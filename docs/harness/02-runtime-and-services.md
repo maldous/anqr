@@ -68,6 +68,15 @@ Long-running services:
 - `anqr-symphony-bridge.service` — OpenAI-compatible HTTP gateway for Symphony with AI SDK and tool execution
 - `anqr-context7-mcp.service` — Context7 MCP documentation service (HTTP on port 4320)
 
+**CRITICAL: Before restarting any bridge service:**
+
+1. **STOP task execution**: `node scripts/ops/orchestration/symphony-control.mjs --stop`
+2. **Wait for zero concurrency**: Check `symphony-runner.mjs --status` and Discord for "(0 concurrent)"
+3. **Restart service**: `systemctl --user restart <service-name>`
+4. **RESTART task execution**: `node scripts/ops/orchestration/symphony-control.mjs --start`
+
+Skipping steps 1 or 4 will cause data loss or leave the system permanently disabled.
+
 Shared environment:
 
 - `services/systemd/anqr-ops.env`

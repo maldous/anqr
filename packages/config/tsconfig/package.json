@@ -3,5 +3,9 @@
   "version": "0.0.0-contract",
   "private": true,
   "description": "Reserved workspace scaffold for future config-tsconfig extraction",
-  "type": "module"
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  }
 }

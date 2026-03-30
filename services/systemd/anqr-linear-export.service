@@ -1,0 +1,42 @@
+# anqr-linear-export.service — Export Linear issues to JSON
+#
+# Runs the Linear issue export script to fetch issues and write to JSON
+# for downstream RAG indexing. Designed to run as a periodic oneshot via timer.
+#
+# Install as user service:
+#   cp services/systemd/anqr-linear-export.service ~/.config/systemd/user/
+#   cp services/systemd/anqr-linear-export.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-linear-export.timer
+
+[Unit]
+Description=ANQR Linear issue export
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/user/src/anqr
+
+# Explicit PATH — nvm Node is not on default systemd PATH
+Environment=PATH=/home/user/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/home/user
+Environment=NODE_PATH=/home/user/.nvm/versions/node/v25.8.0/lib/node_modules
+Environment=NODE_OPTIONS=--max-old-space-size=512
+
+# Secrets and overrides
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+
+ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/integrations/linear/export-issues.mjs
+
+# Logging to journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-linear-export
+
+# Safety limits
+TimeoutStartSec=300
+MemoryMax=2G
+
+[Install]
+WantedBy=default.target

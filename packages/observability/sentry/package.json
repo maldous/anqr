@@ -3,5 +3,9 @@
   "version": "0.0.0-contract",
   "private": true,
   "description": "Sentry integration package for ANQR observability",
-  "type": "module"
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  }
 }

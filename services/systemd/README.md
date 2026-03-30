@@ -52,3 +52,39 @@ journalctl --user -u anqr-rag-rebuild -f
 # Manual RAG rebuild
 systemctl --user start anqr-rag-rebuild
 ```
+
+## CRITICAL: Service restart procedure
+
+**Before restarting any bridge service (symphony-bridge, codebuff-bridge):**
+
+1. **STOP task execution FIRST:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --stop
+   ```
+
+2. **Wait for zero concurrency:**
+   ```bash
+   node scripts/ops/orchestration/symphony-runner.mjs --status
+   ```
+   Check Discord for "(0 concurrent)" confirmation
+
+3. **Commit and push:**
+   ```bash
+   git add -A && git commit -m "..." && git push
+   ```
+
+4. **Restart service:**
+   ```bash
+   systemctl --user restart anqr-symphony-bridge
+   # OR
+   systemctl --user restart anqr-codebuff-bridge
+   ```
+
+5. **RESTART task execution:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --start
+   ```
+
+6. **Update MEMORY.md** and commit
+
+**Skipping steps 1 or 5 will cause data loss or leave the system permanently disabled.**

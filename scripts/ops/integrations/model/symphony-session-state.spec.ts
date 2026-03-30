@@ -36,6 +36,10 @@ const {
   getEvaluationSampleProvider,
   getAdaptiveParams,
   resetAdaptiveParams,
+  setSessionMessages,
+  getSessionMessages,
+  verifySessionMessages,
+  clearSessionMessages,
 } = sessionStateModule;
 
 describe("symphony-session-state.mjs", () => {
@@ -109,14 +113,16 @@ describe("symphony-session-state.mjs", () => {
       expect(session?.turnCount).toBe(1);
     });
 
-    it("should clear session provider", () => {
+    it("should clear session provider but preserve messages", () => {
       const sessionId = "test-session-4";
 
       updateSessionProvider(sessionId, { name: "groq", mode: "free", tier: "free-cloud" });
       clearSessionProvider(sessionId);
 
       const session = getSessionProvider(sessionId);
-      expect(session).toBeNull();
+      // clearSessionProvider now preserves session with messages, just clears provider fields
+      expect(session).toBeDefined();
+      expect(session?.provider).toBeUndefined();
     });
 
     it("should handle null sessionId gracefully", () => {
@@ -453,6 +459,112 @@ describe("symphony-session-state.mjs", () => {
 
       const reset = getAdaptiveParams();
       expect(reset.freeTurnLimit.base).toBe(10);
+    });
+  });
+
+  describe("Server-side message storage", () => {
+    it("should store messages for a session", () => {
+      const sessionId = "test-session-messages";
+      const messages = [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: "Hello" },
+      ];
+
+      updateSessionProvider(sessionId, { name: "groq", mode: "free", tier: "free-cloud" });
+      setSessionMessages(sessionId, messages);
+
+      const retrieved = getSessionMessages(sessionId);
+      expect(retrieved).toBeDefined();
+      expect(retrieved).toHaveLength(2);
+      expect(retrieved?.[0].role).toBe("system");
+      expect(retrieved?.[1].content).toBe("Hello");
+    });
+
+    it("should return deep copy of messages to prevent mutation", () => {
+      const sessionId = "test-session-deep-copy";
+      const messages = [{ role: "user", content: "Original" }];
+
+      updateSessionProvider(sessionId, { name: "groq", mode: "free", tier: "free-cloud" });
+      setSessionMessages(sessionId, messages);
+
+      const retrieved = getSessionMessages(sessionId);
+      if (retrieved) {
+        retrieved[0].content = "Modified";
+      }
+
+      const retrievedAgain = getSessionMessages(sessionId);
+      expect(retrievedAgain?.[0].content).toBe("Original");
+    });
+
+    it("should verify matching message hashes", () => {
+      const sessionId = "test-session-verify";
+      const messages = [
+        { role: "user", content: "Test message" },
+      ];
+
+      updateSessionProvider(sessionId, { name: "groq", mode: "free", tier: "free-cloud" });
+      setSessionMessages(sessionId, messages);
+
+      const isValid = verifySessionMessages(sessionId, messages);
+      expect(isValid).toBe(true);
+    });
+
+    it("should detect message hash mismatch", () => {
+      const sessionId = "test-session-mismatch";
+      const originalMessages = [{ role: "user", content: "Original" }];
+      const modifiedMessages = [{ role: "user", content: "Modified" }];
+
+      updateSessionProvider(sessionId, { name: "groq", mode: "free", tier: "free-cloud" });
+      setSessionMessages(sessionId, originalMessages);
+
+      const isValid = verifySessionMessages(sessionId, modifiedMessages);
+      expect(isValid).toBe(false);
+    });
+
+    it("should clear stored messages", () => {
+      const sessionId = "test-session-clear-messages";
+      const messages = [{ role: "user", content: "Test" }];
+
+      updateSessionProvider(sessionId, { name: "groq", mode: "free", tier: "free-cloud" });
+      setSessionMessages(sessionId, messages);
+
+      clearSessionMessages(sessionId);
+
+      const retrieved = getSessionMessages(sessionId);
+      expect(retrieved).toBeNull();
+    });
+
+    it("should preserve messages when clearing session provider", () => {
+      const sessionId = "test-session-preserve";
+      const messages = [{ role: "user", content: "Test" }];
+
+      updateSessionProvider(sessionId, { name: "groq", mode: "free", tier: "free-cloud" });
+      setSessionMessages(sessionId, messages);
+
+      clearSessionProvider(sessionId);
+
+      const retrieved = getSessionMessages(sessionId);
+      expect(retrieved).toBeDefined();
+      expect(retrieved).toHaveLength(1);
+    });
+
+    it("should return null for non-existent session messages", () => {
+      const retrieved = getSessionMessages("non-existent-session");
+      expect(retrieved).toBeNull();
+    });
+
+    it("should return false when verifying non-existent session", () => {
+      const isValid = verifySessionMessages("non-existent-session", []);
+      expect(isValid).toBe(false);
+    });
+
+    it("should handle null sessionId gracefully in message operations", () => {
+      expect(() => {
+        setSessionMessages(null as any, []);
+        getSessionMessages(null as any);
+        verifySessionMessages(null as any, []);
+        clearSessionMessages(null as any);
+      }).not.toThrow();
     });
   });
 

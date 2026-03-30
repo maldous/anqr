@@ -83,6 +83,56 @@ The maintained flow is:
 
 - `scripts/ops/harness-doctor.mjs` — Performs runtime diagnostics and health checks on the AI harness. Validates environment, tokens, services, and connectivity.
 
+## Phase completion validation
+
+For multi-phase issues, the agent MUST validate that previous phases completed successfully before proceeding:
+
+- Check issue comments for failure indicators (provider errors, model errors, timeouts)
+- If a previous phase failed, complete that phase first before moving to the next
+- This prevents building on incomplete or failed work
+- Particularly important when provider/model issues cause mid-execution failures
+
+## Service management protocol
+
+**CRITICAL: Before making ANY changes to bridge services (symphony-bridge, codebuff-bridge):**
+
+1. **STOP task execution FIRST:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --stop
+   ```
+   - This prevents new tasks from starting while you make changes
+   - Without this step, new tasks may start during service restart causing data loss
+
+2. **Wait for zero concurrency:**
+   ```bash
+   node scripts/ops/orchestration/symphony-runner.mjs --status
+   ```
+   - All worktree runners must be idle (no active leases)
+   - Check Discord for "(0 concurrent)" confirmation
+   - Typical wait: 5-20 minutes
+
+3. **Make your changes** (restart service, update config, etc.)
+
+4. **RESTART task execution:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --start
+   ```
+   - **CRITICAL:** Without this step, the system remains permanently stopped
+   - No work will be processed until timers are re-enabled
+
+**This protocol applies to:**
+- Bridge service restarts (`systemctl --user restart anqr-symphony-bridge`)
+- Bridge configuration changes
+- Any changes to `scripts/ops/integrations/model/*` bridge files
+- Provider configuration updates
+- Any change that requires service restart
+
+**Why this matters:**
+- Restarting bridges during active requests drops streaming connections
+- Partial file writes corrupt issue state
+- Lost validation results require re-execution
+- Wasted provider credits from duplicate API calls
+
 ## Truth rules
 
 - root `scripts/ops/*` entrypoints remain the stable operator contract

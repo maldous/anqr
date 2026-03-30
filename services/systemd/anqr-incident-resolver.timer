@@ -1,0 +1,11 @@
+[Unit]
+Description=ANQR Incident Auto-Resolver Timer
+Documentation=docs/harness/README.md
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

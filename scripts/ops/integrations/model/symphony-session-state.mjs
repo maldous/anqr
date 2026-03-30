@@ -37,7 +37,7 @@ import { fileURLToPath } from "node:url";
 import { createLogger } from "../../lib/logger.mjs";
 import { createHash } from "node:crypto";
 
-const { logInfo } = createLogger();
+const { logInfo, logWarn, logError, logDebug } = createLogger();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../../..");

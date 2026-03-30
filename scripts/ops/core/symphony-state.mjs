@@ -273,12 +273,47 @@ export function recordTransition(issueIdentifier, transition) {
   return patchIssueState(issueIdentifier, { transitions: nextTransitions });
 }
 
+/**
+ * Calculate exponential backoff with jitter for retry cooldowns
+ * @param {number} retryCount - Current retry attempt (0-indexed)
+ * @param {number} baseMs - Base cooldown in milliseconds (default: 10 minutes)
+ * @param {number} maxMs - Maximum cooldown in milliseconds (default: 60 minutes)
+ * @returns {number} Cooldown duration in milliseconds
+ */
+export function calculateExponentialBackoff(retryCount, baseMs = 10 * 60 * 1000, maxMs = 60 * 60 * 1000) {
+  // Exponential: base * 2^retryCount, capped at maxMs
+  const exponential = Math.min(baseMs * Math.pow(2, retryCount), maxMs);
+  // Add random jitter (±20%) to prevent thundering herd
+  const jitter = exponential * (0.8 + Math.random() * 0.4);
+  return Math.floor(jitter);
+}
+
 export function setCooldown(issueIdentifier, ms, reason = "cooldown", signature = null) {
   const patch = {
     cooldown_until: new Date(Date.now() + ms).toISOString(),
     last_failure_reason: reason,
   };
   if (signature !== null) patch.last_failure_signature = signature;
+  return patchIssueState(issueIdentifier, patch);
+}
+
+/**
+ * Set cooldown with exponential backoff based on retry count
+ * @param {string} issueIdentifier - Issue identifier
+ * @param {string} reason - Failure reason
+ * @param {string|null} signature - Failure signature for deduplication
+ */
+export function setCooldownWithBackoff(issueIdentifier, reason = "cooldown", signature = null) {
+  const current = getIssueState(issueIdentifier);
+  const retryCount = Number(current.retry_count || 0);
+  const cooldownMs = calculateExponentialBackoff(retryCount);
+  
+  const patch = {
+    cooldown_until: new Date(Date.now() + cooldownMs).toISOString(),
+    last_failure_reason: reason,
+  };
+  if (signature !== null) patch.last_failure_signature = signature;
+  
   return patchIssueState(issueIdentifier, patch);
 }
 
@@ -393,6 +428,38 @@ export function recordCompletion(issueIdentifier, details = {}) {
   return patchIssueState(issueIdentifier, {
     completed_at: details.completedAt || new Date().toISOString(),
     latency_ms: Number(details.latencyMs) || null,
+  });
+}
+
+/**
+ * Record retry/failover event for evidence logging
+ * @param {string} issueIdentifier - Issue identifier
+ * @param {object} event - Event details (type, provider, reason, etc.)
+ */
+export function recordRetryEvent(issueIdentifier, event = {}) {
+  const current = getIssueState(issueIdentifier);
+  const retryEvents = Array.isArray(current.notes?.retry_events) 
+    ? current.notes.retry_events 
+    : [];
+  
+  const newEvent = {
+    timestamp: nowIso(),
+    type: event.type || "retry",
+    retry_count: Number(current.retry_count || 0),
+    provider: event.provider || null,
+    reason: event.reason || null,
+    cooldown_ms: event.cooldown_ms || null,
+    ...event,
+  };
+  
+  // Keep last 20 retry events
+  const updatedEvents = [...retryEvents, newEvent].slice(-20);
+  
+  return patchIssueState(issueIdentifier, {
+    notes: {
+      ...current.notes,
+      retry_events: updatedEvents,
+    },
   });
 }
 

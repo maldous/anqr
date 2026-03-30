@@ -664,13 +664,82 @@ The harness uses two OpenAI-compatible bridges:
 
 **Bridge restart procedure (CRITICAL):**
 
-1. Check concurrent runner status: `node scripts/ops/orchestration/symphony-runner.mjs --status`
-2. Wait for zero concurrency (all runners idle) — check Discord for "(0 concurrent)"
-3. Commit & push first: `git add -A && git commit -m "..." && git push`
-4. Restart: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
-5. Update `MEMORY.md` with stop/start entries, then commit & push again
+**⚠️ WARNING: Never restart bridges during active concurrent requests — data loss will occur.**
 
-**Never restart bridges during active concurrent requests** — data loss will occur. Restarting during active concurrent requests drops streaming connections and causes partial results to be lost.
+Restarting during active concurrent requests drops streaming connections and causes partial results to be lost. Always verify zero concurrency before proceeding.
+
+**Procedure:**
+
+1. **STOP TASK EXECUTION FIRST:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --stop
+   ```
+   - **CRITICAL:** This must be the FIRST step before any other actions
+   - Disables all Symphony runner timers to prevent new tasks from starting
+   - Shows "🛑 STOPPED - no new tasks will be picked up" status
+   - Without this step, new tasks may start while you wait for concurrency to drop
+
+2. **Check concurrent runner status:**
+   ```bash
+   node scripts/ops/orchestration/symphony-runner.mjs --status
+   ```
+   - Shows active worktree runners and their current work
+   - Displays lock status and in-progress issues
+
+3. **Wait for zero concurrency:**
+   - All worktree runners must be idle (no active leases)
+   - Check Discord for "(0 concurrent)" confirmation in status messages
+   - If runners are active, wait for current issues to complete
+   - Typical wait: 5-20 minutes depending on issue complexity
+
+4. **Commit and push first:**
+   ```bash
+   git add -A && git commit -m "..." && git push
+   ```
+   - Ensures all changes are saved before restart
+   - Prevents loss of in-flight configuration changes
+
+5. **Restart bridge:**
+   ```bash
+   systemctl --user restart anqr-symphony-bridge
+   # OR
+   systemctl --user restart anqr-codebuff-bridge
+   ```
+
+6. **RESTART TASK EXECUTION:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --start
+   ```
+   - **CRITICAL:** Must restart task execution after bridge restart
+   - Re-enables all Symphony runner timers
+   - Runners will resume picking up tasks on next timer cycle
+   - Shows "✅ RUNNING - new tasks will be picked up" status
+   - **Without this step, the system remains stopped and no work will be processed**
+
+7. **Update MEMORY.md:**
+   - Add stop/start entries with timestamp and reason
+   - Commit and push again: `git add MEMORY.md && git commit -m "..." && git push`
+
+**Impact of unsafe restart:**
+- Streaming connections dropped → incomplete LLM responses
+- Partial file writes → corrupted issue state
+- Lost validation results → re-execution required
+- Wasted provider credits → duplicate API calls
+
+**For emergency restarts:**
+If bridge must restart immediately (e.g., security patch):
+1. Run `--stop` first (always, no exceptions)
+2. Accept that in-progress work will be lost and re-executed
+3. Restart bridge after concurrency drops to zero
+4. Run `--start` to resume task execution
+
+**CRITICAL: Don't forget steps 1 and 4!**
+The `--stop` and `--start` steps are mandatory for ALL service changes, not just restarts. Skipping these steps will either:
+- Cause data loss (if you skip `--stop`)
+- Leave the system permanently disabled (if you skip `--start`)
+
+**CRITICAL: Don't forget to restart tasks!**
+After using `--stop`, you MUST use `--start` to resume task execution. Without this, runners remain disabled and no work will be processed.
 
 ### Bootstrap contract
 

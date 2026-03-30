@@ -202,28 +202,92 @@ git worktree prune   # Remove stale worktree metadata
 │              (Linear "Todo" state issues)             │
 └────────────┬─────────────┬─────────────┬─────────────┘
              │             │             │
-      ┌──────▼──────┐ ┌───▼──────┐ ┌────▼─────┐
-      │  Runner 1   │ │ Runner 2 │ │ Runner 3 │
-      │  (wt1)      │ │  (wt2)   │ │  (wt3)   │
-      └──────┬──────┘ └────┬─────┘ └────┬─────┘
-             │             │             │
-             │    ┌────────▼─────────┐   │
-             └────►  Lease System    ◄───┘
-                  │ (state.json)     │
-                  └──────────────────┘
-                           │
-                  ┌────────▼─────────┐
-                  │  Symphony Bridge │
-                  │  (port 4319)     │
-                  └──────────────────┘
+   ┌─────────▼──────┐  ┌──▼──────────┐ ┌▼────────────┐
+   │  Symphony      │  │  Discord    │ │ Discord     │
+   │  Runners       │  │  Runners    │ │ Router      │
+   │  (wt1-wt4)     │  │  (wt5-wt8)  │ │ (port 18790)│
+   │                │  │             │ │             │
+   │ Non-Discord    │  │ Discord-    │ │ Load        │
+   │ issues only    │  │ sourced     │ │ balances    │
+   │                │  │ issues only │ │ OpenClaw    │
+   └────────┬───────┘  └──────┬──────┘ └─────────────┘
+            │                 │
+            │    ┌────────────▼─────────┐
+            └────►  Lease System        │
+                 │  (state.json)        │
+                 │  - Routes Discord    │
+                 │    issues → wt5-wt8  │
+                 │  - Routes others     │
+                 │    → wt1-wt4         │
+                 └──────────────────────┘
+                          │
+                 ┌────────▼─────────┐
+                 │  Symphony Bridge │
+                 │  (port 4319)     │
+                 └──────────────────┘
 ```
 
 **Key components:**
 
 1. **Queue control** — Maintains "Todo" issue queue depth
-2. **Lease system** — Prevents duplicate work across runners
-3. **Worktree runners** — Independent execution environments
-4. **Symphony bridge** — Shared LLM provider routing service
+2. **Lease system** — Prevents duplicate work across runners AND routes issues by source
+3. **Worktree runners** — Independent execution environments with source-based routing:
+   - **Symphony worktrees (wt1-wt4, main)**: Handle non-Discord issues (general Symphony work)
+   - **Discord worktrees (wt5-wt8)**: Handle ONLY Discord-sourced issues to prevent concurrent conflicts
+4. **Discord router** — Load balances Discord OpenClaw Gateway requests across wt5-wt8
+5. **Symphony bridge** — Shared LLM provider routing service
+
+### Worktree Routing by Issue Source
+
+**Automatic source-based routing prevents concurrent execution conflicts:**
+
+When issues are created from Discord interactions, they're tagged with `source: "discord"` in the state management system. The symphony-runner automatically routes issues based on their source:
+
+**Discord worktrees (wt5-wt8):**
+- Handle ONLY issues with `source` containing "discord"
+- Skip all non-Discord issues
+- Dedicated to Discord bot interactions to prevent conflicts
+- Logs: `🎮 Discord worktree mode: handling ONLY Discord-sourced issues`
+
+**Symphony worktrees (wt1-wt4, main):**
+- Handle all issues EXCEPT Discord-sourced ones
+- Skip Discord issues entirely
+- General Symphony work (Linear issues, email, manual)
+- Logs: `🎼 Symphony worktree mode: handling non-Discord issues`
+
+**How it works:**
+
+```javascript
+// In symphony-runner.mjs pickIssue() function
+function isDiscordIssue(issue) {
+  const state = getIssueState(issue.identifier);
+  return (state.source || "").toLowerCase().includes("discord");
+}
+
+// Filter issues based on worktree type
+const candidates = todoIssues
+  .filter((issue) => {
+    const fromDiscord = isDiscordIssue(issue);
+    
+    // Discord worktrees only handle Discord issues
+    if (isDiscordWorktree() && !fromDiscord) return false;
+    
+    // Symphony worktrees only handle non-Discord issues
+    if (isSymphonyWorktree() && fromDiscord) return false;
+    
+    return true;
+  });
+```
+
+**Why this matters:**
+
+Without source-based routing, any worktree could pick up any issue, leading to:
+- Discord issues executed in Symphony worktrees (wt1-wt4)
+- Symphony issues executed in Discord worktrees (wt5-wt8)
+- Potential conflicts when Discord-specific environment differs from Symphony environment
+- Confusion in logs and debugging
+
+With routing, each issue goes to the appropriate execution environment based on its origin.
 
 ### Execution Flow
 

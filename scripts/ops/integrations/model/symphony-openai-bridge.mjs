@@ -73,6 +73,7 @@ import {
   shouldTriggerEvalCycle,
   getAdaptiveParams,
   getEvaluationSampleProvider,
+  setSessionMessages,
 } from "./symphony-session-state.mjs";
 
 // AI SDK imports
@@ -108,6 +109,8 @@ import {
   shouldReduceContextForTPM,
   ERROR_TYPES,
 } from "./symphony-adaptive-context.mjs";
+
+const CODEX_SANDBOX_MODE = process.env.CODEX_SANDBOX_MODE || "danger-full-access";
 
 // Discord webhook notifications
 import {
@@ -342,8 +345,9 @@ async function sendProcessingStatusUpdate() {
   // Combine all summaries into a single description
   const description = summaries.join("\n");
 
+  // Clear messaging: show total active requests (0 active = idle state)
   await sendDiscordEmbed({
-    title: `⏳ Processing (${activeRequests.size} active)`,
+    title: `⏳ Processing — ${activeRequests.size} active ${activeRequests.size === 1 ? "request" : "requests"}`,
     description,
     color: 0x3498db, // Blue
     fields: [], // No fields - all info in description for simplicity
@@ -415,7 +419,7 @@ async function invokeWithCodex(provider, messages, options = {}) {
   const thread = codex.startThread({
     model: provider.model || undefined,
     workingDirectory: process.cwd(),
-    sandboxMode: "workspace-write",
+    sandboxMode: CODEX_SANDBOX_MODE,
     approvalPolicy: "never",
     webSearchEnabled: false,
     networkAccessEnabled: true,
@@ -2419,6 +2423,7 @@ function createProviderModel(provider) {
 // --------------------------------------------------------------------------
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(__dirname, "../../../../");
 
 const PORT = process.env.SYMPHONY_BRIDGE_PORT || 4319;
 const API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
@@ -2542,7 +2547,7 @@ if (VALID_TOKENS.size > 1) {
   logDebug(`Auth: accepting ${VALID_TOKENS.size} tokens`);
 }
 
-const MAX_TOOL_ITERATIONS = 200; // Maximum tool call loops for AI SDK providers (lowered from 10000 for bounded autonomous work)
+const MAX_TOOL_ITERATIONS = 100; // Reduced from 200 to limit memory usage
 const REQUEST_TIMEOUT_MS = 30 * 60 * 1000; // 30 min — hard timeout per HTTP request (prevents infinite hangs)
 const FALLBACK_DELAY_MS = 1000;
 const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response text
@@ -2550,7 +2555,26 @@ const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response
 // Opportunistic GC between requests (requires --expose-gc flag)
 const maybeGC = typeof globalThis.gc === "function" ? () => globalThis.gc() : () => {};
 
-// Periodic stats logging interval (every 10 requests)
+// Periodic garbage collection to prevent memory bloat (every 5 minutes)
+if (typeof globalThis.gc === "function") {
+  setInterval(() => {
+    const mem = process.memoryUsage();
+    const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
+    const rssMB = Math.round(mem.rss / 1024 / 1024);
+    logInfo(`[gc] Periodic GC: heap=${heapMB}MB rss=${rssMB}MB`);
+    globalThis.gc();
+    const after = process.memoryUsage();
+    const heapAfter = Math.round(after.heapUsed / 1024 / 1024);
+    const rssAfter = Math.round(after.rss / 1024 / 1024);
+    logInfo(`[gc] After GC: heap=${heapAfter}MB rss=${rssAfter}MB (freed ${heapMB - heapAfter}MB)`);
+  }, 5 * 60 * 1000);
+  logInfo(`[gc] Periodic GC enabled (every 5 minutes)`);
+}
+
+// Concurrency control to prevent memory overload
+const MAX_CONCURRENT_REQUESTS = 8; // Maximum simultaneous requests (rejects excess with 429)
+
+// Periodic statistics logging interval (every 10 requests)
 const STATS_LOG_INTERVAL = 10;
 let requestCount = 0;
 
@@ -2654,35 +2678,11 @@ async function runContinuousProviderProbe() {
         }
         logInfo(`🔍 Full ranking cached in provider stats`);
 
-        // Send Discord embedded card with updated rankings
-        try {
-          const available = providerStatusCache.probeResults.filter((r) => r.available);
-          const total = providerStatusCache.configured.length;
-
-          // Build concise top 10 list (just position, model, score)
-          const topProviders = ranked.slice(0, 10);
-          const rankingLines = topProviders.map(({ rank, name, score }) => {
-            const scoreDisplay = typeof score === "number" ? score.toFixed(2) : score;
-            return `${rank}. ${name}: ${scoreDisplay}`;
-          });
-
-          await sendDiscordEmbed({
-            title: "🔍 Provider Rankings (Probe Cycle Complete)",
-            description: rankingLines.join("\n"),
-            color: 0x3498db, // Blue
-            fields: [
-              {
-                name: "Summary",
-                value: `${available.length}/${total} available | ${toolCapableProviders.size} tool-capable | ${nonToolCapableProviders.size} excluded`,
-                inline: false,
-              },
-            ],
-          });
-
-          logInfo(`📊 Sent updated provider rankings to Discord (top ${topProviders.length})`);
-        } catch (err) {
-          logError(`❌ Failed to send provider rankings to Discord: ${err.message}`);
-        }
+        // SKIP: Don't send Discord notifications during probe cycles
+        // Sending probe results to Discord creates bridge requests that trigger more probes
+        // causing a feedback loop that leads to OOM
+        // Provider rankings are logged server-side via logInfo above
+        logInfo(`📊 Provider rankings logged server-side (not sent to Discord)`);
       }
       // Reset counter but keep probing
       probeCompletionCount = 0;
@@ -4055,6 +4055,8 @@ async function invokeWithFallback(messages, route, sessionId = null) {
         const mode =
           detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
         updateSessionProvider(sessionId, { name: provider.name, mode, tier: provider.tier });
+        // Store server-side message history for context verification on provider switches
+        setSessionMessages(sessionId, messages);
       }
 
       requestCount++;
@@ -4436,6 +4438,8 @@ async function invokeWithFallbackStream(
         const mode =
           detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
         updateSessionProvider(sessionId, { name: provider.name, mode, tier: provider.tier });
+        // Store server-side message history for context verification on provider switches
+        setSessionMessages(sessionId, messages);
       }
 
       requestCount++;
@@ -4986,6 +4990,9 @@ const server = http.createServer(async (req, res) => {
       setCurrentRequestId(requestId);
 
       // Track this request
+      if (activeRequests.size >= MAX_CONCURRENT_REQUESTS) {
+        return sendJson(res, 429, { error: { message: "Too many concurrent requests. Please try again later." } });
+      }
       activeRequests.set(requestId, {
         startTime,
         issueId: issueContext?.identifier || null,
@@ -5233,6 +5240,8 @@ const server = http.createServer(async (req, res) => {
               // Detect mode from response or errors
               const mode = result.mode || "unknown";
               updateSessionProvider(sessionId, { name: "codebuff", mode, tier: "paid" });
+              // Store server-side message history for context verification on provider switches
+              setSessionMessages(sessionId, messages);
             }
             maybeGC();
             return;
@@ -5802,15 +5811,16 @@ server.listen(PORT, "127.0.0.1", async () => {
     }
   }
 
-  // Startup exploration: run 3 complete probe cycles (reachability → tool probe)
-  // This builds a strong initial ranking before accepting any requests
+  // Startup exploration: run 1 complete probe cycle (reachability → tool probe)
+  // This builds initial ranking before accepting any requests
+  // Background probe will continue to refine rankings over time
   (async () => {
     try {
-      logInfo(`🔍 Starting 3-cycle startup exploration...`);
+      logInfo(`🔍 Starting startup exploration (1 cycle)...`);
 
-      for (let cycle = 1; cycle <= 3; cycle++) {
+      for (let cycle = 1; cycle <= 1; cycle++) {
         logInfo(`========================================`);
-        logInfo(`🔍 Startup Probe Cycle ${cycle}/3`);
+        logInfo(`🔍 Startup Probe Cycle ${cycle}/1`);
         logInfo(`========================================`);
 
         // Phase 1: Reachability probe (knock out unreachable providers)
@@ -5837,18 +5847,14 @@ server.listen(PORT, "127.0.0.1", async () => {
           `🔧 Tool probe: ${toolCapable} capable | ${toolExcluded} excluded | ${unclassified.length} unclassified`,
         );
 
-        // Small delay between cycles to reduce rate-limit pressure
-        if (cycle < 3) {
-          logInfo(`⏳ Waiting 2s before next cycle...`);
-          await sleep(2000);
-        }
+        // No delay needed - single cycle only
       }
 
       // Final summary after all 3 cycles
       const available = providerStatusCache.probeResults.filter((r) => r.available);
       const total = providerStatusCache.configured.length;
       logInfo(`========================================`);
-      logInfo(`Startup exploration complete (3 cycles)`);
+      logInfo(`Startup exploration complete (1 cycle)`);
       logInfo(`========================================`);
       logInfo(`Final status: ${available.length}/${total} providers available`);
 
@@ -5880,34 +5886,11 @@ server.listen(PORT, "127.0.0.1", async () => {
       logInfo(`Ready to accept requests`);
       logInfo(`========================================`);
 
-      // Send Discord embedded card with provider rankings
-      try {
-        const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
-
-        // Build concise top 10 list (just position, model, score)
-        const topProviders = ranked.slice(0, 10);
-        const rankingLines = topProviders.map(({ rank, name, score }) => {
-          const scoreDisplay = typeof score === "number" ? score.toFixed(2) : score;
-          return `${rank}. ${name}: ${scoreDisplay}`;
-        });
-
-        await sendDiscordEmbed({
-          title: "🔍 Provider Rankings (Startup Probe Complete)",
-          description: rankingLines.join("\n"),
-          color: 0x3498db, // Blue
-          fields: [
-            {
-              name: "Summary",
-              value: `${available.length}/${total} available | ${toolCapableProviders.size} tool-capable | ${nonToolCapableProviders.size} excluded`,
-              inline: false,
-            },
-          ],
-        });
-
-        logInfo(`📊 Sent provider rankings to Discord (top ${topProviders.length})`);
-      } catch (err) {
-        logError(`❌ Failed to send provider rankings to Discord: ${err.message}`);
-      }
+      // SKIP: Don't send Discord notifications during startup probe
+      // Sending probe results to Discord creates bridge requests that trigger more probes
+      // causing a feedback loop that leads to OOM
+      // Provider rankings are logged server-side in the summary above
+      logInfo(`📊 Startup probe complete - rankings logged server-side (not sent to Discord)`);
 
       // Update MEMORY.md with successful startup
       try {
@@ -5968,6 +5951,24 @@ server.listen(PORT, "127.0.0.1", async () => {
 
   // Start periodic processing status updates
   startProcessingStatusUpdates();
+
+  // Auto-start Symphony runner timers on bridge startup
+  logInfo(`🚀 Auto-starting Symphony runner timers...`);
+  try {
+    const { execFileSync } = await import("node:child_process");
+    const nodeExec = process.execPath; // Use same Node.js binary as current process
+    const controlScript = path.join(PROJECT_ROOT, "scripts/ops/orchestration/symphony-control.mjs");
+    
+    execFileSync(nodeExec, [controlScript, "--start"], {
+      cwd: PROJECT_ROOT,
+      encoding: "utf-8",
+      timeout: 10000,
+    });
+    logInfo(`✅ Symphony runner timers auto-started successfully`);
+  } catch (err) {
+    logError(`❌ Failed to auto-start Symphony runner timers: ${err.message}`);
+    logError(`⚠️ You may need to manually run: node scripts/ops/orchestration/symphony-control.mjs --start`);
+  }
 });
 
 // Export for testing

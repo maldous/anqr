@@ -19,4 +19,3 @@ export { generateReadabilityHeatmap } from "./generate-readability-heatmap";
 export { simulateScan } from "./simulate-scan";
 export { analyzeQR } from "./analyze-qr";
 export { SafetyAnalyzer } from "./safety-analyzer";
-export { default } from "./default-export";

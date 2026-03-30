@@ -1,6 +1,6 @@
-import { type TelemetryContext } from "./types";
+import type { TelemetryContext } from "./types";
 
-const telemetryContext: TelemetryContext = {
+export const telemetryContext: TelemetryContext = {
   serviceName: "ANQR",
   serviceVersion: "1.0.0",
   release: "1.0.0",
@@ -12,5 +12,3 @@ const telemetryContext: TelemetryContext = {
   userIdHash: "",
   feature: "",
 };
-
-export default telemetryContext;

@@ -60,8 +60,8 @@ if (OPENCLAW_TOOL_PROXY_ENABLED && !OPENCLAW_GATEWAY_TOKEN) {
   );
 }
 
-const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap to limit memory
-const CODEBUFF_MAX_CONTINUATIONS = 200; // Max auto-continue loops when agent ends turn with work remaining
+const CODEBUFF_MAX_STEPS = 100; // Reduced from 200 to limit memory usage
+const CODEBUFF_MAX_CONTINUATIONS = 50; // Reduced from 200 to limit memory usage
 const CODEBUFF_NOISY_TOOLS = new Set([
   "set_messages",
   "set_output",
@@ -81,6 +81,45 @@ const CODEBUFF_NOISY_TOOLS = new Set([
   "codebuff/find-all-referencer@0.0.4",
 ]);
 const maybeGC = typeof globalThis.gc === "function" ? () => globalThis.gc() : () => {};
+
+// Concurrency control reserved for future use (not currently enforced)
+const _MAX_CONCURRENT_REQUESTS = 5;
+let _activeRequestCount = 0;
+
+// Periodic garbage collection to prevent memory bloat
+if (typeof globalThis.gc === "function") {
+  setInterval(() => {
+    const mem = process.memoryUsage();
+    const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
+    const rssMB = Math.round(mem.rss / 1024 / 1024);
+    logInfo(`[gc] Periodic GC: heap=${heapMB}MB rss=${rssMB}MB`);
+    globalThis.gc();
+    const after = process.memoryUsage();
+    const heapAfter = Math.round(after.heapUsed / 1024 / 1024);
+    const rssAfter = Math.round(after.rss / 1024 / 1024);
+    logInfo(`[gc] After GC: heap=${heapAfter}MB rss=${rssAfter}MB (freed ${heapMB - heapAfter}MB)`);
+  }, 5 * 60 * 1000); // Every 5 minutes
+  logInfo(`[gc] Periodic GC enabled (every 5 minutes)`);
+}
+
+// Memory monitoring and auto-throttling (reserved for future use)
+let _memoryPressureCount = 0;
+function _checkMemoryPressure() {
+  const mem = process.memoryUsage();
+  const heapUsed = mem.heapUsed;
+  const heapLimit = mem.heapTotal || (4 * 1024 * 1024 * 1024); // Fallback to 4GB if not available
+  const heapPercent = heapUsed / heapLimit;
+  if (heapPercent > 0.85) {
+    _memoryPressureCount++;
+    logWarn(`[memory] High memory usage: ${Math.round(heapPercent * 100)}% of heap (${Math.round(heapUsed/1024/1024)}MB)`);
+    if (_memoryPressureCount > 3) {
+      logError(`[memory] Sustained high memory usage — consider restarting service`);
+    }
+  } else {
+    _memoryPressureCount = 0;
+  }
+}
+
 
 // Parameter validation error tracking — counts per tool to monitor SDK-internal failures
 const paramValidationErrorCounts = new Map();

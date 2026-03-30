@@ -1,0 +1,24 @@
+# anqr-linear-export.timer — Schedule Linear issue exports
+#
+# Fires at 02:30 local time daily (30 min before RAG rebuild at 03:00).
+# Persistent=true ensures a missed run (e.g. machine was off) is caught up.
+#
+# Install:
+#   cp services/systemd/anqr-linear-export.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-linear-export.timer
+#
+# Check status:
+#   systemctl --user list-timers
+#   journalctl --user -u anqr-linear-export.service --since today
+
+[Unit]
+Description=ANQR Linear issue export timer
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

@@ -36,7 +36,7 @@ import {
 } from "../symphony-config.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
-const { logInfo, logWarn, logError } = createLogger();
+const { logInfo, logWarn, logError, logDebug } = createLogger();
 import { sendDiscordEmbed } from "../integrations/notifications/discord-webhook.mjs";
 import { feedQueue, getQueueSnapshot } from "../symphony-queue-control.mjs";
 import { recordLinearCompletion, recordProviderSuccess } from "../symphony-credit-gate.mjs";
@@ -64,6 +64,8 @@ import {
   getGlobalValue,
   patchIssueState,
   recordCompletion,
+  recordRetryEvent,
+  calculateExponentialBackoff,
 } from "../symphony-state.mjs";
 import {
   runValidation,
@@ -584,11 +586,13 @@ async function executeIssue(issue, dryRun = false) {
   // IMPORTANT: This happens BEFORE lease acquisition to avoid wasting lease cycles on sync failures
   if (WORKTREE_ID !== "main") {
     try {
+      logInfo(`[runner] 🔄 Syncing worktree ${WORKTREE_ID} with main...`);
       execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
       execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
       logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} synced with main`);
-      syncFailCount = 0; // Reset counter on successful sync
-      // Persist reset counter
+      
+      // Reset failure counter on successful sync
+      syncFailCount = 0;
       try {
         if (existsSync(SYNC_FAIL_COUNT_FILE)) {
           unlinkSync(SYNC_FAIL_COUNT_FILE);
@@ -597,7 +601,8 @@ async function executeIssue(issue, dryRun = false) {
     } catch (err) {
       // Sync failed - release lock immediately and exit to avoid wasting lease cycles
       syncFailCount++;
-      // Persist incremented counter
+      
+      // Persist incremented counter for next cycle
       try {
         writeFileSync(SYNC_FAIL_COUNT_FILE, String(syncFailCount));
       } catch {}
@@ -605,27 +610,44 @@ async function executeIssue(issue, dryRun = false) {
       logError(
         `[runner] ❌ Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`,
       );
-      logError(`[runner] This likely indicates conflicting changes in the worktree.`);
-      logError(
-        `[runner] ⏭️  Releasing lock and exiting immediately to avoid wasting lease acquisition cycle.`,
-      );
+      
+      // Check if merge conflict or other error
+      const stderr = err.stderr?.toString() || "";
+      const stdout = err.stdout?.toString() || "";
+      const isConflict = stderr.includes("conflict") || stdout.includes("conflict") || 
+                        stderr.includes("CONFLICT") || stdout.includes("CONFLICT");
+      
+      if (isConflict) {
+        logError(`[runner] Detected merge conflict - divergent changes exist in worktree`);
+      } else {
+        logError(`[runner] Sync error type: ${err.code || 'unknown'}`);
+      }
+      
+      logError(`[runner] ⏭️  Releasing lock and exiting immediately to avoid wasting lease acquisition cycle.`);
 
+      // Threshold reached - attempt hard reset
       if (syncFailCount >= SYNC_FAILURE_THRESHOLD) {
         logWarn(
-          `[runner] ⚠️ Sync failure threshold reached (${syncFailCount}/${SYNC_FAILURE_THRESHOLD}), attempting hard reset to origin/main`,
+          `[runner] ⚠️ Sync failure threshold reached (${syncFailCount}/${SYNC_FAILURE_THRESHOLD})`,
         );
+        logWarn(`[runner] Attempting hard reset to origin/main to recover...`);
+        
         try {
           execFileSync("git", ["reset", "--hard", "origin/main"], { cwd: ROOT, stdio: "pipe" });
           execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
           logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} reset to origin/main successfully`);
-          syncFailCount = 0; // Reset counter after successful recovery
-          // Persist reset counter
+          
+          // Reset counter after successful recovery
+          syncFailCount = 0;
           try {
             if (existsSync(SYNC_FAIL_COUNT_FILE)) {
               unlinkSync(SYNC_FAIL_COUNT_FILE);
             }
           } catch {}
-          logInfo(`[runner] Next cycle will use clean worktree — releasing lock and exiting.`);
+          
+          logInfo(`[runner] ✅ Recovery complete. Next cycle will use clean worktree.`);
+          logInfo(`[runner] Releasing lock and exiting cleanly.`);
+          
           // ROLLBACK: Release lock and exit after successful reset
           // Next cycle will start fresh with clean worktree
           releaseLock();
@@ -633,7 +655,8 @@ async function executeIssue(issue, dryRun = false) {
         } catch (resetErr) {
           logError(`[runner] ❌ Hard reset failed: ${resetErr.message}`);
           logError(`[runner] ⛔ Manual intervention required for worktree ${WORKTREE_ID}`);
-          logError(`[runner] Run: cd ${ROOT} && git reset --hard origin/main && git clean -fd`);
+          logError(`[runner] Recovery command: cd ${ROOT} && git reset --hard origin/main && git clean -fd`);
+          
           // ROLLBACK: Release lock immediately and exit - manual intervention required
           releaseLock();
           return "skip";
@@ -645,6 +668,8 @@ async function executeIssue(issue, dryRun = false) {
       logError(
         `[runner] Will retry sync on next runner cycle (${syncFailCount}/${SYNC_FAILURE_THRESHOLD} failures so far).`,
       );
+      
+      // Release lock and exit - don't attempt to acquire lease
       releaseLock();
       return "skip";
     }
@@ -864,8 +889,19 @@ async function executeIssue(issue, dryRun = false) {
       const failureMsg = agentResult.error || agentResult.summary || "Unknown failure";
 
       if (failureKind === "local_busy") {
+        const cooldownMs = 2 * 60 * 1000; // Short cooldown for local busy
         await updateIssue(issue.id, { stateId: STATES.todo });
-        setCooldown(issue.identifier, 2 * 60 * 1000, "local_busy");
+        setCooldown(issue.identifier, cooldownMs, "local_busy");
+        
+        // Record retry event for evidence
+        recordRetryEvent(issue.identifier, {
+          type: "failure",
+          provider: metricsProviderName,
+          reason: "local_busy",
+          cooldown_ms: cooldownMs,
+          error: failureMsg.slice(0, 200),
+        });
+        
         await addComment(
           issue.id,
           `⏳ **Local model busy** — returned to Todo with short cooldown.\n\nError: ${failureMsg.slice(0, 500)}`,
@@ -885,13 +921,26 @@ async function executeIssue(issue, dryRun = false) {
         return "done";
       }
 
-      // Handle provider failures (LLM call failed, no choices, etc.) with moderate cooldown
+      // Handle provider failures (LLM call failed, no choices, etc.) with exponential backoff
       if (failureKind === "provider") {
+        const currentState = getIssueState(issue.identifier);
+        const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0);
+        
         await updateIssue(issue.id, { stateId: STATES.todo });
-        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "provider_failure");
+        setCooldown(issue.identifier, cooldownMs, "provider_failure");
+        
+        // Record retry event for evidence
+        recordRetryEvent(issue.identifier, {
+          type: "failure",
+          provider: metricsProviderName,
+          reason: "provider_failure",
+          cooldown_ms: cooldownMs,
+          error: failureMsg.slice(0, 200),
+        });
+        
         await addComment(
           issue.id,
-          `🔴 **Provider failure** — returned to Todo with cooldown.\n\nError: ${failureMsg.slice(0, 500)}`,
+          `🔴 **Provider failure** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
         );
         recordTransition(issue.identifier, {
           actor: "runner",
@@ -908,13 +957,27 @@ async function executeIssue(issue, dryRun = false) {
         return "done";
       }
 
-      // Handle quota/rate-limit failures with longer cooldown
+      // Handle quota/rate-limit failures with exponential backoff (longer base)
       if (failureKind === "quota") {
+        const currentState = getIssueState(issue.identifier);
+        // Use longer base for quota failures (15min base instead of 10min)
+        const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0, 15 * 60 * 1000);
+        
         await updateIssue(issue.id, { stateId: STATES.todo });
-        setCooldown(issue.identifier, 15 * 60 * 1000, "quota_exhausted");
+        setCooldown(issue.identifier, cooldownMs, "quota_exhausted");
+        
+        // Record retry event for evidence
+        recordRetryEvent(issue.identifier, {
+          type: "failure",
+          provider: metricsProviderName,
+          reason: "quota_exhausted",
+          cooldown_ms: cooldownMs,
+          error: failureMsg.slice(0, 200),
+        });
+        
         await addComment(
           issue.id,
-          `🚫 **Quota exhausted** — returned to Todo with extended cooldown (15min).\n\nError: ${failureMsg.slice(0, 500)}`,
+          `🚫 **Quota exhausted** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
         );
         recordTransition(issue.identifier, {
           actor: "runner",
@@ -931,13 +994,26 @@ async function executeIssue(issue, dryRun = false) {
         return "done";
       }
 
-      // Handle other failures with standard cooldown
+      // Handle other failures with exponential backoff
       if (failureKind === "other") {
+        const currentState = getIssueState(issue.identifier);
+        const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0);
+        
         await updateIssue(issue.id, { stateId: STATES.todo });
-        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "other_failure");
+        setCooldown(issue.identifier, cooldownMs, "other_failure");
+        
+        // Record retry event for evidence
+        recordRetryEvent(issue.identifier, {
+          type: "failure",
+          provider: metricsProviderName,
+          reason: "other_failure",
+          cooldown_ms: cooldownMs,
+          error: failureMsg.slice(0, 200),
+        });
+        
         await addComment(
           issue.id,
-          `⚠️ **Execution failed** — returned to Todo with cooldown.\n\nError: ${failureMsg.slice(0, 500)}`,
+          `⚠️ **Execution failed** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
         );
         recordTransition(issue.identifier, {
           actor: "runner",

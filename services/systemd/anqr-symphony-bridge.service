@@ -36,7 +36,10 @@ EnvironmentFile=-%h/.config/symphony/anqr.env
 # Systemd env overrides (LINEAR_API_KEY, etc.)
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=4096 --expose-gc scripts/ops/integrations/model/symphony-openai-bridge.mjs
+ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc scripts/ops/integrations/model/symphony-openai-bridge.mjs
+
+# Auto-enable runner timers after bridge starts
+ExecStartPost=/home/user/.nvm/versions/node/v25.8.0/bin/node /home/user/src/anqr/scripts/ops/orchestration/symphony-control.mjs --start
 
 # Logging to journal
 StandardOutput=journal
@@ -49,10 +52,10 @@ RestartSec=5
 
 # Safety limits — host has 64 GB RAM; be generous to avoid cgroup throttle.
 # MemoryHigh must exceed --max-old-space-size by ≥512 MB for native overhead.
-# Previous 1536M == V8 heap limit caused permanent D-state cgroup throttle.
+# Reduced from 4096MB to 2048MB heap to prevent OOM (matches codebuff-bridge)
 TimeoutStartSec=30
-MemoryHigh=5120M
-MemoryMax=6G
+MemoryHigh=3G
+MemoryMax=3584M
 
 [Install]
 WantedBy=default.target

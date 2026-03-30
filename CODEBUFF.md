@@ -43,10 +43,35 @@ The bridge dynamically adjusts per-provider context limits at runtime:
 
 ### Bridge restart procedure (CRITICAL)
 
-1. **Commit & push first**: `git add -A && git commit -m "..." && git push`
-2. **Wait for zero concurrency**: Check Discord for "(0 concurrent)"
-3. **Then restart**: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
-4. Update `MEMORY.md` with stop/start entries, then commit & push again
+**⚠️ WARNING: Never restart bridges during active concurrent requests — data loss will occur.**
+
+**Procedure:**
+
+1. **STOP TASK EXECUTION FIRST:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --stop
+   ```
+   - **CRITICAL:** This must be the FIRST step before any other actions
+   - Disables all Symphony runner timers to prevent new tasks from starting
+
+2. **Check concurrent runner status**: `node scripts/ops/orchestration/symphony-runner.mjs --status`
+
+3. **Wait for zero concurrency**: Check Discord for "(0 concurrent)"
+
+4. **Commit & push first**: `git add -A && git commit -m "..." && git push`
+
+5. **Restart bridge**: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
+
+6. **RESTART TASK EXECUTION:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --start
+   ```
+   - **CRITICAL:** Must restart task execution after bridge restart
+   - Without this step, the system remains stopped and no work will be processed
+
+7. **Update MEMORY.md** with stop/start entries, then commit & push again
+
+**CRITICAL: Don't forget steps 1 and 6!** Skipping these will cause data loss or leave the system permanently disabled.
 
 ### Validation commands
 

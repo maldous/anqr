@@ -15,7 +15,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, statfsSync } from "node:fs";
+import { existsSync, statfsSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { createLogger } from "../lib/logger.mjs";
 import {
@@ -38,8 +38,44 @@ export function createWorktree(id) {
   const branchName = getWorktreeBranch(id);
 
   if (existsSync(worktreePath)) {
-    logInfo(`Worktree already exists: ${worktreePath}`);
-    return worktreePath;
+    // Path exists - verify it's a valid registered worktree
+    const worktrees = listWorktrees();
+    const isRegistered = worktrees.some((wt) => wt.path === worktreePath);
+
+    if (isRegistered) {
+      logInfo(`Worktree already exists and is registered: ${worktreePath}`);
+      return worktreePath;
+    } else {
+      logWarn(
+        `Path exists but is not a registered worktree: ${worktreePath}. Attempting cleanup and recreation.`,
+      );
+
+      // Try to remove from git's worktree list if it exists there
+      try {
+        execFileSync("git", ["worktree", "remove", worktreePath, "--force"], {
+          cwd: PROJECT_ROOT,
+          stdio: "pipe",
+        });
+        logInfo(`Removed corrupted worktree from git: ${worktreePath}`);
+      } catch {
+        // Worktree not in git's list, that's expected for corrupted state
+        logInfo(`Worktree not in git registry (expected for corrupted state)`);
+      }
+
+      // Remove the directory if it still exists
+      try {
+        rmSync(worktreePath, { recursive: true, force: true });
+        logInfo(`Removed corrupted directory: ${worktreePath}`);
+      } catch (err) {
+        logError(`Failed to remove corrupted directory: ${err.message}`);
+        throw new Error(
+          `Corrupted worktree path exists and cannot be cleaned up: ${worktreePath}`,
+        );
+      }
+
+      // Fall through to create fresh worktree
+      logInfo(`Recreating worktree ${id} after cleanup...`);
+    }
   }
 
   try {

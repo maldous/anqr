@@ -80,6 +80,7 @@ const TRANSIENT_PATTERNS = [
 ];
 
 import { createLogger } from "../../lib/logger.mjs";
+import { createOrUpdateIncident } from "../../integrations/linear/incident-manager.mjs";
 
 const { logDebug, logInfo, logWarn, logError } = createLogger();
 
@@ -93,6 +94,13 @@ const rapidRestartHistory = new Map();
 // Track last recovery action to avoid repeated rollbacks
 const lastRecoveryAction = new Map();
 const RECOVERY_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between rollbacks
+
+// Track watchdog trigger rate for alerting
+const watchdogTriggerHistory = [];
+const TRIGGER_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour window
+const TRIGGER_RATE_THRESHOLD = 3; // Alert if >3 triggers per hour
+let lastTriggerRateAlert = 0;
+const TRIGGER_RATE_ALERT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour between rate alerts
 
 // Shutdown flag for graceful loop exit
 let shuttingDown = false;
@@ -359,7 +367,79 @@ async function verifyAndNotifyRecovery(serviceName, shortName) {
   }
 }
 
+/**
+ * Track watchdog trigger and check if alert threshold exceeded
+ */
+async function trackWatchdogTrigger(serviceName, reason) {
+  const now = Date.now();
+  
+  // Add current trigger to history
+  watchdogTriggerHistory.push({ timestamp: now, service: serviceName, reason });
+  
+  // Filter to only recent triggers within the window
+  const recentTriggers = watchdogTriggerHistory.filter(
+    (trigger) => now - trigger.timestamp < TRIGGER_RATE_WINDOW_MS
+  );
+  
+  // Update history to only keep recent triggers
+  watchdogTriggerHistory.length = 0;
+  watchdogTriggerHistory.push(...recentTriggers);
+  
+  // Check if threshold exceeded
+  if (recentTriggers.length > TRIGGER_RATE_THRESHOLD) {
+    // Check cooldown to avoid alert spam
+    const timeSinceLastAlert = now - lastTriggerRateAlert;
+    if (timeSinceLastAlert >= TRIGGER_RATE_ALERT_COOLDOWN_MS) {
+      lastTriggerRateAlert = now;
+      
+      // Send critical alert
+      const triggerSummary = recentTriggers
+        .slice(-5)
+        .map(t => `• ${t.service}: ${t.reason}`)
+        .join("\n");
+      
+      try {
+        await sendDiscordEmbed({
+          title: "🚨 WATCHDOG HIGH TRIGGER RATE ALERT",
+          description: `**CRITICAL: Watchdog triggered ${recentTriggers.length} times in the last hour**\n\nThis indicates systemic instability requiring immediate investigation.`,
+          color: 0xff0000, // Red
+          fields: [
+            { name: "Trigger Count", value: `${recentTriggers.length} (threshold: ${TRIGGER_RATE_THRESHOLD})`, inline: true },
+            { name: "Time Window", value: "Last 60 minutes", inline: true },
+            { name: "Recent Triggers", value: triggerSummary, inline: false },
+          ],
+          footer: "⚠️ Manual investigation required - possible configuration or code issues",
+        });
+      } catch (err) {
+        logError(`[watchdog] ⚠️ Failed to send trigger rate alert: ${err.message}`);
+      }
+      
+      await updateMemory(
+        `CRITICAL: Watchdog triggered ${recentTriggers.length} times in 1 hour - systemic instability detected`,
+      );
+      
+      logError(
+        `[watchdog] 🚨 CRITICAL: Watchdog trigger rate exceeded threshold (${recentTriggers.length} > ${TRIGGER_RATE_THRESHOLD} in 1 hour)`,
+      );
+    }
+  }
+}
+
 async function rollbackAndRestart(serviceName, shortName, reason) {
+  // Track this watchdog trigger for rate alerting
+  await trackWatchdogTrigger(serviceName, reason);
+  
+  // Create incident for watchdog rollback
+  try {
+    await createOrUpdateIncident({
+      type: "WATCHDOG_ROLLBACK",
+      service: shortName,
+      trigger: reason,
+    });
+  } catch (err) {
+    logError(`[watchdog] ⚠️ Failed to create incident: ${err.message}`);
+  }
+  
   // Check cooldown
   if (isInCooldown(serviceName)) {
     logInfo(`[watchdog] ⏭️ Skipping rollback for ${shortName} - in cooldown period`);

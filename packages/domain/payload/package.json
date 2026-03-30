@@ -3,5 +3,9 @@
   "version": "0.0.0-contract",
   "private": true,
   "description": "Payload and helper generation domain package for ANQR",
-  "type": "module"
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  }
 }

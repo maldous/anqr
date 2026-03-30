@@ -59,6 +59,7 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../../..");
+const CODEX_SANDBOX_MODE = process.env.CODEX_SANDBOX_MODE || "danger-full-access";
 const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
 const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
 const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
@@ -218,7 +219,7 @@ async function probeCodexSdk(model) {
     const thread = codex.startThread({
       model: model || undefined,
       workingDirectory: PROJECT_ROOT,
-      sandboxMode: "read-only",
+      sandboxMode: CODEX_SANDBOX_MODE,
       approvalPolicy: "never",
       webSearchEnabled: false,
       networkAccessEnabled: false,
