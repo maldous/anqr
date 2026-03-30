@@ -402,7 +402,7 @@ function executeTool(projectRoot, toolCall, context = {}) {
 // LLM API call
 // ---------------------------------------------------------------------------
 
-async function callLLM(provider, messages, taskDescription) {
+async function callLLM(provider, messages, taskDescription, projectRoot = PROJECT_ROOT) {
   if (provider.name === "symphony-bridge") {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -573,6 +573,7 @@ async function callLLM(provider, messages, taskDescription) {
         body: JSON.stringify({
           model: CODEBUFF_BRIDGE_MODEL,
           messages: bridgeMessages,
+          cwd: projectRoot,
           stream: true,
         }),
         signal: controller.signal,
@@ -731,6 +732,7 @@ async function callLLM(provider, messages, taskDescription) {
         model: provider.model,
         messages,
         tools: TOOL_DEFINITIONS,
+        cwd: projectRoot,
         ...(provider.useMaxCompletionTokens
           ? { max_completion_tokens: RUNNER_MAX_OUTPUT_TOKENS }
           : { max_tokens: RUNNER_MAX_OUTPUT_TOKENS }),
@@ -846,7 +848,7 @@ async function runToolLoop({
 
     let response;
     try {
-      response = await callLLM(provider, messages, taskDescription);
+      response = await callLLM(provider, messages, taskDescription, projectRoot);
     } catch (err) {
       logError(`[agent] LLM call failed: ${err.message}`);
       return {

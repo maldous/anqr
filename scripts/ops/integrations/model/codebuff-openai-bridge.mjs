@@ -1511,6 +1511,7 @@ const server = http.createServer(async (req, res) => {
       req.openclawSessionId = openclawSessionId;
       const model = body.model || MODEL_ID;
       const messages = Array.isArray(body.messages) ? body.messages : [];
+      const requestCwd = typeof body.cwd === "string" && body.cwd.trim() ? path.resolve(body.cwd.trim()) : DEFAULT_CWD;
       const stream = body.stream === true;
 
       // Extract issue context from user messages
@@ -1567,7 +1568,7 @@ const server = http.createServer(async (req, res) => {
           logInfo(`⏱️ Starting streaming invocation...`);
           streamResult = await invokeCodebuffStream({
             messages,
-            cwd: DEFAULT_CWD,
+            cwd: requestCwd,
             completionId,
             created,
             sessionId: openclawSessionId,
@@ -1694,7 +1695,7 @@ const server = http.createServer(async (req, res) => {
         logInfo(`⏱️ Starting non-streaming invocation...`);
         const result = await invokeCodebuff({
           messages,
-          cwd: DEFAULT_CWD,
+          cwd: requestCwd,
           sessionId: openclawSessionId,
           proxyToolFn: openclawSessionId ? callOpenClawGatewayTool : null,
         });

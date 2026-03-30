@@ -37,6 +37,7 @@
 // register signal handlers, preventing MaxListenersExceededWarning at startup.
 import "./_set-max-listeners.mjs";
 import http from "node:http";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
@@ -413,6 +414,37 @@ function ensureString(value) {
   return String(value);
 }
 
+
+const requestCwdStorage = new AsyncLocalStorage();
+
+function normalizeRequestCwd(cwd) {
+  if (typeof cwd !== "string") return process.cwd();
+  const trimmed = cwd.trim();
+  return trimmed ? path.resolve(trimmed) : process.cwd();
+}
+
+function withRequestCwd(cwd, fn) {
+  return requestCwdStorage.run({ cwd: normalizeRequestCwd(cwd) }, fn);
+}
+
+function getCurrentRequestCwd() {
+  return requestCwdStorage.getStore()?.cwd || process.cwd();
+}
+
+function resolveRequestPath(targetPath) {
+  if (typeof targetPath !== "string") return targetPath;
+  const trimmed = targetPath.trim();
+  if (!trimmed) return getCurrentRequestCwd();
+  return path.isAbsolute(trimmed) ? trimmed : path.resolve(getCurrentRequestCwd(), trimmed);
+}
+
+function resolveRequestDir(cwd) {
+  if (typeof cwd !== "string") return getCurrentRequestCwd();
+  const trimmed = cwd.trim();
+  if (!trimmed) return getCurrentRequestCwd();
+  return path.isAbsolute(trimmed) ? trimmed : path.resolve(getCurrentRequestCwd(), trimmed);
+}
+
 // --------------------------------------------------------------------------
 // Codex SDK invoke
 // --------------------------------------------------------------------------
@@ -424,7 +456,7 @@ async function invokeWithCodex(provider, messages, options = {}) {
   });
   const thread = codex.startThread({
     model: provider.model || undefined,
-    workingDirectory: process.cwd(),
+    workingDirectory: normalizeRequestCwd(options.cwd),
     sandboxMode: CODEX_SANDBOX_MODE,
     approvalPolicy: "never",
     webSearchEnabled: false,
@@ -498,7 +530,7 @@ async function invokeWithCodex(provider, messages, options = {}) {
 async function execTool({ command, cwd }) {
   try {
     const result = execSync(command, {
-      cwd: cwd || process.cwd(),
+      cwd: resolveRequestDir(cwd),
       encoding: "utf-8",
       timeout: 60000,
       maxBuffer: 10 * 1024 * 1024, // 10MB
@@ -596,7 +628,7 @@ async function readFilesTool({ paths }) {
 
     const results = normalizedPaths.map((filePath) => {
       try {
-        const content = fs.readFileSync(filePath, "utf-8");
+        const content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
         const totalLines = content.split("\n").length;
         return { path: filePath, content, totalLines };
       } catch (error) {
@@ -614,7 +646,7 @@ async function readFilesTool({ paths }) {
  */
 async function readFileTool({ path: filePath, offset, lines }) {
   try {
-    let content = fs.readFileSync(filePath, "utf-8");
+    let content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
     const totalLines = content.split("\n").length;
     const hasOffset = typeof offset === "number";
     const hasLineCount = typeof lines === "number";
@@ -654,7 +686,7 @@ async function readFileTool({ path: filePath, offset, lines }) {
  */
 async function strReplaceTool({ path: filePath, replacements }) {
   try {
-    let content = fs.readFileSync(filePath, "utf-8");
+    let content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
 
     // Defensive normalization (workaround for SDK bug sending string instead of array)
     const replacementsList = Array.isArray(replacements) ? replacements : [replacements];
@@ -677,7 +709,7 @@ async function strReplaceTool({ path: filePath, replacements }) {
       }
     }
 
-    fs.writeFileSync(filePath, content, "utf-8");
+    fs.writeFileSync(resolveRequestPath(filePath), content, "utf-8");
 
     // Track file change for current request
     const reqId = getCurrentRequestId();
@@ -696,7 +728,7 @@ async function strReplaceTool({ path: filePath, replacements }) {
  */
 async function writeFileTool({ path: filePath, content }) {
   try {
-    fs.writeFileSync(filePath, content, "utf-8");
+    fs.writeFileSync(resolveRequestPath(filePath), content, "utf-8");
 
     // Track file change for current request
     const reqId = getCurrentRequestId();
@@ -715,7 +747,7 @@ async function writeFileTool({ path: filePath, content }) {
  */
 async function codeSearchTool({ pattern, flags, cwd, maxResults = 15 }) {
   try {
-    const baseDir = cwd || process.cwd();
+    const baseDir = resolveRequestDir(cwd);
     const flagsStr = flags || "";
     const command = `rg "${pattern.replace(/"/g, '\\"')}" ${flagsStr} "${baseDir}" -n --max-count=${maxResults} 2>/dev/null || true`;
     const result = execSync(command, {
@@ -744,7 +776,7 @@ async function codeSearchTool({ pattern, flags, cwd, maxResults = 15 }) {
  */
 async function globTool({ pattern, cwd }) {
   try {
-    const baseDir = cwd || process.cwd();
+    const baseDir = resolveRequestDir(cwd);
     // Simple glob implementation using find
     const command = `find "${baseDir}" -type f -name "${pattern}" 2>/dev/null | head -100`;
     const result = execSync(command, { encoding: "utf-8", timeout: 10000 });
@@ -760,8 +792,8 @@ async function globTool({ pattern, cwd }) {
  */
 async function memorySearchTool({ query }) {
   try {
-    const memoryFile = path.join(process.cwd(), "MEMORY.md");
-    const knowledgeFile = path.join(process.cwd(), "knowledge.md");
+    const memoryFile = path.join(getCurrentRequestCwd(), "MEMORY.md");
+    const knowledgeFile = path.join(getCurrentRequestCwd(), "knowledge.md");
     const results = [];
 
     // Search MEMORY.md
@@ -809,7 +841,7 @@ async function memorySearchTool({ query }) {
  */
 async function listDirectoryTool({ path: dirPath }) {
   try {
-    const fullPath = path.join(process.cwd(), dirPath);
+    const fullPath = resolveRequestPath(dirPath || ".");
     const entries = fs.readdirSync(fullPath, { withFileTypes: true });
 
     const files = entries.filter((e) => e.isFile()).map((e) => e.name);
@@ -887,7 +919,7 @@ async function readSubtreeTool({ paths, maxTokens = 50000 }) {
     };
 
     for (const targetPath of targetPaths) {
-      const fullPath = path.join(process.cwd(), targetPath);
+      const fullPath = resolveRequestPath(targetPath);
       walk(fullPath, targetPath);
       if (usedChars >= maxChars) break;
     }
@@ -910,13 +942,13 @@ async function memoryGetTool({ file }) {
       return { error: `Invalid file. Must be one of: ${validFiles.join(", ")}` };
     }
 
-    const filePath = path.join(process.cwd(), fileName);
+    const filePath = path.join(getCurrentRequestCwd(), fileName);
 
     if (!fs.existsSync(filePath)) {
       return { error: `File ${fileName} not found`, content: "" };
     }
 
-    const content = fs.readFileSync(filePath, "utf-8");
+    const content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
     return { content, file: fileName, lines: content.split("\n").length };
   } catch (error) {
     return { error: error.message };
@@ -935,7 +967,7 @@ async function runFileChangeHooksTool({ files }) {
     }
 
     // Check if codebuff.json has fileChangeHooks configured
-    const codebuffConfigPath = path.join(process.cwd(), "codebuff.json");
+    const codebuffConfigPath = path.join(getCurrentRequestCwd(), "codebuff.json");
     let hooks = [];
 
     if (fs.existsSync(codebuffConfigPath)) {
@@ -952,6 +984,7 @@ async function runFileChangeHooksTool({ files }) {
       try {
         const command = hook.replace("{files}", files.join(" "));
         const result = execSync(command, {
+          cwd: getCurrentRequestCwd(),
           encoding: "utf-8",
           timeout: 60000,
           maxBuffer: 10 * 1024 * 1024,
@@ -1011,7 +1044,7 @@ async function spawnAgentsTool({ agents }) {
  */
 async function proposeStrReplaceTool({ path: filePath, replacements }) {
   try {
-    const content = fs.readFileSync(filePath, "utf-8");
+    const content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
     const proposed = [];
 
     // Defensive normalization (workaround for SDK bug sending string instead of array)
@@ -1124,7 +1157,7 @@ async function applyPatchTool({ operation }) {
         .filter((l) => l.startsWith("+"))
         .map((l) => l.slice(1));
       const content = lines.join("\n");
-      fs.writeFileSync(filePath, content, "utf-8");
+      fs.writeFileSync(resolveRequestPath(filePath), content, "utf-8");
 
       const reqId = getCurrentRequestId();
       if (reqId) trackFileChange(reqId);
@@ -1138,14 +1171,14 @@ async function applyPatchTool({ operation }) {
         .filter((l) => l.startsWith("+"))
         .map((l) => l.slice(1));
       const content = lines.join("\n");
-      fs.writeFileSync(filePath, content, "utf-8");
+      fs.writeFileSync(resolveRequestPath(filePath), content, "utf-8");
 
       const reqId = getCurrentRequestId();
       if (reqId) trackFileChange(reqId);
 
       return { success: true, operation: "update", path: filePath };
     } else if (type === "delete_file") {
-      fs.unlinkSync(filePath);
+      fs.unlinkSync(resolveRequestPath(filePath));
       return { success: true, operation: "delete", path: filePath };
     }
 
@@ -1205,6 +1238,7 @@ async function findFilesTool({ prompt }) {
     // Attempt hybrid search (BM25 + optional embedding re-ranking)
     try {
       const result = await hybridSearchFiles(prompt, {
+        rootDir: getCurrentRequestCwd(),
         topK: 20,
         useEmbeddings: true,
       });
@@ -1235,7 +1269,11 @@ async function findFilesTool({ prompt }) {
     for (const ext of extensions) {
       try {
         const cmd = `find . -type f -name "*${ext}" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -50`;
-        const output = execSync(cmd, { encoding: "utf-8", timeout: 5000 });
+        const output = execSync(cmd, {
+          cwd: getCurrentRequestCwd(),
+          encoding: "utf-8",
+          timeout: 5000,
+        });
         const files = output.split("\n").filter(Boolean);
 
         for (const file of files) {
@@ -1982,7 +2020,7 @@ const tools = {
             : 60000;
       try {
         const result = execSync(command, {
-          cwd: cwd || process.cwd(),
+          cwd: resolveRequestDir(cwd),
           encoding: "utf-8",
           timeout: timeoutMs || undefined,
           maxBuffer: 10 * 1024 * 1024,
@@ -2125,7 +2163,7 @@ const tools = {
       }
       try {
         const result = execFileSync(bin, args, {
-          cwd: process.cwd(),
+          cwd: getCurrentRequestCwd(),
           encoding: "utf-8",
           timeout: 60000,
           maxBuffer: 10 * 1024 * 1024,
@@ -3467,6 +3505,10 @@ async function probeAllToolCapability() {
  * Invoke AI SDK with a provider, handling tool execution
  */
 async function invokeWithAI(provider, messages, options = {}) {
+  return withRequestCwd(options.cwd, () => invokeWithAIInner(provider, messages, options));
+}
+
+async function invokeWithAIInner(provider, messages, options = {}) {
   const { stream = false, onChunk } = options;
 
   logDebug(`[invokeWithAI] Entry`, {
@@ -4052,7 +4094,7 @@ async function invokeWithAI(provider, messages, options = {}) {
 /**
  * Invoke with automatic fallback through all providers (non-streaming)
  */
-async function invokeWithFallback(messages, route, sessionId = null) {
+async function invokeWithFallback(messages, route, sessionId = null, cwd = null) {
   const triedProviders = [];
   let lastError = null;
   let attemptNumber = 0;
@@ -4118,7 +4160,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
         providerName: provider.name,
         attemptNumber,
       });
-      const result = await invokeWithAI(provider, messages, { stream: false });
+      const result = await invokeWithAI(provider, messages, { stream: false, cwd });
 
       const durationMs = Date.now() - startedAt;
       const textPreview = result.text?.slice(0, 100) || "";
@@ -4383,11 +4425,12 @@ function handleErrorResponse(proxyRes, reject) {
  * @param {string|null} sessionId - OpenClaw session ID for tool proxying
  * @param {Function|null} onDiscordChunk - Optional callback for streaming to Discord (text) => void
  */
-function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordChunk = null) {
+function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordChunk = null, cwd = null) {
   return new Promise((resolve, reject) => {
     const requestBody = JSON.stringify({
       model: "codebuff/base",
       messages,
+      cwd: cwd || getCurrentRequestCwd(),
       stream: true,
     });
 
@@ -4461,6 +4504,7 @@ async function invokeWithFallbackStream(
   onChunk,
   initialExcluded = [],
   sessionId = null,
+  cwd = null,
 ) {
   const triedProviders = [...initialExcluded];
   let lastError = null;
@@ -4502,7 +4546,7 @@ async function invokeWithFallbackStream(
 
     try {
       const startedAt = Date.now();
-      const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
+      const result = await invokeWithAI(provider, messages, { stream: true, onChunk, cwd });
 
       const textPreview = result.text?.slice(0, 100) || "";
       logInfo(
@@ -4957,6 +5001,7 @@ const server = http.createServer(async (req, res) => {
 
       const messages = Array.isArray(body.messages) ? body.messages : undefined;
       const sessionId = req.headers["x-openclaw-session"] || null;
+      const requestCwd = normalizeRequestCwd(body.cwd);
 
       // Fast validation BEFORE route resolution - fail immediately on invalid input
       if (!messages || messages.length === 0) {
@@ -5279,6 +5324,7 @@ const server = http.createServer(async (req, res) => {
               res,
               sessionId,
               streamToDiscord,
+              requestCwd,
             );
 
             clearInterval(heartbeat);
@@ -5364,6 +5410,7 @@ const server = http.createServer(async (req, res) => {
             },
             excludeAfterCodebuff,
             sessionId,
+            requestCwd,
           );
 
           clearInterval(heartbeat);
@@ -5462,7 +5509,7 @@ const server = http.createServer(async (req, res) => {
         // Non-streaming
         let result;
         try {
-          result = await invokeWithFallback(messages, route, sessionId);
+          result = await invokeWithFallback(messages, route, sessionId, requestCwd);
         } finally {
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
