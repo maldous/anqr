@@ -23,6 +23,8 @@ Symphony runner supports concurrent execution via git worktrees. When enabled:
 - Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
 - Lease system prevents concurrent work on the same Linear issue
 - Source-based routing is enforced: `wt1`-`wt4` handle non-Discord work, `wt5`-`wt8` handle Discord-sourced work
+- Linear issues created by linear-guardian are automatically marked with `source: "linear"` for proper routing
+- When Discord interactions create Linear issues, they MUST be marked with `source: "discord"` via patchIssueState()
 - Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
 
 ### Key modules (all under `scripts/ops/integrations/model/`)

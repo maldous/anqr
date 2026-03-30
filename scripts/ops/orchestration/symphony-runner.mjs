@@ -897,7 +897,10 @@ async function executeIssue(issue, dryRun = false) {
   let startingCommentId = null;
   let heartbeatTimer = null;
   try {
-    noteAttemptStart(issue.identifier, { runId: RUN_ID });
+    // Set source for routing: Discord issues already have source="discord", others get "linear"
+    const initialState = getIssueState(issue.identifier);
+    const issueSource = initialState.source || "linear";
+    noteAttemptStart(issue.identifier, { runId: RUN_ID, source: issueSource });
     clearCooldown(issue.identifier);
     // Background heartbeat keeps lease alive during long bridge calls.
     // On failure (lease_mismatch), mark lease lost — runner aborts safely after current call.

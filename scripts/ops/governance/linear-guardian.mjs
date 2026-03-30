@@ -44,6 +44,7 @@ import {
   TITLE_PREFIX,
   REQUIRED_LABEL_IDS,
 } from "../symphony-config.mjs";
+import { patchIssueState } from "../core/symphony-state.mjs";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "..", "..");
@@ -218,6 +219,10 @@ async function processFailingCheck(check, report, queueDepth, dryRun) {
   } else {
     const issue = await createIssue(input);
     logAction("create", `Created ${issue.identifier}: ${title}`);
+    
+    // Mark issue source for worktree routing
+    // Linear-created issues should route to Symphony worktrees (wt1-wt4, main)
+    patchIssueState(issue.identifier, { source: "linear" });
   }
 
   queueDepth++;

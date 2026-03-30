@@ -26,7 +26,7 @@ import {
   getWorktreeBranch,
 } from "../core/worktree-config.mjs";
 
-const { logInfo, logWarn, logError } = createLogger();
+const { logInfo, logWarn, logError, logDebug } = createLogger();
 
 /**
  * Create a new worktree for concurrent Symphony execution

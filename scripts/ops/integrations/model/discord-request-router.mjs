@@ -28,10 +28,12 @@ const WORKTREE_IDS = (process.env.DISCORD_WORKTREES || "5,6,7,8")
   .filter((n) => !isNaN(n));
 const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT || "4", 10);
 
-// Build worktree URLs
+// Build worktree URLs - route to Symphony bridge running in each worktree
+// Port mapping: wt5 -> 4325, wt6 -> 4326, wt7 -> 4327, wt8 -> 4328
+// Each Symphony bridge runs in its worktree directory with isolated working tree
 const WORKTREE_URLS = WORKTREE_IDS.map((id) => ({
   id,
-  url: `http://127.0.0.1:1879${id}`,
+  url: `http://127.0.0.1:432${id}`,
   activeRequests: 0,
 }));
 
@@ -98,12 +100,15 @@ function proxyToWorktree(worktree, req, res) {
 
     const body = Buffer.concat(requestBody).toString();
 
-    // Route to shared gateway at port 18789 (to avoid Bonjour conflicts from multiple gateways)
-    // Note: The load balancing still works - we track concurrent requests per "virtual" worktree
+    // Route to worktree-specific Symphony bridge port
+    // Each worktree runs its own Symphony bridge instance with isolated working directory
+    // This ensures Discord commands execute in the appropriate worktree, not in main
+    const targetPort = 4320 + worktree.id; // wt5->4325, wt6->4326, wt7->4327, wt8->4328
+    
     const proxyReq = http.request(
       {
         hostname: "127.0.0.1",
-        port: 18789, // Shared gateway port (instead of per-worktree 18795-18798)
+        port: targetPort,
         path: "/v1/chat/completions",
         method: "POST",
         headers: {
