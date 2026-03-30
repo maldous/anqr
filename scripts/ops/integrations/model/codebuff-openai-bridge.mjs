@@ -427,6 +427,7 @@ async function testApiKeyInMode(apiKey, index, costMode) {
   });
 
   const runOpts = {
+    agent: MODEL_ID,
     prompt: "Say 'ok' if you can read this.",
     maxAgentSteps: 1,
   };
@@ -958,6 +959,7 @@ async function trySingleAccount(
   };
 
   const runOpts = {
+    agent: MODEL_ID,
     prompt,
     maxAgentSteps: CODEBUFF_MAX_STEPS,
     ...callbacks,
@@ -1002,6 +1004,7 @@ async function trySingleAccount(
     maybeGC();
 
     const contOpts = {
+      agent: MODEL_ID,
       prompt: "Continue with the next step of the task. Complete the remaining work.",
       previousRun: result,
       maxAgentSteps: CODEBUFF_MAX_STEPS,
@@ -1295,6 +1298,7 @@ async function trySingleAccountStream(
   const callbacks = { handleEvent, handleStreamChunk };
 
   const runOpts = {
+    agent: MODEL_ID,
     prompt,
     maxAgentSteps: CODEBUFF_MAX_STEPS,
     ...callbacks,
@@ -1328,6 +1332,7 @@ async function trySingleAccountStream(
     maybeGC();
 
     const contOpts = {
+      agent: MODEL_ID,
       prompt: "Continue with the next step of the task. Complete the remaining work.",
       previousRun: result,
       maxAgentSteps: CODEBUFF_MAX_STEPS,
