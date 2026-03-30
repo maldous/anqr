@@ -33,6 +33,7 @@ const EXPORT_PATH = resolve(PROJECT_ROOT, "reports/linear-export/issues-latest.j
 const INDEX_DIR = resolve(PROJECT_ROOT, "reports/rag-index-linear");
 const _INDEX_FILE = resolve(INDEX_DIR, "index.json");
 const _META_FILE = resolve(INDEX_DIR, "meta.json");
+const LINEAR_EMBEDDING_CONCURRENCY = Number(process.env.LINEAR_RAG_EMBEDDING_CONCURRENCY || 3);
 
 async function saveIndex(indexDir, data) {
   await mkdir(indexDir, { recursive: true });
@@ -136,7 +137,9 @@ async function buildLinearIndex() {
   
   // Generate embeddings
   logInfo("🧠 Generating embeddings...");
-  const embeddings = await generateEmbeddings(chunks.map((chunk) => chunk.content));
+  const embeddings = await generateEmbeddings(chunks.map((chunk) => chunk.content), {
+    maxConcurrency: LINEAR_EMBEDDING_CONCURRENCY,
+  });
   
   const successCount = embeddings.filter((e) => Array.isArray(e) && e.length > 0).length;
   logInfo(`✅ Generated ${successCount}/${chunks.length} embeddings`);

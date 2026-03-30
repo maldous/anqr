@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useDynamicTestId } from "./use-dynamic-test-id";
-import { getRegistry } from "@/ui/web";
+import { getRegistry } from "../../../../packages/ui/web/src/dynamic-testid-registry";
 
 describe("useDynamicTestId", () => {
   beforeEach(() => {

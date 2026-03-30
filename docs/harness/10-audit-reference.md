@@ -27,9 +27,9 @@ The ANQR harness is an AI-assisted engineering automation system that:
 
 ## 2. Systemd Services
 
-| Service                | Timer        | Purpose                                    | Script                             |
-| ---------------------- | ------------ | ------------------------------------------ | ---------------------------------- |
-| `anqr-symphony-runner` | Every 2 min  | Execute issues via AI                      | `symphony-runner.mjs`              |
+| Service                         | Timer        | Purpose                                    | Script                             |
+| -------------------------------- | ------------ | ------------------------------------------ | ---------------------------------- |
+| `anqr-symphony-runner@*`        | Every 2 min  | Execute issues via AI (one worktree per @) | `symphony-runner.mjs`              |
 | `anqr-queue-feeder`    | Every 15 min | Queue maintenance + backup feed            | `symphony-queue-control.mjs --all` |
 | `anqr-nightly`         | Daily 02:00  | Full nightly pipeline                      | `nightly-ops-pass.mjs`             |
 | `anqr-email-ingest`    | Every 5 min  | Email → Linear issues                      | `email-ingest.mjs`                 |
@@ -46,7 +46,9 @@ cp services/systemd/anqr-ops.env ~/.config/systemd/user/
 
 # Edit anqr-ops.env with real API keys
 systemctl --user daemon-reload
-systemctl --user enable --now anqr-symphony-runner.timer
+systemctl --user disable --now anqr-symphony-runner.timer || true
+rm -f ~/.config/systemd/user/anqr-symphony-runner.service ~/.config/systemd/user/anqr-symphony-runner.timer
+systemctl --user enable --now anqr-symphony-runner@{1..4}.timer
 ```
 
 ---

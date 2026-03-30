@@ -286,7 +286,11 @@ The `NODE_OPTIONS=""` override is critical: without it, sonar-scanner's internal
 
 ### Symphony Runner (continuous, every 2 min)
 
-The Symphony runner (`anqr-symphony-runner.timer`) is the execution agent that picks up Todo issues and implements them:
+The Symphony runner is delivered exclusively via the worktree template units (`anqr-symphony-runner@.service` / `.timer`). Instantiate one timer per worktree (`anqr-symphony-runner@1.timer`, `@2`, etc.).
+
+Legacy single-runner units (`anqr-symphony-runner.service`/`.timer`) are retired and now act as no-op reminders; disable/remove them after migrating.
+
+Each active timer kicks off the execution agent loop:
 
 1. Acquires PID lock (prevents overlapping runs)
 2. **Sonar gate**: checks for open `[Sonar]` issues — if any exist, only picks sonar work
@@ -370,11 +374,15 @@ cp services/systemd/anqr-nightly.service ~/.config/systemd/user/
 cp services/systemd/anqr-nightly.timer ~/.config/systemd/user/
 cp services/systemd/anqr-queue-feeder.service ~/.config/systemd/user/
 cp services/systemd/anqr-queue-feeder.timer ~/.config/systemd/user/
-cp services/systemd/anqr-symphony-runner.service ~/.config/systemd/user/
-cp services/systemd/anqr-symphony-runner.timer ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-runner@.service ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-runner@.timer ~/.config/systemd/user/
 cp services/systemd/anqr-email-ingest.service ~/.config/systemd/user/
 cp services/systemd/anqr-email-ingest.timer ~/.config/systemd/user/
 cp services/systemd/anqr-ops.env ~/.config/systemd/user/
+
+# Remove/disable retired single-runner units if they were previously installed
+systemctl --user disable --now anqr-symphony-runner.timer || true
+rm -f ~/.config/systemd/user/anqr-symphony-runner.service ~/.config/systemd/user/anqr-symphony-runner.timer
 
 # Edit env file with real LINEAR_API_KEY
 nano ~/.config/systemd/user/anqr-ops.env
@@ -383,14 +391,14 @@ nano ~/.config/systemd/user/anqr-ops.env
 systemctl --user daemon-reload
 systemctl --user enable --now anqr-nightly.timer
 systemctl --user enable --now anqr-queue-feeder.timer
-systemctl --user enable --now anqr-symphony-runner.timer
+systemctl --user enable --now anqr-symphony-runner@{1..4}.timer
 systemctl --user enable --now anqr-email-ingest.timer
 
 # Verify
 systemctl --user list-timers
 journalctl --user -u anqr-nightly.service --since today
 journalctl --user -u anqr-queue-feeder.service --since today
-journalctl --user -u anqr-symphony-runner.service --since today
+journalctl --user -u 'anqr-symphony-runner@*.service' --since today
 ```
 
 ### Environment Handling

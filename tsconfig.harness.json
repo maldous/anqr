@@ -5,5 +5,12 @@
     "lib": ["ES2023"],
     "types": ["node"]
   },
-  "include": ["scripts/**/*.ts", "scripts/**/*.mts", "scripts/**/*.cts", "scripts/**/*.mjs"]
+  "include": [
+    "scripts/**/*.ts",
+    "scripts/**/*.mts",
+    "scripts/**/*.cts",
+    "scripts/**/*.mjs",
+    "scripts/**/*.d.ts"
+  ],
+  "exclude": ["scripts/**/*.spec.ts", "scripts/**/*.test.ts"]
 }

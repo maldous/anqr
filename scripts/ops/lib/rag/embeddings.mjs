@@ -170,7 +170,7 @@ export async function generateEmbedding(text, options = {}) {
   }
 }
 
-export async function generateEmbeddings(texts) {
+export async function generateEmbeddings(texts, options = {}) {
   if (!Array.isArray(texts) || texts.length === 0) return [];
 
   const available = await isOllamaAvailable();
@@ -179,7 +179,8 @@ export async function generateEmbeddings(texts) {
   }
 
   const results = Array.from({ length: texts.length }, () => null);
-  const workerCount = Math.min(MAX_CONCURRENCY, texts.length);
+  const configuredConcurrency = toPositiveInt(options.maxConcurrency, MAX_CONCURRENCY);
+  const workerCount = Math.min(configuredConcurrency, texts.length);
   let cursor = 0;
   let completed = 0;
 

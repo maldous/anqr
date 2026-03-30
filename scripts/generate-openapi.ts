@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateOpenApi } from "@ts-rest/open-api";
 import { qrApiContract } from "../packages/contracts/api/src";
+// @ts-ignore - harness logger implemented in .mjs for runtime parity
 import { createLogger } from "./ops/lib/logger.mjs";
 
 const { logInfo } = createLogger();

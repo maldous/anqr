@@ -51,10 +51,12 @@ These must not leak into evidence reports or routine docs.
 
 Maintained user services:
 
-- `anqr-symphony-runner`
+- `anqr-symphony-runner@*.service` / `@*.timer` (worktree instances)
 - `anqr-queue-feeder`
 - `anqr-nightly`
 - `anqr-email-ingest` as optional operator integration
+
+Legacy `anqr-symphony-runner.service`/`.timer` installs must be disabled; the files remain only as compatibility shims for stale user directories.
 
 These services assume:
 

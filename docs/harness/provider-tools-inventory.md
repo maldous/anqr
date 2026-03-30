@@ -4,7 +4,7 @@
 
 This document catalogs all tools used by the AI providers in the Symphony bridge ecosystem. Each provider has different tool capabilities that must be supported by the Symphony bridge for OpenClaw compatibility.
 
-**Last Updated**: 2026-03-30 (Documented ANQR-native Context7 + hybrid RAG preference)
+**Last Updated**: 2026-03-30 (Documented ANQR-native Context7 + hybrid/Linear RAG preference)
 
 ---
 
@@ -76,6 +76,11 @@ These are the **currently implemented** tools in the Symphony bridge using the A
     - Schema: `{ query?: string, pattern?: string, prompt?: string }`
     - Use: Route exact searches to `code_search` and natural-language discovery to `find_files`
     - Role: preferred compatibility entrypoint for RAG-style retrieval requests
+
+15. **`search_linear_issues`** - Local Linear issue retrieval
+    - Schema: `{ query: string, limit?: number }`
+    - Use: Search exported/indexed ANQR Linear issues from the local Linear RAG index
+    - Role: preferred fast path for prior issue context before direct Linear API inspection
 
 ---
 
@@ -223,11 +228,12 @@ These tools are exposed via the MCP server for QR code generation:
 Agents should use the bridge tools in this order when possible:
 
 1. `read_docs` for library/framework questions
-2. `find_files` or `file_search` for repository discovery
-3. `code_search` for exact symbol/string matching inside narrowed files
-4. `web_search` only for current external information or when local context is insufficient
+2. `search_linear_issues` for prior ANQR issue history and decision context
+3. `find_files` or `file_search` for repository discovery
+4. `code_search` for exact symbol/string matching inside narrowed files
+5. `web_search` only for current external information or when local context is insufficient
 
-This reflects the ANQR harness posture: prefer local Context7 and local hybrid RAG retrieval before internet search or wide repository scans.
+This reflects the ANQR harness posture: prefer local Context7 and local hybrid/Linear RAG retrieval before internet search or wide repository scans.
 
 ### Missing from Symphony Bridge
 

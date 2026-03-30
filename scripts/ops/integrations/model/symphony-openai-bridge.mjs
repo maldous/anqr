@@ -1405,6 +1405,26 @@ async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
   }
 }
 
+async function searchLinearIssuesTool({ query, limit = 5 }) {
+  try {
+    const results = await searchLinearIssues(query, limit);
+    return {
+      query,
+      count: results.length,
+      results,
+      index: getLinearIndexStats(),
+    };
+  } catch (err) {
+    return {
+      query,
+      count: 0,
+      results: [],
+      error: err?.message || String(err),
+      index: getLinearIndexStats(),
+    };
+  }
+}
+
 // Available tools for the AI SDK
 const tools = {
   code_search: tool({
@@ -1921,6 +1941,20 @@ const tools = {
     }),
     execute: readDocsTool,
   }),
+  search_linear_issues: tool({
+    description:
+      "Search the local Linear RAG index for relevant ANQR issues using cached local retrieval. Prefer this before direct Linear API lookups when you need prior issue context.",
+    inputSchema: z.object({
+      query: z
+        .string()
+        .describe("Natural-language search query for prior Linear issues, incidents, regressions, or decisions"),
+      limit: z
+        .number()
+        .optional()
+        .describe("Maximum number of matches to return. Defaults to 5."),
+    }),
+    execute: searchLinearIssuesTool,
+  }),
 
   // ========================================================================
   // Codebuff-native aliases (critical — these are the canonical tool names
@@ -2288,12 +2322,20 @@ const tools = {
         native_context: {
           context7,
           rag_search: {
-            preferred_tools: ["read_docs", "find_files", "file_search", "code_search"],
+            preferred_tools: [
+              "read_docs",
+              "search_linear_issues",
+              "find_files",
+              "file_search",
+              "code_search",
+            ],
             stats: getHybridSearchStats(),
           },
+          linear_rag: getLinearIndexStats(),
         },
         preferred_workflow: [
           "Use read_docs for library/framework questions before web_search.",
+          "Use search_linear_issues when you need prior ANQR issue context before calling the Linear API directly.",
           "Use find_files or file_search for natural-language repository discovery before broad glob/code scans.",
           "Use code_search after file discovery when exact symbols or strings are needed.",
         ],
@@ -5619,13 +5661,14 @@ server.keepAliveTimeout = 0;
 
 server.listen(PORT, "127.0.0.1", async () => {
   const RETRIEVAL_WARMUP_ENABLED = process.env.ANQR_RETRIEVAL_WARMUP !== "false";
-  let warmupSummary = { bm25: "skipped", vector: "skipped" };
+  let warmupSummary = { bm25: "skipped", vector: "skipped", linear: "skipped" };
 
   if (RETRIEVAL_WARMUP_ENABLED) {
     try {
-      const [bm25Result, vectorResult] = await Promise.allSettled([
+      const [bm25Result, vectorResult, linearResult] = await Promise.allSettled([
         warmSearchIndex({ rootDir: process.cwd() }),
         getVectorIndexStats(),
+        warmLinearIndex(),
       ]);
 
       warmupSummary = {
@@ -5637,6 +5680,10 @@ server.listen(PORT, "127.0.0.1", async () => {
           vectorResult.status === "fulfilled"
             ? `${vectorResult.value.totalEntries} entries / ${vectorResult.value.totalFiles} files`
             : `error: ${vectorResult.reason?.message || vectorResult.reason}`,
+        linear:
+          linearResult.status === "fulfilled"
+            ? `${linearResult.value.length} indexed issues`
+            : `error: ${linearResult.reason?.message || linearResult.reason}`,
       };
     } catch {
       // best effort only
@@ -5644,6 +5691,7 @@ server.listen(PORT, "127.0.0.1", async () => {
   }
 
   const ragStats = getHybridSearchStats();
+  const linearStats = getLinearIndexStats();
   let context7StartupStatus = "unreachable";
   try {
     const res = await fetch(`${CONTEXT7_HTTP_BASE}/health`, {
@@ -5670,7 +5718,10 @@ server.listen(PORT, "127.0.0.1", async () => {
     `Hybrid RAG: indexed=${ragStats.indexed} docs=${ragStats.documentCount} builtAt=${ragStats.builtAt || "n/a"} embeddings=${ragStats.embeddingsAvailable} vectorStore=${ragStats.vectorStoreReady}`,
   );
   logInfo(
-    `Retrieval warmup: bm25=${warmupSummary.bm25} | vector=${warmupSummary.vector} | enabled=${RETRIEVAL_WARMUP_ENABLED}`,
+    `Linear RAG: ready=${linearStats.ready} entries=${linearStats.entries ?? 0} builtAt=${linearStats.builtAt || "n/a"}`,
+  );
+  logInfo(
+    `Retrieval warmup: bm25=${warmupSummary.bm25} | vector=${warmupSummary.vector} | linear=${warmupSummary.linear} | enabled=${RETRIEVAL_WARMUP_ENABLED}`,
   );
   logInfo(`Tools available: ${Object.keys(tools).join(", ")}`);
   logInfo(`========================================`);

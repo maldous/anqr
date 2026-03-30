@@ -44,6 +44,8 @@ Symphony runner supports concurrent execution via git worktrees. When enabled:
 
 - Prefer `read_docs` for framework/library questions before `web_search`
   - ANQR routes this through the local Context7 service on port `4320` first
+- Prefer `search_linear_issues` when prior ANQR issue context, regressions, or historical decisions are relevant
+  - ANQR routes this through the local Linear RAG index instead of hitting the Linear API on every request
 - Prefer `find_files` or `file_search` for repository discovery before broad `code_search`
   - `find_files` uses hybrid BM25 + semantic retrieval backed by the local RAG stack when available
   - `file_search` is the compatibility wrapper that routes to exact or natural-language retrieval as appropriate

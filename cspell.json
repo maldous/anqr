@@ -473,6 +473,7 @@
     "textareas",
     "unstub",
     "iotop",
+    "killall",
     "lookback",
     "oomd"
   ],

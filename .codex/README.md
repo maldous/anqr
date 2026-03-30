@@ -28,10 +28,12 @@ For efficient operation in this repository:
 
 1. Use `read_docs` before `web_search` for framework/library questions.
    - This routes through ANQR's local Context7 service on `http://127.0.0.1:4320` first.
-2. Use `find_files` or `file_search` before broad `code_search`.
+2. Use `search_linear_issues` before direct Linear/API digging when prior ANQR issue context may answer the question.
+   - This routes into ANQR's local Linear RAG index instead of repeated live Linear API calls.
+3. Use `find_files` or `file_search` before broad `code_search`.
    - These route into ANQR's hybrid retrieval stack (BM25 + local RAG/vector search when available).
-3. Use `code_search` after retrieval narrows candidate files.
-4. Avoid main-repo runner execution.
+4. Use `code_search` after retrieval narrows candidate files.
+5. Avoid main-repo runner execution.
    - Harness work should run from worktrees (`/home/user/src/anqr-wt*`) when using Symphony runner paths.
 
 Bridge startup now preloads retrieval state:

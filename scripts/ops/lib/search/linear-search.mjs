@@ -8,7 +8,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { createLogger } from "../logger.mjs";
 import { generateEmbedding, cosineSimilarity } from "../rag/embeddings.mjs";
 
@@ -30,43 +30,99 @@ const PROJECT_ROOT = detectProjectRoot();
 const LINEAR_INDEX_DIR = resolve(PROJECT_ROOT, "reports/rag-index-linear");
 const LINEAR_INDEX_FILE = resolve(LINEAR_INDEX_DIR, "index.json");
 
-/** @type {Array<any> | null} */
+/** @type {{ entries: Array<any>, mtimeMs: number } | null} */
 let linearIndexCache = null;
+
+function normalizeText(value) {
+  return String(value || "").toLowerCase();
+}
+
+function tokenize(value) {
+  return normalizeText(value)
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(/\s+/)
+    .filter((token) => token.length >= 2);
+}
+
+function extractTitle(content) {
+  const match = content.match(/^#\s+([A-Z]+-\d+):\s+(.+)$/m);
+  return match ? match[2] : "(no title)";
+}
+
+function buildSearchEntry(entry) {
+  const title = extractTitle(entry.content);
+  const state = entry.metadata?.state || "Unknown";
+  const priority = entry.metadata?.priority || "None";
+  const updatedAt = entry.metadata?.updatedAt || null;
+  const searchableText = [
+    entry.metadata?.identifier || "",
+    title,
+    state,
+    priority,
+    entry.content,
+  ].join("\n");
+
+  return {
+    ...entry,
+    title,
+    state,
+    priority,
+    updatedAt,
+    excerpt: entry.content.slice(0, 300),
+    searchTokens: tokenize(searchableText),
+    searchableText: normalizeText(searchableText),
+  };
+}
 
 /**
  * Load the Linear RAG index from disk
  * @returns {Promise<Array>}
  */
 async function loadLinearIndex() {
-  if (linearIndexCache) {
-    return linearIndexCache;
-  }
-
   if (!existsSync(LINEAR_INDEX_FILE)) {
     logWarn(`Linear index not found at ${LINEAR_INDEX_FILE}`);
     return [];
   }
 
   try {
+    const stat = statSync(LINEAR_INDEX_FILE);
+    if (linearIndexCache && linearIndexCache.mtimeMs === stat.mtimeMs) {
+      return linearIndexCache.entries;
+    }
+
     const raw = await readFile(LINEAR_INDEX_FILE, "utf-8");
     const parsed = JSON.parse(raw);
-    linearIndexCache = Array.isArray(parsed) ? parsed : [];
-    logInfo(`Loaded Linear index: ${linearIndexCache.length} entries`);
-    return linearIndexCache;
+    const entries = Array.isArray(parsed) ? parsed.map(buildSearchEntry) : [];
+    linearIndexCache = { entries, mtimeMs: stat.mtimeMs };
+    logInfo(`Loaded Linear index: ${entries.length} entries`);
+    return entries;
   } catch (err) {
     logError(`Failed to load Linear index: ${err?.message || err}`);
     return [];
   }
 }
 
-/**
- * Extract title from issue content chunk
- * @param {string} content
- * @returns {string}
- */
-function extractTitle(content) {
-  const match = content.match(/^#\s+([A-Z]+-\d+):\s+(.+)$/m);
-  return match ? match[2] : "(no title)";
+function computeLexicalScore(queryTokens, entry) {
+  if (queryTokens.length === 0) return 0;
+  const tokenSet = new Set(entry.searchTokens);
+  let matched = 0;
+  for (const token of queryTokens) {
+    if (tokenSet.has(token)) matched += 1;
+  }
+
+  const coverage = matched / queryTokens.length;
+  const phraseBoost = entry.searchableText.includes(queryTokens.join(" ")) ? 0.25 : 0;
+  return coverage + phraseBoost;
+}
+
+function computeRecencyBonus(updatedAt) {
+  if (!updatedAt) return 0;
+  const ageMs = Date.now() - new Date(updatedAt).getTime();
+  if (!Number.isFinite(ageMs) || ageMs < 0) return 0;
+  const ageDays = ageMs / (24 * 60 * 60 * 1000);
+  if (ageDays <= 7) return 0.08;
+  if (ageDays <= 30) return 0.04;
+  return 0;
 }
 
 /**
@@ -87,30 +143,47 @@ export async function searchLinearIssues(query, topK = 5) {
     return [];
   }
 
-  // Generate embedding for the query
+  const queryTokens = tokenize(query);
+  const lexicalRanked = index
+    .map((entry) => ({
+      entry,
+      lexicalScore: computeLexicalScore(queryTokens, entry),
+    }))
+    .filter(({ lexicalScore }) => lexicalScore > 0)
+    .sort((a, b) => b.lexicalScore - a.lexicalScore);
+
+  const candidateLimit = lexicalRanked.length > 0 ? Math.min(25, lexicalRanked.length) : index.length;
+  const candidates =
+    lexicalRanked.length > 0
+      ? lexicalRanked.slice(0, candidateLimit)
+      : index.slice(0, Math.min(50, index.length)).map((entry) => ({ entry, lexicalScore: 0 }));
+
+  // Generate embedding for the query. Fall back to lexical ranking if Ollama is unavailable.
   const queryEmbedding = await generateEmbedding(query);
-  if (!Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
-    logError("Failed to embed query — is Ollama running?");
-    return [];
+  const semanticAvailable = Array.isArray(queryEmbedding) && queryEmbedding.length > 0;
+  if (!semanticAvailable) {
+    logWarn("Linear query embedding unavailable — falling back to lexical ranking");
   }
 
-  // Score all entries by cosine similarity
   const scored = [];
-  for (const entry of index) {
-    if (!Array.isArray(entry.embedding) || entry.embedding.length === 0) {
-      continue;
-    }
-
+  for (const { entry, lexicalScore } of candidates) {
     try {
-      const score = cosineSimilarity(queryEmbedding, entry.embedding);
+      const semanticScore =
+        semanticAvailable && Array.isArray(entry.embedding) && entry.embedding.length > 0
+          ? cosineSimilarity(queryEmbedding, entry.embedding)
+          : 0;
+      const score = semanticAvailable
+        ? semanticScore * 0.75 + lexicalScore * 0.2 + computeRecencyBonus(entry.updatedAt)
+        : lexicalScore + computeRecencyBonus(entry.updatedAt);
       scored.push({
         identifier: entry.metadata?.identifier || entry.id || "unknown",
-        title: extractTitle(entry.content),
-        state: entry.metadata?.state || "Unknown",
-        priority: entry.metadata?.priority || "None",
+        title: entry.title,
+        state: entry.state,
+        priority: entry.priority,
         score,
-        excerpt: entry.content.slice(0, 300),
+        excerpt: entry.excerpt,
         content: entry.content,
+        updatedAt: entry.updatedAt,
       });
     } catch (err) {
       logDebug(`Similarity computation failed for ${entry.id}: ${err?.message || err}`);
@@ -136,8 +209,30 @@ export async function searchLinearIssues(query, topK = 5) {
  * @returns {boolean}
  */
 export function isLinearIndexReady() {
-  if (linearIndexCache && linearIndexCache.length > 0) {
+  if (linearIndexCache && linearIndexCache.entries.length > 0) {
     return true;
   }
   return existsSync(LINEAR_INDEX_FILE);
+}
+
+export async function warmLinearIndex() {
+  return loadLinearIndex();
+}
+
+export function getLinearIndexStats() {
+  if (!existsSync(LINEAR_INDEX_FILE)) {
+    return { ready: false, entries: 0 };
+  }
+
+  try {
+    const stat = statSync(LINEAR_INDEX_FILE);
+    return {
+      ready: true,
+      entries: linearIndexCache?.entries?.length || null,
+      builtAt: new Date(stat.mtimeMs).toISOString(),
+      path: LINEAR_INDEX_FILE,
+    };
+  } catch (err) {
+    return { ready: false, error: err?.message || String(err) };
+  }
 }

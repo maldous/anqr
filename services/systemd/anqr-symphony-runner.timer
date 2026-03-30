@@ -1,28 +1,20 @@
-# anqr-symphony-runner.timer — Symphony execution agent schedule
+# anqr-symphony-runner.timer — Retired compatibility timer
 #
-# Fires every 2 minutes after the last activation. Since the service
-# is Type=oneshot, systemd won't start a new instance while one is
-# running. The PID lock in the runner is a backup safety net.
+# Legacy installs should disable/remove this timer and use the worktree template
+# timers instead:
+#   systemctl --user disable --now anqr-symphony-runner.timer
+#   rm ~/.config/systemd/user/anqr-symphony-runner.timer
+#   systemctl --user enable --now anqr-symphony-runner@1.timer
 #
-# If the runner takes 10 min (max execution), the next run starts
-# at ~12 min. If there's no work (exits in <1s), next run is at 2 min.
-#
-# Install:
-#   cp services/systemd/anqr-symphony-runner.timer ~/.config/systemd/user/
-#   systemctl --user daemon-reload
-#   systemctl --user enable --now anqr-symphony-runner.timer
-#
-# Check status:
-#   systemctl --user list-timers
-#   journalctl --user -u anqr-symphony-runner.service --since today
+# Until clean-up happens, this timer only logs a reminder via the no-op service.
 
 [Unit]
-Description=ANQR Symphony runner timer (continuous execution)
+Description=ANQR Symphony runner timer (retired legacy single-runner)
 
 [Timer]
-OnBootSec=5min
-OnUnitActiveSec=2min
-Persistent=true
+OnBootSec=10min
+OnUnitActiveSec=1h
+Persistent=false
 
 [Install]
 WantedBy=timers.target

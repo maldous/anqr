@@ -7,6 +7,20 @@
 import { createLogger } from "../logger.mjs";
 
 const { logDebug } = createLogger("rag-linear-chunker");
+const MAX_DESCRIPTION_CHARS = Number(process.env.LINEAR_RAG_MAX_DESCRIPTION_CHARS || 1800);
+
+function compactWhitespace(value) {
+  return String(value || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function truncateDescription(description) {
+  const compacted = compactWhitespace(description);
+  if (compacted.length <= MAX_DESCRIPTION_CHARS) return compacted;
+  return `${compacted.slice(0, MAX_DESCRIPTION_CHARS).trim()}\n\n[truncated for embedding efficiency]`;
+}
 
 /**
  * Convert a Linear issue to a RAG chunk
@@ -25,7 +39,7 @@ export function chunkLinearIssue(issue) {
   
   const priority = issue.priority || "None";
   const state = issue.state?.name || "Unknown";
-  const description = issue.description || "(no description)";
+  const description = truncateDescription(issue.description || "(no description)");
 
   const content = `
 # ${issue.identifier}: ${issue.title}

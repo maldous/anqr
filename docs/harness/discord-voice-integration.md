@@ -4,6 +4,14 @@
 
 ANQR's Discord integration consists of two distinct components:
 
+### 0. Gateway stabilization (new)
+
+- `services/systemd/anqr-discord-bridge@.service` now launches `scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs`.
+- The singleton keeps a lock file at `~/.cache/anqr-openclaw/gateway.lock`. Only the worktree that acquires the lock actually spawns `openclaw gateway`; the remaining wt5-wt8 instances stay idle but alive.
+- The wrapper runs the gateway without legacy `--host` flags and forces Bonjour/advertiser env vars off, eliminating hostname churn such as `foo (OpenClaw) (4)`.
+- If the active gateway dies, the other worktrees automatically re-compete for the lock and start a fresh instance after a short randomized backoff, preventing restart storms and Discord command 429s.
+- **Update path:** re-copy `services/systemd/anqr-discord-bridge@.service` into `~/.config/systemd/user/`, run `systemctl --user daemon-reload`, then `systemctl --user restart anqr-discord-bridge@{5,6,7,8}.service`.
+
 ### 1. Discord Webhook Integration (ANQR-owned)
 
 **Location**: `scripts/ops/integrations/notifications/discord-webhook.mjs`

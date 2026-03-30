@@ -57,7 +57,7 @@ Restructured copies under subdirectories may exist. The root entrypoints remain 
 Scheduled automation:
 
 - `anqr-symphony-runner@.service` / `.timer` — canonical concurrent runner template using git worktrees
-- `anqr-symphony-runner.service` / `.timer` — legacy single-runner unit; not the canonical execution path once worktree enforcement is enabled
+- `anqr-symphony-runner.service` / `.timer` — retired single-runner units, kept only as no-op compatibility shims until all installs migrate
 - `anqr-queue-feeder.service` / `.timer`
 - `anqr-nightly.service` / `.timer` — 02:00 daily
 - `anqr-rag-rebuild.service` / `.timer` — 03:00 daily, full-repo RAG vector index rebuild via Ollama embeddings

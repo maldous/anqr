@@ -39,6 +39,36 @@ const INCIDENT_TYPES = {
     titlePrefix: "Issue retry exhausted",
     estimate: 2,
   },
+  BUILD_FAILURE: {
+    priority: 0, // P0 - blocks all work
+    titlePrefix: "Build failure",
+    estimate: 2,
+  },
+  DEPLOYMENT_FAILURE: {
+    priority: 0, // P0 - production impact
+    titlePrefix: "Deployment failure",
+    estimate: 2,
+  },
+  TEST_FAILURE: {
+    priority: 1, // P1 - CI breakage
+    titlePrefix: "Test suite failure",
+    estimate: 2,
+  },
+  VALIDATION_FAILURE: {
+    priority: 1, // P1 - quality gate breakage
+    titlePrefix: "Validation failure",
+    estimate: 2,
+  },
+  MONITORING_ALERT: {
+    priority: 1, // P1 - operational issue
+    titlePrefix: "Monitoring alert",
+    estimate: 2,
+  },
+  SERVICE_UNHEALTHY: {
+    priority: 0, // P0 - service down
+    titlePrefix: "Service health check failed",
+    estimate: 3,
+  },
 };
 
 /**

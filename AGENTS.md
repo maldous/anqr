@@ -31,6 +31,7 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 - `find_files` — Find files by natural language description
 - `web_search` — Search web via Linkup API (requires API key)
 - `read_docs` — Fetch library documentation via Context7 API (requires API key)
+- `search_linear_issues` — Search local Linear RAG index for prior issue context
 - `spawn_agents` — Spawn multiple agents in parallel
 - `add_message` — Add message to conversation (Codebuff context only)
 - `set_messages` — Set conversation history (Codebuff context only)
@@ -93,6 +94,7 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 
 - `web_search` — Search web via Linkup API (requires `LINKUP_API_KEY`)
 - `read_docs` — Fetch library documentation via Context7 API (requires `CONTEXT7_API_KEY`)
+- `search_linear_issues` — Search exported/indexed Linear issues via local Linear RAG index
 - `browser_search` — Web search (Groq compatibility alias)
 - `visit_website` — Fetch web pages (best-effort via web search)
 
@@ -103,6 +105,8 @@ Agents should prefer ANQR's local context systems before broad or external searc
 - **Library/framework questions:** use `read_docs` first
   - Symphony bridge resolves via the local Context7 MCP/HTTP service on port `4320` first
   - cloud Context7 is fallback only when local resolution is unavailable
+- **Prior issue context:** use `search_linear_issues` before direct Linear/API digging
+  - this uses ANQR's local Linear RAG index for fast historical issue retrieval
 - **Repository discovery:** use `find_files` or `file_search` before broad `code_search`
   - `find_files` uses ANQR's hybrid retrieval stack (BM25 + semantic embeddings/RAG when available)
   - `file_search` routes exact string/pattern queries to `code_search` and natural-language prompts to `find_files`

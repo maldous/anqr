@@ -47,18 +47,17 @@ Environment=DISCORD_VOICE_CHANNEL_ID=1486262758256410647
 Environment=OPENCLAW_PORT=18789
 Environment=OPENCLAW_GATEWAY_HOST=127.0.0.1
 Environment=OPENCLAW_GATEWAY_PORT=18789
+Environment=OPENCLAW_CONFIG_PATH=%h/src/anqr-wt%i/.openclaw/openclaw.json
+Environment=OPENCLAW_LOCK_DIR=%h/.cache/anqr-openclaw
+Environment=OPENCLAW_CLI=openclaw
 
 # Secrets and overrides
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 EnvironmentFile=-%h/.config/symphony/anqr.env
 
-# Git sync: fetch and rebase origin/main before keeping alive
-# This ensures Discord worktrees stay up-to-date with main branch
-ExecStartPre=-/bin/bash -c 'git fetch origin main && git rebase origin/main || true'
-
-# Start a simple placeholder process - the actual gateway is shared at port 18789
-# This service exists for environment configuration and timer coordination
-ExecStart=/bin/sleep infinity
+# Launch the gateway singleton wrapper so only one OpenClaw gateway process
+# runs across wt5-wt8 and Bonjour advertiser loops stay disabled.
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr-wt%i/scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs
 
 # Logging to journal
 StandardOutput=journal

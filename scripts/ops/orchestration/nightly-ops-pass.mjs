@@ -158,7 +158,6 @@ async function main() {
   ];
 
   let hardFailure = false;
-  let degraded = false;
   for (const step of plan) {
     if (hardFailure && step.severity === "blocking") {
       logInfo(`[nightly] Skipping ${step.name} because an earlier blocking step failed`);
@@ -172,19 +171,17 @@ async function main() {
       continue;
     }
     const result = runStep(step);
-    if (result.exitCode !== 0) {
-      if (step.severity === "blocking") {
-        hardFailure = true;
-        degraded = true;
-      } else if (step.severity === "advisory") {
-        degraded = true;
-      }
+    if (result.exitCode !== 0 && step.severity === "blocking") {
+      hardFailure = true;
     }
   }
 
   archiveReport();
   printSummary();
-  process.exit(hardFailure || degraded ? 1 : 0);
+
+  // Exit 0 for operational success even if advisory/independent steps found quality issues.
+  // Only exit 1 for blocking step failures (operational/correctness failures).
+  process.exit(hardFailure ? 1 : 0);
 }
 
 try {

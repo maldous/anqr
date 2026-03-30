@@ -985,7 +985,7 @@ scripts/ops/nightly-ops-pass.mjs                            — ✅ canonical (o
 scripts/ops/email-ingest.mjs                                — ✅ canonical (integrations)
 scripts/ops/lib/notify.mjs                                  — ✅ canonical (notifications)
 scripts/ops/integrations/model/codebuff-openai-bridge.mjs  — ✅ canonical (provider bridge)
-services/systemd/anqr-symphony-runner.service/.timer        — ✅ canonical (scheduled)
+services/systemd/anqr-symphony-runner.service/.timer        — ⚠️ retired (no-op compatibility shim)
 services/systemd/anqr-queue-feeder.service/.timer           — ✅ canonical (scheduled)
 services/systemd/anqr-nightly.service/.timer                — ✅ canonical (scheduled)
 services/systemd/anqr-email-ingest.service/.timer           — ✅ canonical (scheduled)

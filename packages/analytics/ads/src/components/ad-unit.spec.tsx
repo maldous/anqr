@@ -1,117 +1,262 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render } from "@testing-library/react";
 import { AdUnit } from "./ad-unit";
-import * as CapacitorCore from "@capacitor/core";
 
+// Mock Capacitor
 vi.mock("@capacitor/core", () => ({
   Capacitor: {
     isNativePlatform: vi.fn(() => false),
   },
 }));
 
+// Mock child components
+vi.mock("./ad-placeholder", () => ({
+  AdPlaceholder: ({ slot, width, height, className, format }: any) => (
+    <div
+      data-testid="ad-placeholder"
+      data-slot={slot}
+      data-width={width}
+      data-height={height}
+      data-className={className}
+      data-format={format}
+    >
+      Placeholder: {slot}
+    </div>
+  ),
+}));
+
+vi.mock("./ad-sense", () => ({
+  AdSense: ({ slot, format, responsive, className, width, height }: any) => (
+    <div
+      data-testid="ad-sense"
+      data-slot={slot}
+      data-format={format}
+      data-responsive={String(responsive)}
+      data-className={className}
+      data-width={width}
+      data-height={height}
+    >
+      AdSense: {slot}
+    </div>
+  ),
+}));
+
 describe("AdUnit", () => {
+  const originalEnv = { ...import.meta.env };
+
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.unstubAllEnvs();
+    vi.resetModules();
   });
 
-  it("should render null on native platforms", () => {
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(true);
-    const { container } = render(<AdUnit slot="123456" />);
-    expect(container.firstChild).toBeNull();
+  afterEach(() => {
+    Object.assign(import.meta.env, originalEnv);
   });
 
-  it("should render placeholder in development", () => {
-    vi.stubEnv("PROD", false);
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" />);
-    expect(container.querySelector(".ad-placeholder")).toBeTruthy();
+  // ── Native platform ────────────────────────────────────────────
+
+  describe("Native platform", () => {
+    it("renders null on native platform", async () => {
+      const { Capacitor } = await import("@capacitor/core");
+      vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+
+      const { container } = render(<AdUnit slot="gallery-top" />);
+      expect(container.firstChild).toBeNull();
+    });
   });
 
-  it("should render placeholder when test mode enabled", () => {
-    vi.stubEnv("PROD", true);
-    vi.stubEnv("VITE_ADSENSE_TEST_MODE", "true");
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" />);
-    expect(container.querySelector(".ad-placeholder")).toBeTruthy();
+  // ── Web platform - development ─────────────────────────────────
+
+  describe("Web platform - development", () => {
+    beforeEach(() => {
+      import.meta.env.PROD = false;
+    });
+
+    it("renders placeholder in development", () => {
+      const { getByTestId } = render(<AdUnit slot="gallery-top" />);
+      expect(getByTestId("ad-placeholder")).toBeTruthy();
+    });
+
+    it("passes slot to placeholder", () => {
+      const { getByTestId } = render(<AdUnit slot="gallery-top" />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-slot")).toBe("gallery-top");
+    });
+
+    it("passes default width to placeholder", () => {
+      const { getByTestId } = render(<AdUnit slot="test" />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-width")).toBe("100%");
+    });
+
+    it("passes custom width to placeholder", () => {
+      const { getByTestId } = render(<AdUnit slot="test" width={300} />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-width")).toBe("300");
+    });
+
+    it("passes default height to placeholder", () => {
+      const { getByTestId } = render(<AdUnit slot="test" />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-height")).toBe("90");
+    });
+
+    it("passes custom height to placeholder", () => {
+      const { getByTestId } = render(<AdUnit slot="test" height={250} />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-height")).toBe("250");
+    });
+
+    it("passes className to placeholder", () => {
+      const { getByTestId } = render(<AdUnit slot="test" className="custom-ad" />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-className")).toBe("custom-ad");
+    });
+
+    it("passes format to placeholder", () => {
+      const { getByTestId } = render(<AdUnit slot="test" format="rectangle" />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-format")).toBe("rectangle");
+    });
   });
 
-  it("should render placeholder when slot not configured", () => {
-    vi.stubEnv("PROD", true);
-    vi.stubEnv("VITE_ADSENSE_ENABLED", "true");
-    vi.stubEnv("VITE_ADSENSE_TEST_MODE", "false");
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="invalid-slot" />);
-    expect(container.querySelector(".ad-placeholder")).toBeTruthy();
+  // ── Web platform - production test mode ───────────────────────
+
+  describe("Web platform - production test mode", () => {
+    beforeEach(() => {
+      import.meta.env.PROD = true;
+      import.meta.env.VITE_ADSENSE_TEST_MODE = "true";
+    });
+
+    it("renders placeholder in test mode", () => {
+      const { getByTestId } = render(<AdUnit slot="gallery-top" />);
+      expect(getByTestId("ad-placeholder")).toBeTruthy();
+    });
+
+    it("does not render AdSense in test mode", () => {
+      const { queryByTestId } = render(<AdUnit slot="gallery-top" />);
+      expect(queryByTestId("ad-sense")).toBeNull();
+    });
   });
 
-  it("should render AdSense in production with valid config", () => {
-    vi.stubEnv("PROD", true);
-    vi.stubEnv("VITE_ADSENSE_ENABLED", "true");
-    vi.stubEnv("VITE_ADSENSE_TEST_MODE", "false");
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" />);
-    expect(container.querySelector(".adsbygoogle")).toBeTruthy();
+  // ── Web platform - production with slot ID ────────────────────
+
+  describe("Web platform - production with slot ID", () => {
+    beforeEach(() => {
+      import.meta.env.PROD = true;
+      import.meta.env.VITE_ADSENSE_TEST_MODE = "false";
+      import.meta.env.VITE_ADSENSE_ENABLED = "true";
+    });
+
+    it("renders AdSense when numeric slot provided", () => {
+      const { getByTestId } = render(<AdUnit slot="1234567890" />);
+      expect(getByTestId("ad-sense")).toBeTruthy();
+    });
+
+    it("passes slot to AdSense", () => {
+      const { getByTestId } = render(<AdUnit slot="1234567890" />);
+      const adSense = getByTestId("ad-sense");
+      expect(adSense.getAttribute("data-slot")).toBe("1234567890");
+    });
+
+    it("passes format to AdSense", () => {
+      const { getByTestId } = render(<AdUnit slot="1234567890" format="rectangle" />);
+      const adSense = getByTestId("ad-sense");
+      expect(adSense.getAttribute("data-format")).toBe("rectangle");
+    });
+
+    it("passes responsive to AdSense", () => {
+      const { getByTestId } = render(<AdUnit slot="1234567890" responsive={false} />);
+      const adSense = getByTestId("ad-sense");
+      expect(adSense.getAttribute("data-responsive")).toBe("false");
+    });
+
+    it("passes className to AdSense", () => {
+      const { getByTestId } = render(<AdUnit slot="1234567890" className="custom-ad" />);
+      const adSense = getByTestId("ad-sense");
+      expect(adSense.getAttribute("data-className")).toBe("custom-ad");
+    });
+
+    it("passes numeric width to AdSense", () => {
+      const { getByTestId } = render(<AdUnit slot="1234567890" width={300} />);
+      const adSense = getByTestId("ad-sense");
+      expect(adSense.getAttribute("data-width")).toBe("300");
+    });
+
+    it("does not pass string width to AdSense", () => {
+      const { getByTestId } = render(<AdUnit slot="1234567890" width="100%" />);
+      const adSense = getByTestId("ad-sense");
+      expect(adSense.getAttribute("data-width")).toBe("undefined");
+    });
+
+    it("passes height to AdSense", () => {
+      const { getByTestId } = render(<AdUnit slot="1234567890" height={250} />);
+      const adSense = getByTestId("ad-sense");
+      expect(adSense.getAttribute("data-height")).toBe("250");
+    });
+
+    it("renders placeholder when slot is not numeric", () => {
+      const { getByTestId } = render(<AdUnit slot="gallery-top" />);
+      expect(getByTestId("ad-placeholder")).toBeTruthy();
+    });
+
+    it("renders placeholder when slot is empty string", () => {
+      const { getByTestId } = render(<AdUnit slot="" />);
+      expect(getByTestId("ad-placeholder")).toBeTruthy();
+    });
   });
 
-  it("should pass width to AdSense when numeric", () => {
-    vi.stubEnv("PROD", true);
-    vi.stubEnv("VITE_ADSENSE_ENABLED", "true");
-    vi.stubEnv("VITE_ADSENSE_TEST_MODE", "false");
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" width={300} />);
-    const ins = container.querySelector(".adsbygoogle");
-    expect(ins?.getAttribute("style")).toContain("width");
+  // ── Web platform - production with VITE_ADSENSE_ENABLED=false ─
+
+  describe("Web platform - ADSENSE_ENABLED=false", () => {
+    beforeEach(() => {
+      import.meta.env.PROD = true;
+      import.meta.env.VITE_ADSENSE_TEST_MODE = "false";
+      import.meta.env.VITE_ADSENSE_ENABLED = "false";
+    });
+
+    it("renders placeholder when ads disabled", () => {
+      const { getByTestId } = render(<AdUnit slot="1234567890" />);
+      expect(getByTestId("ad-placeholder")).toBeTruthy();
+    });
   });
 
-  it("should pass height to components", () => {
-    vi.stubEnv("PROD", false);
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" height={250} />);
-    const placeholder = container.querySelector(".ad-placeholder");
-    expect(placeholder?.getAttribute("style")).toContain("250px");
-  });
+  // ── Default props ──────────────────────────────────────────────
 
-  it("should pass className to components", () => {
-    vi.stubEnv("PROD", false);
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" className="my-ad" />);
-    const placeholder = container.querySelector(".ad-placeholder");
-    expect(placeholder?.className).toContain("my-ad");
-  });
+  describe("Default props", () => {
+    beforeEach(() => {
+      import.meta.env.PROD = false;
+    });
 
-  it("should pass format to components", () => {
-    vi.stubEnv("PROD", false);
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" format="rectangle" />);
-    const placeholder = container.querySelector(".ad-placeholder");
-    expect(placeholder?.getAttribute("data-ad-format")).toBe("rectangle");
-  });
+    it("uses default format auto", () => {
+      const { getByTestId } = render(<AdUnit slot="test" />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-format")).toBe("auto");
+    });
 
-  it("should use auto format by default", () => {
-    vi.stubEnv("PROD", false);
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" />);
-    const placeholder = container.querySelector(".ad-placeholder");
-    expect(placeholder?.getAttribute("data-ad-format")).toBe("auto");
-  });
+    it("uses default responsive true", () => {
+      import.meta.env.PROD = true;
+      import.meta.env.VITE_ADSENSE_ENABLED = "true";
+      const { getByTestId } = render(<AdUnit slot="1234567890" />);
+      const adSense = getByTestId("ad-sense");
+      expect(adSense.getAttribute("data-responsive")).toBe("true");
+    });
 
-  it("should handle responsive prop", () => {
-    vi.stubEnv("PROD", true);
-    vi.stubEnv("VITE_ADSENSE_ENABLED", "true");
-    vi.stubEnv("VITE_ADSENSE_TEST_MODE", "false");
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" responsive={false} />);
-    const ins = container.querySelector(".adsbygoogle");
-    expect(ins?.getAttribute("data-full-width-responsive")).toBe("false");
-  });
+    it("uses default width 100%", () => {
+      const { getByTestId } = render(<AdUnit slot="test" />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-width")).toBe("100%");
+    });
 
-  it("should render placeholder when VITE_ADSENSE_ENABLED is false", () => {
-    vi.stubEnv("PROD", true);
-    vi.stubEnv("VITE_ADSENSE_ENABLED", "false");
-    vi.stubEnv("VITE_ADSENSE_TEST_MODE", "false");
-    vi.mocked(CapacitorCore.Capacitor.isNativePlatform).mockReturnValue(false);
-    const { container } = render(<AdUnit slot="123456" />);
-    expect(container.querySelector(".ad-placeholder")).toBeTruthy();
+    it("uses default height 90", () => {
+      const { getByTestId } = render(<AdUnit slot="test" />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-height")).toBe("90");
+    });
+
+    it("uses default className empty string", () => {
+      const { getByTestId } = render(<AdUnit slot="test" />);
+      const placeholder = getByTestId("ad-placeholder");
+      expect(placeholder.getAttribute("data-className")).toBe("");
+    });
   });
 });
