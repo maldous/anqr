@@ -890,6 +890,11 @@ async function trySingleAccount(
       if (!event) return;
       // Text events are delivered via handleStreamChunk; skip to avoid duplication
       if (event.type === "text") return;
+      // Defensive: log event structure if missing expected properties
+      if (!event.type) {
+        logDebug(`handleEvent: event missing type`, { event: JSON.stringify(event).slice(0, 200) });
+        return;
+      }
 
       const type = event.type;
 
@@ -1197,6 +1202,11 @@ async function trySingleAccountStream(
       if (!event) return;
       // Text events are delivered via handleStreamChunk; skip to avoid duplication
       if (event.type === "text") return;
+      // Defensive: log event structure if missing expected properties
+      if (!event.type) {
+        logDebug(`handleEvent: event missing type`, { event: JSON.stringify(event).slice(0, 200) });
+        return;
+      }
 
       const type = event.type;
 
