@@ -132,6 +132,7 @@ import {
   getSearchStats as getHybridSearchStats,
   warmSearchIndex,
 } from "../../lib/search/hybrid-search.mjs";
+import { getLinearIndexStats, searchLinearIssues, warmLinearIndex } from "../../lib/search/linear-search.mjs";
 import { getIndexStats as getVectorIndexStats } from "../../lib/rag/vector-store.mjs";
 
 // Discord message monitoring (listen for user input from Discord text channel)

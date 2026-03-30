@@ -175,6 +175,7 @@ const HIGH_PRIORITY_THRESHOLD = 2; // P0, P1 = high complexity
 const MEDIUM_PRIORITY_THRESHOLD = 4; // P2, P3 = medium complexity
 
 const PROBE_TIMEOUT_MS = 5000;
+const LOCAL_PROBE_TIMEOUT_MS = 15000; // Longer timeout for local bridges (Codebuff on port 4318)
 const CODEX_PROBE_TIMEOUT_MS = 20000;
 const CODEX_SUCCESS_WINDOW_MS = 5 * 60 * 1000;
 
@@ -195,9 +196,12 @@ async function probeWithTimeout(url, options = {}) {
   }
 }
 
-async function probeOpenAIModels(baseUrl, model, apiKey) {
+async function probeOpenAIModels(baseUrl, model, apiKey, isLocal = false) {
+  // Use longer timeout for local bridges (Codebuff on port 4318) which may take 3-5s to respond
+  const timeoutMs = isLocal ? LOCAL_PROBE_TIMEOUT_MS : PROBE_TIMEOUT_MS;
   const res = await probeWithTimeout(`${baseUrl}/models`, {
     headers: { Authorization: `Bearer ${apiKey}` },
+    timeoutMs,
   });
   if (!res || !res.ok) return false;
   const text = await res.text();
@@ -314,7 +318,7 @@ const PROVIDERS = [
     envVar: "CODEBUFF_BRIDGE_API_KEY",
     loadToken: () => "local-bridge",
     failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
-    probe: (p, apiKey) => probeOpenAIModels(p.baseUrl, p.model, apiKey),
+    probe: (p, apiKey) => probeOpenAIModels(p.baseUrl, p.model, apiKey, true), // isLocal=true for codebuff bridge
   },
   {
     name: "groq",
