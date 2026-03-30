@@ -691,6 +691,7 @@ async function readFileTool({ path: filePath, offset, lines }) {
 
     return { content, totalLines };
   } catch (error) {
+    logError(`readFileTool failed: ${error.message}`, { path });
     return { error: error.message };
   }
 }
@@ -733,6 +734,7 @@ async function strReplaceTool({ path: filePath, replacements }) {
 
     return { success: true, path: filePath, replacements: replacementsList.length };
   } catch (error) {
+    logError(`replaceInFileTool failed: ${error.message}`, { path: filePath });
     return { error: error.message };
   }
 }
@@ -752,6 +754,7 @@ async function writeFileTool({ path: filePath, content }) {
 
     return { success: true, path: filePath };
   } catch (error) {
+    logError(`writeFileTool failed: ${error.message}`, { path: filePath });
     return { error: error.message };
   }
 }
@@ -863,6 +866,7 @@ async function listDirectoryTool({ path: dirPath }) {
 
     return { files, directories, path: dirPath };
   } catch (error) {
+    logError(`listDirectoryTool failed: ${error.message}`, { path: dirPath });
     return { error: error.message };
   }
 }
@@ -940,6 +944,7 @@ async function readSubtreeTool({ paths, maxTokens = 50000 }) {
 
     return { entries: result, count: result.length, truncated, maxTokens: normalizedMaxTokens };
   } catch (error) {
+    logError(`readSubtreeTool failed: ${error.message}`, { paths });
     return { error: error.message };
   }
 }
@@ -965,6 +970,7 @@ async function memoryGetTool({ file }) {
     const content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
     return { content, file: fileName, lines: content.split("\n").length };
   } catch (error) {
+    logError(`memoryGetTool failed: ${error.message}`, { file });
     return { error: error.message };
   }
 }
@@ -1079,6 +1085,7 @@ async function proposeStrReplaceTool({ path: filePath, replacements }) {
 
     return { success: true, path: filePath, proposed };
   } catch (error) {
+    logError(`proposeStrReplaceTool failed: ${error.message}`, { path: filePath });
     return { error: error.message };
   }
 }
@@ -1198,6 +1205,7 @@ async function applyPatchTool({ operation }) {
 
     return { error: `Unknown operation type: ${type}` };
   } catch (error) {
+    logError(`executeFileChangeHooksTool failed: ${error.message}`);
     return { error: error.message };
   }
 }
