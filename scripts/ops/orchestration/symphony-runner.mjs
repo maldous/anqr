@@ -32,6 +32,7 @@ import {
   TARGET_MIN,
   RUNNER_STUCK_THRESHOLD_MS,
   HEARTBEAT_INTERVAL_MS,
+  MAX_CONCURRENT_AGENTS,
 } from "../symphony-config.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
@@ -463,12 +464,61 @@ async function maybeRunPreflights() {
   return result;
 }
 
+/**
+ * Determine if this worktree should handle Discord-sourced issues
+ */
+function isDiscordWorktree() {
+  const wtId = WORKTREE_ID.replace(/^wt/, "");
+  return ["5", "6", "7", "8"].includes(wtId);
+}
+
+/**
+ * Determine if this worktree should handle Symphony (non-Discord) issues
+ */
+function isSymphonyWorktree() {
+  const wtId = WORKTREE_ID.replace(/^wt/, "");
+  return ["main", "1", "2", "3", "4"].includes(wtId);
+}
+
+/**
+ * Check if an issue originated from Discord
+ */
+function isDiscordIssue(issue) {
+  const state = getIssueState(issue.identifier);
+  return (state.source || "").toLowerCase().includes("discord");
+}
+
 async function pickIssue({ excludeIds = new Set(), baselineOnly = false } = {}) {
   const todoIssues = await listIssuesByState(QUEUE_STATES.readyStates);
+  
+  // IMPORTANT: Worktree routing to prevent concurrent conflicts
+  // - Discord issues (wt5-wt8) are routed to Discord worktrees only
+  // - Symphony issues (wt1-wt4, main) handle all other work
+  const isDiscordWt = isDiscordWorktree();
+  const isSymphonyWt = isSymphonyWorktree();
+  
   const candidates = todoIssues
     .filter((issue) => !excludeIds.has(issue.id))
     .filter((issue) => canExecuteIssue(issue))
     .filter((issue) => (baselineOnly ? isBaselineRepairIssue(issue) : true))
+    .filter((issue) => {
+      // Worktree routing based on issue source
+      const fromDiscord = isDiscordIssue(issue);
+      
+      // Discord worktrees (wt5-wt8) only handle Discord issues
+      if (isDiscordWt && !fromDiscord) {
+        logDebug(`[runner] Skipping non-Discord issue ${issue.identifier} (Discord worktree)`);
+        return false;
+      }
+      
+      // Symphony worktrees (wt1-wt4, main) only handle non-Discord issues
+      if (isSymphonyWt && fromDiscord) {
+        logDebug(`[runner] Skipping Discord issue ${issue.identifier} (Symphony worktree)`);
+        return false;
+      }
+      
+      return true;
+    })
     .sort(
       (a, b) =>
         (a.priority ?? 99) - (b.priority ?? 99) || new Date(a.createdAt) - new Date(b.createdAt),
@@ -617,15 +667,12 @@ async function executeIssue(issue, dryRun = false) {
   // Capture prior failure info BEFORE noteAttemptStart clears it (used for fingerprinting)
   const _priorFailureReason = state.last_failure_reason;
   const priorFailureSignature = state.last_failure_signature;
-  const attempt = Number(state.retry_count || 0) + 1;
-  logInfo(
-    `[runner] Attempt ${attempt}/${RUNNER_MAX_RETRIES} for ${issue.identifier}: ${issue.title}`,
-  );
-
-
 
   // Check retry limit BEFORE acquiring lease or incrementing retry_count
   if (state.retry_count >= RUNNER_MAX_RETRIES) {
+    logInfo(
+      `[runner] Issue ${issue.identifier} has exhausted retries (${state.retry_count}/${RUNNER_MAX_RETRIES}) — moving to Backlog`,
+    );
     await updateIssue(issue.id, { stateId: STATES.backlog });
     markRetryExhausted(issue.identifier, { reason: "retry_exhausted" });
     recordTransition(issue.identifier, {
@@ -650,6 +697,12 @@ async function executeIssue(issue, dryRun = false) {
     }
     return "skip";
   }
+
+  // Calculate attempt number after retry check passes
+  const attempt = Number(state.retry_count || 0) + 1;
+  logInfo(
+    `[runner] Attempt ${attempt}/${RUNNER_MAX_RETRIES} for ${issue.identifier}: ${issue.title}`,
+  );
 
   const leaseNonce = `${RUN_ID}:${issue.identifier}:${Date.now()}`;
   const lease = acquireLease(issue.identifier, {
@@ -1537,6 +1590,13 @@ ${String(r.detail).slice(0, 1000)}\n`,
     }).trim();
 
     // Send single consolidated Discord notification on completion
+    // Get queue snapshot for concurrent runner context
+    const queueSnap = await getQueueSnapshot();
+    const activeRunners = queueSnap.inProgress.automatable.length;
+    const maxRunners = MAX_CONCURRENT_AGENTS;
+    const worktreeValue = `${WORKTREE_ID} (${activeRunners}/${maxRunners} active)`;
+    const queueValue = `${queueSnap.readyDepth} issues ready`;
+
     await sendDiscordEmbed({
       title: issue.identifier,
       description: issue.title,
@@ -1544,7 +1604,8 @@ ${String(r.detail).slice(0, 1000)}\n`,
       fields: [
         { name: "Status", value: finalStateName, inline: true },
         { name: "Provider", value: metricsProviderName, inline: true },
-        { name: "Worktree", value: WORKTREE_ID, inline: true },
+        { name: "Worktree", value: worktreeValue, inline: true },
+        { name: "Queue", value: queueValue, inline: true },
         { name: "Files Changed", value: String(changedFiles.length), inline: true },
         { name: "Turns", value: String(agentResult.turns), inline: true },
         { name: "Validation", value: validation.passed ? "✅ Passed" : "❌ Failed", inline: true },
@@ -1644,6 +1705,16 @@ async function main() {
   }
   logInfo(`[runner]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
   logInfo(`[runner] Worktree: ${WORKTREE_ID}, Root: ${ROOT}`);
+  
+  // Log worktree routing configuration
+  if (isDiscordWorktree()) {
+    logInfo(`[runner] 🎮 Discord worktree mode: handling ONLY Discord-sourced issues`);
+  } else if (isSymphonyWorktree()) {
+    logInfo(`[runner] 🎼 Symphony worktree mode: handling non-Discord issues`);
+  } else {
+    logWarn(`[runner] ⚠️ Unknown worktree type: ${WORKTREE_ID} - will handle all issues`);
+  }
+  
   if (!process.env.LINEAR_API_KEY) {
     logError("[runner] LINEAR_API_KEY is not set");
     process.exit(1);
@@ -1705,8 +1776,10 @@ async function main() {
       }
 
       // Now check if we need to feed more issues from Backlog
+      // CRITICAL: Use readyDepth (Todo count), not queueDepth (includes In Progress)
+      // Runners pick from Todo only, so that's what matters
       const freshSnap = await getQueueSnapshot();
-      if (freshSnap.queueDepth < TARGET_MIN) await feedQueue(freshSnap, false);
+      if (freshSnap.readyDepth < TARGET_MIN) await feedQueue(freshSnap, false);
     }
 
     // SECOND: Pick and execute issues (now with recovered issues in Todo)
@@ -1721,15 +1794,17 @@ async function main() {
         continue;
       }
       // After completing an issue (success or handled outcome), feed queue to eliminate idle gap
+      // CRITICAL: Use readyDepth (Todo count), not queueDepth (includes In Progress)
       const snap = await getQueueSnapshot();
-      if (snap.queueDepth < TARGET_MIN) await feedQueue(snap, false);
+      if (snap.readyDepth < TARGET_MIN) await feedQueue(snap, false);
       executed = true;
     }
 
     // After processing (whether an issue was executed or not), feed to keep queue topped up and eliminate idle gap
+    // CRITICAL: Use readyDepth (Todo count), not queueDepth (includes In Progress)
     if (!dryRun) {
       const finalSnap = await getQueueSnapshot();
-      if (finalSnap.queueDepth < TARGET_MIN) await feedQueue(finalSnap, false);
+      if (finalSnap.readyDepth < TARGET_MIN) await feedQueue(finalSnap, false);
     }
 
     if (!executed) {

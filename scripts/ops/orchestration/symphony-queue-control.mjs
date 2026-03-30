@@ -136,11 +136,13 @@ function printQueueHealth(snap) {
 
 export async function feedQueue(snap = null, dryRun = false) {
   const live = snap || (await getQueueSnapshot());
-  const deficit = TARGET_MIN - live.queueDepth;
+  // CRITICAL: Feed based on Todo (runnable) count, not In Progress
+  // Runners pick from Todo only, so that's what matters for keeping runners busy
+  const deficit = TARGET_MIN - live.readyDepth;
   if (deficit <= 0) {
     logAction(
       "info",
-      `Queue depth ${live.queueDepth} >= target_min ${TARGET_MIN} — no feeding needed`,
+      `Ready depth ${live.readyDepth} >= target_min ${TARGET_MIN} — no feeding needed`,
     );
     return;
   }
@@ -172,11 +174,12 @@ export async function feedQueue(snap = null, dryRun = false) {
 
 async function drainOverflow(snap = null, dryRun = false) {
   const live = snap || (await getQueueSnapshot());
-  const excess = live.queueDepth - TARGET_MAX;
+  // Drain based on Todo (runnable) count - that's what runners actually pick from
+  const excess = live.readyDepth - TARGET_MAX;
   if (excess <= 0) {
     logAction(
       "info",
-      `Queue depth ${live.queueDepth} <= target_max ${TARGET_MAX} — no draining needed`,
+      `Ready depth ${live.readyDepth} <= target_max ${TARGET_MAX} — no draining needed`,
     );
     return;
   }
