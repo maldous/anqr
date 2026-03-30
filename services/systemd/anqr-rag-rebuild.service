@@ -17,19 +17,19 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/user/src/anqr
+WorkingDirectory=%h/src/anqr
 
 # Explicit PATH — nvm Node is not on default systemd PATH
-Environment=PATH=/home/user/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-Environment=HOME=/home/user
-Environment=NODE_PATH=/home/user/.nvm/versions/node/v25.8.0/lib/node_modules
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 Environment=NODE_OPTIONS=--max-old-space-size=8192
 Environment=OLLAMA_API_BASE=http://localhost:11434
 
 # Secrets and overrides
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/lib/rag/build-index.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/lib/rag/build-index.mjs
 
 # Logging to journal
 StandardOutput=journal

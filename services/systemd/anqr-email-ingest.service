@@ -15,12 +15,12 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-Environment=PATH=/home/user/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-Environment=HOME=/home/user
-Environment=NODE_PATH=/home/user/.nvm/versions/node/v25.8.0/lib/node_modules
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
-WorkingDirectory=/home/user/src/anqr
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/email-ingest.mjs
+WorkingDirectory=%h/src/anqr
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/email-ingest.mjs
 TimeoutStartSec=180
 StandardOutput=journal
 StandardError=journal

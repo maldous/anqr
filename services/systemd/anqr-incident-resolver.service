@@ -1,13 +1,15 @@
 [Unit]
 Description=ANQR Incident Auto-Resolver
-Documentation=docs/harness/README.md
 After=network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/user/src/anqr
-EnvironmentFile=/home/user/src/anqr/services/systemd/anqr-ops.env
-ExecStart=/usr/bin/node scripts/ops/integrations/linear/incident-resolution.mjs
+WorkingDirectory=%h/src/anqr
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/integrations/linear/incident-resolution.mjs
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=anqr-incident-resolver

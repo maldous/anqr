@@ -4,7 +4,7 @@
 
 This document catalogs all tools used by the AI providers in the Symphony bridge ecosystem. Each provider has different tool capabilities that must be supported by the Symphony bridge for OpenClaw compatibility.
 
-**Last Updated**: 2026-03-27 (Added find_files, web_search, read_docs)
+**Last Updated**: 2026-03-30 (Documented ANQR-native Context7 + hybrid RAG preference)
 
 ---
 
@@ -59,6 +59,7 @@ These are the **currently implemented** tools in the Symphony bridge using the A
 11. **`find_files`** - Natural language file search
     - Schema: `{ prompt: string }`
     - Use: Find files by description or function/class name
+    - Implementation: local hybrid search (BM25 + semantic embeddings/RAG when available), then basic fallback
 
 12. **`web_search`** - Web search capability via Linkup API
     - Schema: `{ query: string, depth?: "standard" | "deep" }`
@@ -68,7 +69,13 @@ These are the **currently implemented** tools in the Symphony bridge using the A
 13. **`read_docs`** - Library documentation via Context7 API
     - Schema: `{ libraryTitle: string, topic: string, max_tokens?: number }`
     - Use: Fetch up-to-date library/framework documentation
-    - Requires: `CONTEXT7_API_KEY` or `DOCS_API_KEY` environment variable
+    - Implementation: local Context7 MCP/HTTP service first, cloud Context7 fallback second
+    - Cloud fallback requires: `CONTEXT7_API_KEY` or `DOCS_API_KEY`
+
+14. **`file_search`** - Compatibility retrieval wrapper
+    - Schema: `{ query?: string, pattern?: string, prompt?: string }`
+    - Use: Route exact searches to `code_search` and natural-language discovery to `find_files`
+    - Role: preferred compatibility entrypoint for RAG-style retrieval requests
 
 ---
 
@@ -210,6 +217,17 @@ These tools are exposed via the MCP server for QR code generation:
 ---
 
 ## Tool Coverage Gap Analysis
+
+### Native-first usage guidance
+
+Agents should use the bridge tools in this order when possible:
+
+1. `read_docs` for library/framework questions
+2. `find_files` or `file_search` for repository discovery
+3. `code_search` for exact symbol/string matching inside narrowed files
+4. `web_search` only for current external information or when local context is insufficient
+
+This reflects the ANQR harness posture: prefer local Context7 and local hybrid RAG retrieval before internet search or wide repository scans.
 
 ### Missing from Symphony Bridge
 

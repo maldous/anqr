@@ -143,15 +143,15 @@ systemctl --user start 'anqr-symphony-runner@*.timer'
 
 ## Emergency Rollback
 
-If concurrent execution causes issues, return to single runner:
+If concurrent execution causes issues, reduce to a minimal worktree footprint:
 
 ```bash
 # Stop all worktree runners
 systemctl --user stop 'anqr-symphony-runner@*.timer'
 systemctl --user disable 'anqr-symphony-runner@*.timer'
 
-# Start original single runner
-systemctl --user start anqr-symphony-runner.timer
+# Re-enable a single worktree runner only
+systemctl --user enable --now anqr-symphony-runner@1.timer
 
 # Optionally clean up worktrees
 node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
@@ -182,10 +182,10 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
 
 - Each worktree syncs with `origin/main` **twice** during execution:
   1. **Initial sync** before starting work (via `git fetch origin main && git merge origin/main --ff-only`)
-  2. **Pre-validation sync** before validation (via `git merge origin/main --no-commit --no-ff`)
+  2. **Pre-validation sync** before validation (save patch -> fast-forward to `origin/main` -> replay patch with `git apply --index --3way`)
 - Completed work is pushed to `origin/main` immediately after commit (with automatic retry + rebase)
 - **This means:** Work from other worktrees becomes visible when syncing with origin
-- **Pre-validation sync catches conflicts early** before wasting time on validation
+- **Pre-validation replay catches conflicts early** before wasting time on validation
 
 **Example flow:**
 

@@ -19,12 +19,12 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/user/src/anqr
+WorkingDirectory=%h/src/anqr
 
 # Explicit PATH — nvm Node is not on default systemd PATH
-Environment=PATH=/home/user/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-Environment=HOME=/home/user
-Environment=NODE_PATH=/home/user/.nvm/versions/node/v25.8.0/lib/node_modules
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 
 # Router configuration
 Environment=DISCORD_ROUTER_PORT=18790
@@ -32,11 +32,11 @@ Environment=DISCORD_WORKTREES=5,6,7,8
 Environment=MAX_CONCURRENT=4
 
 # Secrets and overrides
-EnvironmentFile=-/home/user/.config/systemd/user/anqr-ops.env
-EnvironmentFile=-/home/user/.config/symphony/anqr.env
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+EnvironmentFile=-%h/.config/symphony/anqr.env
 
 # Start the Discord request router
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node /home/user/src/anqr/scripts/ops/integrations/model/discord-request-router.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/scripts/ops/integrations/model/discord-request-router.mjs
 
 # Logging to journal
 StandardOutput=journal

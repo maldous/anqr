@@ -3,8 +3,8 @@
 # Picks up Todo issues from Linear, executes them via AI agent,
 # validates results, and commits changes.
 #
-# Triggered by anqr-symphony-runner.timer (every 2-3 min).
-# Only runs if the PID lock is available (prevents overlap).
+# Legacy single-runner unit for non-worktree setups.
+# Canonical execution uses anqr-symphony-runner@.service worktree instances.
 #
 # Install as user service:
 #   cp services/systemd/anqr-symphony-runner.service ~/.config/systemd/user/

@@ -33,11 +33,16 @@ function getEnabledTimers() {
   try {
     const output = execFileSync(
       "systemctl",
-      ["--user", "list-unit-files", "anqr-symphony-runner@*.timer", "--state=enabled", "--no-legend"],
-      { encoding: "utf-8" }
+      ["--user", "list-timers", "anqr-symphony-runner@*.timer", "--all", "--no-legend"],
+      { encoding: "utf-8" },
     );
-    const lines = output.trim().split("\n").filter(Boolean);
-    return lines.map(line => line.split(/\s+/)[0]);
+    const lines = output
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    return lines
+      .map((line) => line.split(/\s+/).slice(-2, -1)[0])
+      .filter((unit) => unit?.startsWith("anqr-symphony-runner@"));
   } catch {
     return [];
   }

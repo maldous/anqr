@@ -15,11 +15,11 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/user/src/anqr
+WorkingDirectory=%h/src/anqr
 
 # Explicit PATH for git and node commands
-Environment=PATH=/home/user/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-Environment=HOME=/home/user
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
 
 # Check interval (every 60 seconds)
 Environment=WATCHDOG_CHECK_INTERVAL=60
@@ -27,7 +27,7 @@ Environment=WATCHDOG_CHECK_INTERVAL=60
 # Systemd env overrides
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/runtime/watchdog/bridge-watchdog.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/runtime/watchdog/bridge-watchdog.mjs
 
 # Logging to journal
 StandardOutput=journal

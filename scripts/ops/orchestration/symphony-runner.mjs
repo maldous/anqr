@@ -295,6 +295,88 @@ function gitRevert() {
   }
 }
 
+function getRepoHeadSha(ref = "HEAD") {
+  return execFileSync("git", ["rev-parse", ref], {
+    cwd: ROOT,
+    encoding: "utf-8",
+  }).trim();
+}
+
+function writePreValidationPatch(changedFiles) {
+  const patchFile = resolve(ROOT, ".git", `SYMPHONY_PREVALIDATION_${Date.now()}.patch`);
+  const filesToCapture = [...new Set((changedFiles || []).map((file) => normalizeRepoPath(file)).filter(Boolean))];
+  const args = ["diff", "--binary", "--full-index", "HEAD"];
+  if (filesToCapture.length > 0) args.push("--", ...filesToCapture);
+  const patch = execFileSync("git", args, {
+    cwd: ROOT,
+    encoding: "utf-8",
+    stdio: "pipe",
+  });
+  writeFileSync(patchFile, patch, "utf-8");
+  return patchFile;
+}
+
+function removeTempFile(filePath) {
+  if (!filePath) return;
+  try {
+    unlinkSync(filePath);
+  } catch {}
+}
+
+function syncWorktreeBeforeValidation(changedFiles) {
+  const previousHead = getRepoHeadSha("HEAD");
+  let patchFile = null;
+
+  try {
+    patchFile = writePreValidationPatch(changedFiles);
+    execFileSync("git", ["reset", "--hard", "HEAD"], { cwd: ROOT, stdio: "pipe" });
+    execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
+    execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
+    execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
+
+    const patchSize = statSync(patchFile).size;
+    if (patchSize > 0) {
+      execFileSync("git", ["apply", "--index", "--3way", patchFile], {
+        cwd: ROOT,
+        stdio: "pipe",
+      });
+    }
+
+    removeTempFile(patchFile);
+    return { ok: true };
+  } catch (err) {
+    const stderr = err.stderr?.toString?.() || "";
+    const stdout = err.stdout?.toString?.() || "";
+    const conflictDetected =
+      stderr.includes("CONFLICT") ||
+      stdout.includes("CONFLICT") ||
+      stderr.includes("patch does not apply") ||
+      stdout.includes("patch does not apply") ||
+      stderr.includes("could not build fake ancestor") ||
+      stdout.includes("could not build fake ancestor");
+
+    try {
+      execFileSync("git", ["merge", "--abort"], { cwd: ROOT, stdio: "pipe" });
+    } catch {}
+    try {
+      execFileSync("git", ["rebase", "--abort"], { cwd: ROOT, stdio: "pipe" });
+    } catch {}
+    try {
+      execFileSync("git", ["reset", "--hard", previousHead], { cwd: ROOT, stdio: "pipe" });
+      execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
+      if (patchFile && existsSync(patchFile) && statSync(patchFile).size > 0) {
+        execFileSync("git", ["apply", patchFile], { cwd: ROOT, stdio: "pipe" });
+      }
+    } catch (restoreErr) {
+      logError(`[runner] Failed to restore pre-validation state: ${restoreErr.message}`);
+    } finally {
+      removeTempFile(patchFile);
+    }
+
+    return { ok: false, conflictDetected, error: err };
+  }
+}
+
 const SCOPE_RULES = [
   { pattern: /^src\/domain\//, scope: "domain" },
   { pattern: /^src\/platform\//, scope: "platform" },
@@ -1327,77 +1409,60 @@ async function executeIssue(issue, dryRun = false) {
       return "done";
     }
 
-    // Sync with main before validation to catch conflicts early and validate against current code
+    // Rebase uncommitted work onto latest main before validation without creating merge commits.
+    // This keeps each worktree isolated while ensuring validation runs against current shared git state.
     if (WORKTREE_ID !== "main") {
-      try {
-        execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
-        // Try to merge - will auto-complete if no conflicts
-        execFileSync("git", ["merge", "origin/main"], {
-          cwd: ROOT,
-          stdio: "pipe",
-        });
-        logInfo(`[runner] Pre-validation sync: merged latest changes from main`);
-      } catch (err) {
-        // Check if merge is in progress (indicates conflict)
-        const mergeHeadPath = resolve(ROOT, ".git", "MERGE_HEAD");
-        const hasConflicts = existsSync(mergeHeadPath);
-
-        if (hasConflicts) {
-          // Abort merge and revert our changes - another worktree's work takes precedence
-          try {
-            execFileSync("git", ["merge", "--abort"], { cwd: ROOT, stdio: "pipe" });
-          } catch {}
-          gitRevert();
-
-          const conflictSignature = "merge_conflict_before_validation";
-          if (priorFailureSignature === conflictSignature) {
-            markRetryExhausted(issue.identifier, {
-              reason: "merge_conflict_repeated",
-              signature: conflictSignature,
-            });
-            await updateIssue(issue.id, { stateId: STATES.backlog });
-            await addComment(
-              issue.id,
-              `🚫 **Merge conflict with main (repeated)** — another worktree's changes conflict with this work. Moved to Backlog for manual review.`,
-            );
-            recordTransition(issue.identifier, {
-              actor: "runner",
-              reason: "merge_conflict_repeated",
-              from: "In Progress",
-              to: "Backlog",
-              runId: RUN_ID,
-            });
-          } else {
-            setCooldown(
-              issue.identifier,
-              RUNNER_ISSUE_COOLDOWN_MS,
-              "merge_conflict_before_validation",
-              conflictSignature,
-            );
-            await updateIssue(issue.id, { stateId: STATES.todo });
-            await addComment(
-              issue.id,
-              `⚠️ **Merge conflict with main** — another worktree completed conflicting changes. Returned to Todo with cooldown.`,
-            );
-            recordTransition(issue.identifier, {
-              actor: "runner",
-              reason: "merge_conflict_before_validation",
-              from: "In Progress",
-              to: "Todo",
-              runId: RUN_ID,
-            });
-          }
-          recordLinearCompletion(metricsProviderName, {
-            completed: false,
-            priority: issue.priority,
-            estimate: issue.estimate,
+      const syncResult = syncWorktreeBeforeValidation(changedFiles);
+      if (syncResult.ok) {
+        logInfo(`[runner] Pre-validation sync: replayed local changes onto latest origin/main`);
+      } else if (syncResult.conflictDetected) {
+        const conflictSignature = "merge_conflict_before_validation";
+        if (priorFailureSignature === conflictSignature) {
+          markRetryExhausted(issue.identifier, {
+            reason: "merge_conflict_repeated",
+            signature: conflictSignature,
           });
-          return "done";
+          await updateIssue(issue.id, { stateId: STATES.backlog });
+          await addComment(
+            issue.id,
+            `🚫 **Merge conflict with main (repeated)** — another worktree's changes conflict with this work. Moved to Backlog for manual review.`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "merge_conflict_repeated",
+            from: "In Progress",
+            to: "Backlog",
+            runId: RUN_ID,
+          });
         } else {
-          // Other merge error (not conflicts)
-          logWarn(`[runner] Pre-validation sync failed (non-fatal): ${err.message}`);
-          // Continue with validation using original changes
+          setCooldown(
+            issue.identifier,
+            RUNNER_ISSUE_COOLDOWN_MS,
+            "merge_conflict_before_validation",
+            conflictSignature,
+          );
+          await updateIssue(issue.id, { stateId: STATES.todo });
+          await addComment(
+            issue.id,
+            `⚠️ **Merge conflict with main** — another worktree completed conflicting changes. Returned to Todo with cooldown.`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "merge_conflict_before_validation",
+            from: "In Progress",
+            to: "Todo",
+            runId: RUN_ID,
+          });
         }
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+        return "done";
+      } else {
+        logWarn(`[runner] Pre-validation sync failed (non-fatal): ${syncResult.error.message}`);
+        // Continue with validation using the restored working tree state.
       }
     }
 

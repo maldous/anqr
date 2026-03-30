@@ -79,12 +79,31 @@ export function createWorktree(id) {
   }
 
   try {
-    // Create worktree with new branch tracking main
-    execFileSync("git", ["worktree", "add", "-b", branchName, worktreePath, "main"], {
+    // Prefer a fresh origin/main baseline so newly-created worktrees do not
+    // inherit stale local main state.
+    let baseRef = "main";
+    try {
+      execFileSync("git", ["fetch", "origin", "main"], {
+        cwd: PROJECT_ROOT,
+        stdio: "pipe",
+      });
+      execFileSync("git", ["rev-parse", "--verify", "origin/main"], {
+        cwd: PROJECT_ROOT,
+        stdio: "pipe",
+      });
+      baseRef = "origin/main";
+    } catch (err) {
+      logWarn(
+        `Could not refresh origin/main for worktree ${id}; falling back to local main: ${err.message}`,
+      );
+    }
+
+    // Create worktree with new branch tracking the freshest available mainline ref.
+    execFileSync("git", ["worktree", "add", "-b", branchName, worktreePath, baseRef], {
       cwd: PROJECT_ROOT,
       stdio: "inherit",
     });
-    logInfo(`✅ Created worktree: ${worktreePath} (branch: ${branchName})`);
+    logInfo(`✅ Created worktree: ${worktreePath} (branch: ${branchName}, base: ${baseRef})`);
 
     // Install dependencies in worktree
     logInfo(`📦 Installing dependencies in ${worktreePath}...`);

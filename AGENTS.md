@@ -96,6 +96,21 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 - `browser_search` — Web search (Groq compatibility alias)
 - `visit_website` — Fetch web pages (best-effort via web search)
 
+### Native context preference
+
+Agents should prefer ANQR's local context systems before broad or external search:
+
+- **Library/framework questions:** use `read_docs` first
+  - Symphony bridge resolves via the local Context7 MCP/HTTP service on port `4320` first
+  - cloud Context7 is fallback only when local resolution is unavailable
+- **Repository discovery:** use `find_files` or `file_search` before broad `code_search`
+  - `find_files` uses ANQR's hybrid retrieval stack (BM25 + semantic embeddings/RAG when available)
+  - `file_search` routes exact string/pattern queries to `code_search` and natural-language prompts to `find_files`
+- **Exact symbol/string lookup:** use `code_search` after file discovery narrows the search surface
+- **External web lookups:** use `web_search` only when current external information is actually needed, or when local docs/repo context are insufficient
+
+This keeps agent operation cheaper, faster, and more stable than defaulting to broad file scans or internet search.
+
 **Progress tracking:**
 
 - `think_deeply` — Deep reasoning for complex tasks
@@ -413,10 +428,11 @@ When running in a worktree (Symphony runner with concurrency enabled):
 
 - **Working directory:** Each runner operates in an isolated worktree directory (e.g., `/home/user/src/anqr-wt1`, `/home/user/src/anqr-wt2`)
 - **Environment variables:**
-  - `ANQR_WORKTREE_ID` — Worktree identifier (e.g., `wt1`, `wt2`, or `main` for non-worktree)
+  - `ANQR_WORKTREE_ID` — Worktree identifier (e.g., `wt1`, `wt2`)
   - `ANQR_WORKTREE_PATH` — Absolute path to worktree directory
 - **Branch isolation:** Each worktree uses a unique branch (e.g., `symphony/wt1`, `symphony/wt2`) that tracks `origin/main`
 - **Git operations:** All git commands (status, add, commit, push) operate on the worktree's isolated working directory and index
+- **Main repo restriction:** `scripts/ops/orchestration/symphony-runner.mjs` refuses to execute from the main repository without worktree context; use a worktree or set `ANQR_WORKTREE_ID`/`ANQR_WORKTREE_PATH` explicitly
 - **Sync workflow:** Worktrees sync with `origin/main` before each issue execution via `git fetch origin main && git merge origin/main --ff-only`
   - **CRITICAL:** This brings in all work from other worktrees that has been pushed to `origin/main`
   - **CRITICAL:** Work committed in other worktrees but not yet pushed to origin won't be visible
@@ -432,6 +448,9 @@ Agents running in Symphony bridge should be aware that:
 - Multiple agents may be executing different issues concurrently in different worktrees
 - File changes are isolated to the specific worktree until committed and pushed
 - The lease system ensures no two agents work on the same Linear issue simultaneously
+- Issue routing is source-aware:
+  - `wt1`-`wt4` handle non-Discord Symphony work
+  - `wt5`-`wt8` handle Discord-sourced work only
 - Discord notifications include worktree ID to distinguish concurrent executions
 - Worktree failures (sync errors, corruption) are handled with automatic recovery or hard reset
 
@@ -644,6 +663,8 @@ The harness uses two OpenAI-compatible bridges:
 - 4-tier provider cascade (paid → free-cloud → local-proxy → local-safety-net)
 - 42 providers with dynamic tool-capability probing
 - Adaptive context: shrinks ceilings on 413/context errors, throttles on 429/rate-limit
+- Structured result contract: returns `_symphonyResult` on streaming and non-streaming responses so the runner can consume provider/usage outcome data directly
+- Codex SDK path defaults to `CODEX_SANDBOX_MODE=danger-full-access` unless overridden
 - Service: `anqr-symphony-bridge.service`
 - **Concurrency-safe:** Handles multiple concurrent requests from worktree runners
 
@@ -651,6 +672,7 @@ The harness uses two OpenAI-compatible bridges:
 
 - Codebuff SDK exposed as OpenAI-compatible HTTP
 - Automatic paid → free mode fallback with periodic re-validation
+- Structured result contract: returns `_symphonyResult` so the runner and bridge client share the same completion contract
 - Service: `anqr-codebuff-bridge.service`
 - **Concurrency-safe:** Supports simultaneous Discord and Symphony requests
 

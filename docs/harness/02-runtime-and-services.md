@@ -14,7 +14,7 @@ Control loop:
 - `scripts/ops/harness-report.mjs`
 - `scripts/ops/linear-guardian.mjs`
 - `scripts/ops/symphony-queue-control.mjs`
-- `scripts/ops/symphony-runner.mjs`
+- `scripts/ops/symphony-runner.mjs` — compatibility shim to `scripts/ops/orchestration/symphony-runner.mjs`
 - `scripts/ops/symphony-agent.mjs`
 - `scripts/ops/nightly-ops-pass.mjs`
 
@@ -56,7 +56,8 @@ Restructured copies under subdirectories may exist. The root entrypoints remain 
 
 Scheduled automation:
 
-- `anqr-symphony-runner.service` / `.timer`
+- `anqr-symphony-runner@.service` / `.timer` — canonical concurrent runner template using git worktrees
+- `anqr-symphony-runner.service` / `.timer` — legacy single-runner unit; not the canonical execution path once worktree enforcement is enabled
 - `anqr-queue-feeder.service` / `.timer`
 - `anqr-nightly.service` / `.timer` — 02:00 daily
 - `anqr-rag-rebuild.service` / `.timer` — 03:00 daily, full-repo RAG vector index rebuild via Ollama embeddings
@@ -109,3 +110,11 @@ Documented harness ports:
 - `18789` — OpenClaw gateway (local AI agent, /v1/chat/completions)
 
 Additional port truth must be documented in follow-up runbooks instead of inferred.
+
+## Current runtime notes
+
+- Queue maintenance is split deliberately:
+  - runner instances self-feed after issue completion
+  - `anqr-queue-feeder.timer` remains a 15-minute safety-net for drain/enforce/backup feed
+- Queue feed and drain decisions use `readyDepth` (Todo-only depth), not aggregate queue depth including `In Progress`
+- The orchestration runner now requires worktree context; the main repository is control-plane and service-host territory, not the canonical execution working tree

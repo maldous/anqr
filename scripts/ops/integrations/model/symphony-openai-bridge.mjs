@@ -127,7 +127,12 @@ import { inferSymphonyResultFromCompletion } from "../../runtime/symphony/bridge
 const CONTEXT7_HTTP_BASE = process.env.CONTEXT7_HTTP_URL || "http://127.0.0.1:4320";
 
 // Enhancement 3: Hybrid search (BM25 + embeddings) for find_files
-import { searchFiles as hybridSearchFiles } from "../../lib/search/hybrid-search.mjs";
+import {
+  searchFiles as hybridSearchFiles,
+  getSearchStats as getHybridSearchStats,
+  warmSearchIndex,
+} from "../../lib/search/hybrid-search.mjs";
+import { getIndexStats as getVectorIndexStats } from "../../lib/rag/vector-store.mjs";
 
 // Discord message monitoring (listen for user input from Discord text channel)
 let lastDiscordMessageId = null;
@@ -1872,7 +1877,7 @@ const tools = {
   }),
   find_files: tool({
     description:
-      "Find files using natural language description of the files or the name of a function or class you are looking for",
+      "Find files using local hybrid search first (BM25 + semantic embeddings/RAG), with basic filename fallback. Prefer this before broad code_search when you only need likely files.",
     inputSchema: z.object({
       prompt: z
         .string()
@@ -1896,7 +1901,8 @@ const tools = {
     execute: webSearchTool,
   }),
   read_docs: tool({
-    description: "Fetch up-to-date documentation for libraries and frameworks using Context7 API",
+    description:
+      "Fetch up-to-date documentation using ANQR's local Context7 MCP/HTTP service first, with cloud Context7 fallback only if local resolution is unavailable",
     inputSchema: z.object({
       libraryTitle: z
         .string()
@@ -2100,7 +2106,8 @@ const tools = {
     },
   }),
   file_search: tool({
-    description: "Search indexed files for RAG-style retrieval (uses local code search)",
+    description:
+      "Search local project context using ANQR's native retrieval stack: code_search for exact query/pattern matches and hybrid RAG-backed find_files for natural-language prompts",
     inputSchema: z.object({
       query: z.string().optional().describe("Search query"),
       pattern: z.string().optional().describe("Search pattern"),
@@ -2252,14 +2259,48 @@ const tools = {
     }),
   }),
   mcp_list_tools: tool({
-    description: "List tools from an MCP server (MCP tools not configured in this bridge)",
+    description:
+      "List the locally available tools plus ANQR-native context systems such as Context7 docs resolution and hybrid RAG/file retrieval",
     inputSchema: z.object({
       server: z.string().optional().describe("MCP server name"),
     }),
-    execute: async () => ({
-      available_tools: Object.keys(tools),
-      message: "MCP server tools are not directly available. Here are the locally available tools.",
-    }),
+    execute: async () => {
+      let context7 = { configured: true, reachable: false, endpoint: `${CONTEXT7_HTTP_BASE}/health` };
+      try {
+        const res = await fetch(`${CONTEXT7_HTTP_BASE}/health`, {
+          signal: AbortSignal.timeout(3000),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          context7 = {
+            configured: true,
+            reachable: data.status === "ok" || data.status === "degraded",
+            endpoint: `${CONTEXT7_HTTP_BASE}/health`,
+            status: data.status,
+          };
+        }
+      } catch {
+        // best effort only
+      }
+
+      return {
+        available_tools: Object.keys(tools),
+        native_context: {
+          context7,
+          rag_search: {
+            preferred_tools: ["read_docs", "find_files", "file_search", "code_search"],
+            stats: getHybridSearchStats(),
+          },
+        },
+        preferred_workflow: [
+          "Use read_docs for library/framework questions before web_search.",
+          "Use find_files or file_search for natural-language repository discovery before broad glob/code scans.",
+          "Use code_search after file discovery when exact symbols or strings are needed.",
+        ],
+        message:
+          "MCP server tools are not directly exposed through this bridge, but ANQR-native Context7 and hybrid RAG retrieval are available through the local tools above.",
+      };
+    },
   }),
 };
 
@@ -5577,6 +5618,45 @@ server.timeout = 0;
 server.keepAliveTimeout = 0;
 
 server.listen(PORT, "127.0.0.1", async () => {
+  const RETRIEVAL_WARMUP_ENABLED = process.env.ANQR_RETRIEVAL_WARMUP !== "false";
+  let warmupSummary = { bm25: "skipped", vector: "skipped" };
+
+  if (RETRIEVAL_WARMUP_ENABLED) {
+    try {
+      const [bm25Result, vectorResult] = await Promise.allSettled([
+        warmSearchIndex({ rootDir: process.cwd() }),
+        getVectorIndexStats(),
+      ]);
+
+      warmupSummary = {
+        bm25:
+          bm25Result.status === "fulfilled"
+            ? `${bm25Result.value.documentCount} docs${bm25Result.value.rebuilt ? " (rebuilt)" : " (cached)"}`
+            : `error: ${bm25Result.reason?.message || bm25Result.reason}`,
+        vector:
+          vectorResult.status === "fulfilled"
+            ? `${vectorResult.value.totalEntries} entries / ${vectorResult.value.totalFiles} files`
+            : `error: ${vectorResult.reason?.message || vectorResult.reason}`,
+      };
+    } catch {
+      // best effort only
+    }
+  }
+
+  const ragStats = getHybridSearchStats();
+  let context7StartupStatus = "unreachable";
+  try {
+    const res = await fetch(`${CONTEXT7_HTTP_BASE}/health`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      context7StartupStatus = data.status || "ok";
+    }
+  } catch {
+    // best effort only; detailed startup probe below already handles fallback messaging
+  }
+
   logInfo(`========================================`);
   logInfo(`Symphony OpenAI Bridge Starting`);
   logInfo(`========================================`);
@@ -5585,6 +5665,13 @@ server.listen(PORT, "127.0.0.1", async () => {
   logInfo(`Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
   logInfo(`Streaming: enabled`);
   logInfo(`Auto-fallback: enabled (credit-gate)`);
+  logInfo(`Context7: ${context7StartupStatus} via ${CONTEXT7_HTTP_BASE}`);
+  logInfo(
+    `Hybrid RAG: indexed=${ragStats.indexed} docs=${ragStats.documentCount} builtAt=${ragStats.builtAt || "n/a"} embeddings=${ragStats.embeddingsAvailable} vectorStore=${ragStats.vectorStoreReady}`,
+  );
+  logInfo(
+    `Retrieval warmup: bm25=${warmupSummary.bm25} | vector=${warmupSummary.vector} | enabled=${RETRIEVAL_WARMUP_ENABLED}`,
+  );
   logInfo(`Tools available: ${Object.keys(tools).join(", ")}`);
   logInfo(`========================================`);
 

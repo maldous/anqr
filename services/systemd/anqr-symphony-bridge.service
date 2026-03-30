@@ -19,16 +19,18 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/user/src/anqr
+WorkingDirectory=%h/src/anqr
 
 # Explicit PATH — nvm Node is not on default systemd PATH
-Environment=PATH=/home/user/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-Environment=HOME=/home/user
-Environment=NODE_PATH=/home/user/.nvm/versions/node/v25.8.0/lib/node_modules
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 
 # Bridge configuration
 Environment=SYMPHONY_BRIDGE_PORT=4319
 Environment=SYMPHONY_BRIDGE_API_KEY=local-symphony
+Environment=CODEX_SANDBOX_MODE=danger-full-access
+Environment=ANQR_RETRIEVAL_WARMUP=true
 
 # Provider tokens (loaded from anqr.env)
 EnvironmentFile=-%h/.config/symphony/anqr.env
@@ -36,10 +38,10 @@ EnvironmentFile=-%h/.config/symphony/anqr.env
 # Systemd env overrides (LINEAR_API_KEY, etc.)
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc scripts/ops/integrations/model/symphony-openai-bridge.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc scripts/ops/integrations/model/symphony-openai-bridge.mjs
 
 # Auto-enable runner timers after bridge starts
-ExecStartPost=/home/user/.nvm/versions/node/v25.8.0/bin/node /home/user/src/anqr/scripts/ops/orchestration/symphony-control.mjs --start
+ExecStartPost=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/scripts/ops/orchestration/symphony-control.mjs --start
 
 # Logging to journal
 StandardOutput=journal

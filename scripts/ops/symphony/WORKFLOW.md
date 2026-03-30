@@ -9,7 +9,8 @@ This file is the live system prompt for the ANQR harness runner.
 **The runner infrastructure handles git operations for you:**
 
 1. **Before you start:** The runner automatically syncs your worktree with `origin/main` using `git fetch origin main && git merge origin/main --ff-only`
-2. **After you finish:** The runner automatically commits your changes and pushes them to `main` when `RUNNER_AUTO_PUSH` is enabled
+2. **Before validation:** The runner replays your uncommitted changes onto the latest `origin/main` without creating merge commits
+3. **After you finish:** The runner automatically commits your changes and pushes them to `main` when `RUNNER_AUTO_PUSH` is enabled
 
 **Your responsibilities:**
 

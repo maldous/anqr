@@ -16,11 +16,13 @@ ANQR uses a Symphony Bridge (port 4319) and Codebuff Bridge (port 4318) as OpenA
 Symphony runner supports concurrent execution via git worktrees. When enabled:
 
 - Each runner instance operates in an isolated worktree directory (e.g., `/home/user/src/anqr-wt1`, `/home/user/src/anqr-wt2`)
-- Environment variables: `ANQR_WORKTREE_ID` (e.g., `wt1`, `wt2`, or `main`) and `ANQR_WORKTREE_PATH`
+- Environment variables: `ANQR_WORKTREE_ID` (e.g., `wt1`, `wt2`) and `ANQR_WORKTREE_PATH`
 - Each worktree uses a unique branch (`symphony/wt1`, `symphony/wt2`) tracking `origin/main`
+- `scripts/ops/orchestration/symphony-runner.mjs` refuses to run from the main repository without worktree context
 - Worktrees sync with `origin/main` before each issue execution
 - Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
 - Lease system prevents concurrent work on the same Linear issue
+- Source-based routing is enforced: `wt1`-`wt4` handle non-Discord work, `wt5`-`wt8` handle Discord-sourced work
 - Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
 
 ### Key modules (all under `scripts/ops/integrations/model/`)
@@ -30,6 +32,24 @@ Symphony runner supports concurrent execution via git worktrees. When enabled:
 - `symphony-adaptive-context.mjs` — dynamic per-provider token ceilings, rate-limit throttling, TPM/RPM tracking
 - `symphony-bridge-truncation.mjs` — static token limits and message truncation
 - `codebuff-openai-bridge.mjs` — Codebuff SDK exposed as OpenAI-compatible HTTP
+
+### Bridge contract
+
+- Both `symphony-openai-bridge.mjs` and `codebuff-openai-bridge.mjs` return `_symphonyResult` in their completion payloads
+- `scripts/ops/runtime/symphony/symphony-agent.mjs` consumes `_symphonyResult` directly and falls back to inference only when necessary
+- Symphony bridge requests use a 15-minute request timeout for long-running turns
+- Codex SDK execution through Symphony defaults to `CODEX_SANDBOX_MODE=danger-full-access` unless explicitly overridden
+
+### Native context usage
+
+- Prefer `read_docs` for framework/library questions before `web_search`
+  - ANQR routes this through the local Context7 service on port `4320` first
+- Prefer `find_files` or `file_search` for repository discovery before broad `code_search`
+  - `find_files` uses hybrid BM25 + semantic retrieval backed by the local RAG stack when available
+  - `file_search` is the compatibility wrapper that routes to exact or natural-language retrieval as appropriate
+- Use `code_search` after retrieval narrows the likely files or symbols
+
+This is the intended fast path for Codex and bridge-routed agents.
 
 ### Adaptive context system
 
@@ -91,3 +111,9 @@ npm run typecheck:all
 npm run lint:all
 npm run test:unit
 ```
+
+### Queue behavior
+
+- The runner self-feeds the queue after issue completion
+- `anqr-queue-feeder.timer` is a safety-net maintenance loop, not the primary feeder
+- Queue feed/drain decisions use `readyDepth` (Todo-only depth), not aggregate queue depth including `In Progress`

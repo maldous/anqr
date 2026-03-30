@@ -18,12 +18,12 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/user/src/anqr
+WorkingDirectory=%h/src/anqr
 
 # Explicit PATH — nvm Node is not on default systemd PATH
-Environment=PATH=/home/user/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-Environment=HOME=/home/user
-Environment=NODE_PATH=/home/user/.nvm/versions/node/v25.8.0/lib/node_modules
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 
 # Bridge configuration
 Environment=CODEBUFF_BRIDGE_PORT=4318
@@ -32,7 +32,7 @@ Environment=CODEBUFF_BRIDGE_API_KEY=local-bridge
 # Codebuff API keys from ops env
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc scripts/ops/integrations/model/codebuff-openai-bridge.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc scripts/ops/integrations/model/codebuff-openai-bridge.mjs
 
 # Logging to journal
 StandardOutput=journal

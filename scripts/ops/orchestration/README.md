@@ -30,6 +30,7 @@ node scripts/ops/orchestration/symphony-runner.mjs --status
 
 **Worktree support:**
 Set `ANQR_WORKTREE_ID` and `ANQR_WORKTREE_PATH` environment variables to run in a worktree.
+Running from the main repository without worktree context is rejected by the runner.
 
 ### symphony-queue-control.mjs
 
@@ -96,6 +97,8 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
 - Branches: `symphony/wt1`, `symphony/wt2`, etc.
 
 ## Concurrent Execution with Worktrees
+
+This is the canonical execution mode for Symphony runners.
 
 ### Setup
 

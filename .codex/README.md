@@ -21,3 +21,21 @@ Use [MCP-MIGRATION.md](/home/user/src/anqr/MCP-MIGRATION.md) as the migration le
 - **Key harness modules**: `scripts/ops/integrations/model/symphony-openai-bridge.mjs`, `symphony-credit-gate.mjs`, `symphony-adaptive-context.mjs`, `symphony-bridge-truncation.mjs`
 - **Bridge restart**: commit & push → wait for zero concurrency → `systemctl --user restart anqr-symphony-bridge`
 - **Harness tests**: `npx vitest run scripts/ops/integrations/model/symphony-adaptive-context.spec.ts` (and similar for truncation, credit-gate, fallback specs)
+
+## Codex fast path
+
+For efficient operation in this repository:
+
+1. Use `read_docs` before `web_search` for framework/library questions.
+   - This routes through ANQR's local Context7 service on `http://127.0.0.1:4320` first.
+2. Use `find_files` or `file_search` before broad `code_search`.
+   - These route into ANQR's hybrid retrieval stack (BM25 + local RAG/vector search when available).
+3. Use `code_search` after retrieval narrows candidate files.
+4. Avoid main-repo runner execution.
+   - Harness work should run from worktrees (`/home/user/src/anqr-wt*`) when using Symphony runner paths.
+
+Bridge startup now preloads retrieval state:
+
+- BM25 in-memory index warm-up for faster first file-discovery request
+- local vector index cache load for faster semantic retrieval
+- explicit `CODEX_SANDBOX_MODE=danger-full-access` to avoid `bwrap` sandbox failures on this host

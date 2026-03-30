@@ -4,7 +4,7 @@
 
 Git worktrees enable multiple concurrent Symphony runner instances to operate independently on the same repository without conflicts. This multiplies throughput while maintaining the safety guarantees of the lease-based state management system.
 
-**Status:** Implementation complete, ready for Phase 2 validation (2026-03-27)
+**Status:** Canonical execution model for Symphony runners on `main` (updated 2026-03-30)
 
 ## Why Worktrees Are Required
 
@@ -60,6 +60,8 @@ Worktree 2:
 - ✅ **Branch safety:** Git prevents checking out the same branch in multiple worktrees
 - ✅ **Shared refs:** All worktrees see the same branches, tags, and commits instantly
 - ✅ **Simple cleanup:** Remove worktrees without affecting main repository
+
+The main repository remains the control-plane checkout for services, docs, and shared configuration. Runner execution should happen from worktrees.
 
 ## What Worktrees Enable
 
@@ -160,7 +162,8 @@ This ensures consistency across Symphony runner, worktree pool manager, and syst
 **Create worktree:**
 
 ```bash
-git worktree add /home/user/src/anqr-wt1 -b symphony/wt1 main
+git fetch origin main
+git worktree add /home/user/src/anqr-wt1 -b symphony/wt1 origin/main
 ```
 
 This creates:
@@ -241,7 +244,7 @@ git worktree prune   # Remove stale worktree metadata
 
 **Automatic source-based routing prevents concurrent execution conflicts:**
 
-When issues are created from Discord interactions, they're tagged with `source: "discord"` in the state management system. The symphony-runner automatically routes issues based on their source:
+When issues are created from Discord interactions, they must be tagged with `source: "discord"` in the shared state management system. The symphony-runner routes issues based on that state field:
 
 **Discord worktrees (wt5-wt8):**
 - Handle ONLY issues with `source` containing "discord"
@@ -315,12 +318,14 @@ With routing, each issue goes to the appropriate execution environment based on 
    ├─ Read issue context and workflow
    ├─ Call LLM via Symphony bridge
    ├─ Apply file changes
-   └─ **Sync with main before validation** (NEW)
+   └─ **Replay local changes onto latest main before validation**
+      ├─ git diff --binary --full-index HEAD -- <changed files>
+      ├─ git reset --hard HEAD && git clean -fd
       ├─ git fetch origin main
-      ├─ git merge origin/main --no-commit --no-ff
-      ├─ Detect merge conflicts early
-      ├─ If conflicts: abort merge, revert changes, return to Todo
-      └─ If clean: finalize merge and proceed to validation
+      ├─ git merge origin/main --ff-only
+      ├─ git apply --index --3way <saved patch>
+      ├─ If patch replay conflicts: restore local state, return to Todo/Backlog
+      └─ If clean: proceed to validation without creating a merge commit
 
 5. Run validation gates
    ├─ Now validates against latest code from all worktrees
@@ -623,10 +628,11 @@ git reset --hard origin/main
 git clean -fd
 
 # Option B: Manual conflict resolution
-git merge origin/main
+git fetch origin main
+git rebase origin/main
 # ... resolve conflicts ...
 git add .
-git commit
+git rebase --continue
 ```
 
 **Problem: Lock file issues**
@@ -847,7 +853,7 @@ node scripts/ops/symphony-benchmark-report.mjs
 
 # Resolution (automatic in runner):
 git fetch origin main
-git merge origin/main  # Usually auto-merges
+git rebase origin/main
 git push origin symphony/wt1:main
 ```
 

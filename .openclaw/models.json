@@ -142,7 +142,15 @@
           "spawn_agents",
           "spawn_agent_inline",
           "think_deeply",
-          "thinker"
+          "thinker",
+          "code_search",
+          "find_files",
+          "file_search",
+          "read_docs",
+          "read_files",
+          "list_directory",
+          "read_subtree",
+          "run_file_change_hooks"
         ]
       }
     }

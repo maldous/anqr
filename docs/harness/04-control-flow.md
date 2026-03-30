@@ -40,6 +40,7 @@ The maintained flow is:
   - enforce queue limits
   - detect stale work
   - act as the maintenance layer behind the runner
+  - evaluate queue health using `readyDepth` (Todo-only depth)
 
 ### 4. Symphony runner
 
@@ -50,6 +51,13 @@ The maintained flow is:
   - execute via configured providers
   - run validation and evidence steps
   - update issue state and comments
+  - self-feed the queue after issue completion when ready depth falls below target
+
+Runner execution notes:
+
+- canonical execution is from worktrees, not the main repository
+- the runner auto-detects worktree context from `.git` metadata when possible
+- Discord-sourced issues are routed to Discord worktrees (`wt5`-`wt8`); other Symphony work stays on `wt1`-`wt4`
 
 ### 5. Notify
 

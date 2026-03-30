@@ -15,6 +15,7 @@
  */
 
 import MiniSearch from "minisearch";
+import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { basename, extname, join, relative } from "node:path";
 import { createLogger } from "../logger.mjs";
@@ -399,6 +400,39 @@ export async function hybridSearch(query, options = {}) {
  * @returns {Promise<Array<{path: string, content: string}>>}
  */
 async function collectProjectFiles(rootDir) {
+  try {
+    const raw = execFileSync("git", ["ls-files", "-z"], {
+      cwd: rootDir,
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 20 * 1024 * 1024,
+    });
+    const trackedFiles = raw.split("\0").filter(Boolean);
+    const files = [];
+
+    for (const relPath of trackedFiles) {
+      const normalized = relPath.replaceAll(/\\/g, "/");
+      const parts = normalized.split("/");
+      if (parts.some((part) => EXCLUDED_DIRS.has(part))) continue;
+
+      const ext = extname(normalized);
+      if (!INDEXABLE_EXTENSIONS.has(ext)) continue;
+
+      const fullPath = join(rootDir, normalized);
+      try {
+        const content = await readFile(fullPath, "utf-8");
+        if (content.length > MAX_FILE_BYTES) continue;
+        files.push({ path: normalized, content });
+      } catch {
+        // skip unreadable tracked files
+      }
+    }
+
+    return files;
+  } catch {
+    // Fall back to recursive directory walk when git metadata is unavailable.
+  }
+
   const files = [];
 
   /**
@@ -445,6 +479,31 @@ async function collectProjectFiles(rootDir) {
 
   await walk(rootDir);
   return files;
+}
+
+/**
+ * Warm the in-memory BM25 index so the first retrieval request does not pay
+ * the full file scan + index build cost.
+ *
+ * @param {object} [options]
+ * @param {string} [options.rootDir] Project root (defaults to process.cwd()).
+ * @returns {Promise<{ indexed: boolean, documentCount: number, rebuilt: boolean }>}
+ */
+export async function warmSearchIndex(options = {}) {
+  const { rootDir = process.cwd() } = options;
+  const projectFiles = await collectProjectFiles(rootDir);
+  const fp = computeFingerprint(projectFiles);
+  const rebuilt = !miniSearchIndex || fp !== indexFingerprint;
+
+  if (rebuilt) {
+    createHybridSearchIndex(projectFiles);
+  }
+
+  return {
+    indexed: miniSearchIndex !== null,
+    documentCount: indexedDocCount,
+    rebuilt,
+  };
 }
 
 /**
