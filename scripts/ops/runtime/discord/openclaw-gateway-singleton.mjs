@@ -2,6 +2,7 @@
 
 import { spawn } from "node:child_process";
 import { promises as fsp } from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 
@@ -17,6 +18,7 @@ const LOCK_FILE = path.join(LOCK_DIR, "gateway.lock");
 const FOLLOWER_SLEEP_MS = Number.parseInt(process.env.OPENCLAW_FOLLOWER_SLEEP_MS || "5000", 10);
 const RESTART_BACKOFF_MS = Number.parseInt(process.env.OPENCLAW_RESTART_BACKOFF_MS || "15000", 10);
 const WAIT_LOG_INTERVAL_MS = Number.parseInt(process.env.OPENCLAW_WAIT_LOG_INTERVAL_MS || "60000", 10);
+const PORT_CHECK_INTERVAL_MS = Number.parseInt(process.env.OPENCLAW_PORT_CHECK_INTERVAL_MS || "30000", 10);
 
 let stopping = false;
 let lockHeld = false;
@@ -170,6 +172,31 @@ function spawnGatewayProcess() {
   return child;
 }
 
+function isPortListening(host, port) {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    socket.setTimeout(2000);
+    socket.once("connect", () => { socket.destroy(); resolve(true); });
+    socket.once("error", () => resolve(false));
+    socket.once("timeout", () => { socket.destroy(); resolve(false); });
+    socket.connect(port, host);
+  });
+}
+
+async function monitorExternalGateway() {
+  logInfo(`External gateway detected on ${HOST}:${PORT}; monitoring until it goes down`);
+  while (!stopping) {
+    await sleep(PORT_CHECK_INTERVAL_MS);
+    if (stopping) return true;
+    const alive = await isPortListening(HOST, PORT);
+    if (!alive) {
+      logInfo(`External gateway on ${HOST}:${PORT} is no longer listening; will spawn`);
+      return false;
+    }
+  }
+  return true;
+}
+
 async function isLockStillOurs() {
   const info = await readLockInfo();
   return info && info.runnerPid === process.pid;
@@ -177,6 +204,18 @@ async function isLockStillOurs() {
 
 async function runGatewayOwnerLoop() {
   while (!stopping) {
+    const portInUse = await isPortListening(HOST, PORT);
+    if (portInUse) {
+      const shouldStop = await monitorExternalGateway();
+      if (shouldStop || stopping) break;
+      if (!(await isLockStillOurs())) {
+        logWarn("Lock was taken during external gateway monitoring; returning to follower mode");
+        lockHeld = false;
+        return;
+      }
+      continue;
+    }
+
     await writeLockMetadata();
     childProcess = spawnGatewayProcess();
     const exitInfo = await new Promise((resolve) => {

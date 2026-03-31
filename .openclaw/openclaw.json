@@ -515,10 +515,9 @@
     }
   },
   "plugins": {
-    "entries": {
-      "qwen-portal-auth": {
-        "enabled": true
-      }
-    }
+    "allow": [
+      "lossless-claw"
+    ],
+    "entries": {}
   }
 }
