@@ -571,6 +571,15 @@ function isBaselineRepairIssue(issue) {
 
 function classifyProviderFailure(message = "") {
   const msg = String(message || "");
+  // Check for stream errors first - these are retryable provider failures
+  if (
+    msg.includes("stream_error") ||
+    msg.includes("STREAM_ERROR") ||
+    msg.includes("stream_error_with_output") ||
+    msg.includes("STREAM_ERROR_WITH_OUTPUT") ||
+    msg.includes("NO_OUTPUT_GENERATED")
+  )
+    return "stream_error";
   if (msg.includes("LOCAL_BUSY") || msg.includes("local_busy")) return "local_busy";
   if (
     msg.includes("429") ||
@@ -1070,6 +1079,43 @@ async function executeIssue(issue, dryRun = false) {
         recordTransition(issue.identifier, {
           actor: "runner",
           reason: "local_busy",
+          from: "In Progress",
+          to: "Todo",
+          runId: RUN_ID,
+        });
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+        return "done";
+      }
+
+      // Handle stream errors (connection drops, SSE failures, premature closes) with exponential backoff
+      // Stream errors are retryable and should trigger provider fallback in the bridge
+      if (failureKind === "stream_error") {
+        const currentState = getIssueState(issue.identifier);
+        const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0);
+        
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        setCooldown(issue.identifier, cooldownMs, "stream_error");
+        
+        // Record retry event for evidence
+        recordRetryEvent(issue.identifier, {
+          type: "failure",
+          provider: metricsProviderName,
+          reason: "stream_error",
+          cooldown_ms: cooldownMs,
+          error: failureMsg.slice(0, 200),
+        });
+        
+        await addComment(
+          issue.id,
+          `🌊 **Stream error** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "stream_error",
           from: "In Progress",
           to: "Todo",
           runId: RUN_ID,
