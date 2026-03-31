@@ -113,6 +113,69 @@ export function createLogger(scriptName = "", options = {}) {
   });
 
   /**
+   * Safely serialize data for logging, handling circular references and Error objects
+   * @param {any} data - Data to serialize
+   * @returns {string} Serialized string or placeholder
+   */
+  function safeSerialize(data) {
+    if (data === null || data === undefined) {
+      return "";
+    }
+
+    // Handle Error objects - extract properties without circular references
+    if (data instanceof Error) {
+      const errorProps = {
+        message: data.message,
+        name: data.name,
+        stack: data.stack?.split("\n").slice(0, 3).join("\n"), // First 3 lines of stack
+      };
+      // Safely extract cause if present (Node.js Error cause chain)
+      if (data.cause && typeof data.cause === "object") {
+        errorProps.cause = data.cause instanceof Error
+          ? { message: data.cause.message, name: data.cause.name }
+          : String(data.cause).slice(0, 100);
+      }
+      try {
+        return JSON.stringify(errorProps);
+      } catch {
+        // Fallback with escaped quotes
+        const msg = (data.message || "").replace(/"/g, '\\"');
+        const nm = (data.name || "").replace(/"/g, '\\"');
+        return `{"message":"${msg}","name":"${nm}"}`;
+      }
+    }
+
+    // Handle plain objects with potential circular references
+    if (typeof data === "object") {
+      try {
+        return JSON.stringify(data, (key, value) => {
+          // Skip functions and symbols
+          if (typeof value === "function" || typeof value === "symbol") {
+            return "[function]";
+          }
+          // Detect and truncate circular references
+          if (value && typeof value === "object") {
+            if (key === "cause" || key === "parent" || key === "inner") {
+              return "[circular]";
+            }
+          }
+          return value;
+        });
+      } catch (err) {
+        // Final fallback - just return type info
+        return `[serialization failed: ${err.message}]`;
+      }
+    }
+
+    // Primitives - convert directly
+    try {
+      return JSON.stringify(data);
+    } catch {
+      return String(data);
+    }
+  }
+
+  /**
    * Format a log entry with optional data payload
    * @param {string} level - Log level (DEBUG, INFO, WARN, ERROR)
    * @param {string} msg - Log message
@@ -123,11 +186,10 @@ export function createLogger(scriptName = "", options = {}) {
     const { filename, lineNumber } = getCallerInfo();
     const location = filename ? `[${filename}:${lineNumber}]` : "";
     let line = `${prefix}${location} [${level}] ${msg}`;
-    if (data && typeof data === "object") {
-      try {
-        line += ` ${JSON.stringify(data)}`;
-      } catch (err) {
-        line += ` [data serialization failed: ${err.message}]`;
+    if (data !== null && data !== undefined) {
+      const serialized = safeSerialize(data);
+      if (serialized) {
+        line += ` ${serialized}`;
       }
     }
     return line + "\n";

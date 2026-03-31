@@ -32,6 +32,7 @@ import {
   CONTEXT_SHRINK_BUFFER,
   CONTEXT_EXPAND_FACTOR,
   CONTEXT_EXPAND_THRESHOLD,
+  CONTEXT_INITIAL_BUFFER,
   RATE_LIMIT_DEFAULT_BACKOFF_MS,
   RATE_LIMIT_MAX_BACKOFF_MS,
   TPM_PROACTIVE_THRESHOLD,
@@ -92,32 +93,36 @@ describe("adaptive context constants", () => {
 // ---------------------------------------------------------------------------
 
 describe("dynamic context limits", () => {
-  it("returns base value for a known provider with no errors", () => {
+  it("returns buffered value (80% of base) for a known provider with no errors", () => {
     const max = getEffectiveMaxTokens("groq");
-    expect(max).toBe(PROVIDER_MAX_INPUT_TOKENS.groq);
+    const expected = Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER);
+    expect(max).toBe(expected);
   });
 
-  it("returns DEFAULT_MAX_INPUT_TOKENS for an unknown provider", () => {
+  it("returns buffered value (80% of default) for an unknown provider", () => {
     const max = getEffectiveMaxTokens("unknown-provider-xyz");
-    expect(max).toBe(DEFAULT_MAX_INPUT_TOKENS);
+    const expected = Math.floor(DEFAULT_MAX_INPUT_TOKENS * CONTEXT_INITIAL_BUFFER);
+    expect(max).toBe(expected);
   });
 
   it("shrinks by CONTEXT_SHRINK_FACTOR on context error with no details", () => {
     const base = PROVIDER_MAX_INPUT_TOKENS.groq;
+    const initialBuffered = Math.floor(base * CONTEXT_INITIAL_BUFFER);
     recordContextError("groq", {});
-    const expected = Math.max(Math.floor(base * CONTEXT_SHRINK_FACTOR), MIN_MESSAGE_BUDGET_TOKENS);
+    const expected = Math.max(Math.floor(initialBuffered * CONTEXT_SHRINK_FACTOR), MIN_MESSAGE_BUDGET_TOKENS);
     expect(getEffectiveMaxTokens("groq")).toBe(expected);
   });
 
   it("shrinks by precise ratio when requestedTokens and reportedLimit provided", () => {
     const base = PROVIDER_MAX_INPUT_TOKENS.groq; // 6000
+    const initialBuffered = Math.floor(base * CONTEXT_INITIAL_BUFFER); // 4800
     recordContextError("groq", {
       requestedTokens: 13279,
       reportedLimit: 12000,
     });
     const ratio = 12000 / 13279;
     const expected = Math.max(
-      Math.floor(base * ratio * CONTEXT_SHRINK_BUFFER),
+      Math.floor(initialBuffered * ratio * CONTEXT_SHRINK_BUFFER),
       MIN_MESSAGE_BUDGET_TOKENS,
     );
     expect(getEffectiveMaxTokens("groq")).toBe(expected);
@@ -144,7 +149,7 @@ describe("dynamic context limits", () => {
   it("expands after consecutive successes", () => {
     recordContextError("groq", {});
     const shrunkMax = getEffectiveMaxTokens("groq");
-    expect(shrunkMax).toBeLessThan(PROVIDER_MAX_INPUT_TOKENS.groq);
+    expect(shrunkMax).toBeLessThan(Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER));
 
     for (let i = 0; i < CONTEXT_EXPAND_THRESHOLD; i++) {
       recordContextSuccess("groq");
@@ -156,8 +161,11 @@ describe("dynamic context limits", () => {
   });
 
   it("never expands beyond base max tokens", () => {
+    // Initial state is buffered at 80%, so we need to first expand to reach base
     for (let i = 0; i < 100; i++) {
-      recordContextSuccess("groq");
+      for (let j = 0; j < CONTEXT_EXPAND_THRESHOLD; j++) {
+        recordContextSuccess("groq");
+      }
     }
     expect(getEffectiveMaxTokens("groq")).toBe(PROVIDER_MAX_INPUT_TOKENS.groq);
   });
@@ -175,10 +183,11 @@ describe("dynamic context limits", () => {
   });
 
   it("shrink-then-expand converges back to base over many successes", () => {
+    // Start at 80% buffer, then shrink twice, then expand
     recordContextError("groq", {});
     recordContextError("groq", {});
     const deepShrunk = getEffectiveMaxTokens("groq");
-    expect(deepShrunk).toBeLessThan(PROVIDER_MAX_INPUT_TOKENS.groq);
+    expect(deepShrunk).toBeLessThan(Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER));
 
     for (let cycle = 0; cycle < 50; cycle++) {
       for (let i = 0; i < CONTEXT_EXPAND_THRESHOLD; i++) {
@@ -697,9 +706,11 @@ describe("getAdaptiveStats", () => {
     const stats = getAdaptiveStats();
     expect(stats.groq).toBeDefined();
     expect(stats.cerebras).toBeDefined();
-    expect(stats.groq.dynamicMaxTokens).toBeLessThan(stats.groq.baseMaxTokens);
+    // After error, dynamic is below the initial 80% buffer
+    expect(stats.groq.dynamicMaxTokens).toBeLessThan(Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER));
     expect(stats.groq.dynamicVsBase).not.toBe("100%");
-    expect(stats.cerebras.dynamicVsBase).toBe("100%");
+    // cerebras starts at 80% with no errors, so dynamicVsBase = 100% (since it's at its initial buffer which equals baseMaxTokens * 0.8, but we show ratio of dynamic/base)
+    expect(stats.cerebras.dynamicVsBase).toBe("80%");
   });
 
   it("includes error counts in stats", () => {
@@ -731,7 +742,8 @@ describe("resetAdaptiveState", () => {
     resetAdaptiveState();
 
     expect(getAdaptiveStats()).toEqual({});
-    expect(getEffectiveMaxTokens("groq")).toBe(PROVIDER_MAX_INPUT_TOKENS.groq);
+    // After reset, new providers start at 80% buffer again
+    expect(getEffectiveMaxTokens("groq")).toBe(Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER));
     expect(isProviderThrottled("cerebras")).toBe(false);
     expect(getTokensPerMinute("mistral")).toBe(0);
   });
@@ -744,9 +756,10 @@ describe("resetAdaptiveState", () => {
 describe("end-to-end: Groq TPM overflow scenario", () => {
   it("reproduces and resolves the P0 Groq TPM 413 error", () => {
     const groqBase = PROVIDER_MAX_INPUT_TOKENS.groq; // 6000
+    const initialBuffered = Math.floor(groqBase * CONTEXT_INITIAL_BUFFER); // 4800
 
-    // 1. Initial state: effective max equals base
-    expect(getEffectiveMaxTokens("groq")).toBe(groqBase);
+    // 1. Initial state: effective max equals 80% buffer (not full base)
+    expect(getEffectiveMaxTokens("groq")).toBe(initialBuffered);
 
     // 2. Groq returns 413 with TPM info
     const groqErr = new Error(
@@ -766,16 +779,16 @@ describe("end-to-end: Groq TPM overflow scenario", () => {
     recordErrorType("groq", errorType);
     recordContextError("groq", details);
 
-    // 3. Dynamic limit shrunk based on ratio
+    // 3. Dynamic limit shrunk based on ratio from initial buffered value
     const shrunkMax = getEffectiveMaxTokens("groq");
-    expect(shrunkMax).toBeLessThan(groqBase);
+    expect(shrunkMax).toBeLessThan(initialBuffered);
     expect(shrunkMax).toBeGreaterThanOrEqual(MIN_MESSAGE_BUDGET_TOKENS);
 
     // 4. TPM limit recorded
     const state = getProviderAdaptiveState("groq");
     expect(state.rateLimit.tpmLimit).toBe(12000);
 
-    // 5. Subsequent successes slowly expand back
+    // 5. Subsequent successes slowly expand back to base
     for (let cycle = 0; cycle < 20; cycle++) {
       for (let i = 0; i < CONTEXT_EXPAND_THRESHOLD; i++) {
         recordContextSuccess("groq");

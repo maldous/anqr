@@ -38,6 +38,11 @@ export const CONTEXT_SHRINK_BUFFER = 0.9;
 export const CONTEXT_EXPAND_FACTOR = 1.05;
 export const CONTEXT_EXPAND_THRESHOLD = 3;
 
+// Initial safety margin — start below the documented limit to avoid
+// immediate 413 errors. For providers with tight limits (e.g., github-models
+// at 8000), this prevents the first request from being too large.
+export const CONTEXT_INITIAL_BUFFER = 0.8; // start at 80% of documented limit
+
 export const RATE_LIMIT_DEFAULT_BACKOFF_MS = 30_000;
 export const RATE_LIMIT_MAX_BACKOFF_MS = 300_000;
 export const MAX_WINDOW_EVENTS = 512;
@@ -61,10 +66,15 @@ const providerStates = new Map();
 
 function createProviderState(providerName) {
   const baseMaxTokens = PROVIDER_MAX_INPUT_TOKENS[providerName] || DEFAULT_MAX_INPUT_TOKENS;
+  // Start with safety margin to avoid immediate 413 on first request
+  const initialMaxTokens = Math.max(
+    Math.floor(baseMaxTokens * CONTEXT_INITIAL_BUFFER),
+    MIN_MESSAGE_BUDGET_TOKENS,
+  );
   return {
     providerName,
     baseMaxTokens,
-    dynamicMaxTokens: baseMaxTokens,
+    dynamicMaxTokens: initialMaxTokens,
     consecutiveContextErrors: 0,
     consecutiveContextSuccesses: 0,
     lastContextErrorAt: null,
