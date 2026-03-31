@@ -820,6 +820,33 @@ After using `--stop`, you MUST use `--start` to resume task execution. Without t
 - Do not import legacy wholesale — rebuild intentionally
 - Keep launch truth in one place (docs/program/01-anqr-1.0-definition.md)
 
+### CRITICAL: Never Lose Work
+
+**This is the most important rule. Work must NEVER be lost.**
+
+**When working with git and worktrees:**
+- **NEVER use `git reset --hard` or `git reset --merge`** unless explicitly instructed by the user - this destroys uncommitted work
+- **NEVER force push with `--force`** unless explicitly instructed - this can overwrite other's work
+- **NEVER reset worktrees to main** - this loses the worktree's unique commits and work
+- **Before any git operation that could lose work, ALWAYS verify** with `git status` and `git log`
+- **If a merge fails, use `git merge --abort`** to safely back out instead of reset
+- **When syncing worktrees, ALWAYS use `git merge origin/main`** (not reset) to preserve work
+
+**Proper worktree sync pattern:**
+```bash
+# Safe sync - preserves local work
+git fetch origin main
+git merge origin/main --ff-only
+
+# If merge fails, do NOT reset - investigate and merge manually
+git merge origin/main  # resolve conflicts if any
+```
+
+**If you've accidentally lost work:**
+1. IMMEDIATELY check `git reflog` to find lost commits
+2. Use `git checkout <commit-hash>` to recover
+3. Alert the user immediately
+
 ### Handover block format
 
 Use this structure for task handover:
