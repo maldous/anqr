@@ -20,7 +20,7 @@ ANQR's Discord integration consists of two distinct components:
 
 - Send text notifications to Discord channels
 - Send embedded messages with formatting
-- Stream progress updates with batching (every 5s or 1900 chars)
+- Stream progress updates with batching (every 1s or 1900 chars)
 - Per-request buffering to prevent message mixing
 
 **Environment Variables**:
