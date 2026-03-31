@@ -485,17 +485,35 @@ function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
 async function gitPush() {
   const MAX_PUSH_RETRIES = 3;
 
+  // Get current branch name for worktrees
+  const currentBranch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+    cwd: ROOT,
+    encoding: "utf-8",
+  }).trim();
+
   for (let attempt = 1; attempt <= MAX_PUSH_RETRIES; attempt++) {
     try {
-      // For worktrees: push current branch (symphony/wtN) to main
-      // For main worktree: push to tracking branch (default behavior)
       if (WORKTREE_ID !== "main") {
+        // FIXED: Push to worktree branch first to avoid race conditions
+        // Step 1: Push current branch (e.g., symphony/wt1) to its remote branch
+        // Use -u for first push to set upstream tracking
+        const worktreeBranch = currentBranch || `symphony/${WORKTREE_ID}`;
+        logInfo(`[runner] Pushing to worktree branch: origin ${worktreeBranch}`);
+        execFileSync("git", ["push", "-u", "origin", `HEAD:${worktreeBranch}`], {
+          cwd: ROOT,
+          stdio: "pipe",
+          timeout: 30_000,
+        });
+
+        // Step 2: Push to main (this should now work since we pushed to our branch first)
+        logInfo(`[runner] Syncing to main...`);
         execFileSync("git", ["push", "origin", "HEAD:main"], {
           cwd: ROOT,
           stdio: "pipe",
           timeout: 30_000,
         });
       } else {
+        // Main worktree: push to tracking branch (default behavior)
         execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
       }
       if (attempt > 1) {
