@@ -48,6 +48,7 @@ import {
   recordProviderHealthSuccess,
   recordProviderHealthFailure,
   shouldRetryProvider,
+  HEALTH_STATES,
 } from "./symphony-provider-health.mjs";
 
 const { logDebug, logInfo, logWarn } = createLogger();
@@ -948,6 +949,13 @@ export function getRankedProviders(options = {}) {
   // First pass: include providers with stats and/or probe data
   for (const name of providersWithData) {
     if (excludeSet && excludeSet.has(name)) continue;
+    
+    // Skip unhealthy providers from ranking
+    const health = getProviderHealthState(name);
+    if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED || health.state === HEALTH_STATES.DISABLED) {
+      continue;
+    }
+    
     seenProviders.add(name);
     const score = stats.score[name];
     const provider = PROVIDERS.find((p) => p.name === name);
@@ -978,6 +986,12 @@ export function getRankedProviders(options = {}) {
     for (const provider of PROVIDERS) {
       if (excludeSet && excludeSet.has(provider.name)) continue;
       if (seenProviders.has(provider.name)) continue;
+      
+      // Skip unhealthy providers from ranking
+      const health = getProviderHealthState(provider.name);
+      if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED || health.state === HEALTH_STATES.DISABLED) {
+        continue;
+      }
 
       const tier = getProviderTier(provider);
       const entry = { name: provider.name, score: "pending", tier, selections: 0 };
@@ -1427,6 +1441,16 @@ async function tryProvider(provider) {
     requiresSdk: !!provider.requiresSdk,
   });
 
+  // Check health state first - skip unhealthy providers
+  const health = getProviderHealthState(provider.name);
+  if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED || health.state === HEALTH_STATES.DISABLED) {
+    logDebug(`${provider.name}: skipped (health state: ${health.state})`, {
+      providerName: provider.name,
+      healthState: health.state,
+    });
+    return null;
+  }
+
   const apiKey = await resolveProviderApiKey(provider);
 
   if (provider.envVar && !apiKey) {
@@ -1496,10 +1520,18 @@ export async function selectProvider(options = {}) {
     excludedNames: excludedNames ? Array.from(excludedNames) : null,
   });
 
+  // Skip preferred providers that are in cooling-down or blocked state
+  const healthyPreferredProviders = PREFERRED_PROVIDER_ORDER.filter((name) => {
+    const health = getProviderHealthState(name);
+    return health.state !== HEALTH_STATES.COOLING_DOWN && health.state !== HEALTH_STATES.BLOCKED;
+  });
+
   logDebug(`[selectProvider] Trying preferred providers`, {
     preferredOrder: PREFERRED_PROVIDER_ORDER,
+    healthyPreferredProviders,
+    skippedDueToHealth: PREFERRED_PROVIDER_ORDER.filter((n) => !healthyPreferredProviders.includes(n)),
   });
-  for (const providerName of PREFERRED_PROVIDER_ORDER) {
+  for (const providerName of healthyPreferredProviders) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
     if (
       !provider ||
@@ -1530,7 +1562,7 @@ export async function selectProvider(options = {}) {
     }
   }
 
-  // First: try providers in dynamic ranking order if we have enough data
+  // PRIMARY: try providers in dynamic ranking order - this is now the main path
   const ranked = getRankedProviders();
   logDebug(`[selectProvider] Dynamic ranking`, {
     rankedCount: ranked.length,
