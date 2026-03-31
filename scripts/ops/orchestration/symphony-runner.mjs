@@ -580,6 +580,16 @@ function classifyProviderFailure(message = "") {
     msg.includes("NO_OUTPUT_GENERATED")
   )
     return "stream_error";
+  // Check for HTTP gateway errors (502, 503, 504) - transient infrastructure failures
+  if (
+    msg.includes("502") ||
+    msg.includes("503") ||
+    msg.includes("504") ||
+    msg.includes("Bad Gateway") ||
+    msg.includes("Service Unavailable") ||
+    msg.includes("Gateway Timeout")
+  )
+    return "gateway_error";
   if (msg.includes("LOCAL_BUSY") || msg.includes("local_busy")) return "local_busy";
   if (
     msg.includes("429") ||
@@ -1079,6 +1089,42 @@ async function executeIssue(issue, dryRun = false) {
         recordTransition(issue.identifier, {
           actor: "runner",
           reason: "local_busy",
+          from: "In Progress",
+          to: "Todo",
+          runId: RUN_ID,
+        });
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+        return "done";
+      }
+
+      // Handle HTTP gateway errors (502, 503, 504) - transient infrastructure failures from OpenRouter/gateways
+      // These are retryable and should trigger provider fallback
+      if (failureKind === "gateway_error") {
+        const currentState = getIssueState(issue.identifier);
+        const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0);
+        
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        setCooldown(issue.identifier, cooldownMs, "gateway_error");
+        
+        recordRetryEvent(issue.identifier, {
+          type: "failure",
+          provider: metricsProviderName,
+          reason: "gateway_error",
+          cooldown_ms: cooldownMs,
+          error: failureMsg.slice(0, 200),
+        });
+        
+        await addComment(
+          issue.id,
+          `🌐 **Gateway error** (502/503/504) — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "gateway_error",
           from: "In Progress",
           to: "Todo",
           runId: RUN_ID,
