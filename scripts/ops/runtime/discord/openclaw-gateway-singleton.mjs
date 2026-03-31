@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { spawn } from "node:child_process";
-import fs from "node:fs";
 import { promises as fsp } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -127,11 +126,19 @@ async function releaseLock() {
 
 function spawnGatewayProcess() {
   const args = ["gateway"];
-  if (CONFIG_PATH && fs.existsSync(CONFIG_PATH)) {
-    args.push("--config", CONFIG_PATH);
+
+  // This OpenClaw build reads .openclaw/openclaw.json from the working directory
+  // and does not support CLI flags like --config. Keep the bridge pinned to the
+  // selected worktree by running the gateway from that worktree path.
+  if (CONFIG_PATH && CONFIG_PATH !== DEFAULT_CONFIG) {
+    logWarn(
+      `OPENCLAW_CONFIG_PATH is set to ${CONFIG_PATH}, but this OpenClaw build does not support --config; using cwd ${WORKTREE_PATH}`,
+    );
   }
   if (process.env.OPENCLAW_GATEWAY_PROFILE) {
-    args.push("--profile", process.env.OPENCLAW_GATEWAY_PROFILE);
+    logWarn(
+      `OPENCLAW_GATEWAY_PROFILE=${process.env.OPENCLAW_GATEWAY_PROFILE} ignored because this OpenClaw build does not support --profile`,
+    );
   }
 
   const env = {
@@ -150,6 +157,7 @@ function spawnGatewayProcess() {
   const child = spawn(CLI, args, {
     stdio: "inherit",
     env,
+    cwd: WORKTREE_PATH,
   });
 
   child.once("spawn", () => {

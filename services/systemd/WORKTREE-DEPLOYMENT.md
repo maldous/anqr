@@ -6,6 +6,8 @@
 
 **Root Cause**: The `anqr-symphony-bridge@.service` template was missing, so no Symphony bridges were running on worktree ports (4325-4328). The Discord router tried to route requests to these ports, but with no listeners, requests fell back to the main bridge (port 4319) running in the main repo.
 
+**Additional Root Cause**: Discord requests can also carry an absolute `cwd` from OpenClaw or an older main-checkout session. Before this patch, the router forwarded that path unchanged and the worktree bridge trusted it, so edits could still land in `/home/user/src/anqr` even after routing to a worktree port.
+
 **Evidence**: 
 - File `worktree-name.txt` created in `/home/user/src/anqr` with content "anqr"
 - Expected behavior: Two files created in two different worktrees with different names
@@ -130,3 +132,51 @@ curl http://127.0.0.1:18790/health | jq
 **Created**: 2026-03-30  
 **Issue**: Worktree isolation not working (file created in main repo)  
 **Fix**: Created missing `anqr-symphony-bridge@.service` template
+
+## Required Manual Steps After Extracting This Patch
+
+1. **Deploy the updated user units from the repository copy**
+
+```bash
+cp services/systemd/anqr-discord-bridge@.service ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-bridge@.service ~/.config/systemd/user/
+cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+```
+
+2. **Restart the router and all Discord worktree services**
+
+```bash
+systemctl --user restart anqr-discord-router.service
+systemctl --user restart anqr-symphony-bridge@{5,6,7,8}.service
+systemctl --user restart anqr-discord-bridge@{5,6,7,8}.service
+```
+
+3. **Replace the stale placeholder Discord bridge unit if it was previously installed**
+
+The live `~/.config/systemd/user/anqr-discord-bridge@.service` in the provided systemd snapshot still runs `sleep infinity`. It must be replaced with the repository version that launches `scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs`.
+
+4. **Ensure every Discord-facing OpenClaw config points at the router, not the main bridge**
+
+Each Discord worktree config should use the router base URL:
+
+```json
+"baseUrl": "http://127.0.0.1:18790/v1"
+```
+
+Not:
+
+```json
+"baseUrl": "http://127.0.0.1:4319/v1"
+```
+
+5. **Verify isolation**
+
+```bash
+curl http://127.0.0.1:18790/health | jq
+curl http://127.0.0.1:4325/health | jq
+journalctl --user -u anqr-discord-router.service -n 100 --no-pager
+journalctl --user -u anqr-symphony-bridge@5.service -n 100 --no-pager
+```
+
+You should now see router log lines rebasing Discord request cwd into the selected worktree, and the bridge will clamp any main-checkout path back into its own worktree.

@@ -446,11 +446,62 @@ function ensureString(value) {
 
 
 const requestCwdStorage = new AsyncLocalStorage();
+const BRIDGE_ROOT = path.resolve(process.env.ANQR_WORKTREE_PATH || process.cwd());
+const BRIDGE_PARENT_ROOT = path.dirname(BRIDGE_ROOT);
+const IS_WORKTREE_BRIDGE = Boolean(process.env.ANQR_WORKTREE_ID || process.env.ANQR_WORKTREE_PATH);
+const WORKTREE_CHECKOUT_PATTERN = /^(anqr|anqr-wt\d+)$/;
+
+function isPathWithinRoot(candidatePath, rootPath) {
+  if (!candidatePath || !rootPath) return false;
+  const relative = path.relative(rootPath, candidatePath);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function detectControlRepoRoot() {
+  const gitPointerPath = path.join(BRIDGE_ROOT, ".git");
+  try {
+    const stat = fs.statSync(gitPointerPath);
+    if (!stat.isFile()) return BRIDGE_ROOT;
+    const gitPointer = fs.readFileSync(gitPointerPath, "utf8");
+    const match = gitPointer.match(/gitdir:\s*(.+)/);
+    if (!match || !match[1]) return BRIDGE_ROOT;
+    const gitDir = path.resolve(BRIDGE_ROOT, match[1].trim());
+    const marker = `${path.sep}.git${path.sep}worktrees${path.sep}`;
+    const markerIndex = gitDir.lastIndexOf(marker);
+    if (markerIndex === -1) return BRIDGE_ROOT;
+    return gitDir.slice(0, markerIndex);
+  } catch {
+    return BRIDGE_ROOT;
+  }
+}
+
+const CONTROL_REPO_ROOT = detectControlRepoRoot();
+
+function remapRepoPathToBridgeRoot(candidatePath) {
+  if (!IS_WORKTREE_BRIDGE) return candidatePath;
+  if (isPathWithinRoot(candidatePath, BRIDGE_ROOT)) return candidatePath;
+
+  if (isPathWithinRoot(candidatePath, CONTROL_REPO_ROOT)) {
+    const relative = path.relative(CONTROL_REPO_ROOT, candidatePath);
+    return path.resolve(BRIDGE_ROOT, relative);
+  }
+
+  if (isPathWithinRoot(candidatePath, BRIDGE_PARENT_ROOT)) {
+    const relative = path.relative(BRIDGE_PARENT_ROOT, candidatePath);
+    const segments = relative.split(path.sep).filter(Boolean);
+    if (segments.length > 0 && WORKTREE_CHECKOUT_PATTERN.test(segments[0])) {
+      return path.resolve(BRIDGE_ROOT, ...segments.slice(1));
+    }
+  }
+
+  return BRIDGE_ROOT;
+}
 
 function normalizeRequestCwd(cwd) {
-  if (typeof cwd !== "string") return process.cwd();
+  if (typeof cwd !== "string") return remapRepoPathToBridgeRoot(BRIDGE_ROOT);
   const trimmed = cwd.trim();
-  return trimmed ? path.resolve(trimmed) : process.cwd();
+  if (!trimmed) return remapRepoPathToBridgeRoot(BRIDGE_ROOT);
+  return remapRepoPathToBridgeRoot(path.resolve(trimmed));
 }
 
 function withRequestCwd(cwd, fn) {
@@ -458,21 +509,27 @@ function withRequestCwd(cwd, fn) {
 }
 
 function getCurrentRequestCwd() {
-  return requestCwdStorage.getStore()?.cwd || process.cwd();
+  return requestCwdStorage.getStore()?.cwd || normalizeRequestCwd(BRIDGE_ROOT);
 }
 
 function resolveRequestPath(targetPath) {
   if (typeof targetPath !== "string") return targetPath;
   const trimmed = targetPath.trim();
   if (!trimmed) return getCurrentRequestCwd();
-  return path.isAbsolute(trimmed) ? trimmed : path.resolve(getCurrentRequestCwd(), trimmed);
+  const resolvedPath = path.isAbsolute(trimmed)
+    ? path.resolve(trimmed)
+    : path.resolve(getCurrentRequestCwd(), trimmed);
+  return remapRepoPathToBridgeRoot(resolvedPath);
 }
 
 function resolveRequestDir(cwd) {
   if (typeof cwd !== "string") return getCurrentRequestCwd();
   const trimmed = cwd.trim();
   if (!trimmed) return getCurrentRequestCwd();
-  return path.isAbsolute(trimmed) ? trimmed : path.resolve(getCurrentRequestCwd(), trimmed);
+  const resolvedDir = path.isAbsolute(trimmed)
+    ? path.resolve(trimmed)
+    : path.resolve(getCurrentRequestCwd(), trimmed);
+  return remapRepoPathToBridgeRoot(resolvedDir);
 }
 
 // --------------------------------------------------------------------------
@@ -5827,6 +5884,12 @@ server.timeout = 0;
 server.keepAliveTimeout = 0;
 
 server.listen(PORT, "127.0.0.1", async () => {
+  logInfo(`Bridge root: ${BRIDGE_ROOT}`);
+  if (IS_WORKTREE_BRIDGE) {
+    logInfo(`Worktree bridge isolation active: repo paths remap into ${BRIDGE_ROOT}`);
+    logInfo(`Control-plane checkout detected at: ${CONTROL_REPO_ROOT}`);
+  }
+
   const RETRIEVAL_WARMUP_ENABLED = process.env.ANQR_RETRIEVAL_WARMUP !== "false";
   let warmupSummary = { bm25: "skipped", vector: "skipped", linear: "skipped" };
 

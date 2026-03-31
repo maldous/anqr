@@ -16,7 +16,9 @@
  */
 
 import http from "node:http";
+import path from "node:path";
 import { createLogger } from "../../lib/logger.mjs";
+import { PROJECT_ROOT, getWorktreePath } from "../../core/worktree-config.mjs";
 
 const { logInfo, logWarn, logError, logDebug } = createLogger();
 
@@ -33,12 +35,44 @@ const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT || "4", 10);
 // Each Symphony bridge runs in its worktree directory with isolated working tree
 const WORKTREE_URLS = WORKTREE_IDS.map((id) => ({
   id,
+  path: getWorktreePath(id),
   url: `http://127.0.0.1:432${id}`,
   activeRequests: 0,
 }));
 
 // Track global concurrent requests
 let globalActiveRequests = 0;
+
+function isPathWithinRoot(candidatePath, rootPath) {
+  if (!candidatePath || !rootPath) return false;
+  const relative = path.relative(rootPath, candidatePath);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function rebaseCwdToWorktree(cwd, worktreePath) {
+  if (typeof cwd !== "string" || !cwd.trim()) return worktreePath;
+  const resolved = path.resolve(cwd.trim());
+
+  if (isPathWithinRoot(resolved, worktreePath)) {
+    return resolved;
+  }
+
+  if (isPathWithinRoot(resolved, PROJECT_ROOT)) {
+    const relative = path.relative(PROJECT_ROOT, resolved);
+    return path.resolve(worktreePath, relative);
+  }
+
+  const projectParent = path.dirname(PROJECT_ROOT);
+  if (isPathWithinRoot(resolved, projectParent)) {
+    const relative = path.relative(projectParent, resolved);
+    const segments = relative.split(path.sep).filter(Boolean);
+    if (segments.length > 0 && /^(anqr|anqr-wt\d+)$/.test(segments[0])) {
+      return path.resolve(worktreePath, ...segments.slice(1));
+    }
+  }
+
+  return worktreePath;
+}
 
 /**
  * Find the worktree with the least active requests (least-loaded)
@@ -98,7 +132,17 @@ function proxyToWorktree(worktree, req, res) {
       `📨 Routing to worktree wt${worktree.id} (active: ${worktree.activeRequests}, global: ${globalActiveRequests}/${MAX_CONCURRENT})`,
     );
 
-    const body = Buffer.concat(requestBody).toString();
+    const rawBody = Buffer.concat(requestBody).toString();
+    let proxyBody = rawBody;
+
+    try {
+      const parsedBody = JSON.parse(rawBody || "{}");
+      parsedBody.cwd = rebaseCwdToWorktree(parsedBody.cwd, worktree.path);
+      proxyBody = JSON.stringify(parsedBody);
+      logDebug(`🧭 Rebased request cwd for wt${worktree.id}: ${parsedBody.cwd}`);
+    } catch (err) {
+      logWarn(`Failed to rewrite Discord request cwd for wt${worktree.id}: ${err.message}`);
+    }
 
     // Route to worktree-specific Symphony bridge port
     // Each worktree runs its own Symphony bridge instance with isolated working directory
@@ -112,9 +156,11 @@ function proxyToWorktree(worktree, req, res) {
         path: "/v1/chat/completions",
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Content-Length": Buffer.byteLength(body),
           ...req.headers,
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(proxyBody),
+          "x-worktree-id": `wt${worktree.id}`,
+          "x-worktree-path": worktree.path,
         },
       },
       (proxyRes) => {
@@ -153,7 +199,7 @@ function proxyToWorktree(worktree, req, res) {
       );
     });
 
-    proxyReq.write(body);
+    proxyReq.write(proxyBody);
     proxyReq.end();
   });
 
@@ -173,6 +219,7 @@ function handleHealth(res) {
     availableSlots: Math.max(0, MAX_CONCURRENT - globalActiveRequests),
     worktrees: WORKTREE_URLS.map((wt) => ({
       id: wt.id,
+      path: wt.path,
       url: wt.url,
       activeRequests: wt.activeRequests,
       healthy: true, // Could add actual health check
