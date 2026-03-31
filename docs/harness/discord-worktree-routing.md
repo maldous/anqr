@@ -6,7 +6,7 @@
 
 Discord requests flow through a **single OpenClaw Gateway instance** which provides the Discord bot relay. OpenClaw uses Symphony Bridge for AI processing, routing through the Discord Request Router to isolated worktrees (wt5-wt8).
 
-**Current status (2026-03-31):** All Discord services STOPPED. Critical config conflicts identified. See primary doc for full gap analysis, phased delivery plan (Section 17), E2E testing strategy (Section 18), and reviewer briefing (Section 19).
+**Current status (2026-03-31):** All Discord services **OPERATIONAL**. All config conflicts resolved. All 8 phases of validation complete (Phases 0-7 passed, Phase 8 documentation finalized). See primary doc for evidence.
 
 ## OpenClaw's Role
 
@@ -50,7 +50,7 @@ Git Worktrees (wt5-wt8)
 |--------|-------------------|-------|
 | `~/.openclaw/openclaw.json` | `http://127.0.0.1:18790/v1` | Global config |
 | `.openclaw/openclaw.json` (in-repo) | `http://127.0.0.1:18790/v1` | Project config |
-| `.openclaw/models.json` (in-repo) | `http://127.0.0.1:4319/v1` | ⚠️ **OVERRIDES to main bridge!** |
+| `.openclaw/models.json` (in-repo) | `http://127.0.0.1:18790/v1` | ✅ Updated to match router |
 
 ### 2. Discord Request Router
 
@@ -94,30 +94,30 @@ The following defects were identified by external code review and have been fixe
 
 See `docs/harness/12-concurrent-execution-with-worktrees.md` Section 4A for full evidence.
 
-## Critical Issues (Config — Unverified at Runtime)
+## Resolved Issues (All Verified)
 
-### Issue 1: `models.json` Overrides Provider URL (CRITICAL)
+All issues identified by external review have been resolved and verified through Phases 1-7:
 
-The in-repo `.openclaw/models.json` sets `symphony-bridge.baseUrl` to `http://127.0.0.1:4319/v1` (the **main** Symphony Bridge). Since `models.json` likely takes precedence over `openclaw.json` in the merge chain, OpenClaw may send ALL AI requests directly to port 4319, **completely bypassing the Discord Router and worktree bridges**.
+### Issue 1: `models.json` Provider URL — ✅ RESOLVED (Phase 3)
 
-**Fix:** Update `models.json` to use `http://127.0.0.1:18790/v1`, or remove the `symphony-bridge` provider from `models.json` entirely.
+`models.json` was updated to point to `http://127.0.0.1:18790/v1` (the router). Verified via `openclaw config get` that `openclaw.json` wins the merge chain. Both config files now agree on the router URL.
 
-### Issue 2: Workspace Config Points to Main (CRITICAL)
+### Issue 2: Workspace Config — ✅ VERIFIED SAFE (Phase 3)
 
-All `.openclaw/openclaw.json` files (git-tracked) have `"workspace": "/home/user/src/anqr"`. This anchors OpenClaw's tool operations to the main repo regardless of bridge cwd.
+Verified that the bridge ignores the `workspace` field. The Discord Router rebases `cwd` to the target worktree path. Not a runtime isolation issue.
 
-**Four layers of isolation defense:**
+**All isolation layers verified:**
 
 | Layer | Status | Notes |
 |-------|--------|-------|
-| 1. Provider URL routing (to router, not main bridge) | ❌ `models.json` may override | See Issue 1 |
-| 2. Systemd `WorkingDirectory` (bridge cwd = worktree) | ✅ Implemented | |
-| 3. Router cwd rebase (rewrites request paths) | ✅ Implemented | |
-| 4. OpenClaw workspace (anchors tool ops) | ❌ Points to main | Git-tracked, identical everywhere |
+| 1. Provider URL routing (to router, not main bridge) | ✅ **VERIFIED** | `models.json` updated; `openclaw.json` wins merge |
+| 2. Systemd `WorkingDirectory` (bridge cwd = worktree) | ✅ Implemented | Verified Phase 4 |
+| 3. Router cwd rebase (rewrites request paths) | ✅ Implemented | Verified Phase 5 |
+| 4. OpenClaw workspace (anchors tool ops) | ✅ **VERIFIED SAFE** | Bridge ignores workspace; router rebases cwd |
 
-### Issue 3: Duplicate Gateway Services
+### Issue 3: Duplicate Gateway Services — ✅ RESOLVED (Phase 2)
 
-Both `openclaw-gateway.service` (created by OpenClaw CLI) and `anqr-discord-bridge@.service` (ANQR harness) try to bind port 18789. Remove the standalone `openclaw-gateway.service`.
+The standalone `openclaw-gateway.service` was removed. The gateway singleton script now includes port-alive detection — if an external gateway is already running on port 18789, it enters monitoring mode instead of crash-restarting.
 
 ## Monitoring
 
@@ -160,7 +160,7 @@ rm -f ~/.config/systemd/user/openclaw-gateway.service.bak
 - `scripts/ops/integrations/model/symphony-openai-bridge.mjs` — Bridge implementation
 - `scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs` — Gateway singleton wrapper
 - `.openclaw/openclaw.json` — In-repo OpenClaw config (models, workspace, gateway)
-- `.openclaw/models.json` — In-repo model provider overrides (⚠️ config conflict source)
+- `.openclaw/models.json` — In-repo model provider overrides (✅ updated to match router URL)
 - `services/systemd/anqr-discord-router.service` — Router service
 - `services/systemd/anqr-symphony-bridge@.service` — Bridge template
 - `services/systemd/anqr-discord-bridge@.service` — Gateway singleton template

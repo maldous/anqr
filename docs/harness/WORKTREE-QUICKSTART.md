@@ -37,17 +37,16 @@ git worktree list
 # Should show: main + wt1 through wt8 (9 total)
 ```
 
-### Step 2: Fix OpenClaw Config (CRITICAL)
+### Step 2: Verify OpenClaw Config
 
-The in-repo `.openclaw/models.json` may override the symphony-bridge URL to point to the main bridge (port 4319) instead of the Discord Router (port 18790). Verify and fix:
+The in-repo `.openclaw/models.json` should point to the Discord Router (port 18790). This was resolved in Phase 3 — verify it's still correct:
 
 ```bash
-# Check current value
+# Should show "http://127.0.0.1:18790/v1"
 jq '.providers["symphony-bridge"].baseUrl' .openclaw/models.json
-# If it shows "http://127.0.0.1:4319/v1", it needs to be fixed to 18790
 ```
 
-See Gap #1 in [12-concurrent-execution-with-worktrees.md](12-concurrent-execution-with-worktrees.md) for details.
+If it shows port 4319, update it to 18790. See [12-concurrent-execution-with-worktrees.md](12-concurrent-execution-with-worktrees.md) for details.
 
 ### Step 3: Deploy Systemd Services (1 minute)
 
@@ -173,13 +172,13 @@ systemctl --user restart anqr-symphony-runner@1.service
 
 **Problem: Discord commands go to main repo**
 
-Three likely causes (check in order):
+Check in order:
 
-1. **`models.json` overrides provider URL to 4319** — Check `jq '.providers["symphony-bridge"].baseUrl' .openclaw/models.json`
-2. **OpenClaw workspace config points to main** — All `.openclaw/openclaw.json` have `workspace: /home/user/src/anqr`
-3. **Worktree bridges not running** — Check `systemctl --user status anqr-symphony-bridge@{5,6,7,8}.service`
+1. **`models.json` URL** — Should be `18790`: `jq '.providers["symphony-bridge"].baseUrl' .openclaw/models.json`
+2. **Worktree bridges not running** — Check `systemctl --user status anqr-symphony-bridge@{5,6,7,8}.service`
+3. **Router not running** — Check `curl http://127.0.0.1:18790/health`
 
-See Gap Analysis in [12-concurrent-execution-with-worktrees.md](12-concurrent-execution-with-worktrees.md) for details.
+**Note:** The `workspace` field in `.openclaw/openclaw.json` is safe — the bridge ignores it and the router rebases cwd to the worktree path (verified Phase 3).
 
 **Problem: Services out of date**
 

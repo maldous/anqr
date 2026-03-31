@@ -4,14 +4,16 @@
 
 ## Current State (2026-03-31)
 
-**ALL services are STOPPED.** Multiple issues identified:
+**All services OPERATIONAL.** All issues identified by external review have been resolved through Phases 1-7:
 
-- Deployed service files differ from repo versions (multiple files out of date)
-- Duplicate `openclaw-gateway.service` (created by OpenClaw CLI) conflicts with ANQR gateway singleton
-- Wrong-ID template instantiations: runner@{5-8} and discord-bridge@{1-4} should not exist
-- `models.json` may override symphony-bridge URL to main bridge (4319) instead of router (18790)
+- ✅ Service files reconciled and deployed from repo (Phase 2)
+- ✅ Duplicate `openclaw-gateway.service` removed; singleton has port-alive detection (Phase 2)
+- ✅ Wrong-ID template instantiations removed (Phase 2)
+- ✅ `models.json` updated to point to router (18790); `openclaw.json` wins merge (Phase 3)
+- ✅ All 7 ports listening: 4319, 4325-4328, 18789, 18790 (Phase 4)
+- ✅ Discord isolation verified (Phase 5), Linear execution verified (Phase 6), concurrent ops verified (Phase 7)
 
-See the primary worktree documentation for full gap analysis.
+See the primary worktree documentation for full evidence.
 
 ## Deploy All Services
 
@@ -129,29 +131,25 @@ rm -f ~/.config/systemd/user/openclaw-gateway.service.bak
 systemctl --user daemon-reload
 ```
 
-## Known Issues (Config — Unverified at Runtime)
+## Resolved Issues (All Verified)
 
-### 1. `models.json` Overrides Provider URL (CRITICAL)
+### 1. `models.json` Provider URL — ✅ RESOLVED (Phase 3)
 
-`.openclaw/models.json` sets `symphony-bridge.baseUrl` to `http://127.0.0.1:4319/v1` (main bridge), while `openclaw.json` correctly sets it to `http://127.0.0.1:18790/v1` (router). Since `models.json` likely wins the merge, OpenClaw may bypass the router entirely.
+`models.json` updated to `http://127.0.0.1:18790/v1`. Verified via `openclaw config get` that `openclaw.json` wins the merge. Both files now agree.
 
-**Fix:** Update `models.json` baseUrl to `18790`, or remove `symphony-bridge` provider from `models.json`.
+### 2. Workspace Config — ✅ VERIFIED SAFE (Phase 3)
 
-### 2. Workspace Config Points to Main
+Bridge ignores the `workspace` field. Router rebases `cwd` to the target worktree path. Not a runtime isolation issue.
 
-`.openclaw/openclaw.json` (git-tracked) has `workspace: /home/user/src/anqr` in all worktrees. OpenClaw may anchor tool operations to main regardless of bridge cwd.
+### 3. Duplicate Gateway Service — ✅ RESOLVED (Phase 2)
 
-**Fix:** Bridge must override workspace from `ANQR_WORKTREE_PATH` env var.
+Removed `openclaw-gateway.service`. Gateway singleton script now has port-alive detection — enters monitoring mode if an external gateway already owns the port.
 
-### 3. Duplicate Gateway Service
+**Warning:** Running `openclaw service install` or `openclaw doctor` may recreate the standalone service. Re-remove it if this happens.
 
-`openclaw-gateway.service` was created by OpenClaw CLI and conflicts with `anqr-discord-bridge@.service`. Remove the standalone service.
+### 4. Deployed Files Drift — ✅ RESOLVED (Phase 2)
 
-**Warning:** Running `openclaw service install` or `openclaw doctor` may recreate it.
-
-### 4. Deployed Files Drift from Repo
-
-Re-run deploy commands above to copy fresh files from repo.
+All service files reconciled and deployed from repo. Re-run deploy commands above if files drift again.
 
 ---
 
