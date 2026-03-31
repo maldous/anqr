@@ -3805,10 +3805,12 @@ async function invokeWithAIInner(provider, messages, options = {}) {
     let streamErrorDetail = null;
     let fatalStreamError = null;
     let hasTextDeltas = false;
+    let hasMeaningfulText = false; // Track if we got any meaningful content (text-delta OR reasoning-delta)
     let partCount = 0;
     let textDeltaCount = 0;
     let toolCallCount = 0;
     let errorCount = 0;
+    let emittedReasoningContent = false; // Track if we actually emitted reasoning content
 
     logDebug(`[invokeWithAI] Processing fullStream...`);
 
@@ -3824,23 +3826,31 @@ async function invokeWithAIInner(provider, messages, options = {}) {
       // Build detailed log context based on part type
       const logContext = { type: part.type };
 
-      // Check for empty reasoning-delta to suppress log spam
-      const isEmptyReasoningDelta = part.type === "reasoning-delta" && (!part.textDelta || part.textDelta.length === 0);
+      // Check for empty deltas to suppress log spam (both text-delta and reasoning-delta)
+      const deltaText = part.textDelta || "";
+      const isEmptyTextDelta = part.type === "text-delta" && deltaText.length === 0;
+      const isEmptyReasoningDelta = part.type === "reasoning-delta" && deltaText.length === 0;
+      const isEmptyDelta = isEmptyTextDelta || isEmptyReasoningDelta;
 
-      // DIAGNOSTIC: Log all event types for non-Codebuff providers (skip empty reasoning-delta)
-      if (provider.name !== "codebuff" && provider.name !== "codex" && !isEmptyReasoningDelta) {
-        logInfo(`🔍 [${provider.name}] Stream event: ${part.type}`, { 
+      // DIAGNOSTIC: Log non-empty events only, and use DEBUG (not INFO) to prevent log flood
+      if (provider.name !== "codebuff" && provider.name !== "codex" && !isEmptyDelta) {
+        logDebug(`🔍 [${provider.name}] Stream event: ${part.type}`, {
           type: part.type,
           hasTextDelta: !!part.textDelta,
           hasToolName: !!part.toolName,
-          preview: part.textDelta?.slice(0, 50) || part.toolName || ""
+          preview: deltaText.slice(0, 50) || part.toolName || "",
         });
       }
 
-      // Track empty reasoning-delta count (skip logging for these)
+      // Track empty delta counts and skip processing for empty deltas
       if (isEmptyReasoningDelta) {
         emptyReasoningDeltaCount++;
         continue; // Skip further processing for empty reasoning-delta
+      }
+
+      // Track empty text-delta and skip processing
+      if (isEmptyTextDelta) {
+        continue; // Skip empty text-delta
       }
 
       if (part.type === "text-delta") {
@@ -3848,6 +3858,7 @@ async function invokeWithAIInner(provider, messages, options = {}) {
         logContext.length = deltaText.length;
         logContext.preview = deltaText.slice(0, 100);
         hasTextDeltas = true;
+        if (deltaText.length > 0) hasMeaningfulText = true;
         textDeltaCount++;
       } else if (part.type === "tool-call") {
         logContext.toolName = part.toolName;
@@ -3887,15 +3898,16 @@ async function invokeWithAIInner(provider, messages, options = {}) {
       }
 
       // Suppress blank DEBUG lines (text-delta or reasoning-delta with length 0)
-      const isEmptyTextDelta = part.type === "text-delta" && (!part.textDelta || part.textDelta.length === 0);
+      // Reuse isEmptyTextDelta already defined at line 3831
       if (!isEmptyTextDelta && !isEmptyReasoningDelta) {
         logDebug(`[invokeWithAI] Stream part ${partCount}`, logContext);
       }
 
       // Process stream parts based on type
       if (part.type === "reasoning-start") {
-        // Emit newline when reasoning starts (no emoji for Discord)
-        if (onChunk) onChunk({ type: "text", text: "\n" });
+        // Only emit newline if we actually have reasoning content coming
+        // (emittedReasoningContent will be set when we get non-empty reasoning-delta)
+        // For now, don't emit - wait for actual content
       } else if (part.type === "reasoning-delta") {
         // CRITICAL BUG FIX (ANQ-XXX): Accumulate reasoning-delta into fullText
         // Previously, reasoning-delta was only forwarded to onChunk but never
@@ -3904,6 +3916,8 @@ async function invokeWithAIInner(provider, messages, options = {}) {
         // This is the root cause of the OpenRouter streaming failures.
         const reasoningDelta = part.textDelta || "";
         if (reasoningDelta && reasoningDelta.length > 0) {
+          hasMeaningfulText = true; // Track meaningful reasoning content
+          emittedReasoningContent = true; // Mark that we actually got reasoning
           // Accumulate into fullText (same as text-delta)
           if (!fullTextCapped) {
             if (fullText.length + reasoningDelta.length > MAX_RESPONSE_TEXT_BYTES) {
@@ -3923,7 +3937,10 @@ async function invokeWithAIInner(provider, messages, options = {}) {
           }
         }
       } else if (part.type === "reasoning-end") {
-        if (onChunk) onChunk({ type: "text", text: "\n" });
+        // Only emit newline if we actually got reasoning content
+        if (emittedReasoningContent && onChunk) {
+          onChunk({ type: "text", text: "\n" });
+        }
       } else if (part.type === "text-delta") {
         const delta = part.textDelta || "";
         if (!fullTextCapped) {
@@ -4076,14 +4093,17 @@ async function invokeWithAIInner(provider, messages, options = {}) {
       throw fatalStreamError;
     }
 
-    // Fallback: if fullStream produced no text-delta events, try result.text
+    // Fallback: if fullStream produced no meaningful content (text-delta OR reasoning-delta), try result.text
     // (best-effort — result.text derives from the same stream, but internal
     // accumulation may differ for some provider SDKs)
     //
     // For Codebuff: AI SDK buffers activity messages ("✅ done", "🔧 read:") and only
     // exposes them via result.text at the end. This is expected behavior - the AI SDK
     // only emits text-delta for model-generated text, not for SDK activity metadata.
-    if (!hasTextDeltas || !fullText || fullText.trim() === "") {
+    //
+    // FIX: Check hasMeaningfulText instead of hasTextDeltas to handle reasoning-only streams
+    // where content comes via reasoning-delta events instead of text-delta.
+    if (!hasMeaningfulText || !fullText || fullText.trim() === "") {
       try {
         const fallbackText = await result.text;
         if (fallbackText && fallbackText.trim()) {

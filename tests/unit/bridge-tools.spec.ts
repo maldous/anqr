@@ -268,7 +268,7 @@ describe.skip("Bridge Tools - File Operations", () => {
   });
 });
 
-describe.skip("Bridge Tools - Code Search", () => {
+describe.skip("Bridge Tools - Code Search", () => { // Skipped because importing symphony-openai-bridge.mjs starts an HTTP server on port 4319, which conflicts with the running systemd service.
   beforeEach(() => {
     if (!fs.existsSync(FIXTURES_DIR)) {
       fs.mkdirSync(FIXTURES_DIR, { recursive: true });
