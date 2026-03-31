@@ -4313,8 +4313,8 @@ async function invokeWithFallback(messages, route, sessionId = null, cwd = null)
     logInfo(`🔍 Periodic evaluation cycle: sampling underused providers`);
   }
 
-  // Keep trying providers until we run out
-  while (attemptNumber < 10) {
+  // Keep trying providers until we run out (no limit - try ALL providers)
+  while (true) {
     attemptNumber++;
     logDebug(`[invokeWithFallback] Attempt ${attemptNumber}/10`, {
       triedProviders,
@@ -4712,8 +4712,8 @@ async function invokeWithFallbackStream(
   let lastError = null;
   let attemptNumber = 0;
 
-  // Keep trying providers until we run out (higher limit for streaming due to rate limits)
-  while (attemptNumber < 15) {
+  // Keep trying providers until we run out (no limit - try ALL providers)
+  while (true) {
     attemptNumber++;
 
     // Get next provider from credit-gate (excluding already-tried ones)

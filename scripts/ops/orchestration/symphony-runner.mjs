@@ -571,25 +571,8 @@ function isBaselineRepairIssue(issue) {
 
 function classifyProviderFailure(message = "") {
   const msg = String(message || "");
-  // Check for stream errors first - these are retryable provider failures
-  if (
-    msg.includes("stream_error") ||
-    msg.includes("STREAM_ERROR") ||
-    msg.includes("stream_error_with_output") ||
-    msg.includes("STREAM_ERROR_WITH_OUTPUT") ||
-    msg.includes("NO_OUTPUT_GENERATED")
-  )
-    return "stream_error";
-  // Check for HTTP gateway errors (502, 503, 504) - transient infrastructure failures
-  if (
-    msg.includes("502") ||
-    msg.includes("503") ||
-    msg.includes("504") ||
-    msg.includes("Bad Gateway") ||
-    msg.includes("Service Unavailable") ||
-    msg.includes("Gateway Timeout")
-  )
-    return "gateway_error";
+  // All retryable errors are now handled by the bridge - the bridge tries ALL providers
+  // No special classification needed here - just pass through to provider handling
   if (msg.includes("LOCAL_BUSY") || msg.includes("local_busy")) return "local_busy";
   if (
     msg.includes("429") ||
@@ -1101,112 +1084,22 @@ async function executeIssue(issue, dryRun = false) {
         return "done";
       }
 
-      // Handle HTTP gateway errors (502, 503, 504) - transient infrastructure failures from OpenRouter/gateways
-      // These are retryable and should trigger provider fallback
-      if (failureKind === "gateway_error") {
-        const currentState = getIssueState(issue.identifier);
-        const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0);
-        
-        await updateIssue(issue.id, { stateId: STATES.todo });
-        setCooldown(issue.identifier, cooldownMs, "gateway_error");
-        
-        recordRetryEvent(issue.identifier, {
-          type: "failure",
-          provider: metricsProviderName,
-          reason: "gateway_error",
-          cooldown_ms: cooldownMs,
-          error: failureMsg.slice(0, 200),
-        });
-        
+      // Provider failures, stream errors, and gateway errors are now handled entirely by the bridge
+      // The bridge tries ALL providers (no limit) until success or all providers exhausted
+      // No runner-side retry logic needed - bridge handles fallback automatically
+      if (failureKind === "provider" || failureKind === "stream_error" || failureKind === "gateway_error") {
+        // Bridge handles all retries - just record the failure and let it propagate
         await addComment(
           issue.id,
-          `🌐 **Gateway error** (502/503/504) — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
+          `⚠️ **Bridge failure** - all providers exhausted or bridge error: ${failureMsg.slice(0, 500)}`,
         );
-        recordTransition(issue.identifier, {
-          actor: "runner",
-          reason: "gateway_error",
-          from: "In Progress",
-          to: "Todo",
-          runId: RUN_ID,
-        });
         recordLinearCompletion(metricsProviderName, {
           completed: false,
           priority: issue.priority,
           estimate: issue.estimate,
         });
-        return "done";
-      }
-
-      // Handle stream errors (connection drops, SSE failures, premature closes) with exponential backoff
-      // Stream errors are retryable and should trigger provider fallback in the bridge
-      if (failureKind === "stream_error") {
-        const currentState = getIssueState(issue.identifier);
-        const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0);
-        
-        await updateIssue(issue.id, { stateId: STATES.todo });
-        setCooldown(issue.identifier, cooldownMs, "stream_error");
-        
-        // Record retry event for evidence
-        recordRetryEvent(issue.identifier, {
-          type: "failure",
-          provider: metricsProviderName,
-          reason: "stream_error",
-          cooldown_ms: cooldownMs,
-          error: failureMsg.slice(0, 200),
-        });
-        
-        await addComment(
-          issue.id,
-          `🌊 **Stream error** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
-        );
-        recordTransition(issue.identifier, {
-          actor: "runner",
-          reason: "stream_error",
-          from: "In Progress",
-          to: "Todo",
-          runId: RUN_ID,
-        });
-        recordLinearCompletion(metricsProviderName, {
-          completed: false,
-          priority: issue.priority,
-          estimate: issue.estimate,
-        });
-        return "done";
-      }
-
-      // Handle provider failures (LLM call failed, no choices, etc.) with exponential backoff
-      if (failureKind === "provider") {
-        const currentState = getIssueState(issue.identifier);
-        const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0);
-        
-        await updateIssue(issue.id, { stateId: STATES.todo });
-        setCooldown(issue.identifier, cooldownMs, "provider_failure");
-        
-        // Record retry event for evidence
-        recordRetryEvent(issue.identifier, {
-          type: "failure",
-          provider: metricsProviderName,
-          reason: "provider_failure",
-          cooldown_ms: cooldownMs,
-          error: failureMsg.slice(0, 200),
-        });
-        
-        await addComment(
-          issue.id,
-          `🔴 **Provider failure** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
-        );
-        recordTransition(issue.identifier, {
-          actor: "runner",
-          reason: "provider_failure",
-          from: "In Progress",
-          to: "Todo",
-          runId: RUN_ID,
-        });
-        recordLinearCompletion(metricsProviderName, {
-          completed: false,
-          priority: issue.priority,
-          estimate: issue.estimate,
-        });
+        // Move to Backlog (not Todo) - bridge already tried all providers, no more retries possible
+        await updateIssue(issue.id, { stateId: STATES.backlog });
         return "done";
       }
 
