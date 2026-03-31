@@ -218,16 +218,16 @@ export async function sendDiscordEmbed({
   });
 }
 
-// Streaming state for Discord updates - send in chunks every 5 seconds for proper formatting
+// Streaming state for Discord updates - send in chunks every 1 second for responsive streaming
 // Per-request buffers to prevent mixing output from concurrent requests
 const discordStreamBuffers = new Map(); // requestId -> { buffer: string, timer: NodeJS.Timeout | null }
-const DISCORD_STREAM_INTERVAL_MS = 5000; // Send every 5 seconds to preserve formatting
+const DISCORD_STREAM_INTERVAL_MS = 1000; // Send every 1 second for responsive streaming
 const DISCORD_STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
 
 /**
  * Stream a progress update to Discord with automatic batching.
- * Accumulates text and sends every 5 seconds OR when buffer exceeds 1900 chars.
- * This preserves natural formatting and prevents fragmented messages.
+ * Accumulates text and sends every 1 second OR when buffer exceeds 1900 chars.
+ * This provides responsive streaming while preserving formatting and preventing fragmented messages.
  *
  * Per-request buffering prevents text from concurrent requests getting mixed.
  *
