@@ -3260,7 +3260,7 @@ function convertMessages(messages) {
 const KNOWN_TOOL_CAPABLE = new Set(["codex", "codebuff"]);
 const toolCapableProviders = new Set(KNOWN_TOOL_CAPABLE);
 const nonToolCapableProviders = new Set();
-const TOOL_PROBE_TIMEOUT_MS = 20_000;
+const TOOL_PROBE_TIMEOUT_MS = 45_000;
 const TOOL_PROBE_RETRY_DELAY_MS = 60_000;
 const GATEWAY_BATCH_SIZE = 3; // Max concurrent probes per shared API gateway
 const GATEWAY_BATCH_DELAY_MS = 3_000; // Delay between batches within a gateway
@@ -4131,22 +4131,37 @@ async function invokeWithAIInner(provider, messages, options = {}) {
     }
 
     // Check for embedded errors — some providers return 200 with error in body
-    // CHANGED: Reclassify as retryable provider failure, not a loud generic error.
-    // Some providers can terminate a stream without text and without a final finish reason.
-    // This should trigger fallback, not a hard error.
-    if ((!fullText || fullText.trim() === "") && finishReason !== "tool-calls") {
-      const noOutputError = new Error(
-        `no_output_generated: provider=${provider.name}, finishReason=${finishReason ?? "null"}, parts=${partCount}, errors=${errorCount}, hasMeaningfulText=${hasMeaningfulText}`
-      );
-      noOutputError.code = "NO_OUTPUT_GENERATED";
+    // CHANGED: Distinguish between truly no output vs stream errors with partial output.
+    // - hasMeaningfulText=false + errorCount=0: truly no output generated (retryable)
+    // - hasMeaningfulText=false + errorCount>0: stream error produced an error part (retryable, but different classification)
+    // - hasMeaningfulText=true: content was produced, don't treat as no-output
+    const hasAnyOutput = hasMeaningfulText || (fullText && fullText.trim() !== "");
+    if (!hasAnyOutput && finishReason !== "tool-calls") {
+      // Distinguish error cases for better debugging
+      const outputClassification =
+        errorCount > 0
+          ? `stream_error_with_output: parts=${partCount}, errors=${errorCount}`
+          : `no_output_generated: provider=${provider.name}, finishReason=${finishReason ?? "null"}, parts=${partCount}, errors=${errorCount}, hasMeaningfulText=${hasMeaningfulText}`;
+
+      const noOutputError = new Error(outputClassification);
+      noOutputError.code = errorCount > 0 ? "STREAM_ERROR_WITH_OUTPUT" : "NO_OUTPUT_GENERATED";
       noOutputError.providerName = provider.name;
       noOutputError.finishReason = finishReason ?? null;
       noOutputError.retryable = true; // Mark as retryable for fallback selection
-      // Log as warning, not error — this is a provider edge case, not a hard bridge failure
-      logWarn(
-        `⚠️ Stream completed but produced no content (finishReason: ${finishReason}) — treating as retryable provider failure`,
-        { providerName: provider.name, partCount, errorCount, hasMeaningfulText },
-      );
+      noOutputError.hasErrors = errorCount > 0; // Flag for downstream handling
+
+      // Log with appropriate severity - stream errors with output are more informative
+      if (errorCount > 0) {
+        logWarn(
+          `⚠️ Stream produced error parts but no text content (finishReason: ${finishReason}) — treating as retryable provider failure`,
+          { providerName: provider.name, partCount, errorCount, hasMeaningfulText },
+        );
+      } else {
+        logWarn(
+          `⚠️ Stream completed but produced no meaningful content (finishReason: ${finishReason}) — treating as retryable provider failure`,
+          { providerName: provider.name, partCount, errorCount, hasMeaningfulText },
+        );
+      }
       throw noOutputError;
     }
     if (finishReason === "error") {

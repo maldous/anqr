@@ -139,7 +139,7 @@ export async function fetchAllSonarDuplicationIssues(sonarToken, sonarHost, proj
 // Linear helpers
 // ---------------------------------------------------------------------------
 
-async function findOpenLinearIssuesByTag(titleTag) {
+export async function findOpenLinearIssuesByTag(titleTag) {
   const result = await query(
     `query($filter: IssueFilter!) {
       issues(filter: $filter, first: 100) {
