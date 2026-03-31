@@ -339,21 +339,34 @@ let lastRevalidationTime = Date.now();
 let STARTUP_INITIALIZED = false;
 let STARTUP_WINNER = null; // Pre-selected winning key + mode for fast requests
 
-// Singleton CodebuffClient - created once at startup and reused for all requests
-// This avoids re-fetching the agent list on every request, which can fail if API is slow
+// Shared CodebuffClient cache — keyed by BOTH costMode AND cwd to prevent
+// cross-worktree isolation leaks. Only one client is cached at a time; it is
+// recreated when either costMode or cwd changes. This avoids re-fetching the
+// agent list on consecutive same-worktree requests while ensuring requests
+// for different worktrees never share a client.
+// See: External review finding F1 — shared client was previously keyed by
+// costMode only, allowing a request for one worktree to silently reuse
+// a client created with a different cwd.
 let SHARED_CLIENT = null;
 let SHARED_CLIENT_COST_MODE = null;
+let SHARED_CLIENT_CWD = null;
 
-// Create a shared CodebuffClient instance
+// Create or return a shared CodebuffClient instance.
+// Returns the cached client ONLY if both costMode and cwd match.
 function getSharedClient(apiKey, costMode, cwd) {
   const normalizedCwd = cwd || DEFAULT_CWD;
   
-  // Return existing client if cost mode matches (no need to recreate)
-  if (SHARED_CLIENT && SHARED_CLIENT_COST_MODE === costMode) {
+  // Return existing client only if BOTH cost mode AND cwd match
+  if (SHARED_CLIENT && SHARED_CLIENT_COST_MODE === costMode && SHARED_CLIENT_CWD === normalizedCwd) {
     return SHARED_CLIENT;
   }
   
-  // Create new client with the specified cost mode
+  // Log when cwd changes to help debug isolation issues
+  if (SHARED_CLIENT && SHARED_CLIENT_CWD !== normalizedCwd) {
+    logInfo(`[getSharedClient] cwd changed: ${SHARED_CLIENT_CWD} → ${normalizedCwd} — recreating client`);
+  }
+  
+  // Create new client with the specified cost mode and cwd
   SHARED_CLIENT = new CodebuffClient({
     apiKey,
     cwd: normalizedCwd,
@@ -362,8 +375,9 @@ function getSharedClient(apiKey, costMode, cwd) {
     },
   });
   SHARED_CLIENT_COST_MODE = costMode;
+  SHARED_CLIENT_CWD = normalizedCwd;
   
-  logDebug(`[getSharedClient] Created new client for costMode: ${costMode}`, {
+  logDebug(`[getSharedClient] Created new client`, {
     costMode,
     cwd: normalizedCwd,
   });
@@ -375,6 +389,7 @@ function getSharedClient(apiKey, costMode, cwd) {
 function resetSharedClient() {
   SHARED_CLIENT = null;
   SHARED_CLIENT_COST_MODE = null;
+  SHARED_CLIENT_CWD = null;
   logDebug(`[resetSharedClient] Client cache cleared`);
 }
 
@@ -1924,4 +1939,4 @@ server.listen(PORT, "127.0.0.1", async () => {
 });
 
 // Export for testing
-export { invokeCodebuff, invokeCodebuffStream, getApiKey, MODEL_ID };
+export { invokeCodebuff, invokeCodebuffStream, getApiKey, MODEL_ID, getSharedClient, resetSharedClient };

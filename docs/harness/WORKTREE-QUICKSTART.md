@@ -1,224 +1,223 @@
 # Worktree Quick Start Guide
 
-**Goal:** Enable concurrent Symphony execution to increase throughput 75-150%.
+> **Full reference:** [12-concurrent-execution-with-worktrees.md](12-concurrent-execution-with-worktrees.md) — comprehensive documentation with gap analysis, phased delivery plan, E2E testing strategy, and third-party reviewer briefing.
 
-**Time required:** 10 minutes
+**Goal:** Enable concurrent Symphony execution (wt1-wt4) and Discord isolation (wt5-wt8).
+
+**Time required:** 15 minutes
 
 **Prerequisites:**
 
 - Full harness capability (systemd user services, credentials)
+- OpenClaw CLI installed (`which openclaw`)
 - 4+ GB RAM, 2+ CPU cores
-- 2+ GB free disk space
+- 4+ GB free disk space (200 MB per worktree × 8 + node_modules)
 
-## Quick Start (3 Steps)
+## Important Notes
+
+**Runner timers vs bridge services:** Only wt1-wt4 use runner timers (`anqr-symphony-runner@{1,2,3,4}.timer`). Discord worktrees wt5-wt8 use bridge services (`anqr-symphony-bridge@{5,6,7,8}.service`), NOT runner timers. Do not enable `anqr-symphony-runner@{5,6,7,8}.timer` — this contradicts the architecture.
+
+**Bridge startup:** Bridge processes do NOT auto-start runner timers. Use `symphony-control.mjs --start` to manage runners independently.
+
+**Codebuff client isolation:** The Codebuff bridge shared client is keyed by both `costMode` and `cwd` to prevent cross-worktree isolation leaks.
+
+## Quick Start
 
 ### Step 1: Create Worktrees (2 minutes)
 
 ```bash
 cd /home/user/src/anqr
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2
+node scripts/ops/orchestration/symphony-worktree-pool.mjs init 8
 ```
 
-**Expected output:**
-
-```
-🚀 Initializing worktree pool (2 worktrees)...
-✅ Created worktree: /home/user/src/anqr-wt1 (branch: symphony/wt1)
-✅ Created worktree: /home/user/src/anqr-wt2 (branch: symphony/wt2)
-✅ Worktree pool initialized: 2/2 worktrees created
-```
-
-**Verify:**
+Verify:
 
 ```bash
-node scripts/ops/orchestration/symphony-worktree-pool.mjs status
+git worktree list
+# Should show: main + wt1 through wt8 (9 total)
 ```
 
-### Step 2: Install Systemd Services (1 minute)
+### Step 2: Fix OpenClaw Config (CRITICAL)
+
+The in-repo `.openclaw/models.json` may override the symphony-bridge URL to point to the main bridge (port 4319) instead of the Discord Router (port 18790). Verify and fix:
 
 ```bash
+# Check current value
+jq '.providers["symphony-bridge"].baseUrl' .openclaw/models.json
+# If it shows "http://127.0.0.1:4319/v1", it needs to be fixed to 18790
+```
+
+See Gap #1 in [12-concurrent-execution-with-worktrees.md](12-concurrent-execution-with-worktrees.md) for details.
+
+### Step 3: Deploy Systemd Services (1 minute)
+
+```bash
+# Copy ALL service and timer files
+cp services/systemd/anqr-symphony-bridge.service ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-bridge@.service ~/.config/systemd/user/
 cp services/systemd/anqr-symphony-runner@.service ~/.config/systemd/user/
 cp services/systemd/anqr-symphony-runner@.timer ~/.config/systemd/user/
+cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
+cp services/systemd/anqr-discord-bridge@.service ~/.config/systemd/user/
+cp services/systemd/anqr-discord-bridge@.timer ~/.config/systemd/user/
 systemctl --user daemon-reload
 ```
 
-### Step 3: Enable Concurrent Runners (1 minute)
+### Step 4: Start Services (1 minute)
 
 ```bash
-systemctl --user enable --now anqr-symphony-runner@1.timer
-systemctl --user enable --now anqr-symphony-runner@2.timer
+# Main Symphony bridge (must start first)
+systemctl --user enable --now anqr-symphony-bridge.service
+
+# Symphony runners (wt1-wt4 ONLY)
+systemctl --user enable --now anqr-symphony-runner@{1,2,3,4}.timer
+
+# Discord worktree bridges (wt5-wt8 ONLY)
+systemctl --user enable --now anqr-symphony-bridge@{5,6,7,8}.service
+
+# Discord router
+systemctl --user enable --now anqr-discord-router.service
+
+# Discord gateway singleton (wt5-wt8 ONLY)
+systemctl --user enable --now anqr-discord-bridge@{5,6,7,8}.timer
 ```
 
-**Verify:**
+### Step 5: Clean Up Legacy and Incorrect Services
 
 ```bash
-systemctl --user list-timers | grep symphony
+# Remove retired single runner
+systemctl --user disable --now anqr-symphony-runner.timer 2>/dev/null
+systemctl --user disable --now anqr-symphony-runner.service 2>/dev/null
+rm -f ~/.config/systemd/user/anqr-symphony-runner.service
+rm -f ~/.config/systemd/user/anqr-symphony-runner.timer
+
+# Remove wrong-ID instances
+systemctl --user disable --now anqr-symphony-runner@{5,6,7,8}.timer 2>/dev/null
+systemctl --user disable --now anqr-discord-bridge@{1,2,3,4}.timer 2>/dev/null
+
+# Remove duplicate OpenClaw gateway (created by OpenClaw CLI, conflicts with our singleton)
+systemctl --user disable --now openclaw-gateway.service 2>/dev/null
+rm -f ~/.config/systemd/user/openclaw-gateway.service
+rm -f ~/.config/systemd/user/openclaw-gateway.service.bak
+
+systemctl --user daemon-reload
+systemctl --user reset-failed
 ```
 
-**Expected:** Two timers active, firing every 2 minutes.
+### Step 6: Verify (1 minute)
+
+```bash
+# Timers should be active
+systemctl --user list-timers | grep anqr
+
+# Services should be running
+systemctl --user list-units --type=service | grep anqr | grep running
+
+# Ports should be listening
+ss -tln | grep -E '(4319|4325|4326|4327|4328|18789|18790)'
+
+# Health checks
+curl -s http://127.0.0.1:4319/health | jq '.status'   # Main bridge
+curl -s http://127.0.0.1:18790/health | jq '.status'  # Discord router
+```
+
+## How It Works
+
+**Discord flow:** Discord → OpenClaw Gateway (18789) → Discord Router (18790) → Worktree Bridge (4325-4328) → AI in worktree
+
+**Linear flow:** Linear "Todo" → Symphony Runner (wt1-wt4) → Main Bridge (4319) → AI in worktree → Commit → Push to main
+
+OpenClaw is a **single instance** that provides the Discord bot relay. It uses Symphony Bridge for AI processing. It does NOT contain the AI models.
+
+## Worktree Classification
+
+| Worktree | Type | Purpose | Concurrency |
+|----------|------|---------|-------------|
+| main | Control plane | Services, docs, config | N/A |
+| wt1-wt4 | Symphony | Linear issue execution | Max 4 |
+| wt5-wt8 | Discord | Interactive Discord requests | Max 4 |
+
+**Total max concurrent:** 8 (4 Symphony + 4 Discord)
 
 ## Monitoring
 
-**Watch logs in real-time:**
-
 ```bash
+# Watch all runner logs
 journalctl --user -u 'anqr-symphony-runner@*.service' -f
-```
 
-**Check runner status:**
+# Watch Discord router
+journalctl --user -u anqr-discord-router.service -f
 
-```bash
-systemctl --user status anqr-symphony-runner@1.service
-systemctl --user status anqr-symphony-runner@2.service
-```
-
-**Check worktree health:**
-
-```bash
-node scripts/ops/orchestration/symphony-worktree-pool.mjs status
-```
-
-**Monitor queue:**
-
-```bash
+# Check queue
 node scripts/ops/orchestration/symphony-queue-control.mjs --check
-```
 
-## Scaling
-
-**Add a third runner:**
-
-```bash
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 3
-systemctl --user enable --now anqr-symphony-runner@3.timer
-```
-
-**Remove a runner:**
-
-```bash
-systemctl --user stop anqr-symphony-runner@3.timer
-systemctl --user disable anqr-symphony-runner@3.timer
+# Worktree health
+node scripts/ops/orchestration/symphony-worktree-pool.mjs status
 ```
 
 ## Troubleshooting
 
 **Problem: No issues being picked up**
 
-- Check queue: `node scripts/ops/orchestration/symphony-queue-control.mjs --check`
-- Feed queue: `node scripts/ops/orchestration/symphony-queue-control.mjs --feed`
+```bash
+node scripts/ops/orchestration/symphony-queue-control.mjs --check
+node scripts/ops/orchestration/symphony-queue-control.mjs --feed
+```
 
 **Problem: Runner appears stuck**
 
-- Check for expired leases: `node scripts/ops/orchestration/symphony-queue-control.mjs --enforce`
-- Restart runner: `systemctl --user restart anqr-symphony-runner@1.service`
-
-**Problem: Worktree shows "prunable" status**
-
-- Repair: `node scripts/ops/orchestration/symphony-worktree-pool.mjs repair`
-- If that fails, recreate: `node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup && node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2`
-
-**Problem: Disk space low**
-
-- Garbage collect: `cd /home/user/src/anqr && git gc --aggressive --prune=now`
-
-**Problem: All worktrees corrupted (disk full, etc.)**
-
-If all worktrees are corrupted simultaneously:
-
 ```bash
-# Step 1: Stop all runners
-systemctl --user stop 'anqr-symphony-runner@*.timer'
-
-# Step 2: Remove all worktrees
-node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
-
-# Step 3: Recreate fresh pool
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2
-
-# Step 4: Restart runners
-systemctl --user start 'anqr-symphony-runner@*.timer'
+node scripts/ops/orchestration/symphony-queue-control.mjs --enforce
+systemctl --user restart anqr-symphony-runner@1.service
 ```
 
-**No data loss** — all state preserved in `reports/symphony/state.json`.
+**Problem: Discord commands go to main repo**
+
+Three likely causes (check in order):
+
+1. **`models.json` overrides provider URL to 4319** — Check `jq '.providers["symphony-bridge"].baseUrl' .openclaw/models.json`
+2. **OpenClaw workspace config points to main** — All `.openclaw/openclaw.json` have `workspace: /home/user/src/anqr`
+3. **Worktree bridges not running** — Check `systemctl --user status anqr-symphony-bridge@{5,6,7,8}.service`
+
+See Gap Analysis in [12-concurrent-execution-with-worktrees.md](12-concurrent-execution-with-worktrees.md) for details.
+
+**Problem: Services out of date**
+
+```bash
+cp services/systemd/anqr-*.service services/systemd/anqr-*.timer ~/.config/systemd/user/ 2>/dev/null
+systemctl --user daemon-reload
+```
+
+**Problem: Worktree corrupted**
+
+```bash
+node scripts/ops/orchestration/symphony-worktree-pool.mjs repair
+# Nuclear: recreate all
+node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
+node scripts/ops/orchestration/symphony-worktree-pool.mjs init 8
+```
 
 ## Emergency Rollback
 
-If concurrent execution causes issues, reduce to a minimal worktree footprint:
-
 ```bash
-# Stop all worktree runners
+# Stop everything
 systemctl --user stop 'anqr-symphony-runner@*.timer'
-systemctl --user disable 'anqr-symphony-runner@*.timer'
+systemctl --user stop 'anqr-symphony-bridge@*.service'
+systemctl --user stop anqr-discord-router.service
+systemctl --user stop 'anqr-discord-bridge@*.timer'
 
-# Re-enable a single worktree runner only
+# Run single runner only
 systemctl --user enable --now anqr-symphony-runner@1.timer
-
-# Optionally clean up worktrees
-node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
 ```
 
-**No data loss** — all state preserved in `reports/symphony/state.json`.
-
-## What to Expect
-
-**Single runner (baseline):**
-
-- 2-3 issues/hour
-- 40-60% idle time
-
-**With 2 concurrent runners:**
-
-- 4-5 issues/hour (75% increase)
-- 20-30% idle time
-
-**With 4 concurrent runners:**
-
-- 6-8 issues/hour (150% increase)
-- 10-20% idle time
-
-## Important: Work Visibility Between Worktrees
-
-**How worktrees see each other's work:**
-
-- Each worktree syncs with `origin/main` **twice** during execution:
-  1. **Initial sync** before starting work (via `git fetch origin main && git merge origin/main --ff-only`)
-  2. **Pre-validation sync** before validation (save patch -> fast-forward to `origin/main` -> replay patch with `git apply --index --3way`)
-- Completed work is pushed to `origin/main` immediately after commit (with automatic retry + rebase)
-- **This means:** Work from other worktrees becomes visible when syncing with origin
-- **Pre-validation replay catches conflicts early** before wasting time on validation
-
-**Example flow:**
-
-```
-Worktree 1: Initial sync → Works on ANQ-100 → Pre-validation sync → Validates → Commits → Pushes to origin/main
-Worktree 2: Initial sync (gets ANQ-100) → Works on ANQ-101 → Pre-validation sync → Validates → Commits → Pushes
-Worktree 3: Initial sync (gets ANQ-100 + ANQ-101) → Works on ANQ-102 → Pre-validation sync → Validates → Commits → Pushes
-```
-
-**Conflict handling:**
-
-- If pre-validation sync detects conflicts, the worktree aborts and returns the issue to Todo
-- This prevents wasted validation cycles on code that will conflict anyway
-- The issue can be retried later with the latest changes already merged
-
-**Push retry mechanism:**
-
-- If multiple worktrees push simultaneously, rejected pushes automatically rebase and retry
-- Up to 3 retry attempts with automatic conflict resolution
-- This ensures all completed work reaches `origin/main` reliably
-
-## Next Steps
-
-After 24 hours of operation:
-
-1. **Review performance:** `journalctl --user -u 'anqr-symphony-runner@*.service' --since '24 hours ago' | grep completed`
-2. **Check for issues:** `node scripts/ops/orchestration/symphony-worktree-pool.mjs status`
-3. **Adjust scaling:** Add/remove runners based on queue depth and resource usage
+**No data loss** — all state is in `$XDG_RUNTIME_DIR/anqr-symphony-state/`.
 
 ## Full Documentation
 
-For complete details, see:
+- [12-concurrent-execution-with-worktrees.md](12-concurrent-execution-with-worktrees.md) — comprehensive guide with gap analysis
+- [discord-worktree-routing.md](discord-worktree-routing.md) — Discord routing architecture
+- [WORKTREE-DEPLOYMENT.md](/home/user/src/anqr/services/systemd/WORKTREE-DEPLOYMENT.md) — deployment procedures
 
-- [12-concurrent-execution-with-worktrees.md](/home/user/src/anqr/docs/harness/12-concurrent-execution-with-worktrees.md) — comprehensive guide
-- [ANQ-1099-worktree-investigation.md](/home/user/src/anqr/docs/harness/evidence/ANQ-1099-worktree-investigation.md) — investigation and design
-- [scripts/ops/orchestration/README.md](/home/user/src/anqr/scripts/ops/orchestration/README.md) — operational reference
+---
+
+**Last Updated:** 2026-03-31

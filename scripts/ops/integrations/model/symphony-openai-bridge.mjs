@@ -6320,23 +6320,12 @@ server.listen(PORT, "127.0.0.1", async () => {
   // Start periodic processing status updates
   startProcessingStatusUpdates();
 
-  // Auto-start Symphony runner timers on bridge startup
-  logInfo(`🚀 Auto-starting Symphony runner timers...`);
-  try {
-    const { execFileSync } = await import("node:child_process");
-    const nodeExec = process.execPath; // Use same Node.js binary as current process
-    const controlScript = path.join(PROJECT_ROOT, "scripts/ops/orchestration/symphony-control.mjs");
-    
-    execFileSync(nodeExec, [controlScript, "--start"], {
-      cwd: PROJECT_ROOT,
-      encoding: "utf-8",
-      timeout: 10000,
-    });
-    logInfo(`✅ Symphony runner timers auto-started successfully`);
-  } catch (err) {
-    logError(`❌ Failed to auto-start Symphony runner timers: ${err.message}`);
-    logError(`⚠️ You may need to manually run: node scripts/ops/orchestration/symphony-control.mjs --start`);
-  }
+  // NOTE: Runner timer management removed from bridge startup.
+  // Bridge startup must NOT have side effects on runner timers.
+  // Use symphony-control.mjs --start/--stop to manage runners independently.
+  // See: External review finding F3 — starting a worktree bridge was
+  // re-enabling runner timers, including wrong-scope runners.
+  logInfo(`ℹ️  Runner timers are managed separately via symphony-control.mjs`);
 });
 
 // Export for testing

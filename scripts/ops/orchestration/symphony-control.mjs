@@ -51,7 +51,9 @@ function getEnabledTimers() {
 function disableAllTimers() {
   logInfo("🛑 Disabling all Symphony runner timers...");
   try {
-    // Stop any currently running timers
+    // Intentionally uses glob to stop ALL runner timers, including any stale
+    // wrong-ID instances (e.g. runner@5-8). enableAllTimers() is narrower
+    // and only starts the correct subset (wt1-wt4).
     execFileSync("systemctl", ["--user", "stop", "anqr-symphony-runner@*.timer"], {
       stdio: "pipe",
     });
@@ -71,10 +73,13 @@ function disableAllTimers() {
 }
 
 function enableAllTimers() {
-  logInfo("▶️  Enabling all Symphony runner timers...");
+  logInfo("▶️  Enabling Symphony runner timers (wt1-wt4 only)...");
   try {
-    // Enable standard runners (wt1-wt4) and Discord runners (wt5-wt8)
-    const runners = ["1", "2", "3", "4", "5", "6", "7", "8"];
+    // Enable only Symphony runners (wt1-wt4).
+    // Discord worktrees (wt5-wt8) use bridge services, NOT runner timers.
+    // See: External review finding F2 — enabling runner@5-8 contradicts
+    // the documented target model where only wt1-wt4 are runner targets.
+    const runners = ["1", "2", "3", "4"];
     for (const id of runners) {
       execFileSync("systemctl", ["--user", "enable", `anqr-symphony-runner@${id}.timer`], {
         stdio: "pipe",
@@ -84,7 +89,7 @@ function enableAllTimers() {
       });
     }
     
-    logInfo("✅ All Symphony runner timers enabled and started");
+    logInfo("✅ Symphony runner timers enabled and started (wt1-wt4)");
     logInfo("🚀 Runners will begin picking up tasks on next timer cycle");
     return true;
   } catch (err) {
