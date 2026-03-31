@@ -7,7 +7,7 @@
  * 3. This prevents race conditions when multiple worktrees push simultaneously
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -22,11 +22,6 @@ describe("Worktree Git Push Sync", () => {
     expect(existsSync(gitPath)).toBe(true);
     
     // Get current branch - should be symphony/wtN
-    const currentBranch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
-      cwd: ROOT,
-      encoding: "utf-8",
-    }).trim();
-    
     console.log(`Current branch: ${currentBranch}`);
     
     // Verify branch matches worktree pattern
@@ -66,11 +61,6 @@ describe("Worktree Git Push Sync", () => {
     // In actual runner, push does:
     // 1. git push -u origin HEAD:symphony/wt1
     // 2. git push origin HEAD:main
-    
-    const currentBranch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
-      cwd: ROOT,
-      encoding: "utf-8",
-    }).trim();
     
     // Check we're at same point as main (should be synced)
     const localHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf-8" }).trim();

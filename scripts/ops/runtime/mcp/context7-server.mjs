@@ -575,7 +575,7 @@ function extractLibraryId(result) {
         } catch {
           // Not JSON — parse plain text response
           // Format: "Context7-compatible library ID: /org/project"
-          const match = block.text.match(/Context7-compatible library ID:\s*(\/[^\s\n]+)/);
+          const match = block.text.match(/Context7-compatible library ID:\s*(\/[^\s]+)/);
           if (match && match[1]) {
             return match[1].trim();
           }

@@ -405,8 +405,8 @@ function syncWorktreeBeforeValidation(changedFiles) {
       if (patchFile && existsSync(patchFile) && statSync(patchFile).size > 0) {
         execFileSync("git", ["apply", patchFile], { cwd: ROOT, stdio: "pipe" });
       }
-    } catch (restoreErr) {
-      logError(`[runner] Failed to restore pre-validation state: ${restoreErr.message}`);
+    } catch (error_) {
+      logError(`[runner] Failed to restore pre-validation state: ${error_.message}`);
     } finally {
       removeTempFile(patchFile);
     }

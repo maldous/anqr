@@ -161,8 +161,8 @@ async function loadIndex() {
           if (Array.isArray(shardData)) {
             indexCache.push(...shardData.filter(isValidEntry));
           }
-        } catch (shardErr) {
-          logWarn(`Failed to load shard ${shard.filename}: ${shardErr?.message || shardErr}`);
+        } catch (error_) {
+          logWarn(`Failed to load shard ${shard.filename}: ${error_?.message || error_}`);
         }
       }
       logInfo(

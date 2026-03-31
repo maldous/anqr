@@ -49,8 +49,8 @@ RestartSec=5
 
 # Safety limits
 TimeoutStartSec=60
-MemoryHigh=512M
-MemoryMax=1G
+MemoryHigh=1G
+MemoryMax=2G
 
 [Install]
 WantedBy=default.target

@@ -85,12 +85,12 @@ function assertMutationContext(ctx) {
   if (!ctx.projectRoot) {
     throw new Error("Mutation blocked: missing projectRoot - mutating requests must specify project root");
   }
-  const resolvedProjectRoot = ctx.projectRoot.replace(/\\/g, "/");
+  const resolvedProjectRoot = ctx.projectRoot.replaceAll("\\", "/");
   const resolvedMainRoot = MAIN_REPO_ROOT;
   if (resolvedProjectRoot === resolvedMainRoot) {
     throw new Error("Mutation blocked: main repo is forbidden for mutating requests - must use worktree");
   }
-  if (ctx.worktreeRoot && resolvedProjectRoot !== ctx.worktreeRoot.replace(/\\/g, "/")) {
+  if (ctx.worktreeRoot && resolvedProjectRoot !== ctx.worktreeRoot.replaceAll("\\", "/")) {
     throw new Error("Mutation blocked: projectRoot must equal worktreeRoot for mutating requests");
   }
 }
@@ -501,8 +501,8 @@ async function callLLM(provider, messages, taskDescription, projectRoot = PROJEC
                 symphonyResult = parsed._symphonyResult;
                 logDebug(`[agent] 📦 Captured _symphonyResult from final buffer`);
               }
-            } catch (parseErr) {
-              logDebug(`[agent] ⚠️ Final buffer parse error: ${parseErr.message}`);
+            } catch (error_) {
+              logDebug(`[agent] ⚠️ Final buffer parse error: ${error_.message}`);
             }
           }
           break;
@@ -535,9 +535,9 @@ async function callLLM(provider, messages, taskDescription, projectRoot = PROJEC
               symphonyResult = parsed._symphonyResult;
               logDebug(`[agent] 📦 Captured _symphonyResult from stream`);
             }
-          } catch (parseErr) {
+          } catch (error_) {
             // Skip non-JSON chunks but log for debugging
-            logDebug(`[agent] ⚠️ SSE chunk parse error: ${parseErr.message}`);
+            logDebug(`[agent] ⚠️ SSE chunk parse error: ${error_.message}`);
           }
         }
       }

@@ -261,7 +261,7 @@ export function setSessionMessages(sessionId, messages) {
   }
 
   // Store a deep copy to avoid external mutation
-  const messagesCopy = JSON.parse(JSON.stringify(messages));
+  const messagesCopy = structuredClone(messages);
   session.messages = messagesCopy;
   session.messageHash = hashMessages(messagesCopy);
   session.lastUsed = Date.now(); // Update timestamp
@@ -286,7 +286,7 @@ export function getSessionMessages(sessionId) {
   }
 
   // Return a deep copy to prevent external mutation
-  return JSON.parse(JSON.stringify(session.messages));
+  return structuredClone(session.messages);
 }
 
 /**

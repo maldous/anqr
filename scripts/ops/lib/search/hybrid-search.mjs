@@ -411,7 +411,7 @@ async function collectProjectFiles(rootDir) {
     const files = [];
 
     for (const relPath of trackedFiles) {
-      const normalized = relPath.replaceAll(/\\/g, "/");
+      const normalized = relPath.replaceAll("\\", "/");
       const parts = normalized.split("/");
       if (parts.some((part) => EXCLUDED_DIRS.has(part))) continue;
 

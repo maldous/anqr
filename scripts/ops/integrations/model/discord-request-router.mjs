@@ -122,6 +122,12 @@ function sendOverloadResponse(res) {
 function proxyToWorktree(worktree, req, res) {
   const requestBody = [];
 
+  // Add incoming request timeout (2 minutes)
+  req.setTimeout(120000, () => {
+    logWarn(`⏱️ Incoming request timeout for wt${worktree.id}`);
+    req.destroy(new Error("Request timeout"));
+  });
+
   req.on("data", (chunk) => requestBody.push(chunk));
   req.on("end", async () => {
     // Update counters BEFORE proxying
@@ -172,11 +178,26 @@ function proxyToWorktree(worktree, req, res) {
       },
     );
 
-    proxyReq.on("error", (err) => {
-      // Decrement counters on error
+    // Add proxy request timeout (2 minutes)
+    proxyReq.setTimeout(120000, () => {
+      logError(`⏱️ Proxy request timeout to wt${worktree.id}`);
+      proxyReq.destroy(new Error("Proxy timeout"));
+    });
+
+    // Track completion to prevent double-decrement when both error and close fire
+    let completed = false;
+    const cleanup = () => {
+      if (completed) return;
+      completed = true;
       worktree.activeRequests--;
       globalActiveRequests--;
+      logDebug(
+        `✅ Request complete (wt${worktree.id}, remaining: ${worktree.activeRequests}, global: ${globalActiveRequests})`,
+      );
+    };
 
+    proxyReq.on("error", (err) => {
+      cleanup();
       logError(`❌ Proxy error to wt${worktree.id}: ${err.message}`);
 
       if (!res.writableEnded) {
@@ -190,13 +211,7 @@ function proxyToWorktree(worktree, req, res) {
     });
 
     proxyReq.on("close", () => {
-      // Decrement counters when connection closes
-      worktree.activeRequests--;
-      globalActiveRequests--;
-
-      logDebug(
-        `✅ Request complete (wt${worktree.id}, remaining: ${worktree.activeRequests}, global: ${globalActiveRequests})`,
-      );
+      cleanup();
     });
 
     proxyReq.write(proxyBody);

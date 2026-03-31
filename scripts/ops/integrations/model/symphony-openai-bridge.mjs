@@ -700,6 +700,14 @@ function coerceOptionalNumberInput(value, fallback = undefined) {
   return fallback;
 }
 
+function calculateTimeoutMs(seconds) {
+  // Convert timeout from seconds to milliseconds
+  const DEFAULT_SECONDS = 30;
+  if (seconds === -1) return undefined; // no timeout
+  if (seconds == null) return DEFAULT_SECONDS * 1000;
+  return seconds * 1000;
+}
+
 function isProbablyBinaryContent(content) {
   return content.includes("\0");
 }
@@ -3180,12 +3188,11 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
           allowedNames: [providerName],
           excludeNames: [...excludeSet],
         };
-      } else {
-        safeLogDebug(`🔄 Rotating: ${providerName} (${turnCount}/${turnLimit} turns reached)`);
-        // Exclude current provider to force rotation
-        excludeSet.add(providerName);
-        clearSessionProvider(sessionId);
       }
+      // Rotation: turn limit reached, exclude current provider to force rotation
+      safeLogDebug(`🔄 Rotating: ${providerName} (${turnCount}/${turnLimit} turns reached)`);
+      excludeSet.add(providerName);
+      clearSessionProvider(sessionId);
     }
   }
 
@@ -3848,11 +3855,14 @@ async function invokeWithAIInner(provider, messages, options = {}) {
         const deltaText = part.textDelta || "";
         logContext.length = deltaText.length;
         logContext.preview = deltaText.slice(0, 100);
-        // DIAGNOSTIC: Verify reasoning-delta events are being emitted
-        logInfo(`💡 [${provider.name}] reasoning-delta event detected`, {
-          length: deltaText.length,
-          preview: deltaText.slice(0, 100)
-        });
+        // CRITICAL FIX: Only log non-empty reasoning-delta events to prevent log spam
+        // from infinite empty reasoning-delta loops (ANQ-XXX)
+        if (deltaText.length > 0) {
+          logInfo(`💡 [${provider.name}] reasoning-delta event detected`, {
+            length: deltaText.length,
+            preview: deltaText.slice(0, 100)
+          });
+        }
       } else if (part.type === "reasoning-start") {
         logInfo(`💡 [${provider.name}] reasoning-start event`, { providerName: provider.name });
       } else if (part.type === "reasoning-end") {
@@ -3874,8 +3884,30 @@ async function invokeWithAIInner(provider, messages, options = {}) {
         // Emit newline when reasoning starts (no emoji for Discord)
         if (onChunk) onChunk({ type: "text", text: "\n" });
       } else if (part.type === "reasoning-delta") {
-        if (onChunk && part.textDelta) {
-          onChunk({ type: "text", text: part.textDelta });
+        // CRITICAL BUG FIX (ANQ-XXX): Accumulate reasoning-delta into fullText
+        // Previously, reasoning-delta was only forwarded to onChunk but never
+        // accumulated, causing "Stream completed but produced no content" errors
+        // when models send reasoning via reasoning-delta instead of text-delta.
+        // This is the root cause of the OpenRouter streaming failures.
+        const reasoningDelta = part.textDelta || "";
+        if (reasoningDelta && reasoningDelta.length > 0) {
+          // Accumulate into fullText (same as text-delta)
+          if (!fullTextCapped) {
+            if (fullText.length + reasoningDelta.length > MAX_RESPONSE_TEXT_BYTES) {
+              fullTextCapped = true;
+              logWarn(`⚠️ fullText capped at ${MAX_RESPONSE_TEXT_BYTES} bytes (reasoning-delta)`, {
+                currentLength: fullText.length,
+                deltaLength: reasoningDelta.length,
+                maxBytes: MAX_RESPONSE_TEXT_BYTES,
+              });
+            } else {
+              fullText += reasoningDelta;
+            }
+          }
+          // Forward to client for streaming
+          if (onChunk) {
+            onChunk({ type: "text", text: reasoningDelta });
+          }
         }
       } else if (part.type === "reasoning-end") {
         if (onChunk) onChunk({ type: "text", text: "\n" });
@@ -3909,18 +3941,10 @@ async function invokeWithAIInner(provider, messages, options = {}) {
           }
         }
 
-        if (inThinkBlock) {
-          // We're inside a think block - stream the thinking content in real-time
-          // This handles multi-chunk blocks correctly
-          if (onChunk && delta && delta.length > 0) {
-            onChunk({ type: "text", text: delta });
-          }
-        } else {
-          // Normal text-delta outside thinking blocks
-          // Forward non-empty text deltas to client immediately (including Codebuff activity messages)
-          if (onChunk && delta && delta.length > 0) {
-            onChunk({ type: "text", text: delta });
-          }
+        // Forward non-empty text deltas to client immediately
+        // This handles both thinking blocks and normal text-delta content
+        if (onChunk && delta && delta.length > 0) {
+          onChunk({ type: "text", text: delta });
         }
 
         if (delta.includes("</think>")) {
@@ -5892,10 +5916,11 @@ server.listen(PORT, "127.0.0.1", async () => {
         warmLinearIndex(),
       ]);
 
+      const bm25Status = bm25Result.value.rebuilt ? " (rebuilt)" : " (cached)";
       warmupSummary = {
         bm25:
           bm25Result.status === "fulfilled"
-            ? `${bm25Result.value.documentCount} docs${bm25Result.value.rebuilt ? " (rebuilt)" : " (cached)"}`
+            ? `${bm25Result.value.documentCount} docs${bm25Status}`
             : `error: ${bm25Result.reason?.message || bm25Result.reason}`,
         vector:
           vectorResult.status === "fulfilled"
@@ -6084,7 +6109,7 @@ server.listen(PORT, "127.0.0.1", async () => {
         if (toolName === "run_file_change_hooks" || toolName === "read_files") {
           const key = toolName === "run_file_change_hooks" ? "files" : "paths";
           if (!Array.isArray(parsed[key])) {
-            throw new Error(`Expected ${key} to be normalized to array, got ${typeof parsed[key]}`);
+            throw new TypeError(`Expected ${key} to be normalized to array, got ${typeof parsed[key]}`);
           }
         }
 
