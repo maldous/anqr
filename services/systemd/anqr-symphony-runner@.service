@@ -40,7 +40,7 @@ EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 # Provider API tokens (GROQ_TOKEN, GEMINI_TOKEN, OPENAI_API_KEY, etc.)
 EnvironmentFile=-%h/.config/symphony/anqr.env
 
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/scripts/ops/orchestration/symphony-runner.mjs --once
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/orchestration/symphony-runner.mjs --once
 
 # Logging to journal
 StandardOutput=journal

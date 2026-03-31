@@ -55,9 +55,11 @@ Environment=OPENCLAW_CLI=openclaw
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 EnvironmentFile=-%h/.config/symphony/anqr.env
 
-# Launch the gateway singleton wrapper so only one OpenClaw gateway process
-# runs across wt5-wt8 and Bonjour advertiser loops stay disabled.
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr-wt%i/scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs
+# Launch the control-plane copy of the gateway singleton wrapper.
+# Do not execute the worktree-local script copy, because extracting a repo patch
+# into the main checkout does not update every existing worktree checkout.
+# The wrapper still targets the selected worktree via ANQR_WORKTREE_PATH.
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs
 
 # Logging to journal
 StandardOutput=journal
