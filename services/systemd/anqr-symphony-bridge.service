@@ -40,8 +40,6 @@ EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
 ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc scripts/ops/integrations/model/symphony-openai-bridge.mjs
 
-# Auto-enable runner timers after bridge starts
-ExecStartPost=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/scripts/ops/orchestration/symphony-control.mjs --start
 
 # Logging to journal
 StandardOutput=journal
