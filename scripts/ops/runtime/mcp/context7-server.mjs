@@ -482,7 +482,9 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
       const resolveResult = await sendRequest("tools/call", {
         name: "resolve-library-id",
         arguments: {
-          query: `Documentation for ${libraryTitle}${topic ? ` focusing on ${topic}` : ""}`,
+          query: topic
+            ? `Documentation for ${libraryTitle} focusing on ${topic}`
+            : `Documentation for ${libraryTitle}`,
           libraryName: libraryTitle,
         },
       });

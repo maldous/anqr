@@ -3815,20 +3815,32 @@ async function invokeWithAIInner(provider, messages, options = {}) {
     // Track <think> blocks in text-delta for models that embed reasoning in text
     let inThinkBlock = false;
 
+    // Track empty reasoning-delta events to suppress log spam
+    let emptyReasoningDeltaCount = 0;
+
     for await (const part of result.fullStream) {
       partCount++;
 
       // Build detailed log context based on part type
       const logContext = { type: part.type };
 
-      // DIAGNOSTIC: Log all event types for non-Codebuff providers to identify streaming issues
-      if (provider.name !== "codebuff" && provider.name !== "codex") {
+      // Check for empty reasoning-delta to suppress log spam
+      const isEmptyReasoningDelta = part.type === "reasoning-delta" && (!part.textDelta || part.textDelta.length === 0);
+
+      // DIAGNOSTIC: Log all event types for non-Codebuff providers (skip empty reasoning-delta)
+      if (provider.name !== "codebuff" && provider.name !== "codex" && !isEmptyReasoningDelta) {
         logInfo(`🔍 [${provider.name}] Stream event: ${part.type}`, { 
           type: part.type,
           hasTextDelta: !!part.textDelta,
           hasToolName: !!part.toolName,
           preview: part.textDelta?.slice(0, 50) || part.toolName || ""
         });
+      }
+
+      // Track empty reasoning-delta count (skip logging for these)
+      if (isEmptyReasoningDelta) {
+        emptyReasoningDeltaCount++;
+        continue; // Skip further processing for empty reasoning-delta
       }
 
       if (part.type === "text-delta") {
@@ -3874,8 +3886,9 @@ async function invokeWithAIInner(provider, messages, options = {}) {
         logContext.finishReason = part.finishReason;
       }
 
-      // Suppress blank DEBUG lines (text-delta with length 0)
-      if (part.type !== "text-delta" || (part.textDelta && part.textDelta.length > 0)) {
+      // Suppress blank DEBUG lines (text-delta or reasoning-delta with length 0)
+      const isEmptyTextDelta = part.type === "text-delta" && (!part.textDelta || part.textDelta.length === 0);
+      if (!isEmptyTextDelta && !isEmptyReasoningDelta) {
         logDebug(`[invokeWithAI] Stream part ${partCount}`, logContext);
       }
 
@@ -4046,7 +4059,15 @@ async function invokeWithAIInner(provider, messages, options = {}) {
       hasTextDeltas,
       finishReason,
       hasFatalStreamError: !!fatalStreamError,
+      emptyReasoningDeltaCount,
     });
+
+    // Summary of suppressed empty reasoning-delta events
+    if (emptyReasoningDeltaCount > 0) {
+      logDebug(`[${provider.name}] Suppressed empty reasoning-delta events`, {
+        count: emptyReasoningDeltaCount,
+      });
+    }
 
     // If stream contained a fatal error (413/context or 429/rate-limit), throw
     // the original error to trigger adaptive context recording and provider
