@@ -14,6 +14,8 @@ export default defineConfig({
         replacement: path.resolve(repoRoot, "src"),
       },
     ],
+    // Allow importing .mjs files from scripts directory
+    extensions: [".mjs", ".js", ".mts", ".ts", ".jsx", ".tsx", ".json"],
   },
   test: {
     globals: false,

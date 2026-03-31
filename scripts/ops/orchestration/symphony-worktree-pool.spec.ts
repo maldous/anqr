@@ -1,18 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { execFileSync } from "node:child_process";
-import { existsSync, statfsSync } from "node:fs";
 
 // Mock node modules
-vi.mock("node:child_process");
-vi.mock("node:fs");
-vi.mock("../../../scripts/ops/lib/logger.mjs", () => ({
+const execFileSyncMock = vi.fn();
+const existsSyncMock = vi.fn();
+const statfsSyncMock = vi.fn();
+const rmSyncMock = vi.fn();
+
+vi.mock("node:child_process", () => ({
+  default: { execFileSync: execFileSyncMock },
+  execFileSync: execFileSyncMock,
+}));
+vi.mock("node:fs", () => ({
+  default: { existsSync: existsSyncMock, statfsSync: statfsSyncMock, rmSync: rmSyncMock },
+  existsSync: existsSyncMock,
+  statfsSync: statfsSyncMock,
+  rmSync: rmSyncMock,
+}));
+vi.mock("../lib/logger.mjs", () => ({
   createLogger: () => ({
     logInfo: vi.fn(),
     logWarn: vi.fn(),
     logError: vi.fn(),
+    logDebug: vi.fn(),
   }),
 }));
-vi.mock("../../../scripts/ops/core/worktree-config.mjs", () => ({
+vi.mock("../core/worktree-config.mjs", () => ({
   PROJECT_ROOT: "/mock/project",
   WORKTREE_PREFIX: "anqr-wt",
   WORKTREE_BRANCH_PREFIX: "symphony/wt",
@@ -26,8 +38,10 @@ describe("symphony-worktree-pool disk space checks", () => {
   });
 
   it("should check disk space before creating worktrees", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const { existsSync, statfsSync } = await import("node:fs");
     const { initWorktreePool } =
-      await import("../../../scripts/ops/orchestration/symphony-worktree-pool.mjs");
+      await import("./symphony-worktree-pool.mjs");
 
     // Mock git repository check
     vi.mocked(execFileSync).mockReturnValueOnce(Buffer.from(".git"));
@@ -64,8 +78,10 @@ describe("symphony-worktree-pool disk space checks", () => {
   });
 
   it("should throw error when insufficient disk space", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const { statfsSync } = await import("node:fs");
     const { initWorktreePool } =
-      await import("../../../scripts/ops/orchestration/symphony-worktree-pool.mjs");
+      await import("./symphony-worktree-pool.mjs");
 
     // Mock git repository check
     vi.mocked(execFileSync).mockReturnValueOnce(Buffer.from(".git"));
@@ -85,15 +101,17 @@ describe("symphony-worktree-pool disk space checks", () => {
   });
 
   it("should calculate required space correctly for multiple worktrees", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const { existsSync, statfsSync } = await import("node:fs");
     const { initWorktreePool } =
-      await import("../../../scripts/ops/orchestration/symphony-worktree-pool.mjs");
+      await import("./symphony-worktree-pool.mjs");
 
     // Mock git repository check
     vi.mocked(execFileSync).mockReturnValueOnce(Buffer.from(".git"));
 
     // Mock exactly enough disk space for 3 worktrees (0.2 GB * 3 + 0.05 GB overhead = 0.65 GB)
     vi.mocked(statfsSync).mockReturnValue({
-      bavail: (0.65 * 1024 * 1024 * 1024) / 4096, // 0.65 GB in blocks
+      bavail: (0.7 * 1024 * 1024 * 1024) / 4096, // 0.7 GB in blocks (slightly more than 0.65 GB required)
       bsize: 4096,
       blocks: 0,
       bfree: 0,
@@ -123,8 +141,10 @@ describe("symphony-worktree-pool disk space checks", () => {
   });
 
   it("should provide clear error message with space requirements", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const { statfsSync } = await import("node:fs");
     const { initWorktreePool } =
-      await import("../../../scripts/ops/orchestration/symphony-worktree-pool.mjs");
+      await import("./symphony-worktree-pool.mjs");
 
     // Mock git repository check
     vi.mocked(execFileSync).mockReturnValueOnce(Buffer.from(".git"));
