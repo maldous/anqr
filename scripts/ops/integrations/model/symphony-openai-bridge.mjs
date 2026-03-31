@@ -38,7 +38,6 @@
 import "./_set-max-listeners.mjs";
 import http from "node:http";
 import { AsyncLocalStorage } from "node:async_hooks";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
 import { execSync, execFileSync } from "node:child_process";
@@ -2648,8 +2647,6 @@ function createProviderModel(provider) {
 // Bridge state
 // --------------------------------------------------------------------------
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = path.resolve(__dirname, "../../../../");
 
 const PORT = process.env.SYMPHONY_BRIDGE_PORT || 4319;
 const API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
