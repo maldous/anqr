@@ -1,0 +1,69 @@
+# anqr-symphony-bridge@.service — Symphony bridge for worktree %i
+#
+# Template service for running Symphony bridges in isolated worktrees.
+# Each instance runs in its own worktree with isolated working directory and git state.
+#
+# Port mapping:
+#   wt5 → port 4325
+#   wt6 → port 4326
+#   wt7 → port 4327
+#   wt8 → port 4328
+#
+# Install:
+#   cp services/systemd/anqr-symphony-bridge@.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-symphony-bridge@{5,6,7,8}.service
+
+[Unit]
+Description=ANQR Symphony bridge for worktree wt%i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# CRITICAL: Run in worktree directory, not main repo
+WorkingDirectory=%h/src/anqr-wt%i
+
+# Explicit PATH — nvm Node is not on default systemd PATH
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
+
+# Worktree identification
+Environment=ANQR_WORKTREE_ID=wt%i
+Environment=ANQR_WORKTREE_PATH=%h/src/anqr-wt%i
+
+# Bridge configuration — port is 4320 + worktree number
+Environment=SYMPHONY_BRIDGE_PORT=432%i
+Environment=SYMPHONY_BRIDGE_API_KEY=local-symphony
+Environment=CODEX_SANDBOX_MODE=danger-full-access
+Environment=ANQR_RETRIEVAL_WARMUP=false
+
+# Provider tokens (loaded from anqr.env)
+EnvironmentFile=-%h/.config/symphony/anqr.env
+
+# Systemd env overrides (LINEAR_API_KEY, etc.)
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc scripts/ops/integrations/model/symphony-openai-bridge.mjs
+
+# Logging to journal with worktree identifier
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-symphony-bridge-wt%i
+
+# Restart on failure with exponential backoff
+Restart=on-failure
+RestartSec=5
+
+# CRITICAL: Worktree bridges must restart to apply Discord monitoring disable fix
+# This prevents duplicate request flooding (4 bridges × 1 request = 4x duplicates)
+
+# Safety limits (same as main bridge)
+TimeoutStartSec=30
+MemoryHigh=3G
+MemoryMax=3584M
+
+[Install]
+WantedBy=default.target

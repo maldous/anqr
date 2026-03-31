@@ -205,11 +205,18 @@ Environment=ANQR_WORKTREE_PATH=/home/user/src/anqr-wt%i
 
 **Install**:
 ```bash
-# For each worktree (5-8)
+# Copy template service
+cp services/systemd/anqr-symphony-bridge@.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+
+# Enable and start for each worktree (5-8)
 systemctl --user enable --now anqr-symphony-bridge@5.service
 systemctl --user enable --now anqr-symphony-bridge@6.service
 systemctl --user enable --now anqr-symphony-bridge@7.service
 systemctl --user enable --now anqr-symphony-bridge@8.service
+
+# Verify all bridges are running
+systemctl --user status anqr-symphony-bridge@{5,6,7,8}.service
 ```
 
 ### Gateway Services (Singleton)
@@ -284,6 +291,48 @@ journalctl --user -u anqr-symphony-bridge@5.service -f
 # Gateway logs
 journalctl --user -u anqr-discord-bridge@5.service -f
 ```
+
+## Deployment Checklist
+
+Before testing Discord worktree isolation:
+
+1. **Create worktrees** (if not already created):
+   ```bash
+   git worktree add ../anqr-wt5 -b symphony/wt5 origin/main
+   git worktree add ../anqr-wt6 -b symphony/wt6 origin/main
+   git worktree add ../anqr-wt7 -b symphony/wt7 origin/main
+   git worktree add ../anqr-wt8 -b symphony/wt8 origin/main
+   ```
+
+2. **Install worktree bridge services**:
+   ```bash
+   cp services/systemd/anqr-symphony-bridge@.service ~/.config/systemd/user/
+   systemctl --user daemon-reload
+   systemctl --user enable --now anqr-symphony-bridge@{5,6,7,8}.service
+   ```
+
+3. **Install Discord router service**:
+   ```bash
+   cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
+   systemctl --user daemon-reload
+   systemctl --user enable --now anqr-discord-router.service
+   ```
+
+4. **Verify all services are running**:
+   ```bash
+   # Check router
+   systemctl --user status anqr-discord-router.service
+   curl http://127.0.0.1:18790/health
+   
+   # Check worktree bridges
+   systemctl --user status anqr-symphony-bridge@{5,6,7,8}.service
+   curl http://127.0.0.1:4325/health  # wt5
+   curl http://127.0.0.1:4326/health  # wt6
+   curl http://127.0.0.1:4327/health  # wt7
+   curl http://127.0.0.1:4328/health  # wt8
+   ```
+
+5. **Configure OpenClaw gateway** to route to Discord router (port 18790) instead of main Symphony bridge
 
 ## Troubleshooting
 

@@ -212,6 +212,25 @@ async function pollDiscordMessages() {
  * Start monitoring Discord channel for user messages
  */
 function startDiscordMonitoring() {
+  // CRITICAL FIX (ANQ-XXXX): Disable Discord monitoring on ALL Symphony bridges (main and worktrees).
+  // Only the OpenClaw Gateway (port 18789) and Discord Router (port 18790) should listen for Discord messages.
+  // This prevents duplicate request flooding when multiple bridges poll Discord.
+  //
+  // Root cause: When Discord monitoring is enabled on multiple bridges, each poll triggers a request.
+  // The main bridge (4319) plus 4 worktree bridges (4325-4328) = 5 potential duplicates per message.
+  // Even with worktree bridges disabled, the main bridge still duplicates requests to itself.
+  //
+  // Correct flow: Discord Bot → OpenClaw Gateway (18789) → Discord Router (18790) → Worktree Bridges (4325-4328)
+  // The main Symphony bridge (4319) handles only queue/Linear automation, not Discord commands.
+  if (process.env.ANQR_WORKTREE_ID || PORT === 4319) {
+    // Main bridge (4319) should not monitor Discord - let OpenClaw Gateway handle Discord interaction
+    // Worktree bridges already have ANQR_WORKTREE_ID set, skip them too
+    const bridgeId = process.env.ANQR_WORKTREE_ID || `main-bridge`;
+    logInfo(`⚠️ Discord monitoring DISABLED on ${bridgeId} (port ${PORT}) - OpenClaw Gateway handles Discord`);
+    logInfo(`   Flow: Discord Bot → OpenClaw Gateway (18789) → Discord Router (18790) → Worktree Bridges`);
+    return;
+  }
+
   if (!process.env.DISCORD_BOT_TOKEN) {
     logError(`⚠️ Discord monitoring disabled: DISCORD_BOT_TOKEN not set`);
     return;
