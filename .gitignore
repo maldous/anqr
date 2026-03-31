@@ -2,7 +2,8 @@ AuthKey_*.p8
 sonar-report.json
 play-store-key.json
 .codebuff-bridge-state.json
-.openclaw/workspace-state.json
+# OpenClaw - environment-specific, never commit
+.openclaw/
 .env
 .jscpd-low-report/
 .jscpd-report/
