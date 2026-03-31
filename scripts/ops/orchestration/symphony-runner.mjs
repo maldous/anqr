@@ -74,7 +74,7 @@ import {
   validationManifestHash,
 } from "../symphony-validation.mjs";
 
-import { getWorktreePath } from "../core/worktree-config.mjs";
+import { getWorktreePath, isDiscordWorktree, isSymphonyWorktree } from "../core/worktree-config.mjs";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -587,26 +587,6 @@ async function maybeRunPreflights() {
 }
 
 /**
- * Determine if this worktree should handle Discord-sourced issues
- */
-function isDiscordWorktree() {
-  const wtId = WORKTREE_ID.replace(/^wt/, "");
-  const isDiscord = ["5", "6", "7", "8"].includes(wtId);
-  logDebug(`[worktree-routing] isDiscordWorktree() - WORKTREE_ID: ${WORKTREE_ID}, wtId: ${wtId}, result: ${isDiscord}`);
-  return isDiscord;
-}
-
-/**
- * Determine if this worktree should handle Symphony (non-Discord) issues
- */
-function isSymphonyWorktree() {
-  const wtId = WORKTREE_ID.replace(/^wt/, "");
-  const isSymphony = ["main", "1", "2", "3", "4"].includes(wtId);
-  logDebug(`[worktree-routing] isSymphonyWorktree() - WORKTREE_ID: ${WORKTREE_ID}, wtId: ${wtId}, result: ${isSymphony}`);
-  return isSymphony;
-}
-
-/**
  * Check if an issue originated from Discord
  */
 function isDiscordIssue(issue) {
@@ -628,8 +608,8 @@ async function pickIssue({ excludeIds = new Set(), baselineOnly = false } = {}) 
   // IMPORTANT: Worktree routing to prevent concurrent conflicts
   // - Discord issues (wt5-wt8) are routed to Discord worktrees only
   // - Symphony issues (wt1-wt4, main) handle all other work
-  const isDiscordWt = isDiscordWorktree();
-  const isSymphonyWt = isSymphonyWorktree();
+  const isDiscordWt = isDiscordWorktree(WORKTREE_ID);
+  const isSymphonyWt = isSymphonyWorktree(WORKTREE_ID);
   
   logDebug(`[worktree-routing] This worktree - isDiscord: ${isDiscordWt}, isSymphony: ${isSymphonyWt}`);
   
@@ -897,9 +877,12 @@ async function executeIssue(issue, dryRun = false) {
   let startingCommentId = null;
   let heartbeatTimer = null;
   try {
-    // Set source for routing: Discord issues already have source="discord", others get "linear"
+    // Set source for routing based on worktree context
+    // Discord worktrees (wt5-wt8) mark their issues as discord-sourced
+    // Symphony worktrees (wt1-wt4, main) mark as linear-sourced
     const initialState = getIssueState(issue.identifier);
-    const issueSource = initialState.source || "linear";
+    const isDiscordWt = isDiscordWorktree(WORKTREE_ID);
+    const issueSource = initialState.source || (isDiscordWt ? "discord" : "linear");
     noteAttemptStart(issue.identifier, { runId: RUN_ID, source: issueSource });
     clearCooldown(issue.identifier);
     // Background heartbeat keeps lease alive during long bridge calls.
@@ -1967,9 +1950,9 @@ async function main() {
   logDebug(`[worktree-verify] ====================================================`);
   
   // Log worktree routing configuration
-  if (isDiscordWorktree()) {
+  if (isDiscordWorktree(WORKTREE_ID)) {
     logInfo(`[runner] 🎮 Discord worktree mode: handling ONLY Discord-sourced issues`);
-  } else if (isSymphonyWorktree()) {
+  } else if (isSymphonyWorktree(WORKTREE_ID)) {
     logInfo(`[runner] 🎼 Symphony worktree mode: handling non-Discord issues`);
   } else {
     logWarn(`[runner] ⚠️ Unknown worktree type: ${WORKTREE_ID} - will handle all issues`);

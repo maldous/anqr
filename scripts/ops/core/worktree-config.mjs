@@ -63,3 +63,37 @@ export function getWorktreeBranch(id) {
   }
   return `${WORKTREE_BRANCH_PREFIX}${id}`;
 }
+
+/**
+ * Discord worktree IDs (wt5-wt8)
+ * These worktrees handle Discord-sourced issues exclusively
+ * @type {string[]}
+ */
+export const DISCORD_WORKTREE_IDS = ["5", "6", "7", "8"];
+
+/**
+ * Symphony worktree IDs (wt1-wt4, main)
+ * These worktrees handle Linear-sourced and general issues
+ * @type {string[]}
+ */
+export const SYMPHONY_WORKTREE_IDS = ["main", "1", "2", "3", "4"];
+
+/**
+ * Determine if a worktree ID corresponds to a Discord worktree
+ * @param {string} worktreeId - Worktree ID (e.g., "wt5", "5", "main")
+ * @returns {boolean} - True if Discord worktree (wt5-wt8)
+ */
+export function isDiscordWorktree(worktreeId) {
+  const normalizedId = String(worktreeId || "").replace(/^wt/, "");
+  return DISCORD_WORKTREE_IDS.includes(normalizedId);
+}
+
+/**
+ * Determine if a worktree ID corresponds to a Symphony worktree
+ * @param {string} worktreeId - Worktree ID (e.g., "wt1", "1", "main")
+ * @returns {boolean} - True if Symphony worktree (wt1-wt4, main)
+ */
+export function isSymphonyWorktree(worktreeId) {
+  const normalizedId = String(worktreeId || "").replace(/^wt/, "");
+  return SYMPHONY_WORKTREE_IDS.includes(normalizedId);
+}
