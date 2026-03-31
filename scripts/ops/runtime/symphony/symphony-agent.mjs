@@ -428,7 +428,7 @@ function executeTool(projectRoot, toolCall, context = {}) {
 // LLM API call
 // ---------------------------------------------------------------------------
 
-async function callLLM(provider, messages, taskDescription, projectRoot = PROJECT_ROOT, _worktreeId = null, _worktreeRoot = null, _leaseId = null, _executionMode = null) {
+async function callLLM(provider, messages, taskDescription, projectRoot = PROJECT_ROOT, worktreeId = null, _worktreeRoot = null, _leaseId = null, _executionMode = null) {
   if (provider.name === "symphony-bridge") {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
