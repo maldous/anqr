@@ -59,5 +59,7 @@ export default defineConfig({
     },
     setupFiles: [],
     testTimeout: 30_000,
+    // Limit parallelism to prevent platform flooding (Vitest 4+ format)
+    maxWorkers: 2, // Reduced from default (CPUs - 1) to prevent platform overload
   },
 });

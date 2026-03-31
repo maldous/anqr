@@ -1,24 +1,25 @@
 #!/usr/bin/env node
 
 /**
- * sonar-linear-audit.mjs — Nightly SonarQube → Linear issue sync (blocking)
+ * sonar-linear-audit.mjs - Nightly SonarQube -> Linear issue sync (consolidated)
  *
- * Queries the local SonarQube instance for open issues and creates one
- * Linear issue per finding (priority 1 / urgent). Resolves any Linear
- * [Sonar] issues whose findings are no longer present.
+ * Queries the local SonarQube instance for open issues and creates ONE
+ * consolidated Linear issue with all findings listed, rather than one
+ * issue per finding. This allows the AI to batch-resolve multiple issues
+ * in a single execution.
  *
  * Designed to run in the nightly pipeline after sonar-scanner + sonar-export.
  *
  * Required env:
- *   SONAR_TOKEN       — SonarQube authentication token
- *   LINEAR_API_KEY    — Linear API key
+ *   SONAR_TOKEN       - SonarQube authentication token
+ *   LINEAR_API_KEY    - Linear API key
  *
  * Optional env:
- *   SONAR_HOST_URL    — SonarQube base URL (default: http://localhost:9000)
+ *   SONAR_HOST_URL    - SonarQube base URL (default: http://localhost:9000)
  *
  * Exit codes:
  *   0 = no findings (clean)
- *   1 = findings detected (Linear issues created/updated)
+ *   1 = findings detected (single Linear issue created/updated)
  *   2 = configuration error
  */
 
@@ -27,10 +28,9 @@ import {
   fetchAllSonarHotspots,
   fetchAllSonarDuplicationIssues,
   fetchSonarMeasures,
-  syncSonarToLinear,
-  syncSonarHotspotsToLinear,
-  syncSonarDuplicationsToLinear,
+  findOpenLinearIssuesByTag,
 } from "../../lib/sonar-linear-sync.mjs";
+import { createIssue, findOpenIssuesByTitle, updateIssue, STATES, LABELS } from "../linear/linear-client.mjs";
 import { sendNotification } from "../../lib/notify.mjs";
 import { createLogger } from "../../lib/logger.mjs";
 
@@ -39,6 +39,101 @@ const { logInfo, logError } = createLogger();
 const SONAR_TOKEN = process.env.SONAR_TOKEN;
 const SONAR_HOST = process.env.SONAR_HOST_URL || "http://localhost:9000";
 const PROJECT_KEY = "anqr";
+const CONSOLIDATED_ISSUE_TITLE = "Nightly Sonar: unresolved findings";
+
+/**
+ * Resolve stale individual Linear issues that no longer exist in SonarQube.
+ * @param {string[]} sonarKeys - Current Sonar keys to check against
+ * @param {string} tag - Linear tag to search for (e.g., "[Sonar]")
+ * @param {string} keyType - Key type for regex ("" for issues, "hotspot-" for hotspots, "dup-" for duplications)
+ */
+async function resolveStaleLinearIssues(sonarKeys, tag, keyType) {
+  const existingIssues = await findOpenLinearIssuesByTag(tag);
+  const resolved = [];
+
+  for (const issue of existingIssues) {
+    // Extract sonar key from issue description
+    const keyMatch = issue.description?.match(new RegExp(`<!-- sonar-${keyType}key:([^>]+) -->`));
+    const sonarKey = keyMatch ? keyMatch[1] : null;
+
+    // If not found in current Sonar findings, resolve it
+    if (!sonarKey || !sonarKeys.includes(sonarKey)) {
+      await updateIssue(issue.id, { stateId: STATES.done });
+      resolved.push(issue.identifier);
+    }
+  }
+
+  return resolved;
+}
+
+async function findOrCreateConsolidatedIssue(existingIssues) {
+  if (existingIssues.length > 0) {
+    return existingIssues[0];
+  }
+  // No existing consolidated issue - create one
+  const issue = await createIssue({
+    title: CONSOLIDATED_ISSUE_TITLE,
+    description: "Placeholder - will be updated after findings are enumerated",
+    priority: 1,
+    labelIds: [LABELS.harness],
+    stateId: STATES.todo,
+  });
+  logInfo(`[sonar-audit] Created consolidated issue: ${issue.identifier}`);
+  return issue;
+}
+
+async function updateConsolidatedIssue(issueId, findings) {
+  const lines = [];
+
+  // Group issues by type for cleaner presentation
+  const issues = findings.issues;
+  const hotspots = findings.hotspots;
+  const duplications = findings.duplications;
+
+  if (issues.length > 0) {
+    lines.push("## Issues");
+    for (const issue of issues) {
+      const file = issue.component.split("/").pop();
+      lines.push(`- ${file}:${issue.line} - ${issue.message}<!-- sonar-key:${issue.key} -->`);
+    }
+    lines.push("");
+  }
+
+  if (hotspots.length > 0) {
+    lines.push("## Security Hotspots");
+    for (const hotspot of hotspots) {
+      const file = hotspot.component.split("/").pop();
+      lines.push(`- ${file} - ${hotspot.message}<!-- sonar-hotspot-key:${hotspot.key} -->`);
+    }
+    lines.push("");
+  }
+
+  if (duplications.length > 0) {
+    lines.push("## Duplications");
+    for (const dup of duplications) {
+      const file = dup.component.split("/").pop();
+      lines.push(`- ${file}:${dup.line} - ${dup.message}<!-- sonar-dup-key:${dup.key} -->`);
+    }
+    lines.push("");
+  }
+
+  // Add grouping instructions for the AI
+  lines.push("---");
+  lines.push("");
+  lines.push("## Grouping Guidance");
+  lines.push("");
+  lines.push("When resolving these findings, consider grouping by:");
+  lines.push("1. **File** - fix all issues in the same file together");
+  lines.push("2. **Rule** - address all instances of the same Sonar rule");
+  lines.push("3. **Category** - handle all issues of the same type (bugs, code smells, etc.)");
+  lines.push("");
+  lines.push("This consolidated issue tracks all open SonarQube findings. When resolving, ");
+  lines.push("create new grouped issues if appropriate rather than marking everything done at once.");
+
+  const description = lines.join("\n");
+  await updateIssue(issueId, { description });
+  logInfo(`[sonar-audit] Updated consolidated issue with ${issues.length} issues, ${hotspots.length} hotspots, ${duplications.length} duplications`);
+}
 
 async function main() {
   if (!SONAR_TOKEN) {
@@ -66,135 +161,77 @@ async function main() {
     `[sonar-audit] Issues: ${issues.length}, Hotspots: ${hotspotCount}, Duplications: ${dupIssues.length}, Measures: ${measSummary || "none"}`,
   );
 
-  // Sync regular issues
-  const issueResult = await syncSonarToLinear({
-    sonarIssues: issues,
-    projectKey: PROJECT_KEY,
-    sonarHost: SONAR_HOST,
-    priority: 1,
-    resolveStale: true,
-    requeueToReady: false,
-  });
+  // Resolve stale individual issues (from previous per-finding approach)
+  const issueKeys = issues.map((i) => i.key);
+  const hotspotKeys = hotspots.map((h) => h.key);
+  const dupKeys = dupIssues.map((d) => d.key);
 
-  // Sync security hotspots
-  const hotspotResult = await syncSonarHotspotsToLinear({
-    sonarHotspots: hotspots,
-    projectKey: PROJECT_KEY,
-    sonarHost: SONAR_HOST,
-    priority: 1,
-    resolveStale: true,
-    requeueToReady: false,
-  });
+  const staleIssues = await resolveStaleLinearIssues(issueKeys, "[Sonar]", "");
+  const staleHotspots = await resolveStaleLinearIssues(hotspotKeys, "[SonarHotspot]", "hotspot-");
+  const staleDupCount = await resolveStaleLinearIssues(dupKeys, "[SonarDup]", "dup-");
 
-  // Sync duplication issues
-  const dupResult = await syncSonarDuplicationsToLinear({
-    sonarDupIssues: dupIssues,
-    projectKey: PROJECT_KEY,
-    sonarHost: SONAR_HOST,
-    priority: 2, // Duplications are lower priority than bugs and vulnerabilities
-    resolveStale: true,
-    requeueToReady: false,
-  });
-
-  const totalCreated =
-    issueResult.created.length + hotspotResult.created.length + dupResult.created.length;
-  const totalPromoted =
-    issueResult.promoted.length + hotspotResult.promoted.length + dupResult.promoted.length;
-  const totalRequeued =
-    issueResult.requeued.length + hotspotResult.requeued.length + dupResult.requeued.length;
-  const totalSkipped =
-    issueResult.skipped.length + hotspotResult.skipped.length + dupResult.skipped.length;
-  const totalResolved =
-    issueResult.resolved.length + hotspotResult.resolved.length + dupResult.resolved.length;
-
-  logInfo(
-    `[sonar-audit] Issues: created ${issueResult.created.length}, promoted ${issueResult.promoted.length}, requeued ${issueResult.requeued.length}, existing ${issueResult.skipped.length}, resolved ${issueResult.resolved.length}`,
-  );
-  logInfo(
-    `[sonar-audit] Hotspots: created ${hotspotResult.created.length}, promoted ${hotspotResult.promoted.length}, requeued ${hotspotResult.requeued.length}, existing ${hotspotResult.skipped.length}, resolved ${hotspotResult.resolved.length}`,
-  );
-  logInfo(
-    `[sonar-audit] Duplications: created ${dupResult.created.length}, promoted ${dupResult.promoted.length}, requeued ${dupResult.requeued.length}, existing ${dupResult.skipped.length}, resolved ${dupResult.resolved.length}`,
-  );
-  logInfo(
-    `[sonar-audit] Total: created ${totalCreated}, promoted ${totalPromoted}, requeued ${totalRequeued}, existing ${totalSkipped}, resolved ${totalResolved}`,
-  );
-
-  if (totalCreated > 0 || totalPromoted > 0 || totalRequeued > 0) {
-    // Build details for each category
-    const parts = [];
-
-    // Regular issues
-    if (issueResult.created.length > 0) {
-      const lines = issueResult.created.map(
-        (c) =>
-          `  ${c.linear.identifier}: ${c.sonar.message} (${c.sonar.component.split("/").pop()}:${c.sonar.line})`,
-      );
-      parts.push(`**Issues (${issueResult.created.length} new):**`, ...lines);
-    }
-    if (issueResult.promoted.length > 0) {
-      if (parts.length > 0) parts.push("");
-      const lines = issueResult.promoted.map(
-        (p) => `  ${p.linear.identifier}: promoted to Urgent (was P${p.from})`,
-      );
-      parts.push(`**Issues (${issueResult.promoted.length} promoted):**`, ...lines);
-    }
-
-    // Hotspots
-    if (hotspotResult.created.length > 0) {
-      if (parts.length > 0) parts.push("");
-      const lines = hotspotResult.created.map(
-        (c) =>
-          `  ${c.linear.identifier}: ${c.hotspot.message} (${c.hotspot.component.split("/").pop()})`,
-      );
-      parts.push(`**Security Hotspots (${hotspotResult.created.length} new):**`, ...lines);
-    }
-
-    // Duplications
-    if (dupResult.created.length > 0) {
-      if (parts.length > 0) parts.push("");
-      const lines = dupResult.created.map(
-        (c) =>
-          `  ${c.linear.identifier}: ${c.duplication.message} (${c.duplication.component.split("/").pop()}:${c.duplication.line})`,
-      );
-      parts.push(`**Duplications (${dupResult.created.length} new):**`, ...lines);
-    }
-
-    const subjectParts = [];
-    if (issueResult.created.length > 0) subjectParts.push(`${issueResult.created.length} issues`);
-    if (hotspotResult.created.length > 0)
-      subjectParts.push(`${hotspotResult.created.length} hotspots`);
-    if (dupResult.created.length > 0) subjectParts.push(`${dupResult.created.length} dup`);
-
-    sendNotification({
-      subject: `Nightly sonar: ${subjectParts.join(", ")} — ${totalCreated} new`,
-      body: [
-        ...parts,
-        "",
-        `---`,
-        `**Summary:** Created: ${totalCreated}, Promoted: ${totalPromoted}, Requeued: ${totalRequeued}, Existing: ${totalSkipped}, Resolved: ${totalResolved}`,
-        "",
-        `Total open: ${issues.length} issues, ${hotspotCount} hotspots, ${dupIssues.length} duplications`,
-        `Dashboard: ${SONAR_HOST}/dashboard?id=${PROJECT_KEY}`,
-      ].join("\n"),
-      severity: "critical",
-    });
+  const totalResolved = staleIssues.length + staleHotspots.length + staleDupCount.length;
+  if (totalResolved > 0) {
+    logInfo(`[sonar-audit] Resolved stale: ${staleIssues.length} issues, ${staleHotspots.length} hotspots, ${staleDupCount.length} duplications`);
   }
 
-  if (totalResolved > 0 && totalCreated === 0 && totalSkipped === 0) {
+  // Find existing consolidated issues
+  const existingConsolidated = await findOpenIssuesByTitle("Nightly Sonar:");
+  const consolidatedIssue = await findOrCreateConsolidatedIssue(existingConsolidated);
+
+  const totalFindings = issues.length + hotspotCount + dupIssues.length;
+
+  if (totalFindings > 0) {
+    // Update the consolidated issue with all findings
+    await updateConsolidatedIssue(consolidatedIssue.id, {
+      issues,
+      hotspots,
+      duplications: dupIssues,
+    });
+
+    // Ensure it's in Todo state
+    if (consolidatedIssue.state.name !== "Todo") {
+      await updateIssue(consolidatedIssue.id, { stateId: STATES.todo });
+    }
+
+    sendNotification({
+      subject: `Nightly sonar: ${issues.length} issues, ${hotspotCount} hotspots, ${dupIssues.length} duplications`,
+      body: [
+        `Consolidated issue: ${consolidatedIssue.identifier}`,
+        "",
+        `**Findings:**`,
+        `- Issues: ${issues.length}`,
+        `- Security Hotspots: ${hotspotCount}`,
+        `- Duplications: ${dupIssues.length}`,
+        totalResolved > 0 ? `**Resolved stale:** ${totalResolved}` : "",
+        "",
+        `Total open: ${totalFindings}`,
+        `Dashboard: ${SONAR_HOST}/dashboard?id=${PROJECT_KEY}`,
+        "",
+        `The consolidated issue includes grouping guidance for batch resolution.`,
+      ].filter(Boolean).join("\n"),
+      severity: "critical",
+    });
+  } else {
+    // All findings resolved - close the consolidated issue
+    await updateIssue(consolidatedIssue.id, { stateId: STATES.done });
+
     sendNotification({
       subject: "Nightly sonar: all findings resolved",
-      body: `All SonarQube findings cleared. Resolved ${totalResolved} Linear issue(s).`,
+      body: [
+        `All SonarQube findings cleared. Consolidated issue ${consolidatedIssue.identifier} resolved.`,
+        totalResolved > 0 ? `Also resolved ${totalResolved} stale individual issues.` : "",
+      ].filter(Boolean).join("\n"),
       severity: "info",
     });
   }
 
-  if (issues.length === 0 && hotspotCount === 0 && dupIssues.length === 0) {
-    logInfo("[sonar-audit] Clean — no findings");
+  if (totalFindings === 0) {
+    logInfo("[sonar-audit] Clean - no findings");
     process.exit(0);
   }
 
-  logInfo(`[sonar-audit] Findings exist — exiting with code 1 (blocking)`);
+  logInfo(`[sonar-audit] Findings exist - exiting with code 1 (blocking)`);
   process.exit(1);
 }
 

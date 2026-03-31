@@ -1521,7 +1521,12 @@ const server = http.createServer(async (req, res) => {
   // Debug: log ALL requests before any processing
   logDebug(`===== REQUEST =====`);
   logDebug(`method: ${req.method}, url: ${req.url}`);
-  logDebug(`headers`, { authorization: req.headers.authorization?.slice(0, 20) + "..." });
+  // Fixed: properly handle undefined authorization header (don't log "undefined...")
+  logDebug(`headers`, {
+    authorization: req.headers.authorization
+      ? req.headers.authorization.slice(0, 20) + "..."
+      : "(none)"
+  });
   if (req.headers["x-openclaw-session"]) {
     logDebug(`session`, { sessionId: req.headers["x-openclaw-session"].slice(0, 12) + "..." });
   }

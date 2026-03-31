@@ -4131,9 +4131,23 @@ async function invokeWithAIInner(provider, messages, options = {}) {
     }
 
     // Check for embedded errors — some providers return 200 with error in body
+    // CHANGED: Reclassify as retryable provider failure, not a loud generic error.
+    // Some providers can terminate a stream without text and without a final finish reason.
+    // This should trigger fallback, not a hard error.
     if ((!fullText || fullText.trim() === "") && finishReason !== "tool-calls") {
-      logError(`Stream completed but produced no content (finishReason: ${finishReason})`);
-      throw new Error(`Stream completed but produced no content (finishReason: ${finishReason})`);
+      const noOutputError = new Error(
+        `no_output_generated: provider=${provider.name}, finishReason=${finishReason ?? "null"}, parts=${partCount}, errors=${errorCount}, hasMeaningfulText=${hasMeaningfulText}`
+      );
+      noOutputError.code = "NO_OUTPUT_GENERATED";
+      noOutputError.providerName = provider.name;
+      noOutputError.finishReason = finishReason ?? null;
+      noOutputError.retryable = true; // Mark as retryable for fallback selection
+      // Log as warning, not error — this is a provider edge case, not a hard bridge failure
+      logWarn(
+        `⚠️ Stream completed but produced no content (finishReason: ${finishReason}) — treating as retryable provider failure`,
+        { providerName: provider.name, partCount, errorCount, hasMeaningfulText },
+      );
+      throw noOutputError;
     }
     if (finishReason === "error") {
       logError(`Stream finished with error: ${streamErrorDetail || "unknown"} (text: ${fullText.length} chars)`);
@@ -4196,9 +4210,14 @@ async function invokeWithAIInner(provider, messages, options = {}) {
       stepCount: executionMetrics.stepCount,
     };
 
+    // CHANGED: Return the recovered fullText (which may have been populated via
+    // result.text fallback), not rely on result.text being consistently populated
+    // after stream recovery. This removes the mismatch between recovered text
+    // and returned text.
     return {
       text: fullText,
       providerName: provider.name,
+      usage: result.response?.usage,
       _symphonyResult,
     };
   } else {
