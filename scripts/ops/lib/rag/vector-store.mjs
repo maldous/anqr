@@ -171,11 +171,11 @@ async function loadIndex() {
     } else {
       throw new Error("Invalid manifest format");
     }
-  } catch (manifestErr) {
+  } catch (error_) {
     // Fall back to legacy single-file format
-    if (manifestErr?.code !== "ENOENT") {
+    if (error_?.code !== "ENOENT") {
       logDebug(
-        `Manifest not found or invalid, trying legacy format: ${manifestErr?.message || manifestErr}`,
+        `Manifest not found or invalid, trying legacy format: ${error_?.message || error_}`,
       );
     }
 

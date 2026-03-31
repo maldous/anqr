@@ -248,7 +248,7 @@ function startDiscordMonitoring() {
 
       // Process the command via Symphony bridge (Discord streaming handled in SSE consumption loop below)
       try {
-        if (!message || !message.id) {
+        if (!message.id) {
           logWarn(`⚠️ Discord command skipped: invalid message object`);
           return;
         }
@@ -374,7 +374,8 @@ async function sendProcessingStatusUpdate() {
     const worktreeLabel = req.worktreeId ? ` [${req.worktreeId}]` : "";
 
     // Create brief summary: "ANQ-123 [wt5] (2.5min, 3 files)"
-    const summary = `${issueLabel}${worktreeLabel} (${runtime}${filesChanged > 0 ? `, ${filesChanged} files` : ""})`;
+    const filesSuffix = filesChanged > 0 ? ", " + filesChanged + " files" : "";
+    const summary = issueLabel + worktreeLabel + " (" + runtime + filesSuffix + ")";
     summaries.push(summary);
   }
 
@@ -2114,12 +2115,7 @@ const tools = {
       ),
     }),
     execute: async ({ command, cwd, timeout_seconds }) => {
-      const timeoutMs =
-        timeout_seconds != null && timeout_seconds > 0
-          ? timeout_seconds * 1000
-          : timeout_seconds === -1
-            ? 0
-            : 60000;
+      const timeoutMs = calculateTimeoutMs(timeout_seconds);
       try {
         const result = execSync(command, {
           cwd: resolveRequestDir(cwd),
@@ -4745,9 +4741,7 @@ async function invokeWithFallbackStream(
       // Send error notification to client (but don't end the stream yet)
       if (onChunk) {
         // Include actual error details when errorType is generic/unknown
-        const errorDetail = errorType === ERROR_TYPES.UNKNOWN || errorType === "unknown"
-          ? errStr.slice(0, 100) 
-          : errorType;
+        const errorDetail = (errorType === ERROR_TYPES.UNKNOWN || errorType === "unknown") ? errStr.slice(0, 100) : errorType;
         const errorNotice = `\n⚠️ ${provider.name} failed (${errorDetail}), trying next provider...\n`;
         onChunk({ type: "text", text: errorNotice });
       }

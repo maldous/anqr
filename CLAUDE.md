@@ -11,9 +11,9 @@ Read order:
 
 ANQR uses a Symphony Bridge (port 4319) and Codebuff Bridge (port 4318) as OpenAI-compatible gateways. Both run as user-level systemd services.
 
-### Worktree execution environment
+### Worktree execution environment (OPERATIONAL as of 2026-03-31)
 
-Symphony runner supports concurrent execution via git worktrees with **8 concurrent worktrees**:
+Symphony runner supports concurrent execution via git worktrees with **8 concurrent worktrees** (fully validated through Phase 0-8):
 
 **Symphony worktrees (wt1-wt4):** Handle Linear issues and general Symphony work
 **Discord worktrees (wt5-wt8):** Handle ONLY Discord-sourced issues (prevents conflicts)
@@ -29,8 +29,11 @@ Symphony runner supports concurrent execution via git worktrees with **8 concurr
   - After commit: `git push origin HEAD:main` (makes work immediately available to other worktrees)
   - **CRITICAL:** Work from other worktrees is only visible AFTER it's pushed to `origin/main`
   - **CRITICAL:** Always push completed work immediately to enable other worktrees to build on it
-- Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
+- Shared state (`$XDG_RUNTIME_DIR/anqr-symphony-state/state.json`) uses file-based locking for atomicity
 - Lease system prevents concurrent work on the same Linear issue
+- **Isolation verified:** All 6 defense layers validated (config routing, router cwd rebasing, systemd WorkingDirectory, process cwd, Codebuff client isolation, file operations)
+- **Concurrency enforced:** Max 8 concurrent operations (4 Symphony + 4 Discord), 429 overflow tested
+- **7 ports listening:** 4319 (main bridge), 4325-4328 (worktree bridges), 18789 (gateway), 18790 (router)
 - Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
 
 **Initial setup (one-time):**

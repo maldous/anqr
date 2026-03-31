@@ -11,20 +11,26 @@ Read order:
 
 ANQR uses a Symphony Bridge (port 4319) and Codebuff Bridge (port 4318) as OpenAI-compatible gateways. Both run as user-level systemd services.
 
-### Worktree execution environment
+### Worktree execution environment (OPERATIONAL as of 2026-03-31)
 
-Symphony runner supports concurrent execution via git worktrees. When enabled:
+Symphony runner supports concurrent execution via git worktrees with **8 concurrent worktrees** (fully validated through Phase 0-8):
+
+**Symphony worktrees (wt1-wt4):** Handle Linear issues and general Symphony work
+**Discord worktrees (wt5-wt8):** Handle ONLY Discord-sourced issues (prevents conflicts)
 
 - Each runner instance operates in an isolated worktree directory (e.g., `/home/user/src/anqr-wt1`, `/home/user/src/anqr-wt2`)
-- Environment variables: `ANQR_WORKTREE_ID` (e.g., `wt1`, `wt2`) and `ANQR_WORKTREE_PATH`
-- Each worktree uses a unique branch (`symphony/wt1`, `symphony/wt2`) tracking `origin/main`
+- Environment variables: `ANQR_WORKTREE_ID` (e.g., `wt1`, `wt2`, ..., `wt8`, or `main`) and `ANQR_WORKTREE_PATH`
+- Each worktree uses a unique branch (`symphony/wt1`, `symphony/wt2`, ..., `symphony/wt8`) tracking `origin/main`
 - `scripts/ops/orchestration/symphony-runner.mjs` refuses to run from the main repository without worktree context
-- Worktrees sync with `origin/main` before each issue execution
-- Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
+- Worktrees sync with `origin/main` before each issue execution: `git fetch origin main && git merge origin/main --ff-only`
+- Shared state (`$XDG_RUNTIME_DIR/anqr-symphony-state/state.json`) uses file-based locking for atomicity
 - Lease system prevents concurrent work on the same Linear issue
 - Source-based routing is enforced: `wt1`-`wt4` handle non-Discord work, `wt5`-`wt8` handle Discord-sourced work
 - Linear issues created by linear-guardian are automatically marked with `source: "linear"` for proper routing
 - When Discord interactions create Linear issues, they MUST be marked with `source: "discord"` via patchIssueState()
+- **Isolation verified:** All 6 defense layers validated (config routing, router cwd rebasing, systemd WorkingDirectory, process cwd, Codebuff client isolation, file operations)
+- **Concurrency enforced:** Max 8 concurrent operations (4 Symphony + 4 Discord), 429 overflow tested
+- **7 ports listening:** 4319 (main bridge), 4325-4328 (worktree bridges), 18789 (gateway), 18790 (router)
 - Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
 
 ### Key modules (all under `scripts/ops/integrations/model/`)
@@ -76,11 +82,13 @@ The bridge dynamically adjusts per-provider context limits at runtime:
    node scripts/ops/orchestration/symphony-control.mjs --stop
    ```
    - **CRITICAL:** This must be the FIRST step before any other actions
-   - Disables all Symphony runner timers to prevent new tasks from starting
+   - Disables all 4 Symphony runner timers (wt1-wt4) to prevent new tasks from starting
+   - Shows "🛑 STOPPED - no new tasks will be picked up" status
 
 2. **Check concurrent runner status**: `node scripts/ops/orchestration/symphony-runner.mjs --status`
+   - Verify all worktree runners are idle (no active leases)
 
-3. **Wait for zero concurrency**: Check Discord for "(0 concurrent)"
+3. **Wait for zero concurrency**: Check Discord for "(0 concurrent)" or verify all locks released
 
 4. **Commit & push first**: `git add -A && git commit -m "..." && git push`
 
@@ -91,6 +99,8 @@ The bridge dynamically adjusts per-provider context limits at runtime:
    node scripts/ops/orchestration/symphony-control.mjs --start
    ```
    - **CRITICAL:** Must restart task execution after bridge restart
+   - Re-enables all 4 Symphony runner timers (wt1-wt4)
+   - Shows "✅ RUNNING - new tasks will be picked up" status
    - Without this step, the system remains stopped and no work will be processed
 
 7. **Update MEMORY.md** with stop/start entries, then commit & push again
@@ -121,3 +131,20 @@ npm run test:unit
 - The runner self-feeds the queue after issue completion
 - `anqr-queue-feeder.timer` is a safety-net maintenance loop, not the primary feeder
 - Queue feed/drain decisions use `readyDepth` (Todo-only depth), not aggregate queue depth including `In Progress`
+
+### Worktree operations
+
+**Check status of all worktrees:**
+```bash
+node scripts/ops/orchestration/symphony-runner.mjs --status
+```
+
+**View worktree pool health:**
+```bash
+node scripts/ops/orchestration/symphony-worktree-pool.mjs status
+```
+
+**Emergency worktree repair:**
+```bash
+node scripts/ops/orchestration/symphony-worktree-pool.mjs repair
+```

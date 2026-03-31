@@ -1569,7 +1569,6 @@ const server = http.createServer(async (req, res) => {
       req.openclawSessionId = openclawSessionId;
       const model = body.model || MODEL_ID;
       const messages = Array.isArray(body.messages) ? body.messages : [];
-      const _worktreeId = req.headers["x-worktree-id"] || null;
       const requestCwd = typeof body.cwd === "string" && body.cwd.trim() ? path.resolve(body.cwd.trim()) : DEFAULT_CWD;
       const stream = body.stream === true;
 
