@@ -1223,11 +1223,14 @@ anqr-symphony-bridge.service          (must start first)
 - [x] **Fix `models.json`** — Updated `symphony-bridge.baseUrl` from `4319` to `18790` to eliminate dead conflicting value
 - [x] **Workspace fix** — Not needed: bridge has no workspace reference; router already rebases cwd from main→worktree
 
-### Short-term: E2E Validation (Phase 4)
+### Short-term: Service Startup & Smoke Testing (Phase 4) ✅ COMPLETE
 
-- [ ] **Discord isolation test** — File created via Discord exists ONLY in wt5-8
-- [ ] **Linear execution test** — Issue processed, committed, pushed from wt1-4
-- [ ] **Concurrent operation test** — 8 simultaneous ops without conflict
+- [x] **All services started** — Started in dependency order: main bridge → runners → worktree bridges → router → gateway
+- [x] **All 7 ports listening** — 4319, 4325-4328, 18789, 18790 all confirmed
+- [x] **All health endpoints OK** — All 6 HTTP health endpoints return "ok"
+- [x] **Runner timers active** — 4 runner timers firing every 2 minutes, exiting cleanly (no work)
+- [x] **OpenClaw config fixed** — Removed invalid `fallbacks` array and `tools` key from openclaw.json
+- [x] **Gateway singleton lock churn fixed** — `cleanupStaleLock()` now checks runnerPid (not just gatewayPid)
 
 ### Medium-term: Hardening (Phase 5)
 
@@ -1619,7 +1622,7 @@ git push
 
 **Tasks:**
 
-- [ ] **Start services in dependency order:**
+- [x] **Start services in dependency order:**
   ```bash
   # 1. Main Symphony bridge (dependency for everything)
   systemctl --user enable --now anqr-symphony-bridge.service
@@ -1642,12 +1645,12 @@ git push
   # 5. Discord gateway singleton (wt5-wt8)
   systemctl --user enable --now anqr-discord-bridge@{5,6,7,8}.timer
   ```
-- [ ] **Verify all ports listening:**
+- [x] **Verify all ports listening:**
   ```bash
   ss -tln | grep -E '(4319|4325|4326|4327|4328|18789|18790)'
   # Should show 7 listening ports
   ```
-- [ ] **Verify all health endpoints:**
+- [x] **Verify all health endpoints:**
   ```bash
   for port in 4319 4325 4326 4327 4328 18790; do
     echo "Port $port: $(curl -s http://127.0.0.1:$port/health | jq -r '.status')"
@@ -1658,13 +1661,13 @@ git push
 
 | Criterion | Evidence | Status |
 |-----------|----------|--------|
-| Main bridge healthy | `curl :4319/health` returns `{"status": "ok"}` | ⬜ |
-| All 4 worktree bridges healthy | `:4325-4328/health` all return OK | ⬜ |
-| Discord router healthy | `:18790/health` returns OK with 4 worktrees | ⬜ |
-| OpenClaw gateway running | Port 18789 listening, Discord bot online | ⬜ |
-| Runner timers active | `systemctl --user list-timers` shows 4 runner timers | ⬜ |
-| 7 ports listening | `ss -tln` confirms all expected ports | ⬜ |
-| No service failures | `systemctl --user --failed` shows nothing anqr-related | ⬜ |
+| Main bridge healthy | `curl :4319/health` returns `{"status": "ok"}` | ✅ |
+| All 4 worktree bridges healthy | `:4325-4328/health` all return OK | ✅ |
+| Discord router healthy | `:18790/health` returns OK with 4 worktrees | ✅ |
+| OpenClaw gateway running | Port 18789 listening, Discord bot online | ✅ |
+| Runner timers active | `systemctl --user list-timers` shows 4 runner timers | ✅ |
+| 7 ports listening | `ss -tln` confirms all expected ports | ✅ |
+| No service failures | `systemctl --user --failed` shows nothing anqr-related | ✅ |
 
 **Evidence artifacts:**
 
@@ -2091,7 +2094,7 @@ Phase 2: Clean Up Deployed State    [COMPLETE] Gate: Clean systemd state, no sta
 Phase 3: Runtime Config Verification  [COMPLETE] Gate: OpenClaw merge/workspace verified empirically ✅
   │
   ▼
-Phase 4: Service Startup & Smoke Testing  ← NEXT  Gate: All 7 ports listening, health OK
+Phase 4: Service Startup & Smoke Testing  [COMPLETE] Gate: All 7 ports listening, health OK ✅
   │
   ▼
 Phase 5: Discord Flow E2E Validation           Gate: Isolation proven (file not in main)

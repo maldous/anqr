@@ -66,10 +66,9 @@ async function cleanupStaleLock() {
   try {
     const info = await readLockInfo();
     if (!info) return;
-    const ownerPid = info.gatewayPid || info.runnerPid;
-    if (isPidAlive(ownerPid)) return;
+    if (isPidAlive(info.runnerPid) || isPidAlive(info.gatewayPid)) return;
     logWarn(
-      `Removing stale gateway lock owned by ${info.worktree || "unknown"} (pid ${ownerPid || "?"})`,
+      `Removing stale gateway lock owned by ${info.worktree || "unknown"} (runner ${info.runnerPid || "?"}, gateway ${info.gatewayPid || "?"})`,
     );
     await fsp.unlink(LOCK_FILE);
   } catch (err) {
@@ -171,8 +170,14 @@ function spawnGatewayProcess() {
   return child;
 }
 
+async function isLockStillOurs() {
+  const info = await readLockInfo();
+  return info && info.runnerPid === process.pid;
+}
+
 async function runGatewayOwnerLoop() {
   while (!stopping) {
+    await writeLockMetadata();
     childProcess = spawnGatewayProcess();
     const exitInfo = await new Promise((resolve) => {
       childProcess.once("exit", (code, signal) => {
@@ -193,7 +198,15 @@ async function runGatewayOwnerLoop() {
         `Gateway exited (code ${exitInfo.code ?? "?"}, signal ${exitInfo.signal ?? "?"}); restarting in ${RESTART_BACKOFF_MS}ms`,
       );
     }
-    await sleep(RESTART_BACKOFF_MS + Math.floor(Math.random() * 5000));
+
+    const backoff = RESTART_BACKOFF_MS + Math.floor(Math.random() * 5000);
+    await sleep(backoff);
+
+    if (!(await isLockStillOurs())) {
+      logWarn("Lock was taken by another runner during backoff; returning to follower mode");
+      lockHeld = false;
+      return;
+    }
   }
 }
 
