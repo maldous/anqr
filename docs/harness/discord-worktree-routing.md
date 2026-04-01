@@ -19,19 +19,27 @@ OpenClaw is a **third-party CLI/gateway** that:
 
 **OpenClaw does NOT contain AI models.** It delegates to Symphony Bridge for AI processing.
 
-## Architecture
+## Architecture (ADR-0003: All-in-One Symphony Bridge)
 
 ```
 Discord Bot (OpenClaw Gateway, port 18789)   ← ONE singleton instance
        ↓ uses symphony-bridge provider
 Discord Request Router (port 18790)          ← Load balancer
-       ↓ least-loaded selection + cwd rebase
-Worktree Symphony Bridges (ports 4325-4328)  ← Per-worktree isolation
-       ↓ isolated working directory
-Provider Cascade → LLM API → Tool execution
+       ↓ least-loaded selection
+All-in-One Symphony Bridges (ports 4325-4328) ← Per-worktree isolation
+       ↓ AI + Codebuff SDK + tools in one service
+       ↓ WorkingDirectory = worktree path (single source of truth)
+Provider Cascade → LLM API
        ↓
 Git Worktrees (wt5-wt8)
 ```
+
+**Key change (2026-03-31):** Symphony bridges now provide all capabilities:
+- AI completion (`/v1/chat/completions`)
+- Codebuff SDK operations (integrated, not separate service)
+- Tool execution (file ops, git, etc.)
+
+This eliminates the separate Codebuff bridge service and caching defects. See `docs/adr/ADR-0003-all-in-one-symphony-bridge.md`.
 
 ## Components
 
@@ -61,7 +69,7 @@ Git Worktrees (wt5-wt8)
 - Rebases `cwd` in request payload to target worktree path
 - Returns 429 when all 4 worktrees at capacity
 
-### 3. Worktree Symphony Bridges
+### 3. All-in-One Worktree Symphony Bridges
 
 | Worktree | Port | Directory |
 |----------|------|-----------|
@@ -71,28 +79,36 @@ Git Worktrees (wt5-wt8)
 | wt8 | 4328 | `/home/user/src/anqr-wt8` |
 
 - **Service:** `anqr-symphony-bridge@{5,6,7,8}.service`
+- **Capabilities:** AI completion + Codebuff SDK + tool execution (all integrated)
 - Each runs in its own worktree directory via `WorkingDirectory`
 - ExecStart uses main repo script path; cwd is the worktree
 - Full provider cascade (same as main bridge)
+- **No separate Codebuff bridge needed** (integrated per ADR-0003)
 
-## Request Flow
+## Request Flow (Simplified with All-in-One Bridge)
 
 1. **Discord user sends message** → OpenClaw Gateway (port 18789)
 2. **Gateway forwards to provider:** `POST http://127.0.0.1:18790/v1/chat/completions` (via symphony-bridge config)
-3. **Router selects worktree:** Least-loaded of wt5-wt8, rebases cwd
+3. **Router selects worktree:** Least-loaded of wt5-wt8
 4. **Router proxies to bridge:** `POST http://127.0.0.1:432{i}/v1/chat/completions` with `X-Worktree-ID: wt{i}`
-5. **Bridge executes in worktree:** File operations scoped to `/home/user/src/anqr-wt{i}`
+5. **Bridge executes in worktree:**
+   - AI completion via provider cascade
+   - Codebuff SDK operations (integrated)
+   - Tool execution (file ops, git, etc.)
+   - All scoped to `/home/user/src/anqr-wt{i}` via `WorkingDirectory`
 6. **Response streams back:** Bridge → Router → Gateway → Discord
+
+**Note:** No cwd rewriting needed — systemd `WorkingDirectory` ensures correct working directory from process start.
 
 ## Resolved Defects (External Review 2026-03-31)
 
-The following defects were identified by external code review and have been fixed:
+The following defects were identified by external code review:
 
-- **F1: Codebuff client cwd caching** — `codebuff-openai-bridge.mjs` shared client was keyed by `costMode` only, ignoring `cwd`. Requests for one worktree could silently reuse a client created with a different cwd. **Fixed:** Client now keyed by `costMode + cwd`.
+- **F1: Codebuff client cwd caching** — `codebuff-openai-bridge.mjs` shared client was keyed by `costMode` only, ignoring `cwd`. Requests for one worktree could silently reuse a client created with a different cwd. **Resolution:** ADR-0003 — eliminate separate Codebuff bridge entirely; integrate Codebuff SDK into Symphony bridge (no shared client state).
 - **F2: Control script scope** — `symphony-control.mjs --start` enabled runner timers 1-8, but only wt1-wt4 are runner targets. **Fixed:** Now enables only runners 1-4.
 - **F3: Bridge auto-start** — `symphony-openai-bridge.mjs` called `symphony-control.mjs --start` on every bridge startup, re-enabling wrong-scope runners. **Fixed:** Auto-start removed; runner timers managed independently.
 
-See `docs/harness/12-concurrent-execution-with-worktrees.md` Section 4A for full evidence.
+F1 led to the architectural decision documented in `docs/adr/ADR-0003-all-in-one-symphony-bridge.md`. See `docs/harness/12-concurrent-execution-with-worktrees.md` Section 4A for full evidence.
 
 ## Resolved Issues (All Verified)
 

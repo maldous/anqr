@@ -9,7 +9,7 @@
 
 import { describe, it, expect, afterAll } from "vitest";
 import { spawn } from "node:child_process";
-import { readFileSync, unlinkSync, existsSync } from "node:fs";
+import { readFileSync, unlinkSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const MAIN_REPO = "/home/user/src/anqr";
@@ -73,56 +73,78 @@ describe("Discord Worktree Isolation", () => {
     }
   });
 
-  it("should verify Discord requests create files in worktrees only", async () => {
-    // This test verifies isolation by checking that files created through Discord
-    // appear in worktrees only, never in the main repository.
-    // 
-    // Note: Full end-to-end testing requires the OpenClaw Gateway (Discord bot) to be running.
-    // This test verifies the isolation mechanisms are in place:
-    // - Router rewrites cwd from main repo to worktree (verified in logs)
-    // - WorkingDirectory is set correctly for each bridge (verified in systemd config)
-    // - Manual verification: Files created by Discord appear in worktrees only
+  it("should verify Discord infrastructure isolation (routing, cwd, WorkingDirectory)", async () => {
+    // This test validates the isolation infrastructure without requiring successful LLM execution
+    // It verifies: router routing, cwd rewriting, bridge WorkingDirectory, and process cwd
+    console.log(`\n🧪 Testing Discord isolation infrastructure...`);
 
-    console.log(`\n🧪 Checking for any Discord-created files in main repo...`);
+    // STEP 1: Verify router routes to worktree bridges (not main bridge)
+    console.log(`\n📍 Step 1: Router routing validation`);
+    const routerHealth = await fetch("http://127.0.0.1:18790/health").then(r => r.json());
+    expect(routerHealth.status).toBe("ok");
+    expect(routerHealth.worktrees).toHaveLength(4);
+    expect(routerHealth.worktrees.map((w: any) => w.id)).toEqual([5, 6, 7, 8]);
+    console.log(`✅ Router correctly configured for wt5-wt8`);
 
-    const mainTestFile = join(MAIN_REPO, testFileName);
-    
-    // CRITICAL CHECK 1: Test file must NOT exist in main repo
-    const mainExists = existsSync(mainTestFile);
-    expect(mainExists).toBe(false);
-    console.log(`✅ ISOLATION VERIFIED: No test files in main repo`);
-
-    // CRITICAL CHECK 2: Verify router logs show cwd rewriting from main to worktrees
-    const routerLogs = await new Promise<string>((resolve, reject) => {
-      const proc = spawn("sh", ["-c", "journalctl --user -u anqr-discord-router.service --since '1 hour ago' --no-pager | grep 'cwd:' | tail -5 || true"]);
+    // STEP 2: Verify router rewrites cwd from main to worktree
+    console.log(`\n📍 Step 2: Router cwd rewriting validation`);
+    const routerLogs = await new Promise<string>((resolve) => {
+      const { spawn } = require("node:child_process");
+      const proc = spawn("journalctl", ["--user", "-u", "anqr-discord-router.service", "--since", "10 minutes ago", "--no-pager"]);
       let output = "";
-      proc.stdout.on("data", d => output += d);
+      proc.stdout.on("data", (d: Buffer) => output += d);
       proc.on("close", () => resolve(output));
-      proc.on("error", reject);
     });
+    
+    const cwdRewritePattern = /cwd: "\/home\/user\/src\/anqr" -> "\/home\/user\/src\/anqr-wt[5-8]"/;
+    const hasCwdRewrite = cwdRewritePattern.test(routerLogs);
+    expect(hasCwdRewrite).toBe(true);
+    console.log(`✅ Router rewrites cwd: main → worktree`);
 
-    if (routerLogs && routerLogs.length > 0) {
-      console.log(`✅ Router has handled requests (showing recent cwd rewrites):`);
-      const lines = routerLogs.split("\n").filter(l => l.includes("cwd:")).slice(0, 3);
-      lines.forEach(line => {
-        const match = line.match(/cwd: "([^"]+)" -> "([^"]+)"/);
-        if (match) {
-          console.log(`   ${match[1]} -> ${match[2]}`);
-          // Verify rewrite is from main to worktree
-          expect(match[1]).toBe(MAIN_REPO);
-          expect(match[2]).toMatch(/\/home\/user\/src\/anqr-wt[5-8]/);
-        }
+    // STEP 3: Verify worktree bridges have correct WorkingDirectory
+    console.log(`\n📍 Step 3: Bridge WorkingDirectory validation`);
+    for (let i = 5; i <= 8; i++) {
+      const result = await new Promise<string>((resolve) => {
+        const { spawn } = require("node:child_process");
+        const proc = spawn("systemctl", ["--user", "show", `anqr-symphony-bridge@${i}.service`, "-p", "WorkingDirectory"], { shell: true });
+        let output = "";
+        proc.stdout.on("data", (d: Buffer) => output += d);
+        proc.on("close", () => resolve(output));
       });
-    } else {
-      console.log(`ℹ️  No recent Discord requests in router logs (no active traffic)`);
+      expect(result).toContain(`WorkingDirectory=/home/user/src/anqr-wt${i}`);
     }
+    console.log(`✅ All worktree bridges have correct WorkingDirectory`);
 
-    console.log(`\n🎉 ISOLATION MECHANISMS VERIFIED:`);
-    console.log(`   ✓ Router rewrites cwd from main to worktrees (logs confirmed)`);
-    console.log(`   ✓ WorkingDirectory correctly set for all bridges (systemd verified)`);
-    console.log(`   ✓ No test files appear in main repository`);
-    console.log(`   ✓ Complete isolation chain validated`);
-  }, 10_000); // 10 second timeout
+    // STEP 4: Verify bridges report correct cwd via health endpoint
+    console.log(`\n📍 Step 4: Bridge process cwd validation`);
+    for (let i = 5; i <= 8; i++) {
+      const health = await fetch(`http://127.0.0.1:432${i}/health`).then(r => r.json());
+      expect(health.status).toBe("ok");
+      // The bridge health endpoint includes process.cwd()
+      if (health.cwd) {
+        expect(health.cwd).toBe(`/home/user/src/anqr-wt${i}`);
+      }
+    }
+    console.log(`✅ All bridges running in correct worktree directory`);
+
+    // STEP 5: Verify main repo has no test artifacts from previous Discord executions
+    console.log(`\n📍 Step 5: Main repo isolation check`);
+    const mainFiles = readdirSync(MAIN_REPO).filter(f => f.includes("TEST") || f.includes("DISCORD"));
+    const hasLeakedFiles = mainFiles.length > 0;
+    if (hasLeakedFiles) {
+      console.error(`⚠️  Found potential leaked files in main: ${mainFiles.join(", ")}`);
+    }
+    expect(hasLeakedFiles).toBe(false);
+    console.log(`✅ Main repo clean (no leaked test files)`);
+
+    console.log(`\n🎉 ISOLATION INFRASTRUCTURE VALIDATED:`);
+    console.log(`   ✓ Router routes to wt5-wt8 bridges (not main)`);
+    console.log(`   ✓ Router rewrites cwd from main → worktree`);
+    console.log(`   ✓ Bridges have WorkingDirectory = worktree`);
+    console.log(`   ✓ Bridge processes run in worktree cwd`);
+    console.log(`   ✓ Main repo has no leaked files`);
+    console.log(`   ✓ Complete isolation chain verified`);
+  }, 30_000); // 30 second timeout for infrastructure checks
 
   it("should verify router properly rewrites cwd to Discord worktrees", async () => {
     // This test verifies that the router correctly rewrites the cwd parameter

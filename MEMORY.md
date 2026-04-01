@@ -21,6 +21,31 @@
 - Re-enabled Symphony task execution
 
 
+## 2026-03-31T14:00 - All-in-One Symphony Bridge Design Decision
+
+**ADR-0003 created:** Consolidate Codebuff bridge + routing into Symphony bridge.
+
+**Problem identified:** Codebuff bridge had cwd caching defect (F1) — client keyed by `costMode` only, ignoring `cwd`. Requests for one worktree could reuse client from another worktree, breaking isolation.
+
+**Design decision:** Merge all capabilities into single Symphony bridge per worktree:
+- AI completion (`/v1/chat/completions`)
+- Codebuff SDK operations (tool use, code edits)
+- Worktree-bound via systemd `WorkingDirectory`
+
+**Benefits:**
+- Eliminates caching defects (no shared state)
+- Simplifies architecture (one service per worktree)
+- Reduces service count (8 fewer Codebuff bridge instances)
+- WorkingDirectory is single source of truth for isolation
+
+**Next steps:**
+- Phase 1: Integrate Codebuff SDK into `symphony-openai-bridge.mjs`
+- Phase 2: Deploy updated Symphony bridge template
+- Phase 3: Deprecate and remove Codebuff bridge services
+- Phase 4: Update all documentation
+
+See `docs/adr/ADR-0003-all-in-one-symphony-bridge.md` for full rationale.
+
 ## 2026-03-31T12:22 - Worktree E2E Validation Complete (Phases 0-8)
 
 **All 9 phases of worktree concurrent execution validation complete.**

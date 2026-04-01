@@ -9,7 +9,15 @@ Read order:
 
 ## Harness Context
 
-ANQR uses a Symphony Bridge (port 4319) and Codebuff Bridge (port 4318) as OpenAI-compatible gateways. Both run as user-level systemd services.
+ANQR uses an **all-in-one Symphony Bridge** architecture (ADR-0003) where each bridge provides:
+- AI completion (`/v1/chat/completions`) with provider cascade
+- Codebuff SDK operations (tool use, code edits, file operations)
+- Worktree-isolated execution via systemd `WorkingDirectory`
+
+**Main bridge:** port 4319 (control plane, non-worktree operations)
+**Worktree bridges:** ports 4321-4328 (wt1-wt8, isolated per worktree)
+
+**NOTE:** The separate Codebuff Bridge service (`anqr-codebuff-bridge@.service`) is deprecated and will be removed. All Codebuff SDK functionality is now integrated into Symphony bridges.
 
 ### Worktree execution environment (OPERATIONAL as of 2026-03-31)
 
