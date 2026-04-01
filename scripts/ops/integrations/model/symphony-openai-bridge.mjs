@@ -3260,7 +3260,9 @@ function convertMessages(messages) {
 const KNOWN_TOOL_CAPABLE = new Set(["codex", "codebuff"]);
 const toolCapableProviders = new Set(KNOWN_TOOL_CAPABLE);
 const nonToolCapableProviders = new Set();
-const TOOL_PROBE_TIMEOUT_MS = 45_000;
+// Configurable tool probe timeout (default: 60s)
+// Override via SYMPHONY_TOOL_PROBE_TIMEOUT_MS environment variable
+const TOOL_PROBE_TIMEOUT_MS = parseInt(process.env.SYMPHONY_TOOL_PROBE_TIMEOUT_MS, 10) || 60_000;
 const TOOL_PROBE_RETRY_DELAY_MS = 60_000;
 const GATEWAY_BATCH_SIZE = 3; // Max concurrent probes per shared API gateway
 const GATEWAY_BATCH_DELAY_MS = 3_000; // Delay between batches within a gateway
@@ -4172,11 +4174,23 @@ async function invokeWithAIInner(provider, messages, options = {}) {
     }
 
     // Handle truncated responses — but distinguish between actual step limit vs API errors
-    if (finishReason === "tool-calls") {
-      const truncationNote =
-        errorCount > 0
-          ? "\n\n---\n⚠️ Response truncated: the stream ended during tool execution due to API error(s). The results above may be incomplete."
-          : "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
+    // CRITICAL FIX: When stream ends during tool execution due to API errors (errorCount > 0),
+    // we MUST throw to trigger provider fallback. The partial results are not reliable.
+    if (finishReason === "tool-calls" && errorCount > 0) {
+      const truncatedError = new Error(
+        `Response truncated: the stream ended during tool execution due to API error(s). The results above may be incomplete. (provider: ${provider.name}, errors: ${errorCount})`,
+      );
+      truncatedError.code = "STREAM_TRUNCATED_WITH_ERRORS";
+      truncatedError.providerName = provider.name;
+      truncatedError.retryable = true;
+      truncatedError.errorCount = errorCount;
+      // Throw to trigger provider fallback - don't return partial results
+      throw truncatedError;
+    }
+
+    // Handle step limit case (no errors, model still working but hit step limit)
+    if (finishReason === "tool-calls" && errorCount === 0) {
+      const truncationNote = "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
       fullText += truncationNote;
       if (onChunk) {
         onChunk({ type: "text", text: truncationNote });
