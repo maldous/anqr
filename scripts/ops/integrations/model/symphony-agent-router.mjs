@@ -153,8 +153,140 @@ function proxyRequest(target, req, res, parsedBody = {}) {
   proxyReq.end();
 }
 
+// Linear webhook event handling
+const linearQueue = [];
+
+/**
+ * Handle Linear trigger - spawn runner in least-loaded Linear worktree (wt1-4)
+ * Returns 202 immediately, processes async
+ */
+import { spawn } from "node:child_process";
+
+function handleLinearTrigger(req, res) {
+  // Return 202 immediately - Linear webhooks expect fast response
+  json(res, 202, { status: "accepted" });
+
+  // Only route to Linear worktrees (wt1-4)
+  const linearWorktrees = WORKTREES.filter((w) => w.id >= 1 && w.id <= 4);
+  if (linearWorktrees.length === 0) {
+    logError("No Linear worktrees available for trigger");
+    return;
+  }
+
+  // Select least-loaded Linear worktree
+  const target = linearWorktrees.sort((a, b) => a.activeRequests - b.activeRequests)[0];
+
+  // Read the request body async
+  const chunks = [];
+  req.on("data", (chunk) => chunks.push(chunk));
+  req.on("end", () => {
+    let parsedBody = {};
+    try {
+      parsedBody = JSON.parse(Buffer.concat(chunks).toString());
+    } catch (err) {
+      logError(`Invalid JSON in trigger: ${err.message}`);
+      return;
+    }
+
+    const identifier = parsedBody.identifier || req.headers["x-linear-identifier"];
+    if (!identifier) {
+      logError("Missing identifier in trigger");
+      return;
+    }
+
+    logInfo(`Linear trigger: ${identifier} -> spawning runner in wt${target.id}`);
+
+    // Spawn the runner in the target worktree
+    // The runner will pick up the specific issue and execute it
+    const nodePath = process.env.PATH?.split(":").find((p) => p.includes("nvm")) || "/home/user/.nvm/versions/node/v25.8.0/bin/node";
+    
+    const runner = spawn(
+      nodePath,
+      [
+        "scripts/ops/orchestration/symphony-runner.mjs",
+        "--once",
+        "--issue",
+        identifier,
+      ],
+      {
+        cwd: target.path,
+        env: {
+          ...process.env,
+          ANQR_WORKTREE_ID: `wt${target.id}`,
+          ANQR_WORKTREE_PATH: target.path,
+        },
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+
+    runner.stdout.on("data", (data) => logInfo(`[runner-wt${target.id}] ${data}`));
+    runner.stderr.on("data", (data) => logError(`[runner-wt${target.id}] ${data}`));
+    runner.on("close", (code) => {
+      logInfo(`Runner for ${identifier} exited with code ${code}`);
+    });
+    runner.on("error", (err) => {
+      logError(`Failed to spawn runner for ${identifier}: ${err.message}`);
+    });
+  });
+
+  req.on("error", (err) => {
+    logError(`Linear trigger request error: ${err.message}`);
+  });
+}
+
+function handleLinearQueue(req, res) {
+  // POST /v1/linear/queue - add event to queue
+  if (req.method === "POST") {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => {
+      try {
+        const event = JSON.parse(Buffer.concat(chunks).toString());
+        linearQueue.push({
+          ...event,
+          queuedAt: new Date().toISOString(),
+        });
+        logInfo(`Queued Linear event: ${event.event?.identifier}`);
+        return json(res, 202, { status: "queued", queueLength: linearQueue.length });
+      } catch (err) {
+        return json(res, 400, { error: { message: `Invalid JSON: ${err.message}` } });
+      }
+    });
+    return;
+  }
+
+  // GET /v1/linear/queue - get queue status
+  if (req.method === "GET") {
+    return json(res, 200, {
+      queueLength: linearQueue.length,
+      events: linearQueue.slice(-10).map((e) => ({
+        identifier: e.event?.identifier,
+        action: e.event?.action,
+        queuedAt: e.queuedAt,
+      })),
+    });
+  }
+
+  // DELETE /v1/linear/queue - clear queue
+  if (req.method === "DELETE") {
+    const cleared = linearQueue.length;
+    linearQueue.length = 0;
+    return json(res, 200, { status: "cleared", clearedCount: cleared });
+  }
+
+  json(res, 405, { error: { message: "Method not allowed" } });
+}
+
 const server = http.createServer((req, res) => {
   logDebug(`${req.method} ${req.url}`);
+
+  // Linear webhook endpoints
+  if (req.url === "/v1/linear/trigger") {
+    return handleLinearTrigger(req, res);
+  }
+  if (req.url === "/v1/linear/queue") {
+    return handleLinearQueue(req, res);
+  }
 
   if (req.method === "GET" && (req.url === "/" || req.url === "/health" || req.url === "/stats")) {
     return json(res, 200, {
@@ -162,6 +294,7 @@ const server = http.createServer((req, res) => {
       role: "symphony-agent-router",
       activeRequests: globalActiveRequests,
       maxConcurrent: MAX_CONCURRENT,
+      queueLength: linearQueue.length,
       worktrees: WORKTREES.map((worktree) => ({
         id: `wt${worktree.id}`,
         path: worktree.path,

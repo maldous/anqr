@@ -123,6 +123,11 @@ export async function findOpenIssuesByDescriptionFragment(fragment) {
   return findOpenIssues({ description: { contains: fragment } });
 }
 
+export async function findOpenIssuesByIdentifier(identifier) {
+  // Support both identifier (ANQ-123) and internal ID
+  return findOpenIssues({ identifier: { eq: identifier } });
+}
+
 export async function listIssuesByState(stateNames) {
   const allNodes = [];
   let cursor = null;

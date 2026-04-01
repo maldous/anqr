@@ -29,38 +29,44 @@ The ANQR harness is an AI-assisted engineering automation system that:
 
 | Service                         | Timer        | Purpose                                    | Script                             |
 | -------------------------------- | ------------ | ------------------------------------------ | ---------------------------------- |
-| `anqr-symphony-runner@*`        | Every 2 min  | Execute issues via AI (one worktree per @) | `symphony-runner.mjs`              |
+| `anqr-linear-runner@*`         | Every 2 min  | Execute Linear issues via AI (one per @)   | `symphony-runner.mjs`              |
 | `anqr-queue-feeder`    | Every 15 min | Queue maintenance + backup feed            | `symphony-queue-control.mjs --all` |
 | `anqr-nightly`         | Daily 02:00  | Full nightly pipeline                      | `nightly-ops-pass.mjs`             |
 | `anqr-email-ingest`    | Every 5 min  | Email → Linear issues                      | `email-ingest.mjs`                 |
-| `anqr-codebuff-bridge` | Always-on    | OpenAI-compatible Codebuff API             | `codebuff-openai-bridge.mjs`       |
-| `anqr-symphony-bridge` | Always-on    | OpenAI-compatible Symphony API with AI SDK | `symphony-openai-bridge.mjs`       |
+| `anqr-symphony-router` | Always-on    | Global orchestration (control plane)       | `symphony-agent-router.mjs`        |
+| `anqr-symphony-executor@*` | Always-on | Worktree executors (execution plane) | `symphony-openai-bridge.mjs`       |
 
 ### Service Installation
 
 ```bash
 # Copy service files
-cp services/systemd/anqr-*.service ~/.config/systemd/user/
-cp services/systemd/anqr-*.timer ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-router.service ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-executor@.service ~/.config/systemd/user/
+cp services/systemd/anqr-linear-runner@.service ~/.config/systemd/user/
+cp services/systemd/anqr-linear-runner@.timer ~/.config/systemd/user/
+cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
 cp services/systemd/anqr-ops.env ~/.config/systemd/user/
 
 # Edit anqr-ops.env with real API keys
 systemctl --user daemon-reload
-systemctl --user disable --now anqr-symphony-runner.timer || true
-rm -f ~/.config/systemd/user/anqr-symphony-runner.service ~/.config/systemd/user/anqr-symphony-runner.timer
-systemctl --user enable --now anqr-symphony-runner@{1..4}.timer
+
+# Enable services
+systemctl --user enable --now anqr-symphony-router.service
+systemctl --user enable --now anqr-symphony-executor@{1..8}.service
+systemctl --user enable --now anqr-linear-runner@{1..4}.timer
 ```
 
 ---
 
 ## 3. Ports and Network
 
-| Port  | Service         | Protocol                 | Auth                                   |
-| ----- | --------------- | ------------------------ | -------------------------------------- |
-| 4318  | Codebuff Bridge | HTTP (OpenAI-compatible) | Bearer: `local-bridge`                 |
-| 4319  | Symphony Bridge | HTTP (OpenAI-compatible) | Bearer: `local-symphony`               |
-| 18789 | OpenClaw        | HTTP (OpenAI-compatible) | Token from `~/.openclaw/openclaw.json` |
-| 11434 | Ollama          | HTTP                     | Local only                             |
+| Port  | Service              | Protocol                 | Auth                                   |
+| ----- | ------------------- | ------------------------ | -------------------------------------- |
+| 4319  | Symphony Router     | HTTP (OpenAI-compatible) | Bearer: `local-symphony`               |
+| 4321-4328 | Symphony Executors | HTTP (OpenAI-compatible) | Bearer: `local-symphony`               |
+| 18789 | OpenClaw            | HTTP (OpenAI-compatible) | Token from `~/.openclaw/openclaw.json` |
+| 18790 | Discord Router      | HTTP                     | -                                      |
+| 11434 | Ollama              | HTTP                     | Local only                             |
 
 ---
 

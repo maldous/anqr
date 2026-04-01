@@ -1905,17 +1905,33 @@ function showStatus() {
 }
 
 async function main() {
-  const args = new Set(process.argv.slice(2));
-  const dryRun = args.has("--dry-run");
-  const doOnce = args.has("--once");
-  const doStatus = args.has("--status");
+  const args = new Map();
+  // Parse arguments with values (e.g., --issue ANQ-123)
+  for (let i = 2; i < process.argv.length; i++) {
+    const arg = process.argv[i];
+    if (arg === "--dry-run") args.set("dryRun", true);
+    else if (arg === "--once") args.set("once", true);
+    else if (arg === "--status") args.set("status", true);
+    else if (arg === "--issue" && i + 1 < process.argv.length) {
+      args.set("issue", process.argv[i + 1]);
+      i++; // Skip next arg (the value)
+    }
+  }
+  const dryRun = args.get("dryRun");
+  const doOnce = args.get("once");
+  const doStatus = args.get("status");
+  const targetIssue = args.get("issue");
   if (doStatus) {
     showStatus();
     process.exit(0);
   }
-  if (!doOnce) {
-    logError("Usage: symphony-runner.mjs --once [--dry-run] | --status");
+  if (!doOnce && !targetIssue) {
+    logError("Usage: symphony-runner.mjs --once [--dry-run] [--issue IDENTIFIER] | --status");
     process.exit(2);
+  }
+  // Allow --issue without --once for webhook-triggered execution
+  if (!doOnce && targetIssue) {
+    // Running in trigger mode - one-shot execution of specific issue
   }
   logInfo(`[runner]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
   logInfo(`[runner] Worktree: ${WORKTREE_ID}, Root: ${ROOT}`);
@@ -2032,7 +2048,21 @@ async function main() {
     const excludeIds = new Set();
     let executed = false;
     while (!executed) {
-      const issue = await pickIssue({ excludeIds, baselineOnly });
+      // If --issue flag provided, fetch that specific issue directly
+    let issue = null;
+    if (targetIssue) {
+      logInfo(`[runner] Targeting specific issue: ${targetIssue}`);
+      const { findOpenIssuesByIdentifier } = await import("../linear-client.mjs");
+      const results = await findOpenIssuesByIdentifier(targetIssue);
+      const found = results?.[0];
+      if (found && found.state?.name !== "Done" && found.state?.name !== "Canceled") {
+        issue = found;
+      } else {
+        logWarn(`[runner] Issue ${targetIssue} not found or already completed`);
+      }
+    } else {
+      issue = await pickIssue({ excludeIds, baselineOnly });
+    }
       if (!issue) break;
       const status = await executeIssue(issue, dryRun);
       if (status === "skip") {

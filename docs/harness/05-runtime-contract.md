@@ -51,12 +51,15 @@ These must not leak into evidence reports or routine docs.
 
 Maintained user services:
 
-- `anqr-symphony-runner@*.service` / `@*.timer` (worktree instances)
+- `anqr-symphony-router.service` — Global orchestration (control plane)
+- `anqr-symphony-executor@*.service` — Worktree executors (execution plane)
+- `anqr-linear-runner@*.service` / `@*.timer` — Linear issue polling (wt1-wt4)
+- `anqr-discord-router.service` — Discord request load balancer
 - `anqr-queue-feeder`
 - `anqr-nightly`
 - `anqr-email-ingest` as optional operator integration
 
-Legacy `anqr-symphony-runner.service`/`.timer` installs must be disabled; the files remain only as compatibility shims for stale user directories.
+Legacy services are deprecated; the current architecture uses Router/Executor model.
 
 These services assume:
 
