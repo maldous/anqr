@@ -128,8 +128,20 @@ This keeps agent operation cheaper, faster, and more stable than defaulting to b
 
 - `spawn_agents` — Spawn multiple agents in parallel
   - **Codebuff:** Spawns actual sub-agents
-  - **Symphony bridge:** Acknowledges request, delegates to parent Codebuff/OpenClaw instance
+  - **Symphony bridge:** Acknowledges request, delegates to parent Codebuff/OpenClaw instance (returns `{ acknowledged: true, message: "delegated" }`)
   - **OpenClaw:** Routes to gateway for agent orchestration
+
+**Accepted input format (array required):**
+```json
+{
+  "agents": [
+    { "agent_type": "basher", "prompt": "run tests" },
+    { "agent_type": "researcher-web", "prompt": "search for materials" }
+  ]
+}
+```
+- **Symphony bridge:** Uses `.preprocess()` for auto-normalization (string → array)
+- **Codebuff SDK:** Requires strict array format — pass actual JSON arrays, not strings or objects
 
 **Codebuff context only:**
 

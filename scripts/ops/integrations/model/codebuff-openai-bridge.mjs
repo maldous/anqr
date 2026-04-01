@@ -163,7 +163,7 @@ These tools require array-typed parameters. You MUST pass actual JSON arrays, no
 - \`run_file_change_hooks\`: \`files\` MUST be \`["file.ts"]\` — NEVER \`"file.ts"\`
 - \`str_replace\`: \`replacements\` MUST be \`[{"old": "...", "new": "..."}]\` — NEVER a single object
 - \`propose_str_replace\`: \`replacements\` MUST be an array of objects
-- \`spawn_agents\`: \`agents\` MUST be \`[{"agent_type": "..."}]\` — NEVER a single object
+- \`spawn_agents\`: \`agents\` MUST be an array \`[{"agent_type": "..."}]\`
 - \`set_messages\`: \`messages\` MUST be an array
 - \`suggest_followups\`: \`followups\` MUST be an array of objects
 - \`write_todos\`: \`todos\` MUST be an array of objects
@@ -188,10 +188,8 @@ These tools require array-typed parameters. You MUST pass actual JSON arrays, no
 // str_replace — WRONG (will fail!)
 {"path": "file.ts", "replacements": {"old": "foo", "new": "bar"}}
 
-// spawn_agents — CORRECT
+// spawn_agents — CORRECT (array format)
 {"agents": [{"agent_type": "basher", "prompt": "..."}]}
-// spawn_agents — WRONG (will fail!)
-{"agents": {"agent_type": "basher", "prompt": "..."}}
 \`\`\`
 
 Remember: ALL array parameters MUST be actual JSON arrays \`[]\`, never strings or bare objects.
@@ -205,7 +203,7 @@ Only use tools that are listed in your tool definitions. The canonical Codebuff 
 - \`str_replace\` — edit files with string replacements
 - \`code_search\` — search code with ripgrep
 - \`think_deeply\` — deep reasoning (NOT \`thinker\`)
-- \`spawn_agents\` — spawn subagents (NOT \`spawn_agent\`)
+- \`spawn_agents\` — spawn subagents
 - \`suggest_followups\` — suggest next steps
 - \`write_todos\` — track tasks (NOT \`create_plan\`)
 

@@ -135,19 +135,28 @@ function proxyToWorktree(worktree, req, res) {
     globalActiveRequests++;
 
     logInfo(
-      `📨 Routing to worktree wt${worktree.id} (active: ${worktree.activeRequests}, global: ${globalActiveRequests}/${MAX_CONCURRENT})`,
+      `📨 ROUTING: Discord request -> wt${worktree.id} | cwd: ${worktree.path} | active: ${worktree.activeRequests}/${globalActiveRequests}/${MAX_CONCURRENT}`,
     );
 
     const rawBody = Buffer.concat(requestBody).toString();
     let proxyBody = rawBody;
 
+    let originalCwd = "(not provided)";
     try {
       const parsedBody = JSON.parse(rawBody || "{}");
+      originalCwd = parsedBody.cwd || "(not provided)";
       parsedBody.cwd = rebaseCwdToWorktree(parsedBody.cwd, worktree.path);
       proxyBody = JSON.stringify(parsedBody);
-      logDebug(`🧭 Rebased request cwd for wt${worktree.id}: ${parsedBody.cwd}`);
+      logInfo(`🧭 ROUTING: Discord request -> wt${worktree.id} | cwd: "${originalCwd}" -> "${parsedBody.cwd}" | port: 432${worktree.id}`);
+      
+      // CRITICAL ISOLATION CHECK: Log warning if cwd would result in main repo access
+      // Only check for exact main repo path, NOT worktree paths (which also start with /home/user/src/anqr)
+      const PROJECT_ROOT = "/home/user/src/anqr";
+      if (parsedBody.cwd === PROJECT_ROOT || parsedBody.cwd === MAIN_REPO) {
+        logError(`🚨 ISOLATION VIOLATION: Request would write to main repo! cwd=${parsedBody.cwd}`);
+      }
     } catch (err) {
-      logWarn(`Failed to rewrite Discord request cwd for wt${worktree.id}: ${err.message}`);
+      logWarn(`Failed to rewrite Discord request cwd for wt${worktree.id}: ${err.message} (original cwd: ${originalCwd})`);
     }
 
     // Route to worktree-specific Symphony bridge port
