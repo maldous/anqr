@@ -31,6 +31,7 @@ export default defineConfig({
     include: [
       "tests/unit/**/*.spec.{ts,tsx}",
       "tests/unit/**/*.test.{ts,tsx}",
+      "tests/integration/**/*.spec.{ts,tsx}",
       "scripts/ops/**/*.spec.{ts,tsx}",
       "scripts/ops/**/*.test.{ts,tsx}",
       "packages/**/*.spec.{ts,tsx}",
@@ -38,7 +39,8 @@ export default defineConfig({
       "apps/**/*.spec.{ts,tsx}",
       "apps/**/*.test.{ts,tsx}",
     ],
-    exclude: ["node_modules", "dist", "android", "ios", "tests/e2e/**", "tests/integration/**"],
+    // Note: Integration tests are excluded from default runs; run with: vitest run tests/integration/**/*.spec.ts
+    exclude: ["node_modules", "dist", "android", "ios", "tests/e2e/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov", "json-summary"],

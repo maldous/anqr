@@ -5245,6 +5245,7 @@ const server = http.createServer(async (req, res) => {
       for (let i = 0; i < messages.length; i++) {
         const msg = messages[i];
         if (!msg.role) {
+          logError(`❌ VALIDATION: message[${i}].role is missing`, { messageIndex: i, message: msg });
           return sendJson(res, 400, {
             error: {
               message: `Invalid request: message[${i}].role is required`,
@@ -5254,9 +5255,21 @@ const server = http.createServer(async (req, res) => {
           });
         }
         if (msg.content === undefined) {
+          logError(`❌ VALIDATION: message[${i}].content is undefined (role: ${msg.role})`, { messageIndex: i, role: msg.role, message: msg });
           return sendJson(res, 400, {
             error: {
-              message: `Invalid request: message[${i}].content is required`,
+              message: `Invalid request: message[${i}].content is required (cannot be undefined)`,
+              type: "invalid_request_error",
+              param: `messages[${i}].content`,
+            },
+          });
+        }
+        // Additional validation: content must be string or array (not null, not object)
+        if (msg.content !== null && typeof msg.content !== 'string' && !Array.isArray(msg.content)) {
+          logError(`❌ VALIDATION: message[${i}].content has invalid type (role: ${msg.role}, type: ${typeof msg.content})`, { messageIndex: i, role: msg.role, contentType: typeof msg.content });
+          return sendJson(res, 400, {
+            error: {
+              message: `Invalid request: message[${i}].content must be string or array, got ${typeof msg.content}`,
               type: "invalid_request_error",
               param: `messages[${i}].content`,
             },

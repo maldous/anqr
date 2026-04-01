@@ -151,8 +151,7 @@ function proxyToWorktree(worktree, req, res) {
       
       // CRITICAL ISOLATION CHECK: Log warning if cwd would result in main repo access
       // Only check for exact main repo path, NOT worktree paths (which also start with /home/user/src/anqr)
-      const PROJECT_ROOT = "/home/user/src/anqr";
-      if (parsedBody.cwd === PROJECT_ROOT || parsedBody.cwd === MAIN_REPO) {
+      if (parsedBody.cwd === PROJECT_ROOT) {
         logError(`🚨 ISOLATION VIOLATION: Request would write to main repo! cwd=${parsedBody.cwd}`);
       }
     } catch (err) {

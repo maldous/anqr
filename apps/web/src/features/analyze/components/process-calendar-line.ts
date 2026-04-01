@@ -45,7 +45,10 @@ export function processCalendarLine(
       result.recurrenceFormatted = formatRecurrenceRule(line);
       return false;
     case "VALARM":
+      // VALARM is a component, not a property - skip it
+      return false;
     case "TRIGGER":
+      // TRIGGER inside VALARM defines the alarm time
       if (value) result.alarm = value;
       return false;
     default:
