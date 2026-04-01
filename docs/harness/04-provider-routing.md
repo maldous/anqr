@@ -61,11 +61,11 @@ OpenClaw is configured with the following failover chain:
 | -------- | ----------------------------------------- | -------------------------------------------------------- |
 | Primary  | `symphony-bridge/symphony/main`           | Symphony autoselects the best healthy provider           |
 | 2        | `symphony-bridge/symphony/codex`          | Direct pinned Codex route                                |
-| 3        | `symphony-bridge/symphony/codebuff`       | Direct pinned Codebuff route (via codebuff-bridge)       |
+| 3        | `symphony-bridge/symphony/codebuff`       | Direct pinned Codebuff route (SDK inside worktree bridge) |
 | 4+       | Other `symphony-bridge/symphony/*` routes | Direct pinned routes matching Symphony inventory         |
-| Final    | `codebuff-bridge/codebuff/base`           | Local Codebuff bridge fallback with paid → free rotation |
+| Final    | `ollama/qwen2.5-coder:0.5b`              | Local Ollama fallback                                     |
 
-**Key insight**: OpenClaw should prefer Symphony first, but its fallback inventory should mirror Symphony's provider surface so interactive work keeps going even if the Symphony bridge itself is unavailable.
+**Key insight**: OpenClaw should prefer Symphony first, and its fallback inventory mirrors Symphony's provider surface so interactive work keeps going even if the Symphony agent router itself is unavailable.
 
 ### Layer 2: Symphony Bridge (credit-gate)
 
@@ -80,16 +80,16 @@ Symphony Bridge uses the credit-gate provider cascade with **tier-based dynamic 
 
 The credit-gate selects providers based on dynamic scoring and health state, with `codex` always retried first when healthy. Provider rotation on failure uses health state tracking to skip cooling-down providers. The exploration mechanism clears old failures every 2-6 minutes (depending on tier) to re-discover providers whose rate-limit windows may have reset.
 
-### Layer 3: Codebuff Bridge (paid → free fallback)
+### Codebuff SDK execution (inside worktree bridges)
 
-When Codebuff is selected, the bridge uses a single API key with automatic mode selection:
+When Codebuff is selected by the credit-gate, it runs directly inside the worktree-local Symphony bridge via `codebuff-direct.mjs`:
 
 1. **Paid mode** is always tried first when available.
 2. **Free mode** is used if paid mode is unavailable or rate-limited.
-3. **Mode is re-validated every 5 hours** so the bridge returns to paid automatically.
+3. There is no standalone Codebuff bridge service — the SDK is integrated into each worktree bridge (ADR-0003).
 
 ## Current provider cascade
 
-The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory. The harness reaches it only through Symphony Bridge. OpenClaw uses the same inventory as pinned `symphony/*` routes, then falls back to the direct Codebuff bridge only if Symphony itself is unavailable.
+The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory. The harness reaches it only through the Symphony agent router (port 4319), which proxies to worktree-local bridges (ports 4321-4328). OpenClaw uses the same inventory as pinned `symphony/*` routes.
 
 See full provider list in original file section below...

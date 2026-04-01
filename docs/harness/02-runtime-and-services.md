@@ -24,8 +24,9 @@ Integrations and support:
 - `scripts/ops/lib/notify.mjs`
 - `scripts/ops/sonar-linear-mail.mjs`
 - `scripts/ops/symphony-credit-gate.mjs`
-- `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
 - `scripts/ops/integrations/model/symphony-openai-bridge.mjs` — AI SDK-based bridge with tool execution
+- `scripts/ops/integrations/model/codebuff-direct.mjs` — Codebuff SDK execution (runs inside each worktree-local bridge)
+- `scripts/ops/integrations/model/symphony-agent-router.mjs` — Control-plane router for worktree-local bridges
 - `scripts/ops/integrations/model/symphony-adaptive-context.mjs` — dynamic per-provider token ceilings and rate management
 - `scripts/ops/integrations/model/symphony-bridge-truncation.mjs` — static token limits and message truncation
 - `scripts/ops/integrations/model/ollama-local-audit.mjs`
@@ -56,8 +57,7 @@ Restructured copies under subdirectories may exist. The root entrypoints remain 
 
 Scheduled automation:
 
-- `anqr-symphony-runner@.service` / `.timer` — canonical concurrent runner template using git worktrees
-- `anqr-symphony-runner.service` / `.timer` — retired single-runner units, kept only as no-op compatibility shims until all installs migrate
+- `anqr-linear-runner@.service` / `.timer` — Linear issue poller and scheduler (wt1-wt4)
 - `anqr-queue-feeder.service` / `.timer`
 - `anqr-nightly.service` / `.timer` — 02:00 daily
 - `anqr-rag-rebuild.service` / `.timer` — 03:00 daily, full-repo RAG vector index rebuild via Ollama embeddings
@@ -65,9 +65,13 @@ Scheduled automation:
 
 Long-running services:
 
-- `anqr-codebuff-bridge.service` — OpenAI-compatible HTTP gateway for Codebuff SDK
-- `anqr-symphony-bridge.service` — OpenAI-compatible HTTP gateway for Symphony with AI SDK and tool execution
+- `anqr-symphony-router.service` — Global Symphony orchestration (control plane, port 4319)
+- `anqr-symphony-executor@.service` — Worktree-local Symphony executors (ports 4321-4328)
+- `anqr-discord-router.service` — Discord request load balancer (port 18790)
 - `anqr-context7-mcp.service` — Context7 MCP documentation service (HTTP on port 4320)
+- `anqr-watchdog.service` — Health monitoring
+
+Note: Codebuff is a provider used by executors, not a standalone service (per ADR-0003).
 
 **CRITICAL: Before restarting any bridge service:**
 
@@ -104,10 +108,11 @@ Optional local support:
 
 Documented harness ports:
 
-- `4318` — Codebuff bridge (OpenAI-compatible HTTP gateway)
-- `4319` — Symphony bridge (AI SDK-based with tool execution)
+- `4319` — Symphony agent router (control-plane entrypoint)
 - `4320` — Context7 MCP documentation service (POST /v1/resolve-docs, GET /health)
+- `4321`-`4328` — Worktree-local Symphony execution bridges (wt1-wt8)
 - `18789` — OpenClaw gateway (local AI agent, /v1/chat/completions)
+- `18790` — Discord router (load-balances Discord requests to worktree bridges)
 
 Additional port truth must be documented in follow-up runbooks instead of inferred.
 

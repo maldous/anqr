@@ -14,10 +14,8 @@ ANQR uses an **all-in-one Symphony Bridge** architecture (ADR-0003) where each b
 - Codebuff SDK operations (tool use, code edits, file operations)
 - Worktree-isolated execution via systemd `WorkingDirectory`
 
-**Main bridge:** port 4319 (control plane, non-worktree operations)
+**Agent router:** port 4319 (control plane, routes requests to worktree bridges)
 **Worktree bridges:** ports 4321-4328 (wt1-wt8, isolated per worktree)
-
-**NOTE:** The separate Codebuff Bridge service (`anqr-codebuff-bridge@.service`) is deprecated and will be removed. All Codebuff SDK functionality is now integrated into Symphony bridges.
 
 ### Worktree execution environment (OPERATIONAL as of 2026-03-31)
 
@@ -82,7 +80,8 @@ node scripts/ops/orchestration/symphony-control.mjs --start
 - `symphony-credit-gate.mjs` — 4-tier provider selection (paid → free-cloud → local-proxy → local-safety-net)
 - `symphony-adaptive-context.mjs` — dynamic per-provider token ceilings, rate-limit throttling, TPM/RPM tracking
 - `symphony-bridge-truncation.mjs` — static token limits and message truncation
-- `codebuff-openai-bridge.mjs` — Codebuff SDK exposed as OpenAI-compatible HTTP
+- `codebuff-direct.mjs` — Codebuff SDK execution (runs inside each worktree-local bridge)
+- `symphony-agent-router.mjs` — Control-plane router for worktree-local bridges
 
 ### Bridge restart procedure (CRITICAL)
 
@@ -103,7 +102,7 @@ node scripts/ops/orchestration/symphony-control.mjs --start
 
 4. **Commit & push first**: `git add -A && git commit -m "..." && git push`
 
-5. **Restart bridge**: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
+5. **Restart bridge**: `systemctl --user restart anqr-symphony-bridge` (and/or worktree instances)
 
 6. **RESTART TASK EXECUTION:**
    ```bash

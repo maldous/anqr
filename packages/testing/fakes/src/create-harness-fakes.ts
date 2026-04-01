@@ -9,9 +9,10 @@ export function createHarnessFakes() {
       baseUrl: "http://127.0.0.1:4319/v1",
       apiKey: "local-symphony",
     }),
+    // Standalone Codebuff bridge retired per ADR-0003 — Codebuff SDK runs inside Symphony bridges
     codebuffClient: new FakeBridgeClient({
-      baseUrl: "http://127.0.0.1:4318/v1",
-      apiKey: "local-bridge",
+      baseUrl: "http://127.0.0.1:4319/v1",
+      apiKey: "local-symphony",
     }),
     failureSimulator: new FakeProviderFailureSimulator(),
     metricsCollector: new FakeMetricsCollector(),

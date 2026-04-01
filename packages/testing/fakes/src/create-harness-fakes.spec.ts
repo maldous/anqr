@@ -25,7 +25,7 @@ describe("createHarnessFakes", () => {
   it("should configure codebuff bridge client", () => {
     const fakes = createHarnessFakes();
     expect(fakes.codebuffClient).toBeDefined();
-    // Codebuff client configured with port 4318
+    // Codebuff SDK now runs inside Symphony bridge (port 4319)
   });
 
   it("should create independent instances", () => {

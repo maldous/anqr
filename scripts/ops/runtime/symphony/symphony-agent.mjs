@@ -60,11 +60,9 @@ import {
   runTests,
 } from "../../symphony-validation.mjs";
 import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
+import { invokeCodebuffDirect } from "../../integrations/model/codebuff-direct.mjs";
 import { inferSymphonyResultFromCompletion } from "./bridge-result.mjs";
 
-const CODEBUFF_BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
-const CODEBUFF_BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
-const CODEBUFF_BRIDGE_MODEL = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const SYMPHONY_BRIDGE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319";
 const SYMPHONY_BRIDGE_API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
 const SYMPHONY_BRIDGE_MODEL = process.env.SYMPHONY_MODEL_ID || "symphony/main";
@@ -577,110 +575,31 @@ async function callLLM(provider, messages, taskDescription, projectRoot = PROJEC
     }
   }
 
-  // Handle Codebuff via HTTP bridge (unified with OpenClaw)
+  // Handle direct SDK providers inside the selected worktree.
   if (provider.requiresSdk) {
-    // Use the HTTP bridge instead of direct SDK
-    // The bridge handles key rotation, rate limiting, and continuation detection
-    logDebug(`[agent] Using bridge: ${CODEBUFF_BRIDGE_URL}`);
-
-    // Convert internal message format to OpenAI-style for bridge
-    const bridgeMessages = messages.map((m) => {
-      const content = typeof m.content === "string" ? m.content : JSON.stringify(m.content);
-      return { role: m.role, content };
+    logDebug(`[agent] Using direct SDK provider in worktree`, {
+      provider: provider.name,
+      cwd: projectRoot,
+      worktreeId,
     });
 
-    const controller = new AbortController();
-    const timeoutMs = 15 * 60 * 1000; // 15 min - match symphony-bridge timeout
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-
     try {
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${CODEBUFF_BRIDGE_API_KEY}`,
-      };
-      if (worktreeId) {
-        headers["X-Worktree-ID"] = worktreeId;
-      }
-      const res = await fetch(`${CODEBUFF_BRIDGE_URL}/v1/chat/completions`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model: CODEBUFF_BRIDGE_MODEL,
-          messages: bridgeMessages,
-          cwd: projectRoot,
-          stream: true,
-        }),
-        signal: controller.signal,
+      const result = await invokeCodebuffDirect({
+        messages,
+        cwd: projectRoot,
       });
-      clearTimeout(timer);
 
-      if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        throw new Error(`Bridge API ${res.status}: ${body.slice(0, 500)}`);
-      }
+      const finishReason = result.needsContinuation ? "length" : "stop";
 
-      // Stream the response and accumulate content
-      let content = "";
-      let finishReason = "stop";
-      let symphonyResult = null;
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6);
-          if (data === "[DONE]") continue;
-          if (!data.trim()) continue;
-
-          try {
-            const parsed = JSON.parse(data);
-            const deltaContent = parsed.choices?.[0]?.delta?.content;
-            if (deltaContent) {
-              content += deltaContent;
-              logDebug(`[agent] 🌊 ${deltaContent.slice(0, 200)}`);
-            }
-            const reason = parsed.choices?.[0]?.finish_reason;
-            if (reason) {
-              finishReason = reason;
-            }
-            // Capture structured result from bridge if present
-            if (parsed._symphonyResult) {
-              symphonyResult = parsed._symphonyResult;
-              logDebug(`[agent] 📦 Captured _symphonyResult from codebuff bridge`);
-            }
-          } catch {
-            // Skip non-JSON chunks
-          }
-        }
-      }
-
-      if (content) {
-        process.stdout.write("\n"); // Final newline
-      }
-
-      // The bridge returns completion tokens but we need to detect if agent wants continuation
-      // Check finish_reason - if "length", agent has more work to do
-      const needsContinuation = finishReason === "length";
-
-      // Write report artifact
       const report = {
         timestamp: new Date().toISOString(),
         task: taskDescription?.slice(0, 500) || "Symphony agent run",
-        project: provider.cwd || PROJECT_ROOT,
+        project: projectRoot,
         exitCode: 0,
-        method: "bridge-http",
-        outputLength: content.length,
-        output: content.slice(-5000),
-        needsContinuation,
+        method: "codebuff-direct",
+        outputLength: result.text.length,
+        output: result.text.slice(-5000),
+        needsContinuation: result.needsContinuation,
         error: null,
       };
 
@@ -689,52 +608,37 @@ async function callLLM(provider, messages, taskDescription, projectRoot = PROJEC
       }
       const reportFile = pathJoin(REPORTS_DIR, `latest-${Date.now()}.json`);
       writeFileSync(reportFile, JSON.stringify(report, null, 2) + "\n");
-      logDebug(`[agent] Codebuff bridge report written to: ${reportFile}`);
-
-      // Infer symphony result if not captured from bridge
-      if (!symphonyResult) {
-        symphonyResult = inferSymphonyResultFromCompletion({
-          finishReason,
-          text: content,
-        });
-        if (symphonyResult) {
-          logDebug(`[agent] 🛟 Inferred _symphonyResult from codebuff bridge (finish_reason=${finishReason})`);
-        }
-      }
+      logDebug(`[agent] Codebuff direct report written to: ${reportFile}`);
 
       return {
         choices: [
           {
             message: {
               role: "assistant",
-              content,
+              content: result.text,
               tool_calls: [],
             },
           },
         ],
         providerName: provider.name,
-        _symphonyResult: symphonyResult,
-        needsContinuation, // Pass through for continuation logic
+        _symphonyResult:
+          result._symphonyResult ||
+          inferSymphonyResultFromCompletion({
+            finishReason,
+            text: result.text,
+          }),
+        needsContinuation: result.needsContinuation,
       };
     } catch (err) {
-      clearTimeout(timer);
-      const errStr = err.message || "";
-
-      // Check for rate limits
-      if (isRateLimitError(errStr)) {
-        logWarn(`[agent] Bridge rate limited: ${errStr.slice(0, 200)}`);
-      }
-
-      // Write failure report
       const failureReport = {
         timestamp: new Date().toISOString(),
         task: taskDescription?.slice(0, 500) || "Symphony agent run",
-        project: provider.cwd || PROJECT_ROOT,
+        project: projectRoot,
         exitCode: 1,
-        method: "bridge-http",
+        method: "codebuff-direct",
         outputLength: 0,
         output: "",
-        error: errStr.slice(0, 500),
+        error: String(err?.message || err).slice(0, 500),
       };
 
       try {
@@ -744,7 +648,7 @@ async function callLLM(provider, messages, taskDescription, projectRoot = PROJEC
         const reportFile = pathJoin(REPORTS_DIR, `latest-${Date.now()}.json`);
         writeFileSync(reportFile, JSON.stringify(failureReport, null, 2) + "\n");
       } catch {
-        // Ignore
+        // ignore report write failures
       }
 
       throw err;

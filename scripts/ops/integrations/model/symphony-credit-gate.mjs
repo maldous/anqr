@@ -10,7 +10,7 @@
  *
  *   TIER: paid — cloud providers with paid API keys
  *   1. Codex (OpenAI)  — paid cloud, gpt-5.4 (temporary rate limits, 2-min cooldown)
- *   2. Codebuff        — paid cloud, codebuff/base (temporary rate limits, 2-min cooldown)
+ *   2. Codebuff        — paid cloud, codebuff/base via direct SDK in the selected worktree (temporary rate limits, 2-min cooldown)
  *
  *   TIER: free-cloud — free/experimental cloud providers
  *   3. Groq            — free cloud, fast, llama-3.3-70b-versatile
@@ -315,11 +315,11 @@ const PROVIDERS = [
     name: "codebuff",
     tier: TIER_PAID,
     model: "codebuff/base",
-    baseUrl: "http://127.0.0.1:4318/v1",
-    envVar: "CODEBUFF_BRIDGE_API_KEY",
-    loadToken: () => "local-bridge",
+    baseUrl: "codebuff-sdk",
+    envVar: "CODEBUFF_API_KEY",
+    driver: "codebuff-sdk",
     failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
-    probe: (p, apiKey) => probeOpenAIModels(p.baseUrl, p.model, apiKey, true), // isLocal=true for codebuff bridge
+    probe: async (_provider, apiKey) => Boolean(apiKey),
   },
   {
     name: "groq",

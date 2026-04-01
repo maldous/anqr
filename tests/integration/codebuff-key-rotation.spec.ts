@@ -1,16 +1,17 @@
 /**
  * Integration tests for Codebuff paid/free mode fallback
  *
- * Tests Codebuff API key mode selection (paid first, then free)
- * with re-validation every 5 hours as specified in testing-strategy-anqr-1.0.md
+ * @deprecated The standalone Codebuff bridge has been retired (ADR-0003).
+ * Codebuff SDK now runs inside each worktree-local Symphony bridge.
+ * These tests are skipped until rewritten for the new architecture.
  *
  * Run: npx vitest run tests/integration/codebuff-key-rotation.spec.ts
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
 
-const CODEBUFF_BASE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
-const CODEBUFF_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
+const CODEBUFF_BASE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4319";
+const CODEBUFF_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-symphony";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const COMPLETION_TIMEOUT_MS = 120_000;

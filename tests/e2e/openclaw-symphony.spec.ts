@@ -7,7 +7,7 @@
  * - Command execution through SDK, HTTP, and streaming modes
  * - Provider degradation and recovery behavior
  *
- * Requires: Bridges running on ports 4319 (symphony) and 4318 (codebuff)
+ * Requires: Symphony agent router running on port 4319
  * Run: npx playwright test tests/e2e/openclaw-symphony.spec.ts
  */
 
@@ -42,7 +42,6 @@ test.describe("OpenClaw Model Configuration", () => {
     const symphonyRoutes = [
       "symphony/codex",
       "symphony/codebuff",
-      "symphony/codebuff-bridge",
       "symphony/groq",
       "symphony/mistral",
       "symphony/gemini",
@@ -71,7 +70,7 @@ test.describe("OpenClaw Model Configuration", () => {
 
   test("fallback list should include Codebuff as last resort", () => {
     const lastFallback = openclawConfig.fallbackModels[openclawConfig.fallbackModels.length - 1];
-    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
+    expect(lastFallback).toBe("ollama/qwen2.5-coder:3b-instruct");
   });
 });
 
@@ -129,9 +128,9 @@ test.describe("Symphony Fallback Continuity", () => {
     ).toBe(0);
   });
 
-  test("codebuff-bridge should be the absolute last fallback", () => {
+  test("ollama model should be the absolute last fallback", () => {
     const lastFallback = openclawConfig.fallbackModels[openclawConfig.fallbackModels.length - 1];
-    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
+    expect(lastFallback).toBe("ollama/qwen2.5-coder:3b-instruct");
   });
 });
 
@@ -320,7 +319,6 @@ const DIRECT_PROVIDERS = [
   { name: "sambanova", model: "Meta-Llama-3.3-70B-Instruct", envVar: "SAMBANOVA_TOKEN" },
   { name: "cerebras", model: "llama3.1-8b", envVar: "CEREBRAS_TOKEN" },
   { name: "github-models", model: "gpt-4.1-mini", envVar: "GITHUB_MODELS_TOKEN" },
-  { name: "codebuff-bridge", model: "codebuff/base", envVar: "CODEBUFF_BRIDGE_API_KEY" },
 ];
 
 const OPENROUTER_PROVIDERS = [
@@ -378,7 +376,6 @@ const EXPECTED_ROUTES = [
   "symphony/text",
   "symphony/codex",
   "symphony/codebuff",
-  "symphony/codebuff-bridge",
   "symphony/groq",
   "symphony/mistral",
   "symphony/gemini",
@@ -413,11 +410,6 @@ const HEURISTIC_ROUTES = [
 // Routes that need local/special services
 const LOCAL_SERVICE_ROUTES = [
   { route: "symphony/codebuff", provider: "codebuff", description: "Codebuff SDK" },
-  {
-    route: "symphony/codebuff-bridge",
-    provider: "codebuff-bridge",
-    description: "Codebuff bridge on :4318",
-  },
   { route: "symphony/codex", provider: "codex", description: "Codex API (often quota-exhausted)" },
   {
     route: "symphony/ollama-qwen2.5-coder-3b",
@@ -604,7 +596,7 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
 
     // Known-capable providers must be in the capable list
     const capable: string[] = data.toolProbe.capable;
-    for (const known of ["codex", "codebuff", "codebuff-bridge"]) {
+    for (const known of ["codex", "codebuff"]) {
       expect(capable, `Known-capable provider "${known}" should be in toolProbe.capable`).toContain(
         known,
       );
@@ -1504,12 +1496,11 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
   });
 });
 
-test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
+test.describe("Live Codebuff Bridge Tests (DEPRECATED - bridge retired per ADR-0003)", () => {
   test.setTimeout(120_000);
 
   test("Codebuff bridge health check", async () => {
-    const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
-    test.skip(!reachable, "Codebuff bridge not reachable - requires running bridge on port 4318");
+    test.skip(true, "Standalone Codebuff bridge retired per ADR-0003 — Codebuff SDK runs inside Symphony bridges");
 
     const res = await fetch(`${CODEBUFF_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
@@ -1525,8 +1516,7 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
   });
 
   test("Codebuff bridge /v1/models lists codebuff model", async () => {
-    const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
-    test.skip(!reachable, "Codebuff bridge not reachable - requires running bridge on port 4318");
+    test.skip(true, "Standalone Codebuff bridge retired per ADR-0003");
 
     const res = await fetch(`${CODEBUFF_BASE_URL}/v1/models`, {
       signal: AbortSignal.timeout(5_000),
@@ -1539,8 +1529,7 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
   });
 
   test("Codebuff bridge non-streaming completion", async () => {
-    const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
-    test.skip(!reachable, "Codebuff bridge not reachable - requires running bridge on port 4318");
+    test.skip(true, "Standalone Codebuff bridge retired per ADR-0003");
 
     const startTime = Date.now();
     const res = await fetch(`${CODEBUFF_BASE_URL}/v1/chat/completions`, {
@@ -1575,8 +1564,7 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
   });
 
   test("Codebuff bridge streaming completion", async () => {
-    const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
-    test.skip(!reachable, "Codebuff bridge not reachable - requires running bridge on port 4318");
+    test.skip(true, "Standalone Codebuff bridge retired per ADR-0003");
 
     const startTime = Date.now();
     const res = await fetch(`${CODEBUFF_BASE_URL}/v1/chat/completions`, {
@@ -1666,7 +1654,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     expect(keys).toContain("symphony-bridge/symphony/text");
     expect(keys).toContain("ollama/qwen2.5-coder:0.5b");
     expect(keys).toContain("ollama/qwen2.5-coder:3b-instruct");
-    expect(keys).toContain("codebuff-bridge/codebuff/base");
+    // codebuff-bridge/codebuff/base removed — standalone Codebuff bridge retired per ADR-0003
   });
 
   test("default model is symphony-bridge/symphony/main", () => {
@@ -1747,7 +1735,6 @@ test.describe("OpenClaw CLI Model Validation", () => {
     const expectedSymphonyRoutes = [
       "symphony-bridge/symphony/codex",
       "symphony-bridge/symphony/codebuff",
-      "symphony-bridge/symphony/codebuff-bridge",
       "symphony-bridge/symphony/groq",
       "symphony-bridge/symphony/mistral",
       "symphony-bridge/symphony/gemini",
@@ -1772,7 +1759,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     ).toHaveLength(0);
   });
 
-  test("codebuff-bridge is last in the live fallback chain", () => {
+  test("ollama model is last in the live fallback chain", () => {
     let data: ModelsStatusOutput;
     try {
       data = runCliJson<ModelsStatusOutput>("models status --json");
@@ -1782,7 +1769,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     }
 
     const lastFallback = data.fallbacks[data.fallbacks.length - 1];
-    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
+    expect(lastFallback).toBe("ollama/qwen2.5-coder:3b-instruct");
   });
 });
 
@@ -1807,7 +1794,6 @@ test.describe("OpenClaw Model Selection Validation", () => {
       "symphony-bridge/symphony/text",
       "symphony-bridge/symphony/codex",
       "symphony-bridge/symphony/codebuff",
-      "symphony-bridge/symphony/codebuff-bridge",
       "symphony-bridge/symphony/groq",
       "symphony-bridge/symphony/mistral",
       "symphony-bridge/symphony/gemini",
@@ -1847,19 +1833,7 @@ test.describe("OpenClaw Model Selection Validation", () => {
     console.log(`[openclaw-e2e] All ${ollamaModels.length} direct ollama models are selectable`);
   });
 
-  test("codebuff-bridge model is selectable (in allowed list)", () => {
-    let data: ModelsStatusOutput;
-    try {
-      data = runCliJson<ModelsStatusOutput>("models status --json");
-    } catch {
-      test.skip(true, "OpenClaw CLI not installed or not in PATH - test requires openclaw CLI");
-      return;
-    }
-
-    expect(data.allowed, "codebuff-bridge/codebuff/base not in allowed list").toContain(
-      "codebuff-bridge/codebuff/base",
-    );
-  });
+  // codebuff-bridge model test removed — standalone Codebuff bridge retired per ADR-0003
 
   test("configured model count matches expected", () => {
     let data: ModelsListOutput;

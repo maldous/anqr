@@ -76,7 +76,7 @@ The credit-gate classifies every provider into one of four tiers:
 | ------------------ | --------------------------------------------------------------------- | -------------------------------------- |
 | `paid`             | codex, codebuff                                                       | Probed first; uses paid API credits    |
 | `free-cloud`       | groq, mistral, gemini, openrouter, sambanova, cerebras, github-models | Dynamic scoring; default tier          |
-| `local-proxy`      | openclaw, codebuff-bridge                                             | Local HTTP gateways to other services  |
+| `local-proxy`      | openclaw                                                              | Local HTTP gateways to other services  |
 | `local-safety-net` | ollama-local, ollama-qwen2.5-coder-3b, ollama-qwen2.5-coder-0.5b      | Score-capped at 0.25; always rank last |
 
 **Key constraint:** `SAFETY_NET_SCORE_CEILING = 0.25` — safety-net providers are capped at this score in dynamic ranking so they never outrank even a mediocre cloud provider. `getRankedProviders()` partitions providers into two groups (normal + safety-net) and always appends safety nets after all other providers regardless of their raw score.
@@ -284,11 +284,9 @@ The `NODE_OPTIONS=""` override is critical: without it, sonar-scanner's internal
 
 ## Scheduled Operations
 
-### Symphony Runner (continuous, every 2 min)
+### Linear Runner (continuous, every 2 min)
 
-The Symphony runner is delivered exclusively via the worktree template units (`anqr-symphony-runner@.service` / `.timer`). Instantiate one timer per worktree (`anqr-symphony-runner@1.timer`, `@2`, etc.).
-
-Legacy single-runner units (`anqr-symphony-runner.service`/`.timer`) are retired and now act as no-op reminders; disable/remove them after migrating.
+The Linear runner is delivered exclusively via the worktree template units (`anqr-linear-runner@.service` / `.timer`). Instantiate one timer per worktree (`anqr-linear-runner@1.timer`, `@2`, `@3`, `@4`).
 
 Each active timer kicks off the execution agent loop:
 
@@ -374,15 +372,11 @@ cp services/systemd/anqr-nightly.service ~/.config/systemd/user/
 cp services/systemd/anqr-nightly.timer ~/.config/systemd/user/
 cp services/systemd/anqr-queue-feeder.service ~/.config/systemd/user/
 cp services/systemd/anqr-queue-feeder.timer ~/.config/systemd/user/
-cp services/systemd/anqr-symphony-runner@.service ~/.config/systemd/user/
-cp services/systemd/anqr-symphony-runner@.timer ~/.config/systemd/user/
+cp services/systemd/anqr-linear-runner@.service ~/.config/systemd/user/
+cp services/systemd/anqr-linear-runner@.timer ~/.config/systemd/user/
 cp services/systemd/anqr-email-ingest.service ~/.config/systemd/user/
 cp services/systemd/anqr-email-ingest.timer ~/.config/systemd/user/
 cp services/systemd/anqr-ops.env ~/.config/systemd/user/
-
-# Remove/disable retired single-runner units if they were previously installed
-systemctl --user disable --now anqr-symphony-runner.timer || true
-rm -f ~/.config/systemd/user/anqr-symphony-runner.service ~/.config/systemd/user/anqr-symphony-runner.timer
 
 # Edit env file with real LINEAR_API_KEY
 nano ~/.config/systemd/user/anqr-ops.env
@@ -391,14 +385,14 @@ nano ~/.config/systemd/user/anqr-ops.env
 systemctl --user daemon-reload
 systemctl --user enable --now anqr-nightly.timer
 systemctl --user enable --now anqr-queue-feeder.timer
-systemctl --user enable --now anqr-symphony-runner@{1..4}.timer
+systemctl --user enable --now anqr-linear-runner@{1..4}.timer
 systemctl --user enable --now anqr-email-ingest.timer
 
 # Verify
 systemctl --user list-timers
 journalctl --user -u anqr-nightly.service --since today
 journalctl --user -u anqr-queue-feeder.service --since today
-journalctl --user -u 'anqr-symphony-runner@*.service' --since today
+journalctl --user -u 'anqr-linear-runner@*.service' --since today
 ```
 
 ### Environment Handling
@@ -468,8 +462,8 @@ The guardian is deterministic, not AI-driven:
 | `scripts/ops/symphony-agent.mjs`                       | Tool-calling AI agent                                  | ANQ-374           |
 | `scripts/ops/symphony-credit-gate.mjs`                 | Provider cascade (credit gate)                         | ANQ-374           |
 | `scripts/ops/symphony/WORKFLOW.md`                     | Agent system prompt (versioned)                        | ANQ-374           |
-| `services/systemd/anqr-symphony-runner.service`        | systemd runner service                                 | ANQ-374           |
-| `services/systemd/anqr-symphony-runner.timer`          | systemd runner timer (2min)                            | ANQ-374           |
+| `services/systemd/anqr-linear-runner@.service`        | systemd Linear runner service (worktree template)      | ANQ-374           |
+| `services/systemd/anqr-linear-runner@.timer`          | systemd Linear runner timer (2min)                     | ANQ-374           |
 | `scripts/ops/lib/notify.mjs`                           | Email notification helper (msmtp + rate limiting)      | ANQ-377           |
 | `scripts/ops/email-ingest.mjs`                         | Email ingest (mbsync + notmuch → Linear issues)        | ANQ-377           |
 | `services/systemd/anqr-email-ingest.service`           | systemd email ingest service                           | ANQ-377           |

@@ -252,7 +252,7 @@ OpenClaw gateway (standalone) → inactive dead
 Legacy single runner          → FAILED
 ```
 
-**No listening ports:** 4318, 4319, 4325-4328, 18789, 18790 are all down.
+**No listening ports:** 4319, 4321-4328, 18789, 18790 are all down.
 
 ### Deployed Systemd Units (Actual State)
 
@@ -260,7 +260,7 @@ The following units are **actually deployed** in `~/.config/systemd/user/`:
 
 | Deployed File | In Repo | Status | Notes |
 |--------------|---------|--------|-------|
-| `anqr-codebuff-bridge.service` | ✅ | Matches repo | Codebuff SDK bridge |
+| ~~`anqr-codebuff-bridge.service`~~ | ❌ | **Retired** | Removed per ADR-0003 — Codebuff SDK integrated into Symphony bridge |
 | `anqr-context7-mcp.service` | ✅ | Matches repo | Context7 MCP docs |
 | `anqr-discord-bridge@.service` | ✅ | **Differs** | Gateway singleton template |
 | `anqr-discord-bridge@.timer` | ✅ | Matches repo | Gateway timer template |
@@ -309,7 +309,7 @@ External code review (2026-03-31) confirmed five proven defects and corrected tw
 
 | Finding | Evidence | Severity | Impact | Required Fix |
 |---------|----------|:--------:|--------|-------------|
-| **F1. Codebuff client caches the wrong cwd (FIXED)** | `codebuff-openai-bridge.mjs:348-371` — `getSharedClient(apiKey, costMode, cwd)` reuses a singleton keyed only by `costMode`; the `cwd` parameter is ignored when the cached client is reused. Requests carry request-specific `cwd` (line 1560) but the shared client may execute in a previously cached directory. | **CRITICAL** | Requests for one worktree can execute in a previously cached cwd, including the main repo. **This is the strongest proven isolation failure.** | Key the shared client by `costMode + cwd`, or disable shared-client reuse across distinct cwd values. Add an alternating-cwd regression test. |
+| **F1. Codebuff client caches the wrong cwd (FIXED → RETIRED)** | `codebuff-openai-bridge.mjs:348-371` — `getSharedClient(apiKey, costMode, cwd)` reuses a singleton keyed only by `costMode`; the `cwd` parameter is ignored when the cached client is reused. Requests carry request-specific `cwd` (line 1560) but the shared client may execute in a previously cached directory. **Note:** The standalone Codebuff bridge has been retired per ADR-0003. Codebuff SDK now runs inside each worktree-local Symphony bridge via `codebuff-direct.mjs`, eliminating this class of bug entirely. | **CRITICAL** | Requests for one worktree can execute in a previously cached cwd, including the main repo. **This is the strongest proven isolation failure.** | Key the shared client by `costMode + cwd`, or disable shared-client reuse across distinct cwd values. Add an alternating-cwd regression test. |
 | **F2. Control script enables the wrong runner timers (FIXED)** | `symphony-control.mjs:73-89` — `enableAllTimers()` enables runners `1` through `8`: `const runners = ["1","2","3","4","5","6","7","8"]` | **HIGH** | Discord worktrees `wt5-wt8` are incorrectly treated as runner targets | Restrict enable/start logic to `anqr-symphony-runner@{1,2,3,4}.timer` only |
 | **F3. Bridge startup auto-starts runner timers (FIXED)** | `symphony-openai-bridge.mjs:6324-6338` — bridge startup invokes `symphony-control.mjs --start` | **HIGH** | Starting any bridge (including Discord worktree bridges wt5-wt8) mutates global runner state and re-enables the wrong timers from F2 | Remove this side effect entirely; runner scheduling must be operator-controlled, not bridge-start-controlled |
 | **F4. Deployed systemd state does not match target topology (FIXED)** | Verified via `systemctl --user list-units` and deployed files: wrong Discord bridge IDs `1-4` exist, wrong runner IDs `5-8` exist, legacy single runner in FAILED state, duplicate `openclaw-gateway.service` | **HIGH** | Operational state diverges from documented topology; stale units can reintroduce incorrect behavior | ~~Remove wrong-ID units, delete duplicate gateway, remove legacy runner, redeploy from repo~~ **DONE** |
@@ -432,7 +432,7 @@ Validation → Commit → Push to origin/main → Linear updated
 
 **Key difference:** In the Discord flow, the Symphony bridge is the execution entry point, but the bridge is not relying purely on `process.cwd()`. The bridge already stores request-local cwd using `AsyncLocalStorage` (`symphony-openai-bridge.mjs:448-533`) and resolves tool paths against that request context in `execTool` (617-623), `readFilesTool` (710-727), `strReplaceTool` (778-815), and `writeFileTool` (821-835).
 
-That means a single Symphony bridge can, in principle, serve multiple worktrees safely **if every downstream provider and tool preserves request-local cwd**. The current proven break is downstream: the Codebuff bridge caches a shared `CodebuffClient` by `costMode` only and ignores `cwd` when reusing that client (`codebuff-openai-bridge.mjs:348-371`), even though requests carry request-specific cwd later in the request path.
+That means a single Symphony bridge can, in principle, serve multiple worktrees safely **if every downstream provider and tool preserves request-local cwd**. The previously proven break was downstream: the Codebuff bridge cached a shared `CodebuffClient` by `costMode` only and ignored `cwd` when reusing that client. **This has been fully resolved by ADR-0003:** the standalone Codebuff bridge is retired and Codebuff SDK now runs inside each worktree-local Symphony bridge via `codebuff-direct.mjs`.
 
 For the Linear flow, the available evidence supports the intended model that runners operate in their own worktree context and use the bridge primarily for model access, but full end-to-end proof still requires runtime verification.
 
@@ -440,15 +440,20 @@ For the Linear flow, the available evidence supports the intended model that run
 
 | Port | Service | Purpose |
 |------|---------|---------|
-| 4318 | Codebuff Bridge | Codebuff SDK as OpenAI-compatible HTTP |
-| 4319 | Symphony Bridge (main) | Main provider cascade for Symphony runners |
+| 4319 | Symphony Agent Router | Control-plane entrypoint (routes to worktree bridges) |
 | 4320 | Context7 MCP | Library documentation service |
+| 4321 | Symphony Bridge (wt1) | Worktree execution bridge #1 |
+| 4322 | Symphony Bridge (wt2) | Worktree execution bridge #2 |
+| 4323 | Symphony Bridge (wt3) | Worktree execution bridge #3 |
+| 4324 | Symphony Bridge (wt4) | Worktree execution bridge #4 |
 | 4325 | Symphony Bridge (wt5) | Discord worktree bridge #1 |
 | 4326 | Symphony Bridge (wt6) | Discord worktree bridge #2 |
 | 4327 | Symphony Bridge (wt7) | Discord worktree bridge #3 |
 | 4328 | Symphony Bridge (wt8) | Discord worktree bridge #4 |
 | 18789 | OpenClaw Gateway | Discord bot relay (singleton) |
 | 18790 | Discord Router | Load balancer: Discord → worktree bridges |
+
+> **Note:** Port 4318 (standalone Codebuff bridge) has been retired per ADR-0003. Codebuff SDK now runs inside each worktree-local Symphony bridge.
 
 ### Why Per-Worktree Bridges Are a Deployment Choice, Not a Node.js Requirement
 
@@ -724,7 +729,7 @@ Discord worktrees do NOT follow the same auto-push cycle as runners:
 | symphony-bridge URL | `http://127.0.0.1:18790/v1` | `openclaw.json` (both) | ✅ |
 | symphony-bridge URL | `http://127.0.0.1:4319/v1` | `models.json` (in-repo) | ❌ CONFLICT (correct for runners, wrong if OpenClaw merges this over openclaw.json's 18790) |
 | workspace | `/home/user/src/anqr` | `openclaw.json` (both) | ❌ Should be per-worktree |
-| codebuff-bridge URL | `http://127.0.0.1:4318/v1` | Both configs | ✅ |
+| ~~codebuff-bridge URL~~ | ~~`http://127.0.0.1:4318/v1`~~ | ~~Both configs~~ | **Retired** (ADR-0003) |
 | Default model | `symphony-bridge/symphony/main` | `openclaw.json` (both) | ✅ |
 
 ### Harness Config Files
@@ -1096,7 +1101,7 @@ systemctl --user restart <service-name>
 
 ### Recommendation 1: Fix Codebuff cwd Caching (CRITICAL — Immediate) [F1]
 
-The shared `CodebuffClient` in `codebuff-openai-bridge.mjs:348-371` is keyed by `costMode` only. When requests arrive with different `cwd` values (from different worktrees), the cached client may execute in the previously cached directory.
+The shared `CodebuffClient` in the retired `codebuff-openai-bridge.mjs:348-371` was keyed by `costMode` only. This class of bug has been eliminated by ADR-0003 — the standalone Codebuff bridge is retired and Codebuff SDK runs inside each worktree-local Symphony bridge.
 
 **Fix options:**
 - Key the shared client by `costMode + cwd` (create separate client per unique cwd)
@@ -1286,7 +1291,7 @@ cp services/systemd/anqr-symphony-runner@.timer /tmp/anqr-worktree-review/servic
 cp services/systemd/anqr-discord-router.service /tmp/anqr-worktree-review/services-repo/
 cp services/systemd/anqr-discord-bridge@.service /tmp/anqr-worktree-review/services-repo/
 cp services/systemd/anqr-discord-bridge@.timer /tmp/anqr-worktree-review/services-repo/
-cp services/systemd/anqr-codebuff-bridge.service /tmp/anqr-worktree-review/services-repo/
+# anqr-codebuff-bridge.service retired per ADR-0003
 cp services/systemd/anqr-watchdog.service /tmp/anqr-worktree-review/services-repo/
 
 # Deployed systemd files (actual running versions)
@@ -1303,7 +1308,7 @@ cp .openclaw/models.json /tmp/anqr-worktree-review/config/models-inrepo.json
 cp ~/.openclaw/openclaw.json /tmp/anqr-worktree-review/config/openclaw-home.json 2>/dev/null
 cp ~/.openclaw/config.json /tmp/anqr-worktree-review/config/config-home.json 2>/dev/null
 # Additional implementation files
-cp scripts/ops/integrations/model/codebuff-openai-bridge.mjs /tmp/anqr-worktree-review/implementation/
+cp scripts/ops/integrations/model/codebuff-direct.mjs /tmp/anqr-worktree-review/implementation/
 
 # MEMORY.md (operational context)
 cp MEMORY.md /tmp/anqr-worktree-review/ 2>/dev/null
@@ -1365,7 +1370,7 @@ mkdir -p /tmp/anqr-worktree-review/state
 git worktree list > /tmp/anqr-worktree-review/state/worktree-list.txt 2>&1
 systemctl --user list-units --type=service --all 2>&1 | grep -E '(anqr|openclaw|symphony|discord)' > /tmp/anqr-worktree-review/state/systemd-units.txt
 systemctl --user list-timers --all 2>&1 | grep -E '(anqr|openclaw)' > /tmp/anqr-worktree-review/state/systemd-timers.txt
-ss -tln 2>&1 | grep -E '(4318|4319|4320|4325|4326|4327|4328|18789|18790)' > /tmp/anqr-worktree-review/state/listening-ports.txt
+ss -tln 2>&1 | grep -E '(4319|4320|4321|4322|4323|4324|4325|4326|4327|4328|18789|18790)' > /tmp/anqr-worktree-review/state/listening-ports.txt
 
 # Create zip
 cd /tmp
@@ -1470,7 +1475,7 @@ This delivery plan follows the external reviewer's priority order. Proven code d
 **Tasks (in reviewer-recommended priority order):**
 
 - [x] **Fix Codebuff cwd caching (F1)** — `getSharedClient()` now keyed by both `costMode` and `cwd`; recreates client when either changes
-  - File: `scripts/ops/integrations/model/codebuff-openai-bridge.mjs` lines 348-390
+  - File: `scripts/ops/integrations/model/codebuff-openai-bridge.mjs` lines 348-390 **(retired per ADR-0003)**
   - Added `SHARED_CLIENT_CWD` tracking variable alongside `SHARED_CLIENT_COST_MODE`
   - Regression test: `scripts/ops/integrations/model/codebuff-cwd-isolation.spec.ts` (6 tests, all pass)
 - [x] **Remove bridge startup auto-start of runner timers (F3)** — Removed `symphony-control.mjs --start` call from bridge startup
@@ -2391,7 +2396,7 @@ anqr-worktree-review/
 │   ├── symphony-control.mjs                    ← Start/stop control
 │   ├── symphony-openai-bridge.mjs              ← Bridge (230KB, 6000+ lines)
 │   ├── discord-request-router.mjs              ← Discord load balancer
-│   ├── codebuff-openai-bridge.mjs              ← Codebuff SDK bridge
+│   ├── codebuff-direct.mjs                     ← Codebuff SDK integration (replaces retired codebuff-openai-bridge.mjs)
 │   ├── openclaw-gateway-singleton.mjs          ← Gateway singleton wrapper
 │   └── analyze-worktree-benchmark.mjs          ← Benchmark analysis tool
 ├── tests/                                      ← Worktree-related test files
@@ -2441,7 +2446,9 @@ anqr-worktree-review/
 | `scripts/ops/orchestration/symphony-runner.mjs` | Runner execution with issue routing |
 | `scripts/ops/orchestration/symphony-worktree-pool.mjs` | Worktree lifecycle management |
 | `scripts/ops/orchestration/symphony-control.mjs` | Start/stop task execution |
-| `scripts/ops/integrations/model/symphony-openai-bridge.mjs` | Symphony bridge (provider cascade) |
+| `scripts/ops/integrations/model/symphony-openai-bridge.mjs` | Symphony bridge (provider cascade + Codebuff SDK) |
+| `scripts/ops/integrations/model/symphony-agent-router.mjs` | Symphony agent router (control-plane) |
+| `scripts/ops/integrations/model/codebuff-direct.mjs` | Codebuff SDK direct integration |
 | `scripts/ops/integrations/model/discord-request-router.mjs` | Discord load balancer |
 | `scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs` | Gateway singleton wrapper |
 
@@ -2449,7 +2456,7 @@ anqr-worktree-review/
 
 | File | Purpose |
 |------|---------|
-| `services/systemd/anqr-symphony-bridge.service` | Main bridge (port 4319) |
+| `services/systemd/anqr-symphony-bridge.service` | Symphony agent router (port 4319) |
 | `services/systemd/anqr-symphony-bridge@.service` | Worktree bridge template (ports 4325-4328) |
 | `services/systemd/anqr-symphony-runner@.service` | Runner template (wt1-wt4) |
 | `services/systemd/anqr-symphony-runner@.timer` | Runner timer (2 min interval) |

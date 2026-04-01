@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * bridge-watchdog.mjs — Watchdog for Symphony and Codebuff bridges
+ * bridge-watchdog.mjs — Watchdog for the Symphony agent router and worktree bridges
  *
  * Enhanced watchdog that detects catastrophic failures and automatically recovers.
  *
@@ -39,23 +39,15 @@ const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || 'main';
 const MONITORED_SERVICES = [
   {
     name: "anqr-symphony-bridge.service",
-    shortName: "symphony",
+    shortName: "symphony-agent",
     port: 4319,
     criticalFiles: [
+      "scripts/ops/integrations/model/symphony-agent-router.mjs",
       "scripts/ops/integrations/model/symphony-credit-gate.mjs",
       "scripts/ops/integrations/model/symphony-openai-bridge.mjs",
-      "scripts/ops/integrations/model/symphony-session-state.mjs",
+      "scripts/ops/integrations/model/codebuff-direct.mjs",
     ],
     healthEndpoint: "http://127.0.0.1:4319/health",
-  },
-  {
-    name: "anqr-codebuff-bridge.service",
-    shortName: "codebuff",
-    port: 4318,
-    criticalFiles: [
-      "scripts/ops/integrations/model/codebuff-openai-bridge.mjs",
-    ],
-    healthEndpoint: "http://127.0.0.1:4318/health",
   },
 ];
 

@@ -1,7 +1,10 @@
-# anqr-symphony-runner@.service — Symphony execution agent (worktree template)
+# anqr-linear-runner@.service — Linear issue poller and scheduler (worktree template)
 #
-# Template service for concurrent Symphony runners using git worktrees.
+# Template service for polling Linear issues and scheduling work.
 # Each instance operates in its own worktree with isolated working directory.
+#
+# NOTE: This is the worktree-bound version. Consider whether a single global
+# Linear runner that assigns to wt1-wt4 is simpler and sufficient.
 #
 # Usage:
 #   # First, initialize worktree pool:
@@ -16,7 +19,7 @@
 #   journalctl --user -u anqr-symphony-runner@1.service -f
 
 [Unit]
-Description=ANQR Symphony execution agent (worktree %i)
+Description=ANQR Linear runner for worktree wt%i
 After=network-online.target
 Wants=network-online.target
 
@@ -45,7 +48,7 @@ ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/orchestration/symph
 # Logging to journal
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=anqr-symphony-runner-wt%i
+SyslogIdentifier=anqr-linear-runner-wt%i
 
 # Safety limits — 125 min timeout (runner has 120 min internal limit)
 TimeoutStartSec=7500

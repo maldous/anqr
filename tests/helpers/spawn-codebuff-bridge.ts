@@ -1,4 +1,8 @@
 /**
+ * @deprecated The standalone Codebuff bridge has been retired (ADR-0003).
+ * Codebuff SDK now runs inside each worktree-local Symphony bridge.
+ * Use spawnSymphonyBridge instead.
+ *
  * Helper to spawn Codebuff bridge server on dynamic port for testing
  * Prevents "address already in use" errors when running tests
  */
@@ -10,6 +14,7 @@ import { findAvailablePort } from "./find-available-port";
 import { waitForBridgeReady } from "./wait-for-bridge-ready";
 
 /**
+ * @deprecated Use spawnSymphonyBridge instead — standalone Codebuff bridge retired per ADR-0003.
  * Spawn a Codebuff bridge instance on a dynamic port
  */
 export async function spawnCodebuffBridge(

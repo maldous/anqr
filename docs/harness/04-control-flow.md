@@ -102,7 +102,7 @@ For multi-phase issues, the agent MUST validate that previous phases completed s
 
 ## Service management protocol
 
-**CRITICAL: Before making ANY changes to bridge services (symphony-bridge, codebuff-bridge):**
+**CRITICAL: Before making ANY changes to bridge services (symphony-bridge, worktree bridges):**
 
 1. **STOP task execution FIRST:**
    ```bash
@@ -129,7 +129,8 @@ For multi-phase issues, the agent MUST validate that previous phases completed s
    - No work will be processed until timers are re-enabled
 
 **This protocol applies to:**
-- Bridge service restarts (`systemctl --user restart anqr-symphony-bridge`)
+- Agent router restart (`systemctl --user restart anqr-symphony-bridge`)
+- Worktree bridge restarts (`systemctl --user restart 'anqr-symphony-bridge@*.service'`)
 - Bridge configuration changes
 - Any changes to `scripts/ops/integrations/model/*` bridge files
 - Provider configuration updates

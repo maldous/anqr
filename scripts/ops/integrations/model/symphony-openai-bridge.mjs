@@ -84,7 +84,8 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { z } from "zod";
 
-// Codebuff SDK — no longer imported directly; codebuff routes through codebuff-bridge (port 4318)
+// Codebuff now executes directly inside the current worktree-local Symphony bridge.
+import { invokeCodebuffDirect, invokeCodebuffDirectStream } from "./codebuff-direct.mjs";
 import { Codex } from "@openai/codex-sdk";
 
 // Truncation utilities (extracted for unit-testability)
@@ -2553,8 +2554,8 @@ const toolsProxy = new Proxy(tools, {
 // --------------------------------------------------------------------------
 
 /**
- * Map credit-gate providers to AI SDK instances.
- * "codebuff" routes through codebuff-bridge (port 4318) which handles paid→free fallback.
+ * Map credit-gate providers to SDK model instances.
+ * Codebuff is handled separately via direct SDK execution inside the selected worktree.
  */
 const OPENROUTER_PROVIDER_NAME_SET = new Set([
   "openrouter-nemotron-super",
@@ -2601,7 +2602,7 @@ function createProviderModel(provider) {
   const { name, model, baseUrl, apiKey } = provider;
 
   if (name === "codebuff") {
-    return createOpenAiCompatibleModel(model, apiKey, "http://127.0.0.1:4318/v1", "local-bridge");
+    throw new Error("codebuff is handled by direct SDK execution, not AI SDK HTTP bridging");
   }
   if (name === "groq") {
     return createGroq({ apiKey })(model);
@@ -4376,7 +4377,13 @@ async function invokeWithFallback(messages, route, sessionId = null, cwd = null)
         providerName: provider.name,
         attemptNumber,
       });
-      const result = await invokeWithAI(provider, messages, { stream: false, cwd });
+      const result =
+        provider.name === "codebuff"
+          ? await invokeCodebuffDirect({
+              messages,
+              cwd: cwd || getCurrentRequestCwd(),
+            })
+          : await invokeWithAI(provider, messages, { stream: false, cwd });
 
       const durationMs = Date.now() - startedAt;
       const textPreview = result.text?.slice(0, 100) || "";
@@ -4621,94 +4628,60 @@ async function handleProxyEnd(res, state, resolve) {
 }
 
 /**
- * Handle error response from proxy
+ * Direct streaming for Codebuff from the current worktree-local bridge.
  */
-function handleErrorResponse(proxyRes, reject) {
-  let errorBody = "";
-  proxyRes.on("data", (chunk) => (errorBody += chunk));
-  proxyRes.on("end", () => {
-    reject(new Error(`Codebuff bridge returned ${proxyRes.statusCode}: ${errorBody}`));
-  });
-}
+async function invokeCodebuffDirectStreamToSSE(messages, res, onDiscordChunk = null, cwd = null) {
+  const completionId = `chatcmpl-symphony-${Date.now()}`;
+  const created = Math.floor(Date.now() / 1000);
+  let fullText = "";
 
-/**
- * Transparent SSE relay for Codebuff - forwards raw SSE chunks directly to OpenClaw
- * without AI SDK buffering. This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
- * that the AI SDK would otherwise buffer until the end.
- *
- * @param {Array} messages - Chat messages
- * @param {http.ServerResponse} res - HTTP response for SSE streaming
- * @param {string|null} sessionId - OpenClaw session ID for tool proxying
- * @param {Function|null} onDiscordChunk - Optional callback for streaming to Discord (text) => void
- */
-function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordChunk = null, cwd = null) {
-  return new Promise((resolve, reject) => {
-    const requestBody = JSON.stringify({
-      model: "codebuff/base",
-      messages,
-      cwd: cwd || getCurrentRequestCwd(),
-      stream: true,
-    });
-
-    logDebug(`🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`);
-
-    const headers = {
-      "Content-Type": "application/json",
-      "Content-Length": Buffer.byteLength(requestBody),
-      Authorization: "Bearer local-bridge",
-    };
-
-    // Forward OpenClaw session ID to Codebuff bridge for tool proxying
-    if (sessionId) {
-      headers["X-OpenClaw-Session"] = sessionId;
-      logDebug(`🔗 Forwarding session ID to Codebuff bridge`, {
-        sessionId: sessionId.slice(0, 12) + "...",
-      });
-    }
-
-    const options = {
-      hostname: "127.0.0.1",
-      port: 4318,
-      path: "/v1/chat/completions",
-      method: "POST",
-      headers,
-    };
-
-    const state = {
-      fullText: "",
-      logBuffer: "",
-      partialBuffer: "",
-      finishReason: null,
-      symphonyResult: null,
-      sawDone: false,
-    };
-
-    const proxyReq = http.request(options, (proxyRes) => {
-      if (proxyRes.statusCode !== 200) {
-        handleErrorResponse(proxyRes, reject);
-        return;
+  const result = await invokeCodebuffDirectStream({
+    messages,
+    cwd: cwd || getCurrentRequestCwd(),
+    onTextChunk: (text) => {
+      fullText += text;
+      if (onDiscordChunk) {
+        const trimmed = text.trim();
+        const isLightbulb = trimmed === "💡" || text === "\n💡 ";
+        if (!isLightbulb) {
+          onDiscordChunk(text);
+        }
       }
-
-      proxyRes.on("data", (chunk) => {
-        handleProxyDataChunk(chunk, res, state, onDiscordChunk);
-      });
-
-      proxyRes.on("end", async () => {
-        await handleProxyEnd(res, state, resolve);
-      });
-
-      proxyRes.on("error", (err) => {
-        reject(new Error(`Codebuff stream error: ${err.message}`));
-      });
-    });
-
-    proxyReq.on("error", (err) => {
-      reject(new Error(`Codebuff request error: ${err.message}`));
-    });
-
-    proxyReq.write(requestBody);
-    proxyReq.end();
+      const chunk = {
+        id: completionId,
+        object: "chat.completion.chunk",
+        created,
+        model: "codebuff/base",
+        choices: [{ index: 0, delta: { content: text }, finish_reason: null }],
+      };
+      res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+    },
   });
+
+  const finalChunk = {
+    id: completionId,
+    object: "chat.completion.chunk",
+    created,
+    model: "codebuff/base",
+    choices: [
+      {
+        index: 0,
+        delta: {},
+        finish_reason: result.finishReason || (result.needsContinuation ? "length" : "stop"),
+      },
+    ],
+    _symphonyResult: result._symphonyResult,
+  };
+  res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
+  res.write("data: [DONE]\n\n");
+
+  return {
+    text: result.text || fullText,
+    providerName: "codebuff",
+    finishReason: result.finishReason || (result.needsContinuation ? "length" : "stop"),
+    _symphonyResult: result._symphonyResult,
+    mode: result.mode,
+  };
 }
 
 /**
@@ -5588,10 +5561,9 @@ const server = http.createServer(async (req, res) => {
                   }
                 };
 
-            const result = await invokeCodebuffDirectStream(
+            const result = await invokeCodebuffDirectStreamToSSE(
               messages,
               res,
-              sessionId,
               streamToDiscord,
               requestCwd,
             );

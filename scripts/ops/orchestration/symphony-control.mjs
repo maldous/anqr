@@ -6,9 +6,9 @@ import { createLogger } from "../lib/logger.mjs";
 const { logInfo, logError } = createLogger();
 
 /**
- * Symphony Runner Control Script
+ * Linear Runner Control Script
  * 
- * Controls the systemd timers that feed the Symphony runner queue.
+ * Controls the systemd timers that feed the Linear issue runner queue.
  * 
  * Usage:
  *   node scripts/ops/orchestration/symphony-control.mjs --stop     # Stop all runners (disable timers)
@@ -19,7 +19,7 @@ const { logInfo, logError } = createLogger();
 
 function getTimerStatus() {
   try {
-    const output = execFileSync("systemctl", ["--user", "list-timers", "anqr-symphony-runner@*.timer", "--all"], {
+    const output = execFileSync("systemctl", ["--user", "list-timers", "anqr-linear-runner@*.timer", "--all"], {
       encoding: "utf-8",
     });
     return output;
@@ -33,7 +33,7 @@ function getEnabledTimers() {
   try {
     const output = execFileSync(
       "systemctl",
-      ["--user", "list-timers", "anqr-symphony-runner@*.timer", "--all", "--no-legend"],
+      ["--user", "list-timers", "anqr-linear-runner@*.timer", "--all", "--no-legend"],
       { encoding: "utf-8" },
     );
     const lines = output
@@ -42,28 +42,28 @@ function getEnabledTimers() {
       .filter(Boolean);
     return lines
       .map((line) => line.split(/\s+/).slice(-2, -1)[0])
-      .filter((unit) => unit?.startsWith("anqr-symphony-runner@"));
+      .filter((unit) => unit?.startsWith("anqr-linear-runner@"));
   } catch {
     return [];
   }
 }
 
 function disableAllTimers() {
-  logInfo("🛑 Disabling all Symphony runner timers...");
+  logInfo("🛑 Disabling all Linear runner timers...");
   try {
     // Intentionally uses glob to stop ALL runner timers, including any stale
     // wrong-ID instances (e.g. runner@5-8). enableAllTimers() is narrower
     // and only starts the correct subset (wt1-wt4).
-    execFileSync("systemctl", ["--user", "stop", "anqr-symphony-runner@*.timer"], {
+    execFileSync("systemctl", ["--user", "stop", "anqr-linear-runner@*.timer"], {
       stdio: "pipe",
     });
     
     // Disable timers to prevent restart
-    execFileSync("systemctl", ["--user", "disable", "anqr-symphony-runner@*.timer"], {
+    execFileSync("systemctl", ["--user", "disable", "anqr-linear-runner@*.timer"], {
       stdio: "pipe",
     });
     
-    logInfo("✅ All Symphony runner timers disabled");
+    logInfo("✅ All Linear runner timers disabled");
     logInfo("⏸️  No new tasks will be picked up until timers are re-enabled");
     return true;
   } catch (err) {
@@ -73,23 +73,22 @@ function disableAllTimers() {
 }
 
 function enableAllTimers() {
-  logInfo("▶️  Enabling Symphony runner timers (wt1-wt4 only)...");
+  logInfo("▶️  Enabling Linear runner timers (wt1-wt4 only)...");
   try {
-    // Enable only Symphony runners (wt1-wt4).
-    // Discord worktrees (wt5-wt8) use bridge services, NOT runner timers.
-    // See: External review finding F2 — enabling runner@5-8 contradicts
-    // the documented target model where only wt1-wt4 are runner targets.
+    // Enable only Linear runners (wt1-wt4).
+    // Discord worktrees (wt5-wt8) use executor services, NOT runner timers.
+    // See: Clean architecture — wt1-wt4 for Linear, wt5-wt8 for Discord.
     const runners = ["1", "2", "3", "4"];
     for (const id of runners) {
-      execFileSync("systemctl", ["--user", "enable", `anqr-symphony-runner@${id}.timer`], {
+      execFileSync("systemctl", ["--user", "enable", `anqr-linear-runner@${id}.timer`], {
         stdio: "pipe",
       });
-      execFileSync("systemctl", ["--user", "start", `anqr-symphony-runner@${id}.timer`], {
+      execFileSync("systemctl", ["--user", "start", `anqr-linear-runner@${id}.timer`], {
         stdio: "pipe",
       });
     }
     
-    logInfo("✅ Symphony runner timers enabled and started (wt1-wt4)");
+    logInfo("✅ Linear runner timers enabled and started (wt1-wt4)");
     logInfo("🚀 Runners will begin picking up tasks on next timer cycle");
     return true;
   } catch (err) {
@@ -99,7 +98,7 @@ function enableAllTimers() {
 }
 
 function showStatus() {
-  logInfo("📊 Symphony Runner System Status\n");
+  logInfo("📊 Linear Runner System Status\n");
   
   const timerStatus = getTimerStatus();
   if (timerStatus) {

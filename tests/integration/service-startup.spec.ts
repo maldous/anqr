@@ -86,33 +86,7 @@ describe("Service Startup and Environment Contracts", () => {
     });
   });
 
-  describe("Codebuff Bridge Startup", () => {
-    it("should start and respond to health check", async () => {
-      const { status, data } = await safeFetch("http://127.0.0.1:4318/health");
-
-      if (status === -1) {
-        expect(status).toBe(-1);
-        return;
-      }
-
-      expect(status).toBe(200);
-      expect(data).toBeDefined();
-    });
-
-    it("should report initialization status", async () => {
-      const { status, data } = await safeFetch("http://127.0.0.1:4318/health");
-
-      if (status === -1) {
-        expect(status).toBe(-1);
-        return;
-      }
-
-      expect(status).toBe(200);
-      const health = data as { status: string; model: string };
-      expect(health.status).toMatch(/^(ok|initializing)$/);
-      expect(health.model).toBe("codebuff/base");
-    });
-  });
+  // Standalone Codebuff bridge retired per ADR-0003 — Codebuff SDK now runs inside worktree-local Symphony bridges
 
   describe("Environment Configuration", () => {
     it("should have SYMPHONY_BRIDGE_PORT configured", () => {
@@ -125,10 +99,7 @@ describe("Service Startup and Environment Contracts", () => {
       expect(apiKey).toBeTruthy();
     });
 
-    it("should have CODEBUFF_BRIDGE_PORT configured", () => {
-      const port = process.env.CODEBUFF_BRIDGE_PORT || "4318";
-      expect(port).toBe("4318");
-    });
+    // CODEBUFF_BRIDGE_PORT removed — standalone Codebuff bridge retired per ADR-0003
 
     it("should have RUNNER_OLLAMA_MODEL configured", () => {
       const model = process.env.RUNNER_OLLAMA_MODEL || "qwen3-coder-next:latest";
@@ -180,18 +151,7 @@ describe("Service Startup and Environment Contracts", () => {
       expect(typeof exists).toBe("boolean");
     });
 
-    it("should have anqr-codebuff-bridge.service defined", async () => {
-      const { existsSync } = await import("node:fs");
-      const path = await import("node:path");
-
-      const servicePath = path.resolve(
-        process.cwd(),
-        "services/systemd/anqr-codebuff-bridge.service",
-      );
-
-      const exists = existsSync(servicePath);
-      expect(exists).toBe(true);
-    });
+    // anqr-codebuff-bridge.service removed — standalone Codebuff bridge retired per ADR-0003
   });
 
   describe("Harness Report Contract", () => {

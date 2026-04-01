@@ -6,7 +6,6 @@
  *
  * These tests require the bridges to be running:
  *   systemctl --user start anqr-symphony-bridge.service
- *   systemctl --user start anqr-codebuff-bridge.service
  *
  * Run: npx vitest run tests/integration/harness-bridge.spec.ts
  */
@@ -16,12 +15,10 @@ import { z } from "zod";
 import { validateStreamingContract } from "./harness-bridge-validate-streaming";
 import { isBridgeReachable } from "./harness-bridge-check";
 import { symphonyTestScenarios } from "./harness-bridge-scenarios";
-import { codebuffTestScenarios } from "./harness-bridge-codebuff-scenarios";
+// codebuffTestScenarios removed — standalone Codebuff bridge retired per ADR-0003
 
 const SYMPHONY_BASE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319";
-const CODEBUFF_BASE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
 const SYMPHONY_API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
-const CODEBUFF_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
 
 const FETCH_TIMEOUT_MS = 5_000;
 const COMPLETION_TIMEOUT_MS = 120_000;
@@ -706,136 +703,5 @@ describe("Symphony Bridge Contract Tests", () => {
   });
 });
 
-describe("Codebuff Bridge Contract Tests", () => {
-  const baseUrl = CODEBUFF_BASE_URL;
-  const apiKey = CODEBUFF_API_KEY;
-  let bridgeAvailable = false;
-
-  beforeAll(async () => {
-    bridgeAvailable = await isBridgeReachable(baseUrl);
-    if (!bridgeAvailable) {
-      console.warn(
-        `[harness-bridge] ⚠️ Codebuff bridge not reachable at ${baseUrl} — skipping live tests`,
-      );
-    }
-  });
-
-  describe("GET /v1/models", () => {
-    it("should return valid codebuff model", async () => {
-      if (!bridgeAvailable) return;
-
-      const res = await fetch(`${baseUrl}/v1/models`, {
-        headers: { Authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
-
-      expect(res.status).toBe(200);
-      const data = await res.json();
-
-      const result = symphonyModelsResponseSchema.safeParse(data);
-      expect(result.success).toBe(true);
-
-      const modelIds = data.data.map((m: { id: string }) => m.id);
-      expect(modelIds).toContain("codebuff/base");
-    });
-  });
-
-  describe("GET /health", () => {
-    it("should return health status with account info", async () => {
-      if (!bridgeAvailable) return;
-
-      const res = await fetch(`${baseUrl}/health`, {
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
-
-      expect(res.status).toBe(200);
-      const data = await res.json();
-
-      expect(data.status).toBeDefined();
-      expect(data.model).toBe("codebuff/base");
-      expect(data.apiKeyConfigured).toBeDefined();
-      expect(typeof data.apiKeyConfigured).toBe("boolean");
-      expect(data.mode).toBeDefined();
-      expect(["paid", "free", "none"]).toContain(data.mode);
-    });
-  });
-
-  describe("POST /v1/chat/completions - Non-streaming", () => {
-    it("should complete simple prompt", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
-      if (!bridgeAvailable) return;
-
-      const scenario = codebuffTestScenarios.simplePrompt;
-
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(scenario),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
-      });
-
-      if (res.status === 200) {
-        const data = await res.json();
-        expect(data.choices).toBeDefined();
-        expect(data.choices[0].message.content).toBeTruthy();
-      } else {
-        const error = await res.json();
-        expect(error.error).toBeDefined();
-      }
-    });
-  });
-
-  describe("POST /v1/chat/completions - Streaming", () => {
-    it("should stream response", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
-      if (!bridgeAvailable) return;
-
-      const scenario = codebuffTestScenarios.streamingPrompt;
-
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(scenario),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
-      });
-
-      if (res.status === 200) {
-        expect(res.headers.get("content-type")).toContain("text/event-stream");
-
-        const chunks: string[] = [];
-        const reader = res.body?.getReader();
-        const decoder = new TextDecoder();
-        let doneReading = false;
-
-        if (reader) {
-          while (!doneReading) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") {
-                  doneReading = true;
-                  break;
-                }
-                if (data.trim()) {
-                  chunks.push(data);
-                }
-              }
-            }
-          }
-        }
-
-        expect(chunks.length).toBeGreaterThan(0);
-      }
-    });
-  });
-});
+// Standalone Codebuff Bridge Contract Tests removed — bridge retired per ADR-0003.
+// Codebuff SDK now runs inside each worktree-local Symphony bridge.

@@ -290,10 +290,10 @@ These tools return graceful error messages with suggestions for alternatives rat
 - Includes defensive parameter normalization for array inputs
 - Catch-all Proxy for unknown tool names (graceful no-ops)
 
-**Codebuff bridge tools:**
+**Codebuff direct execution:**
 
-- Implementation: `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
-- Routes to Codebuff SDK (port 4318)
+- Implementation: `scripts/ops/integrations/model/codebuff-direct.mjs`
+- Runs inside each worktree-local Symphony bridge (no standalone service)
 - Full Codebuff tool set available
 
 **Tool capability probing:**
@@ -537,20 +537,19 @@ The harness uses a cascading provider model with failure cooldown:
 
 1. **codex** (gpt-5.4) — primary, uses OpenAI credits
 2. **groq**, **mistral**, **gemini** — free tier providers
-3. **codebuff** (SDK-based) — autonomous agent with paid → free mode fallback
-4. **codebuff-bridge** (HTTP) — OpenAI-compatible gateway for OpenClaw integration
-5. **ollama-local** — local fallback
+3. **codebuff** (direct SDK) — runs inside each worktree-local Symphony bridge, paid → free fallback
+4. **ollama-local** — local fallback
 
 Codebuff uses a single API key with automatic mode selection:
 
 - `CODEBUFF_API_KEY` — single account (paid mode first, free mode fallback)
 
-**Codebuff bridge:** `http://127.0.0.1:4318` (OpenAI-compatible gateway)
+**Codebuff direct execution:**
 
-- Exposes Codebuff SDK via OpenAI-compatible HTTP API
-- Supports streaming responses (SSE)
-- Automatic paid → free mode fallback with periodic re-validation
-- Configured via `.openclaw/models.json` for OpenClaw integration
+- Codebuff SDK runs directly inside each worktree-local Symphony bridge
+- No standalone Codebuff bridge service in the active design
+- Automatic paid → free mode fallback
+- Worktree-bound via systemd `WorkingDirectory`
 
 ### Degraded mode
 
@@ -719,13 +718,13 @@ The harness uses two OpenAI-compatible bridges:
 - Service: `anqr-symphony-bridge.service`
 - **Concurrency-safe:** Handles multiple concurrent requests from worktree runners
 
-**Codebuff Bridge** (port 4318):
+**Codebuff Direct Execution:**
 
-- Codebuff SDK exposed as OpenAI-compatible HTTP
-- Automatic paid → free mode fallback with periodic re-validation
-- Structured result contract: returns `_symphonyResult` so the runner and bridge client share the same completion contract
-- Service: `anqr-codebuff-bridge.service`
-- **Concurrency-safe:** Supports simultaneous Discord and Symphony requests
+- Codebuff SDK runs directly inside each worktree-local Symphony bridge
+- No standalone service — integrated via `codebuff-direct.mjs`
+- Automatic paid → free mode fallback
+- Structured result contract: returns `_symphonyResult` so the runner shares the same completion contract
+- **Worktree-isolated:** Each bridge instance is bound to its worktree via systemd `WorkingDirectory`
 
 **Key modules** (all under `scripts/ops/integrations/model/`):
 
@@ -733,7 +732,8 @@ The harness uses two OpenAI-compatible bridges:
 - `symphony-credit-gate.mjs` — 4-tier provider selection
 - `symphony-adaptive-context.mjs` — dynamic token ceilings, rate-limit tracking
 - `symphony-bridge-truncation.mjs` — static limits and message truncation
-- `codebuff-openai-bridge.mjs` — Codebuff SDK bridge
+- `codebuff-direct.mjs` — Codebuff SDK execution (runs inside each worktree-local bridge)
+- `symphony-agent-router.mjs` — Control-plane router for worktree-local bridges
 
 **Bridge restart procedure (CRITICAL):**
 
@@ -775,8 +775,8 @@ Restarting during active concurrent requests drops streaming connections and cau
 5. **Restart bridge:**
    ```bash
    systemctl --user restart anqr-symphony-bridge
-   # OR
-   systemctl --user restart anqr-codebuff-bridge
+   # OR for worktree instances:
+   systemctl --user restart 'anqr-symphony-bridge@*.service'
    ```
 
 6. **RESTART TASK EXECUTION:**

@@ -1,0 +1,26 @@
+# anqr-linear-runner@.timer — Linear runner timer (worktree template)
+#
+# Fires every 2 minutes to poll Linear for new issues.
+# Each instance operates in its own worktree (wt1-wt4).
+#
+# Install:
+#   systemctl --user enable --now anqr-linear-runner@1.timer
+#   systemctl --user enable --now anqr-linear-runner@2.timer
+#   systemctl --user enable --now anqr-linear-runner@3.timer
+#   systemctl --user enable --now anqr-linear-runner@4.timer
+#
+# Check status:
+#   systemctl --user list-timers
+#   journalctl --user -u anqr-linear-runner@1.service --since today
+
+[Unit]
+Description=ANQR Linear runner timer (worktree %i)
+
+[Timer]
+# Stagger startup to distribute load: 15s * instance number
+OnBootSec=15s
+OnUnitActiveSec=2min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

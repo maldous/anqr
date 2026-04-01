@@ -13,7 +13,6 @@ const { logInfo, logWarn, logDebug } = createLogger();
 // Service health check endpoints
 const HEALTH_ENDPOINTS = {
   symphony: "http://127.0.0.1:4319/health",
-  codebuff: "http://127.0.0.1:4318/health",
 };
 
 // Required healthy duration before auto-resolving (1 hour)

@@ -17,7 +17,7 @@
 
 - Committed and pushed main (commit 5ac4e4ecc)
 - Synced all 8 worktrees (wt1-wt8) to main
-- Restarted all services (symphony-bridge, codebuff-bridge, context7-mcp, discord-router, watchdog, discord-bridge@1-8, symphony-runner@1-8)
+- Restarted all services (symphony-bridge, context7-mcp, discord-router, watchdog, discord-bridge@1-8, symphony-runner@1-8)
 - Re-enabled Symphony task execution
 
 

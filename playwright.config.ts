@@ -43,7 +43,7 @@ export default defineConfig({
     },
   ],
   // Web server only needed for UI-based projects (basic, advanced, professional, permutations).
-  // OpenClaw tests use local bridges (ports 4318/4319) which are managed by systemd, not Playwright.
+  // OpenClaw tests use the Symphony agent router (port 4319) which is managed by systemd, not Playwright.
   webServer: process.env.CI
     ? undefined
     : {

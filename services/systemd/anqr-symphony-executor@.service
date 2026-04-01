@@ -1,21 +1,24 @@
-# anqr-symphony-bridge@.service — Symphony bridge for worktree %i
+# anqr-symphony-executor@.service — Worktree-local Symphony executor for worktree %i
 #
-# Template service for running Symphony bridges in isolated worktrees.
+# Template service for running Symphony executors in isolated worktrees.
 # Each instance runs in its own worktree with isolated working directory and git state.
+# Performs all AI execution, file mutation, git operations, and validation.
+#
+# Worktree mapping:
+#   wt1-wt4: Reserved for Linear work
+#   wt5-wt8: Reserved for Discord work
 #
 # Port mapping:
-#   wt5 → port 4325
-#   wt6 → port 4326
-#   wt7 → port 4327
-#   wt8 → port 4328
+#   wt1 → port 4321, wt2 → port 4322, wt3 → port 4323, wt4 → port 4324
+#   wt5 → port 4325, wt6 → port 4326, wt7 → port 4327, wt8 → port 4328
 #
 # Install:
-#   cp services/systemd/anqr-symphony-bridge@.service ~/.config/systemd/user/
+#   cp services/systemd/anqr-symphony-executor@.service ~/.config/systemd/user/
 #   systemctl --user daemon-reload
-#   systemctl --user enable --now anqr-symphony-bridge@{5,6,7,8}.service
+#   systemctl --user enable --now anqr-symphony-executor@{1,2,3,4,5,6,7,8}.service
 
 [Unit]
-Description=ANQR Symphony bridge for worktree wt%i
+Description=ANQR Symphony executor for worktree wt%i
 After=network-online.target
 Wants=network-online.target
 
@@ -53,7 +56,7 @@ ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --exp
 # Logging to journal with worktree identifier
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=anqr-symphony-bridge-wt%i
+SyslogIdentifier=anqr-symphony-executor-wt%i
 
 # Restart on failure with exponential backoff
 Restart=on-failure

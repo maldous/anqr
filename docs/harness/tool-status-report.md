@@ -1,8 +1,10 @@
 # Tool Status Report
 
-**Generated:** 2024-03-27  
-**Context:** Symphony OpenAI Bridge + Codebuff Bridge  
+**Generated:** 2024-03-27 (updated 2026-04-01)  
+**Context:** Symphony OpenAI Bridge (all-in-one per ADR-0003)  
 **Purpose:** Comprehensive reference for all available tools, their schemas, and current status
+
+> **Note:** The standalone Codebuff bridge (`codebuff-openai-bridge.mjs`, port 4318) has been retired per ADR-0003. Codebuff SDK now runs inside each worktree-local Symphony bridge. References below have been updated accordingly.
 
 ---
 
@@ -21,31 +23,31 @@ This report documents every tool available in the ANQR harness, their current op
 
 ## Tool Availability Matrix
 
-| Tool                    | Symphony Bridge | Codebuff Bridge | Status    | Notes                                 |
-| ----------------------- | --------------- | --------------- | --------- | ------------------------------------- |
-| `read_files`            | ✅              | ✅              | Available | Accepts array or string (normalized)  |
-| `str_replace`           | ✅              | ✅              | Available | Accepts array or string (normalized)  |
-| `write_file`            | ✅              | ✅              | Available | Single file operation                 |
-| `run_terminal_command`  | ✅              | ✅              | Available | Aliased as `exec`                     |
-| `code_search`           | ✅              | ✅              | Available | Uses ripgrep                          |
-| `list_directory`        | ✅              | ✅              | Available | File/directory listing                |
-| `read_subtree`          | ✅              | ✅              | Available | Recursive tree read                   |
-| `memory_search`         | ✅              | ✅              | Available | Searches MEMORY.md                    |
-| `memory_get`            | ✅              | ✅              | Available | Gets full memory file                 |
-| `run_file_change_hooks` | ✅              | ❌              | Available | **Known Issue:** Parameter validation |
-| `think_deeply`          | ✅              | ✅              | Available | Acknowledgment-only                   |
-| `update_subgoal`        | ✅              | ✅              | Available | Acknowledgment-only                   |
-| `add_subgoal`           | ✅              | ✅              | Available | Acknowledgment-only                   |
-| `find_files`            | ✅              | ❌              | Available | Hybrid search                         |
-| `web_search`            | ✅              | ❌              | Available | Requires API key                      |
-| `read_docs`             | ✅              | ❌              | Available | Context7 API                          |
-| `spawn_agents`          | ✅              | ❌              | Available | Acknowledgment-only (delegated)       |
-| `propose_str_replace`   | ✅              | ❌              | Available | Codebuff-only context                 |
-| `propose_write_file`    | ✅              | ❌              | Available | Codebuff-only context                 |
-| `add_message`           | ✅              | ❌              | Available | Codebuff-only context                 |
-| `set_messages`          | ✅              | ❌              | Available | Codebuff-only context                 |
-| `ask_user`              | ✅              | ❌              | Available | Codebuff-only context                 |
-| `lookup_agent_info`     | ✅              | ❌              | Available | Codebuff-only context                 |
+| Tool                    | Symphony Bridge | Status    | Notes                                 |
+| ----------------------- | --------------- | --------- | ------------------------------------- |
+| `read_files`            | ✅              | Available | Accepts array or string (normalized)  |
+| `str_replace`           | ✅              | Available | Accepts array or string (normalized)  |
+| `write_file`            | ✅              | Available | Single file operation                 |
+| `run_terminal_command`  | ✅              | Available | Aliased as `exec`                     |
+| `code_search`           | ✅              | Available | Uses ripgrep                          |
+| `list_directory`        | ✅              | Available | File/directory listing                |
+| `read_subtree`          | ✅              | Available | Recursive tree read                   |
+| `memory_search`         | ✅              | Available | Searches MEMORY.md                    |
+| `memory_get`            | ✅              | Available | Gets full memory file                 |
+| `run_file_change_hooks` | ✅              | Available | **Known Issue:** Parameter validation |
+| `think_deeply`          | ✅              | Available | Acknowledgment-only                   |
+| `update_subgoal`        | ✅              | Available | Acknowledgment-only                   |
+| `add_subgoal`           | ✅              | Available | Acknowledgment-only                   |
+| `find_files`            | ✅              | Available | Hybrid search                         |
+| `web_search`            | ✅              | Available | Requires API key                      |
+| `read_docs`             | ✅              | Available | Context7 API                          |
+| `spawn_agents`          | ✅              | Available | Acknowledgment-only (delegated)       |
+| `propose_str_replace`   | ✅              | Available | Codebuff-only context                 |
+| `propose_write_file`    | ✅              | Available | Codebuff-only context                 |
+| `add_message`           | ✅              | Available | Codebuff-only context                 |
+| `set_messages`          | ✅              | Available | Codebuff-only context                 |
+| `ask_user`              | ✅              | Available | Codebuff-only context                 |
+| `lookup_agent_info`     | ✅              | Available | Codebuff-only context                 |
 
 ### Tools Not Available (By Design)
 
@@ -689,7 +691,7 @@ These tools are **only available in Codebuff context**, not in Symphony/OpenClaw
 **Implementation:** Symphony bridge acknowledges the spawn request and logs it server-side, but delegates actual agent spawning to the parent Codebuff/OpenClaw instance. This is **by design** to maintain the agent execution hierarchy:
 
 - **Symphony Bridge (port 4319):** AI model routing layer with tool execution for file/code operations
-- **Codebuff Bridge (port 4318):** Agent orchestration layer with spawn_agents support
+- **Worktree-local Symphony bridges (ports 4321-4328):** Per-worktree execution with Codebuff SDK integration
 - **OpenClaw Gateway:** Top-level coordinator that manages agent lifecycles
 
 When an agent running through Symphony makes a `spawn_agents` call, the tool returns an acknowledgment immediately. The parent orchestration layer (Codebuff/OpenClaw) handles the actual agent spawning, typically by invoking the appropriate agent via the Codebuff SDK or OpenClaw's agent management API.
@@ -995,6 +997,6 @@ paramName: z
 ## References
 
 - Tool implementations: `scripts/ops/integrations/model/symphony-openai-bridge.mjs`
-- Codebuff bridge: `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
+- Codebuff direct SDK: `scripts/ops/integrations/model/codebuff-direct.mjs`
 - Known issues: `docs/known-issues/`
 - Agent rules: `AGENTS.md`

@@ -680,7 +680,11 @@ operator-only protected env
 
 Documented harness ports (per `docs/harness/02-runtime-and-services.md`):
 
-- `4318` — Codebuff bridge (OpenAI-compatible HTTP gateway)
+- `4319` — Symphony agent router (control-plane entrypoint)
+- `4320` — Context7 MCP documentation service
+- `4321`-`4328` — Worktree-local Symphony execution bridges (wt1-wt8)
+- `18789` — OpenClaw gateway (local AI agent)
+- `18790` — Discord router (load-balances Discord requests to worktree bridges)
 
 Product runtime ports:
 
@@ -970,7 +974,7 @@ Phase 1 exit criteria:
 - [x] implement 90+ E2E tests for OpenClaw/Symphony integration
 - [x] define coverage-scope.json with 7-phase protected scope
 
-**Phase 3 completed:** All harness runtime surfaces classified and documented. Symphony Bridge (port 4319) with AI SDK tool execution and Codebuff Bridge (port 4318) fully implemented. Provider routing cascade with 38 providers across 4 tiers (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`). Dynamic tool-capability probing ensures only structured-tool-capable providers are selected. Comprehensive E2E testing (90+ tests) validates OpenClaw integration, provider cascade, and TUI workflows. Coverage strategy documented in 7 phases with Phase 1 (Contracts & Domain Primitives) active. All documentation surfaces current.
+**Phase 3 completed:** All harness runtime surfaces classified and documented. Symphony agent router (port 4319) with worktree-local execution bridges (ports 4321-4328) fully implemented. Codebuff SDK runs directly inside each worktree bridge (ADR-0003). Provider routing cascade with 42 providers across 4 tiers (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`). Dynamic tool-capability probing ensures only structured-tool-capable providers are selected. Comprehensive E2E testing (90+ tests) validates OpenClaw integration, provider cascade, and TUI workflows. Coverage strategy documented in 7 phases with Phase 1 (Contracts & Domain Primitives) active. All documentation surfaces current.
 
 Required inventory classified:
 
@@ -984,12 +988,12 @@ scripts/ops/symphony-credit-gate.mjs                        — ✅ canonical (p
 scripts/ops/nightly-ops-pass.mjs                            — ✅ canonical (orchestration)
 scripts/ops/email-ingest.mjs                                — ✅ canonical (integrations)
 scripts/ops/lib/notify.mjs                                  — ✅ canonical (notifications)
-scripts/ops/integrations/model/codebuff-openai-bridge.mjs  — ✅ canonical (provider bridge)
+scripts/ops/integrations/model/codebuff-direct.mjs          — ✅ canonical (Codebuff SDK, runs inside worktree bridges)
+scripts/ops/integrations/model/symphony-agent-router.mjs    — ✅ canonical (control-plane router)
 services/systemd/anqr-symphony-runner.service/.timer        — ⚠️ retired (no-op compatibility shim)
 services/systemd/anqr-queue-feeder.service/.timer           — ✅ canonical (scheduled)
 services/systemd/anqr-nightly.service/.timer                — ✅ canonical (scheduled)
 services/systemd/anqr-email-ingest.service/.timer           — ✅ canonical (scheduled)
-services/systemd/anqr-codebuff-bridge.service               — ✅ canonical (long-running)
 services/systemd/anqr-ops.env                               — ✅ canonical (environment)
 ```
 
@@ -1312,7 +1316,7 @@ This is the correct immediate order from here.
 4. rebuild launch-grade verification around the current claim (Phase 7)
 5. resolve the mobile claim truthfully before any 1.0 launch claim expansion (Phase 6)
 
-**Current focus:** Phase 4 ongoing maintenance. The harness is fully operational with 42-provider cascade across 4 tiers, including Symphony Bridge (port 4319) with AI SDK tool execution and dynamic tool-capability probing. All documentation updated to reflect Phase 3 completion and current testing strategy (90+ E2E tests, coverage-scope.json with 7 phases). Ready to begin Phase 5 API/MCP perimeter work when prioritized.
+**Current focus:** Phase 4 ongoing maintenance. The harness is fully operational with 42-provider cascade across 4 tiers, including Symphony agent router (port 4319) routing to worktree-local execution bridges with AI SDK tool execution, Codebuff SDK integration, and dynamic tool-capability probing. All documentation updated to reflect Phase 3 completion and current testing strategy (90+ E2E tests, coverage-scope.json with 7 phases). Ready to begin Phase 5 API/MCP perimeter work when prioritized.
 
 ---
 

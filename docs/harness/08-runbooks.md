@@ -10,7 +10,7 @@ This file is the index for active runbooks.
 - nightly dry-run
 - email ingest dry-run
 - Sonar scan and export
-- bridge services (codebuff & symphony)
+- bridge services (symphony agent router & worktree bridges)
 
 ## Current command surface
 
@@ -20,7 +20,6 @@ This file is the index for active runbooks.
 - `npm run queue:all:dry-run`
 - `npm run symphony:status`
 - `npm run nightly:dry-run`
-- `make codebuff-bridge`
 - `make symphony-bridge`
 
 ## Rule

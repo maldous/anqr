@@ -9,7 +9,15 @@ Read order:
 
 ## Harness Context
 
-ANQR uses a Symphony Bridge (port 4319) and Codebuff Bridge (port 4318) as OpenAI-compatible gateways. Both run as user-level systemd services.
+ANQR uses an **all-in-one Symphony Bridge** architecture (ADR-0003) where each worktree-local bridge provides:
+- AI completion (`/v1/chat/completions`) with provider cascade
+- Codebuff SDK operations (tool use, code edits, file operations)
+- Worktree-isolated execution via systemd `WorkingDirectory`
+
+**Agent router:** port 4319 (control-plane, routes to worktree bridges)
+**Worktree bridges:** ports 4321-4328 (wt1-wt8, isolated per worktree)
+
+There is no standalone Codebuff bridge service in the active design.
 
 ### Worktree execution environment (OPERATIONAL as of 2026-03-31)
 
@@ -39,11 +47,13 @@ Symphony runner supports concurrent execution via git worktrees with **8 concurr
 - `symphony-credit-gate.mjs` — 4-tier provider selection (paid → free-cloud → local-proxy → local-safety-net)
 - `symphony-adaptive-context.mjs` — dynamic per-provider token ceilings, rate-limit throttling, TPM/RPM tracking
 - `symphony-bridge-truncation.mjs` — static token limits and message truncation
-- `codebuff-openai-bridge.mjs` — Codebuff SDK exposed as OpenAI-compatible HTTP
+- `codebuff-direct.mjs` — Codebuff SDK execution (runs inside each worktree-local bridge)
+- `symphony-agent-router.mjs` — Control-plane router for worktree-local bridges
 
 ### Bridge contract
 
-- Both `symphony-openai-bridge.mjs` and `codebuff-openai-bridge.mjs` return `_symphonyResult` in their completion payloads
+- `symphony-openai-bridge.mjs` returns `_symphonyResult` in completion payloads
+- `codebuff-direct.mjs` returns `_symphonyResult` when invoked from within a worktree bridge
 - `scripts/ops/runtime/symphony/symphony-agent.mjs` consumes `_symphonyResult` directly and falls back to inference only when necessary
 - Symphony bridge requests use a 15-minute request timeout for long-running turns
 - Codex SDK execution through Symphony defaults to `CODEX_SANDBOX_MODE=danger-full-access` unless explicitly overridden
@@ -92,7 +102,7 @@ The bridge dynamically adjusts per-provider context limits at runtime:
 
 4. **Commit & push first**: `git add -A && git commit -m "..." && git push`
 
-5. **Restart bridge**: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
+5. **Restart bridge**: `systemctl --user restart anqr-symphony-bridge` (and/or worktree instances)
 
 6. **RESTART TASK EXECUTION:**
    ```bash

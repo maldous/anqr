@@ -1,7 +1,8 @@
-# anqr-watchdog.service — Watchdog for Symphony and Codebuff bridges
+# anqr-watchdog.service — Watchdog for Symphony router and executors
 #
-# Monitors both bridges and automatically rolls back to previous git commit
-# if either service fails to start within 60 seconds after a restart.
+# Monitors the Symphony router (control plane) and worktree-local executors,
+# automatically rolling back to previous git commit if a service fails to
+# start within 60 seconds after a restart.
 #
 # Install as user service:
 #   cp services/systemd/anqr-watchdog.service ~/.config/systemd/user/
@@ -9,7 +10,7 @@
 #   systemctl --user enable --now anqr-watchdog.service
 
 [Unit]
-Description=ANQR Symphony/Codebuff Bridge Watchdog
+Description=ANQR Symphony Router and Executor Watchdog
 After=network-online.target
 Wants=network-online.target
 

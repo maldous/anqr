@@ -6,7 +6,7 @@
 
 Integration tests that interact with Symphony or Codebuff bridges can encounter "address already in use" errors when:
 
-- Production bridges are already running on ports 4318/4319 (via systemd)
+- Production bridges are already running on port 4319+ (via systemd)
 - Multiple test suites run concurrently
 - Tests are run repeatedly during development
 
@@ -105,13 +105,13 @@ Spawns a Symphony bridge instance on a dynamic port.
 
 #### `spawnCodebuffBridge(options?)`
 
-Same as `spawnSymphonyBridge` but for Codebuff bridge (default port: 14318).
+**DEPRECATED:** The standalone Codebuff bridge has been retired (ADR-0003). Codebuff SDK now runs inside each worktree-local Symphony bridge.
 
 ### Port Ranges
 
-- **Production**: 4318 (Codebuff), 4319 (Symphony)
-- **Tests**: 14318+ (Codebuff), 14319+ (Symphony)
-- **Concurrent tests**: 15318+, 16318+, etc.
+- **Production**: 4319 (Symphony router), 4321-4328 (worktree bridges)
+- **Tests**: 14319+ (Symphony)
+- **Concurrent tests**: 15319+, 16319+, etc.
 
 ### Cleanup
 

@@ -24,10 +24,6 @@
           "name": "Symphony Codebuff SDK"
         },
         {
-          "id": "symphony/codebuff-bridge",
-          "name": "Symphony Codebuff Bridge"
-        },
-        {
           "id": "symphony/groq",
           "name": "Symphony Groq"
         },
@@ -79,17 +75,6 @@
           "name": "Qwen3 Coder Next"
         }
       ]
-    },
-    "codebuff-bridge": {
-      "baseUrl": "http://127.0.0.1:4318/v1",
-      "apiKey": "local-bridge",
-      "api": "openai-completions",
-      "models": [
-        {
-          "id": "codebuff/base",
-          "name": "Codebuff Base (via bridge)"
-        }
-      ]
     }
   },
   "agents": {
@@ -99,7 +84,6 @@
         "fallbacks": [
           "symphony-bridge/symphony/codex",
           "symphony-bridge/symphony/codebuff",
-          "symphony-bridge/symphony/codebuff-bridge",
           "symphony-bridge/symphony/groq",
           "symphony-bridge/symphony/mistral",
           "symphony-bridge/symphony/gemini",
@@ -111,8 +95,7 @@
           "symphony-bridge/symphony/text",
           "ollama/qwen2.5-coder:0.5b",
           "ollama/qwen2.5-coder:3b-instruct",
-          "ollama/qwen3-coder-next:latest",
-          "codebuff-bridge/codebuff/base"
+          "ollama/qwen3-coder-next:latest"
         ]
       },
       "tools": {
