@@ -13,7 +13,7 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 
 ## Tool availability
 
-**Available tools for agents:**
+**Available tools for agents (native Codebuff/Freebuff):**
 
 - `read_files` — Read multiple files from filesystem
 - `str_replace` — Replace strings in files
@@ -22,23 +22,32 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 - `code_search` — Search code using ripgrep
 - `list_directory` — List directory contents
 - `read_subtree` — Read directory tree with contents
-- `memory_search` — Search MEMORY.md and knowledge files
-- `memory_get` — Get full memory file content
+- `find_files` — Find files by natural language description
+- `glob` — Find files matching patterns
 - `run_file_change_hooks` — Execute file change hooks (accepts `files` as array)
 - `think_deeply` — Deep reasoning for complex tasks
-- `update_subgoal` — Update task progress tracking
-- `add_subgoal` — Add new subgoal for complex tasks
-- `find_files` — Find files by natural language description
 - `web_search` — Search web via Linkup API (requires API key)
 - `read_docs` — Fetch library documentation via Context7 API (requires API key)
-- `search_linear_issues` — Search local Linear RAG index for prior issue context
 - `spawn_agents` — Spawn multiple agents in parallel
-- `add_message` — Add message to conversation (Codebuff context only)
-- `set_messages` — Set conversation history (Codebuff context only)
-- `propose_str_replace` — Propose edits without applying (Codebuff context only)
-- `propose_write_file` — Propose file write without applying (Codebuff context only)
-- `ask_user` — Ask user questions (Codebuff context only)
+- `add_message` — Add message to conversation
+- `set_messages` — Set conversation history
+- `propose_str_replace` — Propose edits without applying
+- `propose_write_file` — Propose file write without applying
+- `ask_user` — Ask user questions (requires interactive session)
+- `suggest_followups` — Suggest followup prompts to user
+- `write_todos` — Write task list for tracking progress
+- `set_output` — Set agent output (for subagents)
+- `end_turn` — Signal turn completion
+- `skill` — Load skill instructions
 - `lookup_agent_info` — Get agent metadata
+
+**Additional tools (Symphony bridge only — NOT available in native Codebuff):**
+
+- `memory_search` — Search MEMORY.md and knowledge files
+- `memory_get` — Get full memory file content
+- `update_subgoal` — Update task progress tracking
+- `add_subgoal` — Add new subgoal for complex tasks
+- `search_linear_issues` — Search local Linear RAG index for prior issue context
 
 **Important notes:**
 
@@ -49,10 +58,8 @@ This file is the **first-read execution contract** for AI agents working on ANQR
   - `str_replace` expects `replacements` as an array: `{"replacements": [{"old": "...", "new": "..."}]}`
   - `spawn_agents` expects `agents` as an array: `{"agents": [{"agent_type": "..."}]}`
   - And all other array-accepting tools follow the same pattern
-  - **PREFERRED:** Always pass arrays in proper format: `{"files": ["path.ts"]}`
-  - **TOLERATED:** Single strings are auto-normalized: `{"files": "path.ts"}` → `["path.ts"]`
-  - **TOLERATED:** JSON-encoded arrays are parsed: `{"files": "[\"a.ts\", \"b.ts\"]"}` → `["a.ts", "b.ts"]`
-  - This defensive handling works around AI SDK/provider bugs that send strings instead of arrays
+  - **REQUIRED:** Always pass arrays in proper format: `{"files": ["path.ts"]}` — native Codebuff does NOT auto-normalize
+  - Symphony bridge only: single strings may be auto-normalized via `z.preprocess()`, but do NOT rely on this
 - Web search and docs tools require API keys to be configured
 
 ## Tool implementation by context
@@ -66,8 +73,6 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 - `read_files` — Read multiple files from filesystem
 - `write_file` — Create or overwrite files
 - `str_replace` — Replace strings in files
-- `read` — Read single file (alias for `read_files`)
-- `write` — Write file (alias for `write_file`)
 
 **Code navigation:**
 
@@ -79,22 +84,39 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 
 **Execution:**
 
-- `run_terminal_command` — Execute shell commands (Codebuff-native name)
-- `exec` — Execute shell commands (AI SDK name)
-- `shell` — Execute shell commands (OpenAI compatibility alias)
-- `local_shell` — Execute shell commands (cross-provider alias)
+- `run_terminal_command` — Execute shell commands
 - `run_file_change_hooks` — Execute file change hooks
 
-**Memory:**
+**Reasoning and orchestration:**
 
-- `memory_search` — Search MEMORY.md and knowledge files
-- `memory_get` — Get full memory file content
+- `think_deeply` — Deep reasoning for complex tasks
+- `spawn_agents` — Spawn multiple agents in parallel (behavior differs by context — see "Agent spawning" below)
 
 **External APIs** (when API keys configured):
 
 - `web_search` — Search web via Linkup API (requires `LINKUP_API_KEY`)
 - `read_docs` — Fetch library documentation via Context7 API (requires `CONTEXT7_API_KEY`)
-- `search_linear_issues` — Search exported/indexed Linear issues via local Linear RAG index
+
+### Symphony bridge additional tools
+
+These tools and aliases are available **only** in the Symphony bridge context. Do NOT use them in native Codebuff/Freebuff.
+
+**Tool aliases** (Symphony bridge shims for cross-provider compatibility):
+
+- `read` — alias for `read_files`
+- `write` — alias for `write_file`
+- `exec` — alias for `run_terminal_command`
+- `shell` — alias for `run_terminal_command`
+- `local_shell` — alias for `run_terminal_command`
+
+**Memory tools** (Symphony bridge only):
+
+- `memory_search` — Search MEMORY.md and knowledge files
+- `memory_get` — Get full memory file content
+
+**Additional external APIs** (Symphony bridge only):
+
+- `search_linear_issues` — Search local Linear RAG index for prior issue context
 - `browser_search` — Web search (Groq compatibility alias)
 - `visit_website` — Fetch web pages (best-effort via web search)
 
@@ -105,11 +127,12 @@ Agents should prefer ANQR's local context systems before broad or external searc
 - **Library/framework questions:** use `read_docs` first
   - Symphony bridge resolves via the local Context7 MCP/HTTP service on port `4320` first
   - cloud Context7 is fallback only when local resolution is unavailable
-- **Prior issue context:** use `search_linear_issues` before direct Linear/API digging
+- **Prior issue context (Symphony bridge only):** use `search_linear_issues` before direct Linear/API digging
   - this uses ANQR's local Linear RAG index for fast historical issue retrieval
-- **Repository discovery:** use `find_files` or `file_search` before broad `code_search`
-  - `find_files` uses ANQR's hybrid retrieval stack (BM25 + semantic embeddings/RAG when available)
-  - `file_search` routes exact string/pattern queries to `code_search` and natural-language prompts to `find_files`
+  - `search_linear_issues` is NOT available in native Codebuff — use `code_search` or `find_files` instead
+- **Repository discovery:** use `find_files` or `code_search`
+  - `find_files` locates files by natural language description
+  - `code_search` finds exact strings/patterns via ripgrep
 - **Exact symbol/string lookup:** use `code_search` after file discovery narrows the search surface
 - **External web lookups:** use `web_search` only when current external information is actually needed, or when local docs/repo context are insufficient
 
@@ -117,10 +140,11 @@ This keeps agent operation cheaper, faster, and more stable than defaulting to b
 
 **Progress tracking:**
 
-- `think_deeply` — Deep reasoning for complex tasks
-- `add_subgoal` — Add new subgoal for complex tasks
-- `update_subgoal` — Update task progress tracking
-- `thinker` — Think deeply (compatibility alias)
+- `think_deeply` — Deep reasoning for complex tasks (available in all contexts)
+- `add_subgoal` — Add new subgoal (Symphony bridge only — acknowledgment-only)
+- `update_subgoal` — Update task progress (Symphony bridge only — acknowledgment-only)
+
+Note: `thinker` is a **spawn_agents agent type**, not a tool. Use `think_deeply` as a tool, or spawn `thinker` as an agent via `spawn_agents`.
 
 ### Agent spawning (delegated to parent)
 
@@ -135,7 +159,7 @@ This keeps agent operation cheaper, faster, and more stable than defaulting to b
 ```json
 {
   "agents": [
-    { "agent_type": "basher", "prompt": "run tests" },
+    { "agent_type": "basher", "prompt": "describe test results", "params": { "command": "npm test" } },
     { "agent_type": "researcher-web", "prompt": "search for materials" }
   ]
 }
@@ -143,13 +167,27 @@ This keeps agent operation cheaper, faster, and more stable than defaulting to b
 - **Symphony bridge:** Uses `.preprocess()` for auto-normalization (string → array)
 - **Codebuff SDK:** Requires strict array format — pass actual JSON arrays, not strings or objects
 
+**Agent types and required params (for spawn_agents):**
+
+- `basher` — REQUIRES `params.command` (terminal command). Also accepts `prompt` (what to extract), `params.rawOutput`, `params.timeout_seconds`
+- `file-picker` — REQUIRES `prompt` (what files to find). Optionally `params.directories`
+- `researcher-web` — REQUIRES `prompt` (question to research)
+- `researcher-docs` — REQUIRES `prompt` (documentation question)
+- `thinker` / `thinker-gpt` — REQUIRES `prompt` (problem to think about)
+- `opus-agent` / `gpt-5-agent` — REQUIRES `prompt`. Optionally `params.filePaths`
+- `editor` — No prompt or params needed (inherits conversation context)
+- `code-reviewer` — REQUIRES `prompt` (what to review)
+- `tmux-cli` — REQUIRES `prompt` (what to do). Optionally `params.command`
+- `browser-use` — REQUIRES `prompt` (what to do). Optionally `params.url`
+- `harness-helper` — No prompt or params needed
+
 **Codebuff context only:**
 
 - `lookup_agent_info` — Get agent metadata (not available in Symphony/OpenClaw)
 
 ### Codebuff-only tools
 
-These tools are **NOT available** in Symphony bridge or OpenClaw contexts:
+These tools are available in native Codebuff/Freebuff but **NOT available** in Symphony bridge or OpenClaw contexts:
 
 **Proposal tools** (preview mode):
 
@@ -160,7 +198,6 @@ These tools are **NOT available** in Symphony bridge or OpenClaw contexts:
 
 - `add_message` — Add message to conversation history
 - `set_messages` — Set conversation history
-- `message` — Add message (compatibility alias)
 
 **Interactive prompts:**
 
@@ -173,16 +210,14 @@ These tools are **NOT available** in Symphony bridge or OpenClaw contexts:
 
 **Planning:**
 
-- `create_plan` — Create step-by-step plan
 - `write_todos` — Write task list
 - `suggest_followups` — Suggest followup prompts
 
 **Other Codebuff-native tools:**
 
-- `set_output` — Set agent output
+- `set_output` — Set agent output (for subagents)
 - `skill` — Load skill instructions
 - `apply_patch` — Apply Codex-style patches
-- `browser_logs` — Check browser console (limited in headless environments)
 
 ### Symphony bridge acknowledgment-only tools
 
@@ -197,13 +232,13 @@ These tools are implemented in Symphony bridge as **acknowledgment-only** — th
 
 This allows agents to organize work and track progress across all provider contexts without requiring Symphony bridge to implement full agent orchestration.
 
-### Cross-provider compatibility tools
+### Cross-provider compatibility tools (Symphony bridge ONLY)
 
-Symphony bridge includes compatibility shims for tools from other platforms:
+Symphony bridge includes compatibility shims for tools from other platforms. These do NOT exist in native Codebuff/Freebuff.
 
 **Groq/OpenAI compatibility:**
 
-- `code_interpreter` — Execute code (routes to `exec` or language-specific runtime)
+- `code_interpreter` — Execute code (routes to `run_terminal_command`)
 - `file_search` — Search files (routes to `code_search` or `find_files`)
 - `image_generation` — Not available (returns helpful error)
 - `wolfram_alpha` — Not available (suggests `code_interpreter` instead)

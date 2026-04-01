@@ -188,11 +188,28 @@ These tools require array-typed parameters. You MUST pass actual JSON arrays, no
 // str_replace — WRONG (will fail!)
 {"path": "file.ts", "replacements": {"old": "foo", "new": "bar"}}
 
-// spawn_agents — CORRECT (array format)
-{"agents": [{"agent_type": "basher", "prompt": "..."}]}
+// spawn_agents — CORRECT (array format with required params)
+{"agents": [{"agent_type": "basher", "prompt": "describe output", "params": {"command": "npm test"}}]}
+// spawn_agents — WRONG (basher REQUIRES params.command — will fail without it!)
+{"agents": [{"agent_type": "basher", "prompt": "run tests"}]}
 \`\`\`
 
 Remember: ALL array parameters MUST be actual JSON arrays \`[]\`, never strings or bare objects.
+
+## spawn_agents: agent types and required params
+
+When using \`spawn_agents\`, each agent type has specific param requirements:
+
+- \`basher\`: REQUIRES \`params.command\` (the terminal command to run). Also accepts \`prompt\` (what to extract from output) and \`params.rawOutput\`, \`params.timeout_seconds\`.
+- \`file-picker\`: REQUIRES \`prompt\` (what files to find). Optionally \`params.directories\`.
+- \`researcher-web\`: REQUIRES \`prompt\` (question to research).
+- \`researcher-docs\`: REQUIRES \`prompt\` (documentation question).
+- \`thinker\`: REQUIRES \`prompt\` (problem to think about).
+- \`opus-agent\`: REQUIRES \`prompt\`. Optionally \`params.filePaths\`.
+- \`editor\`: No prompt or params needed (inherits conversation context).
+- \`code-reviewer\`: REQUIRES \`prompt\` (what to review).
+- \`tmux-cli\`: REQUIRES \`prompt\` (what to do). Optionally \`params.command\`.
+- \`browser-use\`: REQUIRES \`prompt\` (what to do). Optionally \`params.url\`.
 
 ## Available tools
 

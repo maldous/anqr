@@ -46,6 +46,7 @@
     "Preflights",
     "PREVALIDATION",
     "SKRS",
+    "reflog",
     "worktree",
     "worktrees",
     "creds",

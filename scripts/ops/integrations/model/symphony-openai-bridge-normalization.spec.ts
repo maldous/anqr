@@ -252,11 +252,11 @@ describe("Tool Parameter Normalization (Symphony Bridge)", () => {
     it("should accept array of agents", async () => {
       const result = await schema.parseAsync([
         { agent_type: "file-picker" },
-        { agent_type: "basher", prompt: "run tests" },
+        { agent_type: "basher", prompt: "describe test results", params: { command: "npm test" } },
       ]);
       expect(result).toEqual([
         { agent_type: "file-picker" },
-        { agent_type: "basher", prompt: "run tests" },
+        { agent_type: "basher", prompt: "describe test results", params: { command: "npm test" } },
       ]);
     });
 
