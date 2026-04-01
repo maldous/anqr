@@ -44,7 +44,7 @@ export const PROVIDER_MAX_INPUT_TOKENS = {
   "openrouter-free": 16_000, // auto-routed, varies
   "openrouter-nemotron-nano-30b": 16_000, // 30B, 128K context
   "openrouter-qwen3-next-80b": 24_000, // 80B, 128K context
-  "openrouter-step3-5-flash": 16_000, // step-3.5-flash
+  "openrouter-step3-5-flash": 12_000, // step-3.5-flash (conservative - model has tight limits)
   "openrouter-trinity-mini": 8_000, // small model
   "openrouter-nemotron-nano-9b": 16_000, // 9B, 128K context
   "openrouter-minimax-m2.5": 24_000, // minimax, 1M context

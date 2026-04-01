@@ -296,21 +296,20 @@ function startDiscordMonitoring() {
                 if (content && content.trim().length > 0) {
                   // Filter out internal activity markers that the AI SDK includes in result.text
                   // These would duplicate what we already log via DEBUG
-                  const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
-                  // Filter out standalone light bulb emoji from Discord notifications
-                  const trimmed = content.trim();
-                  const isLightbulb = trimmed === "💡" || content === "\n💡 " || content === "💡 ";
-                  if (!isActivityMarker.test(trimmed) && !isLightbulb) {
-                    fullText += content;
-                    // Use safe requestId in case message became undefined during stream processing
-                    const streamRequestId = message?.id ? `discord-cmd-${message.id}` : `discord-cmd-${Date.now()}`;
-                    streamDiscordUpdate(content, {
-                      emoji: "",
-                      requestId: streamRequestId,
-                    }).catch(() => {
-                      /* ignore */
-                    });
-                  }
+              const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
+              // Don't filter out thinking emoji or reasoning content - forward everything except activity markers
+              const trimmed = content.trim();
+              if (!isActivityMarker.test(trimmed)) {
+                fullText += content;
+                // Use safe requestId in case message became undefined during stream processing
+                const streamRequestId = message?.id ? `discord-cmd-${message.id}` : `discord-cmd-${Date.now()}`;
+                streamDiscordUpdate(content, {
+                  emoji: "",
+                  requestId: streamRequestId,
+                }).catch(() => {
+                  /* ignore */
+                });
+              }
                 }
               } catch {
                 // Parse error - ignore malformed JSON chunk
@@ -3907,9 +3906,10 @@ async function invokeWithAIInner(provider, messages, options = {}) {
 
       // Process stream parts based on type
       if (part.type === "reasoning-start") {
-        // Only emit newline if we actually have reasoning content coming
-        // (emittedReasoningContent will be set when we get non-empty reasoning-delta)
-        // For now, don't emit - wait for actual content
+        // Emit thinking indicator when reasoning starts
+        if (onChunk) {
+          onChunk({ type: "text", text: "\n💭 " });
+        }
       } else if (part.type === "reasoning-delta") {
         // CRITICAL BUG FIX (ANQ-XXX): Accumulate reasoning-delta into fullText
         // Previously, reasoning-delta was only forwarded to onChunk but never
