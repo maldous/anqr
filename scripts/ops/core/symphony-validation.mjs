@@ -30,7 +30,7 @@ export const VALIDATION_MANIFEST = {
   },
   tests: {
     command:
-      "NODE_OPTIONS='--no-experimental-webstorage' npx vitest run --maxWorkers=100% --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts' --exclude 'tests/unit/qr-generator-perf-profile.spec.ts'",
+      "NODE_OPTIONS='--no-experimental-webstorage' npx vitest run --maxWorkers=1 --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts' --exclude 'tests/unit/qr-generator-perf-profile.spec.ts'",
     timeoutMs: 120_000,
     fullProject: true,
   },
