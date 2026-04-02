@@ -30,7 +30,7 @@ Sends notifications to Discord channels via OpenClaw Gateway's hook API. Used by
 - `OPENCLAW_GATEWAY_PORT` - OpenClaw Gateway port (default: 18789)
 - `OPENCLAW_GATEWAY_TOKEN` - Token for OpenClaw Gateway authentication (required)
 - `DISCORD_TEXT_CHANNEL_ID` - Discord text channel for notifications (default: 1486262758256410646)
-- `DISCORD_VOICE_CHANNEL_ID` - Discord voice channel (default: 1486262758256410647)
+- `DISCORD_VOICE_CHANNEL_ID` - Discord voice channel for TTS/voice only (default: 1486262758256410647) — not used for text routing
 
 **Setup:**
 
