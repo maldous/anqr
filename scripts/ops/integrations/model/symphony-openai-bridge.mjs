@@ -1377,10 +1377,11 @@ function isVoiceNoise(text) {
   if (/all\s+providers?\s+(fail|exhaust)/i.test(t)) return true;
   if (/no\s+providers?\s+available/i.test(t)) return true;
 
-  // Anti-echo: bridge announcement patterns (prevent TTS→STT feedback loops)
-  if (/^starting work on\s+\S/i.test(t)) return true;
-  if (/^finished\s+\S/i.test(t)) return true;
+  // Anti-echo: Symphony bridge internal routing (these are never speakable)
   if (/^symphony bridge\b/i.test(t)) return true;
+  // Note: "starting work on" and "finished" announcements are intentional -
+  // user wants to hear issue start/finish notifications. The actual TTS->STT
+  // feedback loop prevention happens at the input side (voice transcript detection).
   if (/^resolving\s+\d+\s+merge\s+conflict/i.test(t)) return true;
 
   // Internal bridge / harness status
@@ -1731,8 +1732,7 @@ async function pushWorktreeToMain() {
       logInfo(`📤 No staged changes to push`);
       return;
     }
-    const worktreeLabel = process.env.ANQR_WORKTREE_ID || "unknown";
-    execSync(`git commit -m "auto(${worktreeLabel}): push work to main"`, { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+    execSync(`git commit -m "chore(harness): sync worktree changes to main"`, { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
