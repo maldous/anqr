@@ -147,33 +147,39 @@ function shouldProcessEvent(event) {
   }
 
   if (action === "update") {
-    // Only trigger on ACTUAL STATE CHANGES, not metadata updates (comments, labels, etc.)
-    if (!previousStateName || previousStateName === stateName) {
-      // State unchanged - this is a metadata-only update (comment, label, description, priority)
-      // Do NOT trigger execution - the runner already has the issue in its queue
-      logDebug(`Ignoring metadata-only update for ${issue.identifier} (state unchanged: ${stateName})`);
-      return null;
-    }
-
-    // State actually changed - evaluate the transition
     const readyStates = ["Todo", "In Progress"];
-    
+
+    // If moving TO a ready state (Todo/InProgress), ALWAYS trigger - even without previousStateName
+    // This handles cases where Linear doesn't provide previousValues (e.g., API-created issues)
+    // Moving into a ready state is inherently meaningful - the issue is ready for work
     if (readyStates.includes(stateName)) {
-      // Moved TO a ready state - TRIGGER execution
-      // This catches: Backlog→Todo, Done→Todo (reopened), Backlog→In Progress, etc.
+      // If we have previousStateName and it changed, include that info; otherwise note unknown previous
+      const reason = previousStateName && previousStateName !== stateName
+        ? `state changed from ${previousStateName} to ${stateName}`
+        : `moved to ${stateName} (previous state unknown)`;
+
+      logInfo(`Issue ${issue.identifier} moved to ${stateName} - triggering execution`);
       return {
         identifier: issue.identifier,
         title: issue.title || "(no title)",
         action: "update",
         state: stateName,
-        previousState: previousStateName,
+        previousState: previousStateName || null,
         url: issue.url,
-        reason: `state changed from ${previousStateName} to ${stateName}`,
+        reason,
       };
     }
 
-    // Moved TO Backlog/Done/Canceled - don't trigger (not ready or already complete)
-    logInfo(`Ignoring state change to ${stateName}: ${issue.identifier}`);
+    // If we have previousStateName and it's different from current, it's a state change TO non-ready
+    // Only ignore if state actually changed; otherwise could be metadata-only update
+    if (previousStateName && previousStateName !== stateName) {
+      logInfo(`Ignoring state change to ${stateName}: ${issue.identifier}`);
+      return null;
+    }
+
+    // No previousStateName or state unchanged - this is a metadata-only update (comment, label, etc.)
+    // Do NOT trigger execution - the runner already has the issue in its queue
+    logDebug(`Ignoring metadata-only update for ${issue.identifier} (state unchanged: ${stateName})`);
     return null;
   }
 
