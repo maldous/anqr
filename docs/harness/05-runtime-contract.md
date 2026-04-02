@@ -61,6 +61,14 @@ Maintained user services:
 
 Legacy services are deprecated; the current architecture uses Router/Executor model.
 
+Requests are distributed to executors via **round-robin** among equally-loaded worktrees (Discord router + Symphony agent router).
+
+Each executor's Symphony bridge automatically:
+
+- **Syncs from `origin/main`** before each request (`syncWorktreeFromMain()`)
+- **Pushes changes to `origin/main`** after each completion (`pushWorktreeToMain()`)
+- **Announces events via voice** at startup, request start, and completion (`voiceAnnounce()`)
+
 These services assume:
 
 - user-level systemd

@@ -2,7 +2,7 @@
 
 ## Architecture Overview
 
-ANQR's Discord integration consists of two distinct components:
+ANQR's Discord integration consists of two distinct components, plus voice-aware features in the Symphony bridge.
 
 ### 0. OpenClaw Gateway (standalone service)
 
@@ -58,6 +58,63 @@ ANQR's Discord integration consists of two distinct components:
 - Dependencies: `@discordjs/voice`, `libsodium-wrappers`, `ffmpeg`
 
 **Scope**: Managed externally. ANQR code can _invoke_ voice features via OpenClaw Gateway but cannot configure them.
+
+## Symphony Bridge Voice Features
+
+The Symphony bridge (`symphony-openai-bridge.mjs`) includes several voice-aware features:
+
+### Voice Announcements
+
+`voiceAnnounce(text)` is a fire-and-forget wrapper around `voiceSpeakTool()` that announces major bridge events via voice. Non-blocking — silently ignores failures (e.g., no voice session active).
+
+**Events announced:**
+
+- **Bridge startup:** "Symphony bridge is online."
+- **New request:** "Starting work on [issue title or task description]."
+- **Request completion:** "Finished [issue title or task]." (all 3 paths: codebuff direct, streaming, non-streaming)
+
+### Voice-Friendly System Prompt
+
+When a request originates from a Discord voice channel (detected by matching OpenClaw's `"Voice transcript from speaker ..."` prompt format via `VOICE_TRANSCRIPT_RE`), the bridge injects `VOICE_SYSTEM_PROMPT` into the messages array. This instructs the LLM to:
+
+- Respond in natural, conversational spoken language only
+- Never use code blocks, inline code, markdown, bullet points, or numbered lists
+- Never include URLs, file paths, or technical symbols
+- Keep responses brief — a few sentences at most
+
+The voice system prompt is placed after existing system messages for proper precedence.
+
+### Voice Noise Filter
+
+`isVoiceNoise(text)` filters operational noise from being spoken:
+
+- Provider failure/retry messages
+- Rate limit warnings
+- Probe results
+- Stack traces and error dumps
+- Bridge status messages
+
+### Text-to-Speech Sanitizer
+
+`sanitizeTextForSpeech(text)` is a 13-step pipeline that humanizes text for TTS:
+
+1. Strip fenced code blocks → "code block omitted"
+2. Strip inline HTML tags
+3. Strip markdown links (keep link text)
+4. Simplify inline code (keep short names, replace complex code with "code")
+5. URLs → "a link"
+6. File paths → just the filename
+7. Markdown headers → plain text
+8. Bold/italic markers removed
+9. Emoji stripped
+10. Special chars that sound bad when read aloud removed
+11. Collapse whitespace
+12. Truncate at 500 chars (on word boundary)
+13. Final trim
+
+### Voice Speak Tool
+
+`voiceSpeakTool({ text, guildId })` applies the noise filter + sanitizer before sending text to the OpenClaw Gateway's `/tools/invoke` endpoint for TTS playback.
 
 ## Testing Voice Functionality
 
@@ -151,6 +208,19 @@ The test script `scripts/ops/integrations/notifications/test-discord.mjs` includ
 - `.openclaw/openclaw.json` - OpenClaw Gateway configuration
 - `docs/harness/02-runtime-and-services.md` - Service documentation
 - `knowledge.md` - Service restart procedures and Discord streaming behavior
+
+---
+
+## Related Exports
+
+All voice functions and constants are exported from `symphony-openai-bridge.mjs` for testability:
+
+- `voiceSpeakTool` — Main tool for speaking text via OpenClaw
+- `voiceAnnounce` — Fire-and-forget event announcer
+- `isVoiceNoise` — Noise filter predicate
+- `sanitizeTextForSpeech` — 13-step TTS sanitizer
+- `VOICE_TRANSCRIPT_RE` — Regex for detecting voice-originated requests
+- `VOICE_SYSTEM_PROMPT` — System prompt for voice-friendly responses
 
 ---
 

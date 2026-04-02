@@ -6,7 +6,7 @@
 
 Discord requests flow through a **single OpenClaw Gateway instance** which provides the Discord bot relay. OpenClaw uses Symphony Bridge for AI processing, routing through the Discord Request Router to isolated worktrees (wt5-wt8).
 
-**Current status (2026-03-31):** All Discord services **OPERATIONAL**. All config conflicts resolved. All 8 phases of validation complete (Phases 0-7 passed, Phase 8 documentation finalized). See primary doc for evidence.
+**Current status (2026-04-02):** All Discord services **OPERATIONAL**. All config conflicts resolved. All 8 phases of validation complete. Round-robin routing and automatic git sync/push enabled. See primary doc for evidence.
 
 ## OpenClaw's Role
 
@@ -63,7 +63,7 @@ This eliminates the separate Codebuff bridge service and caching defects. See `d
 - **Port:** 18790
 - **Service:** `anqr-discord-router.service`
 - **Implementation:** `scripts/ops/integrations/model/discord-request-router.mjs`
-- Least-loaded worktree selection
+- Least-loaded worktree selection with **round-robin** among equally-loaded worktrees
 - Rebases `cwd` in request payload to target worktree path
 - Returns 429 when all 4 worktrees at capacity
 
@@ -87,16 +87,27 @@ This eliminates the separate Codebuff bridge service and caching defects. See `d
 
 1. **Discord user sends message** → OpenClaw Gateway (port 18789)
 2. **Gateway forwards to provider:** `POST http://127.0.0.1:18790/v1/chat/completions` (via symphony-bridge config)
-3. **Router selects worktree:** Least-loaded of wt5-wt8
+3. **Router selects worktree:** Round-robin among least-loaded of wt5-wt8
 4. **Router proxies to bridge:** `POST http://127.0.0.1:432{i}/v1/chat/completions` with `X-Worktree-ID: wt{i}`
-5. **Bridge executes in worktree:**
+5. **Bridge syncs worktree:** `syncWorktreeFromMain()` — fetches and merges `origin/main` (non-fatal on failure)
+6. **Bridge executes in worktree:**
    - AI completion via provider cascade
    - Codebuff SDK operations (integrated)
    - Tool execution (file ops, git, etc.)
    - All scoped to `/home/user/src/anqr-wt{i}` via `WorkingDirectory`
-6. **Response streams back:** Bridge → Router → Gateway → Discord
+7. **Bridge pushes changes:** `pushWorktreeToMain()` — commits and pushes to `origin/main` (with retry/rebase)
+8. **Response streams back:** Bridge → Router → Gateway → Discord
 
 **Note:** No cwd rewriting needed — systemd `WorkingDirectory` ensures correct working directory from process start.
+
+## Git Sync/Push (Automatic)
+
+As of 2026-04-02, the Symphony bridge automatically syncs and pushes git changes:
+
+- **Before each request:** `syncWorktreeFromMain()` fetches `origin/main` and merges (ff-only first, regular merge fallback, abort on conflict)
+- **After each completion:** `pushWorktreeToMain()` stages, commits, and pushes to `origin/main` (up to 3 retries with rebase)
+- Both are non-fatal — failures log warnings but don't block request processing
+- This ensures all worktrees stay up to date and share their work automatically
 
 ## Resolved Defects (External Review 2026-03-31)
 
@@ -175,4 +186,4 @@ systemctl --user enable --now openclaw-gateway.service
 
 ---
 
-**Last Updated:** 2026-03-31
+**Last Updated:** 2026-04-02

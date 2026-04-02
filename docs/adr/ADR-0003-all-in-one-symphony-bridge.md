@@ -35,6 +35,7 @@ Each Symphony executor instance (`anqr-symphony-executor@{1-8}.service`) will:
 2. Execute Codebuff SDK operations (tool use, code edits, file operations)
 3. Run within its designated worktree via systemd `WorkingDirectory`
 4. Maintain its own isolated provider cascade and session state
+5. Automatically sync from `origin/main` before each request and push changes after completion
 
 This eliminates:
 

@@ -4,9 +4,9 @@
 
 Git worktrees enable multiple concurrent Symphony runner instances to operate independently on the same repository without conflicts. Each worktree provides an isolated working directory with its own `HEAD`, `index`, and file state, while sharing the underlying git object store.
 
-**Status:** Canonical execution model — **ALL SERVICES CURRENTLY STOPPED** (as of 2026-03-31)
+**Status:** Canonical execution model — **OPERATIONAL** (as of 2026-04-02)
 
-**Last verified:** 2026-03-31 via `systemctl --user list-units`, `git worktree list`, `ss -tln`
+**Last verified:** 2026-04-02 via `systemctl --user list-units`, `git worktree list`, `ss -tln`
 
 ---
 
@@ -519,10 +519,12 @@ Purpose:          Load balance Discord requests across wt5-wt8 bridges
 **Routing logic:**
 
 1. Receives request from OpenClaw Gateway
-2. Selects least-loaded worktree (wt5-wt8)
+2. Selects least-loaded worktree (wt5-wt8) using **round-robin** among equally-loaded worktrees
 3. Rebases `cwd` in request payload to target worktree path
 4. Proxies request to worktree's Symphony bridge (port 4325-4328)
 5. Returns 429 if all 4 worktrees at capacity
+
+**Round-robin (2026-04-02):** When multiple worktrees have equal load (the common case for sequential requests), the router rotates via `roundRobinIndex` instead of always picking the first worktree. This distributes requests evenly across all available worktrees.
 
 #### Discord/OpenClaw Gateway — `openclaw-gateway.service` (was `anqr-discord-bridge@{5,6,7,8}.timer`)
 
@@ -590,40 +592,46 @@ Each worktree branch tracks `origin/main` but pushes directly to `main` on the r
 
 **How worktrees see each other's completed work:**
 
-```
-Step 1: Commit in worktree
-  git add <files> && git commit -m "..."
-  → Changes on local branch (e.g., symphony/wt1)
-  → NOT visible to other worktrees yet
+As of 2026-04-02, git sync and push are **automatic** in each worktree's Symphony bridge (`syncWorktreeFromMain()` and `pushWorktreeToMain()`).
 
-Step 2: Push to origin/main
-  git push origin HEAD:main
+```
+Step 1: Auto-sync at request start (bridge-managed)
+  syncWorktreeFromMain():
+    git fetch origin main
+    git merge origin/main --ff-only   (falls back to regular merge if needed)
+  → Worktree now has all work pushed to main by other worktrees
+  → Non-fatal: merge conflicts abort safely, request proceeds on stale state
+
+Step 2: Agent executes task in worktree
+  → File changes, tool execution, etc. scoped to worktree directory
+
+Step 3: Auto-push at request completion (bridge-managed)
+  pushWorktreeToMain():
+    git add -A && git commit -m "auto(wt{i}): push work to main"
+    git push origin HEAD:main   (up to 3 retries with fetch+rebase on conflict)
   → Changes now on remote main branch
-  → Automatic retry + rebase on conflict (up to 3 attempts)
-  → STILL not visible to other worktrees until they sync
-
-Step 3: Sync in other worktrees (on next cycle)
-  git fetch origin main
-  git merge origin/main --ff-only
-  → Now this worktree sees all work pushed to main
+  → Visible to other worktrees on their next sync
 ```
 
-**CRITICAL:** Work committed in a worktree but NOT pushed to `origin/main` is invisible to all other worktrees. Agents must push completed work immediately.
+**CRITICAL:** Work committed in a worktree but NOT pushed to `origin/main` is invisible to all other worktrees. The bridge now handles this automatically — `pushWorktreeToMain()` runs after every request completion (all 3 paths: codebuff direct, streaming, non-streaming).
 
 ### Runner Execution Cycle (wt1-wt4)
 
-Each runner cycle performs two syncs:
+The bridge handles git sync/push automatically for all requests (including runner-triggered ones):
 
-**1. Initial sync (before starting work):**
+**1. Auto-sync at request start (bridge-managed):**
 
 ```bash
+# syncWorktreeFromMain() — runs before each request
 git fetch origin main
 git merge origin/main --ff-only
+# Falls back to regular merge if ff-only fails
+# Aborts merge safely on conflict (non-fatal)
 ```
 
 Brings in all work pushed to main since last cycle.
 
-**2. Pre-validation sync (before validation):**
+**2. Pre-validation sync (runner-managed, before validation):**
 
 ```bash
 # Save local changes as patch
@@ -641,22 +649,25 @@ git apply --index --3way <saved patch>
 - If patch replay conflicts: restore local state, return issue to Todo/Backlog
 - If clean: proceed to validation against latest code from all worktrees
 
-**3. Push with retry:**
+**3. Auto-push at request completion (bridge-managed):**
 
 ```bash
-git push origin HEAD:main  # Up to 3 retries with rebase on rejection
+# pushWorktreeToMain() — runs after each request completion
+git add -A
+git commit -m "auto(wt{i}): push work to main"
+git push origin HEAD:main  # Up to 3 retries with fetch+rebase on rejection
 ```
 
 ### Discord Worktree Behavior (wt5-wt8)
 
-Discord worktrees do NOT follow the same auto-push cycle as runners:
+As of 2026-04-02, Discord worktrees now **automatically sync and push** via the bridge:
 
-- Changes from interactive requests stay in the worktree
-- No automatic push to `origin/main`
-- Agent may commit and push if explicitly asked
-- Worktrees sync with main on a reset/cleanup basis, not per-request
+- **Sync at request start:** `syncWorktreeFromMain()` fetches and merges `origin/main` before each request
+- **Push at request completion:** `pushWorktreeToMain()` commits and pushes changes after each request
+- Both operations are non-fatal — failures are logged but don't block the request
+- Merge conflicts during sync are safely aborted; push failures retry up to 3 times with rebase
 
-**This is by design:** Discord is exploratory. Not every interactive request should modify the canonical codebase.
+This ensures Discord worktrees stay up to date and share their work with all other worktrees automatically.
 
 ---
 

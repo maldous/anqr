@@ -489,10 +489,11 @@ When running in a worktree (Symphony runner with concurrency enabled):
 - **Branch isolation:** Each worktree uses a unique branch (e.g., `symphony/wt1`, `symphony/wt2`) that tracks `origin/main`
 - **Git operations:** All git commands (status, add, commit, push) operate on the worktree's isolated working directory and index
 - **Main repo restriction:** `scripts/ops/orchestration/symphony-runner.mjs` refuses to execute from the main repository without worktree context; use a worktree or set `ANQR_WORKTREE_ID`/`ANQR_WORKTREE_PATH` explicitly
-- **Sync workflow:** Worktrees sync with `origin/main` before each issue execution via `git fetch origin main && git merge origin/main --ff-only`
-  - **CRITICAL:** This brings in all work from other worktrees that has been pushed to `origin/main`
-  - **CRITICAL:** Work committed in other worktrees but not yet pushed to origin won't be visible
-  - **CRITICAL:** Push completed work immediately (via `git push origin HEAD:main`) to make it available to other worktrees
+- **Sync workflow (automatic):** The Symphony bridge automatically syncs and pushes git changes for each request:
+  - **Before each request:** `syncWorktreeFromMain()` fetches `origin/main` and merges (ff-only first, regular merge fallback, abort on conflict)
+  - **After each completion:** `pushWorktreeToMain()` stages, commits, and pushes to `origin/main` (up to 3 retries with rebase)
+  - Both are non-fatal — failures log warnings but don't block request processing
+  - **CRITICAL:** Work committed in other worktrees but not yet pushed to origin won't be visible until their next push
 - **Lock files:** Each worktree has its own PID lock file (e.g., `/run/user/${UID}/symphony-runner/lock-wt1`)
 - **Validation commands:** All validation commands (typecheck, lint, tests) run in the worktree's isolated environment
 - **Dependencies:** Each worktree has its own `node_modules` directory (installed during worktree creation)
@@ -512,11 +513,11 @@ Agents running in Symphony bridge should be aware that:
 
 **Important:** Temporary working scripts (e.g., one-off issue creation scripts, test scripts) must be placed in git-ignored directories to ensure concurrent operations do not conflict. Use `scripts/ops/.workspace/` (already in `.gitignore`) for such temporary files.
 
-**Discord integration without git pollution:**
+**Discord worktree concurrency:**
 
-- Interactive Discord sessions use isolated worktrees for experimentation
-- Discord worktrees are separate from Symphony runner worktrees
-- No changes pushed to main repository unless explicitly requested
+- Discord worktrees (wt5-wt8) are separate from Linear/Symphony worktrees (wt1-wt4)
+- Requests are distributed via **round-robin** among equally-loaded worktrees (not always the first)
+- Each worktree auto-syncs from `origin/main` before each request and auto-pushes after completion
 - Allows simultaneous Discord interaction and Symphony automation without conflicts
 
 ### Testing strategy
@@ -885,6 +886,9 @@ After using `--stop`, you MUST use `--start` to resume task execution. Without t
 - **When syncing worktrees, ALWAYS use `git merge origin/main`** (not reset) to preserve work
 
 **Proper worktree sync pattern:**
+
+Note: The Symphony bridge handles sync/push automatically via `syncWorktreeFromMain()` and `pushWorktreeToMain()`. Manual sync is only needed for operator maintenance.
+
 ```bash
 # Safe sync - preserves local work
 git fetch origin main

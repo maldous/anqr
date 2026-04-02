@@ -46,3 +46,6 @@ Linear  → anqr-linear-runner    → anqr-symphony-router → anqr-symphony-exe
 - No standalone Codebuff bridge — Codebuff is a provider used by executors
 - Router = control plane, Executors = execution plane
 - Root repo is control-plane only; mutation belongs in worktrees
+- **Auto sync/push:** Each bridge syncs from `origin/main` before each request and pushes changes after completion
+- **Round-robin routing:** Both routers distribute requests evenly across equally-loaded worktrees
+- **Voice announcements:** Bridge announces startup, request start, and completion via OpenClaw voice
