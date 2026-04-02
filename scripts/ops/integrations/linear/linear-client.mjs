@@ -124,8 +124,10 @@ export async function findOpenIssuesByDescriptionFragment(fragment) {
 }
 
 export async function findOpenIssuesByIdentifier(identifier) {
-  // Support both identifier (ANQ-123) and internal ID
-  return findOpenIssues({ identifier: { eq: identifier } });
+  // Use getIssueDetail which correctly queries via issue(id: $id)
+  // Linear's IssueFilter doesn't support "identifier" field, only "id"
+  const issue = await getIssueDetail(identifier);
+  return issue ? [issue] : [];
 }
 
 export async function listIssuesByState(stateNames) {
