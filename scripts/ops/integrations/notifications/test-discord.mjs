@@ -6,7 +6,7 @@
  * Usage: node scripts/ops/integrations/notifications/test-discord.mjs
  */
 
-import { sendDiscordMessage, sendDiscordEmbed, streamDiscordUpdate } from "./discord-webhook.mjs";
+import { sendDiscordMessage, sendDiscordEmbed, streamDiscordUpdate, flushDiscordStream } from "./openclaw-discord.mjs";
 import http from "node:http";
 import { createLogger } from "../../lib/logger.mjs";
 
@@ -124,12 +124,23 @@ async function runTests() {
   });
   logInfo(`Result: ${embedResult.sent ? "✅ PASS" : "❌ FAIL"} ${embedResult.reason || ""}\n`);
 
-  // Test 3: Progress update
-  logInfo("Test 3: Discord progress update...");
-  const progressResult = await streamDiscordUpdate(
-    "Working on test task... This is a progress update.",
-    { emoji: "⏳", timestamp: true },
+  // Test 3: Progress update with flush
+  logInfo("Test 3: Discord progress update (streaming with flush)...");
+  await streamDiscordUpdate(
+    "Working on test task... ",
+    { emoji: "⏳", timestamp: true, requestId: "test-flush" },
   );
+  // Add more to exceed buffer limit and trigger flush
+  await streamDiscordUpdate(
+    "This is a progress update.",
+    { emoji: "⏳", timestamp: true, requestId: "test-flush" },
+  );
+  // Flush the remaining buffer
+  const progressResult = await flushDiscordStream({
+    emoji: "⏳",
+    timestamp: true,
+    requestId: "test-flush",
+  });
   logInfo(
     `Result: ${progressResult.sent ? "✅ PASS" : "❌ FAIL"} ${progressResult.reason || ""}\n`,
   );

@@ -468,7 +468,7 @@ Supporting jobs:
 - Each worktree runs independently with its own working directory, branch, and lock file
 - Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
 - Lease system prevents concurrent work on the same Linear issue
-- Default: 8 concurrent agents (4 Symphony runners wt1-wt4 + 4 Discord bridges wt5-wt8)
+- Default: 8 concurrent agents (4 Symphony runners wt1-wt4 + 4 Discord executors wt5-wt8)
 - Configurable via `MAX_CONCURRENT_AGENTS` in `symphony-config.mjs`
 - Worktree setup: `node scripts/ops/orchestration/symphony-worktree-pool.mjs init [count]`
 - Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
@@ -715,7 +715,7 @@ The harness uses two OpenAI-compatible bridges:
 - Adaptive context: shrinks ceilings on 413/context errors, throttles on 429/rate-limit
 - Structured result contract: returns `_symphonyResult` on streaming and non-streaming responses so the runner can consume provider/usage outcome data directly
 - Codex SDK path defaults to `CODEX_SANDBOX_MODE=danger-full-access` unless overridden
-- Service: `anqr-symphony-bridge.service`
+- Service: `anqr-symphony-router.service` (control plane / orchestration)
 - **Concurrency-safe:** Handles multiple concurrent requests from worktree runners
 
 **Codebuff Direct Execution:**
@@ -774,9 +774,9 @@ Restarting during active concurrent requests drops streaming connections and cau
 
 5. **Restart bridge:**
    ```bash
-   systemctl --user restart anqr-symphony-bridge
-   # OR for worktree instances:
-   systemctl --user restart 'anqr-symphony-bridge@*.service'
+   systemctl --user restart anqr-symphony-router
+   # AND for worktree executors:
+   systemctl --user restart 'anqr-symphony-executor@*.service'
    ```
 
 6. **RESTART TASK EXECUTION:**

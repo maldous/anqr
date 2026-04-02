@@ -113,12 +113,12 @@ import {
 
 const CODEX_SANDBOX_MODE = process.env.CODEX_SANDBOX_MODE || "danger-full-access";
 
-// Discord webhook notifications
+// Discord notifications via OpenClaw Gateway - OpenClaw owns the Discord bot integration
 import {
   streamDiscordUpdate,
   flushDiscordStream,
   sendDiscordEmbed,
-} from "../notifications/discord-webhook.mjs";
+} from "../notifications/openclaw-discord.mjs";
 
 // MEMORY.md updates for persistence across restarts
 import { updateMemory } from "../../lib/update-memory.mjs";
@@ -136,289 +136,12 @@ import {
 import { getLinearIndexStats, searchLinearIssues, warmLinearIndex } from "../../lib/search/linear-search.mjs";
 import { getIndexStats as getVectorIndexStats } from "../../lib/rag/vector-store.mjs";
 
-// Discord message monitoring (listen for user input from Discord text channel)
-let lastDiscordMessageId = null;
-let discordMonitorInterval = null;
+// Discord monitoring removed - OpenClaw handles Discord interaction directly
+// The OpenClaw Gateway (port 18789) and Discord Router (port 18790) handle Discord commands
 
-// Discord channel IDs (from environment or fallback defaults)
-const DISCORD_TEXT_CHANNEL_ID = process.env.DISCORD_TEXT_CHANNEL_ID || "1486262758256410646";
-// Voice channel ID passed to OpenClaw for voice announcements
-const DISCORD_VOICE_CHANNEL_ID = process.env.DISCORD_VOICE_CHANNEL_ID || "1486262758256410647";
-logDebug(`Discord channels: text=${DISCORD_TEXT_CHANNEL_ID}, voice=${DISCORD_VOICE_CHANNEL_ID}`);
+// Processing status updates removed - OpenClaw handles Discord notifications
 
-// Voice announcements removed - not possible to send spontaneous voice from Symphony bridge to Discord
-// User will use Discord-based text-to-speech instead
-
-/**
- * Poll Discord channel for new messages (user input)
- * Returns newest message if found, otherwise null
- */
-async function pollDiscordMessages() {
-  if (!process.env.DISCORD_WEBHOOK_URL) return null;
-
-  try {
-    // Extract webhook ID from URL
-    const webhookMatch = process.env.DISCORD_WEBHOOK_URL.match(/webhooks\/(\d+)\//);
-    if (!webhookMatch) return null;
-
-    const channelId = DISCORD_TEXT_CHANNEL_ID;
-
-    // Fetch recent messages from Discord API
-    const response = await fetch(
-      `https://discord.com/api/v10/channels/${channelId}/messages?limit=5`,
-      {
-        headers: {
-          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
-        },
-      },
-    );
-
-    if (!response.ok) {
-      logError(`Discord API error: ${response.status}`);
-      return null;
-    }
-
-    const messages = await response.json();
-
-    // Filter out bot messages (from webhook)
-    const userMessages = messages.filter(
-      (msg) =>
-        !msg.webhook_id && // Not from webhook
-        msg.author &&
-        !msg.author.bot && // Not from bot
-        (!lastDiscordMessageId || msg.id > lastDiscordMessageId), // Newer than last seen
-    );
-
-    if (userMessages.length > 0) {
-      // Get the newest message
-      const newest = userMessages[0];
-      lastDiscordMessageId = newest.id;
-      return {
-        id: newest.id,
-        content: newest.content,
-        author: newest.author.username,
-        timestamp: newest.timestamp,
-      };
-    }
-
-    return null;
-  } catch (err) {
-    logError(`Discord poll error: ${err.message}`);
-    return null;
-  }
-}
-
-/**
- * Start monitoring Discord channel for user messages
- */
-function startDiscordMonitoring() {
-  // CRITICAL FIX (ANQ-XXXX): Disable Discord monitoring on ALL Symphony bridges (main and worktrees).
-  // Only the OpenClaw Gateway (port 18789) and Discord Router (port 18790) should listen for Discord messages.
-  // This prevents duplicate request flooding when multiple bridges poll Discord.
-  //
-  // Root cause: When Discord monitoring is enabled on multiple bridges, each poll triggers a request.
-  // The main bridge (4319) plus 4 worktree bridges (4325-4328) = 5 potential duplicates per message.
-  // Even with worktree bridges disabled, the main bridge still duplicates requests to itself.
-  //
-  // Correct flow: Discord Bot → OpenClaw Gateway (18789) → Discord Router (18790) → Worktree Bridges (4325-4328)
-  // The main Symphony bridge (4319) handles only queue/Linear automation, not Discord commands.
-  if (process.env.ANQR_WORKTREE_ID || PORT === 4319) {
-    // Main bridge (4319) should not monitor Discord - let OpenClaw Gateway handle Discord interaction
-    // Worktree bridges already have ANQR_WORKTREE_ID set, skip them too
-    const bridgeId = process.env.ANQR_WORKTREE_ID || `main-bridge`;
-    logInfo(`⚠️ Discord monitoring DISABLED on ${bridgeId} (port ${PORT}) - OpenClaw Gateway handles Discord`);
-    logInfo(`   Flow: Discord Bot → OpenClaw Gateway (18789) → Discord Router (18790) → Worktree Bridges`);
-    return;
-  }
-
-  if (!process.env.DISCORD_BOT_TOKEN) {
-    logError(`⚠️ Discord monitoring disabled: DISCORD_BOT_TOKEN not set`);
-    return;
-  }
-
-  if (discordMonitorInterval) {
-    clearInterval(discordMonitorInterval);
-  }
-
-  logInfo(`📡 Starting Discord message monitoring (polling every 5s)`);
-
-  discordMonitorInterval = setInterval(async () => {
-    const message = await pollDiscordMessages();
-    if (message) {
-      logInfo(`📨 Discord command: "${message.content.slice(0, 100)}" (from ${message.author})`);
-
-      // Process the command via Symphony bridge (Discord streaming handled in SSE consumption loop below)
-      try {
-        if (!message.id) {
-          logWarn(`⚠️ Discord command skipped: invalid message object`);
-          return;
-        }
-
-        const response = await fetch("http://127.0.0.1:4319/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer local-symphony",
-            "X-OpenClaw-Session": `discord:channel:${DISCORD_TEXT_CHANNEL_ID}`,
-          },
-          body: JSON.stringify({
-            model: "symphony/main",
-            messages: [{ role: "user", content: message.content }],
-            stream: true,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          logError(`❌ Discord command failed: ${response.status} ${errorText.slice(0, 200)}`);
-          return;
-        }
-
-        // Consume the SSE stream and forward text chunks to Discord via streamDiscordUpdate
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullText = "";
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
-
-            for (const line of lines) {
-              const dataMatch = line.match(/^data: (.+)$/);
-              if (!dataMatch || dataMatch[1] === "[DONE]") continue;
-
-              try {
-                const parsed = JSON.parse(dataMatch[1]);
-                const content = parsed.choices?.[0]?.delta?.content;
-                if (content && content.trim().length > 0) {
-                  // Filter out internal activity markers that the AI SDK includes in result.text
-                  // These would duplicate what we already log via DEBUG
-              const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
-              // Don't filter out thinking emoji or reasoning content - forward everything except activity markers
-              const trimmed = content.trim();
-              if (!isActivityMarker.test(trimmed)) {
-                fullText += content;
-                // Use safe requestId in case message became undefined during stream processing
-                const streamRequestId = message?.id ? `discord-cmd-${message.id}` : `discord-cmd-${Date.now()}`;
-                streamDiscordUpdate(content, {
-                  emoji: "",
-                  requestId: streamRequestId,
-                }).catch(() => {
-                  /* ignore */
-                });
-              }
-                }
-              } catch {
-                // Parse error - ignore malformed JSON chunk
-              }
-            }
-          }
-        } finally {
-          reader.releaseLock();
-        }
-
-        // Flush any remaining buffered text to Discord
-        // Use a safe requestId even if message.id is undefined
-        const safeRequestId = message?.id ? `discord-cmd-${message.id}` : `discord-cmd-${Date.now()}`;
-        await flushDiscordStream({ emoji: "", requestId: safeRequestId }).catch(
-          () => {
-            /* ignore */
-          },
-        );
-
-        logInfo(`✅ Discord command processed: ${fullText.slice(0, 100)}`);
-      } catch (err) {
-        // Flush buffer on error too so partial text reaches Discord (use safe requestId)
-        const safeRequestId = message?.id ? `discord-cmd-${message.id}` : `discord-cmd-${Date.now()}`;
-        await flushDiscordStream({ emoji: "", requestId: safeRequestId }).catch(
-          () => {
-            /* ignore */
-          },
-        );
-        logError(`❌ Discord command error: ${err.message}`);
-      }
-    }
-  }, 5000); // Poll every 5 seconds
-}
-
-/**
- * Stop monitoring Discord channel
- */
-function stopDiscordMonitoring() {
-  if (discordMonitorInterval) {
-    clearInterval(discordMonitorInterval);
-    discordMonitorInterval = null;
-    logInfo(`📡 Stopped Discord message monitoring`);
-  }
-}
-
-/**
- * Send periodic Processing Status embedded card to Discord
- * Shows all concurrent requests with brief summaries
- */
-async function sendProcessingStatusUpdate() {
-  if (activeRequests.size === 0) return;
-
-  const now = Date.now();
-  const summaries = [];
-
-  // Build brief one-line summaries for each active request
-  for (const [reqId, req] of activeRequests.entries()) {
-    const runtime = formatElapsed(now - req.startTime);
-    const filesChanged = req.filesChanged || 0;
-    const issueLabel = req.issueId || reqId;
-    const worktreeLabel = req.worktreeId ? ` [${req.worktreeId}]` : "";
-
-    // Create brief summary: "ANQ-123 [wt5] (2.5min, 3 files)"
-    const filesSuffix = filesChanged > 0 ? ", " + filesChanged + " files" : "";
-    const summary = issueLabel + worktreeLabel + " (" + runtime + filesSuffix + ")";
-    summaries.push(summary);
-  }
-
-  // Combine all summaries into a single description
-  const description = summaries.join("\n");
-
-  // Clear messaging: show total active requests (0 active = idle state)
-  await sendDiscordEmbed({
-    title: `⏳ Processing — ${activeRequests.size} active ${activeRequests.size === 1 ? "request" : "requests"}`,
-    description,
-    color: 0x3498db, // Blue
-    fields: [], // No fields - all info in description for simplicity
-  }).catch((err) => safeLogDebug(`Processing status update failed: ${err.message}`));
-}
-
-/**
- * Start periodic processing status updates (once per minute)
- */
-function startProcessingStatusUpdates() {
-  if (processingStatusTimer) {
-    clearInterval(processingStatusTimer);
-  }
-
-  logInfo(`📊 Starting periodic processing status updates (every 60s)`);
-
-  processingStatusTimer = setInterval(async () => {
-    await sendProcessingStatusUpdate();
-  }, 60000); // Every 60 seconds
-}
-
-/**
- * Stop periodic processing status updates
- */
-function stopProcessingStatusUpdates() {
-  if (processingStatusTimer) {
-    clearInterval(processingStatusTimer);
-    processingStatusTimer = null;
-    logInfo(`📊 Stopped periodic processing status updates`);
-  }
-}
-
-// Voice announcements removed - OpenClaw automatically speaks my responses in Discord sessions
-// Symphony bridge Discord notifications are text-only via webhook
+// Discord notifications removed - OpenClaw handles all Discord interaction
 
 // --------------------------------------------------------------------------
 // Helpers
@@ -2818,7 +2541,7 @@ let isProbeRunning = false;
 // Track concurrent requests for Discord notifications
 const activeRequests = new Map(); // requestId -> { startTime, issueId, model, stream, filesChanged }
 let requestIdCounter = 0;
-let processingStatusTimer = null;
+// processingStatusTimer removed — OpenClaw handles Discord status updates
 
 // ---------------------------------------------------------------------------
 // Continuous provider probe — runs in parallel, updating status continuously
@@ -4569,7 +4292,7 @@ function maybeFlushLogBuffer(state) {
 /**
  * Handle data chunk from proxy response
  */
-function handleProxyDataChunk(chunk, res, state, onDiscordChunk) {
+function _handleProxyDataChunk(chunk, res, state, onDiscordChunk) {
   state.partialBuffer += chunk.toString();
   const lines = state.partialBuffer.split("\n");
   state.partialBuffer = lines.pop() || "";
@@ -4584,7 +4307,7 @@ function handleProxyDataChunk(chunk, res, state, onDiscordChunk) {
 /**
  * Handle proxy response end event
  */
-async function handleProxyEnd(res, state, resolve) {
+async function _handleProxyEnd(res, state, resolve) {
   if (state.partialBuffer.length > 0) {
     const transformed = processSSELine(state.partialBuffer, state, null);
     if (transformed !== null) {
@@ -5947,8 +5670,9 @@ async function shutdown(signal) {
   }
 
   // No cleanup needed - setTimeout will be cleared on process exit
-  stopDiscordMonitoring();
-  stopProcessingStatusUpdates();
+  // Discord monitoring was removed - OpenClaw handles Discord interaction directly
+  // stopDiscordMonitoring(); // REMOVED - function no longer exists
+  // stopProcessingStatusUpdates(); // REMOVED - function no longer exists
   logProviderStats();
   server.close(() => {
     logInfo("Server closed");
@@ -6404,11 +6128,10 @@ server.listen(PORT, "127.0.0.1", async () => {
       );
     });
 
-  // Start Discord message monitoring
-  startDiscordMonitoring();
-
-  // Start periodic processing status updates
-  startProcessingStatusUpdates();
+  // Discord monitoring removed - OpenClaw handles Discord interaction directly
+  // The OpenClaw Gateway (port 18789) and Discord Router (port 18790) handle Discord commands
+  // startDiscordMonitoring(); // REMOVED - function no longer exists
+  // startProcessingStatusUpdates(); // REMOVED - function no longer exists
 
   // NOTE: Runner timer management removed from bridge startup.
   // Bridge startup must NOT have side effects on runner timers.

@@ -30,7 +30,7 @@ scripts/ops/
 ├── integrations/          # External service integrations
 │   ├── linear/            # Linear issue tracking
 │   ├── model/             # AI provider bridges and routing
-│   ├── notifications/     # Discord webhooks, email
+│   ├── notifications/     # Discord via OpenClaw, email
 │   └── sonar/             # SonarQube integration
 ├── lib/                   # Shared libraries
 │   ├── rag/               # RAG pipeline (chunker, embeddings, vector-store, build-index)

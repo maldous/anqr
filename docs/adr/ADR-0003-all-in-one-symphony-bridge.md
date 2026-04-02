@@ -10,7 +10,7 @@
 The ANQR harness uses AI bridges to enable LLM-driven task execution across multiple git worktrees for concurrent processing. The original architecture had separate services:
 
 1. **Codebuff Bridge** (`anqr-codebuff-bridge@.service`) — Codebuff SDK exposed as OpenAI HTTP API
-2. **Symphony Bridge** (`anqr-symphony-bridge@.service`) — AI completion with provider cascade and tool execution
+2. **Symphony Bridge** (`anqr-symphony-executor@.service`, was `anqr-symphony-bridge@.service`) — AI completion with provider cascade and tool execution
 3. **Discord Router** (`anqr-discord-router.service`) — Load balancer that rewrites cwd to target worktrees
 
 ### The Fundamental Problem
@@ -29,7 +29,7 @@ While this was fixed by keying the client by `costMode + cwd`, it revealed a dee
 
 **Consolidate Codebuff bridge functionality, routing logic, and Symphony bridge into a single "all-in-one Symphony bridge" per worktree.**
 
-Each Symphony bridge instance (`anqr-symphony-bridge@{1-8}.service`) will:
+Each Symphony executor instance (`anqr-symphony-executor@{1-8}.service`) will:
 
 1. Handle AI completion requests (`/v1/chat/completions`)
 2. Execute Codebuff SDK operations (tool use, code edits, file operations)
@@ -101,7 +101,7 @@ Each Symphony bridge is:
 
 - Symphony bridge already has tool execution framework — extend it to support Codebuff SDK methods
 - Router simplification: can reduce cwd rewriting logic (WorkingDirectory is authoritative)
-- Service deployment: update only `anqr-symphony-bridge@.service` template
+- Service deployment: update only `anqr-symphony-executor@.service` template
 - Backward compatibility: Main bridge (port 4319) remains unchanged for non-worktree use cases
 
 ## Related ADRs

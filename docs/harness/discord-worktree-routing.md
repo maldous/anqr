@@ -22,11 +22,11 @@ OpenClaw is a **third-party CLI/gateway** that:
 ## Architecture (ADR-0003: All-in-One Symphony Bridge)
 
 ```
-Discord Bot (OpenClaw Gateway, port 18789)   ← ONE singleton instance
+Discord Bot (OpenClaw Gateway, port 18789)    ← standalone service
        ↓ uses symphony-bridge provider
-Discord Request Router (port 18790)          ← Load balancer
+Discord Request Router (port 18790)           ← Load balancer
        ↓ least-loaded selection
-All-in-One Symphony Bridges (ports 4325-4328) ← Per-worktree isolation
+Symphony Executors (ports 4325-4328)          ← Per-worktree isolation
        ↓ AI + Codebuff SDK + tools in one service
        ↓ WorkingDirectory = worktree path (single source of truth)
 Provider Cascade → LLM API
@@ -43,14 +43,12 @@ This eliminates the separate Codebuff bridge service and caching defects. See `d
 
 ## Components
 
-### 1. OpenClaw Gateway (Singleton)
+### 1. OpenClaw Gateway (Standalone Service)
 
 - **Port:** 18789
-- **Lock file:** `~/.cache/anqr-openclaw/gateway.lock`
-- **Service:** `anqr-discord-bridge@{5,6,7,8}.timer` (4 competing instances, 1 wins lock)
-- Only ONE gateway process runs across all Discord worktrees
-- Automatic failover if owner crashes
-- Disables Bonjour/advertising to prevent hostname conflicts
+- **Service:** `openclaw-gateway.service` (standalone, managed by systemd)
+- Single gateway process with `Restart=always` for crash recovery
+- Discord channel access controlled via `channels.discord.guilds` allowlist in `~/.openclaw/openclaw.json`
 
 **Config files (3 locations with merge behavior):**
 
@@ -69,7 +67,7 @@ This eliminates the separate Codebuff bridge service and caching defects. See `d
 - Rebases `cwd` in request payload to target worktree path
 - Returns 429 when all 4 worktrees at capacity
 
-### 3. All-in-One Worktree Symphony Bridges
+### 3. Worktree Symphony Executors
 
 | Worktree | Port | Directory |
 |----------|------|-----------|
@@ -78,7 +76,7 @@ This eliminates the separate Codebuff bridge service and caching defects. See `d
 | wt7 | 4327 | `/home/user/src/anqr-wt7` |
 | wt8 | 4328 | `/home/user/src/anqr-wt8` |
 
-- **Service:** `anqr-symphony-bridge@{5,6,7,8}.service`
+- **Service:** `anqr-symphony-executor@{5,6,7,8}.service`
 - **Capabilities:** AI completion + Codebuff SDK + tool execution (all integrated)
 - Each runs in its own worktree directory via `WorkingDirectory`
 - ExecStart uses main repo script path; cwd is the worktree
@@ -104,11 +102,11 @@ This eliminates the separate Codebuff bridge service and caching defects. See `d
 
 The following defects were identified by external code review:
 
-- **F1: Codebuff client cwd caching** — `codebuff-openai-bridge.mjs` shared client was keyed by `costMode` only, ignoring `cwd`. Requests for one worktree could silently reuse a client created with a different cwd. **Resolution:** ADR-0003 — eliminate separate Codebuff bridge entirely; integrate Codebuff SDK into Symphony bridge (no shared client state).
-- **F2: Control script scope** — `symphony-control.mjs --start` enabled runner timers 1-8, but only wt1-wt4 are runner targets. **Fixed:** Now enables only runners 1-4.
-- **F3: Bridge auto-start** — `symphony-openai-bridge.mjs` called `symphony-control.mjs --start` on every bridge startup, re-enabling wrong-scope runners. **Fixed:** Auto-start removed; runner timers managed independently.
+- **F1: Codebuff client cwd caching** — Retired standalone Codebuff bridge cached shared client by `costMode` only, ignoring `cwd`. **Resolution:** ADR-0003 — Codebuff SDK integrated into each worktree-local Symphony executor (no shared client state).
+- **F2: Control script scope** — Fixed to enable only runner timers 1-4.
+- **F3: Bridge auto-start** — Auto-start of runner timers removed from executor startup.
 
-F1 led to the architectural decision documented in `docs/adr/ADR-0003-all-in-one-symphony-bridge.md`. See `docs/harness/12-concurrent-execution-with-worktrees.md` Section 4A for full evidence.
+See `docs/harness/12-concurrent-execution-with-worktrees.md` Section 4A for full evidence.
 
 ## Resolved Issues (All Verified)
 
@@ -131,9 +129,9 @@ Verified that the bridge ignores the `workspace` field. The Discord Router rebas
 | 3. Router cwd rebase (rewrites request paths) | ✅ Implemented | Verified Phase 5 |
 | 4. OpenClaw workspace (anchors tool ops) | ✅ **VERIFIED SAFE** | Bridge ignores workspace; router rebases cwd |
 
-### Issue 3: Duplicate Gateway Services — ✅ RESOLVED (Phase 2)
+### Issue 3: Gateway Architecture — ✅ RESOLVED
 
-The standalone `openclaw-gateway.service` was removed. The gateway singleton script now includes port-alive detection — if an external gateway is already running on port 18789, it enters monitoring mode instead of crash-restarting.
+`openclaw-gateway.service` is now the canonical standalone gateway service. The old timer-based singleton pattern (`anqr-discord-bridge@{5,6,7,8}.timer`) has been retired.
 
 ## Monitoring
 
@@ -141,45 +139,39 @@ The standalone `openclaw-gateway.service` was removed. The gateway singleton scr
 # Router health
 curl http://127.0.0.1:18790/health | jq
 
-# Bridge health
+# Executor health
 for i in 5 6 7 8; do curl -s http://127.0.0.1:432$i/health | jq '.status'; done
 
 # Service status
 systemctl --user status anqr-discord-router.service
-systemctl --user status anqr-symphony-bridge@{5,6,7,8}.service
+systemctl --user status anqr-symphony-executor@{5,6,7,8}.service
+systemctl --user status openclaw-gateway.service
 ```
 
 ## Deployment
 
 ```bash
 # Deploy services
-cp services/systemd/anqr-symphony-bridge@.service ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-executor@.service ~/.config/systemd/user/
 cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
-cp services/systemd/anqr-discord-bridge@.service ~/.config/systemd/user/
-cp services/systemd/anqr-discord-bridge@.timer ~/.config/systemd/user/
 systemctl --user daemon-reload
 
-# Enable (wt5-wt8 ONLY)
-systemctl --user enable --now anqr-symphony-bridge@{5,6,7,8}.service
+# Enable executors (wt5-wt8 for Discord)
+systemctl --user enable --now anqr-symphony-executor@{5,6,7,8}.service
 systemctl --user enable --now anqr-discord-router.service
-systemctl --user enable --now anqr-discord-bridge@{5,6,7,8}.timer
 
-# Remove duplicate gateway
-systemctl --user disable --now openclaw-gateway.service 2>/dev/null
-rm -f ~/.config/systemd/user/openclaw-gateway.service
-rm -f ~/.config/systemd/user/openclaw-gateway.service.bak
+# OpenClaw gateway is managed separately
+systemctl --user enable --now openclaw-gateway.service
 ```
 
 ## Related Files
 
 - `scripts/ops/integrations/model/discord-request-router.mjs` — Router implementation
-- `scripts/ops/integrations/model/symphony-openai-bridge.mjs` — Bridge implementation
-- `scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs` — Gateway singleton wrapper
-- `.openclaw/openclaw.json` — In-repo OpenClaw config (models, workspace, gateway)
+- `scripts/ops/integrations/model/symphony-openai-bridge.mjs` — Executor bridge implementation
+- `~/.openclaw/openclaw.json` — OpenClaw config (models, gateway, Discord guilds allowlist)
 - `.openclaw/models.json` — In-repo model provider overrides (✅ updated to match router URL)
 - `services/systemd/anqr-discord-router.service` — Router service
-- `services/systemd/anqr-symphony-bridge@.service` — Bridge template
-- `services/systemd/anqr-discord-bridge@.service` — Gateway singleton template
+- `services/systemd/anqr-symphony-executor@.service` — Executor template
 
 ---
 

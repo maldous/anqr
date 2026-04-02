@@ -4,29 +4,39 @@
 
 ANQR's Discord integration consists of two distinct components:
 
-### 0. Gateway stabilization (new)
+### 0. OpenClaw Gateway (standalone service)
 
-- `services/systemd/anqr-discord-bridge@.service` now launches `scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs`.
-- The singleton keeps a lock file at `~/.cache/anqr-openclaw/gateway.lock`. Only the worktree that acquires the lock actually spawns `openclaw gateway`; the remaining wt5-wt8 instances stay idle but alive.
-- The wrapper runs the gateway without legacy `--host` flags and forces Bonjour/advertiser env vars off, eliminating hostname churn such as `foo (OpenClaw) (4)`.
-- If the active gateway dies, the other worktrees automatically re-compete for the lock and start a fresh instance after a short randomized backoff, preventing restart storms and Discord command 429s.
-- **Update path:** re-copy `services/systemd/anqr-discord-bridge@.service` into `~/.config/systemd/user/`, run `systemctl --user daemon-reload`, then `systemctl --user restart anqr-discord-bridge@{5,6,7,8}.service`.
+- `openclaw-gateway.service` runs a single OpenClaw Gateway instance on port 18789.
+- The gateway is managed by systemd directly with `Restart=always` — no lock-based singleton pattern needed.
+- OpenClaw owns the Discord bot connection and routes inbound messages to the Symphony bridge provider.
+- The `~/.openclaw/openclaw.json` config controls Discord channel access via `channels.discord.guilds` allowlist.
+- **Update path:** `systemctl --user restart openclaw-gateway.service`
 
-### 1. Discord Webhook Integration (ANQR-owned)
+### 1. Discord Notifications via OpenClaw (ANQR-owned)
 
-**Location**: `scripts/ops/integrations/notifications/discord-webhook.mjs`
+**Location**: `scripts/ops/integrations/notifications/openclaw-discord.mjs`
+
+**Architecture**: OpenClaw owns the Discord bot integration. Symphony routes Discord messages through OpenClaw Gateway instead of using webhooks directly.
 
 **Capabilities**:
 
-- Send text notifications to Discord channels
-- Send embedded messages with formatting
+- Send text notifications to Discord channels via OpenClaw Gateway hook API
+- Send embedded messages with formatting (converted to markdown)
 - Stream progress updates with batching (every 1s or 1900 chars)
 - Per-request buffering to prevent message mixing
+- Session-aware routing via `channel: "last"`
 
 **Environment Variables**:
 
-- `DISCORD_WEBHOOK_URL` - Discord webhook URL for notifications
-- `DISCORD_WEBHOOK_ENABLED` - Enable/disable webhook (default: true if URL set)
+- `OPENCLAW_GATEWAY_HOST` - OpenClaw Gateway host (default: 127.0.0.1)
+- `OPENCLAW_GATEWAY_PORT` - OpenClaw Gateway port (default: 18789)
+- `OPENCLAW_GATEWAY_TOKEN` - Token for OpenClaw Gateway authentication (required)
+- `DISCORD_TEXT_CHANNEL_ID` - Discord text channel for notifications (default: 1486262758256410646)
+- `DISCORD_VOICE_CHANNEL_ID` - Discord voice channel (default: 1486262758256410647)
+
+**Note**: `DISCORD_WEBHOOK_URL` and `DISCORD_WEBHOOK_ENABLED` are no longer used. Discord notifications are now routed through OpenClaw Gateway.
+
+**OpenClaw guilds allowlist** (`~/.openclaw/openclaw.json`): Both channels must be in the `channels.discord.guilds` allowlist for inbound Discord messages to be accepted.
 
 **Scope**: Text-only notifications. Does NOT include bot capabilities or voice channel access.
 
@@ -128,7 +138,7 @@ The test script `scripts/ops/integrations/notifications/test-discord.mjs` includ
 
 | Component                  | Owned By         | Repository               | Can Modify |
 | -------------------------- | ---------------- | ------------------------ | ---------- |
-| Discord webhooks           | ANQR Harness     | anqr                     | ✅ Yes     |
+| Discord via OpenClaw      | ANQR Harness     | anqr                     | ✅ Yes     |
 | Voice bot configuration    | OpenClaw Gateway | External                 | ❌ No      |
 | Voice bot dependencies     | OpenClaw Gateway | External                 | ❌ No      |
 | Discord server permissions | Human operators  | Discord UI               | ❌ No      |
@@ -136,7 +146,7 @@ The test script `scripts/ops/integrations/notifications/test-discord.mjs` includ
 
 ## Related Files
 
-- `scripts/ops/integrations/notifications/discord-webhook.mjs` - Webhook implementation
+- `scripts/ops/integrations/notifications/openclaw-discord.mjs` - Discord integration via OpenClaw
 - `scripts/ops/integrations/notifications/test-discord.mjs` - Integration tests
 - `.openclaw/openclaw.json` - OpenClaw Gateway configuration
 - `docs/harness/02-runtime-and-services.md` - Service documentation
@@ -144,4 +154,4 @@ The test script `scripts/ops/integrations/notifications/test-discord.mjs` includ
 
 ---
 
-_Last updated: 2026-03-27_
+_Last updated: 2026-04-02_

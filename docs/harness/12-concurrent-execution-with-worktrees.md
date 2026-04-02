@@ -25,7 +25,7 @@ The worktree system is designed to achieve:
 | **Linear ingestion** | Linear issues in "Todo" state are picked up by Symphony runners (wt1-wt4) from queue |
 | **Sync flow** | Worktree changes: commit → push to `origin/main` → other worktrees sync on next cycle |
 | **Main = control plane** | The main repository (`/home/user/src/anqr`) runs services/docs/config only — no execution work |
-| **Single OpenClaw** | ONE OpenClaw Gateway instance provides the Discord relay; it uses Symphony for AI |
+| **Single OpenClaw** | ONE OpenClaw Gateway (`openclaw-gateway.service`) provides the Discord relay; it uses Symphony for AI |
 
 ### Discord: Two Modes of Operation
 
@@ -97,19 +97,19 @@ There is **ONE OpenClaw Gateway instance** (singleton on port 18789). It:
 Discord User
      │
      ▼
-OpenClaw Gateway (port 18789)       ← ONE instance, singleton
-     │  Reads .openclaw/openclaw.json for config
+OpenClaw Gateway (port 18789)       ← standalone service (openclaw-gateway.service)
+     │  Reads ~/.openclaw/openclaw.json for config
      │  Uses symphony-bridge provider for AI
+     │  Discord guilds allowlist controls inbound access
      ▼
 Symphony Bridge Provider URL        ← Configured in openclaw.json
-     │  SHOULD point to Discord Router (18790)
-     │  ✅ Correctly points to Discord Router (18790) — verified Phase 3
+     │  Points to Discord Router (18790)
      ▼
 Discord Request Router (port 18790)
      │  Load-balances across wt5-wt8
      │  Rebases cwd to target worktree path
      ▼
-Worktree Symphony Bridges (4325-4328)
+Symphony Executors (4325-4328)      ← anqr-symphony-executor@{5,6,7,8}.service
      │  Each runs in own worktree directory
      │  Tool execution (read/write/exec) scoped to worktree
      ▼
@@ -199,22 +199,14 @@ Therefore:
 - For **OpenClaw native** workspace behavior, the archive is insufficient to prove override semantics
 - This remains a **runtime verification item**, not the strongest proven bug
 
-### Duplicate Gateway Services
+### OpenClaw Gateway Service
 
-Two mechanisms exist to run the OpenClaw Gateway:
+`openclaw-gateway.service` is the canonical standalone gateway service. The old timer-based singleton pattern (`anqr-discord-bridge@{5,6,7,8}.timer` competing for a lock file) has been retired.
 
-| Service | Created By | How It Runs | Worktree-Aware |
-|---------|-----------|------------|----------------|
-| `openclaw-gateway.service` | OpenClaw CLI (`openclaw service install`) | Directly: `openclaw gateway --port 18789` | No |
-| `anqr-discord-bridge@{5-8}.timer` | ANQR harness | Via singleton wrapper: `openclaw-gateway-singleton.mjs` | Yes (sets cwd, disables Bonjour) |
-
-**Problem:** Both try to bind port 18789. Only one can run at a time. The `openclaw-gateway.service` is a leftover from OpenClaw's built-in service installer and should be removed.
-
-**The ANQR custom wrapper is preferred** because it:
-- Sets `cwd` to the worktree path
-- Disables Bonjour/advertising (prevents hostname conflicts)
-- Uses lock-based singleton coordination
-- Integrates with ANQR's environment variables
+| Service | Status | How It Runs |
+|---------|--------|------------|
+| `openclaw-gateway.service` | **Active** | Directly: `openclaw gateway --port 18789` with `Restart=always` |
+| ~~`anqr-discord-bridge@{5-8}.timer`~~ | **Retired** | Was: timer-based singleton wrapper |
 
 ---
 
@@ -260,44 +252,20 @@ The following units are **actually deployed** in `~/.config/systemd/user/`:
 
 | Deployed File | In Repo | Status | Notes |
 |--------------|---------|--------|-------|
-| ~~`anqr-codebuff-bridge.service`~~ | ❌ | **Retired** | Removed per ADR-0003 — Codebuff SDK integrated into Symphony bridge |
 | `anqr-context7-mcp.service` | ✅ | Matches repo | Context7 MCP docs |
-| `anqr-discord-bridge@.service` | ✅ | **Differs** | Gateway singleton template |
-| `anqr-discord-bridge@.timer` | ✅ | Matches repo | Gateway timer template |
-| `anqr-discord-router.service` | ✅ | **Differs** | Discord load balancer |
-| `anqr-email-ingest.service` | ✅ | Matches repo | Email → Linear |
-| `anqr-email-ingest.timer` | ✅ | Matches repo | 5-minute interval |
-| `anqr-linear-export.service` | ✅ | Matches repo | Linear issue export |
-| `anqr-linear-export.timer` | ✅ | Matches repo | Daily at 02:30 |
-| `anqr-nightly.service` | ✅ | Matches repo | Nightly ops pass |
-| `anqr-nightly.timer` | ✅ | Matches repo | Daily at 02:00 |
+| `anqr-discord-router.service` | ✅ | Matches repo | Discord load balancer |
+| `anqr-symphony-router.service` | ✅ | Matches repo | Agent router / control plane (4319) |
+| `anqr-symphony-executor@.service` | ✅ | Matches repo | Worktree executor template |
+| `anqr-watchdog.service` | ✅ | Matches repo | Executor watchdog |
 | `anqr-ops.env` | ✅ | **Secrets** | API keys, tokens |
-| `anqr-queue-feeder.service` | ✅ | Matches repo | Queue maintenance |
-| `anqr-queue-feeder.timer` | ✅ | Matches repo | 15-minute interval |
-| `anqr-rag-rebuild-linear.service` | ✅ symlink | Matches repo | Linear RAG index |
-| `anqr-rag-rebuild-linear.timer` | ✅ symlink | Matches repo | Daily at 02:45 |
-| `anqr-rag-rebuild.service` | ✅ | Matches repo | Source RAG index |
-| `anqr-rag-rebuild.timer` | ✅ | Matches repo | Daily at 03:00 |
-| `anqr-symphony-bridge.service` | ✅ | Matches repo | Main bridge (4319) |
-| `anqr-symphony-bridge@.service` | ✅ | **Differs** | Worktree bridge template |
-| `anqr-symphony-runner.service` | ✅ | **LEGACY** | Retired single runner |
-| `anqr-symphony-runner@.service` | ✅ | **Differs** | Runner template |
-| `anqr-symphony-runner.timer` | ✅ | **LEGACY** | Retired single timer |
-| `anqr-symphony-runner@.timer` | ✅ | Matches repo | Runner timer template |
-| `anqr-watchdog.service` | ✅ | Matches repo | Bridge watchdog |
-| **`openclaw-gateway.service`** | ❌ | **DUPLICATE** | Created by OpenClaw CLI |
-| **`openclaw-gateway.service.bak`** | ❌ | **STALE** | Backup of above |
+| `openclaw-gateway.service` | ✅ | Matches repo | OpenClaw Gateway / Discord bot (18789) |
 
-### Incorrect Template Instantiations
+### Executor Instance Mapping
 
-Systemd shows units instantiated for wrong worktree IDs:
-
-| Unit | Should Exist? | Why |
-|------|--------------|-----|
-| `anqr-symphony-runner@{1,2,3,4}.timer` | ✅ | Correct: runners for wt1-wt4 |
-| `anqr-symphony-runner@{5,6,7,8}.timer` | ❌ | Wrong: wt5-wt8 are Discord worktrees |
-| `anqr-discord-bridge@{5,6,7,8}.timer` | ✅ | Correct: gateway for wt5-wt8 |
-| `anqr-discord-bridge@{1,2,3,4}.service` | ❌ | Wrong: wt1-wt4 are Symphony worktrees |
+| Unit | Purpose |
+|------|---------|
+| `anqr-symphony-executor@{1,2,3,4}.service` | Linear work (wt1-wt4) |
+| `anqr-symphony-executor@{5,6,7,8}.service` | Discord work (wt5-wt8) |
 
 ---
 
@@ -361,7 +329,7 @@ This is the **primary issue** driving this investigation. The defense-in-depth m
 |-------|-----------|--------|-------|
 | 0. Downstream client isolation | Codebuff shared client must preserve request-local cwd | ✅ **FIXED (F1)** | Client now keyed by `costMode + cwd`; regression test passes |
 | 1. Provider URL routing | OpenClaw's configured symphony-bridge URL | ✅ **VERIFIED** | `openclaw.json` wins merge; `models.json` updated to `18790`; conflict eliminated |
-| 2. Systemd WorkingDirectory | Bridge process cwd set to worktree | ✅ Implemented | In `anqr-symphony-bridge@.service` |
+| 2. Systemd WorkingDirectory | Bridge process cwd set to worktree | ✅ Implemented | In `anqr-symphony-executor@.service` |
 | 3. Router cwd rebase | Discord router rewrites request cwd to worktree path | ✅ Implemented | In `discord-request-router.mjs` |
 | 4. Bridge request-scoped cwd | Symphony bridge resolves tools against request-local cwd | ✅ Implemented | Via `AsyncLocalStorage` in bridge |
 | 5. OpenClaw workspace | Anchors tool operations to configured workspace | ✅ **VERIFIED SAFE** | Bridge ignores workspace field; router rebases cwd to worktree; not a runtime isolation issue |
@@ -389,24 +357,25 @@ This is the **primary issue** driving this investigation. The defense-in-depth m
 Discord User
      │
      ▼
-OpenClaw Gateway (port 18789)          ← SINGLETON process
-     │  Reads config from .openclaw/
+OpenClaw Gateway (port 18789)          ← standalone service (openclaw-gateway.service)
+     │  Reads config from ~/.openclaw/openclaw.json
+     │  Guilds allowlist controls inbound access
      │  Sends to configured symphony-bridge provider
      ▼
 Discord Request Router (port 18790)    ← Load balancer
      │  Selects least-loaded wt5-wt8
      │  Rebases cwd to worktree path
      │  Adds X-Worktree-ID header
-     ├──→ Symphony Bridge wt5 (port 4325, cwd: /home/user/src/anqr-wt5)
-     ├──→ Symphony Bridge wt6 (port 4326, cwd: /home/user/src/anqr-wt6)
-     ├──→ Symphony Bridge wt7 (port 4327, cwd: /home/user/src/anqr-wt7)
-     └──→ Symphony Bridge wt8 (port 4328, cwd: /home/user/src/anqr-wt8)
+     ├──→ Symphony Executor wt5 (port 4325, cwd: /home/user/src/anqr-wt5)
+     ├──→ Symphony Executor wt6 (port 4326, cwd: /home/user/src/anqr-wt6)
+     ├──→ Symphony Executor wt7 (port 4327, cwd: /home/user/src/anqr-wt7)
+     └──→ Symphony Executor wt8 (port 4328, cwd: /home/user/src/anqr-wt8)
               │
               ▼
           Provider Cascade → LLM API → Tool execution in worktree
               │
               ▼
-          SSE stream response back: Bridge → Router → Gateway → Discord
+          SSE stream response back: Executor → Router → Gateway → Discord
 ```
 
 **Flow 2: Linear → Runner → Symphony (uses Symphony worktrees wt1-wt4)**
@@ -415,14 +384,13 @@ Discord Request Router (port 18790)    ← Load balancer
 Linear Workspace ("Todo" state issues)
      │
      ▼
-Symphony Runner (timer fires every 2 min)
+Symphony Executor (wt1-wt4, timer fires every 2 min)
      │  Runs in worktree wt1-wt4
      │  Picks issue, acquires lease, filters by source
      │  WorkingDirectory = /home/user/src/anqr-wt{i}
      ▼
-Main Symphony Bridge (port 4319)       ← LLM calls only
-     │  Bridge provides LLM API access; tools run in runner's worktree
-     │  Runner orchestrates tool execution (read/write/exec) directly
+Symphony Agent Router (port 4319)      ← Routes to worktree executors
+     │  Router provides LLM API access; tools run in executor's worktree
      ▼
 Provider Cascade → LLM API → Tool execution
      │
@@ -440,18 +408,18 @@ For the Linear flow, the available evidence supports the intended model that run
 
 | Port | Service | Purpose |
 |------|---------|---------|
-| 4319 | Symphony Agent Router | Control-plane entrypoint (routes to worktree bridges) |
+| 4319 | Symphony Agent Router | Control-plane entrypoint (routes to worktree executors) |
 | 4320 | Context7 MCP | Library documentation service |
-| 4321 | Symphony Bridge (wt1) | Worktree execution bridge #1 |
-| 4322 | Symphony Bridge (wt2) | Worktree execution bridge #2 |
-| 4323 | Symphony Bridge (wt3) | Worktree execution bridge #3 |
-| 4324 | Symphony Bridge (wt4) | Worktree execution bridge #4 |
-| 4325 | Symphony Bridge (wt5) | Discord worktree bridge #1 |
-| 4326 | Symphony Bridge (wt6) | Discord worktree bridge #2 |
-| 4327 | Symphony Bridge (wt7) | Discord worktree bridge #3 |
-| 4328 | Symphony Bridge (wt8) | Discord worktree bridge #4 |
-| 18789 | OpenClaw Gateway | Discord bot relay (singleton) |
-| 18790 | Discord Router | Load balancer: Discord → worktree bridges |
+| 4321 | Symphony Executor (wt1) | Worktree executor #1 (Linear) |
+| 4322 | Symphony Executor (wt2) | Worktree executor #2 (Linear) |
+| 4323 | Symphony Executor (wt3) | Worktree executor #3 (Linear) |
+| 4324 | Symphony Executor (wt4) | Worktree executor #4 (Linear) |
+| 4325 | Symphony Executor (wt5) | Worktree executor #5 (Discord) |
+| 4326 | Symphony Executor (wt6) | Worktree executor #6 (Discord) |
+| 4327 | Symphony Executor (wt7) | Worktree executor #7 (Discord) |
+| 4328 | Symphony Executor (wt8) | Worktree executor #8 (Discord) |
+| 18789 | OpenClaw Gateway | Discord bot relay (standalone service) |
+| 18790 | Discord Router | Load balancer: Discord → worktree executors |
 
 > **Note:** Port 4318 (standalone Codebuff bridge) has been retired per ADR-0003. Codebuff SDK now runs inside each worktree-local Symphony bridge.
 
@@ -491,64 +459,50 @@ Symphony execution is **network-bound** (70% of time waiting for LLM API calls),
 
 | Service | Type | Purpose | When Needed |
 |---------|------|---------|-------------|
-| `anqr-symphony-bridge.service` | simple | Main bridge (port 4319) | Always — runners depend on it |
-| `anqr-symphony-runner@{1,2,3,4}.timer` | timer/oneshot | Symphony runners (wt1-wt4) | When processing Linear issues |
-| `anqr-symphony-bridge@{5,6,7,8}.service` | simple | Worktree bridges (ports 4325-4328) | When Discord is active |
+| `anqr-symphony-router.service` | simple | Agent router / control plane (port 4319) | Always — executors route through it |
+| `anqr-symphony-executor@{1,2,3,4,5,6,7,8}.service` | simple | Worktree executors (ports 4321-4328) | Always |
 | `anqr-discord-router.service` | simple | Load balancer (port 18790) | When Discord is active |
-| `anqr-discord-bridge@{5,6,7,8}.timer` | timer/simple | Gateway singleton (port 18789) | When Discord is active |
+| `openclaw-gateway.service` | simple | OpenClaw Gateway / Discord bot (port 18789) | When Discord is active |
 
-**Total target: 14 explicitly managed units** (1 bridge + 4 runner timers + 4 worktree bridges + 1 router + 4 gateway timers).
+**Total target: 11 explicitly managed units** (1 router + 8 executors + 1 discord router + 1 gateway).
 
-### Units That Should NOT Exist
+### Retired/Legacy Units (should not exist)
 
-| Unit | Problem | Action |
-|------|---------|--------|
-| `anqr-symphony-runner@{5,6,7,8}.timer` | wt5-wt8 are Discord worktrees, not runner targets | Disable and remove |
-| `anqr-discord-bridge@{1,2,3,4}.service` | wt1-wt4 are Symphony worktrees, not Discord targets | Disable and remove |
-| `anqr-symphony-runner.service` | Retired legacy single-runner (FAILED state) | Disable, remove, reset-failed |
-| `anqr-symphony-runner.timer` | Retired legacy timer | Disable and remove |
-| `openclaw-gateway.service` | Duplicate of ANQR gateway singleton; created by OpenClaw CLI | Remove |
-| `openclaw-gateway.service.bak` | Stale backup | Remove |
+| Unit | Status | Notes |
+|------|--------|-------|
+| `anqr-discord-bridge@*.service` / `.timer` | **Retired** | Old gateway singleton pattern; replaced by `openclaw-gateway.service` |
+| `anqr-symphony-bridge.service` | **Retired** | Renamed to `anqr-symphony-router.service` |
+| `anqr-symphony-bridge@*.service` | **Retired** | Renamed to `anqr-symphony-executor@*.service` |
+| `anqr-symphony-runner.service` / `.timer` | **Retired** | Legacy single-runner; replaced by executor model |
+| `anqr-codebuff-bridge.service` | **Retired** | Codebuff SDK integrated into executors per ADR-0003 |
 
 ### Service Details
 
-#### Symphony Bridge (Main) — `anqr-symphony-bridge.service`
+#### Symphony Agent Router — `anqr-symphony-router.service`
 
 ```
 Port:             4319
 WorkingDirectory: /home/user/src/anqr (main repo)
 Type:             simple (long-running)
 Restart:          on-failure
-Purpose:          Provider cascade for Symphony runners (wt1-wt4)
-ExecStart:        node scripts/ops/integrations/model/symphony-openai-bridge.mjs
+Purpose:          Control-plane router; routes requests to worktree executors
+ExecStart:        node scripts/ops/integrations/model/symphony-agent-router.mjs
 ```
 
-#### Symphony Runners — `anqr-symphony-runner@{1,2,3,4}.timer`
+#### Symphony Executors — `anqr-symphony-executor@{1,2,3,4,5,6,7,8}.service`
 
 ```
-WorkingDirectory: /home/user/src/anqr-wt{i}
-Type:             oneshot (triggered by timer every 2 min)
-Environment:      ANQR_WORKTREE_ID=wt{i}, ANQR_WORKTREE_PATH=/home/user/src/anqr-wt{i}
-ExecStart:        node scripts/ops/orchestration/symphony-runner.mjs --once
-Purpose:          Pick Linear issues from queue, execute, validate, commit, push
-Timeout:          125 min (runner has 120 min internal limit)
-```
-
-**Important:** Runner script is always executed from the worktree's copy of the code but with `WorkingDirectory` set to the worktree. The runner code comes from the worktree, and all file operations happen within that worktree.
-
-#### Worktree Symphony Bridges — `anqr-symphony-bridge@{5,6,7,8}.service`
-
-```
-Port:             432{i} (4325, 4326, 4327, 4328)
+Port:             432{i} (4321-4328)
 WorkingDirectory: /home/user/src/anqr-wt{i}
 Type:             simple (long-running)
 Restart:          on-failure
 Environment:      ANQR_WORKTREE_ID=wt{i}, ANQR_WORKTREE_PATH=/home/user/src/anqr-wt{i}
 ExecStart:        node /home/user/src/anqr/scripts/ops/integrations/model/symphony-openai-bridge.mjs
-Purpose:          Provider cascade for Discord requests in isolated worktree
+Purpose:          AI execution, tool ops, Codebuff SDK — all in isolated worktree
+Routing:          wt1-wt4 for Linear work, wt5-wt8 for Discord work
 ```
 
-**Critical:** `WorkingDirectory` ensures all file operations happen in the worktree, not main. The ExecStart uses the **main repo's** script path (so one code update applies to all bridges), but the process runs in the worktree directory.
+**Critical:** `WorkingDirectory` ensures all file operations happen in the worktree, not main. The ExecStart uses the **main repo's** script path (so one code update applies to all executors), but the process runs in the worktree directory.
 
 #### Discord Router — `anqr-discord-router.service`
 
@@ -570,7 +524,7 @@ Purpose:          Load balance Discord requests across wt5-wt8 bridges
 4. Proxies request to worktree's Symphony bridge (port 4325-4328)
 5. Returns 429 if all 4 worktrees at capacity
 
-#### Discord/OpenClaw Gateway — `anqr-discord-bridge@{5,6,7,8}.timer`
+#### Discord/OpenClaw Gateway — `openclaw-gateway.service` (was `anqr-discord-bridge@{5,6,7,8}.timer`)
 
 ```
 Port:             18789
@@ -724,13 +678,11 @@ Discord worktrees do NOT follow the same auto-push cycle as runners:
 
 | Setting | Value | Source File | Correct? |
 |---------|-------|-------------|----------|
-| Gateway port | 18789 | `openclaw.json` (both) | ✅ |
-| Gateway bind | loopback | `openclaw.json` (both) | ✅ |
-| symphony-bridge URL | `http://127.0.0.1:18790/v1` | `openclaw.json` (both) | ✅ |
-| symphony-bridge URL | `http://127.0.0.1:4319/v1` | `models.json` (in-repo) | ❌ CONFLICT (correct for runners, wrong if OpenClaw merges this over openclaw.json's 18790) |
-| workspace | `/home/user/src/anqr` | `openclaw.json` (both) | ❌ Should be per-worktree |
-| ~~codebuff-bridge URL~~ | ~~`http://127.0.0.1:4318/v1`~~ | ~~Both configs~~ | **Retired** (ADR-0003) |
-| Default model | `symphony-bridge/symphony/main` | `openclaw.json` (both) | ✅ |
+| Gateway port | 18789 | `~/.openclaw/openclaw.json` | ✅ |
+| Gateway bind | loopback | `~/.openclaw/openclaw.json` | ✅ |
+| symphony-bridge URL | `http://127.0.0.1:18790/v1` | `~/.openclaw/openclaw.json` + `.openclaw/models.json` | ✅ |
+| Discord guilds allowlist | guild `1486262757543121021` | `~/.openclaw/openclaw.json` | ✅ |
+| Default model | `symphony-bridge/symphony/main` | `~/.openclaw/openclaw.json` | ✅ |
 
 ### Harness Config Files
 
@@ -886,54 +838,42 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs init 8
 
 ```bash
 # Copy ALL service files from repo to systemd user directory
-cp services/systemd/anqr-symphony-bridge.service ~/.config/systemd/user/
-cp services/systemd/anqr-symphony-bridge@.service ~/.config/systemd/user/
-cp services/systemd/anqr-symphony-runner@.service ~/.config/systemd/user/
-cp services/systemd/anqr-symphony-runner@.timer ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-router.service ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-executor@.service ~/.config/systemd/user/
 cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
-cp services/systemd/anqr-discord-bridge@.service ~/.config/systemd/user/
-cp services/systemd/anqr-discord-bridge@.timer ~/.config/systemd/user/
 systemctl --user daemon-reload
 ```
 
 ### Step 3: Enable Services
 
 ```bash
-# Core: Main Symphony bridge (must start first)
-systemctl --user enable --now anqr-symphony-bridge.service
+# Core: Symphony Agent Router (must start first)
+systemctl --user enable --now anqr-symphony-router.service
 
-# Symphony runners (wt1-wt4 ONLY)
-systemctl --user enable --now anqr-symphony-runner@{1,2,3,4}.timer
-
-# Discord worktree bridges (wt5-wt8 ONLY)
-systemctl --user enable --now anqr-symphony-bridge@{5,6,7,8}.service
+# All executors (wt1-wt8)
+systemctl --user enable --now anqr-symphony-executor@{1,2,3,4,5,6,7,8}.service
 
 # Discord router
 systemctl --user enable --now anqr-discord-router.service
 
-# Discord gateway singleton (wt5-wt8 ONLY)
-systemctl --user enable --now anqr-discord-bridge@{5,6,7,8}.timer
+# OpenClaw gateway (standalone service)
+systemctl --user enable --now openclaw-gateway.service
 ```
 
-### Step 4: Clean Up Legacy and Incorrect Services
+### Step 4: Clean Up Legacy Services (if present)
 
 ```bash
+# Remove retired discord-bridge timer/singleton services
+systemctl --user disable --now 'anqr-discord-bridge@*.timer' 2>/dev/null
+systemctl --user disable --now 'anqr-discord-bridge@*.service' 2>/dev/null
+
+# Remove retired symphony-bridge services (renamed to router/executor)
+systemctl --user disable --now anqr-symphony-bridge.service 2>/dev/null
+systemctl --user disable --now 'anqr-symphony-bridge@*.service' 2>/dev/null
+
 # Remove retired single runner
 systemctl --user disable --now anqr-symphony-runner.timer 2>/dev/null
 systemctl --user disable --now anqr-symphony-runner.service 2>/dev/null
-rm -f ~/.config/systemd/user/anqr-symphony-runner.service
-rm -f ~/.config/systemd/user/anqr-symphony-runner.timer
-
-# Remove wrong-ID runner instances (wt5-wt8 should NOT have runners)
-systemctl --user disable --now anqr-symphony-runner@{5,6,7,8}.timer 2>/dev/null
-
-# Remove wrong-ID discord-bridge instances (wt1-wt4 should NOT have discord bridges)
-systemctl --user disable --now anqr-discord-bridge@{1,2,3,4}.timer 2>/dev/null
-
-# Remove duplicate OpenClaw gateway service (created by OpenClaw CLI)
-systemctl --user disable --now openclaw-gateway.service 2>/dev/null
-rm -f ~/.config/systemd/user/openclaw-gateway.service
-rm -f ~/.config/systemd/user/openclaw-gateway.service.bak
 
 systemctl --user daemon-reload
 systemctl --user reset-failed
@@ -955,16 +895,16 @@ cd /home/user/src/anqr
 git worktree list
 
 # Check services
-systemctl --user list-timers | grep anqr
 systemctl --user list-units --type=service | grep anqr | grep running
 
 # Check ports
-ss -tln | grep -E '(4319|4325|4326|4327|4328|18789|18790)'
+ss -tln | grep -E '(4319|4321|4322|4323|4324|4325|4326|4327|4328|18789|18790)'
 
 # Check health endpoints
-curl -s http://127.0.0.1:4319/health | jq '.status'   # Main bridge
+curl -s http://127.0.0.1:4319/health | jq '.status'   # Agent router
 curl -s http://127.0.0.1:18790/health | jq '.status'  # Discord router
-curl -s http://127.0.0.1:4325/health | jq '.status'   # Worktree bridge wt5
+curl -s http://127.0.0.1:4325/health | jq '.status'   # Executor wt5
+curl -s http://127.0.0.1:18789/health                  # OpenClaw gateway
 ```
 
 ---
@@ -982,7 +922,7 @@ systemctl --user list-timers | grep anqr
 journalctl --user -u 'anqr-symphony-runner@*.service' -f
 
 # Specific worktree bridge logs
-journalctl --user -u anqr-symphony-bridge@5.service -f
+journalctl --user -u anqr-symphony-executor@5.service -f
 
 # Discord router logs
 journalctl --user -u anqr-discord-router.service -f
@@ -1037,25 +977,35 @@ node scripts/ops/orchestration/symphony-control.mjs --start
 **Problem: Discord commands execute in main repo**
 
 ```bash
-# Check 1: Verify models.json doesn't override symphony-bridge URL to 4319
-jq '.providers["symphony-bridge"].baseUrl' .openclaw/models.json
-# Should be http://127.0.0.1:18790/v1 (NOT 4319)
+# Check 1: Verify symphony-bridge URL points to router (18790)
+openclaw config get models.providers.symphony-bridge.baseUrl
+# Should be http://127.0.0.1:18790/v1
 
-# Check 2: Are worktree bridges actually running?
-systemctl --user status anqr-symphony-bridge@{5,6,7,8}.service
+# Check 2: Are worktree executors actually running?
+systemctl --user status anqr-symphony-executor@{5,6,7,8}.service
 
 # Check 3: Is the router running and routing correctly?
 curl http://127.0.0.1:18790/health | jq
 
-# Check 4: Verify bridge working directories
+# Check 4: Verify executor working directories
 for i in 5 6 7 8; do
-  echo "wt$i: $(systemctl --user show anqr-symphony-bridge@$i.service -p WorkingDirectory)"
+  echo "wt$i: $(systemctl --user show anqr-symphony-executor@$i.service -p WorkingDirectory)"
 done
+```
 
-# Check 5: Verify OpenClaw config workspace
-for i in 5 6 7 8; do
-  echo "wt$i workspace: $(jq -r '.agents.defaults.workspace' /home/user/src/anqr-wt$i/.openclaw/openclaw.json)"
-done
+**Problem: Discord messages silently ignored (inbound broken)**
+
+```bash
+# Check 1: Verify guilds allowlist is configured
+openclaw config get channels.discord.guilds
+# Should show your guild ID with channel allowlist
+
+# Check 2: Verify OpenClaw gateway is connected to Discord
+journalctl --user -u openclaw-gateway.service --since '5 min ago' | grep -i discord
+
+# Check 3: Verify groupPolicy
+openclaw config get channels.discord.groupPolicy
+# Should be 'allowlist' (with guilds configured) or 'open'
 ```
 
 **Problem: Overload errors (429)**
@@ -1128,9 +1078,9 @@ The `models.json` config conflict and `workspace` field were verified in Phase 3
 
 ### Recommendation 6: Remove Duplicate Gateway Service (HIGH — Immediate)
 
-Delete `~/.config/systemd/user/openclaw-gateway.service` and `.bak`. The ANQR `anqr-discord-bridge@.service` is the correct gateway mechanism.
+`openclaw-gateway.service` is the canonical standalone gateway service. The old `anqr-discord-bridge@.service` singleton pattern has been retired.
 
-**Warning:** Running `openclaw service install` or `openclaw doctor` may recreate the standalone service. Document this so operators know to re-remove it.
+**Note:** `openclaw service install` or `openclaw doctor` may update the gateway service. This is expected — `openclaw-gateway.service` is now the correct mechanism.
 
 ### Recommendation 7: Simplify Gateway to Single Service (MEDIUM)
 
@@ -1156,7 +1106,7 @@ Add guards to service templates:
 # In anqr-symphony-runner@.service
 ExecStartPre=/bin/sh -c 'echo %i | grep -qE "^[1-4]$" || { echo "ERROR: Runner only valid for wt1-wt4, got wt%i"; exit 1; }'
 
-# In anqr-discord-bridge@.service
+# In openclaw-gateway.service (was anqr-discord-bridge@.service)
 ExecStartPre=/bin/sh -c 'echo %i | grep -qE "^[5-8]$" || { echo "ERROR: Discord bridge only valid for wt5-wt8, got wt%i"; exit 1; }'
 ```
 
@@ -1196,7 +1146,7 @@ Add `Requires=` and `After=` directives for correct startup order:
 ```
 anqr-symphony-bridge.service          (must start first)
   └─ anqr-symphony-runner@{1-4}.timer (depends on bridge)
-  └─ anqr-symphony-bridge@{5-8}.service (can start independently)
+  └─ anqr-symphony-executor@{5-8}.service (can start independently)
      └─ anqr-discord-router.service   (depends on worktree bridges)
         └─ anqr-discord-gateway.service (depends on router)
 ```
@@ -1581,12 +1531,12 @@ done
 - [x] **Deploy ALL service files from repo (with reconciled diffs):**
   ```bash
   cp services/systemd/anqr-symphony-bridge.service ~/.config/systemd/user/
-  cp services/systemd/anqr-symphony-bridge@.service ~/.config/systemd/user/
+  cp services/systemd/anqr-symphony-executor@.service ~/.config/systemd/user/
   cp services/systemd/anqr-symphony-runner@.service ~/.config/systemd/user/
   cp services/systemd/anqr-symphony-runner@.timer ~/.config/systemd/user/
   cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
-  cp services/systemd/anqr-discord-bridge@.service ~/.config/systemd/user/
-  cp services/systemd/anqr-discord-bridge@.timer ~/.config/systemd/user/
+  # openclaw-gateway.service is managed separately (not from anqr repo)
+  # Old discord-bridge services have been retired
   systemctl --user daemon-reload
   systemctl --user reset-failed
   ```
@@ -1640,7 +1590,7 @@ git push
   systemctl --user enable --now anqr-symphony-runner@{1,2,3,4}.timer
 
   # 3. Worktree bridges (wt5-wt8)
-  systemctl --user enable --now anqr-symphony-bridge@{5,6,7,8}.service
+  systemctl --user enable --now anqr-symphony-executor@{5,6,7,8}.service
   sleep 5
   for i in 5 6 7 8; do curl -s http://127.0.0.1:432$i/health | jq '.status'; done
 
@@ -1650,7 +1600,8 @@ git push
   curl -s http://127.0.0.1:18790/health | jq
 
   # 5. Discord gateway singleton (wt5-wt8)
-  systemctl --user enable --now anqr-discord-bridge@{5,6,7,8}.timer
+  # openclaw-gateway.service is enabled separately
+  systemctl --user enable --now openclaw-gateway.service
   ```
 - [x] **Verify all ports listening:**
   ```bash
@@ -1758,7 +1709,7 @@ Steps:
 
   3. Check router and bridge logs for streaming evidence:
      journalctl --user -u anqr-discord-router.service --since "5 min ago"
-     journalctl --user -u 'anqr-symphony-bridge@*.service' --since "5 min ago"
+     journalctl --user -u 'anqr-symphony-executor@*.service' --since "5 min ago"
 
 Pass criteria:
   ✅ Response appears in Discord
@@ -1807,7 +1758,7 @@ Pass criteria:
 
 **If tests FAIL:**
 - Check which directory the file appeared in (main? wrong worktree?)
-- Review bridge logs: `journalctl --user -u 'anqr-symphony-bridge@*.service' --since '10 min ago'`
+- Review executor logs: `journalctl --user -u 'anqr-symphony-executor@*.service' --since '10 min ago'`
 - Review router logs: `journalctl --user -u anqr-discord-router.service --since '10 min ago'`
 - If file in main → config routing still broken → return to Phase 1/2
 - If file nowhere → bridge tool execution broken → check bridge health and cwd
@@ -1818,7 +1769,7 @@ Pass criteria:
 mkdir -p reports/worktree-e2e-evidence/phase5
 journalctl --user -u anqr-discord-router.service --since "30 min ago" \
   > reports/worktree-e2e-evidence/phase5/router-logs.txt
-journalctl --user -u 'anqr-symphony-bridge@*.service' --since "30 min ago" \
+journalctl --user -u 'anqr-symphony-executor@*.service' --since "30 min ago" \
   > reports/worktree-e2e-evidence/phase5/bridge-logs.txt
 for wt in 5 6 7 8; do
   ls -la /home/user/src/anqr-wt$wt/*TEST* 2>/dev/null \
@@ -2019,7 +1970,7 @@ journalctl --user -u 'anqr-symphony-runner@*.service' --since "1 hour ago" \
   > reports/worktree-e2e-evidence/phase7/runner-logs.txt
 journalctl --user -u anqr-discord-router.service --since "1 hour ago" \
   > reports/worktree-e2e-evidence/phase7/router-logs.txt
-journalctl --user -u 'anqr-symphony-bridge@*.service' --since "1 hour ago" \
+journalctl --user -u 'anqr-symphony-executor@*.service' --since "1 hour ago" \
   > reports/worktree-e2e-evidence/phase7/bridge-logs.txt
 for wt in 1 2 3 4 5 6 7 8; do
   echo "wt$wt: $(git -C /home/user/src/anqr-wt$wt log --oneline -1 2>&1)" \
@@ -2223,7 +2174,7 @@ mkdir -p reports/worktree-e2e-evidence/$(date +%Y%m%d)
 journalctl --user -u anqr-discord-router.service --since "10 min ago" \
   > reports/worktree-e2e-evidence/$(date +%Y%m%d)/router-logs.txt
 
-journalctl --user -u 'anqr-symphony-bridge@*.service' --since "10 min ago" \
+journalctl --user -u 'anqr-symphony-executor@*.service' --since "10 min ago" \
   > reports/worktree-e2e-evidence/$(date +%Y%m%d)/bridge-logs.txt
 
 journalctl --user -u 'anqr-symphony-runner@*.service' --since "10 min ago" \
@@ -2456,22 +2407,18 @@ anqr-worktree-review/
 
 | File | Purpose |
 |------|---------|
-| `services/systemd/anqr-symphony-bridge.service` | Symphony agent router (port 4319) |
-| `services/systemd/anqr-symphony-bridge@.service` | Worktree bridge template (ports 4325-4328) |
-| `services/systemd/anqr-symphony-runner@.service` | Runner template (wt1-wt4) |
-| `services/systemd/anqr-symphony-runner@.timer` | Runner timer (2 min interval) |
-| `services/systemd/anqr-discord-router.service` | Discord load balancer |
-| `services/systemd/anqr-discord-bridge@.service` | Gateway singleton template |
-| `services/systemd/anqr-discord-bridge@.timer` | Gateway timer (1 min interval) |
+| `services/systemd/anqr-symphony-router.service` | Symphony agent router (port 4319) |
+| `services/systemd/anqr-symphony-executor@.service` | Worktree executor template (ports 4321-4328) |
+| `services/systemd/anqr-discord-router.service` | Discord load balancer (port 18790) |
+| `services/systemd/openclaw-gateway.service` | OpenClaw Gateway / Discord bot (port 18789) |
 
 ### Configuration Files
 
 | File | Purpose |
 |------|---------|
-| `.openclaw/openclaw.json` | In-repo OpenClaw config (git-tracked) |
+| `~/.openclaw/openclaw.json` | OpenClaw config: Discord guilds allowlist, model routing, gateway (not git-tracked) |
 | `.openclaw/models.json` | In-repo model provider overrides (git-tracked) |
-| `~/.openclaw/openclaw.json` | HOME OpenClaw config (not git-tracked) |
-| `~/.openclaw/config.json` | HOME OpenClaw basic settings |
+| `~/.openclaw/config.json` | OpenClaw basic settings (TTS, etc.) |
 | `~/.config/systemd/user/anqr-ops.env` | API keys and secrets |
 | `~/.config/symphony/anqr.env` | Provider API tokens |
 
@@ -2480,9 +2427,10 @@ anqr-worktree-review/
 | File | Purpose |
 |------|---------|
 | `docs/harness/discord-worktree-routing.md` | Discord routing architecture detail |
+| `docs/harness/discord-voice-integration.md` | Discord voice and notification integration |
 | `docs/harness/WORKTREE-QUICKSTART.md` | Quick setup guide |
 | `services/systemd/WORKTREE-DEPLOYMENT.md` | Deployment procedures |
-| `AGENTS.md` | Agent execution contract (bridge restart procedure) |
+| `AGENTS.md` | Agent execution contract (executor restart procedure) |
 
 ---
 

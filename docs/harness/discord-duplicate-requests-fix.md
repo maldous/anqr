@@ -13,11 +13,11 @@
 ```
 Discord Message
   ↓
-4 Symphony Bridges (wt5-wt8) ALL poll Discord API independently
+4 Symphony Bridges (wt5-wt8) ALL polled Discord API independently
   ↓
-Each bridge makes request to main bridge (port 4319)
+Each bridge made request to main bridge (port 4319)
   ↓
-4 DUPLICATE REQUESTS flood AI providers
+4 DUPLICATE REQUESTS flooded AI providers
 ```
 
 **What was happening:**
@@ -29,7 +29,7 @@ Each bridge makes request to main bridge (port 4319)
 5. **wt8 bridge** (port 4328) polls Discord, sees message, makes request to port 4319
 6. **Result**: 4 simultaneous identical requests to AI providers
 
-### Correct Architecture (After Fix)
+### Correct Architecture (Current)
 
 ```
 Discord Message
@@ -38,7 +38,7 @@ OpenClaw Gateway (port 18789) - ONLY listener
   ↓
 Discord Router (port 18790) - load balancer
   ↓
-ONE Worktree Bridge (4325-4328) - selected by router
+ONE Worktree Executor (4325-4328) - selected by router
   ↓
 AI Provider - single request
 ```
@@ -129,46 +129,33 @@ OpenAI API Usage:
 ### 1. Restart All Symphony Bridges
 
 ```bash
-# Restart worktree bridges (wt5-wt8)
-systemctl --user restart anqr-symphony-bridge@{5,6,7,8}.service
+# Restart worktree executors (wt5-wt8)
+systemctl --user restart anqr-symphony-executor@{5,6,7,8}.service
 
-# Restart main bridge (if used for Discord)
-systemctl --user restart anqr-symphony-bridge.service
+# Restart main router (if used for Discord)
+systemctl --user restart anqr-symphony-router.service
 ```
 
 ### 2. Verify OpenClaw Configuration
 
-File: `.openclaw/openclaw.json` (in each worktree)
+File: `~/.openclaw/openclaw.json`
 
-**Should route to Discord Router, NOT main bridge:**
+**Must route to Discord Router, NOT main bridge:**
 
 ```json
 {
   "models": {
     "providers": {
       "symphony-bridge": {
-        "baseUrl": "http://127.0.0.1:18790/v1",  // ← Discord Router
-        // NOT http://127.0.0.1:4319/v1 (main bridge)
+        "baseUrl": "http://127.0.0.1:18790/v1"
       }
     }
   }
 }
 ```
 
-**Current state (INCORRECT)**:
-```json
-"baseUrl": "http://127.0.0.1:4319/v1"  // ❌ Bypasses router
-```
-
-### 3. Update OpenClaw Configs
-
-```bash
-# Update all worktree openclaw.json files
-for i in 5 6 7 8; do
-  sed -i 's|"baseUrl": "http://127.0.0.1:4319/v1"|"baseUrl": "http://127.0.0.1:18790/v1"|' \
-    /home/user/src/anqr-wt$i/.openclaw/openclaw.json
-done
-```
+**Status: ✅ FIXED** — `~/.openclaw/openclaw.json` now points to port 18790 (Discord Router).
+Also added `channels.discord.guilds` allowlist for the target guild.
 
 ## Testing Checklist
 
@@ -187,8 +174,8 @@ If issues arise after the fix:
 # Rollback: restore original symphony-openai-bridge.mjs
 git checkout HEAD -- scripts/ops/integrations/model/symphony-openai-bridge.mjs
 
-# Restart bridges
-systemctl --user restart anqr-symphony-bridge@{5,6,7,8}.service
+# Restart executors
+systemctl --user restart anqr-symphony-executor@{5,6,7,8}.service
 ```
 
 However, this will **restore the duplicate request bug**, so only rollback if the fix causes a more severe issue.
@@ -199,13 +186,14 @@ However, this will **restore the duplicate request bug**, so only rollback if th
 - Main bridge also polling Discord (should be OpenClaw Gateway's job)
 - Worktree bridges running duplicate background tasks
 
-## Next Steps
+## Status
 
 1. ✅ Apply code fix to disable Discord monitoring in worktree bridges
-2. ⏳ Update OpenClaw configs to route through Discord Router (port 18790)
-3. ⏳ Restart all bridges and verify logs
-4. ⏳ Test Discord commands and monitor for duplicates
-5. ⏳ Consider removing Discord monitoring from main bridge too (let OpenClaw handle it)
+2. ✅ Update OpenClaw config to route through Discord Router (port 18790)
+3. ✅ Restart all executors and verify logs
+4. ✅ Test Discord commands and monitor for duplicates
+5. ✅ Discord monitoring removed from all bridges (OpenClaw handles it)
+6. ✅ Added `channels.discord.guilds` allowlist to `~/.openclaw/openclaw.json`
 
 ---
 

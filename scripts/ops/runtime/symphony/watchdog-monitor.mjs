@@ -18,7 +18,7 @@
 
 import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
-import { sendDiscordEmbed } from "../../integrations/notifications/discord-webhook.mjs";
+import { sendDiscordEmbed } from "../../integrations/notifications/openclaw-discord.mjs";
 import { createLogger } from "../../lib/logger.mjs";
 
 const { logInfo } = createLogger();

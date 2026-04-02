@@ -4,7 +4,7 @@ Provides consistent restart/shutdown notifications for all ANQR services.
 
 ## Features
 
-- **Discord webhook notifications** with service status, PID, commit info, and metadata
+- **Discord notifications via OpenClaw** with service status, PID, commit info, and metadata
 - **MEMORY.md updates** for audit trail
 - **Consistent formatting** across all services
 - **Active request warnings** when shutting down with in-flight requests
@@ -260,5 +260,5 @@ Services that should add notifications:
 ## See Also
 
 - `scripts/ops/lib/update-memory.mjs` - MEMORY.md update utility (used internally)
-- `scripts/ops/integrations/notifications/discord-webhook.mjs` - Discord webhook integration
+- `scripts/ops/integrations/notifications/openclaw-discord.mjs` - Discord integration via OpenClaw Gateway
 - `knowledge.md` - Full service restart procedure documentation

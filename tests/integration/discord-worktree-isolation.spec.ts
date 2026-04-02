@@ -106,7 +106,7 @@ describe("Discord Worktree Isolation", () => {
     for (let i = 5; i <= 8; i++) {
       const result = await new Promise<string>((resolve) => {
         const { spawn } = require("node:child_process");
-        const proc = spawn("systemctl", ["--user", "show", `anqr-symphony-bridge@${i}.service`, "-p", "WorkingDirectory"], { shell: true });
+        const proc = spawn("systemctl", ["--user", "show", `anqr-symphony-executor@${i}.service`, "-p", "WorkingDirectory"], { shell: true });
         let output = "";
         proc.stdout.on("data", (d: Buffer) => output += d);
         proc.on("close", () => resolve(output));
@@ -186,7 +186,7 @@ describe("Discord Worktree Isolation", () => {
     // This is the critical check - main bridge must have WorkingDirectory = /home/user/src/anqr
     // If this is wrong, Discord requests could accidentally write to main
     const result = await new Promise<string>((resolve, reject) => {
-      const proc = spawn("systemctl", ["--user", "show", "anqr-symphony-bridge.service", "-p", "WorkingDirectory"], {
+      const proc = spawn("systemctl", ["--user", "show", "anqr-symphony-router.service", "-p", "WorkingDirectory"], {
         shell: true
       });
       let output = "";
@@ -202,7 +202,7 @@ describe("Discord Worktree Isolation", () => {
     // Verify each worktree bridge has WorkingDirectory set to its worktree
     for (let i = 5; i <= 8; i++) {
       const result = await new Promise<string>((resolve, reject) => {
-        const proc = spawn("systemctl", ["--user", "show", `anqr-symphony-bridge@${i}.service`, "-p", "WorkingDirectory"], {
+        const proc = spawn("systemctl", ["--user", "show", `anqr-symphony-executor@${i}.service`, "-p", "WorkingDirectory"], {
           shell: true
         });
         let output = "";

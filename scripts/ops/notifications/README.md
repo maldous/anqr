@@ -18,28 +18,29 @@ Sends email notifications via `msmtp` with rate limiting and deduplication.
 node scripts/ops/notifications/notify.mjs --channel=email
 ```
 
-### Discord Webhook (`discord-webhook.mjs`)
+### Discord via OpenClaw (`openclaw-discord.mjs`)
 
-Sends notifications to Discord channels via webhooks. Used by Symphony/Codebuff bridges to stream real-time updates during OpenClaw sessions.
+Sends notifications to Discord channels via OpenClaw Gateway's hook API. Used by Symphony/Codebuff bridges to stream real-time updates during OpenClaw sessions.
+
+**Architecture:** OpenClaw owns the Discord bot integration. Symphony routes Discord messages through OpenClaw Gateway instead of using webhooks directly.
 
 **Environment Variables:**
 
-- `DISCORD_WEBHOOK_URL` - Discord webhook URL (required)
-- `DISCORD_WEBHOOK_ENABLED` - Enable/disable webhook (default: true if URL set)
+- `OPENCLAW_GATEWAY_HOST` - OpenClaw Gateway host (default: 127.0.0.1)
+- `OPENCLAW_GATEWAY_PORT` - OpenClaw Gateway port (default: 18789)
+- `OPENCLAW_GATEWAY_TOKEN` - Token for OpenClaw Gateway authentication (required)
+- `DISCORD_TEXT_CHANNEL_ID` - Discord text channel for notifications (default: 1486262758256410646)
+- `DISCORD_VOICE_CHANNEL_ID` - Discord voice channel (default: 1486262758256410647)
 
 **Setup:**
 
-1. **Create a Discord webhook:**
-   - Open Discord server settings
-   - Go to Integrations → Webhooks
-   - Click "New Webhook"
-   - Select the target channel (e.g., `#openclaw-updates`)
-   - Copy the webhook URL
+1. **Ensure OpenClaw Gateway is running:**
+   The OpenClaw Gateway handles Discord bot integration. Ensure it's running and accessible.
 
-2. **Set environment variable:**
+2. **Set environment variables:**
 
    ```bash
-   export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
+   export OPENCLAW_GATEWAY_TOKEN="your-openclaw-gateway-token"
    ```
 
 3. **Add to systemd service (for persistent notifications):**
@@ -47,19 +48,21 @@ Sends notifications to Discord channels via webhooks. Used by Symphony/Codebuff 
    Edit `services/systemd/anqr-ops.env`:
 
    ```bash
-   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
+   OPENCLAW_GATEWAY_TOKEN=your-openclaw-gateway-token
    ```
 
-4. **Restart bridges to apply:**
+4. **Restart services to apply:**
    ```bash
-   systemctl --user restart anqr-symphony-bridge
-   systemctl --user restart anqr-codebuff-bridge
+   systemctl --user restart anqr-symphony-router
+   systemctl --user restart 'anqr-symphony-executor@*.service'
    ```
+
+**Note:** The `DISCORD_WEBHOOK_URL` and `DISCORD_WEBHOOK_ENABLED` environment variables are no longer used. Discord notifications are now routed through OpenClaw Gateway.
 
 **Usage in code:**
 
 ```javascript
-import { streamDiscordUpdate, sendDiscordEmbed } from "./discord-webhook.mjs";
+import { streamDiscordUpdate, sendDiscordEmbed } from "./openclaw-discord.mjs";
 
 // Simple text message
 await streamDiscordUpdate("🚀 Task started", { emoji: "🚀" });
@@ -78,7 +81,7 @@ await sendDiscordEmbed({
 
 **Integration:**
 
-The Discord webhook is integrated into the Symphony bridge to send notifications when:
+The Discord notifications via OpenClaw are integrated into the Symphony bridge to send notifications when:
 
 - A request starts processing (with issue context if available)
 - A request completes successfully (with provider and summary)
@@ -87,10 +90,10 @@ Notifications are sent asynchronously and failures are logged but don't interrup
 
 ## Testing
 
-Test Discord webhook:
+Test Discord via OpenClaw:
 
 ```javascript
-node -e "import('./discord-webhook.mjs').then(m => m.sendDiscordMessage('Test notification from ANQR 🤖'))"
+node -e "import('./openclaw-discord.mjs').then(m => m.sendDiscordMessage('Test notification from ANQR 🤖'))"
 ```
 
 Test email notification:

@@ -21,7 +21,7 @@
 import { execSync } from "node:child_process";
 import { appendFile, readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { sendDiscordEmbed } from "../../integrations/notifications/discord-webhook.mjs";
+import { sendDiscordEmbed } from "../../integrations/notifications/openclaw-discord.mjs";
 
 const CHECK_INTERVAL_MS = (Number.parseInt(process.env.WATCHDOG_CHECK_INTERVAL) || 30) * 1000;
 const STARTUP_GRACE_PERIOD_MS = 30 * 1000; // 30 seconds grace period for startup

@@ -950,7 +950,7 @@ paramName: z
 
 - `LINKUP_API_KEY` or `WEB_SEARCH_API_KEY` — Web search functionality
 - `CONTEXT7_API_KEY` or `DOCS_API_KEY` — Documentation API
-- `DISCORD_WEBHOOK_URL` — Discord notifications
+- `OPENCLAW_GATEWAY_TOKEN` — Discord notifications via OpenClaw Gateway
 - `DISCORD_BOT_TOKEN` — Discord message monitoring
 - `OPENCLAW_GATEWAY_TOKEN` — OpenClaw tool proxying
 

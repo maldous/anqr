@@ -98,7 +98,7 @@ If possible, include in the warning:
 
 \`\`\`javascript
 // In discord-request-router.mjs
-import { sendDiscordEmbed } from "../notifications/discord-webhook.mjs";
+import { sendDiscordEmbed } from "../notifications/openclaw-discord.mjs";
 
 let lastOverloadNotification = 0;
 const OVERLOAD_NOTIFICATION_COOLDOWN_MS = 60_000; // 1 minute

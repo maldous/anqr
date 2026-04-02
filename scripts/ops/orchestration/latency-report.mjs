@@ -19,7 +19,7 @@
  */
 
 import { getLatencyMetrics, checkLatencyBaseline } from "../core/symphony-state.mjs";
-import { sendDiscordEmbed } from "../integrations/notifications/discord-webhook.mjs";
+import { sendDiscordEmbed } from "../integrations/notifications/openclaw-discord.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
 const { logInfo, logWarn, logError } = createLogger();

@@ -27,7 +27,7 @@
  */
 
 import { execSync } from "node:child_process";
-import { sendDiscordEmbed } from "../integrations/notifications/discord-webhook.mjs";
+import { sendDiscordEmbed } from "../integrations/notifications/openclaw-discord.mjs";
 import { updateMemory } from "./update-memory.mjs";
 import { createLogger } from "./logger.mjs";
 

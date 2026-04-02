@@ -37,7 +37,7 @@ import {
 import { createLogger } from "../lib/logger.mjs";
 
 const { logInfo, logWarn, logError, logDebug } = createLogger();
-import { sendDiscordEmbed } from "../integrations/notifications/discord-webhook.mjs";
+import { sendDiscordEmbed } from "../integrations/notifications/openclaw-discord.mjs";
 import { feedQueue, getQueueSnapshot } from "../symphony-queue-control.mjs";
 import { recordLinearCompletion, recordProviderSuccess } from "../symphony-credit-gate.mjs";
 import { runAgent, continueAgent } from "../symphony-agent.mjs";
