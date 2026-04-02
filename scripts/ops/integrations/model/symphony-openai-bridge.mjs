@@ -127,6 +127,11 @@ import { inferSymphonyResultFromCompletion } from "../../runtime/symphony/bridge
 // Enhancement 1: Context7 documentation via HTTP service (port 4320)
 const CONTEXT7_HTTP_BASE = process.env.CONTEXT7_HTTP_URL || "http://127.0.0.1:4320";
 
+// OpenClaw Gateway for voice_speak tool (TTS via Discord voice channel)
+const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || "127.0.0.1";
+const OPENCLAW_GATEWAY_PORT = Number.parseInt(process.env.OPENCLAW_GATEWAY_PORT || "18789", 10);
+const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || null;
+
 // Enhancement 3: Hybrid search (BM25 + embeddings) for find_files
 import {
   searchFiles as hybridSearchFiles,
@@ -1295,6 +1300,270 @@ async function searchLinearIssuesTool({ query, limit = 5 }) {
   }
 }
 
+// ── Voice channel speech helpers ──────────────────────────────────────────────
+
+/** Pattern to detect voice-originated requests from OpenClaw Discord voice channel */
+const VOICE_TRANSCRIPT_RE = /^Voice transcript from speaker\s/;
+
+/** System prompt injected for voice-originated requests to produce speech-friendly output */
+const VOICE_SYSTEM_PROMPT = [
+  "IMPORTANT: This conversation is happening via a voice channel. The user is speaking to you and your response will be read aloud by text-to-speech.",
+  "Rules for your response:",
+  "- Respond in natural, conversational spoken language only.",
+  "- NEVER use code blocks, inline code, markdown formatting, bullet points, or numbered lists.",
+  "- NEVER include URLs, file paths, or technical symbols like arrows, pipes, equals signs, or brackets.",
+  "- If you need to reference a file, say just its name, not the full path.",
+  "- If you need to describe code changes, explain what you did in plain English.",
+  "- Keep your response brief and to the point — a few sentences at most.",
+  "- Use natural sentence structure, not lists or structured formats.",
+].join(" ");
+
+/**
+ * Sanitize raw message content for display in Discord embeds.
+ * Strips system prompt preambles, JSON metadata blocks, and internal instructions
+ * so only the meaningful user message (if any) is shown.
+ */
+function sanitizeForDiscordPreview(text) {
+  if (!text || !text.trim()) return "";
+  let s = text;
+
+  // Strip "Conversation info (untrusted metadata):" + fenced JSON block
+  s = s.replace(/Conversation info \(untrusted metadata\):\s*```json?[\s\S]*?```\s*/g, "");
+  s = s.replace(/Conversation info \(untrusted metadata\):\s*\{[\s\S]*?\}\s*/g, "");
+
+  // Strip system instruction preambles (memory flush, workspace bootstrap, etc.)
+  s = s.replace(/Pre-compaction memory flush[\s\S]*?(?=\n\n|$)/i, "");
+  s = s.replace(/Store durable memories only in[\s\S]*?(?=\n\n|$)/i, "");
+  s = s.replace(/Treat workspace bootstrap\/reference files[\s\S]*?(?=\n\n|$)/i, "");
+
+  // Strip voice transcript preamble, keep the actual transcript
+  s = s.replace(/^Voice transcript from speaker\s+"[^"]*":\s*/i, "");
+
+  // Strip remaining fenced code blocks (often JSON metadata)
+  s = s.replace(/```[\s\S]*?```/g, "");
+
+  // Strip "## Issue: ..." / "## System:" headers (internal routing)
+  s = s.replace(/^##\s*(Issue|System|Task):[^\n]*/gm, "");
+
+  // Collapse whitespace
+  s = s.replace(/\n{2,}/g, "\n").trim();
+
+  // Truncate at a natural boundary
+  if (s.length > 120) {
+    const cutoff = s.lastIndexOf(" ", 120);
+    s = s.slice(0, cutoff > 60 ? cutoff : 120) + "\u2026";
+  }
+
+  return s;
+}
+
+/** Emoji-matching regex (same approach as OpenClaw sanitize.ts) */
+const SPEECH_EMOJI_RE =
+  /(?:\p{Extended_Pictographic}(?:\uFE0F|\u200D|\p{Extended_Pictographic}|\p{Emoji_Modifier})*)+/gu;
+
+/**
+ * Detect operational noise that should never be spoken in a voice channel.
+ * Returns true for provider failures, probe results, internal status, error traces, etc.
+ */
+function isVoiceNoise(text) {
+  if (!text || !text.trim()) return true;
+  const t = text.trim();
+
+  // Provider failure / fallback patterns (the primary complaint)
+  if (/\b(groq|mistral|gemini|ollama|codex|codebuff|openai|anthropic|deepseek|together|fireworks|perplexity|cerebras)\b\s+(fail|error|unavailable|timed? ?out|reject|refused)/i.test(t)) return true;
+  if (/rate.?limit(ed|ing)?/i.test(t)) return true;
+  if (/trying\s+next\s+provider|falling\s*back|triggering\s+fallback/i.test(t)) return true;
+  if (/provider.*cooldown|cooldown.*provider/i.test(t)) return true;
+
+  // Internal bridge / harness status
+  if (/credit.?gate\s+selected|adaptive.?context|token.?ceiling/i.test(t)) return true;
+  if (/\bprobe\s+(fail|success|result|error)/i.test(t)) return true;
+  if (/_symphonyResult|SSE\s+relay|transparent.*relay/i.test(t)) return true;
+  if (/heartbeat|keep.?alive|ping.?pong/i.test(t)) return true;
+
+  // HTTP error codes in error context
+  if (/\bHTTP\s+[45]\d{2}\b/i.test(t)) return true;
+
+  // Stack traces (multiple "at " lines)
+  if (/^\s+at\s+\S+/m.test(t) && t.split("\n").filter((l) => /^\s+at\s/.test(l)).length > 1) return true;
+  if (/^(Error|TypeError|RangeError|SyntaxError|ReferenceError):\s/m.test(t)) return true;
+
+  // Provider metrics / telemetry (short messages about tokens)
+  if (/\b(completion|prompt)\s+tokens?\b.*\d/i.test(t) && t.length < 200) return true;
+
+  return false;
+}
+
+/**
+ * Sanitize and humanize text so it sounds natural when spoken aloud via TTS.
+ * Strips code blocks, URLs, file paths, markdown, emoji, and technical symbols.
+ * Returns empty string if nothing meaningful remains.
+ */
+function sanitizeTextForSpeech(text) {
+  if (!text || !text.trim()) return "";
+  let s = text;
+
+  // 1. Fenced code blocks → brief note
+  s = s.replace(/```[\s\S]*?```/g, " (code omitted) ");
+
+  // 2. HTML tags
+  s = s.replace(/<[^>]+>/g, "");
+
+  // 3. Markdown links [text](url) → keep link text
+  s = s.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+
+  // 4. Inline code — keep simple short names, drop complex code
+  s = s.replace(/`([^`]+)`/g, (match, content) => {
+    if (content.length < 30 && !/[{}();=<>/\\|&]/.test(content)) return content;
+    return "code";
+  });
+
+  // 5. URLs → "a link"
+  s = s.replace(/https?:\/\/[^\s)]+/g, "a link");
+
+  // 6. File paths → just the filename
+  s = s.replace(/(?:\.{0,2}\/[\w.-]+){2,}/g, (match) => {
+    const parts = match.split("/");
+    const filename = parts[parts.length - 1];
+    return filename && /\.\w+$/.test(filename) ? filename : "a file";
+  });
+
+  // 7. Markdown formatting
+  s = s.replace(/^#{1,6}\s+/gm, "");
+  s = s.replace(/\*{1,3}([^*]+)\*{1,3}/g, "$1");
+  s = s.replace(/_{1,2}([^_]+)_{1,2}/g, "$1");
+  s = s.replace(/~~([^~]+)~~/g, "$1");
+  s = s.replace(/^[\s]*[-*+]\s+/gm, "");
+  s = s.replace(/^[\s]*\d+\.\s+/gm, "");
+  s = s.replace(/^>\s*/gm, "");
+  s = s.replace(/^\|.*\|$/gm, "");
+  s = s.replace(/^[-|:\s]+$/gm, "");
+
+  // 8. Technical symbols → natural language
+  s = s.replace(/=>/g, " goes to ");
+  s = s.replace(/->/g, " to ");
+  s = s.replace(/===?/g, " equals ");
+  s = s.replace(/!==?/g, " not equals ");
+  s = s.replace(/\|\|/g, " or ");
+  s = s.replace(/&&/g, " and ");
+  s = s.replace(/::/g, " ");
+
+  // 9. Emoji
+  s = s.replace(SPEECH_EMOJI_RE, " ");
+
+  // 10. Special chars that sound bad when read aloud
+  s = s.replace(/(\w)_(\w)/g, "$1 $2");
+  s = s.replace(/[{}<>[\]\\|~`]+/g, "");
+  s = s.replace(/_{2,}/g, "");
+
+  // 11. Collapse whitespace
+  s = s.replace(/\s+/g, " ").trim();
+
+  // 12. Clean dangling punctuation
+  s = s.replace(/\s+([?!.,:;])/g, "$1");
+
+  // 13. Truncate at a natural sentence boundary
+  const MAX_SPEECH_LENGTH = 500;
+  if (s.length > MAX_SPEECH_LENGTH) {
+    const cut = s.slice(0, MAX_SPEECH_LENGTH);
+    const sentenceEnd = cut.lastIndexOf(". ");
+    if (sentenceEnd > MAX_SPEECH_LENGTH * 0.5) {
+      s = cut.slice(0, sentenceEnd + 1);
+    } else {
+      const wordEnd = cut.lastIndexOf(" ");
+      s = cut.slice(0, wordEnd > 0 ? wordEnd : MAX_SPEECH_LENGTH) + "...";
+    }
+  }
+
+  return s.trim();
+}
+
+/**
+ * Speak text in a Discord voice channel via the OpenClaw Gateway's voice_speak tool.
+ * Calls /tools/invoke on the OpenClaw Gateway which routes to the registered voice manager.
+ * Filters operational noise and sanitizes text for natural spoken delivery.
+ */
+async function voiceSpeakTool({ text, guildId }) {
+  if (!OPENCLAW_GATEWAY_TOKEN) {
+    return {
+      error: "OPENCLAW_GATEWAY_TOKEN not configured",
+      message: "voice_speak requires OPENCLAW_GATEWAY_TOKEN to call the OpenClaw Gateway.",
+      available: false,
+    };
+  }
+
+  const rawText = (text || "").trim();
+  if (!rawText) {
+    return { error: "No text provided to speak" };
+  }
+
+  if (isVoiceNoise(rawText)) {
+    logDebug(`🔊 voice_speak: skipping noise: "${rawText.slice(0, 80)}"`);
+    return { ok: true, skipped: true, reason: "filtered as operational noise" };
+  }
+
+  const speakText = sanitizeTextForSpeech(rawText);
+  if (!speakText) {
+    logDebug(`🔊 voice_speak: nothing speakable after sanitization`);
+    return { ok: true, skipped: true, reason: "no speakable content after sanitization" };
+  }
+
+  try {
+    logInfo(`🔊 voice_speak: "${speakText.slice(0, 100)}"`);
+
+    const args = { text: speakText };
+    if (guildId) args.guildId = guildId;
+
+    const requestBody = JSON.stringify({ tool: "voice_speak", args });
+
+    const response = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: OPENCLAW_GATEWAY_HOST,
+        port: OPENCLAW_GATEWAY_PORT,
+        path: "/tools/invoke",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(requestBody),
+          "Authorization": `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
+        },
+        timeout: 30000,
+      };
+
+      const req = http.request(options, (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          if (res.statusCode === 200) {
+            try {
+              resolve(JSON.parse(data));
+            } catch {
+              resolve({ ok: true, raw: data });
+            }
+          } else {
+            reject(new Error(`OpenClaw Gateway returned ${res.statusCode}: ${data.slice(0, 200)}`));
+          }
+        });
+      });
+
+      req.on("error", (err) => reject(err));
+      req.on("timeout", () => {
+        req.destroy();
+        reject(new Error("OpenClaw Gateway request timed out"));
+      });
+
+      req.write(requestBody);
+      req.end();
+    });
+
+    logInfo(`🔊 voice_speak result: ${JSON.stringify(response).slice(0, 200)}`);
+    return response;
+  } catch (error) {
+    logWarn(`🔊 voice_speak failed: ${error.message}`);
+    return { error: error.message, available: false };
+  }
+}
+
 // Available tools for the AI SDK
 const tools = {
   code_search: tool({
@@ -2114,16 +2383,31 @@ const tools = {
     }),
   }),
   tts: tool({
-    description: "Text-to-speech synthesis (not available in this environment)",
+    description: "Text-to-speech synthesis (not available — use voice_speak to speak in Discord voice channels instead)",
     inputSchema: z.object({
       text: z.string().optional().describe("Text to synthesize"),
       input: z.string().optional().describe("Text input"),
     }),
     execute: async () => ({
       error: "tts is not available in this environment",
-      message: "Text-to-speech is not supported in this headless server environment.",
+      message: "Text-to-speech is not supported in this headless server environment. Use voice_speak to speak in Discord voice channels instead.",
       available: false,
+      suggestion: "Use the voice_speak tool to speak text in a Discord voice channel via TTS.",
     }),
+  }),
+  voice_speak: tool({
+    description:
+      "Speak text in a Discord voice channel via TTS through the OpenClaw Gateway. " +
+      "The bot must already be connected to a voice channel. " +
+      "Omit guildId to use the first active voice session.",
+    inputSchema: z.object({
+      text: z.string().describe("Text to speak in the Discord voice channel via TTS"),
+      guildId: z
+        .string()
+        .optional()
+        .describe("Optional Discord guild ID. Uses first active voice session if omitted."),
+    }),
+    execute: voiceSpeakTool,
   }),
   connector_gmail: tool({
     description: "Gmail connector (not available — requires Groq connector setup)",
@@ -5060,7 +5344,7 @@ const server = http.createServer(async (req, res) => {
       activeRequests.set(requestId, {
         startTime,
         issueId: issueContext?.identifier || null,
-        requestText: contentStr.slice(0, 200),
+        requestText: sanitizeForDiscordPreview(contentStr) || contentStr.slice(0, 50),
         model: route.responseModelId,
         stream,
         filesChanged: 0,
@@ -5074,15 +5358,6 @@ const server = http.createServer(async (req, res) => {
       );
 
       const fields = [];
-
-      // Add worktree context if available
-      if (worktreeId) {
-        fields.push({
-          name: "Worktree",
-          value: worktreeId,
-          inline: true,
-        });
-      }
 
       // Read in-progress issues from symphony state
       let inProgressIssues = [];
@@ -5138,8 +5413,8 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
-      // Build message preview for Discord notifications
-      const messagePreview = contentStr.slice(0, 150) + (contentStr.length > 150 ? '...' : '');
+      // Build sanitized message preview for Discord notifications
+      const messagePreview = sanitizeForDiscordPreview(contentStr) || "(system task)";
       // Build title with worktree ID
       const worktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
       const embedTitle = issueContext?.identifier 
@@ -5149,20 +5424,11 @@ const server = http.createServer(async (req, res) => {
         ? issueContext.title 
         : messagePreview || "(no description)";
       
-      // Add message preview field if no Linear issue
-      if (!issueContext?.identifier && messagePreview) {
-        fields.push({
-          name: "Message",
-          value: messagePreview,
-          inline: false,
-        });
-      }
-      
       sendDiscordEmbed({
         title: embedTitle,
         description: embedDescription,
         color: 0xffa500, // Orange
-        fields,
+        fields: fields.length > 0 ? fields : undefined,
       }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
       // Progress logger — log elapsed time periodically during long requests
@@ -5223,6 +5489,21 @@ const server = http.createServer(async (req, res) => {
           logError(`Timeout cleanup error: ${e.message}`);
         }
       }, REQUEST_TIMEOUT_MS);
+
+      // ── Voice request detection ──────────────────────────────────────────────
+      // When the request originates from a Discord voice channel (OpenClaw sends
+      // "Voice transcript from speaker ..."), inject a system prompt that tells
+      // the LLM to respond in speech-friendly format. This applies to all three
+      // provider paths (Codebuff direct, standard stream cascade, non-streaming).
+      const isVoiceRequest = VOICE_TRANSCRIPT_RE.test(contentStr);
+      if (isVoiceRequest) {
+        logInfo(`🎙️ Voice request detected — injecting speech-friendly system prompt`);
+        const firstNonSystem = messages.findIndex((m) => m.role !== "system");
+        messages.splice(firstNonSystem < 0 ? messages.length : firstNonSystem, 0, {
+          role: "system",
+          content: VOICE_SYSTEM_PROMPT,
+        });
+      }
 
       if (stream) {
         // Disable request timeout for streaming — tool execution can take minutes
@@ -5307,22 +5588,21 @@ const server = http.createServer(async (req, res) => {
               `✅ Finished: ${issueContext?.identifier || "Request"} (provider: codebuff, ${result.text.length} chars)`,
             );
 
-          // Send comprehensive completion metrics (non-blocking)
+          // Send compact completion notification (non-blocking)
           const completionFields = [
-            { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
             { name: "Output", value: `${result.text.length} chars`, inline: true },
             { name: "Model", value: "codebuff", inline: true },
           ];
-          if (worktreeId) {
-            completionFields.push({ name: "Worktree", value: worktreeId, inline: true });
+          if (issueContext?.identifier) {
+            completionFields.unshift({ name: "Issue", value: issueContext.identifier, inline: true });
           }
           const completionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
           const completionTitle = issueContext?.identifier 
             ? `✅ ${issueContext.identifier}${completionWorktreeLabel}` 
-            : `✅ Completed Request${completionWorktreeLabel}`;
+            : `✅ Done${completionWorktreeLabel}`;
           sendDiscordEmbed({
             title: completionTitle,
-            description: issueContext?.title || contentStr.slice(0, 150) || "(no description)",
+            description: issueContext?.title || messagePreview,
             color: 0x00ff00, // Green
             fields: completionFields,
           }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
@@ -5410,22 +5690,21 @@ const server = http.createServer(async (req, res) => {
             `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName})`,
           );
 
-          // Send comprehensive completion metrics (non-blocking)
+          // Send compact completion notification (non-blocking)
           const streamCompletionFields = [
-            { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
             { name: "Output", value: `${result.text.length} chars`, inline: true },
             { name: "Model", value: result.providerName, inline: true },
           ];
-          if (worktreeId) {
-            streamCompletionFields.push({ name: "Worktree", value: worktreeId, inline: true });
+          if (issueContext?.identifier) {
+            streamCompletionFields.unshift({ name: "Issue", value: issueContext.identifier, inline: true });
           }
           const streamCompletionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
           const streamCompletionTitle = issueContext?.identifier 
             ? `✅ ${issueContext.identifier}${streamCompletionWorktreeLabel}` 
-            : `✅ Completed Request${streamCompletionWorktreeLabel}`;
+            : `✅ Done${streamCompletionWorktreeLabel}`;
           sendDiscordEmbed({
             title: streamCompletionTitle,
-            description: issueContext?.title || contentStr.slice(0, 150) || "(no description)",
+            description: issueContext?.title || messagePreview,
             color: 0x00ff00, // Green
             fields: streamCompletionFields,
           }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
@@ -5512,7 +5791,6 @@ const server = http.createServer(async (req, res) => {
         const totalTokens = tokensIn + tokensOut;
 
         const nonStreamCompletionFields = [
-          { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
           {
             name: "Output",
             value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`,
@@ -5520,16 +5798,16 @@ const server = http.createServer(async (req, res) => {
           },
           { name: "Model", value: result.providerName, inline: true },
         ];
-        if (worktreeId) {
-          nonStreamCompletionFields.push({ name: "Worktree", value: worktreeId, inline: true });
+        if (issueContext?.identifier) {
+          nonStreamCompletionFields.unshift({ name: "Issue", value: issueContext.identifier, inline: true });
         }
         const nonStreamCompletionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
         const nonStreamCompletionTitle = issueContext?.identifier 
           ? `✅ ${issueContext.identifier}${nonStreamCompletionWorktreeLabel}` 
-          : `✅ Completed Request${nonStreamCompletionWorktreeLabel}`;
+          : `✅ Done${nonStreamCompletionWorktreeLabel}`;
         sendDiscordEmbed({
           title: nonStreamCompletionTitle,
-          description: issueContext?.title || contentStr.slice(0, 150) || "(no description)",
+          description: issueContext?.title || messagePreview,
           color: 0x00ff00, // Green
           fields: nonStreamCompletionFields,
         }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
@@ -5861,6 +6139,7 @@ server.listen(PORT, "127.0.0.1", async () => {
       { tool: "image_generation", name: "basic", input: { prompt: "a cat" } },
       { tool: "wolfram_alpha", name: "basic", input: { query: "2+2" } },
       { tool: "tts", name: "basic", input: { text: "hello" } },
+      { tool: "voice_speak", name: "basic", input: { text: "hello from Symphony" } },
       { tool: "browser_automation", name: "basic", input: { action: "click" } },
       { tool: "computer_use", name: "basic", input: { action: "screenshot" } },
       { tool: "mcp_list_tools", name: "basic", input: {} },
@@ -6173,4 +6452,10 @@ export {
   applyPatchTool,
   webSearchTool,
   readDocsTool,
+  voiceSpeakTool,
+  isVoiceNoise,
+  sanitizeTextForSpeech,
+  VOICE_TRANSCRIPT_RE,
+  VOICE_SYSTEM_PROMPT,
+  sanitizeForDiscordPreview,
 };

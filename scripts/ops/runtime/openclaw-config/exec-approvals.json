@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "socket": {
+    "path": "{{EXEC_APPROVALS_SOCKET_PATH}}",
+    "token": "{{EXEC_APPROVALS_SOCKET_TOKEN}}"
+  },
+  "defaults": {},
+  "agents": {}
+}

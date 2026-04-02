@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.1.24-3",
+    "lastTouchedAt": "2026-01-28T09:00:10.057Z"
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "/home/user/clawd",
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "talk": {
+    "apiKey": "{{ELEVENLABS_API_KEY}}"
+  },
+  "gateway": {
+    "mode": "local",
+    "port": 18789,
+    "bind": "lan",
+    "auth": {
+      "mode": "token",
+      "token": "{{GATEWAY_AUTH_TOKEN}}"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "wizard": {
+    "lastRunAt": "2026-01-28T09:00:10.054Z",
+    "lastRunVersion": "2026.1.24-3",
+    "lastRunCommand": "configure",
+    "lastRunMode": "local"
+  }
+}

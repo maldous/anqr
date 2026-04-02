@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "profiles": {
+    "ollama:default": {
+      "type": "api_key",
+      "provider": "ollama",
+      "key": "ollama-local"
+    },
+    "openai-codex:default": {
+      "type": "oauth",
+      "provider": "openai-codex",
+      "access": "{{CODEX_OAUTH_ACCESS_TOKEN}}",
+      "refresh": "{{CODEX_OAUTH_REFRESH_TOKEN}}",
+      "expires": 1775797249000,
+      "accountId": "{{CODEX_ACCOUNT_ID}}"
+    }
+  },
+  "lastGood": {},
+  "usageStats": {
+    "ollama:default": {
+      "errorCount": 0,
+      "lastUsed": 1774319914088
+    }
+  }
+}

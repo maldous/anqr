@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "deviceId": "{{DEVICE_ID}}",
+  "publicKeyPem": "{{DEVICE_PUBLIC_KEY}}",
+  "privateKeyPem": "{{DEVICE_PRIVATE_KEY}}",
+  "createdAtMs": 1769590741770
+}

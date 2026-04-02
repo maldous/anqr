@@ -1,0 +1,702 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.4.2",
+    "lastTouchedAt": "2026-04-02T09:08:28.201Z"
+  },
+  "env": {
+    "OPENROUTER_API_KEY": "{{OPENROUTER_API_KEY}}",
+    "ELEVENLABS_API_KEY": "{{ELEVENLABS_API_KEY}}"
+  },
+  "wizard": {
+    "lastRunAt": "2026-04-02T06:28:45.373Z",
+    "lastRunVersion": "2026.4.2",
+    "lastRunCommand": "doctor",
+    "lastRunMode": "local"
+  },
+  "auth": {
+    "profiles": {
+      "ollama:default": {
+        "provider": "ollama",
+        "mode": "api_key"
+      }
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "openrouter": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKey": "OPENROUTER_API_KEY",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "meta-llama/llama-3.3-70b-instruct:free",
+            "name": "Llama 3.3 70B Instruct (free)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen/qwen3-next-80b-a3b-instruct:free",
+            "name": "Qwen3-Next-80B Instruct (free)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          },
+          {
+            "id": "openrouter/auto",
+            "name": "OpenRouter Auto (free)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "ollama": {
+        "baseUrl": "http://127.0.0.1:11434",
+        "apiKey": "OLLAMA_API_KEY",
+        "api": "ollama",
+        "models": [
+          {
+            "id": "qwen2.5-coder:0.5b",
+            "name": "Qwen2.5 Coder 0.5B",
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen2.5-coder:3b-instruct",
+            "name": "Qwen2.5 Coder 3B Instruct",
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen3-coder-next:latest",
+            "name": "Qwen3 Coder Next",
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "symphony-bridge": {
+        "baseUrl": "http://127.0.0.1:18790/v1",
+        "apiKey": "local-symphony",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "symphony/main",
+            "name": "Symphony Bridge (local)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/text",
+            "name": "Symphony Text",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/codex",
+            "name": "Symphony Codex",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/codebuff",
+            "name": "Symphony Codebuff SDK",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/groq",
+            "name": "Symphony Groq",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/mistral",
+            "name": "Symphony Mistral",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/gemini",
+            "name": "Symphony Gemini",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/gemini-lite",
+            "name": "Symphony Gemini Lite",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/openrouter",
+            "name": "Symphony OpenRouter",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/sambanova",
+            "name": "Symphony SambaNova",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/cerebras",
+            "name": "Symphony Cerebras",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/ollama-local",
+            "name": "Symphony Ollama Local",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "symphony-bridge/symphony/main",
+        "fallbacks": [
+          "symphony-bridge/symphony/codex",
+          "symphony-bridge/symphony/codebuff",
+          "symphony-bridge/symphony/codebuff-bridge",
+          "symphony-bridge/symphony/groq",
+          "symphony-bridge/symphony/mistral",
+          "symphony-bridge/symphony/gemini",
+          "symphony-bridge/symphony/gemini-lite",
+          "symphony-bridge/symphony/openrouter",
+          "symphony-bridge/symphony/sambanova",
+          "symphony-bridge/symphony/cerebras",
+          "symphony-bridge/symphony/ollama-local",
+          "symphony-bridge/symphony/text",
+          "ollama/qwen2.5-coder:0.5b",
+          "ollama/qwen2.5-coder:3b-instruct",
+          "ollama/qwen3-coder-next:latest",
+          "codebuff-bridge/codebuff/base"
+        ]
+      },
+      "imageGenerationModel": {
+        "primary": "google/gemini-3-pro-image-preview"
+      },
+      "models": {
+        "codebuff-bridge/codebuff/base": {},
+        "symphony-bridge/symphony/main": {},
+        "symphony-bridge/symphony/text": {},
+        "symphony-bridge/symphony/codex": {},
+        "symphony-bridge/symphony/codebuff": {},
+        "symphony-bridge/symphony/codebuff-bridge": {},
+        "symphony-bridge/symphony/groq": {},
+        "symphony-bridge/symphony/mistral": {},
+        "symphony-bridge/symphony/gemini": {},
+        "symphony-bridge/symphony/gemini-lite": {},
+        "symphony-bridge/symphony/openrouter": {},
+        "symphony-bridge/symphony/sambanova": {},
+        "symphony-bridge/symphony/cerebras": {},
+        "symphony-bridge/symphony/ollama-local": {},
+        "ollama/qwen2.5-coder:0.5b": {},
+        "ollama/qwen2.5-coder:3b-instruct": {},
+        "ollama/qwen3-coder-next:latest": {}
+      },
+      "compaction": {
+        "mode": "safeguard"
+      }
+    },
+    "list": [
+      {
+        "id": "main",
+        "model": "symphony-bridge/symphony/main",
+        "tools": {
+          "alsoAllow": [
+            "browser",
+            "canvas",
+            "message",
+            "gateway",
+            "nodes",
+            "agents_list",
+            "read",
+            "write",
+            "edit",
+            "apply_patch",
+            "exec",
+            "process",
+            "web_search",
+            "web_fetch",
+            "memory_search",
+            "memory_get",
+            "sessions_spawn",
+            "sessions_yield",
+            "subagents",
+            "cron",
+            "image",
+            "spawn_agents",
+            "spawn_agent_inline",
+            "think_deeply",
+            "thinker"
+          ]
+        }
+      },
+      {
+        "id": "voice",
+        "model": "symphony-bridge/symphony/main",
+        "tools": {
+          "alsoAllow": [
+            "browser",
+            "canvas",
+            "message",
+            "gateway",
+            "nodes",
+            "agents_list",
+            "tts",
+            "read",
+            "write",
+            "edit",
+            "apply_patch",
+            "exec",
+            "process",
+            "web_search",
+            "web_fetch",
+            "memory_search",
+            "memory_get",
+            "sessions_spawn",
+            "sessions_yield",
+            "subagents",
+            "cron",
+            "image",
+            "spawn_agents",
+            "spawn_agent_inline",
+            "think_deeply",
+            "thinker"
+          ]
+        }
+      }
+    ]
+  },
+  "tools": {
+    "profile": "coding",
+    "web": {
+      "search": {
+        "provider": "brave"
+      }
+    },
+    "media": {
+      "models": [
+        {
+          "type": "cli",
+          "capabilities": [
+            "audio"
+          ],
+          "command": "whisper",
+          "args": [
+            "--model",
+            "large-v3-turbo",
+            "--output_format",
+            "txt",
+            "--output_dir",
+            "{{OutputDir}}",
+            "--verbose",
+            "False",
+            "--language",
+            "en",
+            "--device",
+            "cpu",
+            "{{MediaPath}}"
+          ],
+          "timeoutSeconds": 120,
+          "language": "en"
+        }
+      ]
+    }
+  },
+  "messages": {
+    "tts": {
+      "auto": "off",
+      "provider": "microsoft",
+      "maxTextLength": 1500
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "boot-md": {
+          "enabled": true
+        },
+        "bootstrap-extra-files": {
+          "enabled": true
+        },
+        "session-memory": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "channels": {
+    "discord": {
+      "enabled": true,
+      "token": "{{DISCORD_BOT_TOKEN}}",
+      "groupPolicy": "allowlist",
+      "actions": {
+        "voiceStatus": true
+      },
+      "voice": {
+        "enabled": true,
+        "autoJoin": [
+          {
+            "guildId": "1486262757543121021",
+            "channelId": "1486262758256410647"
+          }
+        ],
+        "daveEncryption": true,
+        "decryptionFailureTolerance": 24,
+        "tts": {
+          "enabled": true,
+          "auto": "always",
+          "provider": "microsoft",
+          "mode": "final"
+        }
+      },
+      "guilds": {
+        "1486262757543121021": {
+          "channels": {
+            "1486262758256410646": {
+              "allow": true
+            },
+            "1486262758256410647": {
+              "allow": true
+            }
+          },
+          "requireMention": false
+        }
+      },
+      "allowFrom": [
+        "704669724088336384"
+      ]
+    }
+  },
+  "talk": {
+    "provider": "microsoft",
+    "voiceId": "hpp4J3VqNfWAUOO0d1Us",
+    "interruptOnSpeech": true,
+    "silenceTimeoutMs": 2000,
+    "providers": {
+      "openai": {
+        "voiceId": "nova"
+      },
+      "elevenlabs": {
+        "voiceId": "hpp4J3VqNfWAUOO0d1Us"
+      },
+      "microsoft": {}
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "{{GATEWAY_AUTH_TOKEN}}"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    },
+    "http": {
+      "endpoints": {
+        "chatCompletions": {
+          "enabled": true
+        }
+      }
+    },
+    "nodes": {
+      "denyCommands": [
+        "camera.snap",
+        "camera.clip",
+        "screen.record",
+        "contacts.add",
+        "calendar.add",
+        "reminders.add",
+        "sms.send"
+      ]
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    },
+    "entries": {
+      "gh-issues": {},
+      "goplaces": {},
+      "notion": {},
+      "openai-image-gen": {},
+      "openai-whisper-api": {},
+      "sag": {},
+      "self-improving-agent": {},
+      "free-ride": {}
+    }
+  },
+  "plugins": {
+    "allow": [
+      "lossless-claw",
+      "discord",
+      "talk-voice",
+      "voice-call",
+      "elevenlabs",
+      "browser",
+      "microsoft",
+      "openai"
+    ],
+    "entries": {
+      "lossless-claw": {
+        "enabled": true,
+        "config": {
+          "freshTailCount": 32,
+          "contextThreshold": 0.75,
+          "incrementalMaxDepth": -1,
+          "ignoreSessionPatterns": [
+            "agent:*:cron:**"
+          ],
+          "summaryProvider": "symphony",
+          "summaryModel": "main"
+        }
+      },
+      "discord": {
+        "enabled": true,
+        "config": {}
+      },
+      "talk-voice": {
+        "enabled": true,
+        "config": {}
+      },
+      "voice-call": {
+        "enabled": true,
+        "config": {}
+      },
+      "elevenlabs": {
+        "enabled": true,
+        "config": {}
+      },
+      "browser": {
+        "enabled": true
+      },
+      "microsoft": {
+        "enabled": true,
+        "config": {}
+      },
+      "openai": {
+        "enabled": true,
+        "config": {}
+      }
+    },
+    "installs": {
+      "lossless-claw": {
+        "source": "npm",
+        "spec": "@martian-engineering/lossless-claw",
+        "installPath": "/home/user/.openclaw/extensions/lossless-claw",
+        "version": "0.5.3",
+        "resolvedName": "@martian-engineering/lossless-claw",
+        "resolvedVersion": "0.5.3",
+        "resolvedSpec": "@martian-engineering/lossless-claw@0.5.3",
+        "integrity": "sha512-9mDRVt9N8t2LWPapIGlWMHl0c0gYw3gLJ7n+rR8eLC4IZav482OHy054J8GNB0LS8ztqkidf8z4PN6Yi6PwExw==",
+        "shasum": "bc7b4065a2ba2a7b143347dae7e09051519ea08c",
+        "resolvedAt": "2026-04-02T03:07:12.723Z",
+        "installedAt": "2026-04-02T03:07:26.901Z"
+      }
+    }
+  },
+  "discovery": {
+    "mdns": {
+      "mode": "off"
+    }
+  },
+  "bindings": [
+    {
+      "type": "route",
+      "agentId": "voice",
+      "match": {
+        "channel": "discord",
+        "accountId": "1486262758256410647"
+      }
+    }
+  ],
+  "audio": {
+    "transcription": {
+      "command": [
+        "whisper",
+        "--model",
+        "large-v3-turbo",
+        "--output_format",
+        "txt",
+        "--language",
+        "en",
+        "--device",
+        "cpu"
+      ],
+      "timeoutSeconds": 60
+    }
+  },
+  "logging": {
+    "level": "debug"
+  }
+}

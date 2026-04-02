@@ -1,0 +1,281 @@
+diff --git a/extensions/discord/src/monitor/provider.lifecycle.ts b/extensions/discord/src/monitor/provider.lifecycle.ts
+index 9e6a438c00..7c938c6f0f 100644
+--- a/extensions/discord/src/monitor/provider.lifecycle.ts
++++ b/extensions/discord/src/monitor/provider.lifecycle.ts
+@@ -1,6 +1,7 @@
+ import { createConnectedChannelStatusPatch } from "openclaw/plugin-sdk/gateway-runtime";
+ import { danger } from "openclaw/plugin-sdk/runtime-env";
+ import type { RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
++import { unregisterVoiceSpeakHandler } from "openclaw/plugin-sdk/voice-speak-registry";
+ import { attachDiscordGatewayLogging } from "../gateway-logging.js";
+ import { getDiscordGatewayEmitter, waitForDiscordGatewayStop } from "../monitor.gateway.js";
+ import type { DiscordVoiceManager } from "../voice/manager.js";
+@@ -461,6 +462,7 @@ export async function runDiscordGatewayLifecycle(params: {
+     statusObserver.dispose();
+     gatewayEmitter?.removeListener("debug", statusObserver.onGatewayDebug);
+     if (params.voiceManager) {
++      unregisterVoiceSpeakHandler();
+       await params.voiceManager.destroy();
+       params.voiceManagerRef.current = null;
+     }
+diff --git a/extensions/discord/src/monitor/provider.ts b/extensions/discord/src/monitor/provider.ts
+index eaa1b1e9f9..c21d4ef8ad 100644
+--- a/extensions/discord/src/monitor/provider.ts
++++ b/extensions/discord/src/monitor/provider.ts
+@@ -40,6 +40,7 @@ import { createSubsystemLogger } from "openclaw/plugin-sdk/runtime-env";
+ import { createNonExitingRuntime, type RuntimeEnv } from "openclaw/plugin-sdk/runtime-env";
+ import { formatErrorMessage } from "openclaw/plugin-sdk/ssrf-runtime";
+ import { summarizeStringEntries } from "openclaw/plugin-sdk/text-runtime";
++import { registerVoiceSpeakHandler, unregisterVoiceSpeakHandler } from "openclaw/plugin-sdk/voice-speak-registry";
+ import { resolveDiscordAccount } from "../accounts.js";
+ import { fetchDiscordApplicationId } from "../probe.js";
+ import { normalizeDiscordToken } from "../token.js";
+@@ -1002,6 +1003,7 @@ export async function monitorDiscordProvider(opts: MonitorDiscordOpts = {}) {
+         botUserId,
+       });
+       voiceManagerRef.current = voiceManager;
++      registerVoiceSpeakHandler((text: string, guildId?: string) => voiceManager!.speakText(text, guildId));
+       registerDiscordListener(client.listeners, new DiscordVoiceReadyListener(voiceManager));
+     }
+ 
+diff --git a/extensions/discord/src/voice/manager.ts b/extensions/discord/src/voice/manager.ts
+index 9d05786190..26c78b5876 100644
+--- a/extensions/discord/src/voice/manager.ts
++++ b/extensions/discord/src/voice/manager.ts
+@@ -549,6 +549,80 @@ export class DiscordVoiceManager {
+     }));
+   }
+ 
++  async speakText(
++    text: string,
++    guildId?: string,
++  ): Promise<{ ok: boolean; message: string }> {
++    if (!this.voiceEnabled) {
++      return { ok: false, message: "Discord voice is disabled." };
++    }
++
++    // Find the target session
++    let entry: VoiceSessionEntry | undefined;
++    if (guildId) {
++      entry = this.sessions.get(guildId);
++      if (!entry) {
++        return { ok: false, message: `No active voice session for guild ${guildId}.` };
++      }
++    } else {
++      // Use first active session
++      const first = this.sessions.values().next();
++      if (first.done) {
++        return { ok: false, message: "No active voice sessions." };
++      }
++      entry = first.value;
++    }
++
++    const speakText = text.trim();
++    if (!speakText) {
++      return { ok: false, message: "Empty text." };
++    }
++
++    logger.info(
++      `discord voice: speakText (${speakText.length} chars): guild=${entry.guildId} channel=${entry.channelId}`,
++    );
++
++    const { cfg: ttsCfg } = resolveVoiceTtsConfig({
++      cfg: this.params.cfg,
++      override: this.params.discordConfig.voice?.tts,
++    });
++
++    const ttsResult = await textToSpeech({
++      text: speakText,
++      cfg: ttsCfg,
++      channel: "discord",
++    });
++    if (!ttsResult.success || !ttsResult.audioPath) {
++      const err = ttsResult.error ?? "unknown error";
++      logger.warn(`discord voice: speakText TTS failed: ${err}`);
++      return { ok: false, message: `TTS failed: ${err}` };
++    }
++    const audioPath = ttsResult.audioPath;
++
++    this.enqueuePlayback(entry, async () => {
++      logVoiceVerbose(
++        `speakText playback start: guild ${entry!.guildId} channel ${entry!.channelId} file ${path.basename(audioPath)}`,
++      );
++      const voiceSdk = loadDiscordVoiceSdk();
++      const resource = voiceSdk.createAudioResource(audioPath);
++      entry!.player.play(resource);
++      await voiceSdk
++        .entersState(entry!.player, voiceSdk.AudioPlayerStatus.Playing, PLAYBACK_READY_TIMEOUT_MS)
++        .catch(() => undefined);
++      await voiceSdk
++        .entersState(entry!.player, voiceSdk.AudioPlayerStatus.Idle, SPEAKING_READY_TIMEOUT_MS)
++        .catch(() => undefined);
++      logVoiceVerbose(`speakText playback done: guild ${entry!.guildId} channel ${entry!.channelId}`);
++    });
++
++    return {
++      ok: true,
++      message: `Speaking in guild ${entry.guildId} channel ${entry.channelId}: "${speakText.slice(0, 50)}${speakText.length > 50 ? '...' : ''}"`,
++    };
++  }
++
++
++
+   async join(params: { guildId: string; channelId: string }): Promise<VoiceOperationResult> {
+     if (!this.voiceEnabled) {
+       return {
+diff --git a/package.json b/package.json
+index c96c87f01a..798e336563 100644
+--- a/package.json
++++ b/package.json
+@@ -1004,7 +1004,11 @@
+       "default": "./dist/plugin-sdk/zod.js"
+     },
+     "./extension-api": "./dist/extensionAPI.js",
+-    "./cli-entry": "./openclaw.mjs"
++    "./cli-entry": "./openclaw.mjs",
++    "./plugin-sdk/voice-speak-registry": {
++      "types": "./dist/plugin-sdk/voice-speak-registry.d.ts",
++      "default": "./dist/plugin-sdk/voice-speak-registry.js"
++    }
+   },
+   "scripts": {
+     "android:assemble": "cd apps/android && ./gradlew :app:assemblePlayDebug",
+diff --git a/src/agents/openclaw-tools.ts b/src/agents/openclaw-tools.ts
+index c2570a1c7c..25fc66c9d7 100644
+--- a/src/agents/openclaw-tools.ts
++++ b/src/agents/openclaw-tools.ts
+@@ -31,6 +31,7 @@ import { createSessionsYieldTool } from "./tools/sessions-yield-tool.js";
+ import { createSubagentsTool } from "./tools/subagents-tool.js";
+ import { createTtsTool } from "./tools/tts-tool.js";
+ import { createWebFetchTool, createWebSearchTool } from "./tools/web-tools.js";
++import { createVoiceSpeakTool } from "./tools/voice-speak-tool.js";
+ import { resolveWorkspaceRoot } from "./workspace-dir.js";
+ 
+ type OpenClawToolsDeps = {
+@@ -201,6 +202,7 @@ export function createOpenClawTools(
+       agentChannel: options?.agentChannel,
+       config: options?.config,
+     }),
++    createVoiceSpeakTool(),
+     ...(imageGenerateTool ? [imageGenerateTool] : []),
+     createGatewayTool({
+       agentSessionKey: options?.agentSessionKey,
+diff --git a/src/agents/tool-catalog.ts b/src/agents/tool-catalog.ts
+index 42ebb18da9..638af6f57a 100644
+--- a/src/agents/tool-catalog.ts
++++ b/src/agents/tool-catalog.ts
+@@ -265,6 +265,14 @@ const CORE_TOOL_DEFINITIONS: CoreToolDefinition[] = [
+     profiles: [],
+     includeInOpenClawGroup: true,
+   },
++  {
++    id: "voice_speak",
++    label: "voice_speak",
++    description: "Speak text in a Discord voice channel via TTS",
++    sectionId: "media",
++    profiles: ["coding"],
++    includeInOpenClawGroup: true,
++  },
+ ];
+ 
+ const CORE_TOOL_BY_ID = new Map<string, CoreToolDefinition>(
+
+diff --git a/src/agents/tools/voice-speak-tool.ts b/src/agents/tools/voice-speak-tool.ts
+new file mode 100644
+index 0000000000..29f810f545
+--- /dev/null
++++ b/src/agents/tools/voice-speak-tool.ts
+@@ -0,0 +1,55 @@
++import { Type } from "@sinclair/typebox";
++import { getVoiceSpeakHandler } from "../../plugin-sdk/voice-speak-registry.js";
++import type { AnyAgentTool } from "./common.js";
++import { readStringParam } from "./common.js";
++
++const VoiceSpeakToolSchema = Type.Object({
++  text: Type.String({ description: "Text to speak in the Discord voice channel via TTS." }),
++  guildId: Type.Optional(
++    Type.String({ description: "Optional Discord guild ID. Uses first active voice session if omitted." }),
++  ),
++});
++
++export function createVoiceSpeakTool(): AnyAgentTool {
++  return {
++    label: "Voice Speak",
++    name: "voice_speak",
++    displaySummary: "Speak text in a Discord voice channel via TTS.",
++    description:
++      "Convert text to speech and play it through the Discord voice connection. " +
++      "The bot must already be connected to a voice channel. " +
++      "Omit guildId to use the first active voice session.",
++    parameters: VoiceSpeakToolSchema,
++    execute: async (_toolCallId, args) => {
++      const params = args as Record<string, unknown>;
++      const text = readStringParam(params, "text", { required: true });
++      const guildId = readStringParam(params, "guildId");
++
++      const speak = getVoiceSpeakHandler();
++      if (!speak) {
++        return {
++          content: [
++            {
++              type: "text",
++              text: "Voice speak is not available. No Discord voice session is active or the voice manager is not initialized.",
++            },
++          ],
++          details: { error: "no voice speak handler registered" },
++        };
++      }
++
++      const result = await speak(text, guildId || undefined);
++      return {
++        content: [
++          {
++            type: "text",
++            text: result.ok
++              ? `Speaking in voice channel: "${text.slice(0, 100)}${text.length > 100 ? "..." : ""}"`
++              : `Voice speak failed: ${result.message}`,
++          },
++        ],
++        details: { ok: result.ok, message: result.message },
++      };
++    },
++  };
++}
+
+diff --git a/src/plugin-sdk/voice-speak-registry.ts b/src/plugin-sdk/voice-speak-registry.ts
+new file mode 100644
+index 0000000000..845dff8c5b
+--- /dev/null
++++ b/src/plugin-sdk/voice-speak-registry.ts
+@@ -0,0 +1,31 @@
++/**
++ * Global registry for the voice-speak handler.
++ *
++ * Uses globalThis to avoid module duplication issues across bundled chunks.
++ * The Discord extension registers its voice manager's speakText function here
++ * at startup. The voice_speak tool reads from this registry to play audio
++ * through the Discord voice connection.
++ */
++
++type VoiceSpeakHandler = (
++  text: string,
++  guildId?: string,
++) => Promise<{ ok: boolean; message: string }>;
++
++const REGISTRY_KEY = Symbol.for("openclaw.voice-speak-handler");
++
++interface VoiceSpeakGlobal {
++  [key: symbol]: VoiceSpeakHandler | undefined;
++}
++
++export function registerVoiceSpeakHandler(fn: VoiceSpeakHandler): void {
++  (globalThis as unknown as VoiceSpeakGlobal)[REGISTRY_KEY] = fn;
++}
++
++export function unregisterVoiceSpeakHandler(): void {
++  (globalThis as unknown as VoiceSpeakGlobal)[REGISTRY_KEY] = undefined;
++}
++
++export function getVoiceSpeakHandler(): VoiceSpeakHandler | null {
++  return (globalThis as unknown as VoiceSpeakGlobal)[REGISTRY_KEY] ?? null;
++}

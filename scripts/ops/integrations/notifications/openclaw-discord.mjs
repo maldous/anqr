@@ -136,29 +136,40 @@ export async function sendDiscordMessage(content) {
  * @returns {Promise<{sent: boolean, reason?: string}>}
  */
 export async function sendDiscordEmbed({ title, description, fields, footer }) {
-  // Build embed as a formatted text message since OpenClaw's message tool
-  // sends plain text. We format it nicely for Discord.
+  // Build embed as compact formatted text for Discord.
+  // Inline fields → single line with " · " separator.
+  // Non-inline fields → one per line.
   let content = "";
 
   if (title) {
-    content += `**${title}**\n\n`;
+    content += `**${title}**`;
   }
 
   if (description) {
-    content += `${description}\n\n`;
+    const desc = description.length > 150
+      ? description.slice(0, 147) + "\u2026"
+      : description;
+    content += `\n${desc}`;
   }
 
   if (fields && fields.length > 0) {
-    for (const field of fields) {
-      content += `**${field.name}**: ${field.value}`;
-      if (!field.inline) content += "\n";
-      content += "\n";
+    const inlineFields = fields.filter((f) => f.inline);
+    const blockFields = fields.filter((f) => !f.inline);
+
+    if (inlineFields.length > 0) {
+      const inlineStr = inlineFields
+        .map((f) => `${f.name}: ${f.value}`)
+        .join(" \u00b7 ");
+      content += `\n${inlineStr}`;
+    }
+
+    for (const field of blockFields) {
+      content += `\n${field.name}: ${field.value}`;
     }
   }
 
   if (footer) {
-    const timestamp = new Date().toISOString();
-    content += `\n_${footer} (${timestamp})_`;
+    content += `\n_${footer}_`;
   }
 
   if (!content.trim()) {

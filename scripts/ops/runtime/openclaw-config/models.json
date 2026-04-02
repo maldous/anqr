@@ -1,0 +1,103 @@
+{
+  "providers": {
+    "symphony-bridge": {
+      "baseUrl": "http://127.0.0.1:18790/v1",
+      "apiKey": "local-bridge",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "symphony/main",
+          "name": "Symphony Main (auto-provider selection)"
+        },
+        {
+          "id": "symphony/text",
+          "name": "Symphony Text (local-only)"
+        },
+        {
+          "id": "symphony/codex",
+          "name": "Symphony Codex (paid)"
+        },
+        {
+          "id": "symphony/codebuff",
+          "name": "Symphony Codebuff SDK"
+        },
+        {
+          "id": "symphony/groq",
+          "name": "Symphony Groq"
+        },
+        {
+          "id": "symphony/mistral",
+          "name": "Symphony Mistral"
+        },
+        {
+          "id": "symphony/gemini",
+          "name": "Symphony Gemini"
+        },
+        {
+          "id": "symphony/gemini-lite",
+          "name": "Symphony Gemini Lite"
+        },
+        {
+          "id": "symphony/openrouter",
+          "name": "Symphony OpenRouter"
+        },
+        {
+          "id": "symphony/sambanova",
+          "name": "Symphony SambaNova"
+        },
+        {
+          "id": "symphony/cerebras",
+          "name": "Symphony Cerebras"
+        },
+        {
+          "id": "symphony/ollama-local",
+          "name": "Symphony Ollama Local"
+        },
+        {
+          "id": "symphony/qwen3-coder",
+          "name": "Qwen3 Coder Next"
+        }
+      ]
+    },
+    "ollama": {
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "local",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "qwen2.5-coder:0.5b",
+          "name": "Qwen2.5 Coder 0.5B"
+        },
+        {
+          "id": "qwen2.5-coder:3b-instruct",
+          "name": "Qwen2.5 Coder 3B"
+        },
+        {
+          "id": "qwen3-coder-next:latest",
+          "name": "Qwen3 Coder Next"
+        }
+      ]
+    }
+  },
+  "agents": {
+    "primary": {
+      "model": "symphony-bridge/symphony/main",
+      "fallbacks": [
+        "symphony-bridge/symphony/codex",
+        "symphony-bridge/symphony/codebuff",
+        "symphony-bridge/symphony/groq",
+        "symphony-bridge/symphony/mistral",
+        "symphony-bridge/symphony/gemini",
+        "symphony-bridge/symphony/gemini-lite",
+        "symphony-bridge/symphony/openrouter",
+        "symphony-bridge/symphony/sambanova",
+        "symphony-bridge/symphony/cerebras",
+        "symphony-bridge/symphony/ollama-local",
+        "ollama/qwen2.5-coder:0.5b",
+        "ollama/qwen2.5-coder:3b-instruct",
+        "ollama/qwen3-coder-next:latest"
+      ]
+    },
+    "tools": ["browser", "canvas", "read", "write", "edit", "exec", "web_search", "subagents", "code_search", "list_directory", "read_subtree", "glob", "file_picker", "researcher_web", "researcher_docs", "thinker", "spawn_agents", "code_interpreter", "file_search", "image_generation", "wolfram_alpha"]
+  }
+}

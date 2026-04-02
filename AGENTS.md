@@ -109,6 +109,10 @@ These tools and aliases are available **only** in the Symphony bridge context. D
 - `shell` — alias for `run_terminal_command`
 - `local_shell` — alias for `run_terminal_command`
 
+**Voice tools** (Symphony bridge only — requires OpenClaw Gateway):
+
+- `voice_speak` — Speak text in a Discord voice channel via TTS (calls OpenClaw Gateway `/tools/invoke`)
+
 **Memory tools** (Symphony bridge only):
 
 - `memory_search` — Search MEMORY.md and knowledge files
