@@ -32,11 +32,11 @@ ANQR's Discord integration consists of two distinct components:
 - `OPENCLAW_GATEWAY_PORT` - OpenClaw Gateway port (default: 18789)
 - `OPENCLAW_GATEWAY_TOKEN` - Token for OpenClaw Gateway authentication (required)
 - `DISCORD_TEXT_CHANNEL_ID` - Discord text channel for notifications (default: 1486262758256410646)
-- `DISCORD_VOICE_CHANNEL_ID` - Discord voice channel for TTS/voice only (default: 1486262758256410647)
+- `DISCORD_VOICE_CHANNEL_ID` - Discord voice channel for voice interaction (default: 1486262758256410647)
 
 **Note**: `DISCORD_WEBHOOK_URL` and `DISCORD_WEBHOOK_ENABLED` are no longer used. Discord notifications are now routed through OpenClaw Gateway.
 
-**OpenClaw guilds allowlist** (`~/.openclaw/openclaw.json`): Only the **text channel** is in the `channels.discord.guilds` allowlist — this controls which channels accept inbound text commands. The voice channel is NOT in the allowlist because it is used exclusively for voice/TTS, not text routing.
+**OpenClaw guilds allowlist** (`~/.openclaw/openclaw.json`): Both channels are in the `channels.discord.guilds` allowlist. The **text channel** handles text commands/responses. The **voice channel** handles voice interaction — the bot listens to speech (STT) and replies via TTS. Symphony can send voice updates to the voice channel via OpenClaw's `message` tool.
 
 **Scope**: Text-only notifications. Does NOT include bot capabilities or voice channel access.
 
