@@ -1574,11 +1574,103 @@ function voiceAnnounce(text) {
 
 // ── Worktree git sync/push ───────────────────────────────────────────────────
 
+const MAX_CONFLICT_FILES = 10;
+const MAX_CONFLICT_FILE_SIZE = 100 * 1024;
+
+/**
+ * Use AI to resolve git merge/rebase conflicts in the current worktree.
+ * Reads each conflicting file, sends to an AI provider for resolution,
+ * writes the resolved content back, and stages the file.
+ * Returns true if all conflicts were resolved, false otherwise.
+ */
+async function resolveConflictsWithAI() {
+  const conflictOutput = execSync("git diff --name-only --diff-filter=U", {
+    cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe",
+  }).trim();
+  const conflictFiles = conflictOutput.split("\n").filter(Boolean);
+
+  if (conflictFiles.length === 0) return true;
+  if (conflictFiles.length > MAX_CONFLICT_FILES) {
+    logWarn(`⚠️ Too many conflicting files (${conflictFiles.length}) — skipping AI resolution`);
+    return false;
+  }
+
+  logInfo(`🔧 Resolving ${conflictFiles.length} conflict(s) with AI: ${conflictFiles.join(", ")}`);
+  voiceAnnounce(`Resolving ${conflictFiles.length} merge conflict${conflictFiles.length > 1 ? "s" : ""} with AI.`);
+
+  const provider = await selectProvider({ excludeNames: ["codebuff"] });
+  if (!provider) {
+    logWarn(`⚠️ No provider available for conflict resolution`);
+    return false;
+  }
+
+  let apiKey = provider.apiKey;
+  if (!apiKey && provider.envKey) apiKey = process.env[provider.envKey];
+  if (!apiKey && provider.loadToken) {
+    try { apiKey = await provider.loadToken(); } catch { /* ignore */ }
+  }
+
+  let model;
+  try {
+    model = createProviderModel({ ...provider, apiKey });
+  } catch (err) {
+    logWarn(`⚠️ Failed to create model for conflict resolution (${provider.name}): ${err.message}`);
+    return false;
+  }
+
+  for (const file of conflictFiles) {
+    try {
+      const filePath = path.join(BRIDGE_ROOT, file);
+      const content = fs.readFileSync(filePath, "utf-8");
+
+      if (content.length > MAX_CONFLICT_FILE_SIZE) {
+        logWarn(`⚠️ File ${file} too large for AI resolution (${content.length} bytes)`);
+        return false;
+      }
+
+      const result = await generateText({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: "You are a git merge conflict resolver. You receive a file containing git conflict markers (<<<<<<< , =======, >>>>>>>). Output ONLY the resolved file content with all conflicts resolved. Prefer keeping both sides' changes when possible. When changes truly conflict, prefer the incoming changes (after =======). Do not add explanation, markdown formatting, or code fences — output only the raw file content.",
+          },
+          {
+            role: "user",
+            content: `Resolve all merge conflicts in this file (${file}):\n\n${content}`,
+          },
+        ],
+        maxTokens: 16384,
+      });
+
+      let resolved = (result.text || "").replace(/^\s*```[^\n]*\n/, "").replace(/\n```\s*$/, "");
+      if (!resolved || resolved.includes("<<<<<<<") || resolved.includes(">>>>>>>")) {
+        logWarn(`⚠️ AI resolution for ${file} still contains conflict markers`);
+        return false;
+      }
+      if (resolved.length < content.length * 0.3) {
+        logWarn(`⚠️ AI resolution for ${file} suspiciously short (${resolved.length} vs ${content.length} original)`);
+        return false;
+      }
+
+      fs.writeFileSync(filePath, resolved, "utf-8");
+      execFileSync("git", ["add", "--", file], { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" });
+      logInfo(`✅ Resolved conflict in ${file} via AI (${provider.name})`);
+    } catch (err) {
+      logWarn(`⚠️ Failed to resolve conflict in ${file}: ${err.message}`);
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /**
  * Sync the current worktree with origin/main before processing a request.
+ * If merge conflicts arise, attempts AI-powered resolution inline.
  * Non-fatal — logs warnings on failure but never blocks the request.
  */
-function syncWorktreeFromMain() {
+async function syncWorktreeFromMain() {
   if (!IS_WORKTREE_BRIDGE) return;
   try {
     execSync("git fetch origin main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
@@ -1588,10 +1680,22 @@ function syncWorktreeFromMain() {
       logWarn(`⚠️ ff-only merge failed — attempting regular merge`);
       try {
         execSync("git merge origin/main --no-edit", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
-      } catch (mergeErr) {
-        logWarn(`⚠️ Merge conflict — aborting merge to preserve worktree state`);
-        try { execSync("git merge --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
-        return;
+      } catch {
+        logInfo(`🔧 Merge conflict detected — attempting AI resolution`);
+        const resolved = await resolveConflictsWithAI();
+        if (!resolved) {
+          logWarn(`⚠️ AI conflict resolution failed — aborting merge`);
+          try { execSync("git merge --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
+          return;
+        }
+        try {
+          execSync("git commit --no-edit", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+          logInfo(`✅ Merge conflicts resolved by AI`);
+        } catch (commitErr) {
+          logWarn(`⚠️ Merge commit failed after AI resolution: ${commitErr.message}`);
+          try { execSync("git merge --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
+          return;
+        }
       }
     }
     logInfo(`🔄 Worktree synced with origin/main`);
@@ -1602,9 +1706,10 @@ function syncWorktreeFromMain() {
 
 /**
  * Push worktree changes to origin/main after request completion.
+ * If rebase conflicts arise, attempts AI-powered resolution inline.
  * Non-fatal — logs warnings on failure. Retries with rebase on push race.
  */
-function pushWorktreeToMain() {
+async function pushWorktreeToMain() {
   if (!IS_WORKTREE_BRIDGE) return;
   try {
     const status = execSync("git status --porcelain", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
@@ -1632,9 +1737,27 @@ function pushWorktreeToMain() {
           try {
             execSync("git fetch origin main && git rebase origin/main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
           } catch {
-            logWarn(`⚠️ Rebase failed — aborting rebase`);
-            try { execSync("git rebase --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
-            break;
+            logInfo(`🔧 Rebase conflict — attempting AI resolution`);
+            let rebaseOk = false;
+            for (let round = 0; round < 5; round++) {
+              const aiOk = await resolveConflictsWithAI();
+              if (!aiOk) break;
+              try {
+                execSync("GIT_EDITOR=true git rebase --continue", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
+                rebaseOk = true;
+                break;
+              } catch {
+                const remaining = execSync("git diff --name-only --diff-filter=U", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+                if (!remaining) { rebaseOk = true; break; }
+                logInfo(`🔧 Rebase round ${round + 1}: more conflicts, continuing`);
+              }
+            }
+            if (!rebaseOk) {
+              logWarn(`⚠️ Rebase conflict resolution failed — aborting rebase`);
+              try { execSync("git rebase --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
+              break;
+            }
+            logInfo(`✅ Rebase conflicts resolved by AI`);
           }
         } else {
           logWarn(`⚠️ Push failed after ${attempt} attempts: ${pushErr.message}`);
@@ -5292,7 +5415,7 @@ const server = http.createServer(async (req, res) => {
       const requestCwd = normalizeRequestCwd(body.cwd);
 
       // Sync worktree with main before processing (non-blocking on failure)
-      syncWorktreeFromMain();
+      await syncWorktreeFromMain();
 
       // Fast validation BEFORE route resolution - fail immediately on invalid input
       if (!messages || messages.length === 0) {
@@ -5695,7 +5818,7 @@ const server = http.createServer(async (req, res) => {
           }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
           voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
-          pushWorktreeToMain();
+          await pushWorktreeToMain();
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -5800,7 +5923,7 @@ const server = http.createServer(async (req, res) => {
           }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
           voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
-          pushWorktreeToMain();
+          await pushWorktreeToMain();
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -5906,7 +6029,7 @@ const server = http.createServer(async (req, res) => {
         }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
         voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
-        pushWorktreeToMain();
+        await pushWorktreeToMain();
 
         const durationMs = Date.now() - startTime;
 
@@ -6310,6 +6433,9 @@ server.listen(PORT, "127.0.0.1", async () => {
   }
 
   // Send immediate Discord notification on startup - BEFORE async probe
+  // Only one executor sends the notification (wt1 or non-worktree main bridge)
+  const startupWorktreeId = process.env.ANQR_WORKTREE_ID;
+  const shouldAnnounceStartup = !startupWorktreeId || startupWorktreeId === "1";
   try {
     const commitHash = execSync("git rev-parse --short HEAD", {
       encoding: "utf-8",
@@ -6339,19 +6465,23 @@ server.listen(PORT, "127.0.0.1", async () => {
       fields.push({ name: "Details", value: truncatedBody, inline: false });
     }
 
-    const discordResult = await sendDiscordEmbed({
-      title: "🔄 Symphony Bridge Restarted",
-      description: `PID ${process.pid}`,
-      color: 0x00ff00, // Green
-      fields,
-    });
-    if (discordResult.sent) {
-      logInfo(`✅ Discord restart notification sent successfully`);
-    } else {
-      logError(`❌ Discord restart notification failed: ${discordResult.reason || "unknown"}`);
-    }
+    if (shouldAnnounceStartup) {
+      const discordResult = await sendDiscordEmbed({
+        title: "🔄 Symphony Bridge Restarted",
+        description: `PID ${process.pid}`,
+        color: 0x00ff00, // Green
+        fields,
+      });
+      if (discordResult.sent) {
+        logInfo(`✅ Discord restart notification sent successfully`);
+      } else {
+        logError(`❌ Discord restart notification failed: ${discordResult.reason || "unknown"}`);
+      }
 
-    voiceAnnounce("Symphony bridge is online.");
+      voiceAnnounce("Symphony bridge is online.");
+    } else {
+      logInfo(`Skipping startup notification (wt${startupWorktreeId} — wt1 announces for all)`);
+    }
   } catch (err) {
     logError(`❌ Failed to send Discord restart notification: ${err.message}`);
   }
@@ -6557,6 +6687,7 @@ export {
   VOICE_TRANSCRIPT_RE,
   VOICE_SYSTEM_PROMPT,
   sanitizeForDiscordPreview,
+  resolveConflictsWithAI,
   syncWorktreeFromMain,
   pushWorktreeToMain,
 };
