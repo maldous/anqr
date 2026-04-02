@@ -1374,6 +1374,14 @@ function isVoiceNoise(text) {
   if (/rate.?limit(ed|ing)?/i.test(t)) return true;
   if (/trying\s+next\s+provider|falling\s*back|triggering\s+fallback/i.test(t)) return true;
   if (/provider.*cooldown|cooldown.*provider/i.test(t)) return true;
+  if (/all\s+providers?\s+(fail|exhaust)/i.test(t)) return true;
+  if (/no\s+providers?\s+available/i.test(t)) return true;
+
+  // Anti-echo: bridge announcement patterns (prevent TTS→STT feedback loops)
+  if (/^starting work on\s+\S/i.test(t)) return true;
+  if (/^finished\s+\S/i.test(t)) return true;
+  if (/^symphony bridge\b/i.test(t)) return true;
+  if (/^resolving\s+\d+\s+merge\s+conflict/i.test(t)) return true;
 
   // Internal bridge / harness status
   if (/credit.?gate\s+selected|adaptive.?context|token.?ceiling/i.test(t)) return true;
@@ -5621,25 +5629,33 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // Detect voice requests early to gate Discord notifications (prevents TTS→STT feedback loop)
+      const isVoiceRequest = VOICE_TRANSCRIPT_RE.test(contentStr);
+
       // Build sanitized message preview for Discord notifications
       const messagePreview = sanitizeForDiscordPreview(contentStr) || "(system task)";
-      // Build title with worktree ID
-      const worktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
-      const embedTitle = issueContext?.identifier 
-        ? `⏳ ${issueContext.identifier}${worktreeLabel}` 
-        : `⏳ Processing Request${worktreeLabel}`;
-      const embedDescription = issueContext?.title 
-        ? issueContext.title 
-        : messagePreview || "(no description)";
-      
-      sendDiscordEmbed({
-        title: embedTitle,
-        description: embedDescription,
-        color: 0xffa500, // Orange
-        fields: fields.length > 0 ? fields : undefined,
-      }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
-      voiceAnnounce(`Starting work on ${issueContext?.title || messagePreview}.`);
+      // Skip Discord text notifications and voice announcements for voice requests —
+      // OpenClaw auto-TTS speaks the response, so extra notifications cause feedback.
+      if (!isVoiceRequest) {
+        // Build title with worktree ID
+        const worktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
+        const embedTitle = issueContext?.identifier 
+          ? `⏳ ${issueContext.identifier}${worktreeLabel}` 
+          : `⏳ Processing Request${worktreeLabel}`;
+        const embedDescription = issueContext?.title 
+          ? issueContext.title 
+          : messagePreview || "(no description)";
+        
+        sendDiscordEmbed({
+          title: embedTitle,
+          description: embedDescription,
+          color: 0xffa500, // Orange
+          fields: fields.length > 0 ? fields : undefined,
+        }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+
+        voiceAnnounce(`Starting work on ${issueContext?.title || messagePreview}.`);
+      }
 
       // Progress logger — log elapsed time periodically during long requests
       // AND send Discord updates every 30 seconds
@@ -5671,7 +5687,7 @@ const server = http.createServer(async (req, res) => {
                 {
                   index: 0,
                   delta: {
-                    content: `\n[Error: Request timed out after ${formatElapsed(elapsed)}]`,
+                    content: isVoiceRequest ? "\nSorry, the request timed out. Please try again." : `\n[Error: Request timed out after ${formatElapsed(elapsed)}]`,
                   },
                   finish_reason: "stop",
                 },
@@ -5705,7 +5721,6 @@ const server = http.createServer(async (req, res) => {
       // "Voice transcript from speaker ..."), inject a system prompt that tells
       // the LLM to respond in speech-friendly format. This applies to all three
       // provider paths (Codebuff direct, standard stream cascade, non-streaming).
-      const isVoiceRequest = VOICE_TRANSCRIPT_RE.test(contentStr);
       if (isVoiceRequest) {
         logInfo(`🎙️ Voice request detected — injecting speech-friendly system prompt`);
         const firstNonSystem = messages.findIndex((m) => m.role !== "system");
@@ -5758,7 +5773,7 @@ const server = http.createServer(async (req, res) => {
             // Skip for Discord-originated requests — the Discord command handler
             // already streams text from the SSE response to avoid double delivery.
             const isDiscordOrigin = sessionId?.startsWith("discord:");
-            const streamToDiscord = isDiscordOrigin
+            const streamToDiscord = isDiscordOrigin || isVoiceRequest
               ? null
               : (text) => {
                   if (text && text.length > 0) {
@@ -5810,14 +5825,17 @@ const server = http.createServer(async (req, res) => {
           const completionTitle = issueContext?.identifier 
             ? `✅ ${issueContext.identifier}${completionWorktreeLabel}` 
             : `✅ Done${completionWorktreeLabel}`;
-          sendDiscordEmbed({
-            title: completionTitle,
-            description: issueContext?.title || messagePreview,
-            color: 0x00ff00, // Green
-            fields: completionFields,
-          }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+          if (!isVoiceRequest) {
+            sendDiscordEmbed({
+              title: completionTitle,
+              description: issueContext?.title || messagePreview,
+              color: 0x00ff00, // Green
+              fields: completionFields,
+            }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
-          voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+            voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+          }
+
           await pushWorktreeToMain();
 
             const durationMs = Date.now() - startTime;
@@ -5915,14 +5933,17 @@ const server = http.createServer(async (req, res) => {
           const streamCompletionTitle = issueContext?.identifier 
             ? `✅ ${issueContext.identifier}${streamCompletionWorktreeLabel}` 
             : `✅ Done${streamCompletionWorktreeLabel}`;
-          sendDiscordEmbed({
-            title: streamCompletionTitle,
-            description: issueContext?.title || messagePreview,
-            color: 0x00ff00, // Green
-            fields: streamCompletionFields,
-          }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+          if (!isVoiceRequest) {
+            sendDiscordEmbed({
+              title: streamCompletionTitle,
+              description: issueContext?.title || messagePreview,
+              color: 0x00ff00, // Green
+              fields: streamCompletionFields,
+            }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
-          voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+            voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+          }
+
           await pushWorktreeToMain();
 
           const durationMs = Date.now() - startTime;
@@ -5962,7 +5983,7 @@ const server = http.createServer(async (req, res) => {
             choices: [
               {
                 index: 0,
-                delta: { content: `\n[Error: ${streamError.message}]` },
+                delta: { content: isVoiceRequest ? "\nSorry, I'm having trouble right now. Please try again in a moment." : `\n[Error: ${streamError.message}]` },
                 finish_reason: "stop",
               },
             ],
@@ -6021,14 +6042,17 @@ const server = http.createServer(async (req, res) => {
         const nonStreamCompletionTitle = issueContext?.identifier 
           ? `✅ ${issueContext.identifier}${nonStreamCompletionWorktreeLabel}` 
           : `✅ Done${nonStreamCompletionWorktreeLabel}`;
-        sendDiscordEmbed({
-          title: nonStreamCompletionTitle,
-          description: issueContext?.title || messagePreview,
-          color: 0x00ff00, // Green
-          fields: nonStreamCompletionFields,
-        }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+        if (!isVoiceRequest) {
+          sendDiscordEmbed({
+            title: nonStreamCompletionTitle,
+            description: issueContext?.title || messagePreview,
+            color: 0x00ff00, // Green
+            fields: nonStreamCompletionFields,
+          }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
-        voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+          voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+        }
+
         await pushWorktreeToMain();
 
         const durationMs = Date.now() - startTime;
