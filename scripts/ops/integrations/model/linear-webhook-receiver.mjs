@@ -346,6 +346,10 @@ server.listen(PORT, "0.0.0.0", () => {
   logInfo(`Secret configured: ${!!WEBHOOK_SECRET}`);
   logInfo("========================================");
   logInfo("Ready to receive Linear webhook events");
+  
+  // Clear stale delivery tracking on startup to prevent false duplicates
+  recentDeliveries.clear();
+  logInfo("🔄 Cleared stale delivery tracking for immediate webhook processing");
 });
 
 // Graceful shutdown

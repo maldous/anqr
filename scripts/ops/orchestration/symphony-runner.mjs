@@ -2021,6 +2021,7 @@ async function main() {
 
     if (!dryRun) {
       // FIRST: Clean up expired leases and recover stale In Progress issues BEFORE picking new work
+      // This is critical for startup recovery - ensures issues stuck in In Progress are moved back to Todo
       const { findExpiredLeases } = await import("../symphony-state.mjs");
       const expiredLeases = findExpiredLeases();
       for (const { issueIdentifier } of expiredLeases) {
@@ -2030,17 +2031,24 @@ async function main() {
       }
 
       // Now check for stale In Progress issues - recover them to Todo so they can be picked up
+      // This handles cases where runners crashed without completing issues or updating state
       const snap = await getQueueSnapshot();
       if (snap.inProgress.all.length > 0) {
         logInfo(`[runner] Checking for stale In Progress issues...`);
         const { detectStuckWork } = await import("./symphony-queue-control.mjs");
         await detectStuckWork(snap, false);
       }
+      
+      // SECOND: Feed the queue to ensure we have enough issues to work on
+      // This handles cases where the queue feeder didn't run or issues weren't properly fed
+      const freshSnap = await getQueueSnapshot();
+      if (freshSnap.readyDepth < TARGET_MIN) {
+        logInfo(`[runner] Queue depth ${freshSnap.readyDepth} < target ${TARGET_MIN} - feeding queue...`);
+        await feedQueue(freshSnap, false);
+      }
 
       // Now check if we need to feed more issues from Backlog
       // CRITICAL: Use readyDepth (Todo count), not queueDepth (includes In Progress)
-      // Runners pick from Todo only, so that's what matters
-      const freshSnap = await getQueueSnapshot();
       if (freshSnap.readyDepth < TARGET_MIN) await feedQueue(freshSnap, false);
     }
 
