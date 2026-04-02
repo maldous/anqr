@@ -43,6 +43,9 @@ const WORKTREE_URLS = WORKTREE_IDS.map((id) => ({
 // Track global concurrent requests
 let globalActiveRequests = 0;
 
+// Round-robin index for distributing requests when loads are equal
+let roundRobinIndex = 0;
+
 function isPathWithinRoot(candidatePath, rootPath) {
   if (!candidatePath || !rootPath) return false;
   const relative = path.relative(rootPath, candidatePath);
@@ -75,19 +78,18 @@ function rebaseCwdToWorktree(cwd, worktreePath) {
 }
 
 /**
- * Find the worktree with the least active requests (least-loaded)
+ * Find the worktree with the least active requests (least-loaded).
+ * When multiple worktrees have equal load, rotate via round-robin
+ * to distribute requests evenly across all available worktrees.
  */
 function getLeastLoadedWorktree() {
-  let minLoad = Infinity;
-  let selected = null;
+  if (WORKTREE_URLS.length === 0) return null;
 
-  for (const wt of WORKTREE_URLS) {
-    if (wt.activeRequests < minLoad) {
-      minLoad = wt.activeRequests;
-      selected = wt;
-    }
-  }
+  const minLoad = Math.min(...WORKTREE_URLS.map((wt) => wt.activeRequests));
+  const candidates = WORKTREE_URLS.filter((wt) => wt.activeRequests === minLoad);
 
+  const selected = candidates[roundRobinIndex % candidates.length];
+  roundRobinIndex = (roundRobinIndex + 1) % WORKTREE_URLS.length;
   return selected;
 }
 

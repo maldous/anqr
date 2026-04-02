@@ -1564,6 +1564,88 @@ async function voiceSpeakTool({ text, guildId }) {
   }
 }
 
+/**
+ * Fire-and-forget voice announcement for major bridge events.
+ * Non-blocking — silently ignores failures (e.g. no voice session active).
+ */
+function voiceAnnounce(text) {
+  voiceSpeakTool({ text }).catch(() => {});
+}
+
+// ── Worktree git sync/push ───────────────────────────────────────────────────
+
+/**
+ * Sync the current worktree with origin/main before processing a request.
+ * Non-fatal — logs warnings on failure but never blocks the request.
+ */
+function syncWorktreeFromMain() {
+  if (!IS_WORKTREE_BRIDGE) return;
+  try {
+    execSync("git fetch origin main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+    try {
+      execSync("git merge origin/main --ff-only", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+    } catch {
+      logWarn(`⚠️ ff-only merge failed — attempting regular merge`);
+      try {
+        execSync("git merge origin/main --no-edit", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
+      } catch (mergeErr) {
+        logWarn(`⚠️ Merge conflict — aborting merge to preserve worktree state`);
+        try { execSync("git merge --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
+        return;
+      }
+    }
+    logInfo(`🔄 Worktree synced with origin/main`);
+  } catch (err) {
+    logWarn(`⚠️ Worktree sync failed (non-fatal): ${err.message}`);
+  }
+}
+
+/**
+ * Push worktree changes to origin/main after request completion.
+ * Non-fatal — logs warnings on failure. Retries with rebase on push race.
+ */
+function pushWorktreeToMain() {
+  if (!IS_WORKTREE_BRIDGE) return;
+  try {
+    const status = execSync("git status --porcelain", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+    if (!status) {
+      logInfo(`📤 No changes to push`);
+      return;
+    }
+    execSync("git add -A", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 10000, stdio: "pipe" });
+    const diff = execSync("git diff --cached --stat", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+    if (!diff) {
+      logInfo(`📤 No staged changes to push`);
+      return;
+    }
+    const worktreeLabel = process.env.ANQR_WORKTREE_ID || "unknown";
+    execSync(`git commit -m "auto(${worktreeLabel}): push work to main"`, { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        execSync("git push origin HEAD:main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
+        logInfo(`📤 Worktree changes pushed to origin/main`);
+        return;
+      } catch (pushErr) {
+        if (attempt < 3) {
+          logWarn(`⚠️ Push attempt ${attempt} failed — rebasing and retrying`);
+          try {
+            execSync("git fetch origin main && git rebase origin/main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
+          } catch {
+            logWarn(`⚠️ Rebase failed — aborting rebase`);
+            try { execSync("git rebase --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
+            break;
+          }
+        } else {
+          logWarn(`⚠️ Push failed after ${attempt} attempts: ${pushErr.message}`);
+        }
+      }
+    }
+  } catch (err) {
+    logWarn(`⚠️ Worktree push failed (non-fatal): ${err.message}`);
+  }
+}
+
 // Available tools for the AI SDK
 const tools = {
   code_search: tool({
@@ -5209,6 +5291,9 @@ const server = http.createServer(async (req, res) => {
       const worktreeId = req.headers["x-worktree-id"] || null;
       const requestCwd = normalizeRequestCwd(body.cwd);
 
+      // Sync worktree with main before processing (non-blocking on failure)
+      syncWorktreeFromMain();
+
       // Fast validation BEFORE route resolution - fail immediately on invalid input
       if (!messages || messages.length === 0) {
         logWarn(`⚠️ Empty messages array received - returning 400 immediately`);
@@ -5431,6 +5516,8 @@ const server = http.createServer(async (req, res) => {
         fields: fields.length > 0 ? fields : undefined,
       }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
+      voiceAnnounce(`Starting work on ${issueContext?.title || messagePreview}.`);
+
       // Progress logger — log elapsed time periodically during long requests
       // AND send Discord updates every 30 seconds
       const progressInterval = setInterval(() => {
@@ -5607,6 +5694,9 @@ const server = http.createServer(async (req, res) => {
             fields: completionFields,
           }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
+          voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+          pushWorktreeToMain();
+
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
               provider: "codebuff",
@@ -5708,6 +5798,9 @@ const server = http.createServer(async (req, res) => {
             color: 0x00ff00, // Green
             fields: streamCompletionFields,
           }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+
+          voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+          pushWorktreeToMain();
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -5811,6 +5904,9 @@ const server = http.createServer(async (req, res) => {
           color: 0x00ff00, // Green
           fields: nonStreamCompletionFields,
         }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+
+        voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+        pushWorktreeToMain();
 
         const durationMs = Date.now() - startTime;
 
@@ -6254,6 +6350,8 @@ server.listen(PORT, "127.0.0.1", async () => {
     } else {
       logError(`❌ Discord restart notification failed: ${discordResult.reason || "unknown"}`);
     }
+
+    voiceAnnounce("Symphony bridge is online.");
   } catch (err) {
     logError(`❌ Failed to send Discord restart notification: ${err.message}`);
   }
@@ -6453,9 +6551,12 @@ export {
   webSearchTool,
   readDocsTool,
   voiceSpeakTool,
+  voiceAnnounce,
   isVoiceNoise,
   sanitizeTextForSpeech,
   VOICE_TRANSCRIPT_RE,
   VOICE_SYSTEM_PROMPT,
   sanitizeForDiscordPreview,
+  syncWorktreeFromMain,
+  pushWorktreeToMain,
 };

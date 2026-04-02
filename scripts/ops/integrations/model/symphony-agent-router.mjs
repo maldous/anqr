@@ -28,6 +28,7 @@ const WORKTREES = WORKTREE_IDS.map((id) => ({
 }));
 
 let globalActiveRequests = 0;
+let roundRobinIndex = 0;
 
 function isPathWithinRoot(candidatePath, rootPath) {
   if (!candidatePath || !rootPath) return false;
@@ -68,12 +69,22 @@ function selectWorktree(req, parsedBody) {
     if (found) return found;
   }
 
-  return (
-    WORKTREES.slice().sort((a, b) => {
-      if (a.activeRequests !== b.activeRequests) return a.activeRequests - b.activeRequests;
-      return a.failures - b.failures;
-    })[0] || null
+  if (WORKTREES.length === 0) return null;
+
+  // Find minimum load, then round-robin among equally-loaded worktrees
+  const sorted = WORKTREES.slice().sort((a, b) => {
+    if (a.activeRequests !== b.activeRequests) return a.activeRequests - b.activeRequests;
+    return a.failures - b.failures;
+  });
+  const minLoad = sorted[0].activeRequests;
+  const minFailures = sorted[0].failures;
+  const candidates = sorted.filter(
+    (wt) => wt.activeRequests === minLoad && wt.failures === minFailures,
   );
+
+  const selected = candidates[roundRobinIndex % candidates.length];
+  roundRobinIndex = (roundRobinIndex + 1) % WORKTREES.length;
+  return selected;
 }
 
 function json(res, status, body) {
