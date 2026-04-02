@@ -24,7 +24,7 @@ const definition: AgentDefinition = {
 
 | Tier | Providers | Behavior |
 |------|-----------|----------|
-| paid | codex, codebuff | Probed first; uses paid credits |
+| paid | codex | Probed first; uses paid credits |
 | free-cloud | groq, mistral, gemini, openrouter (27 models), sambanova, cerebras, github-models | Dynamic scoring |
 | local-proxy | openclaw | Local gateways |
 | local-safety-net | ollama-local, ollama-qwen2.5-coder-3b, ollama-qwen2.5-coder-0.5b | Score-capped at 0.25 |
@@ -39,7 +39,7 @@ const definition: AgentDefinition = {
 
 ## Tool Probe
 
-- KNOWN_TOOL_CAPABLE providers (codex, codebuff) return "known-capable" immediately — no actual probe
+- KNOWN_TOOL_CAPABLE providers (codex) return "known-capable" immediately — no actual probe
 - SDK providers return "sdk-capable"
 - Others probed with add(2,2) tool call
 - OpenRouter models share probe results (1 probe covers all 27)

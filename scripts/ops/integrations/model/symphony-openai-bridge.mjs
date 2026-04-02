@@ -59,6 +59,8 @@ import {
   getConfiguredProviders,
   getProviderDefinitions,
   probeAllProviders,
+  ensureStateDir,
+  STATE_DIR,
 } from "./symphony-credit-gate.mjs";
 
 // Session state and adaptive rotation
@@ -1379,10 +1381,12 @@ function isVoiceNoise(text) {
 
   // Anti-echo: Symphony bridge internal routing (these are never speakable)
   if (/^symphony bridge\b/i.test(t)) return true;
-  // Note: "starting work on" and "finished" announcements are intentional -
-  // user wants to hear issue start/finish notifications. The actual TTS->STT
-  // feedback loop prevention happens at the input side (voice transcript detection).
   if (/^resolving\s+\d+\s+merge\s+conflict/i.test(t)) return true;
+
+  // Probe / test request announcements — startup probes are not real work
+  if (/^(starting work on|finished)\s+(test\.?$|say\s)/i.test(t)) return true;
+  if (/say\s+.?ok.?\s+if\s+you\s+can\s+read/i.test(t)) return true;
+  if (/stream_error_with_output/i.test(t)) return true;
 
   // Internal bridge / harness status
   if (/credit.?gate\s+selected|adaptive.?context|token.?ceiling/i.test(t)) return true;
@@ -2821,9 +2825,6 @@ function createOpenAiCompatibleModel(model, apiKey, baseURL, fallbackApiKey) {
 function createProviderModel(provider) {
   const { name, model, baseUrl, apiKey } = provider;
 
-  if (name === "codebuff") {
-    throw new Error("codebuff is handled by direct SDK execution, not AI SDK HTTP bridging");
-  }
   if (name === "groq") {
     return createGroq({ apiKey })(model);
   }
@@ -2875,8 +2876,10 @@ function createProviderModel(provider) {
 const PORT = process.env.SYMPHONY_BRIDGE_PORT || 4319;
 const API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
 const MODEL_ID = process.env.SYMPHONY_MODEL_ID || "symphony/main";
-const BRIDGE_PROVIDER_BLOCKLIST = new Set();
-const BRIDGE_PROVIDER_BLOCKLIST_REASONS = {};
+const BRIDGE_PROVIDER_BLOCKLIST = new Set(["codebuff"]); // codebuff merged into symphony — no longer a standalone provider
+const BRIDGE_PROVIDER_BLOCKLIST_REASONS = {
+  codebuff: "merged into symphony — no longer a standalone provider",
+};
 const OPENROUTER_PROVIDER_NAMES = [
   "openrouter-nemotron-super",
   "openrouter-free",
@@ -2919,11 +2922,6 @@ const ADVERTISED_MODELS = [
     id: "symphony/codex",
     ownedBy: "codex",
     allowedNames: ["codex"],
-  },
-  {
-    id: "symphony/codebuff",
-    ownedBy: "codebuff",
-    allowedNames: ["codebuff"],
   },
   {
     id: "symphony/groq",
@@ -3055,6 +3053,19 @@ let requestIdCounter = 0;
  * Repeats every 30 minutes OR 200 turns of the current provider.
  */
 async function runContinuousProviderProbe() {
+  // Check shared cache first - if another executor just probed, skip
+  const cached = loadProbeCache();
+  if (cached) {
+    const age = Date.now() - new Date(cached.lastProbeAt).getTime();
+    if (age < PROBE_CYCLE_INTERVAL_MS) {
+      logInfo(`🔍 Skipping probe - another executor probed ${Math.round(age / 1000)}s ago (using shared cache)`);
+      providerStatusCache.configured = cached.configured;
+      providerStatusCache.probeResults = cached.probeResults;
+      providerStatusCache.lastProbeAt = cached.lastProbeAt;
+      return;
+    }
+  }
+
   if (isProbeRunning) {
     logDebug(`🔍 Probe already running, skipping duplicate`);
     return;
@@ -3079,6 +3090,14 @@ async function runContinuousProviderProbe() {
     providerStatusCache.configured = getConfiguredProviders({ excludeNames });
     providerStatusCache.probeResults = await probeAllProviders({ excludeNames });
     providerStatusCache.lastProbeAt = new Date().toISOString();
+
+    // Save to shared cache immediately after probe
+    saveProbeCache({
+      configured: providerStatusCache.configured,
+      probeResults: providerStatusCache.probeResults,
+      lastProbeAt: providerStatusCache.lastProbeAt,
+      probing: false,
+    });
 
     const reachable = providerStatusCache.probeResults.filter((r) => r.available);
     const total = providerStatusCache.configured.length;
@@ -3148,7 +3167,40 @@ async function runContinuousProviderProbe() {
 
 // ---------------------------------------------------------------------------
 // Provider status cache — continuously updated by background probe
+// SHARED across all Symphony executors via filesystem to prevent duplicate probes
 // ---------------------------------------------------------------------------
+
+// fs imports are at the top of the file
+
+const PROBE_CACHE_FILE = path.join(STATE_DIR, "provider-probe-cache.json");
+const PROBE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes - probes are expensive
+
+function loadProbeCache() {
+  try {
+    if (!fs.existsSync(PROBE_CACHE_FILE)) return null;
+    const data = JSON.parse(fs.readFileSync(PROBE_CACHE_FILE, "utf-8"));
+    const age = Date.now() - new Date(data.lastProbeAt).getTime();
+    if (age > PROBE_CACHE_TTL_MS) {
+      logDebug(`Probe cache expired (${Math.round(age / 1000)}s old)`);
+      return null;
+    }
+    logDebug(`Loaded probe cache (${Math.round(age / 1000)}s old, ${data.probeResults.length} results)`);
+    return data;
+  } catch (err) {
+    logDebug(`Failed to load probe cache: ${err.message}`);
+    return null;
+  }
+}
+
+function saveProbeCache(cache) {
+  try {
+    ensureStateDir();
+    fs.writeFileSync(PROBE_CACHE_FILE, JSON.stringify(cache, null, 2));
+    logDebug(`Saved probe cache (${cache.probeResults.length} results)`);
+  } catch (err) {
+    logError(`Failed to save probe cache: ${err.message}`);
+  }
+}
 
 const providerStatusCache = {
   configured: [],
@@ -3158,6 +3210,17 @@ const providerStatusCache = {
 };
 
 async function refreshProviderStatus() {
+  // Check if another executor is already probing (via cache file lock)
+  const cached = loadProbeCache();
+  if (cached && !cached.probing) {
+    // Fresh cache exists - use it instead of re-probing
+    providerStatusCache.configured = cached.configured;
+    providerStatusCache.probeResults = cached.probeResults;
+    providerStatusCache.lastProbeAt = cached.lastProbeAt;
+    logInfo(`📊 Using shared probe cache from ${cached.lastProbeAt} (${providerStatusCache.probeResults.filter(r => r.available).length}/${providerStatusCache.configured.length} available)`);
+    return false; // Indicate cache was used
+  }
+
   if (providerStatusCache.probing) return false;
   providerStatusCache.probing = true;
 
@@ -3170,6 +3233,14 @@ async function refreshProviderStatus() {
     const available = providerStatusCache.probeResults.filter((r) => r.available).length;
     const total = providerStatusCache.configured.length;
     logDebug(`🔄 Provider status refreshed: ${available}/${total} available`);
+
+    // Save to shared cache for other executors
+    saveProbeCache({
+      configured: providerStatusCache.configured,
+      probeResults: providerStatusCache.probeResults,
+      lastProbeAt: providerStatusCache.lastProbeAt,
+      probing: false,
+    });
 
     // Phase 2: probe tool-calling capability for all available providers
     await probeAllToolCapability();
@@ -3477,7 +3548,7 @@ function convertMessages(messages) {
 // through before the startup probe completes.
 // ---------------------------------------------------------------------------
 
-const KNOWN_TOOL_CAPABLE = new Set(["codex", "codebuff"]);
+const KNOWN_TOOL_CAPABLE = new Set(["codex"]);
 const toolCapableProviders = new Set(KNOWN_TOOL_CAPABLE);
 const nonToolCapableProviders = new Set();
 // Configurable tool probe timeout (default: 60s)
@@ -6510,12 +6581,24 @@ server.listen(PORT, "127.0.0.1", async () => {
     logError(`❌ Failed to send Discord restart notification: ${err.message}`);
   }
 
-  // Synchronously populate configured providers (no network calls)
-  const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
-  providerStatusCache.configured = getConfiguredProviders({ excludeNames });
-  logInfo(
-    `Configured providers (${providerStatusCache.configured.length}): ${providerStatusCache.configured.map((p) => p.name).join(", ")}`,
-  );
+  // Check for shared probe cache from other executors FIRST before doing expensive startup probe
+  const cachedProbe = loadProbeCache();
+  if (cachedProbe) {
+    providerStatusCache.configured = cachedProbe.configured;
+    providerStatusCache.probeResults = cachedProbe.probeResults;
+    providerStatusCache.lastProbeAt = cachedProbe.lastProbeAt;
+    const age = Math.round((Date.now() - new Date(cachedProbe.lastProbeAt).getTime()) / 1000);
+    logInfo(
+      `📊 Loaded shared probe cache (${age}s old): ${providerStatusCache.probeResults.filter(r => r.available).length}/${providerStatusCache.configured.length} providers available`,
+    );
+  } else {
+    // No cache - synchronously populate configured providers (no network calls)
+    const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
+    providerStatusCache.configured = getConfiguredProviders({ excludeNames });
+    logInfo(
+      `Configured providers (${providerStatusCache.configured.length}): ${providerStatusCache.configured.map((p) => p.name).join(", ")}`,
+    );
+  }
   if (BRIDGE_PROVIDER_BLOCKLIST.size > 0) {
     logInfo(`⛔ Blocked providers (${BRIDGE_PROVIDER_BLOCKLIST.size}):`);
     for (const name of BRIDGE_PROVIDER_BLOCKLIST) {
@@ -6527,8 +6610,23 @@ server.listen(PORT, "127.0.0.1", async () => {
   // Startup exploration: run 1 complete probe cycle (reachability → tool probe)
   // This builds initial ranking before accepting any requests
   // Background probe will continue to refine rankings over time
+  // OPTIMIZATION: Skip if shared cache from another executor is fresh
   (async () => {
     try {
+      // If cache is fresh (< 5min), skip startup probe entirely
+      if (cachedProbe) {
+        const age = Math.round((Date.now() - new Date(cachedProbe.lastProbeAt).getTime()) / 1000);
+        logInfo(`========================================`);
+        logInfo(`Startup probe SKIPPED - using shared cache`);
+        logInfo(`========================================`);
+        logInfo(`Cache age: ${age}s (${providerStatusCache.probeResults.filter(r => r.available).length}/${providerStatusCache.configured.length} available)`);
+        logInfo(`Cached by executor that probed at: ${cachedProbe.lastProbeAt}`);
+        logInfo(`========================================`);
+        logInfo(`Ready to accept requests (using cached probe)`);
+        logInfo(`========================================`);
+        return;
+      }
+
       logInfo(`🔍 Starting startup exploration (1 cycle)...`);
 
       for (let cycle = 1; cycle <= 1; cycle++) {
@@ -6537,7 +6635,7 @@ server.listen(PORT, "127.0.0.1", async () => {
         logInfo(`========================================`);
 
         // Phase 1: Reachability probe (knock out unreachable providers)
-        await refreshProviderStatus();
+        const _refreshed = await refreshProviderStatus();
         const available = providerStatusCache.probeResults.filter((r) => r.available);
         const total = providerStatusCache.configured.length;
         logInfo(`✅ Reachability: ${available.length}/${total} providers available`);
@@ -6599,6 +6697,14 @@ server.listen(PORT, "127.0.0.1", async () => {
       logInfo(`Ready to accept requests`);
       logInfo(`========================================`);
 
+      // Save final probe results to shared cache for other executors
+      saveProbeCache({
+        configured: providerStatusCache.configured,
+        probeResults: providerStatusCache.probeResults,
+        lastProbeAt: providerStatusCache.lastProbeAt,
+        probing: false,
+      });
+
       // SKIP: Don't send Discord notifications during startup probe
       // Sending probe results to Discord creates bridge requests that trigger more probes
       // causing a feedback loop that leads to OOM
@@ -6640,8 +6746,12 @@ server.listen(PORT, "127.0.0.1", async () => {
     }, delayMs);
   };
 
-  // Start continuous probe IMMEDIATELY on startup (alongside initial cache)
-  scheduleContinuousProbe(0);
+  // Stagger continuous probe startup by worktree ID to prevent thundering herd
+  // On cold start (no cache): wt1 after 5s, wt2 after 10s, etc. — first executor
+  // populates shared cache before others start. With cache: no stagger needed.
+  const wtId = parseInt(process.env.ANQR_WORKTREE_ID || "1", 10);
+  const probeStartDelay = cachedProbe ? 0 : wtId * 5_000;
+  scheduleContinuousProbe(probeStartDelay);
 
   // Verify Context7 HTTP service reachability (non-blocking)
   fetch(`${CONTEXT7_HTTP_BASE}/health`, { signal: AbortSignal.timeout(5000) })

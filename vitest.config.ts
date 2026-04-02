@@ -31,7 +31,6 @@ export default defineConfig({
     include: [
       "tests/unit/**/*.spec.{ts,tsx}",
       "tests/unit/**/*.test.{ts,tsx}",
-      "tests/integration/**/*.spec.{ts,tsx}",
       "scripts/ops/**/*.spec.{ts,tsx}",
       "scripts/ops/**/*.test.{ts,tsx}",
       "packages/**/*.spec.{ts,tsx}",
@@ -39,8 +38,9 @@ export default defineConfig({
       "apps/**/*.spec.{ts,tsx}",
       "apps/**/*.test.{ts,tsx}",
     ],
-    // Note: Integration tests are excluded from default runs; run with: vitest run tests/integration/**/*.spec.ts
-    exclude: ["node_modules", "dist", "android", "ios", "tests/e2e/**"],
+    // Integration tests hit live services (bridge at 127.0.0.1:4319) — never include in default runs.
+    // Run explicitly: npx vitest run tests/integration/harness-bridge.spec.ts
+    exclude: ["node_modules", "dist", "android", "ios", "tests/e2e/**", "tests/integration/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov", "json-summary"],

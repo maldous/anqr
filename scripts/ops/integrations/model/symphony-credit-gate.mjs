@@ -10,7 +10,6 @@
  *
  *   TIER: paid — cloud providers with paid API keys
  *   1. Codex (OpenAI)  — paid cloud, gpt-5.4 (temporary rate limits, 2-min cooldown)
- *   2. Codebuff        — paid cloud, codebuff/base via direct SDK in the selected worktree (temporary rate limits, 2-min cooldown)
  *
  *   TIER: free-cloud — free/experimental cloud providers
  *   3. Groq            — free cloud, fast, llama-3.3-70b-versatile
@@ -33,7 +32,7 @@
  *   - Always probe before selecting
  *   - Track failures with a time window (skip broken providers for 360s)
  *   - Local Ollama models are ultimate fallbacks (never rate limited, score-capped)
- *   - Paid providers (codex, codebuff) get shorter failure cooldowns (2 min vs 6 min)
+ *   - Paid providers (codex) get shorter failure cooldowns (2 min vs 6 min)
  *   - State files live in /run/user/ for crash recovery
  */
 
@@ -61,9 +60,11 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../../..");
 const CODEX_SANDBOX_MODE = process.env.CODEX_SANDBOX_MODE || "danger-full-access";
-const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
+export const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
 const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
 const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
+const PROBE_RESULTS_FILE = resolve(STATE_DIR, "provider-probe-results.json");
+const PROBE_RESULT_TTL_MS = 90_000; // 90s — shared across all executors
 
 // Provider selection statistics - comprehensive metrics
 const PROVIDER_STATS = {
@@ -311,16 +312,7 @@ const PROVIDERS = [
     failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
     probe: (provider) => probeCodexSdk(provider.model),
   },
-  {
-    name: "codebuff",
-    tier: TIER_PAID,
-    model: "codebuff/base",
-    baseUrl: "codebuff-sdk",
-    envVar: "CODEBUFF_API_KEY",
-    driver: "codebuff-sdk",
-    failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
-    probe: async (_provider, apiKey) => Boolean(apiKey),
-  },
+
   {
     name: "groq",
     model: "llama-3.3-70b-versatile",
@@ -553,7 +545,7 @@ const PROVIDERS = [
 // Failure memory
 // ---------------------------------------------------------------------------
 
-function ensureStateDir() {
+export function ensureStateDir() {
   if (!existsSync(STATE_DIR)) {
     mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 });
   }
@@ -1433,6 +1425,40 @@ function toSelectedProvider(provider, apiKey) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Shared per-provider probe result cache — prevents duplicate probes across
+// executors. Each executor checks the cache before making network probes.
+// ---------------------------------------------------------------------------
+
+function loadProbeResults() {
+  try {
+    if (existsSync(PROBE_RESULTS_FILE)) {
+      return JSON.parse(readFileSync(PROBE_RESULTS_FILE, "utf-8"));
+    }
+  } catch {}
+  return {};
+}
+
+function saveProbeResult(providerName, available) {
+  try {
+    ensureStateDir();
+    const results = loadProbeResults();
+    results[providerName] = { available, ts: Date.now() };
+    writeFileSync(PROBE_RESULTS_FILE, JSON.stringify(results, null, 2));
+  } catch {
+    // best-effort — don't block provider selection on cache write failures
+  }
+}
+
+function isRecentlyProbed(providerName) {
+  const results = loadProbeResults();
+  const entry = results[providerName];
+  if (!entry || !entry.ts) return null;
+  const age = Date.now() - entry.ts;
+  if (age > PROBE_RESULT_TTL_MS) return null;
+  return entry;
+}
+
 async function tryProvider(provider) {
   logDebug(`[tryProvider] Attempting provider`, {
     providerName: provider.name,
@@ -1477,6 +1503,25 @@ async function tryProvider(provider) {
     return toSelectedProvider(provider, apiKey);
   }
 
+  // Check shared probe cache — another executor may have probed recently
+  const cached = isRecentlyProbed(provider.name);
+  if (cached) {
+    const ageSecs = Math.round((Date.now() - cached.ts) / 1000);
+    if (cached.available) {
+      logDebug(`${provider.name}: available (shared cache, ${ageSecs}s old)`, {
+        providerName: provider.name,
+      });
+      clearProviderFailure(provider.name);
+      recordProviderSelection(provider.name);
+      return toSelectedProvider(provider, apiKey);
+    } else {
+      logDebug(`${provider.name}: unavailable (shared cache, ${ageSecs}s old)`, {
+        providerName: provider.name,
+      });
+      return null;
+    }
+  }
+
   logDebug(`${provider.name}: probing...`, {
     providerName: provider.name,
     hasCustomProbe: !!provider.probe,
@@ -1484,6 +1529,9 @@ async function tryProvider(provider) {
   const available = provider.probe
     ? await provider.probe(provider, apiKey)
     : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
+
+  // Save result to shared cache for other executors
+  saveProbeResult(provider.name, !!available);
 
   if (!available) {
     logDebug(`${provider.name}: unavailable ❌`, {
