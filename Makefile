@@ -265,8 +265,42 @@ bootstrap: ## Extract bootstrap.zip secrets into local working locations
 clean: ## Remove build and cache artifacts
 	rm -rf dist coverage node_modules/.cache
 
-zip: ## Create a source archive excluding generated/runtime artifacts
-	rm -f anqr.zip && zip -r anqr.zip AGENTS.md CLAUDE.md CODEBUFF.md README.md MCP-MIGRATION.md commitlint.config.js cspell.json docs eslint.config.js index.html knip.json lefthook.yml Makefile netlify netlify.toml oxlint.json package.json packages playwright.config.ts postcss.config.mjs scripts services sonar-project.properties src tests tsconfig.json tsconfig.base.json tsconfig.node.json tsconfig.node.tsbuildinfo tsconfig.src.json tsconfig.apps.json tsconfig.packages.json tsconfig.harness.json tsconfig.netlify.json tsconfig.tests.json vite-config vite.config.ts vitest.config.ts .dependency-cruiser.cjs .dependency-cruiser.architecture.cjs .dependency-cruiser.contracts.cjs .editorconfig .gitignore .codex -x 'src/i18n/static/*' 'src/i18n/locales/*' 'src/content/generated/*' 'public/*' 'ios/*' 'android/*' 'reports/*' 'dist/*' 'coverage/*' 'node_modules/*' '.git/*'
-
 verify-migration: ## Run the legacy migration verification bundle
 	npm run typecheck:all && npm run lint:all && npm run depcruise:all && npm run test:unit && npm run harness:quick
+
+zip:
+	rm -f anqr.zip .zip-openclaw.lst && \
+	git ls-files -z \
+          .agents .codex .cspell.json .editorconfig .gitattributes .gitignore \
+	  .dependency-cruiser.cjs .dependency-cruiser.architecture.cjs \
+	  .dependency-cruiser.contracts.cjs .dependency-cruiser.harness.cjs \
+	  .github .openclaw \
+	  AGENTS.md CLAUDE.md CODEBUFF.md HEARTBEAT.md IDENTITY.md MEMORY.md \
+	  README.md SOUL.md TOOLS.md USER.md MCP-MIGRATION.md \
+	  commitlint.config.js cspell.json eslint.config.js index.html \
+	  knip.json lefthook.yml Makefile netlify.toml oxlint.json package.json \
+	  playwright.config.ts postcss.config.mjs sonar-project.properties \
+	  tsconfig.json tsconfig.base.json tsconfig.node.json tsconfig.src.json \
+	  tsconfig.apps.json tsconfig.packages.json tsconfig.harness.json \
+	  tsconfig.netlify.json tsconfig.tests.json vite.config.ts vitest.config.ts \
+	  apps packages scripts services src tests docs netlify vite-config public \
+	| tr '\0' '\n' \
+	| grep -Ev '^(android/|ios/)' \
+	| grep -Ev '^(apps/web/src/i18n/static/|apps/web/src/i18n/locales/|apps/web/src/content/generated/)' \
+	| grep -Ev '^apps/ios/App/fastlane/screenshots/' \
+	| grep -Eiv '\.(png|jpg|jpeg|gif|webp|avif|ico|mp4|webm|mp3|wav|mov)$$|(^|/)(google-services\.json|release-key\.keystore|local\.properties|tsconfig\.node\.tsbuildinfo)$$|\.((pem|key|p12|p8))$$' \
+	| sed '/^$$/d' > .zip-openclaw.lst && \
+	printf '%s\n' \
+	  '/home/user/.openclaw/agents/main/agent/auth-profiles.json' \
+	  '/home/user/.openclaw/agents/main/agent/models.json' \
+	  '/home/user/.openclaw/agents/main/sessions.json' \
+	  '/home/user/.openclaw/agents/voice/agent/auth-profiles.json' \
+	  '/home/user/.openclaw/agents/voice/agent/models.json' \
+	  '/home/user/.openclaw/agents/voice/sessions.json' \
+	  '/home/user/.openclaw/config.json' \
+	  '/home/user/.openclaw/clawdbot.json' \
+	  '/home/user/.openclaw/cron/jobs.json' \
+	| while read f; do [ -f "$$f" ] && printf '%s\n' "$$f"; done >> .zip-openclaw.lst && \
+	sort -u .zip-openclaw.lst -o .zip-openclaw.lst && \
+	zip -q -@ anqr.zip < .zip-openclaw.lst && \
+	rm -f .zip-openclaw.lst
