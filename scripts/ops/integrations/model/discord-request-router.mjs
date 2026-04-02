@@ -210,13 +210,18 @@ function proxyToWorktree(worktree, req, res) {
       cleanup();
       logError(`❌ Proxy error to wt${worktree.id}: ${err.message}`);
 
-      if (!res.writableEnded) {
+      // Only send error response if headers not yet sent
+      // Check both writableEnded and headersSent to prevent ERR_HTTP_HEADERS_SENT
+      if (!res.headersSent && !res.writableEnded) {
         res.writeHead(502, { "Content-Type": "application/json" });
         res.end(
           JSON.stringify({
             error: { message: `Worktree wt${worktree.id} unavailable: ${err.message}` },
           }),
         );
+      } else {
+        // Headers already sent, just close the connection
+        res.end();
       }
     });
 
