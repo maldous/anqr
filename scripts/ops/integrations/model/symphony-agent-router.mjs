@@ -209,7 +209,8 @@ function handleLinearTrigger(req, res) {
 
     // Spawn the runner in the target worktree
     // The runner will pick up the specific issue and execute it
-    const nodePath = process.env.PATH?.split(":").find((p) => p.includes("nvm")) || "/home/user/.nvm/versions/node/v25.8.0/bin/node";
+    // Use "node" to let the system resolve it via PATH, or fall back to explicit path
+    const nodePath = process.execPath || "/home/user/.nvm/versions/node/v25.8.0/bin/node";
     
     const runner = spawn(
       nodePath,
