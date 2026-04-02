@@ -170,6 +170,7 @@ Note: `thinker` is a **spawn_agents agent type**, not a tool. Use `think_deeply`
 **Agent types and required params (for spawn_agents):**
 
 - `basher` — REQUIRES `params.command` (terminal command). Also accepts `prompt` (what to extract), `params.rawOutput`, `params.timeout_seconds`
+  ⚠️ **CRITICAL**: Always include `{"command": "actual terminal command"}` inside params. Never pass empty `params: {}` — this will fail with validation error.
 - `file-picker` — REQUIRES `prompt` (what files to find). Optionally `params.directories`
 - `researcher-web` — REQUIRES `prompt` (question to research)
 - `researcher-docs` — REQUIRES `prompt` (documentation question)
