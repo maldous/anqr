@@ -1678,7 +1678,68 @@ async function resolveConflictsWithAI() {
   return true;
 }
 
+// ── Env gate for git auto-finalization (default off) ─────────────────────────
+const BRIDGE_ENABLE_GIT_AUTOFINALIZE = process.env.ANQR_BRIDGE_ENABLE_GIT_AUTOFINALIZE === "1";
+
+function currentBranchName() {
+  try {
+    return execSync("git rev-parse --abbrev-ref HEAD", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+  } catch { return "unknown"; }
+}
+
+function currentHeadSha() {
+  try {
+    return execSync("git rev-parse HEAD", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+  } catch { return null; }
+}
+
+function listDirtyFiles() {
+  try {
+    return execSync("git status --porcelain", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim().split("\n").filter(Boolean);
+  } catch { return []; }
+}
+
+function hasTrackedChanges() {
+  try {
+    const status = execSync("git status --porcelain", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+    return status.length > 0;
+  } catch { return false; }
+}
+
 /**
+ * Non-blocking freshness check — logs if worktree is behind origin/main.
+ * Does NOT merge or rebase. Replaces syncWorktreeFromMain.
+ */
+async function verifyWorktreeFreshnessNonBlocking() {
+  if (!IS_WORKTREE_BRIDGE) return;
+  try {
+    execSync("git fetch origin main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+    const local = execSync("git rev-parse HEAD", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+    const remoteMain = execSync("git rev-parse origin/main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+    if (local !== remoteMain) {
+      logInfo(`ℹ️ Worktree not at latest main before request: local=${local.slice(0,8)} main=${remoteMain.slice(0,8)}`);
+    }
+  } catch (err) {
+    logWarn(`⚠️ Freshness check failed (non-fatal): ${err.message}`);
+  }
+}
+
+/**
+ * Report worktree state after request completion without pushing.
+ * Replaces pushWorktreeToMain.
+ */
+async function finalizeWorktreeRequest() {
+  return {
+    changed: hasTrackedChanges(),
+    dirtyFiles: listDirtyFiles(),
+    branch: currentBranchName(),
+    head: currentHeadSha(),
+    autoPromoted: false,
+  };
+}
+
+/**
+ * @deprecated Use verifyWorktreeFreshnessNonBlocking instead.
  * Sync the current worktree with origin/main before processing a request.
  * If merge conflicts arise, attempts AI-powered resolution inline.
  * Non-fatal — logs warnings on failure but never blocks the request.
@@ -1718,6 +1779,7 @@ async function syncWorktreeFromMain() {
 }
 
 /**
+ * @deprecated Use finalizeWorktreeRequest instead. Bridge no longer pushes to main.
  * Push worktree changes to origin/main after request completion.
  * If rebase conflicts arise, attempts AI-powered resolution inline.
  * Non-fatal — logs warnings on failure. Retries with rebase on push race.
@@ -5493,8 +5555,8 @@ const server = http.createServer(async (req, res) => {
       const worktreeId = req.headers["x-worktree-id"] || null;
       const requestCwd = normalizeRequestCwd(body.cwd);
 
-      // Sync worktree with main before processing (non-blocking on failure)
-      await syncWorktreeFromMain();
+      // Verify worktree freshness (non-blocking, no merge/rebase)
+      await verifyWorktreeFreshnessNonBlocking();
 
       // Fast validation BEFORE route resolution - fail immediately on invalid input
       if (!messages || messages.length === 0) {
@@ -5907,7 +5969,7 @@ const server = http.createServer(async (req, res) => {
             voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
           }
 
-          await pushWorktreeToMain();
+          { const _fin = await finalizeWorktreeRequest(); logInfo(`🧾 Request complete without bridge promotion`, _fin); }
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -6015,7 +6077,7 @@ const server = http.createServer(async (req, res) => {
             voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
           }
 
-          await pushWorktreeToMain();
+          { const _fin = await finalizeWorktreeRequest(); logInfo(`🧾 Request complete without bridge promotion`, _fin); }
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -6124,7 +6186,7 @@ const server = http.createServer(async (req, res) => {
           voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
         }
 
-        await pushWorktreeToMain();
+        { const _fin = await finalizeWorktreeRequest(); logInfo(`🧾 Request complete without bridge promotion`, _fin); }
 
         const durationMs = Date.now() - startTime;
 
@@ -6822,6 +6884,11 @@ export {
   VOICE_SYSTEM_PROMPT,
   sanitizeForDiscordPreview,
   resolveConflictsWithAI,
+  verifyWorktreeFreshnessNonBlocking,
+  finalizeWorktreeRequest,
+  currentBranchName,
+  currentHeadSha,
+  // deprecated — kept for backward compatibility
   syncWorktreeFromMain,
   pushWorktreeToMain,
 };

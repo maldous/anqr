@@ -121,6 +121,17 @@ export function createWorktree(id) {
     logInfo(`✅ Dependencies installed in worktree ${id}`);
     logDebug(`[worktree-pool] npm install completed successfully`);
 
+    // Set upstream tracking branch so future pushes work
+    try {
+      execFileSync("git", ["push", "-u", "origin", `HEAD:${branchName}`], {
+        cwd: worktreePath,
+        stdio: "pipe",
+      });
+      logInfo(`✅ Set upstream for ${branchName}`);
+    } catch (err) {
+      logWarn(`⚠️ Failed to set upstream for ${branchName}: ${err.message}`);
+    }
+
     // Verify worktree structure
     logDebug(`[worktree-pool] Verifying worktree structure...`);
     const nodeModulesPath = resolve(worktreePath, "node_modules");

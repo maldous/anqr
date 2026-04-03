@@ -1,0 +1,41 @@
+# anqr-symphony-integrator.service — Single writer to origin/main
+#
+# Reads the integration queue from shared Symphony state and serially
+# promotes queued worktree branches to origin/main via cherry-pick.
+#
+# IMPORTANT: Only this service should ever push to origin/main.
+# Executor bridges and runners must NOT push to main directly.
+#
+# Install:
+#   cp services/systemd/anqr-symphony-integrator.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-symphony-integrator.service
+
+[Unit]
+Description=ANQR Symphony integrator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/src/anqr
+
+# Explicit PATH — nvm Node is not on default systemd PATH
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+
+# Provider tokens and ops config
+EnvironmentFile=-%h/.config/symphony/anqr.env
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/scripts/ops/orchestration/symphony-integrator.mjs daemon
+
+Restart=on-failure
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-symphony-integrator
+
+[Install]
+WantedBy=default.target

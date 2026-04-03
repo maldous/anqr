@@ -97,3 +97,20 @@ export function isSymphonyWorktree(worktreeId) {
   const normalizedId = String(worktreeId || "").replace(/^wt/, "");
   return SYMPHONY_WORKTREE_IDS.includes(normalizedId);
 }
+
+/**
+ * Check if a branch name matches the worktree branch pattern
+ * @param {string} branch - Branch name
+ * @returns {boolean}
+ */
+export function isWorktreeBranch(branch) {
+  return /^symphony\/wt\d+$/.test(String(branch || ""));
+}
+
+/**
+ * Get the integration branch name used by the integrator
+ * @returns {string}
+ */
+export function getIntegrationBranch() {
+  return "symphony/integration";
+}

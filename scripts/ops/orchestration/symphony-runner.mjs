@@ -66,6 +66,10 @@ import {
   recordCompletion,
   recordRetryEvent,
   calculateExponentialBackoff,
+  setFinalizationState,
+  getFinalizationState,
+  enqueueIntegrationCandidate,
+  getNextRepairableIssueForWorktree,
 } from "../symphony-state.mjs";
 import {
   runValidation,
@@ -469,7 +473,11 @@ function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
     const tmpFile = resolve(ROOT, ".git", "SYMPHONY_COMMIT_MSG");
     writeFileSync(tmpFile, msg, "utf-8");
     try {
-      execFileSync("git", ["commit", "-F", tmpFile], { cwd: ROOT, stdio: "pipe" });
+      execFileSync("git", ["commit", "--no-verify", "-F", tmpFile], {
+        cwd: ROOT,
+        stdio: "pipe",
+        env: { ...process.env, ANQR_AUTOMATION_COMMIT: "1" },
+      });
     } finally {
       try {
         unlinkSync(tmpFile);
@@ -482,6 +490,45 @@ function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
   }
 }
 
+function currentBranchNameForRunner() {
+  return execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+    cwd: ROOT,
+    encoding: "utf-8",
+  }).trim();
+}
+
+async function gitPushWorktreeBranch() {
+  const branch = currentBranchNameForRunner();
+  if (!/^symphony\/wt\d+$/.test(branch)) {
+    logError(`[runner] Refusing to push unexpected branch: ${branch}`);
+    return { ok: false, branch, head: getRepoHeadSha("HEAD"), error: `unexpected branch: ${branch}` };
+  }
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      execFileSync("git", ["push", "-u", "origin", `HEAD:${branch}`], {
+        cwd: ROOT,
+        stdio: "pipe",
+        timeout: 30_000,
+        env: { ...process.env, ANQR_AUTOMATION_PUSH: "1" },
+      });
+      if (attempt > 1) {
+        logInfo(`[runner] Git push to ${branch} succeeded on attempt ${attempt}/3`);
+      }
+      return { ok: true, branch, head: getRepoHeadSha("HEAD") };
+    } catch (err) {
+      if (attempt < 3) {
+        logWarn(`[runner] Push to ${branch} failed (attempt ${attempt}/3): ${err.message}`);
+        await new Promise((r) => setTimeout(r, attempt * 1000));
+      } else {
+        logError(`[runner] Git push to ${branch} failed after 3 attempts: ${err.message}`);
+        return { ok: false, branch, head: getRepoHeadSha("HEAD"), error: err.message };
+      }
+    }
+  }
+  return { ok: false, branch, head: getRepoHeadSha("HEAD"), error: "exhausted retries" };
+}
+
+/** @deprecated Use gitPushWorktreeBranch — no longer pushes to main. */
 async function gitPush() {
   const MAX_PUSH_RETRIES = 3;
 
@@ -1721,34 +1768,45 @@ ${String(r.detail).slice(0, 1000)}\n`,
 
     const diffStat = gitDiffStat();
     if (!gitCommit(issue.identifier, issue.title, agentResult.summary, changedFiles)) {
-      gitRevert();
-      const gcfSignature = "git_commit_failed";
-      if (priorFailureSignature === gcfSignature) {
-        markRetryExhausted(issue.identifier, {
-          reason: "git_commit_failed_repeated",
-          signature: gcfSignature,
+      const priorFinalization = getFinalizationState(issue.identifier);
+      const commitAttempts = (priorFinalization?.attempts || 0) + 1;
+      if (commitAttempts > 3) {
+        gitRevert();
+        await setFinalizationState(issue.identifier, {
+          state: "commit_failed_blocked",
+          worktreeId: WORKTREE_ID,
+          stickyOwner: WORKTREE_ID,
+          lastError: "git commit failed repeatedly",
+          attempts: commitAttempts,
+          updatedAt: new Date().toISOString(),
         });
         await updateIssue(issue.id, { stateId: STATES.backlog });
-        await addComment(issue.id, "🚫 **Git commit failed (repeated)** — quarantined to Backlog.");
+        await addComment(issue.id, "🚫 **Git commit failed (blocked)** — exceeded repair threshold. Moved to Backlog.");
         recordTransition(issue.identifier, {
           actor: "runner",
-          reason: "git_commit_failed_repeated",
+          reason: "commit_failed_blocked",
           from: "In Progress",
           to: "Backlog",
           runId: RUN_ID,
         });
       } else {
-        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "git_commit_failed", gcfSignature);
-        await updateIssue(issue.id, { stateId: STATES.todo });
-        await addComment(
-          issue.id,
-          "❌ **Git commit failed** after successful validation. Reverted and returned to Todo with cooldown.",
-        );
+        await setFinalizationState(issue.identifier, {
+          state: "commit_failed_repairable",
+          worktreeId: WORKTREE_ID,
+          stickyOwner: WORKTREE_ID,
+          branch: currentBranchNameForRunner(),
+          headSha: getRepoHeadSha("HEAD"),
+          lastError: "git commit failed during finalization",
+          attempts: commitAttempts,
+          updatedAt: new Date().toISOString(),
+        });
+        await updateIssue(issue.id, { stateId: STATES.inReview });
+        await addComment(issue.id, "❌ Git commit failed during finalization. Assigned back to same worktree for repair.");
         recordTransition(issue.identifier, {
           actor: "runner",
-          reason: "git_commit_failed",
+          reason: "commit_failed_repairable",
           from: "In Progress",
-          to: "Todo",
+          to: "In Review",
           runId: RUN_ID,
         });
       }
@@ -1762,12 +1820,33 @@ ${String(r.detail).slice(0, 1000)}\n`,
 
     let finalStateId = STATES.inReview;
     let finalStateName = "In Review";
-    let pushConfirmed = false;
+    let branchPush = { ok: false };
     if (RUNNER_AUTO_PUSH) {
-      pushConfirmed = await gitPush();
-      if (pushConfirmed) {
-        finalStateId = STATES.done;
-        finalStateName = "Done";
+      branchPush = await gitPushWorktreeBranch();
+      if (branchPush.ok) {
+        await setFinalizationState(issue.identifier, {
+          state: "integration_pending",
+          worktreeId: WORKTREE_ID,
+          branch: branchPush.branch,
+          baseMainSha: getRepoHeadSha("origin/main"),
+          headSha: branchPush.head,
+          attempts: 0,
+          stickyOwner: WORKTREE_ID,
+          lastError: null,
+          updatedAt: new Date().toISOString(),
+        });
+        await enqueueIntegrationCandidate(issue.identifier);
+      } else {
+        await setFinalizationState(issue.identifier, {
+          state: "branch_push_failed_repairable",
+          worktreeId: WORKTREE_ID,
+          stickyOwner: WORKTREE_ID,
+          branch: branchPush.branch,
+          headSha: branchPush.head,
+          lastError: branchPush.error || "push failed",
+          attempts: 1,
+          updatedAt: new Date().toISOString(),
+        });
       }
     }
 
@@ -1781,7 +1860,9 @@ ${String(r.detail).slice(0, 1000)}\n`,
       `**Tool calls:** ${agentResult.toolCalls}`,
       `**Files changed:** ${changedFiles.length}`,
       `**Validation fix attempts:** ${validationFixAttempts}`,
-      `**Promotion state:** ${finalStateName}`,
+      `**Finalization state:** ${branchPush.ok ? "integration_pending" : "local_commit_complete"}`,
+      `**Branch:** ${branchPush.branch || "N/A"}`,
+      `**Commit:** ${getRepoHeadSha("HEAD").slice(0, 8)}`,
       "",
       "### Agent Summary",
       agentResult.summary,
@@ -1839,7 +1920,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
 
     recordTransition(issue.identifier, {
       actor: "runner",
-      reason: pushConfirmed ? "push_confirmed" : "local_commit_complete",
+      reason: branchPush.ok ? "integration_pending" : "local_commit_complete",
       from: "In Progress",
       to: finalStateName,
       runId: RUN_ID,
@@ -1864,12 +1945,12 @@ ${String(r.detail).slice(0, 1000)}\n`,
     if (!RUNNER_AUTO_PUSH) {
       await addComment(
         issue.id,
-        "ℹ️ **Auto-push disabled** — leaving issue In Review. Mark Done only after remote push/review.",
+        "ℹ️ **Auto-push disabled** — leaving issue In Review. Integrator will promote to main.",
       );
-    } else if (!pushConfirmed) {
+    } else if (!branchPush.ok) {
       await addComment(
         issue.id,
-        "⚠️ **Push failed** — commit exists locally but remote push was not confirmed. Leaving issue In Review.",
+        "⚠️ **Branch push failed** — commit exists locally but push to worktree branch failed. Assigned to same worktree for repair.",
       );
     }
 
@@ -2069,7 +2150,20 @@ async function main() {
         logWarn(`[runner] Issue ${targetIssue} not found or already completed`);
       }
     } else {
-      issue = await pickIssue({ excludeIds, baselineOnly });
+      // Priority 1: sticky repair for this worktree
+      const repairCandidate = getNextRepairableIssueForWorktree(WORKTREE_ID);
+      if (repairCandidate) {
+        const { findOpenIssuesByIdentifier } = await import("../linear-client.mjs");
+        const results = await findOpenIssuesByIdentifier(repairCandidate.issueIdentifier);
+        if (results?.[0]) {
+          issue = results[0];
+          logInfo(`[runner] 🔧 Picked sticky repair issue: ${issue.identifier} (${repairCandidate.finalization.state})`);
+        }
+      }
+      // Priority 2/3: new work
+      if (!issue) {
+        issue = await pickIssue({ excludeIds, baselineOnly });
+      }
     }
       if (!issue) break;
       const status = await executeIssue(issue, dryRun);

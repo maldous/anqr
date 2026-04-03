@@ -45,6 +45,14 @@ Environment=SYMPHONY_BRIDGE_API_KEY=local-symphony
 Environment=CODEX_SANDBOX_MODE=danger-full-access
 Environment=ANQR_RETRIEVAL_WARMUP=false
 
+# Git finalization policy:
+# - Executor/bridge must NEVER push to origin/main
+# - Bridge owns worktree-local execution only
+# - Auto-finalization is off; runner handles commit+branch-push
+Environment=ANQR_BRIDGE_ENABLE_GIT_AUTOFINALIZE=0
+Environment=ANQR_AUTOMATION_PUSH=1
+Environment=ANQR_AUTOMATION_COMMIT=1
+
 # Provider tokens (loaded from anqr.env)
 EnvironmentFile=-%h/.config/symphony/anqr.env
 

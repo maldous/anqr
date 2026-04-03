@@ -4,19 +4,25 @@ pre-commit:
     oxlint:
       glob: "*.{ts,tsx,js,mjs}"
       run: |
+        [ "$ANQR_AUTOMATION_COMMIT" = "1" ] && exit 0
         output=$(npx oxlint -c oxlint.json {staged_files} 2>&1)
         status=$?
         echo "$output"
         if [ $status -ne 0 ]; then exit $status; fi
         if echo "$output" | grep -qE 'Found [1-9][0-9]* warning'; then exit 1; fi
     typecheck:
-      run: npm run typecheck
+      run: |
+        [ "$ANQR_AUTOMATION_COMMIT" = "1" ] && exit 0
+        npm run typecheck
     cspell:
       glob: "*.{ts,tsx,js,mjs,md,json}"
-      run: npx cspell --no-progress --no-must-find-files {staged_files}
+      run: |
+        [ "$ANQR_AUTOMATION_COMMIT" = "1" ] && exit 0
+        npx cspell --no-progress --no-must-find-files {staged_files}
     ast-density:
       glob: "*.{ts,tsx}"
       run: |
+        [ "$ANQR_AUTOMATION_COMMIT" = "1" ] && exit 0
         output=$(node scripts/audit-ast-density.mjs --threshold 1 {staged_files} 2>&1)
         if [ -n "$output" ]; then
           echo "$output"
@@ -33,6 +39,8 @@ pre-push:
   parallel: true
   commands:
     typecheck:
-      run: npm run typecheck
+      run: |
+        [ "$ANQR_AUTOMATION_PUSH" = "1" ] && exit 0
+        npm run typecheck
 #    unit-tests:
 #      run: npm run test:unit

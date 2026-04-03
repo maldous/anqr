@@ -6,6 +6,7 @@
 - `anqr-symphony-router.service` — Single public Symphony orchestration (control plane) on port `4319`
 - `anqr-discord-router.service` — Discord request load balancer on port `18790`
 - `anqr-linear-runner@.service` — Linear issue poller (wt1-wt4)
+- `anqr-symphony-integrator.service` — Single writer to origin/main (integration queue)
 - `anqr-context7-mcp.service` — Documentation service on port `4320`
 - `anqr-watchdog.service` — Health monitoring
 
@@ -25,6 +26,7 @@ cp services/systemd/anqr-linear-runner@.service ~/.config/systemd/user/
 cp services/systemd/anqr-linear-runner@.timer ~/.config/systemd/user/
 cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
 cp services/systemd/anqr-context7-mcp.service ~/.config/systemd/user/
+cp services/systemd/anqr-symphony-integrator.service ~/.config/systemd/user/
 cp services/systemd/anqr-watchdog.service ~/.config/systemd/user/
 systemctl --user daemon-reload
 
@@ -34,14 +36,28 @@ systemctl --user enable --now anqr-symphony-executor@{1,2,3,4,5,6,7,8}.service
 systemctl --user enable --now anqr-linear-runner@{1,2,3,4}.timer
 systemctl --user enable --now anqr-discord-router.service
 systemctl --user enable --now anqr-context7-mcp.service
+systemctl --user enable --now anqr-symphony-integrator.service
 systemctl --user enable --now anqr-watchdog.service
 ```
 
 ## Request flow
 
 ```text
-Discord → OpenClaw → anqr-discord-router → anqr-symphony-router → anqr-symphony-executor@5-8 → AI execution in worktree
-Linear  → anqr-linear-runner    → anqr-symphony-router → anqr-symphony-executor@1-4 → AI execution in worktree
+Linear  → anqr-linear-runner@1-4 → executor wt1-4 → commit/push origin/symphony/wtN
+Discord → OpenClaw → discord-router → executor wt5-8 → local changes only unless explicit finalize
+Integrator → queued worktree branches → origin/main
+```
+
+### Integration flow
+
+```text
+1. Worktree executor edits and validates in isolated wtN
+2. Runner commits locally in wtN
+3. Runner pushes only to origin/symphony/wtN
+4. Runner records integration_pending in shared state
+5. Single integrator serially promotes queued work to origin/main
+6. Issue moves to Done only after successful integration to main
+7. Any commit/integration failure stays attached to same issue + same wtN
 ```
 
 ## Worktree mapping

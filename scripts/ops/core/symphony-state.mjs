@@ -121,11 +121,14 @@ function withStateLock(fn) {
 
 function emptyStore() {
   return {
-    version: 1,
+    version: 2,
     updatedAt: new Date().toISOString(),
     hostId: HOST_ID,
     issues: {},
-    global: {},
+    global: {
+      integrationQueue: [],
+      integrationLock: null,
+    },
   };
 }
 
@@ -152,6 +155,21 @@ function normalizeRecord(record = {}) {
     notes: record.notes || {},
     latency_ms: Number(record.latency_ms) || null,
     completed_at: record.completed_at || null,
+    finalization:
+      record.finalization && typeof record.finalization === "object"
+        ? {
+            state: record.finalization.state || null,
+            worktreeId: record.finalization.worktreeId || null,
+            stickyOwner: record.finalization.stickyOwner || null,
+            branch: record.finalization.branch || null,
+            baseMainSha: record.finalization.baseMainSha || null,
+            headSha: record.finalization.headSha || null,
+            integratedMainSha: record.finalization.integratedMainSha || null,
+            attempts: Number(record.finalization.attempts || 0),
+            lastError: record.finalization.lastError || null,
+            updatedAt: record.finalization.updatedAt || null,
+          }
+        : null,
   };
 }
 
@@ -163,7 +181,11 @@ export function loadState() {
     store.version = data.version || 1;
     store.updatedAt = data.updatedAt || store.updatedAt;
     store.hostId = data.hostId || HOST_ID;
-    store.global = data.global || {};
+    store.global = {
+      integrationQueue: [],
+      integrationLock: null,
+      ...(data.global || {}),
+    };
     store.issues = {};
     for (const [key, value] of Object.entries(data.issues || {})) {
       store.issues[key] = normalizeRecord({ ...value, issueIdentifier: key });
@@ -495,6 +517,128 @@ export function getLatencyMetrics() {
     minMs: latencies[0],
     maxMs: latencies[latencies.length - 1],
   };
+}
+
+// ── Finalization state helpers ────────────────────────────────────────────────
+
+const REPAIRABLE_FINALIZATION_STATES = new Set([
+  "commit_failed_repairable",
+  "branch_push_failed_repairable",
+  "integration_failed_repairable",
+]);
+
+export function setFinalizationState(issueIdentifier, patch = {}) {
+  return withStateLock(() => {
+    const store = loadState();
+    const current = normalizeRecord(store.issues[issueIdentifier] || { issueIdentifier });
+    const existing = current.finalization || {};
+    current.finalization = normalizeRecord({
+      ...current,
+      finalization: {
+        ...existing,
+        ...patch,
+        updatedAt: patch.updatedAt || new Date().toISOString(),
+      },
+    }).finalization;
+    store.issues[issueIdentifier] = current;
+    saveState(store);
+    return current.finalization;
+  });
+}
+
+export function getFinalizationState(issueIdentifier) {
+  const record = getIssueState(issueIdentifier);
+  return record.finalization || null;
+}
+
+// ── Integration queue helpers ────────────────────────────────────────────────
+
+export function enqueueIntegrationCandidate(issueIdentifier) {
+  return withStateLock(() => {
+    const store = loadState();
+    if (!Array.isArray(store.global.integrationQueue)) store.global.integrationQueue = [];
+    if (!store.global.integrationQueue.includes(issueIdentifier)) {
+      store.global.integrationQueue.push(issueIdentifier);
+    }
+    saveState(store);
+    return store.global.integrationQueue;
+  });
+}
+
+export function dequeueIntegrationCandidate(issueIdentifier) {
+  return withStateLock(() => {
+    const store = loadState();
+    if (!Array.isArray(store.global.integrationQueue)) store.global.integrationQueue = [];
+    store.global.integrationQueue = store.global.integrationQueue.filter(id => id !== issueIdentifier);
+    saveState(store);
+    return store.global.integrationQueue;
+  });
+}
+
+export function listIntegrationCandidates() {
+  const store = loadState();
+  return Array.isArray(store.global.integrationQueue) ? store.global.integrationQueue : [];
+}
+
+export function acquireIntegrationLock(holder, ttlMs = 10 * 60 * 1000) {
+  return withStateLock(() => {
+    const store = loadState();
+    const lock = store.global.integrationLock;
+    if (lock && new Date(lock.expiresAt).getTime() > Date.now()) {
+      return { ok: false, holder: lock.holder, expiresAt: lock.expiresAt };
+    }
+    store.global.integrationLock = {
+      holder,
+      acquiredAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + ttlMs).toISOString(),
+    };
+    saveState(store);
+    return { ok: true, holder, expiresAt: store.global.integrationLock.expiresAt };
+  });
+}
+
+export function releaseIntegrationLock(holder) {
+  return withStateLock(() => {
+    const store = loadState();
+    const lock = store.global.integrationLock;
+    if (!lock || lock.holder !== holder) return { ok: false, reason: "lock_mismatch" };
+    store.global.integrationLock = null;
+    saveState(store);
+    return { ok: true };
+  });
+}
+
+// ── Repair candidate helpers ────────────────────────────────────────────────
+
+export function getNextRepairableIssueForWorktree(worktreeId) {
+  const store = loadState();
+  for (const [identifier, record] of Object.entries(store.issues)) {
+    const normalized = normalizeRecord(record);
+    if (
+      normalized.finalization &&
+      REPAIRABLE_FINALIZATION_STATES.has(normalized.finalization.state) &&
+      normalized.finalization.stickyOwner === worktreeId
+    ) {
+      return { issueIdentifier: identifier, finalization: normalized.finalization };
+    }
+  }
+  return null;
+}
+
+export function listRepairableIssuesForWorktree(worktreeId) {
+  const store = loadState();
+  const results = [];
+  for (const [identifier, record] of Object.entries(store.issues)) {
+    const normalized = normalizeRecord(record);
+    if (
+      normalized.finalization &&
+      REPAIRABLE_FINALIZATION_STATES.has(normalized.finalization.state) &&
+      normalized.finalization.stickyOwner === worktreeId
+    ) {
+      results.push({ issueIdentifier: identifier, finalization: normalized.finalization });
+    }
+  }
+  return results;
 }
 
 export function checkLatencyBaseline(currentAverageMs) {

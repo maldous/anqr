@@ -5,8 +5,8 @@ import crypto from "node:crypto";
 
 export const VALIDATION_MANIFEST = {
   typecheck: {
-    command: "npx tsc --noEmit",
-    timeoutMs: 120_000,
+    command: "( flock -w 120 9 || exit 1; npx tsc --noEmit ) 9>/tmp/anqr-typecheck.lock",
+    timeoutMs: 240_000,
     fullProject: true,
   },
   lint: {
@@ -30,8 +30,8 @@ export const VALIDATION_MANIFEST = {
   },
   tests: {
     command:
-      "NODE_OPTIONS='--no-experimental-webstorage' npx vitest run --maxWorkers=1 --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts' --exclude 'tests/unit/qr-generator-perf-profile.spec.ts'",
-    timeoutMs: 120_000,
+      "( flock -w 120 9 || exit 1; NODE_OPTIONS='--no-experimental-webstorage' npx vitest run --maxWorkers=1 --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts' --exclude 'tests/unit/qr-generator-perf-profile.spec.ts' ) 9>/tmp/anqr-vitest.lock",
+    timeoutMs: 240_000,
     fullProject: true,
   },
 };
