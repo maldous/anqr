@@ -79,3 +79,4 @@ export const RECOVERY_MAX_REPAIR_ATTEMPTS = 5;           // per worktree before 
 export const RECOVERY_QUARANTINE_THRESHOLD_MS = 600_000; // 10 min stuck in repairable → quarantine
 export const RECOVERY_STALE_LEASE_GRACE_MS = 300_000;    // 5 min grace before reclaiming lease
 export const RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7;
+export const RECOVERY_BASELINE_CHECK_INTERVAL_CYCLES = 5; // check baseline every 5 cycles (5 min at 60s poll)

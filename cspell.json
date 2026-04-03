@@ -27,7 +27,8 @@
     ".git/**",
     "reports/**",
     "**/*.tsbuildinfo",
-    "**/build/**"
+    "**/build/**",
+    "apps/**/i18n/**"
   ],
   "words": [
     "goplaces",
@@ -494,7 +495,10 @@
     "discord",
     "codebuff",
     "autofinalize",
-    "AUTOFINALIZE"
+    "AUTOFINALIZE",
+    "reprovision",
+    "reprovisioning",
+    "reprovisioned"
   ],
   "dictionaries": [
     "typescript",

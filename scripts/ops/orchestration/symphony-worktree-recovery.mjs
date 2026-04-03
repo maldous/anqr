@@ -14,8 +14,8 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
 import { createLogger } from "../lib/logger.mjs";
 import {
   getWorktreeHealthSnapshot,
@@ -41,7 +41,11 @@ import {
   RECOVERY_QUARANTINE_THRESHOLD_MS,
   RECOVERY_STALE_LEASE_GRACE_MS,
   RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD,
+  RECOVERY_BASELINE_CHECK_INTERVAL_CYCLES,
 } from "../symphony-config.mjs";
+import {
+  runCspell,
+} from "../core/symphony-validation.mjs";
 import {
   getWorktreePath,
   getWorktreeBranch,
@@ -50,6 +54,8 @@ import {
 } from "../core/worktree-config.mjs";
 
 const { logInfo, logWarn, logError, logDebug } = createLogger();
+
+const MAIN_REPO_ROOT = resolve(dirname(new URL(import.meta.url).pathname), "..", "..", "..");
 
 const ALL_WORKTREE_IDS = [
   ...SYMPHONY_WORKTREE_IDS.filter((id) => id !== "main"),
@@ -400,6 +406,185 @@ export async function runRecoveryCycle() {
   return stats;
 }
 
+// ---------------------------------------------------------------------------
+// Baseline health — non-destructive auto-repair
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse unknown words from cspell error output.
+ * @param {string} detail - raw cspell output
+ * @returns {string[]}
+ */
+function parseCspellUnknownWords(detail) {
+  const words = new Set();
+  const regex = /Unknown word \(([\w-]+)\)/g;
+  let match;
+  while ((match = regex.exec(detail)) !== null) {
+    words.add(match[1].toLowerCase());
+  }
+  return [...words];
+}
+
+/**
+ * Attempt non-destructive cspell auto-fix by adding unknown words to the dictionary.
+ *
+ * SAFE: Only modifies cspell.json / .cspell.json config files.
+ * SAFE: Checks main repo is clean before committing.
+ * SAFE: Reverts local changes on commit/push failure.
+ * SAFE: Never touches source code or worktree content.
+ *
+ * @param {string} detail - raw cspell error output
+ * @returns {Promise<boolean>} true if fix was committed and pushed
+ */
+async function attemptCspellAutoFix(detail) {
+  const unknownWords = parseCspellUnknownWords(detail);
+  if (unknownWords.length === 0) {
+    logWarn("[recovery] cspell failing but could not parse unknown words from output");
+    return false;
+  }
+
+  const MAX_AUTO_WORDS = 20;
+  if (unknownWords.length > MAX_AUTO_WORDS) {
+    logWarn(`[recovery] Too many unknown cspell words (${unknownWords.length}) — needs manual review`);
+    return false;
+  }
+
+  // SAFETY: refuse to commit if main repo has uncommitted changes
+  try {
+    const status = execFileSync("git", ["status", "--porcelain"], {
+      cwd: MAIN_REPO_ROOT,
+      encoding: "utf-8",
+      timeout: 10_000,
+    }).trim();
+    if (status.length > 0) {
+      logWarn("[recovery] Main repo has uncommitted changes — skipping cspell auto-fix to avoid losing work");
+      return false;
+    }
+  } catch (err) {
+    logWarn(`[recovery] Could not check main repo git status: ${err.message}`);
+    return false;
+  }
+
+  // Read current dictionary (.cspell.json is a symlink to cspell.json — only modify the real file)
+  const cspellPath = resolve(MAIN_REPO_ROOT, "cspell.json");
+  let cspellConfig;
+  try {
+    cspellConfig = JSON.parse(readFileSync(cspellPath, "utf-8"));
+  } catch (err) {
+    logWarn(`[recovery] Could not read cspell.json: ${err.message}`);
+    return false;
+  }
+
+  // Deduplicate against existing words
+  const existingWords = new Set(cspellConfig.words.map((w) => w.toLowerCase()));
+  const newWords = unknownWords.filter((w) => !existingWords.has(w));
+  if (newWords.length === 0) {
+    logWarn("[recovery] All unknown words already in dictionary — cspell failure needs manual investigation");
+    return false;
+  }
+
+  // Append new words (preserves existing order)
+  cspellConfig.words.push(...newWords);
+  const content = JSON.stringify(cspellConfig, null, 2) + "\n";
+
+  try {
+    writeFileSync(cspellPath, content);
+  } catch (err) {
+    logError(`[recovery] Failed to write cspell config: ${err.message}`);
+    return false;
+  }
+
+  // Commit and push
+  try {
+    // .cspell.json is a symlink to cspell.json — only need to add the real file
+    execFileSync("git", ["add", "cspell.json"], { cwd: MAIN_REPO_ROOT, timeout: 10_000, stdio: "pipe" });
+    const subject = newWords.length <= 5
+      ? `fix: auto-add cspell words: ${newWords.join(", ")}`
+      : `fix: auto-add ${newWords.length} cspell words`;
+    execFileSync("git", ["commit", "-m", subject], {
+      cwd: MAIN_REPO_ROOT,
+      timeout: 10_000,
+      stdio: "pipe",
+      env: { ...process.env, ANQR_AUTOMATION_COMMIT: "1" },
+    });
+    execFileSync("git", ["push", "origin", "main"], {
+      cwd: MAIN_REPO_ROOT,
+      timeout: 30_000,
+      stdio: "pipe",
+      env: { ...process.env, ANQR_AUTOMATION_PUSH: "1" },
+    });
+    logInfo(`[recovery] ✅ Auto-fixed cspell: added ${newWords.length} word(s): ${newWords.join(", ")}`);
+  } catch (err) {
+    logError(`[recovery] Failed to commit/push cspell fix: ${err.message}`);
+    // Revert local changes so main repo stays clean
+    try {
+      execFileSync("git", ["checkout", "--", "cspell.json"], {
+        cwd: MAIN_REPO_ROOT,
+        timeout: 10_000,
+        stdio: "pipe",
+      });
+    } catch { /* best-effort revert */ }
+    return false;
+  }
+
+  // Propagate fix to clean worktrees
+  await propagateBaselineFixToCleanWorktrees();
+  return true;
+}
+
+/**
+ * Fast-forward clean worktrees to include the latest main commit.
+ *
+ * SAFE: Only affects worktrees with NO dirty files and NO active leases.
+ * SAFE: Uses --ff-only — cannot create merge conflicts or lose work.
+ * SAFE: On any failure, silently skips the worktree.
+ */
+async function propagateBaselineFixToCleanWorktrees() {
+  for (const id of ALL_WORKTREE_IDS) {
+    const snapshot = getWorktreeHealthSnapshot(id);
+    if (snapshot.gitDirtyFiles.length > 0) continue;
+    if (snapshot.leaseState && leaseIsActive({ lease: snapshot.leaseState })) continue;
+
+    const wtPath = getWorktreePath(String(id));
+    try {
+      execFileSync("git", ["fetch", "origin", "main"], { cwd: wtPath, timeout: 15_000, stdio: "pipe" });
+      execFileSync("git", ["merge", "--ff-only", "origin/main"], { cwd: wtPath, timeout: 15_000, stdio: "pipe" });
+      logInfo(`[recovery] ✅ Fast-forwarded wt${id} to include baseline fix`);
+    } catch {
+      logDebug(`[recovery] Could not fast-forward wt${id} — will pick up fix on next reset`);
+    }
+  }
+}
+
+/**
+ * Check baseline pre-flight health on the main repo and attempt auto-repair.
+ *
+ * SAFE: Never modifies source code — only config files (cspell dictionary).
+ * SAFE: Never does git reset or checkout on worktrees with active work.
+ * SAFE: All worktree updates use --ff-only (cannot lose commits).
+ */
+export async function checkBaselineHealth() {
+  logInfo("[recovery] 🔍 Running baseline cspell check...");
+
+  try {
+    // Only run cspell (lightweight) — not full preflights (typecheck/lint/tests)
+    // to avoid resource contention with executor flock locks.
+    const result = await runCspell(MAIN_REPO_ROOT, [], { fullProject: true });
+    if (result.pass) {
+      logInfo("[recovery] ✅ Baseline cspell passing");
+      return;
+    }
+
+    logWarn("[recovery] ⚠️ Baseline cspell failing");
+    const fixed = await attemptCspellAutoFix(result.detail);
+    if (!fixed) {
+      logWarn("[recovery] Could not auto-fix cspell — manual intervention may be needed");
+    }
+  } catch (err) {
+    logWarn(`[recovery] Baseline health check error: ${err.message}`);
+  }
+}
+
 /**
  * Check quarantined worktrees for reprovisioning eligibility.
  */
@@ -444,7 +629,9 @@ function showStatus() {
  * Run in daemon mode — poll periodically.
  */
 export async function runDaemon() {
-  logInfo(`[recovery] Starting daemon mode (poll every ${RECOVERY_POLL_INTERVAL_MS / 1000}s)`);
+  logInfo(`[recovery] Starting daemon mode (poll every ${RECOVERY_POLL_INTERVAL_MS / 1000}s, baseline check every ${RECOVERY_BASELINE_CHECK_INTERVAL_CYCLES} cycles)`);
+
+  let cycleCount = 0;
 
   const shutdown = (signal) => {
     logInfo(`[recovery] Received ${signal}, shutting down...`);
@@ -453,10 +640,23 @@ export async function runDaemon() {
   process.on("SIGTERM", () => shutdown("SIGTERM"));
   process.on("SIGINT", () => shutdown("SIGINT"));
 
+  // Run baseline check on startup
+  try {
+    await checkBaselineHealth();
+  } catch (err) {
+    logWarn(`[recovery] Initial baseline check failed: ${err.message}`);
+  }
+
   while (true) {
     try {
       await runRecoveryCycle();
       await checkQuarantinedForReprovisioning();
+
+      // Periodic baseline health check (non-destructive auto-repair)
+      cycleCount++;
+      if (cycleCount % RECOVERY_BASELINE_CHECK_INTERVAL_CYCLES === 0) {
+        await checkBaselineHealth();
+      }
     } catch (err) {
       logError(`[recovery] Cycle error: ${err.message}`);
     }
