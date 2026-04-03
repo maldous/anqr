@@ -7,9 +7,9 @@ const { logInfo, logError } = createLogger();
 
 /**
  * Linear Runner Control Script
- * 
+ *
  * Controls the systemd timers that feed the Linear issue runner queue.
- * 
+ *
  * Usage:
  *   node scripts/ops/orchestration/symphony-control.mjs --stop     # Stop all runners (disable timers)
  *   node scripts/ops/orchestration/symphony-control.mjs --start    # Start all runners (enable timers)
@@ -19,9 +19,13 @@ const { logInfo, logError } = createLogger();
 
 function getTimerStatus() {
   try {
-    const output = execFileSync("systemctl", ["--user", "list-timers", "anqr-linear-runner@*.timer", "--all"], {
-      encoding: "utf-8",
-    });
+    const output = execFileSync(
+      "systemctl",
+      ["--user", "list-timers", "anqr-linear-runner@*.timer", "--all"],
+      {
+        encoding: "utf-8",
+      },
+    );
     return output;
   } catch (err) {
     logError(`Failed to get timer status: ${err.message}`);
@@ -57,12 +61,12 @@ function disableAllTimers() {
     execFileSync("systemctl", ["--user", "stop", "anqr-linear-runner@*.timer"], {
       stdio: "pipe",
     });
-    
+
     // Disable timers to prevent restart
     execFileSync("systemctl", ["--user", "disable", "anqr-linear-runner@*.timer"], {
       stdio: "pipe",
     });
-    
+
     logInfo("✅ All Linear runner timers disabled");
     logInfo("⏸️  No new tasks will be picked up until timers are re-enabled");
     return true;
@@ -87,7 +91,7 @@ function enableAllTimers() {
         stdio: "pipe",
       });
     }
-    
+
     logInfo("✅ Linear runner timers enabled and started (wt1-wt4)");
     logInfo("🚀 Runners will begin picking up tasks on next timer cycle");
     return true;
@@ -99,12 +103,12 @@ function enableAllTimers() {
 
 function showStatus() {
   logInfo("📊 Linear Runner System Status\n");
-  
+
   const timerStatus = getTimerStatus();
   if (timerStatus) {
     console.log(timerStatus);
   }
-  
+
   const enabledTimers = getEnabledTimers();
   logInfo(`\n🔧 Enabled timers: ${enabledTimers.length}`);
   if (enabledTimers.length > 0) {
@@ -119,7 +123,7 @@ function showStatus() {
 
 async function main() {
   const args = new Set(process.argv.slice(2));
-  
+
   if (args.has("--stop")) {
     const success = disableAllTimers();
     process.exit(success ? 0 : 1);
@@ -128,7 +132,7 @@ async function main() {
     process.exit(success ? 0 : 1);
   } else if (args.has("--restart")) {
     disableAllTimers();
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const success = enableAllTimers();
     process.exit(success ? 0 : 1);
   } else if (args.has("--status")) {

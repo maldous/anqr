@@ -17,9 +17,7 @@ describe("Discord Worktree Routing Integration", () => {
         identifier: "ANQR-123",
         title: "Test issue from Discord",
         labels: {
-          nodes: [
-            { id: "9341d965-e21d-4c3d-81b2-73beff08356d", name: "source:discord" },
-          ],
+          nodes: [{ id: "9341d965-e21d-4c3d-81b2-73beff08356d", name: "source:discord" }],
         },
         createdBy: {
           id: "user-123",

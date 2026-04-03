@@ -2,7 +2,7 @@
 
 /**
  * validate-issue.mjs — Linear issue validation helper
- * 
+ *
  * Validates issue content, categorization, and formatting before creation
  * to ensure high-quality, consistent Linear issues.
  */
@@ -32,12 +32,12 @@ export function validateIssueInput(input) {
     if (input.title.length > 200) {
       errors.push("❌ Title cannot exceed 200 characters");
     }
-    
-    if (input.title.includes('TODO') || input.title.includes('FIXME')) {
+
+    if (input.title.includes("TODO") || input.title.includes("FIXME")) {
       warnings.push("⚠️  Title contains placeholder text (TODO/FIXME)");
     }
-    
-    if (input.title.startsWith('[') && !input.title.includes(']')) {
+
+    if (input.title.startsWith("[") && !input.title.includes("]")) {
       recommendations.push("💡 Consider adding closing bracket to title format: [Component] Title");
     }
   }
@@ -49,26 +49,26 @@ export function validateIssueInput(input) {
     if (input.description.trim().length < 50) {
       warnings.push("⚠️  Description should be at least 50 characters for clarity");
     }
-    
-    if (input.description.includes('PLACEHOLDER')) {
+
+    if (input.description.includes("PLACEHOLDER")) {
       warnings.push("⚠️  Description contains placeholder text");
     }
-    
+
     // Check for required sections
     const requiredSections = [
-      '## Problem',
-      '## Root Cause', 
-      '## Impact',
-      '## Solution',
-      '## Acceptance Criteria'
+      "## Problem",
+      "## Root Cause",
+      "## Impact",
+      "## Solution",
+      "## Acceptance Criteria",
     ];
-    
-    const missingSections = requiredSections.filter(section => 
-      !input.description.includes(section)
+
+    const missingSections = requiredSections.filter(
+      (section) => !input.description.includes(section),
     );
-    
+
     if (missingSections.length > 0) {
-      warnings.push(`⚠️  Description missing sections: ${missingSections.join(', ')}`);
+      warnings.push(`⚠️  Description missing sections: ${missingSections.join(", ")}`);
     }
   }
 
@@ -84,12 +84,12 @@ export function validateIssueInput(input) {
     errors.push("❌ At least one label is required");
   } else {
     const validLabels = Object.values(LABELS);
-    const invalidLabels = input.labelIds.filter(label => !validLabels.includes(label));
-    
+    const invalidLabels = input.labelIds.filter((label) => !validLabels.includes(label));
+
     if (invalidLabels.length > 0) {
-      errors.push(`❌ Invalid label IDs: ${invalidLabels.join(', ')}`);
+      errors.push(`❌ Invalid label IDs: ${invalidLabels.join(", ")}`);
     }
-    
+
     // Validate label combinations
     const validCombinations = [
       [LABELS.harness],
@@ -104,13 +104,15 @@ export function validateIssueInput(input) {
       [LABELS.harness, LABELS.discord],
       [LABELS.product, LABELS.release],
     ];
-    
-    const isValidCombination = validCombinations.some(combo => 
-      combo.every(label => input.labelIds.includes(label))
+
+    const isValidCombination = validCombinations.some((combo) =>
+      combo.every((label) => input.labelIds.includes(label)),
     );
-    
+
     if (!isValidCombination) {
-      warnings.push("⚠️  Label combination may not be optimal. Consider standard work type labels.");
+      warnings.push(
+        "⚠️  Label combination may not be optimal. Consider standard work type labels.",
+      );
     }
   }
 
@@ -132,10 +134,12 @@ export function validateIssueInput(input) {
       /PLACEHOLDER/g,
       /\{\{[^}]+\}\}/g, // Template placeholders
     ];
-    
-    duplicatePatterns.forEach(pattern => {
+
+    duplicatePatterns.forEach((pattern) => {
       if (pattern.test(input.description)) {
-        warnings.push(`⚠️  Description contains template placeholders matching pattern: ${pattern}`);
+        warnings.push(
+          `⚠️  Description contains template placeholders matching pattern: ${pattern}`,
+        );
       }
     });
   }
@@ -159,7 +163,7 @@ function calculateValidationScore(errors, warnings) {
   const errorPenalty = errors.length * 20;
   const warningPenalty = warnings.length * 5;
   const maxScore = 100;
-  
+
   const score = Math.max(0, maxScore - errorPenalty - warningPenalty);
   return Math.round(score * 100) / 100; // Round to 2 decimal places
 }
@@ -170,37 +174,37 @@ function calculateValidationScore(errors, warnings) {
  * @returns {string} Formatted output
  */
 export function formatValidationResult(result) {
-  let output = '';
-  
+  let output = "";
+
   if (result.valid) {
-    output += '✅ Issue validation PASSED\n';
+    output += "✅ Issue validation PASSED\n";
     output += `📊 Validation Score: ${result.score}/100\n`;
   } else {
-    output += '❌ Issue validation FAILED\n';
+    output += "❌ Issue validation FAILED\n";
     output += `📊 Validation Score: ${result.score}/100\n`;
   }
-  
+
   if (result.errors.length > 0) {
-    output += '\n🚨 Errors (must fix):\n';
-    result.errors.forEach(error => {
+    output += "\n🚨 Errors (must fix):\n";
+    result.errors.forEach((error) => {
       output += `  ${error}\n`;
     });
   }
-  
+
   if (result.warnings.length > 0) {
-    output += '\n⚠️  Warnings (recommended improvements):\n';
-    result.warnings.forEach(warning => {
+    output += "\n⚠️  Warnings (recommended improvements):\n";
+    result.warnings.forEach((warning) => {
       output += `  ${warning}\n`;
     });
   }
-  
+
   if (result.recommendations.length > 0) {
-    output += '\n💡 Recommendations:\n';
-    result.recommendations.forEach(recommendation => {
+    output += "\n💡 Recommendations:\n";
+    result.recommendations.forEach((recommendation) => {
       output += `  ${recommendation}\n`;
     });
   }
-  
+
   return output;
 }
 
@@ -248,8 +252,8 @@ export function validateCategorization(labelIds) {
     [LABELS.harness, LABELS.product],
   ];
 
-  const isValid = validCombinations.some(combo => 
-    combo.every(label => labelIds.includes(label))
+  const isValid = validCombinations.some((combo) =>
+    combo.every((label) => labelIds.includes(label)),
   );
 
   return {
@@ -266,17 +270,17 @@ export function validateCategorization(labelIds) {
  */
 function getRecommendedLabels(currentLabels) {
   const recommendations = [];
-  
+
   // If no labels, recommend harness as default
   if (!currentLabels || currentLabels.length === 0) {
     recommendations.push(LABELS.harness);
   }
-  
+
   // If only harness, consider adding secondary label
   if (currentLabels.includes(LABELS.harness) && currentLabels.length === 1) {
     recommendations.push(LABELS.hygiene); // Common combination
   }
-  
+
   return [...new Set([...(currentLabels || []), ...recommendations])];
 }
 
@@ -287,16 +291,16 @@ function getRecommendedLabels(currentLabels) {
  */
 export function determinePriority(impactLevel) {
   const impact = impactLevel?.toLowerCase();
-  
+
   switch (impact) {
-    case 'critical':
-    case 'urgent':
+    case "critical":
+    case "urgent":
       return 1; // Urgent
-    case 'high':
+    case "high":
       return 2; // High
-    case 'normal':
+    case "normal":
       return 3; // Normal
-    case 'low':
+    case "low":
       return 4; // Low
     default:
       return 3; // Default to normal
@@ -317,28 +321,28 @@ export { PRIORITY_LEVELS };
 // Main function for CLI usage
 async function main() {
   const args = process.argv.slice(2);
-  
+
   if (args.length === 0) {
-    console.log('Usage: node validate-issue.mjs <issue-json-file>');
-    console.log('Example: node validate-issue.mjs issue-input.json');
+    console.log("Usage: node validate-issue.mjs <issue-json-file>");
+    console.log("Example: node validate-issue.mjs issue-input.json");
     process.exit(1);
   }
 
   try {
     const issueInput = JSON.parse(args[0]);
     const result = validateIssueInput(issueInput);
-    
+
     console.log(formatValidationResult(result));
-    
+
     if (!result.valid) {
-      console.error('\n❌ Validation failed. Please fix errors before creating the issue.');
+      console.error("\n❌ Validation failed. Please fix errors before creating the issue.");
       process.exit(1);
     }
-    
-    console.log('\n✅ Issue validation passed! Ready for creation.');
+
+    console.log("\n✅ Issue validation passed! Ready for creation.");
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error during validation:', error.message);
+    console.error("❌ Error during validation:", error.message);
     process.exit(1);
   }
 }

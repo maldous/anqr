@@ -177,7 +177,10 @@ function checkSystemdServices() {
   const runnerUnits =
     process.env.ANQR_HARNESS_DOCTOR_RUNNERS || "anqr-symphony-runner@1,anqr-symphony-runner@2";
   const services = [
-    ...runnerUnits.split(",").map((value) => value.trim()).filter(Boolean),
+    ...runnerUnits
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
     "anqr-nightly",
     "anqr-queue-feeder",
   ];

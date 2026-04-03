@@ -40,8 +40,7 @@ describe("symphony-worktree-pool disk space checks", () => {
   it("should check disk space before creating worktrees", async () => {
     const { execFileSync } = await import("node:child_process");
     const { existsSync, statfsSync } = await import("node:fs");
-    const { initWorktreePool } =
-      await import("./symphony-worktree-pool.mjs");
+    const { initWorktreePool } = await import("./symphony-worktree-pool.mjs");
 
     // Mock git repository check
     vi.mocked(execFileSync).mockReturnValueOnce(Buffer.from(".git"));
@@ -80,8 +79,7 @@ describe("symphony-worktree-pool disk space checks", () => {
   it("should throw error when insufficient disk space", async () => {
     const { execFileSync } = await import("node:child_process");
     const { statfsSync } = await import("node:fs");
-    const { initWorktreePool } =
-      await import("./symphony-worktree-pool.mjs");
+    const { initWorktreePool } = await import("./symphony-worktree-pool.mjs");
 
     // Mock git repository check
     vi.mocked(execFileSync).mockReturnValueOnce(Buffer.from(".git"));
@@ -103,8 +101,7 @@ describe("symphony-worktree-pool disk space checks", () => {
   it("should calculate required space correctly for multiple worktrees", async () => {
     const { execFileSync } = await import("node:child_process");
     const { existsSync, statfsSync } = await import("node:fs");
-    const { initWorktreePool } =
-      await import("./symphony-worktree-pool.mjs");
+    const { initWorktreePool } = await import("./symphony-worktree-pool.mjs");
 
     // Mock git repository check
     vi.mocked(execFileSync).mockReturnValueOnce(Buffer.from(".git"));
@@ -143,8 +140,7 @@ describe("symphony-worktree-pool disk space checks", () => {
   it("should provide clear error message with space requirements", async () => {
     const { execFileSync } = await import("node:child_process");
     const { statfsSync } = await import("node:fs");
-    const { initWorktreePool } =
-      await import("./symphony-worktree-pool.mjs");
+    const { initWorktreePool } = await import("./symphony-worktree-pool.mjs");
 
     // Mock git repository check
     vi.mocked(execFileSync).mockReturnValueOnce(Buffer.from(".git"));

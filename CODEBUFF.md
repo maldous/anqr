@@ -11,6 +11,7 @@ Read order:
 ## Harness Context
 
 ANQR uses an **all-in-one Symphony Bridge** architecture (ADR-0003) where each worktree-local bridge provides:
+
 - AI completion (`/v1/chat/completions`) with provider cascade
 - Codebuff SDK operations (tool use, code edits, file operations)
 - Worktree-isolated execution via systemd `WorkingDirectory`
@@ -89,9 +90,11 @@ The bridge dynamically adjusts per-provider context limits at runtime:
 **Procedure:**
 
 1. **STOP TASK EXECUTION FIRST:**
+
    ```bash
    node scripts/ops/orchestration/symphony-control.mjs --stop
    ```
+
    - **CRITICAL:** This must be the FIRST step before any other actions
    - Disables all 4 Symphony runner timers (wt1-wt4) to prevent new tasks from starting
    - Shows "🛑 STOPPED - no new tasks will be picked up" status
@@ -106,9 +109,11 @@ The bridge dynamically adjusts per-provider context limits at runtime:
 5. **Restart bridge**: `systemctl --user restart anqr-symphony-bridge` (and/or worktree instances)
 
 6. **RESTART TASK EXECUTION:**
+
    ```bash
    node scripts/ops/orchestration/symphony-control.mjs --start
    ```
+
    - **CRITICAL:** Must restart task execution after bridge restart
    - Re-enables all 4 Symphony runner timers (wt1-wt4)
    - Shows "✅ RUNNING - new tasks will be picked up" status
@@ -140,6 +145,7 @@ npm run test:unit
 ### Agent spawning
 
 See [.agents/SPAWN_AGENTS_GUIDE.md](/home/user/src/anqr/.agents/SPAWN_AGENTS_GUIDE.md) for the full reference on `spawn_agents` usage, including:
+
 - All agent types and their required/optional params
 - The #1 error: basher `params.command` must be a non-empty string
 - Common pitfalls (empty params, wrong types, editor doesn't take prompt)
@@ -156,16 +162,19 @@ The Symphony bridge `spawn_agents` tool is **acknowledgment-only** — it delega
 ### Worktree operations
 
 **Check status of all worktrees:**
+
 ```bash
 node scripts/ops/orchestration/symphony-runner.mjs --status
 ```
 
 **View worktree pool health:**
+
 ```bash
 node scripts/ops/orchestration/symphony-worktree-pool.mjs status
 ```
 
 **Emergency worktree repair:**
+
 ```bash
 node scripts/ops/orchestration/symphony-worktree-pool.mjs repair
 ```

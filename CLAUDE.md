@@ -10,6 +10,7 @@ Read order:
 ## Harness Context
 
 ANQR uses an **all-in-one Symphony Bridge** architecture (ADR-0003) where each bridge provides:
+
 - AI completion (`/v1/chat/completions`) with provider cascade
 - Codebuff SDK operations (tool use, code edits, file operations)
 - Worktree-isolated execution via systemd `WorkingDirectory`
@@ -90,9 +91,11 @@ node scripts/ops/orchestration/symphony-control.mjs --start
 **Procedure:**
 
 1. **STOP TASK EXECUTION FIRST:**
+
    ```bash
    node scripts/ops/orchestration/symphony-control.mjs --stop
    ```
+
    - **CRITICAL:** This must be the FIRST step before any other actions
    - Disables all Symphony runner timers to prevent new tasks from starting
 
@@ -105,9 +108,11 @@ node scripts/ops/orchestration/symphony-control.mjs --start
 5. **Restart bridge**: `systemctl --user restart anqr-symphony-bridge` (and/or worktree instances)
 
 6. **RESTART TASK EXECUTION:**
+
    ```bash
    node scripts/ops/orchestration/symphony-control.mjs --start
    ```
+
    - **CRITICAL:** Must restart task execution after bridge restart
    - Without this step, the system remains stopped and no work will be processed
 

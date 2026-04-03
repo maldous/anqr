@@ -24,7 +24,7 @@ Each bridge made request to main bridge (port 4319)
 
 1. User sends Discord message: `"who are you?"`
 2. **wt5 bridge** (port 4325) polls Discord, sees message, makes request to port 4319
-3. **wt6 bridge** (port 4326) polls Discord, sees message, makes request to port 4319  
+3. **wt6 bridge** (port 4326) polls Discord, sees message, makes request to port 4319
 4. **wt7 bridge** (port 4327) polls Discord, sees message, makes request to port 4319
 5. **wt8 bridge** (port 4328) polls Discord, sees message, makes request to port 4319
 6. **Result**: 4 simultaneous identical requests to AI providers
@@ -57,7 +57,7 @@ function startDiscordMonitoring() {
     logInfo(`⚠️ Discord monitoring DISABLED in ${bridgeId}`);
     return; // Exit early - don't start polling
   }
-  
+
   // Original Discord monitoring code continues only for main bridge...
 }
 ```
@@ -74,12 +74,14 @@ function startDiscordMonitoring() {
 ### 1. Check Bridge Logs on Startup
 
 **Worktree bridges (wt5-wt8) should show**:
+
 ```
 ⚠️ Discord monitoring DISABLED in wt5 - only OpenClaw Gateway should monitor Discord
    Architecture: Discord Bot → OpenClaw Gateway → Discord Router (18790) → Worktree Bridges (4325-4328)
 ```
 
 **Main bridge (port 4319) MAY show** (only if Discord monitoring is enabled there):
+
 ```
 📡 Starting Discord message monitoring (polling every 5s)
 ```
@@ -89,11 +91,13 @@ But ideally, the main bridge should also have Discord monitoring disabled since 
 ### 2. Test Discord Command
 
 Send a test message in Discord:
+
 ```
 @bot who are you?
 ```
 
 **Expected behavior**:
+
 - ONE request processed
 - OpenClaw Gateway logs show incoming message
 - Discord Router logs show routing to ONE worktree
@@ -101,6 +105,7 @@ Send a test message in Discord:
 - Response delivered back through the chain
 
 **Before fix**:
+
 - 4 requests processed simultaneously
 - All 4 worktree bridges log "Discord command"
 - 4 duplicate AI provider requests
@@ -109,6 +114,7 @@ Send a test message in Discord:
 ### 3. Monitor AI Provider Usage
 
 **Before fix**:
+
 ```
 OpenAI API Usage:
   - 4 simultaneous identical requests
@@ -117,6 +123,7 @@ OpenAI API Usage:
 ```
 
 **After fix**:
+
 ```
 OpenAI API Usage:
   - 1 request per Discord message

@@ -237,7 +237,7 @@ export async function sendDiscordEmbed({
   footer,
   replyTo,
   threadName,
-  source,
+  _source,
 }) {
   const embed = {
     title: trimToUndefined(title),
@@ -288,14 +288,7 @@ const DISCORD_STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
  */
 export async function streamDiscordUpdate(
   message,
-  {
-    emoji = "🔄",
-    timestamp = false,
-    requestId = "default",
-    replyTo,
-    threadName,
-    source,
-  } = {},
+  { emoji = "🔄", timestamp = false, requestId = "default", replyTo, threadName, source } = {},
 ) {
   // Get or create buffer for this request
   // Store thread/reply options with the buffer for use during flush

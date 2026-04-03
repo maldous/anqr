@@ -2,10 +2,10 @@
 
 /**
  * export-linear-all.mjs — Export ALL Linear issues to JSON
- * 
+ *
  * Exports all issues regardless of state (todo, done, canceled, in-progress, etc.)
  * with: issue number, title, description, and last comment
- * 
+ *
  * Output: linear.json
  */
 
@@ -77,11 +77,13 @@ async function main() {
       title: issue.title,
       description: issue.description || "",
       state: issue.state.name,
-      lastComment: lastComment ? {
-        body: lastComment.body,
-        createdAt: lastComment.createdAt,
-        updatedAt: lastComment.updatedAt,
-      } : null,
+      lastComment: lastComment
+        ? {
+            body: lastComment.body,
+            createdAt: lastComment.createdAt,
+            updatedAt: lastComment.updatedAt,
+          }
+        : null,
       priority: issue.priority,
       labels: (issue.labels?.nodes || []).map((l) => l.name),
       createdAt: issue.createdAt,

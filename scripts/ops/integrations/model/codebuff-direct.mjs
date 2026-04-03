@@ -51,7 +51,10 @@ let sharedClientKey = null;
 
 function makeTimeout() {
   return new Promise((_, reject) => {
-    setTimeout(() => reject(new Error(`Codebuff timeout after ${CODEBUFF_TIMEOUT_MS}ms`)), CODEBUFF_TIMEOUT_MS);
+    setTimeout(
+      () => reject(new Error(`Codebuff timeout after ${CODEBUFF_TIMEOUT_MS}ms`)),
+      CODEBUFF_TIMEOUT_MS,
+    );
   });
 }
 
@@ -261,20 +264,19 @@ async function tryMode(apiKey, cwd, costMode, prompt, onTextChunk = null) {
     hasSubgoals: lastSubgoalStatus !== null,
     usedTools: [...usedTools],
     finishReason,
-    _symphonyResult:
-      inferSymphonyResultFromCompletion({
-        finishReason,
-        text,
-      }) || {
-        completed: !needsContinuation,
-        needsContinuation,
-        failureClass: null,
-        mutationCount: 0,
-        changedFiles: [],
-        validationIntent: false,
-        toolCallCount: usedTools.size,
-        stepCount: 0,
-      },
+    _symphonyResult: inferSymphonyResultFromCompletion({
+      finishReason,
+      text,
+    }) || {
+      completed: !needsContinuation,
+      needsContinuation,
+      failureClass: null,
+      mutationCount: 0,
+      changedFiles: [],
+      validationIntent: false,
+      toolCallCount: usedTools.size,
+      stepCount: 0,
+    },
   };
 }
 
@@ -311,7 +313,9 @@ export async function invokeCodebuffDirectStream({ messages, cwd, onTextChunk })
   } catch (err) {
     const errStr = err?.message || String(err);
     if (!isRecoverableError(errStr)) throw err;
-    logWarn(`[codebuff-direct] paid mode failed during stream, retrying free mode: ${errStr.slice(0, 160)}`);
+    logWarn(
+      `[codebuff-direct] paid mode failed during stream, retrying free mode: ${errStr.slice(0, 160)}`,
+    );
     return tryMode(apiKey, normalizedCwd, "free", prompt, onTextChunk);
   }
 }

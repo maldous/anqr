@@ -62,7 +62,7 @@ describe("utils", () => {
         { active: true, disabled: false },
         ["extra", "more"],
         null,
-        "final"
+        "final",
       );
       expect(result).toContain("base");
       expect(result).toContain("active");

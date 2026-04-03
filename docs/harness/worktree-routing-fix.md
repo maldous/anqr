@@ -5,7 +5,7 @@
 Multiple Discord worktrees (wt6, wt7, wt8) were picking up the same issue when a Discord request came in. This happened because:
 
 1. Discord-created issues were NOT marked with `source: "discord"` in symphony-state
-2. `isDiscordIssue()` in symphony-runner.mjs checks `state.source` 
+2. `isDiscordIssue()` in symphony-runner.mjs checks `state.source`
 3. Without the source set, the worktree routing filter passed ALL issues to ALL worktrees
 4. Multiple Discord worktrees could pick up the same issue simultaneously
 
@@ -26,13 +26,16 @@ import { isDiscordSourced, markDiscordSource } from "../core/discord-source.mjs"
 
 for (const issue of toFeed) {
   await updateIssue(issue.id, { stateId: STATES.todo });
-  
+
   const fromDiscord = isDiscordSourced(issue);
   if (fromDiscord) {
     markDiscordSource(issue.identifier);
   }
-  
-  logAction("feed", `Promoted ${issue.identifier} to Todo: ${issue.title}${fromDiscord ? " (Discord)" : ""}`);
+
+  logAction(
+    "feed",
+    `Promoted ${issue.identifier} to Todo: ${issue.title}${fromDiscord ? " (Discord)" : ""}`,
+  );
 }
 ```
 
@@ -56,18 +59,18 @@ Created a shared utility to avoid code duplication:
 ```javascript
 export function isDiscordSourced(issueData) {
   if (!issueData) return false;
-  
+
   const discordLabelId = process.env.DISCORD_LABEL_ID;
-  
+
   // Check for Discord label
   if (discordLabelId) {
     const labels = issueData.labels?.nodes || [];
     const hasDiscordLabel = labels.some(
-      (l) => l.id === discordLabelId || l.name.toLowerCase().includes("discord")
+      (l) => l.id === discordLabelId || l.name.toLowerCase().includes("discord"),
     );
     if (hasDiscordLabel) return true;
   }
-  
+
   // Check if creator is Discord bot
   const createdBy = issueData.createdBy;
   if (createdBy) {
@@ -77,7 +80,7 @@ export function isDiscordSourced(issueData) {
       createdBy.id === process.env.DISCORD_BOT_USER_ID;
     if (creatorIsDiscord) return true;
   }
-  
+
   return false;
 }
 
@@ -146,6 +149,7 @@ npx vitest run tests/unit/discord-router.spec.ts tests/unit/queue-control.spec.t
 Monitor Discord #general2 channel to verify only one worktree processes each request:
 
 Before fix:
+
 ```
 ⏳ Processing Request | wt6
 ⏳ Processing Request | wt7
@@ -153,6 +157,7 @@ Before fix:
 ```
 
 After fix:
+
 ```
 ⏳ Processing Request | wt6
 ✅ Done | wt6

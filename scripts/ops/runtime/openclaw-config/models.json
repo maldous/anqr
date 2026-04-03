@@ -98,6 +98,28 @@
         "ollama/qwen3-coder-next:latest"
       ]
     },
-    "tools": ["browser", "canvas", "read", "write", "edit", "exec", "web_search", "subagents", "code_search", "list_directory", "read_subtree", "glob", "file_picker", "researcher_web", "researcher_docs", "thinker", "spawn_agents", "code_interpreter", "file_search", "image_generation", "wolfram_alpha"]
+    "tools": [
+      "browser",
+      "canvas",
+      "read",
+      "write",
+      "edit",
+      "exec",
+      "web_search",
+      "subagents",
+      "code_search",
+      "list_directory",
+      "read_subtree",
+      "glob",
+      "file_picker",
+      "researcher_web",
+      "researcher_docs",
+      "thinker",
+      "spawn_agents",
+      "code_interpreter",
+      "file_search",
+      "image_generation",
+      "wolfram_alpha"
+    ]
   }
 }

@@ -53,21 +53,20 @@ setInterval(() => {
  */
 function verifySignature(rawBody, signature) {
   // For testing purposes, allow empty signature or basic sha256= prefix
-  if (!signature || signature === 'sha256=') {
-    logWarn("No proper signature provided - skipping verification for testing (not recommended for production)");
+  if (!signature || signature === "sha256=") {
+    logWarn(
+      "No proper signature provided - skipping verification for testing (not recommended for production)",
+    );
     return true;
   }
-  
+
   if (!WEBHOOK_SECRET) {
     logWarn("No secret configured - skipping verification (not recommended for production)");
     return true;
   }
 
   try {
-    const expected = crypto
-      .createHmac("sha256", WEBHOOK_SECRET)
-      .update(rawBody)
-      .digest("hex");
+    const expected = crypto.createHmac("sha256", WEBHOOK_SECRET).update(rawBody).digest("hex");
 
     const sigBuffer = Buffer.from(signature, "utf8");
     const expectedBuffer = Buffer.from(expected, "utf8");
@@ -99,7 +98,7 @@ function isDuplicate(deliveryId) {
 
 /**
  * Determine if we should process this event and what action to take
- * 
+ *
  * State transition rules:
  * - create + Todo/InProgress -> TRIGGER (new issue ready for work)
  * - create + Backlog/Done/Canceled -> IGNORE (not ready)
@@ -128,8 +127,10 @@ function shouldProcessEvent(event) {
 
   const stateName = issue.state?.name || "unknown";
   const previousStateName = issue.previousValues?.state?.name;
-  
-  logDebug(`Issue ${issue.identifier}: action=${action}, state=${stateName}, previousState=${previousStateName}, createdAt=${createdAt}, updatedAt=${updatedAt}`);
+
+  logDebug(
+    `Issue ${issue.identifier}: action=${action}, state=${stateName}, previousState=${previousStateName}, createdAt=${createdAt}, updatedAt=${updatedAt}`,
+  );
 
   // Handle different actions
   if (action === "remove") {
@@ -165,9 +166,10 @@ function shouldProcessEvent(event) {
     // Moving into a ready state is inherently meaningful - the issue is ready for work
     if (readyStates.includes(stateName)) {
       // If we have previousStateName and it changed, include that info; otherwise note unknown previous
-      const reason = previousStateName && previousStateName !== stateName
-        ? `state changed from ${previousStateName} to ${stateName}`
-        : `moved to ${stateName} (previous state unknown)`;
+      const reason =
+        previousStateName && previousStateName !== stateName
+          ? `state changed from ${previousStateName} to ${stateName}`
+          : `moved to ${stateName} (previous state unknown)`;
 
       logInfo(`Issue ${issue.identifier} moved to ${stateName} - triggering execution`);
       return {
@@ -190,7 +192,9 @@ function shouldProcessEvent(event) {
 
     // No previousStateName or state unchanged - this is a metadata-only update (comment, label, etc.)
     // Do NOT trigger execution - the runner already has the issue in its queue
-    logDebug(`Ignoring metadata-only update for ${issue.identifier} (state unchanged: ${stateName})`);
+    logDebug(
+      `Ignoring metadata-only update for ${issue.identifier} (state unchanged: ${stateName})`,
+    );
     return null;
   }
 
@@ -206,7 +210,9 @@ function shouldProcessEvent(event) {
 async function triggerIssueExecution(processedEvent) {
   // Check if this issue is already being processed
   if (activeIssues.has(processedEvent.identifier)) {
-    logInfo(`Issue ${processedEvent.identifier} is already being processed, skipping duplicate trigger`);
+    logInfo(
+      `Issue ${processedEvent.identifier} is already being processed, skipping duplicate trigger`,
+    );
     return true;
   }
 
@@ -227,7 +233,7 @@ async function triggerIssueExecution(processedEvent) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer local-symphony",
+        Authorization: "Bearer local-symphony",
         "x-linear-identifier": processedEvent.identifier,
         "x-linear-action": processedEvent.action,
         "x-linear-thread-name": threadName,
@@ -328,14 +334,18 @@ function handleWebhook(req, res) {
           logInfo(`Marked ${processedEvent.identifier} as Discord-sourced`);
         }
       } catch (err) {
-        logDebug(`Could not determine Discord source for ${processedEvent.identifier}: ${err.message}`);
+        logDebug(
+          `Could not determine Discord source for ${processedEvent.identifier}: ${err.message}`,
+        );
       }
 
       // Trigger execution on least-loaded wt1-4 executor
       const success = await triggerIssueExecution(processedEvent);
 
       if (success) {
-        logInfo(`Processed ${processedEvent.action}: ${processedEvent.identifier} (${processedEvent.state})`);
+        logInfo(
+          `Processed ${processedEvent.action}: ${processedEvent.identifier} (${processedEvent.state})`,
+        );
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ status: "processed", event: processedEvent }));
       } else {
@@ -385,7 +395,7 @@ server.listen(PORT, "0.0.0.0", () => {
   logInfo(`Secret configured: ${!!WEBHOOK_SECRET}`);
   logInfo("========================================");
   logInfo("Ready to receive Linear webhook events");
-  
+
   // Clear stale delivery tracking on startup to prevent false duplicates
   recentDeliveries.clear();
   activeIssues.clear();
@@ -399,7 +409,6 @@ setInterval(() => {
   if (activeIssues.size > 100) {
     logInfo(`Active issues count: ${activeIssues.size} - clearing oldest entries`);
     // Keep recent issues, clear older ones
-    const now = Date.now();
     // In a real implementation, we'd track issue start time
     // For now, just log and potentially clear if it gets too large
   }

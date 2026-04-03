@@ -55,7 +55,11 @@ vi.mock("./symphony-provider-health.mjs", () => ({
   getAllProviderHealthStates: vi.fn(() => ({})),
 }));
 
-import { selectProvider, recordProviderFailure, resetProviderStats } from "./symphony-credit-gate.mjs";
+import {
+  selectProvider,
+  recordProviderFailure,
+  resetProviderStats,
+} from "./symphony-credit-gate.mjs";
 import { getProviderHealthState } from "./symphony-provider-health.mjs";
 
 const _origFetch = globalThis.fetch;

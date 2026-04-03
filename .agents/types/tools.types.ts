@@ -372,7 +372,13 @@ export interface SpawnAgentsParams {
      *   browser-use → { url?: "..." }
      *   editor / harness-helper / context-pruner / thinker / researchers → not needed
      */
-    params?: BasherParams | GeneralAgentParams | FilePickerParams | TmuxCliParams | BrowserUseParams | Record<string, unknown>;
+    params?:
+      | BasherParams
+      | GeneralAgentParams
+      | FilePickerParams
+      | TmuxCliParams
+      | BrowserUseParams
+      | Record<string, unknown>;
   }[];
 }
 

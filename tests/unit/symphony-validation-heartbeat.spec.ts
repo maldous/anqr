@@ -66,11 +66,15 @@ describe("symphony-validation heartbeat", () => {
     expect(result.passed).toBe(false);
   });
 
-  it("should work without heartbeat callback (backwards compatibility)", { timeout: 30_000 }, async () => {
-    const projectRoot = process.cwd();
+  it(
+    "should work without heartbeat callback (backwards compatibility)",
+    { timeout: 30_000 },
+    async () => {
+      const projectRoot = process.cwd();
 
-    const result = await runValidation(projectRoot, []);
+      const result = await runValidation(projectRoot, []);
 
-    expect(result.heartbeatFailed).toBe(false);
-  });
+      expect(result.heartbeatFailed).toBe(false);
+    },
+  );
 });

@@ -21,8 +21,6 @@ import {
   listIntegrationCandidates,
   acquireIntegrationLock,
   releaseIntegrationLock,
-  setWorktreeState,
-  getWorktreeState,
 } from "../../scripts/ops/core/symphony-state.mjs";
 
 beforeEach(() => {

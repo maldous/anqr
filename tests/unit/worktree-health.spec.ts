@@ -10,7 +10,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   mutateState,
-  setFinalizationState,
   setWorktreeState,
   getWorktreeState,
   listWorktreesByState,

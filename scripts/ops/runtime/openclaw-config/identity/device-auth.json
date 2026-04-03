@@ -5,11 +5,7 @@
     "operator": {
       "token": "CHANGEME",
       "role": "operator",
-      "scopes": [
-        "operator.admin",
-        "operator.read",
-        "operator.write"
-      ],
+      "scopes": ["operator.admin", "operator.read", "operator.write"],
       "updatedAtMs": 1775210122165
     }
   }

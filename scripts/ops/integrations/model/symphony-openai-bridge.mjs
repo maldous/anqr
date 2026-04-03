@@ -140,7 +140,11 @@ import {
   getSearchStats as getHybridSearchStats,
   warmSearchIndex,
 } from "../../lib/search/hybrid-search.mjs";
-import { getLinearIndexStats, searchLinearIssues, warmLinearIndex } from "../../lib/search/linear-search.mjs";
+import {
+  getLinearIndexStats,
+  searchLinearIssues,
+  warmLinearIndex,
+} from "../../lib/search/linear-search.mjs";
 import { getIndexStats as getVectorIndexStats } from "../../lib/rag/vector-store.mjs";
 
 // Discord monitoring removed - OpenClaw handles Discord interaction directly
@@ -173,7 +177,6 @@ function ensureString(value) {
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
-
 
 const requestCwdStorage = new AsyncLocalStorage();
 const BRIDGE_ROOT = path.resolve(process.env.ANQR_WORKTREE_PATH || process.cwd());
@@ -457,16 +460,16 @@ async function readFilesTool({ paths }) {
         const content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
         const totalLines = content.split("\n").length;
         return { path: filePath, content, totalLines };
-    } catch (error) {
-      logError(`readFilesTool map failed: ${error.message}`, { path: filePath });
-      return { path: filePath, error: error.message };
-    }
-  });
-  return { files: results };
-} catch (error) {
-  logError(`readFilesTool failed: ${error.message}`);
-  return { error: error.message };
-}
+      } catch (error) {
+        logError(`readFilesTool map failed: ${error.message}`, { path: filePath });
+        return { path: filePath, error: error.message };
+      }
+    });
+    return { files: results };
+  } catch (error) {
+    logError(`readFilesTool failed: ${error.message}`);
+    return { error: error.message };
+  }
 }
 
 /**
@@ -1372,7 +1375,12 @@ function isVoiceNoise(text) {
   const t = text.trim();
 
   // Provider failure / fallback patterns (the primary complaint)
-  if (/\b(groq|mistral|gemini|ollama|codex|codebuff|openai|anthropic|deepseek|together|fireworks|perplexity|cerebras)\b\s+(fail|error|unavailable|timed? ?out|reject|refused)/i.test(t)) return true;
+  if (
+    /\b(groq|mistral|gemini|ollama|codex|codebuff|openai|anthropic|deepseek|together|fireworks|perplexity|cerebras)\b\s+(fail|error|unavailable|timed? ?out|reject|refused)/i.test(
+      t,
+    )
+  )
+    return true;
   if (/rate.?limit(ed|ing)?/i.test(t)) return true;
   if (/trying\s+next\s+provider|falling\s*back|triggering\s+fallback/i.test(t)) return true;
   if (/provider.*cooldown|cooldown.*provider/i.test(t)) return true;
@@ -1398,7 +1406,8 @@ function isVoiceNoise(text) {
   if (/\bHTTP\s+[45]\d{2}\b/i.test(t)) return true;
 
   // Stack traces (multiple "at " lines)
-  if (/^\s+at\s+\S+/m.test(t) && t.split("\n").filter((l) => /^\s+at\s/.test(l)).length > 1) return true;
+  if (/^\s+at\s+\S+/m.test(t) && t.split("\n").filter((l) => /^\s+at\s/.test(l)).length > 1)
+    return true;
   if (/^(Error|TypeError|RangeError|SyntaxError|ReferenceError):\s/m.test(t)) return true;
 
   // Provider metrics / telemetry (short messages about tokens)
@@ -1538,7 +1547,7 @@ async function voiceSpeakTool({ text, guildId }) {
         headers: {
           "Content-Type": "application/json",
           "Content-Length": Buffer.byteLength(requestBody),
-          "Authorization": `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
+          Authorization: `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
         },
         timeout: 30000,
       };
@@ -1598,7 +1607,10 @@ const MAX_CONFLICT_FILE_SIZE = 100 * 1024;
  */
 async function resolveConflictsWithAI() {
   const conflictOutput = execSync("git diff --name-only --diff-filter=U", {
-    cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe",
+    cwd: BRIDGE_ROOT,
+    encoding: "utf-8",
+    timeout: 5000,
+    stdio: "pipe",
   }).trim();
   const conflictFiles = conflictOutput.split("\n").filter(Boolean);
 
@@ -1609,7 +1621,9 @@ async function resolveConflictsWithAI() {
   }
 
   logInfo(`🔧 Resolving ${conflictFiles.length} conflict(s) with AI: ${conflictFiles.join(", ")}`);
-  voiceAnnounce(`Resolving ${conflictFiles.length} merge conflict${conflictFiles.length > 1 ? "s" : ""} with AI.`);
+  voiceAnnounce(
+    `Resolving ${conflictFiles.length} merge conflict${conflictFiles.length > 1 ? "s" : ""} with AI.`,
+  );
 
   const provider = await selectProvider({ excludeNames: ["codebuff"] });
   if (!provider) {
@@ -1620,7 +1634,11 @@ async function resolveConflictsWithAI() {
   let apiKey = provider.apiKey;
   if (!apiKey && provider.envKey) apiKey = process.env[provider.envKey];
   if (!apiKey && provider.loadToken) {
-    try { apiKey = await provider.loadToken(); } catch { /* ignore */ }
+    try {
+      apiKey = await provider.loadToken();
+    } catch {
+      /* ignore */
+    }
   }
 
   let model;
@@ -1646,7 +1664,8 @@ async function resolveConflictsWithAI() {
         messages: [
           {
             role: "system",
-            content: "You are a git merge conflict resolver. You receive a file containing git conflict markers (<<<<<<< , =======, >>>>>>>). Output ONLY the resolved file content with all conflicts resolved. Prefer keeping both sides' changes when possible. When changes truly conflict, prefer the incoming changes (after =======). Do not add explanation, markdown formatting, or code fences — output only the raw file content.",
+            content:
+              "You are a git merge conflict resolver. You receive a file containing git conflict markers (<<<<<<< , =======, >>>>>>>). Output ONLY the resolved file content with all conflicts resolved. Prefer keeping both sides' changes when possible. When changes truly conflict, prefer the incoming changes (after =======). Do not add explanation, markdown formatting, or code fences — output only the raw file content.",
           },
           {
             role: "user",
@@ -1662,12 +1681,19 @@ async function resolveConflictsWithAI() {
         return false;
       }
       if (resolved.length < content.length * 0.3) {
-        logWarn(`⚠️ AI resolution for ${file} suspiciously short (${resolved.length} vs ${content.length} original)`);
+        logWarn(
+          `⚠️ AI resolution for ${file} suspiciously short (${resolved.length} vs ${content.length} original)`,
+        );
         return false;
       }
 
       fs.writeFileSync(filePath, resolved, "utf-8");
-      execFileSync("git", ["add", "--", file], { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" });
+      execFileSync("git", ["add", "--", file], {
+        cwd: BRIDGE_ROOT,
+        encoding: "utf-8",
+        timeout: 5000,
+        stdio: "pipe",
+      });
       logInfo(`✅ Resolved conflict in ${file} via AI (${provider.name})`);
     } catch (err) {
       logWarn(`⚠️ Failed to resolve conflict in ${file}: ${err.message}`);
@@ -1679,31 +1705,62 @@ async function resolveConflictsWithAI() {
 }
 
 // ── Env gate for git auto-finalization (default off) ─────────────────────────
-const BRIDGE_ENABLE_GIT_AUTOFINALIZE = process.env.ANQR_BRIDGE_ENABLE_GIT_AUTOFINALIZE === "1";
+const _BRIDGE_ENABLE_GIT_AUTOFINALIZE = process.env.ANQR_BRIDGE_ENABLE_GIT_AUTOFINALIZE === "1";
 
 function currentBranchName() {
   try {
-    return execSync("git rev-parse --abbrev-ref HEAD", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
-  } catch { return "unknown"; }
+    return execSync("git rev-parse --abbrev-ref HEAD", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: "pipe",
+    }).trim();
+  } catch {
+    return "unknown";
+  }
 }
 
 function currentHeadSha() {
   try {
-    return execSync("git rev-parse HEAD", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
-  } catch { return null; }
+    return execSync("git rev-parse HEAD", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: "pipe",
+    }).trim();
+  } catch {
+    return null;
+  }
 }
 
 function listDirtyFiles() {
   try {
-    return execSync("git status --porcelain", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim().split("\n").filter(Boolean);
-  } catch { return []; }
+    return execSync("git status --porcelain", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: "pipe",
+    })
+      .trim()
+      .split("\n")
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
 }
 
 function hasTrackedChanges() {
   try {
-    const status = execSync("git status --porcelain", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+    const status = execSync("git status --porcelain", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: "pipe",
+    }).trim();
     return status.length > 0;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -1713,11 +1770,28 @@ function hasTrackedChanges() {
 async function verifyWorktreeFreshnessNonBlocking() {
   if (!IS_WORKTREE_BRIDGE) return;
   try {
-    execSync("git fetch origin main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
-    const local = execSync("git rev-parse HEAD", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
-    const remoteMain = execSync("git rev-parse origin/main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+    execSync("git fetch origin main", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 15000,
+      stdio: "pipe",
+    });
+    const local = execSync("git rev-parse HEAD", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: "pipe",
+    }).trim();
+    const remoteMain = execSync("git rev-parse origin/main", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: "pipe",
+    }).trim();
     if (local !== remoteMain) {
-      logInfo(`ℹ️ Worktree not at latest main before request: local=${local.slice(0,8)} main=${remoteMain.slice(0,8)}`);
+      logInfo(
+        `ℹ️ Worktree not at latest main before request: local=${local.slice(0, 8)} main=${remoteMain.slice(0, 8)}`,
+      );
     }
   } catch (err) {
     logWarn(`⚠️ Freshness check failed (non-fatal): ${err.message}`);
@@ -1747,27 +1821,65 @@ async function finalizeWorktreeRequest() {
 async function syncWorktreeFromMain() {
   if (!IS_WORKTREE_BRIDGE) return;
   try {
-    execSync("git fetch origin main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+    execSync("git fetch origin main", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 15000,
+      stdio: "pipe",
+    });
     try {
-      execSync("git merge origin/main --ff-only", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+      execSync("git merge origin/main --ff-only", {
+        cwd: BRIDGE_ROOT,
+        encoding: "utf-8",
+        timeout: 15000,
+        stdio: "pipe",
+      });
     } catch {
       logWarn(`⚠️ ff-only merge failed — attempting regular merge`);
       try {
-        execSync("git merge origin/main --no-edit", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
+        execSync("git merge origin/main --no-edit", {
+          cwd: BRIDGE_ROOT,
+          encoding: "utf-8",
+          timeout: 30000,
+          stdio: "pipe",
+        });
       } catch {
         logInfo(`🔧 Merge conflict detected — attempting AI resolution`);
         const resolved = await resolveConflictsWithAI();
         if (!resolved) {
           logWarn(`⚠️ AI conflict resolution failed — aborting merge`);
-          try { execSync("git merge --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
+          try {
+            execSync("git merge --abort", {
+              cwd: BRIDGE_ROOT,
+              encoding: "utf-8",
+              timeout: 5000,
+              stdio: "pipe",
+            });
+          } catch {
+            /* already clean */
+          }
           return;
         }
         try {
-          execSync("git commit --no-edit", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+          execSync("git commit --no-edit", {
+            cwd: BRIDGE_ROOT,
+            encoding: "utf-8",
+            timeout: 15000,
+            stdio: "pipe",
+          });
           logInfo(`✅ Merge conflicts resolved by AI`);
         } catch (commitErr) {
           logWarn(`⚠️ Merge commit failed after AI resolution: ${commitErr.message}`);
-          try { execSync("git merge --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
+          try {
+            execSync("git merge --abort", {
+              cwd: BRIDGE_ROOT,
+              encoding: "utf-8",
+              timeout: 5000,
+              stdio: "pipe",
+            });
+          } catch {
+            /* already clean */
+          }
           return;
         }
       }
@@ -1787,29 +1899,54 @@ async function syncWorktreeFromMain() {
 async function pushWorktreeToMain() {
   if (!IS_WORKTREE_BRIDGE) return;
   try {
-    const status = execSync("git status --porcelain", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+    const status = execSync("git status --porcelain", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: "pipe",
+    }).trim();
     if (!status) {
       logInfo(`📤 No changes to push`);
       return;
     }
     execSync("git add -A", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 10000, stdio: "pipe" });
-    const diff = execSync("git diff --cached --stat", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
+    const diff = execSync("git diff --cached --stat", {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: "pipe",
+    }).trim();
     if (!diff) {
       logInfo(`📤 No staged changes to push`);
       return;
     }
-    execSync(`git commit -m "chore(harness): sync worktree changes to main"`, { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 15000, stdio: "pipe" });
+    execSync(`git commit -m "chore(harness): sync worktree changes to main"`, {
+      cwd: BRIDGE_ROOT,
+      encoding: "utf-8",
+      timeout: 15000,
+      stdio: "pipe",
+    });
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        execSync("git push origin HEAD:main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
+        execSync("git push origin HEAD:main", {
+          cwd: BRIDGE_ROOT,
+          encoding: "utf-8",
+          timeout: 30000,
+          stdio: "pipe",
+        });
         logInfo(`📤 Worktree changes pushed to origin/main`);
         return;
       } catch (pushErr) {
         if (attempt < 3) {
           logWarn(`⚠️ Push attempt ${attempt} failed — rebasing and retrying`);
           try {
-            execSync("git fetch origin main && git rebase origin/main", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
+            execSync("git fetch origin main && git rebase origin/main", {
+              cwd: BRIDGE_ROOT,
+              encoding: "utf-8",
+              timeout: 30000,
+              stdio: "pipe",
+            });
           } catch {
             logInfo(`🔧 Rebase conflict — attempting AI resolution`);
             let rebaseOk = false;
@@ -1817,18 +1954,40 @@ async function pushWorktreeToMain() {
               const aiOk = await resolveConflictsWithAI();
               if (!aiOk) break;
               try {
-                execSync("GIT_EDITOR=true git rebase --continue", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 30000, stdio: "pipe" });
+                execSync("GIT_EDITOR=true git rebase --continue", {
+                  cwd: BRIDGE_ROOT,
+                  encoding: "utf-8",
+                  timeout: 30000,
+                  stdio: "pipe",
+                });
                 rebaseOk = true;
                 break;
               } catch {
-                const remaining = execSync("git diff --name-only --diff-filter=U", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }).trim();
-                if (!remaining) { rebaseOk = true; break; }
+                const remaining = execSync("git diff --name-only --diff-filter=U", {
+                  cwd: BRIDGE_ROOT,
+                  encoding: "utf-8",
+                  timeout: 5000,
+                  stdio: "pipe",
+                }).trim();
+                if (!remaining) {
+                  rebaseOk = true;
+                  break;
+                }
                 logInfo(`🔧 Rebase round ${round + 1}: more conflicts, continuing`);
               }
             }
             if (!rebaseOk) {
               logWarn(`⚠️ Rebase conflict resolution failed — aborting rebase`);
-              try { execSync("git rebase --abort", { cwd: BRIDGE_ROOT, encoding: "utf-8", timeout: 5000, stdio: "pipe" }); } catch { /* already clean */ }
+              try {
+                execSync("git rebase --abort", {
+                  cwd: BRIDGE_ROOT,
+                  encoding: "utf-8",
+                  timeout: 5000,
+                  stdio: "pipe",
+                });
+              } catch {
+                /* already clean */
+              }
               break;
             }
             logInfo(`✅ Rebase conflicts resolved by AI`);
@@ -1858,7 +2017,10 @@ const tools = {
   read_files: tool({
     description: "Read multiple files from the filesystem",
     inputSchema: z.object({
-      paths: z.preprocess((val) => coerceStringArrayInput(val, { fallback: [] }), z.array(z.string()).describe("List of file paths to read (accepts string or array)")),
+      paths: z.preprocess(
+        (val) => coerceStringArrayInput(val, { fallback: [] }),
+        z.array(z.string()).describe("List of file paths to read (accepts string or array)"),
+      ),
     }),
     execute: readFilesTool,
   }),
@@ -2368,11 +2530,10 @@ const tools = {
     inputSchema: z.object({
       query: z
         .string()
-        .describe("Natural-language search query for prior Linear issues, incidents, regressions, or decisions"),
-      limit: z
-        .number()
-        .optional()
-        .describe("Maximum number of matches to return. Defaults to 5."),
+        .describe(
+          "Natural-language search query for prior Linear issues, incidents, regressions, or decisions",
+        ),
+      limit: z.number().optional().describe("Maximum number of matches to return. Defaults to 5."),
     }),
     execute: searchLinearIssuesTool,
   }),
@@ -2662,14 +2823,16 @@ const tools = {
     }),
   }),
   tts: tool({
-    description: "Text-to-speech synthesis (not available — use voice_speak to speak in Discord voice channels instead)",
+    description:
+      "Text-to-speech synthesis (not available — use voice_speak to speak in Discord voice channels instead)",
     inputSchema: z.object({
       text: z.string().optional().describe("Text to synthesize"),
       input: z.string().optional().describe("Text input"),
     }),
     execute: async () => ({
       error: "tts is not available in this environment",
-      message: "Text-to-speech is not supported in this headless server environment. Use voice_speak to speak in Discord voice channels instead.",
+      message:
+        "Text-to-speech is not supported in this headless server environment. Use voice_speak to speak in Discord voice channels instead.",
       available: false,
       suggestion: "Use the voice_speak tool to speak text in a Discord voice channel via TTS.",
     }),
@@ -2730,7 +2893,11 @@ const tools = {
       server: z.string().optional().describe("MCP server name"),
     }),
     execute: async () => {
-      let context7 = { configured: true, reachable: false, endpoint: `${CONTEXT7_HTTP_BASE}/health` };
+      let context7 = {
+        configured: true,
+        reachable: false,
+        endpoint: `${CONTEXT7_HTTP_BASE}/health`,
+      };
       try {
         const res = await fetch(`${CONTEXT7_HTTP_BASE}/health`, {
           signal: AbortSignal.timeout(3000),
@@ -2934,7 +3101,6 @@ function createProviderModel(provider) {
 // Bridge state
 // --------------------------------------------------------------------------
 
-
 const PORT = process.env.SYMPHONY_BRIDGE_PORT || 4319;
 const API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
 const MODEL_ID = process.env.SYMPHONY_MODEL_ID || "symphony/main";
@@ -3064,17 +3230,22 @@ const maybeGC = typeof globalThis.gc === "function" ? () => globalThis.gc() : ()
 
 // Periodic garbage collection to prevent memory bloat (every 5 minutes)
 if (typeof globalThis.gc === "function") {
-  setInterval(() => {
-    const mem = process.memoryUsage();
-    const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
-    const rssMB = Math.round(mem.rss / 1024 / 1024);
-    logInfo(`[gc] Periodic GC: heap=${heapMB}MB rss=${rssMB}MB`);
-    globalThis.gc();
-    const after = process.memoryUsage();
-    const heapAfter = Math.round(after.heapUsed / 1024 / 1024);
-    const rssAfter = Math.round(after.rss / 1024 / 1024);
-    logInfo(`[gc] After GC: heap=${heapAfter}MB rss=${rssAfter}MB (freed ${heapMB - heapAfter}MB)`);
-  }, 5 * 60 * 1000);
+  setInterval(
+    () => {
+      const mem = process.memoryUsage();
+      const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
+      const rssMB = Math.round(mem.rss / 1024 / 1024);
+      logInfo(`[gc] Periodic GC: heap=${heapMB}MB rss=${rssMB}MB`);
+      globalThis.gc();
+      const after = process.memoryUsage();
+      const heapAfter = Math.round(after.heapUsed / 1024 / 1024);
+      const rssAfter = Math.round(after.rss / 1024 / 1024);
+      logInfo(
+        `[gc] After GC: heap=${heapAfter}MB rss=${rssAfter}MB (freed ${heapMB - heapAfter}MB)`,
+      );
+    },
+    5 * 60 * 1000,
+  );
   logInfo(`[gc] Periodic GC enabled (every 5 minutes)`);
 }
 
@@ -3120,7 +3291,9 @@ async function runContinuousProviderProbe() {
   if (cached) {
     const age = Date.now() - new Date(cached.lastProbeAt).getTime();
     if (age < PROBE_CYCLE_INTERVAL_MS) {
-      logInfo(`🔍 Skipping probe - another executor probed ${Math.round(age / 1000)}s ago (using shared cache)`);
+      logInfo(
+        `🔍 Skipping probe - another executor probed ${Math.round(age / 1000)}s ago (using shared cache)`,
+      );
       providerStatusCache.configured = cached.configured;
       providerStatusCache.probeResults = cached.probeResults;
       providerStatusCache.lastProbeAt = cached.lastProbeAt;
@@ -3246,7 +3419,9 @@ function loadProbeCache() {
       logDebug(`Probe cache expired (${Math.round(age / 1000)}s old)`);
       return null;
     }
-    logDebug(`Loaded probe cache (${Math.round(age / 1000)}s old, ${data.probeResults.length} results)`);
+    logDebug(
+      `Loaded probe cache (${Math.round(age / 1000)}s old, ${data.probeResults.length} results)`,
+    );
     return data;
   } catch (err) {
     logDebug(`Failed to load probe cache: ${err.message}`);
@@ -3279,7 +3454,9 @@ async function refreshProviderStatus() {
     providerStatusCache.configured = cached.configured;
     providerStatusCache.probeResults = cached.probeResults;
     providerStatusCache.lastProbeAt = cached.lastProbeAt;
-    logInfo(`📊 Using shared probe cache from ${cached.lastProbeAt} (${providerStatusCache.probeResults.filter(r => r.available).length}/${providerStatusCache.configured.length} available)`);
+    logInfo(
+      `📊 Using shared probe cache from ${cached.lastProbeAt} (${providerStatusCache.probeResults.filter((r) => r.available).length}/${providerStatusCache.configured.length} available)`,
+    );
     return false; // Indicate cache was used
   }
 
@@ -4238,7 +4415,7 @@ async function invokeWithAIInner(provider, messages, options = {}) {
         if (deltaText.length > 0) {
           logInfo(`💡 [${provider.name}] reasoning-delta event detected`, {
             length: deltaText.length,
-            preview: deltaText.slice(0, 100)
+            preview: deltaText.slice(0, 100),
           });
         }
       } else if (part.type === "reasoning-start") {
@@ -4322,7 +4499,7 @@ async function invokeWithAIInner(provider, messages, options = {}) {
             if (onChunk) onChunk({ type: "text", text: "\n" });
             logInfo(`💭 [${provider.name}] <think> block start detected in text-delta`, {
               providerName: provider.name,
-              deltaPreview: delta.slice(0, 100)
+              deltaPreview: delta.slice(0, 100),
             });
           }
         }
@@ -4339,7 +4516,7 @@ async function invokeWithAIInner(provider, messages, options = {}) {
             // Emit newline when thinking ends
             if (onChunk) onChunk({ type: "text", text: "\n" });
             logInfo(`💭 [${provider.name}] <think> block end detected in text-delta`, {
-              providerName: provider.name
+              providerName: provider.name,
             });
           }
         }
@@ -4521,7 +4698,9 @@ async function invokeWithAIInner(provider, messages, options = {}) {
       throw noOutputError;
     }
     if (finishReason === "error") {
-      logError(`Stream finished with error: ${streamErrorDetail || "unknown"} (text: ${fullText.length} chars)`);
+      logError(
+        `Stream finished with error: ${streamErrorDetail || "unknown"} (text: ${fullText.length} chars)`,
+      );
       throw new Error(
         `Stream finished with error: ${streamErrorDetail || "unknown"} (text: ${fullText.length} chars)`,
       );
@@ -4544,7 +4723,8 @@ async function invokeWithAIInner(provider, messages, options = {}) {
 
     // Handle step limit case (no errors, model still working but hit step limit)
     if (finishReason === "tool-calls" && errorCount === 0) {
-      const truncationNote = "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
+      const truncationNote =
+        "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
       fullText += truncationNote;
       if (onChunk) {
         onChunk({ type: "text", text: truncationNote });
@@ -5180,7 +5360,10 @@ async function invokeWithFallbackStream(
       // Send error notification to client (but don't end the stream yet)
       if (onChunk) {
         // Include actual error details when errorType is generic/unknown
-        const errorDetail = (errorType === ERROR_TYPES.UNKNOWN || errorType === "unknown") ? errStr.slice(0, 100) : errorType;
+        const errorDetail =
+          errorType === ERROR_TYPES.UNKNOWN || errorType === "unknown"
+            ? errStr.slice(0, 100)
+            : errorType;
         const errorNotice = `\n⚠️ ${provider.name} failed (${errorDetail}), trying next provider...\n`;
         onChunk({ type: "text", text: errorNotice });
       }
@@ -5558,9 +5741,17 @@ const server = http.createServer(async (req, res) => {
       // Extract Discord message ID, thread name, and Linear thread name for thread/reply functionality
       const discordMessageId = req.headers["x-discord-message-id"] || null;
       const discordThreadNameRaw = req.headers["x-discord-thread-name"] || null;
-      const discordThreadName = discordThreadNameRaw ? decodeURIComponent(discordThreadNameRaw) : null;
+      const discordThreadName = discordThreadNameRaw
+        ? decodeURIComponent(discordThreadNameRaw)
+        : null;
       const linearThreadName = req.headers["x-linear-thread-name"] || null;
-      const discordSource = discordMessageId ? "discord" : discordThreadName ? "discord" : linearThreadName ? "linear" : null;
+      const discordSource = discordMessageId
+        ? "discord"
+        : discordThreadName
+          ? "discord"
+          : linearThreadName
+            ? "linear"
+            : null;
       const discordOptions = {};
       if (discordMessageId) discordOptions.replyTo = discordMessageId;
       if (discordThreadName) discordOptions.threadName = discordThreadName;
@@ -5586,7 +5777,10 @@ const server = http.createServer(async (req, res) => {
       for (let i = 0; i < messages.length; i++) {
         const msg = messages[i];
         if (!msg.role) {
-          logError(`❌ VALIDATION: message[${i}].role is missing`, { messageIndex: i, message: msg });
+          logError(`❌ VALIDATION: message[${i}].role is missing`, {
+            messageIndex: i,
+            message: msg,
+          });
           return sendJson(res, 400, {
             error: {
               message: `Invalid request: message[${i}].role is required`,
@@ -5596,7 +5790,11 @@ const server = http.createServer(async (req, res) => {
           });
         }
         if (msg.content === undefined) {
-          logError(`❌ VALIDATION: message[${i}].content is undefined (role: ${msg.role})`, { messageIndex: i, role: msg.role, message: msg });
+          logError(`❌ VALIDATION: message[${i}].content is undefined (role: ${msg.role})`, {
+            messageIndex: i,
+            role: msg.role,
+            message: msg,
+          });
           return sendJson(res, 400, {
             error: {
               message: `Invalid request: message[${i}].content is required (cannot be undefined)`,
@@ -5606,8 +5804,15 @@ const server = http.createServer(async (req, res) => {
           });
         }
         // Additional validation: content must be string or array (not null, not object)
-        if (msg.content !== null && typeof msg.content !== 'string' && !Array.isArray(msg.content)) {
-          logError(`❌ VALIDATION: message[${i}].content has invalid type (role: ${msg.role}, type: ${typeof msg.content})`, { messageIndex: i, role: msg.role, contentType: typeof msg.content });
+        if (
+          msg.content !== null &&
+          typeof msg.content !== "string" &&
+          !Array.isArray(msg.content)
+        ) {
+          logError(
+            `❌ VALIDATION: message[${i}].content has invalid type (role: ${msg.role}, type: ${typeof msg.content})`,
+            { messageIndex: i, role: msg.role, contentType: typeof msg.content },
+          );
           return sendJson(res, 400, {
             error: {
               message: `Invalid request: message[${i}].content must be string or array, got ${typeof msg.content}`,
@@ -5700,7 +5905,9 @@ const server = http.createServer(async (req, res) => {
 
       // Track this request
       if (activeRequests.size >= MAX_CONCURRENT_REQUESTS) {
-        return sendJson(res, 429, { error: { message: "Too many concurrent requests. Please try again later." } });
+        return sendJson(res, 429, {
+          error: { message: "Too many concurrent requests. Please try again later." },
+        });
       }
       activeRequests.set(requestId, {
         startTime,
@@ -5785,19 +5992,22 @@ const server = http.createServer(async (req, res) => {
       if (!isVoiceRequest) {
         // Build title with worktree ID
         const worktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
-        const embedTitle = issueContext?.identifier 
-          ? `⏳ ${issueContext.identifier}${worktreeLabel}` 
+        const embedTitle = issueContext?.identifier
+          ? `⏳ ${issueContext.identifier}${worktreeLabel}`
           : `⏳ Processing Request${worktreeLabel}`;
-        const embedDescription = issueContext?.title 
-          ? issueContext.title 
+        const embedDescription = issueContext?.title
+          ? issueContext.title
           : messagePreview || "(no description)";
-        
-        sendDiscordEmbed({
-          title: embedTitle,
-          description: embedDescription,
-          color: 0xffa500, // Orange
-          fields: fields.length > 0 ? fields : undefined,
-        }, discordOptions).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+
+        sendDiscordEmbed(
+          {
+            title: embedTitle,
+            description: embedDescription,
+            color: 0xffa500, // Orange
+            fields: fields.length > 0 ? fields : undefined,
+          },
+          discordOptions,
+        ).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
         voiceAnnounce(`Starting work on ${issueContext?.title || messagePreview}.`);
       }
@@ -5832,7 +6042,9 @@ const server = http.createServer(async (req, res) => {
                 {
                   index: 0,
                   delta: {
-                    content: isVoiceRequest ? "\nSorry, the request timed out. Please try again." : `\n[Error: Request timed out after ${formatElapsed(elapsed)}]`,
+                    content: isVoiceRequest
+                      ? "\nSorry, the request timed out. Please try again."
+                      : `\n[Error: Request timed out after ${formatElapsed(elapsed)}]`,
                   },
                   finish_reason: "stop",
                 },
@@ -5918,22 +6130,23 @@ const server = http.createServer(async (req, res) => {
             // Skip for Discord-originated requests — the Discord command handler
             // already streams text from the SSE response to avoid double delivery.
             const isDiscordOrigin = sessionId?.startsWith("discord:");
-            const streamToDiscord = isDiscordOrigin || isVoiceRequest
-              ? null
-              : (text) => {
-                  if (text && text.length > 0) {
-                    // Filter out internal activity markers to avoid duplicate messages in Discord
-                    const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
-                    // Filter out standalone light bulb emoji from Discord notifications
-                    const trimmed = text.trim();
-                    const isLightbulb = trimmed === "💡" || text === "\n💡 " || text === "💡 ";
-                    if (!isActivityMarker.test(trimmed) && !isLightbulb) {
-                      streamDiscordUpdate(text, { emoji: "", requestId }).catch(() => {
-                        /* ignore */
-                      });
+            const streamToDiscord =
+              isDiscordOrigin || isVoiceRequest
+                ? null
+                : (text) => {
+                    if (text && text.length > 0) {
+                      // Filter out internal activity markers to avoid duplicate messages in Discord
+                      const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
+                      // Filter out standalone light bulb emoji from Discord notifications
+                      const trimmed = text.trim();
+                      const isLightbulb = trimmed === "💡" || text === "\n💡 " || text === "💡 ";
+                      if (!isActivityMarker.test(trimmed) && !isLightbulb) {
+                        streamDiscordUpdate(text, { emoji: "", requestId }).catch(() => {
+                          /* ignore */
+                        });
+                      }
                     }
-                  }
-                };
+                  };
 
             const result = await invokeCodebuffDirectStreamToSSE(
               messages,
@@ -5958,30 +6171,40 @@ const server = http.createServer(async (req, res) => {
               `✅ Finished: ${issueContext?.identifier || "Request"} (provider: codebuff, ${result.text.length} chars)`,
             );
 
-          // Send compact completion notification (non-blocking)
-          const completionFields = [
-            { name: "Output", value: `${result.text.length} chars`, inline: true },
-            { name: "Model", value: "codebuff", inline: true },
-          ];
-          if (issueContext?.identifier) {
-            completionFields.unshift({ name: "Issue", value: issueContext.identifier, inline: true });
-          }
-          const completionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
-          const completionTitle = issueContext?.identifier 
-            ? `✅ ${issueContext.identifier}${completionWorktreeLabel}` 
-            : `✅ Done${completionWorktreeLabel}`;
-          if (!isVoiceRequest) {
-            sendDiscordEmbed({
-              title: completionTitle,
-              description: issueContext?.title || messagePreview,
-              color: 0x00ff00, // Green
-              fields: completionFields,
-            }, discordOptions).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+            // Send compact completion notification (non-blocking)
+            const completionFields = [
+              { name: "Output", value: `${result.text.length} chars`, inline: true },
+              { name: "Model", value: "codebuff", inline: true },
+            ];
+            if (issueContext?.identifier) {
+              completionFields.unshift({
+                name: "Issue",
+                value: issueContext.identifier,
+                inline: true,
+              });
+            }
+            const completionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
+            const completionTitle = issueContext?.identifier
+              ? `✅ ${issueContext.identifier}${completionWorktreeLabel}`
+              : `✅ Done${completionWorktreeLabel}`;
+            if (!isVoiceRequest) {
+              sendDiscordEmbed(
+                {
+                  title: completionTitle,
+                  description: issueContext?.title || messagePreview,
+                  color: 0x00ff00, // Green
+                  fields: completionFields,
+                },
+                discordOptions,
+              ).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
-            voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
-          }
+              voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
+            }
 
-          { const _fin = await finalizeWorktreeRequest(); logInfo(`🧾 Request complete without bridge promotion`, _fin); }
+            {
+              const _fin = await finalizeWorktreeRequest();
+              logInfo(`🧾 Request complete without bridge promotion`, _fin);
+            }
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -6072,24 +6295,34 @@ const server = http.createServer(async (req, res) => {
             { name: "Model", value: result.providerName, inline: true },
           ];
           if (issueContext?.identifier) {
-            streamCompletionFields.unshift({ name: "Issue", value: issueContext.identifier, inline: true });
+            streamCompletionFields.unshift({
+              name: "Issue",
+              value: issueContext.identifier,
+              inline: true,
+            });
           }
           const streamCompletionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
-          const streamCompletionTitle = issueContext?.identifier 
-            ? `✅ ${issueContext.identifier}${streamCompletionWorktreeLabel}` 
+          const streamCompletionTitle = issueContext?.identifier
+            ? `✅ ${issueContext.identifier}${streamCompletionWorktreeLabel}`
             : `✅ Done${streamCompletionWorktreeLabel}`;
           if (!isVoiceRequest) {
-            sendDiscordEmbed({
-              title: streamCompletionTitle,
-              description: issueContext?.title || messagePreview,
-              color: 0x00ff00, // Green
-              fields: streamCompletionFields,
-            }, discordOptions).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+            sendDiscordEmbed(
+              {
+                title: streamCompletionTitle,
+                description: issueContext?.title || messagePreview,
+                color: 0x00ff00, // Green
+                fields: streamCompletionFields,
+              },
+              discordOptions,
+            ).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
             voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
           }
 
-          { const _fin = await finalizeWorktreeRequest(); logInfo(`🧾 Request complete without bridge promotion`, _fin); }
+          {
+            const _fin = await finalizeWorktreeRequest();
+            logInfo(`🧾 Request complete without bridge promotion`, _fin);
+          }
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -6128,7 +6361,11 @@ const server = http.createServer(async (req, res) => {
             choices: [
               {
                 index: 0,
-                delta: { content: isVoiceRequest ? "\nSorry, I'm having trouble right now. Please try again in a moment." : `\n[Error: ${streamError.message}]` },
+                delta: {
+                  content: isVoiceRequest
+                    ? "\nSorry, I'm having trouble right now. Please try again in a moment."
+                    : `\n[Error: ${streamError.message}]`,
+                },
                 finish_reason: "stop",
               },
             ],
@@ -6181,24 +6418,34 @@ const server = http.createServer(async (req, res) => {
           { name: "Model", value: result.providerName, inline: true },
         ];
         if (issueContext?.identifier) {
-          nonStreamCompletionFields.unshift({ name: "Issue", value: issueContext.identifier, inline: true });
+          nonStreamCompletionFields.unshift({
+            name: "Issue",
+            value: issueContext.identifier,
+            inline: true,
+          });
         }
         const nonStreamCompletionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
-        const nonStreamCompletionTitle = issueContext?.identifier 
-          ? `✅ ${issueContext.identifier}${nonStreamCompletionWorktreeLabel}` 
+        const nonStreamCompletionTitle = issueContext?.identifier
+          ? `✅ ${issueContext.identifier}${nonStreamCompletionWorktreeLabel}`
           : `✅ Done${nonStreamCompletionWorktreeLabel}`;
         if (!isVoiceRequest) {
-          sendDiscordEmbed({
-            title: nonStreamCompletionTitle,
-            description: issueContext?.title || messagePreview,
-            color: 0x00ff00, // Green
-            fields: nonStreamCompletionFields,
-          }, discordOptions).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+          sendDiscordEmbed(
+            {
+              title: nonStreamCompletionTitle,
+              description: issueContext?.title || messagePreview,
+              color: 0x00ff00, // Green
+              fields: nonStreamCompletionFields,
+            },
+            discordOptions,
+          ).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
           voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
         }
 
-        { const _fin = await finalizeWorktreeRequest(); logInfo(`🧾 Request complete without bridge promotion`, _fin); }
+        {
+          const _fin = await finalizeWorktreeRequest();
+          logInfo(`🧾 Request complete without bridge promotion`, _fin);
+        }
 
         const durationMs = Date.now() - startTime;
 
@@ -6574,7 +6821,9 @@ server.listen(PORT, "127.0.0.1", async () => {
         if (toolName === "run_file_change_hooks" || toolName === "read_files") {
           const key = toolName === "run_file_change_hooks" ? "files" : "paths";
           if (!Array.isArray(parsed[key])) {
-            throw new TypeError(`Expected ${key} to be normalized to array, got ${typeof parsed[key]}`);
+            throw new TypeError(
+              `Expected ${key} to be normalized to array, got ${typeof parsed[key]}`,
+            );
           }
         }
 
@@ -6663,7 +6912,7 @@ server.listen(PORT, "127.0.0.1", async () => {
     providerStatusCache.lastProbeAt = cachedProbe.lastProbeAt;
     const age = Math.round((Date.now() - new Date(cachedProbe.lastProbeAt).getTime()) / 1000);
     logInfo(
-      `📊 Loaded shared probe cache (${age}s old): ${providerStatusCache.probeResults.filter(r => r.available).length}/${providerStatusCache.configured.length} providers available`,
+      `📊 Loaded shared probe cache (${age}s old): ${providerStatusCache.probeResults.filter((r) => r.available).length}/${providerStatusCache.configured.length} providers available`,
     );
   } else {
     // No cache - synchronously populate configured providers (no network calls)
@@ -6693,7 +6942,9 @@ server.listen(PORT, "127.0.0.1", async () => {
         logInfo(`========================================`);
         logInfo(`Startup probe SKIPPED - using shared cache`);
         logInfo(`========================================`);
-        logInfo(`Cache age: ${age}s (${providerStatusCache.probeResults.filter(r => r.available).length}/${providerStatusCache.configured.length} available)`);
+        logInfo(
+          `Cache age: ${age}s (${providerStatusCache.probeResults.filter((r) => r.available).length}/${providerStatusCache.configured.length} available)`,
+        );
         logInfo(`Cached by executor that probed at: ${cachedProbe.lastProbeAt}`);
         logInfo(`========================================`);
         logInfo(`Ready to accept requests (using cached probe)`);

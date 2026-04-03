@@ -13,8 +13,8 @@ import { readFileSync, unlinkSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const MAIN_REPO = "/home/user/src/anqr";
-const DISCORD_WORKTREES = [5, 6, 7, 8].map(i => `/home/user/src/anqr-wt${i}`);
-const SYMPHONY_WORKTREES = [1, 2, 3, 4].map(i => `/home/user/src/anqr-wt${i}`);
+const DISCORD_WORKTREES = [5, 6, 7, 8].map((i) => `/home/user/src/anqr-wt${i}`);
+const SYMPHONY_WORKTREES = [1, 2, 3, 4].map((i) => `/home/user/src/anqr-wt${i}`);
 const ALL_WORKTREES = [...SYMPHONY_WORKTREES, ...DISCORD_WORKTREES];
 
 // Use static filename base so cleanup can find it
@@ -28,7 +28,7 @@ describe("Discord Worktree Isolation", () => {
 
   afterAll(() => {
     // Cleanup test files from all worktrees and main using the same timestamp
-    const allPaths = [MAIN_REPO, ...ALL_WORKTREES].map(p => join(p, testFileName));
+    const allPaths = [MAIN_REPO, ...ALL_WORKTREES].map((p) => join(p, testFileName));
     for (const path of allPaths) {
       try {
         if (existsSync(path)) unlinkSync(path);
@@ -46,7 +46,7 @@ describe("Discord Worktree Isolation", () => {
     // Verify each Discord worktree exists and has correct config
     for (const wtPath of DISCORD_WORKTREES) {
       expect(existsSync(wtPath)).toBe(true);
-      
+
       // Check .openclaw/models.json points to router (18790), not main bridge (4319)
       const modelsPath = join(wtPath, ".openclaw/models.json");
       if (existsSync(modelsPath)) {
@@ -59,7 +59,7 @@ describe("Discord Worktree Isolation", () => {
 
   it("should verify Discord router is running and healthy", async () => {
     // Check router health endpoint
-    const routerHealth = await fetch("http://127.0.0.1:18790/health").then(r => r.json());
+    const routerHealth = await fetch("http://127.0.0.1:18790/health").then((r) => r.json());
     expect(routerHealth.status).toBe("ok");
     expect(routerHealth.worktrees).toHaveLength(4);
     expect(routerHealth.worktrees.map((w: any) => w.id)).toEqual([5, 6, 7, 8]);
@@ -68,7 +68,7 @@ describe("Discord Worktree Isolation", () => {
   it("should verify worktree bridges are running", async () => {
     // Check each worktree bridge health
     for (let i = 5; i <= 8; i++) {
-      const health = await fetch(`http://127.0.0.1:432${i}/health`).then(r => r.json());
+      const health = await fetch(`http://127.0.0.1:432${i}/health`).then((r) => r.json());
       expect(health.status).toBe("ok");
     }
   });
@@ -80,7 +80,7 @@ describe("Discord Worktree Isolation", () => {
 
     // STEP 1: Verify router routes to worktree bridges (not main bridge)
     console.log(`\n📍 Step 1: Router routing validation`);
-    const routerHealth = await fetch("http://127.0.0.1:18790/health").then(r => r.json());
+    const routerHealth = await fetch("http://127.0.0.1:18790/health").then((r) => r.json());
     expect(routerHealth.status).toBe("ok");
     expect(routerHealth.worktrees).toHaveLength(4);
     expect(routerHealth.worktrees.map((w: any) => w.id)).toEqual([5, 6, 7, 8]);
@@ -90,12 +90,19 @@ describe("Discord Worktree Isolation", () => {
     console.log(`\n📍 Step 2: Router cwd rewriting validation`);
     const routerLogs = await new Promise<string>((resolve) => {
       const { spawn } = require("node:child_process");
-      const proc = spawn("journalctl", ["--user", "-u", "anqr-discord-router.service", "--since", "10 minutes ago", "--no-pager"]);
+      const proc = spawn("journalctl", [
+        "--user",
+        "-u",
+        "anqr-discord-router.service",
+        "--since",
+        "10 minutes ago",
+        "--no-pager",
+      ]);
       let output = "";
-      proc.stdout.on("data", (d: Buffer) => output += d);
+      proc.stdout.on("data", (d: Buffer) => (output += d));
       proc.on("close", () => resolve(output));
     });
-    
+
     const cwdRewritePattern = /cwd: "\/home\/user\/src\/anqr" -> "\/home\/user\/src\/anqr-wt[5-8]"/;
     const hasCwdRewrite = cwdRewritePattern.test(routerLogs);
     expect(hasCwdRewrite).toBe(true);
@@ -106,9 +113,13 @@ describe("Discord Worktree Isolation", () => {
     for (let i = 5; i <= 8; i++) {
       const result = await new Promise<string>((resolve) => {
         const { spawn } = require("node:child_process");
-        const proc = spawn("systemctl", ["--user", "show", `anqr-symphony-executor@${i}.service`, "-p", "WorkingDirectory"], { shell: true });
+        const proc = spawn(
+          "systemctl",
+          ["--user", "show", `anqr-symphony-executor@${i}.service`, "-p", "WorkingDirectory"],
+          { shell: true },
+        );
         let output = "";
-        proc.stdout.on("data", (d: Buffer) => output += d);
+        proc.stdout.on("data", (d: Buffer) => (output += d));
         proc.on("close", () => resolve(output));
       });
       expect(result).toContain(`WorkingDirectory=/home/user/src/anqr-wt${i}`);
@@ -118,7 +129,7 @@ describe("Discord Worktree Isolation", () => {
     // STEP 4: Verify bridges report correct cwd via health endpoint
     console.log(`\n📍 Step 4: Bridge process cwd validation`);
     for (let i = 5; i <= 8; i++) {
-      const health = await fetch(`http://127.0.0.1:432${i}/health`).then(r => r.json());
+      const health = await fetch(`http://127.0.0.1:432${i}/health`).then((r) => r.json());
       expect(health.status).toBe("ok");
       // The bridge health endpoint includes process.cwd()
       if (health.cwd) {
@@ -129,7 +140,9 @@ describe("Discord Worktree Isolation", () => {
 
     // STEP 5: Verify main repo has no test artifacts from previous Discord executions
     console.log(`\n📍 Step 5: Main repo isolation check`);
-    const mainFiles = readdirSync(MAIN_REPO).filter(f => f.includes("TEST") || f.includes("DISCORD"));
+    const mainFiles = readdirSync(MAIN_REPO).filter(
+      (f) => f.includes("TEST") || f.includes("DISCORD"),
+    );
     const hasLeakedFiles = mainFiles.length > 0;
     if (hasLeakedFiles) {
       console.error(`⚠️  Found potential leaked files in main: ${mainFiles.join(", ")}`);
@@ -155,9 +168,12 @@ describe("Discord Worktree Isolation", () => {
 
     // Check recent router logs to verify cwd rewriting is happening
     const routerLogs = await new Promise<string>((resolve, reject) => {
-      const proc = spawn("sh", ["-c", "journalctl --user -u anqr-discord-router.service --since '10 minutes ago' --no-pager | grep -i cwd || true"]);
+      const proc = spawn("sh", [
+        "-c",
+        "journalctl --user -u anqr-discord-router.service --since '10 minutes ago' --no-pager | grep -i cwd || true",
+      ]);
       let output = "";
-      proc.stdout.on("data", d => output += d);
+      proc.stdout.on("data", (d) => (output += d));
       proc.on("close", () => resolve(output));
       proc.on("error", reject);
     });
@@ -166,14 +182,18 @@ describe("Discord Worktree Isolation", () => {
     // Log format: 🧭 ROUTING: Discord request -> wt5 | cwd: "/home/user/src/anqr" -> "/home/user/src/anqr-wt5" | port: 4325
     const cwdRewritePattern = /cwd: "\/home\/user\/src\/anqr" -> "\/home\/user\/src\/anqr-wt[5-8]"/;
     const matches = routerLogs.match(cwdRewritePattern);
-    
+
     if (!matches || routerLogs.length === 0) {
-      console.log("⚠️  No recent cwd rewrite logs found. This test requires active Discord traffic.");
-      console.log("   The router isolation mechanism is verified by other tests (systemd WorkingDirectory config).");
+      console.log(
+        "⚠️  No recent cwd rewrite logs found. This test requires active Discord traffic.",
+      );
+      console.log(
+        "   The router isolation mechanism is verified by other tests (systemd WorkingDirectory config).",
+      );
       console.log("   Skipping runtime log validation.");
       return; // Skip this test if no logs available
     }
-    
+
     console.log(`✅ Router correctly rewrites cwd from main repo to Discord worktrees`);
     console.log(`   Example: ${matches[0]}`);
 
@@ -186,15 +206,19 @@ describe("Discord Worktree Isolation", () => {
     // This is the critical check - main bridge must have WorkingDirectory = /home/user/src/anqr
     // If this is wrong, Discord requests could accidentally write to main
     const result = await new Promise<string>((resolve, reject) => {
-      const proc = spawn("systemctl", ["--user", "show", "anqr-symphony-router.service", "-p", "WorkingDirectory"], {
-        shell: true
-      });
+      const proc = spawn(
+        "systemctl",
+        ["--user", "show", "anqr-symphony-router.service", "-p", "WorkingDirectory"],
+        {
+          shell: true,
+        },
+      );
       let output = "";
-      proc.stdout.on("data", d => output += d);
+      proc.stdout.on("data", (d) => (output += d));
       proc.on("close", () => resolve(output));
       proc.on("error", reject);
     });
-    
+
     expect(result).toContain("WorkingDirectory=/home/user/src/anqr");
   });
 
@@ -202,15 +226,19 @@ describe("Discord Worktree Isolation", () => {
     // Verify each worktree bridge has WorkingDirectory set to its worktree
     for (let i = 5; i <= 8; i++) {
       const result = await new Promise<string>((resolve, reject) => {
-        const proc = spawn("systemctl", ["--user", "show", `anqr-symphony-executor@${i}.service`, "-p", "WorkingDirectory"], {
-          shell: true
-        });
+        const proc = spawn(
+          "systemctl",
+          ["--user", "show", `anqr-symphony-executor@${i}.service`, "-p", "WorkingDirectory"],
+          {
+            shell: true,
+          },
+        );
         let output = "";
-        proc.stdout.on("data", d => output += d);
+        proc.stdout.on("data", (d) => (output += d));
         proc.on("close", () => resolve(output));
         proc.on("error", reject);
       });
-      
+
       expect(result).toContain(`WorkingDirectory=/home/user/src/anqr-wt${i}`);
     }
   });
@@ -220,27 +248,29 @@ describe("Worktree Sync Status", () => {
   it("should verify all Discord worktrees are synced to origin/main", async () => {
     // Get origin/main commit
     const originHead = await new Promise<string>((resolve, reject) => {
-      const proc = spawn("git", ["log", "--oneline", "-1", "origin/main"], { 
-        cwd: MAIN_REPO, shell: true 
+      const proc = spawn("git", ["log", "--oneline", "-1", "origin/main"], {
+        cwd: MAIN_REPO,
+        shell: true,
       });
       let output = "";
-      proc.stdout.on("data", d => output += d);
+      proc.stdout.on("data", (d) => (output += d));
       proc.on("close", () => resolve(output.trim()));
       proc.on("error", reject);
     });
-    
+
     // Check each Discord worktree is at or ahead of origin/main
     for (const wtPath of DISCORD_WORKTREES) {
       const wtHead = await new Promise<string>((resolve, reject) => {
-        const proc = spawn("git", ["log", "--oneline", "-1"], { 
-          cwd: wtPath, shell: true 
+        const proc = spawn("git", ["log", "--oneline", "-1"], {
+          cwd: wtPath,
+          shell: true,
         });
         let output = "";
-        proc.stdout.on("data", d => output += d);
+        proc.stdout.on("data", (d) => (output += d));
         proc.on("close", () => resolve(output.trim()));
         proc.on("error", reject);
       });
-      
+
       // Worktree should have the same commit (fast-forward sync)
       expect(wtHead).toBe(originHead);
     }

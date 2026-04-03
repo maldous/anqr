@@ -11,14 +11,14 @@ export function useDynamicTestId(props: TestIdProps, fallbackPrefix: string): st
 
   return React.useMemo(() => {
     const base = baseFromProps(props, fallbackPrefix, reactId);
-    
+
     // If base changed, we need to update the registry mapping
     if (previousBaseRef.current !== null && previousBaseRef.current !== base) {
       const registry = getRegistry();
       registry.usedBySource.delete(sourceKeyRef.current);
     }
     previousBaseRef.current = base;
-    
+
     return DynamicTestId.resolve(base, sourceKeyRef.current);
   }, [
     props["data-testid"],

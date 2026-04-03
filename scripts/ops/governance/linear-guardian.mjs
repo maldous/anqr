@@ -219,7 +219,7 @@ async function processFailingCheck(check, report, queueDepth, dryRun) {
   } else {
     const issue = await createIssue(input);
     logAction("create", `Created ${issue.identifier}: ${title}`);
-    
+
     // Mark issue source for worktree routing
     // Linear-created issues should route to Symphony worktrees (wt1-wt4, main)
     patchIssueState(issue.identifier, { source: "linear" });

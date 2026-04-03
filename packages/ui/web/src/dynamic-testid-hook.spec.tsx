@@ -31,7 +31,9 @@ describe("useDynamicTestId", () => {
   });
 
   it("uses aria-label in testid when provided", () => {
-    const { result } = renderHook(() => useDynamicTestId({ "aria-label": "Close Dialog" }, "button"));
+    const { result } = renderHook(() =>
+      useDynamicTestId({ "aria-label": "Close Dialog" }, "button"),
+    );
     expect(result.current).toContain("close-dialog");
   });
 
@@ -61,10 +63,9 @@ describe("useDynamicTestId", () => {
   });
 
   it("returns same id when props object changes but values same", () => {
-    const { result, rerender } = renderHook(
-      ({ props }) => useDynamicTestId(props, "button"),
-      { initialProps: { props: { label: "Save" } } }
-    );
+    const { result, rerender } = renderHook(({ props }) => useDynamicTestId(props, "button"), {
+      initialProps: { props: { label: "Save" } },
+    });
     const first = result.current;
     rerender({ props: { label: "Save" } });
     const second = result.current;
@@ -91,14 +92,14 @@ describe("useDynamicTestId", () => {
 
   it("prioritizes testId over label", () => {
     const { result } = renderHook(() =>
-      useDynamicTestId({ testId: "explicit", label: "Save" }, "button")
+      useDynamicTestId({ testId: "explicit", label: "Save" }, "button"),
     );
     expect(result.current).toBe("explicit");
   });
 
   it("prioritizes label over aria-label", () => {
     const { result } = renderHook(() =>
-      useDynamicTestId({ label: "Save", "aria-label": "Close" }, "button")
+      useDynamicTestId({ label: "Save", "aria-label": "Close" }, "button"),
     );
     expect(result.current).toContain("save");
     expect(result.current).not.toContain("close");
@@ -106,7 +107,7 @@ describe("useDynamicTestId", () => {
 
   it("prioritizes aria-label over title", () => {
     const { result } = renderHook(() =>
-      useDynamicTestId({ "aria-label": "Close", title: "Info" }, "button")
+      useDynamicTestId({ "aria-label": "Close", title: "Info" }, "button"),
     );
     expect(result.current).toContain("close");
     expect(result.current).not.toContain("info");
@@ -114,7 +115,7 @@ describe("useDynamicTestId", () => {
 
   it("prioritizes title over name", () => {
     const { result } = renderHook(() =>
-      useDynamicTestId({ title: "Field", name: "email" }, "input")
+      useDynamicTestId({ title: "Field", name: "email" }, "input"),
     );
     expect(result.current).toContain("field");
     expect(result.current).not.toContain("email");
@@ -122,7 +123,7 @@ describe("useDynamicTestId", () => {
 
   it("prioritizes name over id", () => {
     const { result } = renderHook(() =>
-      useDynamicTestId({ name: "email", id: "field-1" }, "input")
+      useDynamicTestId({ name: "email", id: "field-1" }, "input"),
     );
     expect(result.current).toContain("email");
     expect(result.current).not.toContain("field-1");
@@ -169,14 +170,14 @@ describe("useDynamicTestId", () => {
 
   it("handles undefined values in props", () => {
     const { result } = renderHook(() =>
-      useDynamicTestId({ label: undefined, title: undefined }, "button")
+      useDynamicTestId({ label: undefined, title: undefined }, "button"),
     );
     expect(result.current).toBeTruthy();
   });
 
   it("handles null values in props", () => {
     const { result } = renderHook(() =>
-      useDynamicTestId({ label: null as unknown as string }, "button")
+      useDynamicTestId({ label: null as unknown as string }, "button"),
     );
     expect(result.current).toBeTruthy();
   });

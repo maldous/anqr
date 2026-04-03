@@ -6,20 +6,20 @@ Secrets are replaced with `{{PLACEHOLDER}}` values — see `.env.example` for th
 
 ## File inventory
 
-| File | Purpose |
-|------|---------|
-| `openclaw.json` | Main config: Discord, voice, whisper STT, plugins, agents, gateway |
-| `models.json` | Provider + model definitions (Symphony bridge, Ollama, OpenRouter) |
-| `config.json` | TTS and gateway HTTP endpoint config |
-| `clawdbot.json` | Bot settings: workspace, concurrency, gateway auth |
-| `exec-approvals.json` | Exec approval socket config |
-| `credentials/` | Discord pairing and allowFrom |
-| `identity/` | Device keypair and auth tokens |
-| `settings/tts.json` | TTS auto-mode setting |
-| `agents/main/agent/` | Main agent model routing + auth profiles |
-| `agents/voice/agent/` | Voice agent model routing |
-| `workspace/` | Main agent workspace files (AGENTS.md, SOUL.md, etc.) |
-| `workspace-voice/` | Voice agent workspace files |
+| File                  | Purpose                                                            |
+| --------------------- | ------------------------------------------------------------------ |
+| `openclaw.json`       | Main config: Discord, voice, whisper STT, plugins, agents, gateway |
+| `models.json`         | Provider + model definitions (Symphony bridge, Ollama, OpenRouter) |
+| `config.json`         | TTS and gateway HTTP endpoint config                               |
+| `clawdbot.json`       | Bot settings: workspace, concurrency, gateway auth                 |
+| `exec-approvals.json` | Exec approval socket config                                        |
+| `credentials/`        | Discord pairing and allowFrom                                      |
+| `identity/`           | Device keypair and auth tokens                                     |
+| `settings/tts.json`   | TTS auto-mode setting                                              |
+| `agents/main/agent/`  | Main agent model routing + auth profiles                           |
+| `agents/voice/agent/` | Voice agent model routing                                          |
+| `workspace/`          | Main agent workspace files (AGENTS.md, SOUL.md, etc.)              |
+| `workspace-voice/`    | Voice agent workspace files                                        |
 
 ## Restore to `~/.openclaw`
 

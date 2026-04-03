@@ -58,9 +58,7 @@ describe("Worktree Concurrency Tests", () => {
       expect(existsSync(path)).toBe(true);
 
       const symphonyWorktrees = getSymphonyWorktrees();
-      const testWorktrees = symphonyWorktrees.filter((wt) =>
-        testWorktreeIds.includes(wt.id)
-      );
+      const testWorktrees = symphonyWorktrees.filter((wt) => testWorktreeIds.includes(wt.id));
 
       expect(testWorktrees.length).toBeGreaterThanOrEqual(2);
     });
@@ -220,9 +218,7 @@ describe("Worktree Concurrency Tests", () => {
   describe("Worktree State Management", () => {
     it("should list all Symphony worktrees including test worktrees", () => {
       const symphonyWorktrees = getSymphonyWorktrees();
-      const testWorktrees = symphonyWorktrees.filter((wt) =>
-        testWorktreeIds.includes(wt.id)
-      );
+      const testWorktrees = symphonyWorktrees.filter((wt) => testWorktreeIds.includes(wt.id));
 
       expect(testWorktrees.length).toBe(testWorktreeIds.length);
 
@@ -294,9 +290,7 @@ describe("Worktree Concurrency Tests", () => {
 
     it("should display current test worktree details", () => {
       const symphonyWorktrees = getSymphonyWorktrees();
-      const testWorktrees = symphonyWorktrees.filter((wt) =>
-        testWorktreeIds.includes(wt.id)
-      );
+      const testWorktrees = symphonyWorktrees.filter((wt) => testWorktreeIds.includes(wt.id));
 
       console.log("\n📊 Test Worktree Summary:");
       console.log(`   Total test worktrees: ${testWorktrees.length}`);

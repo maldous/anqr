@@ -1,12 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/react";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "./select";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "./select";
 
 // Mock scrollIntoView (not available in jsdom)
 beforeAll(() => {
@@ -27,7 +21,7 @@ afterAll(() => {
 
 describe("Select", () => {
   // ── SelectTrigger ──────────────────────────────────────────────
-  
+
   describe("SelectTrigger", () => {
     it("renders trigger element", () => {
       const { container } = render(
@@ -35,7 +29,7 @@ describe("Select", () => {
           <SelectTrigger>
             <SelectValue placeholder="Select option" />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
       const trigger = container.querySelector('[role="combobox"]');
       expect(trigger).toBeTruthy();
@@ -47,7 +41,7 @@ describe("Select", () => {
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
       const trigger = container.querySelector('[role="combobox"]');
       expect(trigger?.className).toContain("rounded-md");
@@ -60,7 +54,7 @@ describe("Select", () => {
           <SelectTrigger className="custom-trigger">
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
       const trigger = container.querySelector('[role="combobox"]');
       expect(trigger?.className).toContain("custom-trigger");
@@ -72,7 +66,7 @@ describe("Select", () => {
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
       const trigger = container.querySelector('[role="combobox"]');
       expect(trigger?.getAttribute("data-testid")).toBeTruthy();
@@ -84,7 +78,7 @@ describe("Select", () => {
           <SelectTrigger title="Category Selector">
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
       const trigger = container.querySelector('[role="combobox"]');
       const testid = trigger?.getAttribute("data-testid");
@@ -97,7 +91,7 @@ describe("Select", () => {
           <SelectTrigger aria-label="Filter Options">
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
       const trigger = container.querySelector('[role="combobox"]');
       const testid = trigger?.getAttribute("data-testid");
@@ -110,7 +104,7 @@ describe("Select", () => {
           <SelectTrigger>
             <SelectValue placeholder="Choose..." />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
       expect(container.textContent).toContain("Choose...");
     });
@@ -121,7 +115,7 @@ describe("Select", () => {
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
       const trigger = container.querySelector('[role="combobox"]');
       const svg = trigger?.querySelector("svg");
@@ -141,7 +135,7 @@ describe("Select", () => {
           <SelectContent>
             <SelectItem value="option1">Option 1</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const option = document.querySelector('[role="option"]');
       expect(option?.getAttribute("data-testid")).toBeTruthy();
@@ -156,7 +150,7 @@ describe("Select", () => {
           <SelectContent>
             <SelectItem value="premium">Premium</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const option = document.querySelector('[role="option"]');
       const testid = option?.getAttribute("data-testid");
@@ -174,7 +168,7 @@ describe("Select", () => {
               First
             </SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const option = document.querySelector('[role="option"]');
       const testid = option?.getAttribute("data-testid");
@@ -190,7 +184,7 @@ describe("Select", () => {
           <SelectContent>
             <SelectItem value="test">Test Label</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const option = document.querySelector('[role="option"]');
       expect(option?.textContent).toContain("Test Label");
@@ -207,7 +201,7 @@ describe("Select", () => {
               Item
             </SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const option = document.querySelector('[role="option"]');
       expect(option?.className).toContain("custom-item");
@@ -226,7 +220,7 @@ describe("Select", () => {
           <SelectContent data-testid="custom-content">
             <SelectItem value="1">One</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const content = document.querySelector('[data-testid="custom-content"]');
       expect(content).toBeTruthy();
@@ -241,7 +235,7 @@ describe("Select", () => {
           <SelectContent data-testid="content">
             <SelectItem value="1">One</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const content = document.querySelector('[data-testid="content"]');
       expect(content?.className).toContain("rounded-md");
@@ -257,7 +251,7 @@ describe("Select", () => {
           <SelectContent className="custom-content" data-testid="content">
             <SelectItem value="1">One</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const content = baseElement.ownerDocument.querySelector('[data-testid="content"]');
       expect(content?.className).toContain("custom-content");
@@ -273,7 +267,7 @@ describe("Select", () => {
           <SelectTrigger>
             <SelectValue placeholder="Select an option" />
           </SelectTrigger>
-        </Select>
+        </Select>,
       );
       expect(container.textContent).toContain("Select an option");
     });
@@ -292,7 +286,7 @@ describe("Select", () => {
             <SelectItem value="a">Option A</SelectItem>
             <SelectItem value="b">Option B</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const trigger = container.querySelector('[role="combobox"]');
       expect(trigger).toBeTruthy();
@@ -309,7 +303,7 @@ describe("Select", () => {
             <SelectItem value="2">Two</SelectItem>
             <SelectItem value="3">Three</SelectItem>
           </SelectContent>
-        </Select>
+        </Select>,
       );
       const options = document.querySelectorAll('[role="option"]');
       expect(options).toHaveLength(3);

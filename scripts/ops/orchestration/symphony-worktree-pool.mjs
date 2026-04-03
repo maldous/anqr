@@ -41,7 +41,7 @@ export function createWorktree(id) {
   logDebug(`[worktree-pool] Calculated worktreePath: ${worktreePath}`);
   logDebug(`[worktree-pool] Calculated branchName: ${branchName}`);
   logDebug(`[worktree-pool] PROJECT_ROOT: ${PROJECT_ROOT}`);
-  
+
   if (existsSync(worktreePath)) {
     // Path exists - verify it's a valid registered worktree
     const worktrees = listWorktrees();
@@ -73,9 +73,7 @@ export function createWorktree(id) {
         logInfo(`Removed corrupted directory: ${worktreePath}`);
       } catch (err) {
         logError(`Failed to remove corrupted directory: ${err.message}`);
-        throw new Error(
-          `Corrupted worktree path exists and cannot be cleaned up: ${worktreePath}`,
-        );
+        throw new Error(`Corrupted worktree path exists and cannot be cleaned up: ${worktreePath}`);
       }
 
       // Fall through to create fresh worktree
@@ -138,7 +136,7 @@ export function createWorktree(id) {
     const packageJsonPath = resolve(worktreePath, "package.json");
     logDebug(`[worktree-pool] node_modules exists: ${existsSync(nodeModulesPath)}`);
     logDebug(`[worktree-pool] package.json exists: ${existsSync(packageJsonPath)}`);
-    
+
     return worktreePath;
   } catch (err) {
     logError(`Failed to create worktree ${id}: ${err.message}`);
@@ -220,14 +218,13 @@ export function listWorktrees() {
 export function getSymphonyWorktrees() {
   const allWorktrees = listWorktrees();
   logDebug(`[worktree-pool] getSymphonyWorktrees() - total worktrees: ${allWorktrees.length}`);
-  
-  const filtered = allWorktrees
-    .filter(
-      (wt) => wt.path.includes(WORKTREE_PREFIX) && wt.branch?.startsWith(WORKTREE_BRANCH_PREFIX),
-    );
-  
+
+  const filtered = allWorktrees.filter(
+    (wt) => wt.path.includes(WORKTREE_PREFIX) && wt.branch?.startsWith(WORKTREE_BRANCH_PREFIX),
+  );
+
   logDebug(`[worktree-pool] Worktrees matching Symphony pattern: ${filtered.length}`);
-  
+
   const result = filtered
     .map((wt) => {
       const match = wt.path.match(new RegExp(`${WORKTREE_PREFIX}(\\d+)`));
@@ -239,7 +236,7 @@ export function getSymphonyWorktrees() {
       };
     })
     .filter((wt) => wt.id !== null);
-  
+
   logDebug(`[worktree-pool] Final Symphony worktrees count: ${result.length}`);
   return result;
 }
@@ -349,13 +346,17 @@ export async function reprovisionWorktree(id) {
       if (existsSync(worktreePath)) {
         rmSync(worktreePath, { recursive: true, force: true });
       }
-    } catch { /* best effort */ }
+    } catch {
+      /* best effort */
+    }
   }
 
   // Step 2: Prune stale worktree metadata
   try {
     execFileSync("git", ["worktree", "prune"], { cwd: PROJECT_ROOT, stdio: "pipe" });
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
 
   // Step 3: Recreate from origin/main
   const newPath = createWorktree(id);

@@ -2,25 +2,25 @@
 
 /**
  * recover-stale-in-progress.mjs — Recover stale In Progress issues to Todo state
- * 
+ *
  * This script detects issues that are stuck in In Progress state without active leases
  * and moves them back to Todo so they can be picked up by runners again.
- * 
+ *
  * Usage:
  *   node scripts/ops/tools/recover-stale-in-progress.mjs --dry-run
  *   node scripts/ops/tools/recover-stale-in-progress.mjs [--force]
  */
 
 import { updateIssue, addComment } from "../integrations/linear/linear-client.mjs";
-import { 
-  getIssueState, 
-  releaseLease, 
+import {
+  getIssueState,
+  releaseLease,
   recordTransition,
   canExecuteIssue,
   STALE_THRESHOLD_MS,
   TASK_TIMEOUT_MS,
   RECOVERY_GRACE_MS,
-  leaseIsActive
+  leaseIsActive,
 } from "../core/symphony-state.mjs";
 import { createLogger } from "../lib/logger.mjs";
 import { getQueueSnapshot } from "../symphony-queue-control.mjs";
@@ -45,7 +45,7 @@ async function main() {
   // Get current queue snapshot
   const snap = await getQueueSnapshot();
   const activeIssues = snap.inProgress.all;
-  
+
   if (activeIssues.length === 0) {
     logInfo("No active issues detected");
     process.exit(0);
@@ -63,25 +63,25 @@ async function main() {
     const recentHeartbeat =
       state.lease?.heartbeat_at &&
       Date.now() - new Date(state.lease.heartbeat_at).getTime() < RECOVERY_GRACE_MS;
-    
+
     const isStale = ageMs > TASK_TIMEOUT_MS;
     const isOld = ageMs > STALE_THRESHOLD_MS;
-    
+
     logInfo(`  ${issue.identifier}: ${issue.title}`);
     logInfo(`    Age: ${minutesAgo(issue, "updatedAt")} minutes`);
     logInfo(`    State: In Progress`);
     logInfo(`    Lease active: ${hasActiveLease}`);
     logInfo(`    Recent heartbeat: ${recentHeartbeat}`);
-    logInfo(`    Stale (>${TASK_TIMEOUT_MS/60000}min): ${isStale}`);
-    logInfo(`    Old (>${STALE_THRESHOLD_MS/60000}min): ${isOld}`);
-    
+    logInfo(`    Stale (>${TASK_TIMEOUT_MS / 60000}min): ${isStale}`);
+    logInfo(`    Old (>${STALE_THRESHOLD_MS / 60000}min): ${isOld}`);
+
     // Skip issues with active leases or recent heartbeats
     if (hasActiveLease || recentHeartbeat) {
       issuesToSkip.push({
         identifier: issue.identifier,
-        reason: hasActiveLease ? "active_lease" : "recent_heartbeat"
+        reason: hasActiveLease ? "active_lease" : "recent_heartbeat",
       });
-      logInfo(`    ✓ Skipping (${issuesToSkip[issuesToSkip.length-1].reason})\n`);
+      logInfo(`    ✓ Skipping (${issuesToSkip[issuesToSkip.length - 1].reason})\n`);
       continue;
     }
 
@@ -89,7 +89,7 @@ async function main() {
     if (!canExecuteIssue(issue)) {
       issuesToSkip.push({
         identifier: issue.identifier,
-        reason: "not_executable"
+        reason: "not_executable",
       });
       logInfo(`    ✗ Skipping (not executable - human_only/retry_exhausted/blocked)\n`);
       continue;
@@ -101,13 +101,13 @@ async function main() {
         identifier: issue.identifier,
         title: issue.title,
         ageMs,
-        isOld
+        isOld,
       });
       logInfo(`    🔄 Marked for recovery\n`);
     } else {
       issuesToSkip.push({
         identifier: issue.identifier,
-        reason: "not_stale"
+        reason: "not_stale",
       });
       logInfo(`    ✓ Skipping (not stale enough)\n`);
     }
@@ -121,8 +121,10 @@ async function main() {
   logInfo(`\nFound ${issuesToRecover.length} issues to recover:\n`);
   for (const issue of issuesToRecover) {
     logInfo(`  ${issue.identifier}: ${issue.title}`);
-    logInfo(`    Age: ${minutesAgo({ updatedAt: new Date(Date.now() - issue.ageMs).toISOString() }, "updatedAt")} minutes`);
-    logInfo(`    Old (>${STALE_THRESHOLD_MS/60000}min): ${issue.isOld}\n`);
+    logInfo(
+      `    Age: ${minutesAgo({ updatedAt: new Date(Date.now() - issue.ageMs).toISOString() }, "updatedAt")} minutes`,
+    );
+    logInfo(`    Old (>${STALE_THRESHOLD_MS / 60000}min): ${issue.isOld}\n`);
   }
 
   if (dryRun) {
@@ -136,22 +138,22 @@ async function main() {
   }
 
   logInfo(`\nRecovering ${issuesToRecover.length} issues...`);
-  
+
   let recoveredCount = 0;
   for (const identifier of issuesToRecover) {
     try {
       // Release any existing lease first
       releaseLease(identifier);
-      
+
       // Update issue state to Todo
       await updateIssue(identifier, { stateId: "Todo" });
-      
+
       // Add recovery comment
       await addComment(
         identifier,
-        `⏰ **Recovered from stale execution** — no active lease and no update for ${minutesAgo({ updatedAt: new Date(Date.now() - issueAge({ updatedAt: new Date().toISOString() }, "updatedAt")).getTime() }, "updatedAt")} minutes. Returned to Todo.`
+        `⏰ **Recovered from stale execution** — no active lease and no update for ${minutesAgo({ updatedAt: new Date(Date.now() - issueAge({ updatedAt: new Date().toISOString() }, "updatedAt")).getTime() }, "updatedAt")} minutes. Returned to Todo.`,
       );
-      
+
       // Record transition
       recordTransition(identifier, {
         actor: "recovery-tool",
@@ -159,7 +161,7 @@ async function main() {
         from: "In Progress",
         to: "Todo",
       });
-      
+
       recoveredCount++;
       logInfo(`  ✅ Recovered ${identifier}`);
     } catch (error) {

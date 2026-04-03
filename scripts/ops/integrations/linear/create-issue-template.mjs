@@ -2,13 +2,19 @@
 
 /**
  * create-issue-template.mjs — Standardized template for Linear issue creation
- * 
+ *
  * This template provides a standardized starting point for creating Linear issues.
  * Agents should copy this file, customize the placeholders, and use it as a base
  * for new issue creation scripts.
  */
 
-import { createIssue, STATES, LABELS, validateIssueInput, formatValidationResult } from "./linear-client.mjs";
+import {
+  createIssue,
+  STATES,
+  LABELS,
+  validateIssueInput,
+  formatValidationResult,
+} from "./linear-client.mjs";
 import { validateIssueInput as validateLocalIssueInput } from "./validate-issue.mjs";
 
 /**
@@ -18,7 +24,7 @@ import { validateIssueInput as validateLocalIssueInput } from "./validate-issue.
 const issueTemplate = {
   /**
    * TITLE: [Component/Category] Action Verb Description
-   * 
+   *
    * Format: [Component] Title describing the work
    * Examples:
    * - [QR Engine] Fix memory leak in rendering component
@@ -29,7 +35,7 @@ const issueTemplate = {
 
   /**
    * DESCRIPTION: Standardized sections following the issue creation workflow
-   * 
+   *
    * Required sections:
    * - Problem: What is the problem? Be specific and concise.
    * - Root Cause: Why does this problem exist?
@@ -187,7 +193,7 @@ Error: Maximum call stack size exceeded
 ![Screenshot showing the error in the web interface](https://example.com/screenshot.png)
 
 **API errors:**
-\`\`\"
+\`\`"
 {
   "error": "Internal server error",
   "code": "STACK_OVERFLOW",
@@ -249,7 +255,7 @@ This issue was discovered while working on ANQ-1401 (Document agents instruction
 
   /**
    * STATE: Use appropriate state for new issues
-   * 
+   *
    * Common starting states:
    * - STATES.backlog: Issue is in backlog, not yet prioritized
    * - STATES.todo: Issue is ready for work
@@ -259,7 +265,7 @@ This issue was discovered while working on ANQ-1401 (Document agents instruction
 
   /**
    * LABELS: Use appropriate labels following the work type taxonomy
-   * 
+   *
    * Primary work types (from docs/program/04-taxonomy.md):
    * - LABELS.harness: AI pipeline and automation work
    * - LABELS.governance: Rules, policies, and decision frameworks
@@ -280,7 +286,7 @@ This issue was discovered while working on ANQ-1401 (Document agents instruction
 
   /**
    * PRIORITY: Set based on impact assessment
-   * 
+   *
    * Priority levels:
    * - 1 = Urgent (critical failures blocking work)
    * - 2 = High (important work with significant impact)
@@ -298,7 +304,7 @@ This issue was discovered while working on ANQ-1401 (Document agents instruction
 
   /**
    * ESTIMATE: Story points or hours for planning
-   * 
+   *
    * Estimation guidelines:
    * - 1 point: Very small, trivial task (<1 hour)
    * - 2 points: Small task (1-2 hours)
@@ -327,14 +333,22 @@ function customizeIssue(baseTemplate) {
 
   // Customize description sections with your specific details
   customized.description = customized.description
-    .replace("[Describe the problem clearly and concisely.]", 
-      "The QR generation component has a memory leak that causes increasing memory usage over time, eventually leading to out-of-memory errors in production.")
-    .replace("[Explain why this problem exists.]", 
-      "The memory leak is caused by unclosed file handles in the canvas rendering library used for QR code generation. Each QR code generation leaves file handles open, accumulating over time.")
-    .replace("[Who/what is affected by this problem?]", 
-      "Affects all users generating QR codes in the web application. Causes production outages when memory usage exceeds available resources.")
-    .replace("[Propose a solution or approach to fix the problem]", 
-      "Implement proper cleanup handlers in the QR generation component to close file handles after each QR code generation. Add memory leak detection and automated cleanup processes.");
+    .replace(
+      "[Describe the problem clearly and concisely.]",
+      "The QR generation component has a memory leak that causes increasing memory usage over time, eventually leading to out-of-memory errors in production.",
+    )
+    .replace(
+      "[Explain why this problem exists.]",
+      "The memory leak is caused by unclosed file handles in the canvas rendering library used for QR code generation. Each QR code generation leaves file handles open, accumulating over time.",
+    )
+    .replace(
+      "[Who/what is affected by this problem?]",
+      "Affects all users generating QR codes in the web application. Causes production outages when memory usage exceeds available resources.",
+    )
+    .replace(
+      "[Propose a solution or approach to fix the problem]",
+      "Implement proper cleanup handlers in the QR generation component to close file handles after each QR code generation. Add memory leak detection and automated cleanup processes.",
+    );
 
   // Customize acceptance criteria
   customized.description = customized.description.replace(
@@ -343,7 +357,7 @@ function customizeIssue(baseTemplate) {
 - [ ] Add memory leak detection tests
 - [ ] Update performance benchmarks
 - [ ] Verify no breaking changes to existing functionality
-- [ ] Code review completed by @team-member`
+- [ ] Code review completed by @team-member`,
   );
 
   // Customize evidence section
@@ -358,7 +372,7 @@ Error: Process out of memory
 \`\`\`
 
 **Memory usage graph:**
-![Memory usage increasing over time](https://example.com/memory-graph.png)`
+![Memory usage increasing over time](https://example.com/memory-graph.png)`,
   );
 
   // Customize references
@@ -370,7 +384,7 @@ Error: Process out of memory
 
 **Documentation:**
 - [QR Generation Architecture](https://docs.example.com/qr-architecture)
-- [Memory Management Best Practices](https://docs.example.com/memory-management)`
+- [Memory Management Best Practices](https://docs.example.com/memory-management)`,
   );
 
   return customized;
@@ -381,11 +395,11 @@ Error: Process out of memory
  */
 async function validateIssue(issueInput) {
   console.log("🔍 Validating issue before creation...\n");
-  
+
   // Validate using both validation systems
   const validation1 = validateIssueInput(issueInput);
   const validation2 = validateLocalIssueInput(issueInput);
-  
+
   const combinedValidation = {
     valid: validation1.valid && validation2.valid,
     errors: [...validation1.errors, ...validation2.errors],
@@ -393,18 +407,20 @@ async function validateIssue(issueInput) {
     recommendations: [...validation1.recommendations, ...validation2.recommendations],
     score: Math.min(validation1.score, validation2.score),
   };
-  
+
   console.log(formatValidationResult(combinedValidation));
-  
+
   if (!combinedValidation.valid) {
     console.error("\n❌ Validation failed. Please fix errors before creating the issue.");
     process.exit(1);
   }
-  
+
   if (combinedValidation.score < 80) {
-    console.warn("\n⚠️  Warning: Issue quality score is below 80. Consider improving before creation.");
+    console.warn(
+      "\n⚠️  Warning: Issue quality score is below 80. Consider improving before creation.",
+    );
   }
-  
+
   return combinedValidation;
 }
 
@@ -418,11 +434,19 @@ async function main() {
   try {
     // Customize the template for your specific issue
     const customizedIssue = customizeIssue(issueTemplate);
-    
+
     console.log("🎯 Customized Issue Preview:");
     console.log("Title:", customizedIssue.title);
-    console.log("State:", Object.entries(STATES).find(([_, id]) => id === customizedIssue.stateId)?.[0]);
-    console.log("Labels:", customizedIssue.labelIds.map(id => Object.entries(LABELS).find(([_, labelId]) => labelId === id)?.[0]).join(", "));
+    console.log(
+      "State:",
+      Object.entries(STATES).find(([_, id]) => id === customizedIssue.stateId)?.[0],
+    );
+    console.log(
+      "Labels:",
+      customizedIssue.labelIds
+        .map((id) => Object.entries(LABELS).find(([_, labelId]) => labelId === id)?.[0])
+        .join(", "),
+    );
     console.log("Priority:", customizedIssue.priority);
     console.log("Estimate:", customizedIssue.estimate, "points\n");
 
@@ -431,9 +455,9 @@ async function main() {
 
     // Create the issue
     console.log("🚀 Creating Linear issue...\n");
-    
+
     const issue = await createIssue(customizedIssue);
-    
+
     console.log("✅ Issue created successfully!\n");
     console.log("Issue Details:");
     console.log(`  Identifier: ${issue.identifier}`);
@@ -441,18 +465,17 @@ async function main() {
     console.log(`  State: ${issue.state.name}`);
     console.log(`  Priority: P${issue.priority}`);
     console.log(`  Estimate: ${issue.estimate} points`);
-    console.log(`  Labels: ${issue.labels.nodes.map(l => l.name).join(", ")}`);
+    console.log(`  Labels: ${issue.labels.nodes.map((l) => l.name).join(", ")}`);
     console.log(`  Created: ${new Date().toISOString()}`);
-    
+
     console.log(`\n🔗 Linear URL: https://linear.app/anqr/issue/${issue.identifier}`);
-    
+
     console.log("\n📝 Next steps:");
     console.log("  1. Review the issue in Linear");
     console.log("  2. Update state as work progresses (inProgress → inReview → done)");
     console.log("  3. Add comments with progress updates");
     console.log("  4. Link related issues using Linear's linking feature");
     console.log("  5. Mark as Done when all acceptance criteria are met");
-    
   } catch (error) {
     console.error("❌ Failed to create issue:", error.message);
     if (error.response) {
@@ -467,12 +490,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   await main();
 }
 
-export {
-  issueTemplate,
-  customizeIssue,
-  validateIssue,
-  main,
-};
+export { issueTemplate, customizeIssue, validateIssue, main };
 
 export default {
   issueTemplate,

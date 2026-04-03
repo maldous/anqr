@@ -105,16 +105,20 @@ For multi-phase issues, the agent MUST validate that previous phases completed s
 **CRITICAL: Before making ANY changes to bridge services (symphony-bridge, worktree bridges):**
 
 1. **STOP task execution FIRST:**
+
    ```bash
    node scripts/ops/orchestration/symphony-control.mjs --stop
    ```
+
    - This prevents new tasks from starting while you make changes
    - Without this step, new tasks may start during service restart causing data loss
 
 2. **Wait for zero concurrency:**
+
    ```bash
    node scripts/ops/orchestration/symphony-runner.mjs --status
    ```
+
    - All worktree runners must be idle (no active leases)
    - Check Discord for "(0 concurrent)" confirmation
    - Typical wait: 5-20 minutes
@@ -122,13 +126,16 @@ For multi-phase issues, the agent MUST validate that previous phases completed s
 3. **Make your changes** (restart service, update config, etc.)
 
 4. **RESTART task execution:**
+
    ```bash
    node scripts/ops/orchestration/symphony-control.mjs --start
    ```
+
    - **CRITICAL:** Without this step, the system remains permanently stopped
    - No work will be processed until timers are re-enabled
 
 **This protocol applies to:**
+
 - Router restart (`systemctl --user restart anqr-symphony-router`)
 - Executor restarts (`systemctl --user restart 'anqr-symphony-executor@*.service'`)
 - Bridge configuration changes
@@ -137,6 +144,7 @@ For multi-phase issues, the agent MUST validate that previous phases completed s
 - Any change that requires service restart
 
 **Why this matters:**
+
 - Restarting bridges during active requests drops streaming connections
 - Partial file writes corrupt issue state
 - Lost validation results require re-execution

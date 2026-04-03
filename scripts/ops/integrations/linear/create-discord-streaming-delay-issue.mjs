@@ -178,9 +178,7 @@ async function main() {
     console.log(`   Priority: P${issue.priority} | Estimate: ${issue.estimate} points`);
     console.log(`   Labels: ${issue.labels.nodes.map((l) => l.name).join(", ")}`);
     console.log("\n✅ Issue created successfully!");
-    console.log(
-      "\nNext steps: Review the issue in Linear and adjust priority/estimate if needed.",
-    );
+    console.log("\nNext steps: Review the issue in Linear and adjust priority/estimate if needed.");
   } catch (err) {
     console.error(`❌ Failed to create issue: ${err.message}`);
     process.exit(1);

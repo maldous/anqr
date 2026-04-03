@@ -8,7 +8,7 @@ import { createIssue, STATES, LABELS } from "./linear-client.mjs";
 
 async function main() {
   const title = "Investigate streaming support across providers";
-  
+
   const description = `## Context
 
 Currently, streaming responses are working for Codebuff provider, but we need to verify if streaming is properly implemented for other providers (Groq, Gemini, OpenRouter, etc.).
@@ -79,7 +79,7 @@ If streaming gaps are found:
     title,
     description,
     stateId: STATES.todo,
-    labelIds: [LABELS.harness],  // Only use harness label (research may not exist)
+    labelIds: [LABELS.harness], // Only use harness label (research may not exist)
     priority: 2, // Medium priority
   });
 

@@ -2,16 +2,14 @@
 
 /**
  * reset-retry-exhausted.mjs — Reset retry_exhausted state for blocked issues
- * 
+ *
  * Usage:
  *   node scripts/ops/tools/reset-retry-exhausted.mjs --dry-run
  *   node scripts/ops/tools/reset-retry-exhausted.mjs [--all] [--id ANQ-1234]
  */
 
 import { listIssuesByState } from "../integrations/linear/linear-client.mjs";
-import { 
-  getIssueState,  resetRetryState
-} from "../core/symphony-state.mjs";
+import { getIssueState, resetRetryState } from "../core/symphony-state.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
 const { logInfo, logWarn, logError } = createLogger();
@@ -20,7 +18,7 @@ async function main() {
   const args = new Set(process.argv.slice(2));
   const dryRun = args.has("--dry-run");
   const resetAll = args.has("--all");
-  const specificId = process.argv.find(arg => arg.startsWith("--id="))?.split("=")[1];
+  const specificId = process.argv.find((arg) => arg.startsWith("--id="))?.split("=")[1];
 
   if (!resetAll && !specificId && !dryRun) {
     logError("Usage: reset-retry-exhausted.mjs --dry-run | --all | --id=ANQ-XXXX");
@@ -41,7 +39,7 @@ async function main() {
     if (state.retry_exhausted) {
       issuesToReset.push({
         identifier: specificId,
-        state
+        state,
       });
     } else {
       logWarn(`Issue ${specificId} is not marked as retry_exhausted`);
@@ -59,7 +57,7 @@ async function main() {
           identifier: issue.identifier,
           title: issue.title,
           blocked_reason: state.blocked_reason,
-          state
+          state,
         });
       }
     }
@@ -71,7 +69,7 @@ async function main() {
   }
 
   logInfo(`Found ${issuesToReset.length} retry_exhausted issues:\\n`);
-  
+
   for (const { identifier, title, blocked_reason } of issuesToReset) {
     logInfo(`  ${identifier}: ${blocked_reason || "retry_exhausted"}`);
     if (title) logInfo(`    ${title.slice(0, 80)}`);
@@ -83,7 +81,7 @@ async function main() {
   }
 
   logInfo(`\\nResetting ${issuesToReset.length} issues...`);
-  
+
   let resetCount = 0;
   for (const { identifier } of issuesToReset) {
     resetRetryState(identifier, { retry_count: 0 });

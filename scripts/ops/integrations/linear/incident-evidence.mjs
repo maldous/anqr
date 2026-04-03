@@ -35,19 +35,19 @@ function getGitContext() {
       encoding: "utf-8",
       timeout: 5000,
     }).trim();
-    
+
     const branch = execSync("git rev-parse --abbrev-ref HEAD", {
       encoding: "utf-8",
       timeout: 5000,
     }).trim();
-    
+
     const statusOutput = execSync("git status --porcelain", {
       encoding: "utf-8",
       timeout: 5000,
     });
-    
+
     const hasUncommitted = statusOutput.trim().length > 0;
-    
+
     return { commit, branch, hasUncommitted };
   } catch (err) {
     logWarn(`Failed to get git context: ${err.message}`);
@@ -62,7 +62,7 @@ function getSystemInfo() {
   try {
     const hostname = execSync("hostname", { encoding: "utf-8", timeout: 2000 }).trim();
     const uptime = execSync("uptime -p", { encoding: "utf-8", timeout: 2000 }).trim();
-    
+
     // Get memory info (Linux-specific)
     let memFree = "unknown";
     if (existsSync("/proc/meminfo")) {
@@ -76,7 +76,7 @@ function getSystemInfo() {
         memFree = `${Math.round(memKB / 1024)} MB`;
       }
     }
-    
+
     return { hostname, uptime, memFree };
   } catch (err) {
     logWarn(`Failed to get system info: ${err.message}`);
@@ -89,10 +89,11 @@ function getSystemInfo() {
  */
 function getStateFileInfo() {
   try {
-    const stateDir = process.env.ANQR_SYMPHONY_STATE_DIR || 
-                     `${process.env.XDG_RUNTIME_DIR || "/tmp"}/anqr-symphony-state`;
+    const stateDir =
+      process.env.ANQR_SYMPHONY_STATE_DIR ||
+      `${process.env.XDG_RUNTIME_DIR || "/tmp"}/anqr-symphony-state`;
     const stateFile = `${stateDir}/state.json`;
-    
+
     if (existsSync(stateFile)) {
       const stats = statSync(stateFile);
       return {
@@ -108,7 +109,7 @@ function getStateFileInfo() {
 
 /**
  * Collect comprehensive incident evidence
- * 
+ *
  * @param {string} serviceName - systemd service name (optional)
  * @param {object} errorContext - Additional error context
  * @returns {object} Evidence bundle
@@ -122,12 +123,12 @@ export async function collectIncidentEvidence(serviceName = null, errorContext =
     providerHealth: getAllProviderHealthStates(),
     stateFile: getStateFileInfo(),
   };
-  
+
   if (serviceName) {
     evidence.serviceName = serviceName;
     evidence.journalLog = getServiceJournal(serviceName, 100);
   }
-  
+
   return evidence;
 }
 
@@ -136,18 +137,18 @@ export async function collectIncidentEvidence(serviceName = null, errorContext =
  */
 export function formatEvidenceForIssue(evidence) {
   const lines = [];
-  
+
   lines.push("## Incident Evidence");
   lines.push("");
   lines.push(`**Timestamp:** ${evidence.timestamp}`);
   lines.push("");
-  
+
   if (evidence.serviceName) {
     lines.push("### Service");
     lines.push(`- **Name:** ${evidence.serviceName}`);
     lines.push("");
   }
-  
+
   if (evidence.errorContext && Object.keys(evidence.errorContext).length > 0) {
     lines.push("### Error Context");
     for (const [key, value] of Object.entries(evidence.errorContext)) {
@@ -155,7 +156,7 @@ export function formatEvidenceForIssue(evidence) {
     }
     lines.push("");
   }
-  
+
   if (evidence.gitContext) {
     lines.push("### Git Context");
     lines.push(`- **Commit:** \`${evidence.gitContext.commit}\``);
@@ -163,7 +164,7 @@ export function formatEvidenceForIssue(evidence) {
     lines.push(`- **Uncommitted changes:** ${evidence.gitContext.hasUncommitted ? "Yes" : "No"}`);
     lines.push("");
   }
-  
+
   if (evidence.systemInfo) {
     lines.push("### System Info");
     lines.push(`- **Hostname:** ${evidence.systemInfo.hostname}`);
@@ -171,14 +172,14 @@ export function formatEvidenceForIssue(evidence) {
     lines.push(`- **Memory available:** ${evidence.systemInfo.memFree}`);
     lines.push("");
   }
-  
+
   if (evidence.stateFile) {
     lines.push("### State File");
     lines.push(`- **Size:** ${evidence.stateFile.size}`);
     lines.push(`- **Last modified:** ${evidence.stateFile.modified}`);
     lines.push("");
   }
-  
+
   if (evidence.providerHealth && Object.keys(evidence.providerHealth).length > 0) {
     lines.push("### Provider Health");
     lines.push("");
@@ -193,7 +194,7 @@ export function formatEvidenceForIssue(evidence) {
       lines.push("");
     }
   }
-  
+
   if (evidence.journalLog) {
     lines.push("### Service Journal (last 100 lines)");
     lines.push("");
@@ -202,6 +203,6 @@ export function formatEvidenceForIssue(evidence) {
     lines.push("```");
     lines.push("");
   }
-  
+
   return lines.join("\n");
 }

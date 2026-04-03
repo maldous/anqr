@@ -75,39 +75,28 @@ function assertMutationContext(ctx) {
   if (ctx.executionMode !== "mutating") return; // Read-only requests can pass through
 
   if (!ctx.worktreeId) {
-    throw new Error("Mutation blocked: missing worktreeId - mutating requests must have assigned worktree");
+    throw new Error(
+      "Mutation blocked: missing worktreeId - mutating requests must have assigned worktree",
+    );
   }
   if (!ctx.leaseId) {
     throw new Error("Mutation blocked: missing leaseId - mutating requests must have valid lease");
   }
   if (!ctx.projectRoot) {
-    throw new Error("Mutation blocked: missing projectRoot - mutating requests must specify project root");
+    throw new Error(
+      "Mutation blocked: missing projectRoot - mutating requests must specify project root",
+    );
   }
   const resolvedProjectRoot = ctx.projectRoot.replaceAll("\\", "/");
   const resolvedMainRoot = MAIN_REPO_ROOT;
   if (resolvedProjectRoot === resolvedMainRoot) {
-    throw new Error("Mutation blocked: main repo is forbidden for mutating requests - must use worktree");
+    throw new Error(
+      "Mutation blocked: main repo is forbidden for mutating requests - must use worktree",
+    );
   }
   if (ctx.worktreeRoot && resolvedProjectRoot !== ctx.worktreeRoot.replaceAll("\\", "/")) {
     throw new Error("Mutation blocked: projectRoot must equal worktreeRoot for mutating requests");
   }
-}
-
-function isRateLimitError(errStr) {
-  const s = errStr.toLowerCase();
-  return (
-    s.includes("429") ||
-    s.includes("rate_limit") ||
-    s.includes("too many requests") ||
-    s.includes("session limit") ||
-    s.includes("rate_limit_exceeded") ||
-    s.includes("failed after") ||
-    s.includes("retryerror") ||
-    s.includes("weekly limit") ||
-    s.includes("subscription") ||
-    s.includes("limit resets") ||
-    s.includes("continue with credits")
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -426,7 +415,16 @@ function executeTool(projectRoot, toolCall, context = {}) {
 // LLM API call
 // ---------------------------------------------------------------------------
 
-async function callLLM(provider, messages, taskDescription, projectRoot = PROJECT_ROOT, worktreeId = null, _worktreeRoot = null, _leaseId = null, _executionMode = null) {
+async function callLLM(
+  provider,
+  messages,
+  taskDescription,
+  projectRoot = PROJECT_ROOT,
+  worktreeId = null,
+  _worktreeRoot = null,
+  _leaseId = null,
+  _executionMode = null,
+) {
   if (provider.name === "symphony-bridge") {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -793,7 +791,16 @@ async function runToolLoop({
 
     let response;
     try {
-      response = await callLLM(provider, messages, taskDescription, projectRoot, worktreeId, worktreeRoot, leaseId, executionMode);
+      response = await callLLM(
+        provider,
+        messages,
+        taskDescription,
+        projectRoot,
+        worktreeId,
+        worktreeRoot,
+        leaseId,
+        executionMode,
+      );
     } catch (err) {
       logError(`[agent] LLM call failed: ${err.message}`);
       return {
@@ -858,7 +865,9 @@ async function runToolLoop({
         logError(`[agent] 🚨 bridge_contract_missing DETECTED`);
         logError(`[agent]   Provider: ${provider.name}`);
         logError(`[agent]   Response keys: ${Object.keys(response).join(", ")}`);
-        logError(`[agent]   Response._symphonyResult: ${response._symphonyResult ? "present" : "MISSING"}`);
+        logError(
+          `[agent]   Response._symphonyResult: ${response._symphonyResult ? "present" : "MISSING"}`,
+        );
         logError(`[agent]   Response.providerName: ${response.providerName}`);
         logError(`[agent]   Message.content length: ${(msg.content || "").length}`);
         logError(`[agent]   Message.tool_calls: ${msg.tool_calls?.length || 0}`);
@@ -1190,7 +1199,17 @@ async function runToolLoop({
 // Public: start a new agent session
 // ---------------------------------------------------------------------------
 
-export async function runAgent({ provider, issue, projectRoot, worktreeId, worktreeRoot, leaseId, executionMode, systemPrompt, maxMs }) {
+export async function runAgent({
+  provider,
+  issue,
+  projectRoot,
+  worktreeId,
+  worktreeRoot,
+  leaseId,
+  executionMode,
+  systemPrompt,
+  maxMs,
+}) {
   const messages = [
     { role: "system", content: systemPrompt },
     { role: "user", content: buildIssuePrompt(issue) },

@@ -30,7 +30,13 @@ import {
   fetchSonarMeasures,
   findOpenLinearIssuesByTag,
 } from "../../lib/sonar-linear-sync.mjs";
-import { createIssue, findOpenIssuesByTitle, updateIssue, STATES, LABELS } from "../linear/linear-client.mjs";
+import {
+  createIssue,
+  findOpenIssuesByTitle,
+  updateIssue,
+  STATES,
+  LABELS,
+} from "../linear/linear-client.mjs";
 import { sendNotification } from "../../lib/notify.mjs";
 import { createLogger } from "../../lib/logger.mjs";
 
@@ -128,11 +134,15 @@ async function updateConsolidatedIssue(issueId, findings) {
   lines.push("3. **Category** - handle all issues of the same type (bugs, code smells, etc.)");
   lines.push("");
   lines.push("This consolidated issue tracks all open SonarQube findings. When resolving, ");
-  lines.push("create new grouped issues if appropriate rather than marking everything done at once.");
+  lines.push(
+    "create new grouped issues if appropriate rather than marking everything done at once.",
+  );
 
   const description = lines.join("\n");
   await updateIssue(issueId, { description });
-  logInfo(`[sonar-audit] Updated consolidated issue with ${issues.length} issues, ${hotspots.length} hotspots, ${duplications.length} duplications`);
+  logInfo(
+    `[sonar-audit] Updated consolidated issue with ${issues.length} issues, ${hotspots.length} hotspots, ${duplications.length} duplications`,
+  );
 }
 
 async function main() {
@@ -172,7 +182,9 @@ async function main() {
 
   const totalResolved = staleIssues.length + staleHotspots.length + staleDupCount.length;
   if (totalResolved > 0) {
-    logInfo(`[sonar-audit] Resolved stale: ${staleIssues.length} issues, ${staleHotspots.length} hotspots, ${staleDupCount.length} duplications`);
+    logInfo(
+      `[sonar-audit] Resolved stale: ${staleIssues.length} issues, ${staleHotspots.length} hotspots, ${staleDupCount.length} duplications`,
+    );
   }
 
   // Find existing consolidated issues
@@ -209,7 +221,9 @@ async function main() {
         `Dashboard: ${SONAR_HOST}/dashboard?id=${PROJECT_KEY}`,
         "",
         `The consolidated issue includes grouping guidance for batch resolution.`,
-      ].filter(Boolean).join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n"),
       severity: "critical",
     });
   } else {
@@ -221,7 +235,9 @@ async function main() {
       body: [
         `All SonarQube findings cleared. Consolidated issue ${consolidatedIssue.identifier} resolved.`,
         totalResolved > 0 ? `Also resolved ${totalResolved} stale individual issues.` : "",
-      ].filter(Boolean).join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n"),
       severity: "info",
     });
   }

@@ -20,6 +20,7 @@ The Symphony Bridge was throwing `"Stream completed but produced no content (fin
 2. ❌ **Never adding it to `fullText`** (the accumulated response text)
 
 Meanwhile, `text-delta` events were correctly accumulated:
+
 ```javascript
 } else if (part.type === "text-delta") {
   const delta = part.textDelta || "";
@@ -31,6 +32,7 @@ Meanwhile, `text-delta` events were correctly accumulated:
 ```
 
 But `reasoning-delta` was only streamed, never accumulated:
+
 ```javascript
 } else if (part.type === "reasoning-delta") {
   if (onChunk && part.textDelta) {
@@ -84,7 +86,7 @@ Added check to only log non-empty reasoning-delta events (prevents 17,400+ log l
 if (deltaText.length > 0) {
   logInfo(`💡 [${provider.name}] reasoning-delta event detected`, {
     length: deltaText.length,
-    preview: deltaText.slice(0, 100)
+    preview: deltaText.slice(0, 100),
   });
 }
 ```
@@ -92,12 +94,14 @@ if (deltaText.length > 0) {
 ## Impact
 
 ### Before Fix
+
 - 0% success rate for all OpenRouter providers
 - Providers marked as "cooling-down" after 3 consecutive failures
 - Excessive fallback attempts, eventually exhausting all providers
 - 17,400+ log lines per stuck request (diagnostic logging of empty events)
 
 ### After Fix
+
 - ✅ OpenRouter models now work correctly
 - ✅ `reasoning-delta` content properly accumulated
 - ✅ Reduced log spam from empty reasoning-delta events
@@ -106,6 +110,7 @@ if (deltaText.length > 0) {
 ## Testing
 
 Validated with existing test suite:
+
 ```bash
 npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
 # Result: 12/12 tests passed

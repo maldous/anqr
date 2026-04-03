@@ -182,7 +182,9 @@ setInterval(() => {
   for (let i = linearQueue.length - 1; i >= 0; i--) {
     const age = now - new Date(linearQueue[i].queuedAt).getTime();
     if (age > MAX_QUEUE_AGE_MS) {
-      logWarn(`Dropping stale queued trigger: ${linearQueue[i].identifier} (age: ${Math.round(age/1000)}s)`);
+      logWarn(
+        `Dropping stale queued trigger: ${linearQueue[i].identifier} (age: ${Math.round(age / 1000)}s)`,
+      );
       linearQueue.splice(i, 1);
     }
   }
@@ -225,19 +227,16 @@ function spawnLinearRunner(identifier) {
   // Increment active requests so subsequent triggers route to other worktrees
   target.activeRequests += 1;
   globalActiveRequests += 1;
-  logInfo(`Linear worktree load: wt1=${WORKTREES[0].activeRequests}, wt2=${WORKTREES[1].activeRequests}, wt3=${WORKTREES[2].activeRequests}, wt4=${WORKTREES[3].activeRequests}`);
+  logInfo(
+    `Linear worktree load: wt1=${WORKTREES[0].activeRequests}, wt2=${WORKTREES[1].activeRequests}, wt3=${WORKTREES[2].activeRequests}, wt4=${WORKTREES[3].activeRequests}`,
+  );
 
   // Spawn the runner in the target worktree
   const nodePath = process.execPath || "/home/user/.nvm/versions/node/v25.8.0/bin/node";
-  
+
   const runner = spawn(
     nodePath,
-    [
-      "scripts/ops/orchestration/symphony-runner.mjs",
-      "--once",
-      "--issue",
-      identifier,
-    ],
+    ["scripts/ops/orchestration/symphony-runner.mjs", "--once", "--issue", identifier],
     {
       cwd: target.path,
       env: {
@@ -254,7 +253,9 @@ function spawnLinearRunner(identifier) {
   runner.on("close", (code) => {
     target.activeRequests = Math.max(0, target.activeRequests - 1);
     globalActiveRequests = Math.max(0, globalActiveRequests - 1);
-    logInfo(`Runner for ${identifier} exited with code ${code} (load: wt1=${WORKTREES[0].activeRequests}, wt2=${WORKTREES[1].activeRequests}, wt3=${WORKTREES[2].activeRequests}, wt4=${WORKTREES[3].activeRequests})`);
+    logInfo(
+      `Runner for ${identifier} exited with code ${code} (load: wt1=${WORKTREES[0].activeRequests}, wt2=${WORKTREES[1].activeRequests}, wt3=${WORKTREES[2].activeRequests}, wt4=${WORKTREES[3].activeRequests})`,
+    );
   });
   runner.on("error", (err) => {
     target.activeRequests = Math.max(0, target.activeRequests - 1);
@@ -298,11 +299,15 @@ function handleLinearTrigger(req, res) {
     // If all worktrees are busy, queue the trigger
     if (target.activeRequests >= 1) {
       if (linearQueue.length >= MAX_QUEUE_LENGTH) {
-        logWarn(`Linear trigger queue full (${MAX_QUEUE_LENGTH}), dropping trigger for ${identifier}`);
+        logWarn(
+          `Linear trigger queue full (${MAX_QUEUE_LENGTH}), dropping trigger for ${identifier}`,
+        );
         json(res, 503, { error: { message: "Queue full, try again later" } });
         return;
       }
-      logInfo(`All Linear worktrees busy, queuing ${identifier} (queue length: ${linearQueue.length + 1})`);
+      logInfo(
+        `All Linear worktrees busy, queuing ${identifier} (queue length: ${linearQueue.length + 1})`,
+      );
       linearQueue.push({ identifier, queuedAt: new Date().toISOString() });
       json(res, 202, { status: "queued", queueLength: linearQueue.length });
       return;
@@ -416,7 +421,10 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method !== "POST" || (req.url !== "/v1/chat/completions" && req.url !== "/chat/completions")) {
+  if (
+    req.method !== "POST" ||
+    (req.url !== "/v1/chat/completions" && req.url !== "/chat/completions")
+  ) {
     return json(res, 404, { error: { message: "Not found" } });
   }
 

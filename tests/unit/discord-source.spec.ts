@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { isDiscordSourced, markDiscordSource, detectAndMarkDiscordSource } from "../../scripts/ops/core/discord-source.mjs";
+import {
+  isDiscordSourced,
+  markDiscordSource,
+  detectAndMarkDiscordSource,
+} from "../../scripts/ops/core/discord-source.mjs";
 
 // Mock symphony-state
 vi.mock("../../scripts/ops/core/symphony-state.mjs", () => ({

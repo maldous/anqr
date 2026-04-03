@@ -4,7 +4,7 @@ import { Input } from "./input";
 
 describe("Input", () => {
   // ── Rendering ──────────────────────────────────────────────────
-  
+
   it("renders as input element", () => {
     const { container } = render(<Input />);
     const input = container.querySelector("input");
@@ -91,7 +91,13 @@ describe("Input", () => {
 
   it("forwards onChange handler", () => {
     let changed = false;
-    const { container } = render(<Input onChange={() => { changed = true; }} />);
+    const { container } = render(
+      <Input
+        onChange={() => {
+          changed = true;
+        }}
+      />,
+    );
     const input = container.querySelector("input")!;
     fireEvent.change(input, { target: { value: "new" } });
     expect(changed).toBe(true);
@@ -99,7 +105,13 @@ describe("Input", () => {
 
   it("forwards onFocus handler", () => {
     let focused = false;
-    const { container } = render(<Input onFocus={() => { focused = true; }} />);
+    const { container } = render(
+      <Input
+        onFocus={() => {
+          focused = true;
+        }}
+      />,
+    );
     const input = container.querySelector("input");
     input?.focus();
     expect(focused).toBe(true);
@@ -107,7 +119,13 @@ describe("Input", () => {
 
   it("forwards onBlur handler", () => {
     let blurred = false;
-    const { container } = render(<Input onBlur={() => { blurred = true; }} />);
+    const { container } = render(
+      <Input
+        onBlur={() => {
+          blurred = true;
+        }}
+      />,
+    );
     const input = container.querySelector("input");
     input?.focus();
     input?.blur();

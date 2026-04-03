@@ -15,7 +15,6 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { resolve } from "node:path";
 import { createLogger } from "../lib/logger.mjs";
 import {
   listIntegrationCandidates,
@@ -28,7 +27,7 @@ import {
   enqueueIntegrationCandidate,
   loadState,
 } from "../symphony-state.mjs";
-import { updateIssue, addComment, getIssueDetail, STATES } from "../linear-client.mjs";
+import { updateIssue, addComment, STATES } from "../linear-client.mjs";
 import { PROJECT_ROOT } from "../core/worktree-config.mjs";
 
 const { logInfo, logWarn, logError, logDebug } = createLogger();
@@ -54,7 +53,9 @@ function git(...args) {
 async function integrateCandidate(issueIdentifier) {
   const finalization = getFinalizationState(issueIdentifier);
   if (!finalization || finalization.state !== "integration_pending") {
-    logWarn(`[integrator] ${issueIdentifier}: unexpected finalization state: ${finalization?.state}`);
+    logWarn(
+      `[integrator] ${issueIdentifier}: unexpected finalization state: ${finalization?.state}`,
+    );
     dequeueIntegrationCandidate(issueIdentifier);
     return { ok: false, reason: "invalid_state" };
   }
@@ -65,7 +66,9 @@ async function integrateCandidate(issueIdentifier) {
     return { ok: false, reason: "missing_metadata" };
   }
 
-  logInfo(`[integrator] Integrating ${issueIdentifier}: branch=${branch} head=${headSha.slice(0, 8)}`);
+  logInfo(
+    `[integrator] Integrating ${issueIdentifier}: branch=${branch} head=${headSha.slice(0, 8)}`,
+  );
   const integrationStartMs = Date.now();
 
   try {
@@ -76,7 +79,9 @@ async function integrateCandidate(issueIdentifier) {
     // Create clean integration workspace
     try {
       git("branch", "-D", "symphony/integration");
-    } catch { /* branch may not exist */ }
+    } catch {
+      /* branch may not exist */
+    }
     git("checkout", "-B", "symphony/integration", "origin/main");
 
     // Cherry-pick the candidate commit
@@ -88,10 +93,18 @@ async function integrateCandidate(issueIdentifier) {
       logWarn(`[integrator] Cherry-pick failed for ${issueIdentifier}: ${stderr.slice(0, 200)}`);
 
       // Abort the cherry-pick
-      try { git("cherry-pick", "--abort"); } catch { /* already clean */ }
+      try {
+        git("cherry-pick", "--abort");
+      } catch {
+        /* already clean */
+      }
 
       // Return to main
-      try { git("checkout", "main"); } catch { /* best effort */ }
+      try {
+        git("checkout", "main");
+      } catch {
+        /* best effort */
+      }
 
       // Mark as integration_failed_repairable
       const attempts = (finalization.attempts || 0) + 1;
@@ -122,7 +135,9 @@ async function integrateCandidate(issueIdentifier) {
     const pushedMainSha = git("rev-parse", "HEAD");
 
     const integrationMs = Date.now() - integrationStartMs;
-    logInfo(`[integrator] ✅ ${issueIdentifier} integrated to main at ${pushedMainSha.slice(0, 8)} (${integrationMs}ms)`);
+    logInfo(
+      `[integrator] ✅ ${issueIdentifier} integrated to main at ${pushedMainSha.slice(0, 8)} (${integrationMs}ms)`,
+    );
 
     // Update finalization state
     await setFinalizationState(issueIdentifier, {
@@ -136,10 +151,7 @@ async function integrateCandidate(issueIdentifier) {
     const detail = await findIssueByIdentifier(issueIdentifier);
     if (detail) {
       await updateIssue(detail.id, { stateId: STATES.done });
-      await addComment(
-        detail.id,
-        `✅ Integrated to origin/main at ${pushedMainSha.slice(0, 8)}.`,
-      );
+      await addComment(detail.id, `✅ Integrated to origin/main at ${pushedMainSha.slice(0, 8)}.`);
     }
 
     dequeueIntegrationCandidate(issueIdentifier);
@@ -148,7 +160,11 @@ async function integrateCandidate(issueIdentifier) {
     logError(`[integrator] Unexpected error for ${issueIdentifier}: ${err.message}`);
 
     // Return to main branch
-    try { git("checkout", "main"); } catch { /* best effort */ }
+    try {
+      git("checkout", "main");
+    } catch {
+      /* best effort */
+    }
 
     // Mark as repairable on infra failure
     const attempts = (finalization.attempts || 0) + 1;
@@ -219,7 +235,9 @@ async function processQueue() {
   // Acquire global integration lock
   const lock = acquireIntegrationLock(INTEGRATOR_ID, LOCK_TTL_MS);
   if (!lock.ok) {
-    logWarn(`[integrator] Lock held by ${lock.holder} (expires ${lock.expiresAt}) — skipping cycle`);
+    logWarn(
+      `[integrator] Lock held by ${lock.holder} (expires ${lock.expiresAt}) — skipping cycle`,
+    );
     return { processed: 0, reason: "locked" };
   }
 
@@ -250,7 +268,9 @@ function showStatus() {
   console.log(`Candidates: ${candidates.length}`);
   for (const id of candidates) {
     const fin = getFinalizationState(id);
-    console.log(`  ${id}: state=${fin?.state || "unknown"} branch=${fin?.branch || "?"} head=${fin?.headSha?.slice(0, 8) || "?"}`);
+    console.log(
+      `  ${id}: state=${fin?.state || "unknown"} branch=${fin?.branch || "?"} head=${fin?.headSha?.slice(0, 8) || "?"}`,
+    );
   }
   console.log();
 }

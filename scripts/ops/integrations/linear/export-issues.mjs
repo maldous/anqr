@@ -2,12 +2,12 @@
 
 /**
  * export-issues.mjs — Export Linear issues to JSON for RAG indexing
- * 
+ *
  * Exports:
  * - All open issues (Backlog, Todo, In Progress, In Review, Blocked, Human Review)
  * - Done issues updated within last 90 days
  * - Excludes Canceled issues
- * 
+ *
  * Output: reports/linear-export/issues-latest.json
  */
 

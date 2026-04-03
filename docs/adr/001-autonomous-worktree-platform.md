@@ -20,37 +20,37 @@ Build a control-plane upgrade across six phases, each gated by acceptance criter
 
 ### What Already Exists
 
-| Component | File | Status |
-|---|---|---|
-| State schema v2 | `scripts/ops/core/symphony-state.mjs` | ✅ Finalization states, integration queue/lock, sticky owner, lease/heartbeat, exponential backoff |
-| Integrator | `scripts/ops/orchestration/symphony-integrator.mjs` | ✅ Single writer to main via cherry-pick, daemon mode, queue processing, conflict → `integration_failed_repairable` |
-| Runner | `scripts/ops/orchestration/symphony-runner.mjs` | ✅ Worktree detection, validation, commit, branch-only push, finalization state mgmt, sticky repair priority (`getNextRepairableIssueForWorktree` before `pickIssue`), continuation, failure fingerprinting |
-| Worktree config | `scripts/ops/core/worktree-config.mjs` | ✅ Paths, branch naming, Discord/Symphony routing |
-| Worktree pool | `scripts/ops/orchestration/symphony-worktree-pool.mjs` | ✅ Create, cleanup, repair, list |
-| Queue control | `scripts/ops/orchestration/symphony-queue-control.mjs` | ✅ Feed, drain, enforce concurrency, detect stuck work |
-| Config | `scripts/ops/core/symphony-config.mjs` | ✅ Timing chain, retry limits, concurrency |
-| Systemd services | `services/systemd/anqr-symphony-*` | ✅ executor@, integrator, runner, watchdog, router |
-| Unit tests | `tests/unit/finalization-state.spec.ts` | ✅ Finalization CRUD, queue dedup, lock exclusivity, repair candidate lookup |
-| Integration tests | `tests/integration/symphony-integrator.spec.ts` | ✅ Queue flow, conflict handling, sticky owner preservation |
-| Recovery tools | `scripts/ops/tools/recover-stale-in-progress.mjs`, `startup-recovery.mjs` | ✅ Partial — stale lease cleanup, service restart |
-| Watchdog | `scripts/ops/runtime/symphony/watchdog-monitor.mjs` | ✅ Bridge health, log analysis, auto-rollback |
+| Component         | File                                                                      | Status                                                                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State schema v2   | `scripts/ops/core/symphony-state.mjs`                                     | ✅ Finalization states, integration queue/lock, sticky owner, lease/heartbeat, exponential backoff                                                                                                          |
+| Integrator        | `scripts/ops/orchestration/symphony-integrator.mjs`                       | ✅ Single writer to main via cherry-pick, daemon mode, queue processing, conflict → `integration_failed_repairable`                                                                                         |
+| Runner            | `scripts/ops/orchestration/symphony-runner.mjs`                           | ✅ Worktree detection, validation, commit, branch-only push, finalization state mgmt, sticky repair priority (`getNextRepairableIssueForWorktree` before `pickIssue`), continuation, failure fingerprinting |
+| Worktree config   | `scripts/ops/core/worktree-config.mjs`                                    | ✅ Paths, branch naming, Discord/Symphony routing                                                                                                                                                           |
+| Worktree pool     | `scripts/ops/orchestration/symphony-worktree-pool.mjs`                    | ✅ Create, cleanup, repair, list                                                                                                                                                                            |
+| Queue control     | `scripts/ops/orchestration/symphony-queue-control.mjs`                    | ✅ Feed, drain, enforce concurrency, detect stuck work                                                                                                                                                      |
+| Config            | `scripts/ops/core/symphony-config.mjs`                                    | ✅ Timing chain, retry limits, concurrency                                                                                                                                                                  |
+| Systemd services  | `services/systemd/anqr-symphony-*`                                        | ✅ executor@, integrator, runner, watchdog, router                                                                                                                                                          |
+| Unit tests        | `tests/unit/finalization-state.spec.ts`                                   | ✅ Finalization CRUD, queue dedup, lock exclusivity, repair candidate lookup                                                                                                                                |
+| Integration tests | `tests/integration/symphony-integrator.spec.ts`                           | ✅ Queue flow, conflict handling, sticky owner preservation                                                                                                                                                 |
+| Recovery tools    | `scripts/ops/tools/recover-stale-in-progress.mjs`, `startup-recovery.mjs` | ✅ Partial — stale lease cleanup, service restart                                                                                                                                                           |
+| Watchdog          | `scripts/ops/runtime/symphony/watchdog-monitor.mjs`                       | ✅ Bridge health, log analysis, auto-rollback                                                                                                                                                               |
 
 ### What Is Missing
 
-| Gap ID | Requirement | Current State | Severity |
-|---|---|---|---|
-| **G1** | Recovery daemon (scan → classify → repair → quarantine) | Does not exist | **Critical** — no autonomous dirty worktree resolution |
-| **G2** | `validation_failed_repairable` finalization state | Validation failures `gitRevert()` + return to Todo | **High** — loses work, violates repair-first principle |
-| **G3** | `RUNNER_AUTO_PUSH = false` | Branch→integrator flow disabled | **Blocker** — integrator never receives candidates |
-| **G4** | Explicit worktree state tracking (`available`/`executing`/`dirty`/`quarantined`) | Implicit — no per-worktree state in shared store | **High** — scheduler cannot make informed decisions |
-| **G5** | Quarantine model with reprovisioning | Uses `Backlog` + `retry_exhausted` as proxy | **Medium** — no formal quarantine/reprovision workflow |
-| **G6** | Machine-readable fleet health inventory | No dedicated health snapshot | **Medium** — not externally observable |
-| **G7** | End-to-end simulation harness | Does not exist | **Medium** — cannot prove autonomy |
-| **G8** | Deprecated `gitPush()` still exists | Dead code in runner | **Low** — cleanup |
-| **G9** | Integrator re-enqueue after repair | No automatic re-enqueue when `integration_failed_repairable` is repaired | **Medium** — requires manual intervention |
-| **G10** | `RUNNER_MAX_RETRIES = Infinity` | No bounded retries — violates spec requirement | **High** — repair loops can cycle forever |
-| **G11** | Bridge commit/push audit | Bridge may have auto-commit/push paths in runner flows | **Medium** — spec requires bridge never auto-commits |
-| **G12** | Explicit issue execution states (`locally_validated`, `local_commit_complete`, `branch_published`) | Currently implicit in runner flow, not tracked in state model | **Medium** — reduces observability |
+| Gap ID  | Requirement                                                                                        | Current State                                                            | Severity                                               |
+| ------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------ |
+| **G1**  | Recovery daemon (scan → classify → repair → quarantine)                                            | Does not exist                                                           | **Critical** — no autonomous dirty worktree resolution |
+| **G2**  | `validation_failed_repairable` finalization state                                                  | Validation failures `gitRevert()` + return to Todo                       | **High** — loses work, violates repair-first principle |
+| **G3**  | `RUNNER_AUTO_PUSH = false`                                                                         | Branch→integrator flow disabled                                          | **Blocker** — integrator never receives candidates     |
+| **G4**  | Explicit worktree state tracking (`available`/`executing`/`dirty`/`quarantined`)                   | Implicit — no per-worktree state in shared store                         | **High** — scheduler cannot make informed decisions    |
+| **G5**  | Quarantine model with reprovisioning                                                               | Uses `Backlog` + `retry_exhausted` as proxy                              | **Medium** — no formal quarantine/reprovision workflow |
+| **G6**  | Machine-readable fleet health inventory                                                            | No dedicated health snapshot                                             | **Medium** — not externally observable                 |
+| **G7**  | End-to-end simulation harness                                                                      | Does not exist                                                           | **Medium** — cannot prove autonomy                     |
+| **G8**  | Deprecated `gitPush()` still exists                                                                | Dead code in runner                                                      | **Low** — cleanup                                      |
+| **G9**  | Integrator re-enqueue after repair                                                                 | No automatic re-enqueue when `integration_failed_repairable` is repaired | **Medium** — requires manual intervention              |
+| **G10** | `RUNNER_MAX_RETRIES = Infinity`                                                                    | No bounded retries — violates spec requirement                           | **High** — repair loops can cycle forever              |
+| **G11** | Bridge commit/push audit                                                                           | Bridge may have auto-commit/push paths in runner flows                   | **Medium** — spec requires bridge never auto-commits   |
+| **G12** | Explicit issue execution states (`locally_validated`, `local_commit_complete`, `branch_published`) | Currently implicit in runner flow, not tracked in state model            | **Medium** — reduces observability                     |
 
 ---
 
@@ -126,17 +126,17 @@ Build a control-plane upgrade across six phases, each gated by acceptance criter
 
 #### New Files
 
-| File | Responsibility |
-|---|---|
+| File                                   | Responsibility                                 |
+| -------------------------------------- | ---------------------------------------------- |
 | `scripts/ops/core/worktree-health.mjs` | Per-worktree health snapshot + fleet inventory |
-| `tests/unit/worktree-health.spec.ts` | Health snapshot classification tests |
+| `tests/unit/worktree-health.spec.ts`   | Health snapshot classification tests           |
 
 #### Modifications
 
-| File | Change |
-|---|---|
-| `scripts/ops/core/symphony-state.mjs` | Add `store.worktreeStates` map, `setWorktreeState()`, `getWorktreeState()`, `listWorktreesByState()`, `getFleetSnapshot()` |
-| `tests/unit/finalization-state.spec.ts` | Add worktree state CRUD tests |
+| File                                    | Change                                                                                                                     |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/ops/core/symphony-state.mjs`   | Add `store.worktreeStates` map, `setWorktreeState()`, `getWorktreeState()`, `listWorktreesByState()`, `getFleetSnapshot()` |
+| `tests/unit/finalization-state.spec.ts` | Add worktree state CRUD tests                                                                                              |
 
 #### Interface: `worktree-health.mjs`
 
@@ -189,6 +189,7 @@ export function clearQuarantine(worktreeId) {}
 #### State Migration
 
 Adding `store.worktreeStates` requires no explicit migration. The existing `loadState()` normalizer already falls back to defaults for missing fields via `emptyStore()`. Phase 0 must:
+
 - Extend `emptyStore()` to include `worktreeStates: {}`
 - Add normalization in `loadState()` for the new field
 - Add a schema migration test that loads a v2 state file without `worktreeStates` and verifies it round-trips correctly
@@ -210,9 +211,9 @@ Adding `store.worktreeStates` requires no explicit migration. The existing `load
 
 #### Modifications
 
-| File | Change |
-|---|---|
-| `scripts/ops/core/symphony-config.mjs` | Set `RUNNER_AUTO_PUSH = true`. Set `RUNNER_MAX_RETRIES = 10` (bounded — spec requires finite retries; Infinity violates repair-first model). |
+| File                                            | Change                                                                                                                                                 |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `scripts/ops/core/symphony-config.mjs`          | Set `RUNNER_AUTO_PUSH = true`. Set `RUNNER_MAX_RETRIES = 10` (bounded — spec requires finite retries; Infinity violates repair-first model).           |
 | `scripts/ops/orchestration/symphony-runner.mjs` | Remove deprecated `gitPush()` function (~80 lines). Add `setWorktreeState('executing')` on issue start, `setWorktreeState('available')` on clean exit. |
 
 #### Gate 1 Acceptance Criteria
@@ -234,12 +235,12 @@ Adding `store.worktreeStates` requires no explicit migration. The existing `load
 
 #### Modifications
 
-| File | Change |
-|---|---|
-| `scripts/ops/core/symphony-state.mjs` | Add `"validation_failed_repairable"` to `REPAIRABLE_FINALIZATION_STATES` |
-| `scripts/ops/core/symphony-config.mjs` | Add `RUNNER_VALIDATION_REPAIR_MAX = 3` — max same-worktree validation repair cycles before quarantine |
+| File                                            | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/ops/core/symphony-state.mjs`           | Add `"validation_failed_repairable"` to `REPAIRABLE_FINALIZATION_STATES`                                                                                                                                                                                                                                                                                                                                                                                   |
+| `scripts/ops/core/symphony-config.mjs`          | Add `RUNNER_VALIDATION_REPAIR_MAX = 3` — max same-worktree validation repair cycles before quarantine                                                                                                                                                                                                                                                                                                                                                      |
 | `scripts/ops/orchestration/symphony-runner.mjs` | **Behavioral change:** When validation fails and `finalization.attempts < RUNNER_VALIDATION_REPAIR_MAX`, set `validation_failed_repairable` finalization state with sticky owner instead of `gitRevert()` + return to Todo. Preserve dirty tree. Store full validation output (not truncated) in `lastError` or a sidecar file at `.git/SYMPHONY_VALIDATION_ERRORS`. On next cycle, sticky repair picks it up and continues with validation error context. |
-| `tests/unit/finalization-state.spec.ts` | Add: `validation_failed_repairable` is returned by `getNextRepairableIssueForWorktree()` |
+| `tests/unit/finalization-state.spec.ts`         | Add: `validation_failed_repairable` is returned by `getNextRepairableIssueForWorktree()`                                                                                                                                                                                                                                                                                                                                                                   |
 
 #### New Runner Validation Failure Flow
 
@@ -282,12 +283,12 @@ After (target):
 
 #### New Files
 
-| File | Responsibility |
-|---|---|
+| File                                                       | Responsibility                             |
+| ---------------------------------------------------------- | ------------------------------------------ |
 | `scripts/ops/orchestration/symphony-worktree-recovery.mjs` | Scan → classify → repair → quarantine loop |
-| `services/systemd/anqr-symphony-worktree-recovery.service` | Systemd unit |
-| `tests/unit/worktree-recovery.spec.ts` | Classification + state machine unit tests |
-| `tests/integration/recovery-daemon.spec.ts` | Repair dispatch integration tests |
+| `services/systemd/anqr-symphony-worktree-recovery.service` | Systemd unit                               |
+| `tests/unit/worktree-recovery.spec.ts`                     | Classification + state machine unit tests  |
+| `tests/integration/recovery-daemon.spec.ts`                | Repair dispatch integration tests          |
 
 #### Interface: `symphony-worktree-recovery.mjs`
 
@@ -353,10 +354,10 @@ Input: worktree health snapshot
 #### Recovery Config (added to `symphony-config.mjs`)
 
 ```javascript
-export const RECOVERY_POLL_INTERVAL_MS = 60_000;       // 1 min scan interval
-export const RECOVERY_MAX_REPAIR_ATTEMPTS = 5;          // per worktree before quarantine
+export const RECOVERY_POLL_INTERVAL_MS = 60_000; // 1 min scan interval
+export const RECOVERY_MAX_REPAIR_ATTEMPTS = 5; // per worktree before quarantine
 export const RECOVERY_QUARANTINE_THRESHOLD_MS = 600_000; // 10 min stuck in repairable → quarantine
-export const RECOVERY_STALE_LEASE_GRACE_MS = 300_000;   // 5 min grace before reclaiming lease
+export const RECOVERY_STALE_LEASE_GRACE_MS = 300_000; // 5 min grace before reclaiming lease
 export const RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7;
 ```
 
@@ -378,11 +379,11 @@ export const RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7;
 
 #### Modifications
 
-| File | Change |
-|---|---|
+| File                                                | Change                                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/ops/orchestration/symphony-integrator.mjs` | (1) After `integration_failed_repairable` is repaired and branch re-pushed, automatically re-enqueue via a recovery-daemon hook or periodic queue scan. (2) `git fetch` the specific branch ref before cherry-pick to handle force-pushed branches after conflict repair. (3) Add metric logging for integration latency. |
-| `scripts/ops/orchestration/symphony-runner.mjs` | After successful repair of `integration_failed_repairable` → re-push branch → `enqueueIntegrationCandidate()` → set state back to `integration_pending` |
-| `tests/integration/symphony-integrator.spec.ts` | Add: re-enqueue-after-repair test, force-pushed branch handling test, two-branch serial integration test |
+| `scripts/ops/orchestration/symphony-runner.mjs`     | After successful repair of `integration_failed_repairable` → re-push branch → `enqueueIntegrationCandidate()` → set state back to `integration_pending`                                                                                                                                                                   |
+| `tests/integration/symphony-integrator.spec.ts`     | Add: re-enqueue-after-repair test, force-pushed branch handling test, two-branch serial integration test                                                                                                                                                                                                                  |
 
 #### Gate 4 Acceptance Criteria
 
@@ -400,18 +401,18 @@ export const RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7;
 
 #### New Files
 
-| File | Responsibility |
-|---|---|
-| `services/systemd/anqr-worktree-health.timer` | Periodic health snapshot (every 5 min) |
-| `services/systemd/anqr-worktree-health.service` | One-shot health check |
+| File                                            | Responsibility                         |
+| ----------------------------------------------- | -------------------------------------- |
+| `services/systemd/anqr-worktree-health.timer`   | Periodic health snapshot (every 5 min) |
+| `services/systemd/anqr-worktree-health.service` | One-shot health check                  |
 
 #### Modifications
 
-| File | Change |
-|---|---|
-| `scripts/ops/orchestration/symphony-worktree-pool.mjs` | Add `reprovisionWorktree(id)` — force-remove + recreate from `origin/main`, reinstall deps, reset upstream |
+| File                                                       | Change                                                                                                                                                                                     |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `scripts/ops/orchestration/symphony-worktree-pool.mjs`     | Add `reprovisionWorktree(id)` — force-remove + recreate from `origin/main`, reinstall deps, reset upstream                                                                                 |
 | `scripts/ops/orchestration/symphony-worktree-recovery.mjs` | Add reprovisioning path: quarantined worktree with `repairAttempts >= RECOVERY_MAX_REPAIR_ATTEMPTS` → call `reprovisionWorktree()` → `clearQuarantine()` → `setWorktreeState('available')` |
-| `scripts/ops/core/worktree-health.mjs` | Add `writeFleetHealthFile()` — persist JSON to `reports/symphony/fleet-health.json` for external observability |
+| `scripts/ops/core/worktree-health.mjs`                     | Add `writeFleetHealthFile()` — persist JSON to `reports/symphony/fleet-health.json` for external observability                                                                             |
 
 #### Gate 5 Acceptance Criteria
 
@@ -430,33 +431,33 @@ export const RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7;
 
 #### New Files
 
-| File | Responsibility |
-|---|---|
+| File                                    | Responsibility                                     |
+| --------------------------------------- | -------------------------------------------------- |
 | `tests/e2e/autonomy-simulation.spec.ts` | End-to-end simulation harness with fault injection |
 
 #### Scenarios
 
-| # | Scenario | Expected Outcome |
-|---|---|---|
-| 1 | AI edits introduce lint errors | Recovery loop fixes and publishes → integrator promotes to main |
-| 2 | Two worktrees touch same file, both publish | First integrates, second conflicts → repair → second integrates |
-| 3 | Executor crashes mid-edit | Stale lease expires → recovery resumes → issue completes |
-| 4 | Dirty orphaned worktree with low-confidence ownership | Quarantine → scheduler uses remaining healthy pool |
-| 5 | Kill runner during validation | Recovery classifies `validation_failed_repairable` → same-worktree repair |
-| 6 | Break network during push | `branch_push_failed_repairable` → retry → succeeds → integrates |
-| 7 | Corrupt lock holder process | Stale lock detected → released → execution resumes |
-| 8 | Integration crashes while lock held | TTL expires → next cycle acquires lock → continues |
+| #   | Scenario                                              | Expected Outcome                                                          |
+| --- | ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| 1   | AI edits introduce lint errors                        | Recovery loop fixes and publishes → integrator promotes to main           |
+| 2   | Two worktrees touch same file, both publish           | First integrates, second conflicts → repair → second integrates           |
+| 3   | Executor crashes mid-edit                             | Stale lease expires → recovery resumes → issue completes                  |
+| 4   | Dirty orphaned worktree with low-confidence ownership | Quarantine → scheduler uses remaining healthy pool                        |
+| 5   | Kill runner during validation                         | Recovery classifies `validation_failed_repairable` → same-worktree repair |
+| 6   | Break network during push                             | `branch_push_failed_repairable` → retry → succeeds → integrates           |
+| 7   | Corrupt lock holder process                           | Stale lock detected → released → execution resumes                        |
+| 8   | Integration crashes while lock held                   | TTL expires → next cycle acquires lock → continues                        |
 
 #### SLO Targets
 
-| Metric | Target |
-|---|---|
-| Dirty worktree detection | < 2 minutes |
-| Repair reassignment to same worktree | < 2 minutes |
+| Metric                                     | Target       |
+| ------------------------------------------ | ------------ |
+| Dirty worktree detection                   | < 2 minutes  |
+| Repair reassignment to same worktree       | < 2 minutes  |
 | Quarantine decision for irrecoverable tree | < 10 minutes |
-| Integration queue latency (normal load) | < 5 minutes |
-| Stale lease recovery | < 10 minutes |
-| Main promotion concurrency violations | 0 |
+| Integration queue latency (normal load)    | < 5 minutes  |
+| Stale lease recovery                       | < 10 minutes |
+| Main promotion concurrency violations      | 0            |
 
 #### Gate 6 Acceptance Criteria
 
@@ -472,30 +473,30 @@ export const RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7;
 
 ### New Files (9)
 
-| File | Phase |
-|---|---|
-| `scripts/ops/core/worktree-health.mjs` | 0 |
-| `tests/unit/worktree-health.spec.ts` | 0 |
-| `scripts/ops/orchestration/symphony-worktree-recovery.mjs` | 3 |
-| `tests/unit/worktree-recovery.spec.ts` | 3 |
-| `tests/integration/recovery-daemon.spec.ts` | 3 |
-| `services/systemd/anqr-symphony-worktree-recovery.service` | 3 |
-| `services/systemd/anqr-worktree-health.service` | 5 |
-| `services/systemd/anqr-worktree-health.timer` | 5 |
-| `tests/e2e/autonomy-simulation.spec.ts` | 6 |
+| File                                                       | Phase |
+| ---------------------------------------------------------- | ----- |
+| `scripts/ops/core/worktree-health.mjs`                     | 0     |
+| `tests/unit/worktree-health.spec.ts`                       | 0     |
+| `scripts/ops/orchestration/symphony-worktree-recovery.mjs` | 3     |
+| `tests/unit/worktree-recovery.spec.ts`                     | 3     |
+| `tests/integration/recovery-daemon.spec.ts`                | 3     |
+| `services/systemd/anqr-symphony-worktree-recovery.service` | 3     |
+| `services/systemd/anqr-worktree-health.service`            | 5     |
+| `services/systemd/anqr-worktree-health.timer`              | 5     |
+| `tests/e2e/autonomy-simulation.spec.ts`                    | 6     |
 
 ### Modified Files (8)
 
-| File | Phases |
-|---|---|
-| `scripts/ops/core/symphony-state.mjs` | 0, 2 |
-| `scripts/ops/core/symphony-config.mjs` | 1, 2, 3 |
-| `scripts/ops/orchestration/symphony-runner.mjs` | 1, 2, 4 |
-| `scripts/ops/orchestration/symphony-integrator.mjs` | 4 |
-| `scripts/ops/orchestration/symphony-worktree-pool.mjs` | 5 |
-| `tests/unit/finalization-state.spec.ts` | 0, 2 |
-| `tests/integration/symphony-integrator.spec.ts` | 4 |
-| `docs/adr/001-autonomous-worktree-platform.md` | This file |
+| File                                                   | Phases    |
+| ------------------------------------------------------ | --------- |
+| `scripts/ops/core/symphony-state.mjs`                  | 0, 2      |
+| `scripts/ops/core/symphony-config.mjs`                 | 1, 2, 3   |
+| `scripts/ops/orchestration/symphony-runner.mjs`        | 1, 2, 4   |
+| `scripts/ops/orchestration/symphony-integrator.mjs`    | 4         |
+| `scripts/ops/orchestration/symphony-worktree-pool.mjs` | 5         |
+| `tests/unit/finalization-state.spec.ts`                | 0, 2      |
+| `tests/integration/symphony-integrator.spec.ts`        | 4         |
+| `docs/adr/001-autonomous-worktree-platform.md`         | This file |
 
 ---
 
@@ -521,13 +522,13 @@ Gate 0      Gate 1       Gate 2       Gate 3       Gate 4       Gate 5 → Gate 
 
 ## 8. Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Enabling `RUNNER_AUTO_PUSH` causes cascading integrator failures | High | Gate 1 requires integration test passing before proceeding. Roll back config if failures detected. |
-| `validation_failed_repairable` preserves bad state that blocks worktree | Medium | Bounded attempts (existing `RUNNER_MAX_VALIDATION_FIXES`). After threshold → revert + quarantine. |
-| Recovery daemon misclassifies executing worktree as dirty | High | Skip worktrees with active lease AND recent heartbeat. Grace period before any action. |
-| Reprovisioning destroys forensic evidence | Low | Quarantine period before reprovision. Health file preserves snapshot at quarantine time. |
-| Overnight chaos soak reveals unknown failure modes | Medium | Phase 6 is verification — failures discovered here feed back into prior phases. |
+| Risk                                                                    | Impact | Mitigation                                                                                         |
+| ----------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------- |
+| Enabling `RUNNER_AUTO_PUSH` causes cascading integrator failures        | High   | Gate 1 requires integration test passing before proceeding. Roll back config if failures detected. |
+| `validation_failed_repairable` preserves bad state that blocks worktree | Medium | Bounded attempts (existing `RUNNER_MAX_VALIDATION_FIXES`). After threshold → revert + quarantine.  |
+| Recovery daemon misclassifies executing worktree as dirty               | High   | Skip worktrees with active lease AND recent heartbeat. Grace period before any action.             |
+| Reprovisioning destroys forensic evidence                               | Low    | Quarantine period before reprovision. Health file preserves snapshot at quarantine time.           |
+| Overnight chaos soak reveals unknown failure modes                      | Medium | Phase 6 is verification — failures discovered here feed back into prior phases.                    |
 
 ---
 

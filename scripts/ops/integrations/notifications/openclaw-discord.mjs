@@ -99,7 +99,7 @@ async function sendViaOpenClaw(content, options = {}) {
     headers: {
       "Content-Type": "application/json",
       "Content-Length": Buffer.byteLength(requestBody),
-      "Authorization": `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
+      Authorization: `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
     },
     timeout: 15000,
   };
@@ -182,9 +182,7 @@ export async function sendDiscordEmbed({
   }
 
   if (description) {
-    const desc = description.length > 150
-      ? description.slice(0, 147) + "\u2026"
-      : description;
+    const desc = description.length > 150 ? description.slice(0, 147) + "\u2026" : description;
     content += `\n${desc}`;
   }
 
@@ -193,9 +191,7 @@ export async function sendDiscordEmbed({
     const blockFields = fields.filter((f) => !f.inline);
 
     if (inlineFields.length > 0) {
-      const inlineStr = inlineFields
-        .map((f) => `${f.name}: ${f.value}`)
-        .join(" \u00b7 ");
+      const inlineStr = inlineFields.map((f) => `${f.name}: ${f.value}`).join(" \u00b7 ");
       content += `\n${inlineStr}`;
     }
 
@@ -232,14 +228,7 @@ export async function sendDiscordEmbed({
  */
 export async function streamDiscordUpdate(
   text,
-  {
-    emoji = "🔄",
-    timestamp = false,
-    requestId = "default",
-    replyTo,
-    threadName,
-    source,
-  } = {},
+  { emoji = "🔄", timestamp = false, requestId = "default", replyTo, threadName, source } = {},
 ) {
   // Get or create buffer for this request (matching discord-webhook.mjs behavior)
   // Store thread/reply options with the buffer for use during flush

@@ -160,14 +160,20 @@ Note: `thinker` is a **spawn_agents agent type**, not a tool. Use `think_deeply`
   - **OpenClaw:** Routes to gateway for agent orchestration
 
 **Accepted input format (array required):**
+
 ```json
 {
   "agents": [
-    { "agent_type": "basher", "prompt": "describe test results", "params": { "command": "npm test" } },
+    {
+      "agent_type": "basher",
+      "prompt": "describe test results",
+      "params": { "command": "npm test" }
+    },
     { "agent_type": "researcher-web", "prompt": "search for materials" }
   ]
 }
 ```
+
 - **Symphony bridge:** Uses `.preprocess()` for auto-normalization (string → array)
 - **Codebuff SDK:** Requires strict array format — pass actual JSON arrays, not strings or objects
 
@@ -176,22 +182,23 @@ Note: `thinker` is a **spawn_agents agent type**, not a tool. Use `think_deeply`
 ⚠️ **BASHER CRITICAL**: `params.command` is **ALWAYS REQUIRED** as a non-empty string.
 Never omit `params`, never use `params: {}`. Both cause: `Invalid params for agent basher: expected string, received undefined`.
 
-| Agent | Required | Optional |
-|---|---|---|
-| `basher` | **`params.command`** (string) | `prompt`, `params.rawOutput`, `params.timeout_seconds` |
-| `file-picker` | `prompt` | `params.directories` (string[]) |
-| `researcher-web` | `prompt` | — |
-| `researcher-docs` | `prompt` | — |
-| `thinker` / `thinker-gpt` | `prompt` | — |
-| `opus-agent` / `gpt-5-agent` | `prompt` | `params.filePaths` (string[]) |
-| `editor` | — (inherits context) | — |
-| `code-reviewer` | `prompt` | — |
-| `tmux-cli` | `prompt` | `params.command` |
-| `browser-use` | `prompt` | `params.url` |
-| `harness-helper` | — | `prompt` |
-| `context-pruner` | — (auto-spawned) | `params.maxContextLength`, `params.userBudget`, `params.assistantToolBudget` |
+| Agent                        | Required                      | Optional                                                                     |
+| ---------------------------- | ----------------------------- | ---------------------------------------------------------------------------- |
+| `basher`                     | **`params.command`** (string) | `prompt`, `params.rawOutput`, `params.timeout_seconds`                       |
+| `file-picker`                | `prompt`                      | `params.directories` (string[])                                              |
+| `researcher-web`             | `prompt`                      | —                                                                            |
+| `researcher-docs`            | `prompt`                      | —                                                                            |
+| `thinker` / `thinker-gpt`    | `prompt`                      | —                                                                            |
+| `opus-agent` / `gpt-5-agent` | `prompt`                      | `params.filePaths` (string[])                                                |
+| `editor`                     | — (inherits context)          | —                                                                            |
+| `code-reviewer`              | `prompt`                      | —                                                                            |
+| `tmux-cli`                   | `prompt`                      | `params.command`                                                             |
+| `browser-use`                | `prompt`                      | `params.url`                                                                 |
+| `harness-helper`             | —                             | `prompt`                                                                     |
+| `context-pruner`             | — (auto-spawned)              | `params.maxContextLength`, `params.userBudget`, `params.assistantToolBudget` |
 
 **basher examples:**
+
 ```json
 // ✅ CORRECT
 { "agent_type": "basher", "prompt": "Check status", "params": { "command": "git status" } }
@@ -765,18 +772,22 @@ Restarting during active concurrent requests drops streaming connections and cau
 **Procedure:**
 
 1. **STOP TASK EXECUTION FIRST:**
+
    ```bash
    node scripts/ops/orchestration/symphony-control.mjs --stop
    ```
+
    - **CRITICAL:** This must be the FIRST step before any other actions
    - Disables all Symphony runner timers to prevent new tasks from starting
    - Shows "🛑 STOPPED - no new tasks will be picked up" status
    - Without this step, new tasks may start while you wait for concurrency to drop
 
 2. **Check concurrent runner status:**
+
    ```bash
    node scripts/ops/orchestration/symphony-runner.mjs --status
    ```
+
    - Shows active worktree runners and their current work
    - Displays lock status and in-progress issues
 
@@ -787,13 +798,16 @@ Restarting during active concurrent requests drops streaming connections and cau
    - Typical wait: 5-20 minutes depending on issue complexity
 
 4. **Commit and push first:**
+
    ```bash
    git add -A && git commit -m "..." && git push
    ```
+
    - Ensures all changes are saved before restart
    - Prevents loss of in-flight configuration changes
 
 5. **Restart bridge:**
+
    ```bash
    systemctl --user restart anqr-symphony-router
    # AND for worktree executors:
@@ -801,9 +815,11 @@ Restarting during active concurrent requests drops streaming connections and cau
    ```
 
 6. **RESTART TASK EXECUTION:**
+
    ```bash
    node scripts/ops/orchestration/symphony-control.mjs --start
    ```
+
    - **CRITICAL:** Must restart task execution after bridge restart
    - Re-enables all Symphony runner timers
    - Runners will resume picking up tasks on next timer cycle
@@ -815,6 +831,7 @@ Restarting during active concurrent requests drops streaming connections and cau
    - Commit and push again: `git add MEMORY.md && git commit -m "..." && git push`
 
 **Impact of unsafe restart:**
+
 - Streaming connections dropped → incomplete LLM responses
 - Partial file writes → corrupted issue state
 - Lost validation results → re-execution required
@@ -822,6 +839,7 @@ Restarting during active concurrent requests drops streaming connections and cau
 
 **For emergency restarts:**
 If bridge must restart immediately (e.g., security patch):
+
 1. Run `--stop` first (always, no exceptions)
 2. Accept that in-progress work will be lost and re-executed
 3. Restart bridge after concurrency drops to zero
@@ -829,6 +847,7 @@ If bridge must restart immediately (e.g., security patch):
 
 **CRITICAL: Don't forget steps 1 and 4!**
 The `--stop` and `--start` steps are mandatory for ALL service changes, not just restarts. Skipping these steps will either:
+
 - Cause data loss (if you skip `--stop`)
 - Leave the system permanently disabled (if you skip `--start`)
 
@@ -893,6 +912,7 @@ After using `--stop`, you MUST use `--start` to resume task execution. Without t
 **This is the most important rule. Work must NEVER be lost.**
 
 **When working with git and worktrees:**
+
 - **NEVER use `git reset --hard` or `git reset --merge`** unless explicitly instructed by the user - this destroys uncommitted work
 - **NEVER force push with `--force`** unless explicitly instructed - this can overwrite other's work
 - **NEVER reset worktrees to main** - this loses the worktree's unique commits and work
@@ -914,6 +934,7 @@ git merge origin/main  # resolve conflicts if any
 ```
 
 **If you've accidentally lost work:**
+
 1. IMMEDIATELY check `git reflog` to find lost commits
 2. Use `git checkout <commit-hash>` to recover
 3. Alert the user immediately

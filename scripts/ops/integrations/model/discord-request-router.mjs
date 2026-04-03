@@ -70,11 +70,15 @@ function generateThreadName(messages) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     if (msg?.role === "user") {
-      const content = typeof msg.content === "string"
-        ? msg.content
-        : Array.isArray(msg.content)
-          ? msg.content.filter((p) => p?.type === "text").map((p) => p.text).join(" ")
-          : null;
+      const content =
+        typeof msg.content === "string"
+          ? msg.content
+          : Array.isArray(msg.content)
+            ? msg.content
+                .filter((p) => p?.type === "text")
+                .map((p) => p.text)
+                .join(" ")
+            : null;
       if (content && content.trim()) {
         const preview = content.trim().slice(0, 80).replace(/\n/g, " ");
         return `🔧 ${preview}`;
@@ -230,7 +234,9 @@ function proxyToWorktree(worktree, req, res) {
       }
 
       proxyBody = JSON.stringify(parsedBody);
-      logInfo(`🧭 ROUTING: Discord request -> wt${worktree.id} | cwd: "${originalCwd}" -> "${parsedBody.cwd}" | port: 432${worktree.id}`);
+      logInfo(
+        `🧭 ROUTING: Discord request -> wt${worktree.id} | cwd: "${originalCwd}" -> "${parsedBody.cwd}" | port: 432${worktree.id}`,
+      );
 
       // CRITICAL ISOLATION CHECK: Log warning if cwd would result in main repo access
       // Only check for exact main repo path, NOT worktree paths (which also start with /home/user/src/anqr)
@@ -238,14 +244,16 @@ function proxyToWorktree(worktree, req, res) {
         logError(`🚨 ISOLATION VIOLATION: Request would write to main repo! cwd=${parsedBody.cwd}`);
       }
     } catch (err) {
-      logWarn(`Failed to rewrite Discord request cwd for wt${worktree.id}: ${err.message} (original cwd: ${originalCwd})`);
+      logWarn(
+        `Failed to rewrite Discord request cwd for wt${worktree.id}: ${err.message} (original cwd: ${originalCwd})`,
+      );
     }
 
     // Route to worktree-specific Symphony bridge port
     // Each worktree runs its own Symphony bridge instance with isolated working directory
     // This ensures Discord commands execute in the appropriate worktree, not in main
     const targetPort = 4320 + worktree.id; // wt5->4325, wt6->4326, wt7->4327, wt8->4328
-    
+
     const proxyReq = http.request(
       {
         hostname: "127.0.0.1",
@@ -260,7 +268,9 @@ function proxyToWorktree(worktree, req, res) {
           "x-worktree-path": worktree.path,
           // Pass Discord message ID and thread name for thread/reply functionality
           ...(discordMessageId ? { "x-discord-message-id": discordMessageId } : {}),
-          ...(discordThreadName ? { "x-discord-thread-name": encodeURIComponent(discordThreadName) } : {}),
+          ...(discordThreadName
+            ? { "x-discord-thread-name": encodeURIComponent(discordThreadName) }
+            : {}),
         },
       },
       (proxyRes) => {

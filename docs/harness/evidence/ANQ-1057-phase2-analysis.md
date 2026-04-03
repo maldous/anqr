@@ -14,18 +14,19 @@ ANQ-1057 requests comprehensive unit tests across 5 domain packages to achieve 8
 
 ### File Counts (excluding existing .spec.ts files)
 
-| Package                        | Source Files | Estimated Test Files Needed | Priority |
-|--------------------------------|--------------|----------------------------|----------|
-| `packages/domain/qr/src`       | 766          | ~200-300                   | HIGH     |
-| `packages/domain/render/src`   | 771          | ~200-300                   | HIGH     |
-| `packages/domain/payload/src`  | 135          | ~30-50                     | MEDIUM   |
-| `packages/observability/logging/src` | 53    | ~15-20                     | LOW      |
-| `packages/domain/analyze/src`  | 21           | ~10-15                     | MEDIUM   |
-| **TOTAL**                      | **1,746**    | **~455-685**               | -        |
+| Package                              | Source Files | Estimated Test Files Needed | Priority |
+| ------------------------------------ | ------------ | --------------------------- | -------- |
+| `packages/domain/qr/src`             | 766          | ~200-300                    | HIGH     |
+| `packages/domain/render/src`         | 771          | ~200-300                    | HIGH     |
+| `packages/domain/payload/src`        | 135          | ~30-50                      | MEDIUM   |
+| `packages/observability/logging/src` | 53           | ~15-20                      | LOW      |
+| `packages/domain/analyze/src`        | 21           | ~10-15                      | MEDIUM   |
+| **TOTAL**                            | **1,746**    | **~455-685**                | -        |
 
 ### Current Test Coverage
 
 From coverage-scope.json Phase 2:
+
 - **Current:** 9% (1,507/16,302 lines)
 - **Target:** 85%+ (~13,857 lines covered)
 - **Gap:** ~12,350 lines of production code need test coverage
@@ -34,13 +35,15 @@ From coverage-scope.json Phase 2:
 ### Existing Test Coverage
 
 **Already have tests for:**
+
 - ✅ `packages/domain/qr/src/encode/` - Basic tests exist (qr-encode.spec.ts, auto-detect-type-number.spec.ts, calculate-mode-data-bits.spec.ts, calculate-optimal-version.spec.ts)
 - ✅ `packages/domain/render/src/primitives/` - primitives.spec.ts exists
-- ✅ `packages/domain/render/src/color/` - alpha-blend.spec.ts and others exist  
+- ✅ `packages/domain/render/src/color/` - alpha-blend.spec.ts and others exist
 - ✅ `packages/domain/payload/src/` - payload-generators.spec.ts exists
 - ✅ `packages/observability/logging/src/` - Multiple .spec.ts files exist
 
 **Missing coverage for:**
+
 - ❌ Most of `packages/domain/qr/src/qr-decoder/`
 - ❌ Most of `packages/domain/qr/src/qr-generator/`
 - ❌ Most of `packages/domain/qr/src/spec/`
@@ -61,7 +64,7 @@ Create separate Linear issues for each package:
    - Focus: QR encoding, decoding, spec validation
 
 2. **ANQ-1057-B: Domain Render Unit Tests** (~300 test files, +6% coverage)
-   - Priority: P1 (highest business value)  
+   - Priority: P1 (highest business value)
    - Estimated effort: 3-5 Symphony sessions
    - Focus: Canvas rendering, filters, effects, color operations
 
@@ -83,6 +86,7 @@ Create separate Linear issues for each package:
 ### Option 2: Incremental Implementation
 
 Keep ANQ-1057 open but implement over multiple Symphony sessions:
+
 - Session 1: Complete `packages/domain/analyze/` (smallest, 21 files)
 - Session 2: Complete `packages/observability/logging/` (53 files)
 - Session 3-4: Complete `packages/domain/payload/` (135 files)
@@ -96,11 +100,13 @@ Keep ANQ-1057 open but implement over multiple Symphony sessions:
 ## Constraints
 
 ### Symphony Runner Limits
+
 - **Time budget:** ~30-60 minutes per session (watchdog timeout)
 - **Focus requirement:** Need to run validation gates before completion
 - **Realistic output:** 50-100 test cases per session maximum
 
 ### Quality Requirements (per docs/harness/05-quality-gates.md)
+
 - ✅ All tests must pass (`npm run test:unit`)
 - ✅ No type errors (`npm run typecheck`)
 - ✅ No lint errors (`npm run lint`)
@@ -108,6 +114,7 @@ Keep ANQ-1057 open but implement over multiple Symphony sessions:
 - ✅ AST density compliance (`npm run audit:ast`)
 
 ### Test Quality Requirements
+
 - Pure unit tests only (no network, filesystem mutation, SDK calls)
 - Colocated `*.spec.ts` files in package roots
 - Property-based tests for large output spaces (QR encoding, payload generation)
@@ -130,12 +137,14 @@ If **Option 2** is chosen, update ANQ-1057 description to note incremental appro
 **Target:** Complete `packages/domain/analyze/` (smallest package, 21 files)
 
 **Rationale:**
+
 - Smallest scope (~10-15 test files needed)
 - Manageable in single session
 - Demonstrates testing patterns for other packages
 - Immediate +2% coverage gain
 
 **Deliverables:**
+
 1. Unit tests for all 21 files in `packages/domain/analyze/src/`
 2. 85%+ line coverage for the package
 3. All validation gates passing

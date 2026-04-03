@@ -35,6 +35,7 @@ ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr-wt%i/scripts/ops/ru
    - Services @1-@4 point to non-existent worktrees for Discord context
 
 2. **Timers not enabled**: @{5,6,7,8}.timer exist but are INACTIVE (dead)
+
    ```
    anqr-discord-bridge@5.timer loaded inactive dead
    anqr-discord-bridge@6.timer loaded inactive dead
@@ -56,6 +57,7 @@ ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr-wt%i/scripts/ops/ru
 ## Diagnostic Evidence
 
 ### Service Status
+
 ```bash
 $ systemctl --user status 'anqr-discord-bridge@*.service'
 ● anqr-discord-bridge@1.service - ANQR Discord/OpenClaw bridge (worktree 1)
@@ -67,6 +69,7 @@ $ systemctl --user status 'anqr-discord-bridge@*.service'
 **Analysis**: Service running `/bin/sleep infinity` — no actual gateway process.
 
 ### Process Check
+
 ```bash
 $ ps aux | grep openclaw | grep -v grep
 (no results)
@@ -75,6 +78,7 @@ $ ps aux | grep openclaw | grep -v grep
 **Analysis**: No OpenClaw Gateway process running anywhere.
 
 ### Lock File Status
+
 ```bash
 $ cat ~/.cache/anqr-openclaw/gateway.lock
 Lock file not found
@@ -83,6 +87,7 @@ Lock file not found
 **Analysis**: No worktree has acquired gateway lock (expected, since gateway never started).
 
 ### Worktree Verification
+
 ```bash
 $ ls -d ~/src/anqr-wt{5,6,7,8}
 /home/user/src/anqr-wt5
@@ -100,11 +105,13 @@ $ ls -d ~/src/anqr-wt{5,6,7,8}
 **Severity**: P3 (Low) — Harness operational stability unaffected
 
 **User Impact**:
+
 - Discord bot completely absent from voice channel (not visible)
 - No voice interaction capability
 - Text-based Discord interaction via webhook still functional
 
 **Scope**:
+
 - Discord voice features only
 - Does not affect Symphony runner, queue management, or core harness operations
 
@@ -192,6 +199,7 @@ journalctl --user -u 'anqr-discord-bridge@*.service' -f
 **Purpose**: Prevent multiple OpenClaw Gateway instances from competing for Discord bot connection.
 
 **Mechanism**:
+
 1. Four service instances (@5, @6, @7, @8) start simultaneously
 2. Each runs `openclaw-gateway-singleton.mjs` wrapper
 3. First worktree to acquire `~/.cache/anqr-openclaw/gateway.lock` becomes owner
@@ -199,6 +207,7 @@ journalctl --user -u 'anqr-discord-bridge@*.service' -f
 5. Follower worktrees sleep and monitor lock, ready to take over if owner dies
 
 **Benefits**:
+
 - Eliminates Bonjour hostname conflicts (e.g., "foo (OpenClaw) (4)")
 - Prevents Discord command rate limit 429 errors from restart storms
 - Provides automatic failover if gateway crashes
@@ -289,6 +298,7 @@ DISCORD_VOICE_CHANNEL_ID=1486262758256410647
 
 **Decision**: Document remediation steps instead of automated fix  
 **Rationale**: Issue requires human operator intervention:
+
 1. Must obtain/configure DISCORD_BOT_TOKEN (secret material, human-only)
 2. Must verify Discord bot permissions in Discord Developer Portal (external system)
 3. Must disable wrong service instances without breaking active harness operations

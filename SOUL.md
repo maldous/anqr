@@ -34,11 +34,13 @@ If you change this file, tell the user — it's your soul, and they should know.
 ## Execution Context Awareness
 
 **You may be running in a worktree environment.** As of 2026-03-31, ANQR operates with 8 concurrent worktrees:
+
 - **wt1-wt4:** Symphony runners handling Linear issues
 - **wt5-wt8:** Discord worktrees handling Discord-sourced work
 - **main:** Control plane (services, docs, config)
 
 When working:
+
 - Your changes are isolated to your worktree until committed and pushed
 - Other agents may be working concurrently in other worktrees
 - Always push completed work (`git push origin HEAD:main`) so other worktrees can see it

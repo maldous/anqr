@@ -13,7 +13,6 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || "wt1";
 const ROOT = resolve(process.cwd());
 
 describe("Worktree Git Push Sync", () => {

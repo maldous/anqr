@@ -16,16 +16,16 @@ Git worktrees enable multiple concurrent Symphony runner instances to operate in
 
 The worktree system is designed to achieve:
 
-| Intent | Description |
-|--------|-------------|
-| **Concurrency limit** | Maximum 8 concurrent operations (4 Symphony runners + 4 Discord worktrees) |
-| **Issue source routing** | Linear-sourced issues → wt1-wt4; Discord-sourced issues → wt5-wt8 |
-| **Discord isolation** | Changes from Discord requests must NEVER appear in the main repository during execution |
-| **Discord dual-mode** | Discord can (a) create Linear issues for queue execution, AND (b) execute on-demand interactive goals |
-| **Linear ingestion** | Linear issues in "Todo" state are picked up by Symphony runners (wt1-wt4) from queue |
-| **Sync flow** | Worktree changes: commit → push to `origin/main` → other worktrees sync on next cycle |
-| **Main = control plane** | The main repository (`/home/user/src/anqr`) runs services/docs/config only — no execution work |
-| **Single OpenClaw** | ONE OpenClaw Gateway (`openclaw-gateway.service`) provides the Discord relay; it uses Symphony for AI |
+| Intent                   | Description                                                                                           |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| **Concurrency limit**    | Maximum 8 concurrent operations (4 Symphony runners + 4 Discord worktrees)                            |
+| **Issue source routing** | Linear-sourced issues → wt1-wt4; Discord-sourced issues → wt5-wt8                                     |
+| **Discord isolation**    | Changes from Discord requests must NEVER appear in the main repository during execution               |
+| **Discord dual-mode**    | Discord can (a) create Linear issues for queue execution, AND (b) execute on-demand interactive goals |
+| **Linear ingestion**     | Linear issues in "Todo" state are picked up by Symphony runners (wt1-wt4) from queue                  |
+| **Sync flow**            | Worktree changes: commit → push to `origin/main` → other worktrees sync on next cycle                 |
+| **Main = control plane** | The main repository (`/home/user/src/anqr`) runs services/docs/config only — no execution work        |
+| **Single OpenClaw**      | ONE OpenClaw Gateway (`openclaw-gateway.service`) provides the Discord relay; it uses Symphony for AI |
 
 ### Discord: Two Modes of Operation
 
@@ -120,11 +120,11 @@ AI Provider Cascade → LLM API → Tool Execution → Response
 
 OpenClaw reads configuration from **three locations** with merge semantics:
 
-| # | Config File | Location | Git-Tracked | Purpose |
-|---|-------------|----------|-------------|----------|
-| 1 | `~/.openclaw/openclaw.json` | HOME directory | No | Global user config (OpenClaw manages this) |
-| 2 | `.openclaw/openclaw.json` | In-repo (project cwd) | **Yes** | Project-level config (agents, models, gateway, workspace) |
-| 3 | `.openclaw/models.json` | In-repo (project cwd) | **Yes** | Project-level model override (providers, agents) |
+| #   | Config File                 | Location              | Git-Tracked | Purpose                                                   |
+| --- | --------------------------- | --------------------- | ----------- | --------------------------------------------------------- |
+| 1   | `~/.openclaw/openclaw.json` | HOME directory        | No          | Global user config (OpenClaw manages this)                |
+| 2   | `.openclaw/openclaw.json`   | In-repo (project cwd) | **Yes**     | Project-level config (agents, models, gateway, workspace) |
+| 3   | `.openclaw/models.json`     | In-repo (project cwd) | **Yes**     | Project-level model override (providers, agents)          |
 
 **Merge order (later overrides earlier):**
 
@@ -134,23 +134,23 @@ OpenClaw reads configuration from **three locations** with merge semantics:
 
 **Additional HOME directory files:**
 
-| File | Purpose |
-|------|---------|
-| `~/.openclaw/config.json` | Basic settings (TTS, gateway HTTP endpoints) |
-| `~/.openclaw/credentials/` | Auth credentials (OAuth tokens, API keys) |
-| `~/.openclaw/lcm.db` | Local database |
-| `~/.openclaw/models.json` | Additional model definitions |
-| `~/.openclaw/memory/` | Agent memory storage |
-| `~/.openclaw/agents/` | Agent definitions |
+| File                       | Purpose                                      |
+| -------------------------- | -------------------------------------------- |
+| `~/.openclaw/config.json`  | Basic settings (TTS, gateway HTTP endpoints) |
+| `~/.openclaw/credentials/` | Auth credentials (OAuth tokens, API keys)    |
+| `~/.openclaw/lcm.db`       | Local database                               |
+| `~/.openclaw/models.json`  | Additional model definitions                 |
+| `~/.openclaw/memory/`      | Agent memory storage                         |
+| `~/.openclaw/agents/`      | Agent definitions                            |
 
 ### ⚠️ Config Conflict: symphony-bridge URL (real, but not yet proven as the primary cause)
 
 There is a **real conflict** between the two in-repo config files:
 
-| Config File | `symphony-bridge.baseUrl` | Destination |
-|-------------|---------------------------|-------------|
-| `.openclaw/openclaw.json` | `http://127.0.0.1:18790/v1` | Discord Router ✅ |
-| `.openclaw/models.json` | `http://127.0.0.1:4319/v1` | Main Symphony Bridge ❌ |
+| Config File               | `symphony-bridge.baseUrl`   | Destination             |
+| ------------------------- | --------------------------- | ----------------------- |
+| `.openclaw/openclaw.json` | `http://127.0.0.1:18790/v1` | Discord Router ✅       |
+| `.openclaw/models.json`   | `http://127.0.0.1:4319/v1`  | Main Symphony Bridge ❌ |
 
 Both HOME and in-repo `openclaw.json` correctly point to port 18790 (the Discord Router). However, `models.json` overrides this to port 4319 (the main Symphony Bridge).
 
@@ -203,10 +203,10 @@ Therefore:
 
 `openclaw-gateway.service` is the canonical standalone gateway service. The old timer-based singleton pattern (`anqr-discord-bridge@{5,6,7,8}.timer` competing for a lock file) has been retired.
 
-| Service | Status | How It Runs |
-|---------|--------|------------|
-| `openclaw-gateway.service` | **Active** | Directly: `openclaw gateway --port 18789` with `Restart=always` |
-| ~~`anqr-discord-bridge@{5-8}.timer`~~ | **Retired** | Was: timer-based singleton wrapper |
+| Service                               | Status      | How It Runs                                                     |
+| ------------------------------------- | ----------- | --------------------------------------------------------------- |
+| `openclaw-gateway.service`            | **Active**  | Directly: `openclaw gateway --port 18789` with `Restart=always` |
+| ~~`anqr-discord-bridge@{5-8}.timer`~~ | **Retired** | Was: timer-based singleton wrapper                              |
 
 ---
 
@@ -250,21 +250,21 @@ Legacy single runner          → FAILED
 
 The following units are **actually deployed** in `~/.config/systemd/user/`:
 
-| Deployed File | In Repo | Status | Notes |
-|--------------|---------|--------|-------|
-| `anqr-context7-mcp.service` | ✅ | Matches repo | Context7 MCP docs |
-| `anqr-discord-router.service` | ✅ | Matches repo | Discord load balancer |
-| `anqr-symphony-router.service` | ✅ | Matches repo | Agent router / control plane (4319) |
-| `anqr-symphony-executor@.service` | ✅ | Matches repo | Worktree executor template |
-| `anqr-watchdog.service` | ✅ | Matches repo | Executor watchdog |
-| `anqr-ops.env` | ✅ | **Secrets** | API keys, tokens |
-| `openclaw-gateway.service` | ✅ | Matches repo | OpenClaw Gateway / Discord bot (18789) |
+| Deployed File                     | In Repo | Status       | Notes                                  |
+| --------------------------------- | ------- | ------------ | -------------------------------------- |
+| `anqr-context7-mcp.service`       | ✅      | Matches repo | Context7 MCP docs                      |
+| `anqr-discord-router.service`     | ✅      | Matches repo | Discord load balancer                  |
+| `anqr-symphony-router.service`    | ✅      | Matches repo | Agent router / control plane (4319)    |
+| `anqr-symphony-executor@.service` | ✅      | Matches repo | Worktree executor template             |
+| `anqr-watchdog.service`           | ✅      | Matches repo | Executor watchdog                      |
+| `anqr-ops.env`                    | ✅      | **Secrets**  | API keys, tokens                       |
+| `openclaw-gateway.service`        | ✅      | Matches repo | OpenClaw Gateway / Discord bot (18789) |
 
 ### Executor Instance Mapping
 
-| Unit | Purpose |
-|------|---------|
-| `anqr-symphony-executor@{1,2,3,4}.service` | Linear work (wt1-wt4) |
+| Unit                                       | Purpose                |
+| ------------------------------------------ | ---------------------- |
+| `anqr-symphony-executor@{1,2,3,4}.service` | Linear work (wt1-wt4)  |
 | `anqr-symphony-executor@{5,6,7,8}.service` | Discord work (wt5-wt8) |
 
 ---
@@ -275,13 +275,13 @@ The following units are **actually deployed** in `~/.config/systemd/user/`:
 
 External code review (2026-03-31) confirmed five proven defects and corrected two prior assumptions. These findings now anchor the gap analysis and set the delivery priority.
 
-| Finding | Evidence | Severity | Impact | Required Fix |
-|---------|----------|:--------:|--------|-------------|
-| **F1. Codebuff client caches the wrong cwd (FIXED → RETIRED)** | `codebuff-openai-bridge.mjs:348-371` — `getSharedClient(apiKey, costMode, cwd)` reuses a singleton keyed only by `costMode`; the `cwd` parameter is ignored when the cached client is reused. Requests carry request-specific `cwd` (line 1560) but the shared client may execute in a previously cached directory. **Note:** The standalone Codebuff bridge has been retired per ADR-0003. Codebuff SDK now runs inside each worktree-local Symphony bridge via `codebuff-direct.mjs`, eliminating this class of bug entirely. | **CRITICAL** | Requests for one worktree can execute in a previously cached cwd, including the main repo. **This is the strongest proven isolation failure.** | Key the shared client by `costMode + cwd`, or disable shared-client reuse across distinct cwd values. Add an alternating-cwd regression test. |
-| **F2. Control script enables the wrong runner timers (FIXED)** | `symphony-control.mjs:73-89` — `enableAllTimers()` enables runners `1` through `8`: `const runners = ["1","2","3","4","5","6","7","8"]` | **HIGH** | Discord worktrees `wt5-wt8` are incorrectly treated as runner targets | Restrict enable/start logic to `anqr-symphony-runner@{1,2,3,4}.timer` only |
-| **F3. Bridge startup auto-starts runner timers (FIXED)** | `symphony-openai-bridge.mjs:6324-6338` — bridge startup invokes `symphony-control.mjs --start` | **HIGH** | Starting any bridge (including Discord worktree bridges wt5-wt8) mutates global runner state and re-enables the wrong timers from F2 | Remove this side effect entirely; runner scheduling must be operator-controlled, not bridge-start-controlled |
-| **F4. Deployed systemd state does not match target topology (FIXED)** | Verified via `systemctl --user list-units` and deployed files: wrong Discord bridge IDs `1-4` exist, wrong runner IDs `5-8` exist, legacy single runner in FAILED state, duplicate `openclaw-gateway.service` | **HIGH** | Operational state diverges from documented topology; stale units can reintroduce incorrect behavior | ~~Remove wrong-ID units, delete duplicate gateway, remove legacy runner, redeploy from repo~~ **DONE** |
-| **F5. Architecture documentation contradicts source-routing code** | Section 1 previously said Discord-created Linear issues go through `wt1-wt4`, but `symphony-runner.mjs:592-639` shows Symphony worktrees skip ALL issues whose `state.source` contains `"discord"` | **HIGH** | Operators told a routing model that the code does not implement | Section 1 rewritten to match code (see above). Decision required on intended behavior. |
+| Finding                                                               | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |   Severity   | Impact                                                                                                                                         | Required Fix                                                                                                                                  |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F1. Codebuff client caches the wrong cwd (FIXED → RETIRED)**        | `codebuff-openai-bridge.mjs:348-371` — `getSharedClient(apiKey, costMode, cwd)` reuses a singleton keyed only by `costMode`; the `cwd` parameter is ignored when the cached client is reused. Requests carry request-specific `cwd` (line 1560) but the shared client may execute in a previously cached directory. **Note:** The standalone Codebuff bridge has been retired per ADR-0003. Codebuff SDK now runs inside each worktree-local Symphony bridge via `codebuff-direct.mjs`, eliminating this class of bug entirely. | **CRITICAL** | Requests for one worktree can execute in a previously cached cwd, including the main repo. **This is the strongest proven isolation failure.** | Key the shared client by `costMode + cwd`, or disable shared-client reuse across distinct cwd values. Add an alternating-cwd regression test. |
+| **F2. Control script enables the wrong runner timers (FIXED)**        | `symphony-control.mjs:73-89` — `enableAllTimers()` enables runners `1` through `8`: `const runners = ["1","2","3","4","5","6","7","8"]`                                                                                                                                                                                                                                                                                                                                                                                         |   **HIGH**   | Discord worktrees `wt5-wt8` are incorrectly treated as runner targets                                                                          | Restrict enable/start logic to `anqr-symphony-runner@{1,2,3,4}.timer` only                                                                    |
+| **F3. Bridge startup auto-starts runner timers (FIXED)**              | `symphony-openai-bridge.mjs:6324-6338` — bridge startup invokes `symphony-control.mjs --start`                                                                                                                                                                                                                                                                                                                                                                                                                                  |   **HIGH**   | Starting any bridge (including Discord worktree bridges wt5-wt8) mutates global runner state and re-enables the wrong timers from F2           | Remove this side effect entirely; runner scheduling must be operator-controlled, not bridge-start-controlled                                  |
+| **F4. Deployed systemd state does not match target topology (FIXED)** | Verified via `systemctl --user list-units` and deployed files: wrong Discord bridge IDs `1-4` exist, wrong runner IDs `5-8` exist, legacy single runner in FAILED state, duplicate `openclaw-gateway.service`                                                                                                                                                                                                                                                                                                                   |   **HIGH**   | Operational state diverges from documented topology; stale units can reintroduce incorrect behavior                                            | ~~Remove wrong-ID units, delete duplicate gateway, remove legacy runner, redeploy from repo~~ **DONE**                                        |
+| **F5. Architecture documentation contradicts source-routing code**    | Section 1 previously said Discord-created Linear issues go through `wt1-wt4`, but `symphony-runner.mjs:592-639` shows Symphony worktrees skip ALL issues whose `state.source` contains `"discord"`                                                                                                                                                                                                                                                                                                                              |   **HIGH**   | Operators told a routing model that the code does not implement                                                                                | Section 1 rewritten to match code (see above). Decision required on intended behavior.                                                        |
 
 ### 4B. Reviewer Corrections to Prior Assumptions
 
@@ -301,38 +301,38 @@ The external review corrected two claims in the earlier draft of this document:
 
 #### Tier 1: Proven code defects (fix first)
 
-| Priority | Gap | Finding | Fix Phase |
-|:--------:|-----|---------|:---------:|
-| 1 | Codebuff client cwd caching | F1 | Phase 1 |
-| 2 | Bridge startup auto-starts runner timers | F3 | Phase 1 |
-| 3 | Control script enables runners 1-8 instead of 1-4 | F2 | Phase 1 |
-| 4 | Deployed systemd state drift | F4 | Phase 2 |
-| 5 | Documentation/code contradiction on Discord routing | F5 | Phase 0 (done) |
+| Priority | Gap                                                 | Finding |   Fix Phase    |
+| :------: | --------------------------------------------------- | ------- | :------------: |
+|    1     | Codebuff client cwd caching                         | F1      |    Phase 1     |
+|    2     | Bridge startup auto-starts runner timers            | F3      |    Phase 1     |
+|    3     | Control script enables runners 1-8 instead of 1-4   | F2      |    Phase 1     |
+|    4     | Deployed systemd state drift                        | F4      |    Phase 2     |
+|    5     | Documentation/code contradiction on Discord routing | F5      | Phase 0 (done) |
 
 #### Tier 2: Secondary causes (all verified or resolved)
 
-| Gap | Status | Why Secondary |
-|-----|--------|---------------|
-| `models.json` may override provider URL to `4319` | **RESOLVED** — `openclaw.json` wins merge; `models.json` updated to `18790` | Conflict eliminated; both files now agree |
-| OpenClaw `workspace` points to `/home/user/src/anqr` | **VERIFIED SAFE** — Bridge ignores workspace; router rebases cwd | Not a runtime isolation issue; cleanup deferred to Phase 5 |
-| All services stopped | Operational — not a code defect | Addressed in Phase 2/3 of delivery plan |
-| Duplicate gateway service | Operational drift | Addressed in Phase 2 cleanup |
-| Wrong-ID template instantiations | Subset of F4 | Addressed in Phase 2 cleanup |
-| Gateway timer singleton pattern | Design smell, not a defect | Optimization for Phase 5 |
-| Legacy single runner in failed state | Noise | Addressed in Phase 2 cleanup |
+| Gap                                                  | Status                                                                      | Why Secondary                                              |
+| ---------------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `models.json` may override provider URL to `4319`    | **RESOLVED** — `openclaw.json` wins merge; `models.json` updated to `18790` | Conflict eliminated; both files now agree                  |
+| OpenClaw `workspace` points to `/home/user/src/anqr` | **VERIFIED SAFE** — Bridge ignores workspace; router rebases cwd            | Not a runtime isolation issue; cleanup deferred to Phase 5 |
+| All services stopped                                 | Operational — not a code defect                                             | Addressed in Phase 2/3 of delivery plan                    |
+| Duplicate gateway service                            | Operational drift                                                           | Addressed in Phase 2 cleanup                               |
+| Wrong-ID template instantiations                     | Subset of F4                                                                | Addressed in Phase 2 cleanup                               |
+| Gateway timer singleton pattern                      | Design smell, not a defect                                                  | Optimization for Phase 5                                   |
+| Legacy single runner in failed state                 | Noise                                                                       | Addressed in Phase 2 cleanup                               |
 
 ### 4D. Root Cause Analysis: Discord Changes Appearing in Main
 
 This is the **primary issue** driving this investigation. The defense-in-depth model has multiple layers, but the external review identified that the **strongest proven failure is downstream client reuse**, not config routing:
 
-| Layer | Mechanism | Status | Notes |
-|-------|-----------|--------|-------|
-| 0. Downstream client isolation | Codebuff shared client must preserve request-local cwd | ✅ **FIXED (F1)** | Client now keyed by `costMode + cwd`; regression test passes |
-| 1. Provider URL routing | OpenClaw's configured symphony-bridge URL | ✅ **VERIFIED** | `openclaw.json` wins merge; `models.json` updated to `18790`; conflict eliminated |
-| 2. Systemd WorkingDirectory | Bridge process cwd set to worktree | ✅ Implemented | In `anqr-symphony-executor@.service` |
-| 3. Router cwd rebase | Discord router rewrites request cwd to worktree path | ✅ Implemented | In `discord-request-router.mjs` |
-| 4. Bridge request-scoped cwd | Symphony bridge resolves tools against request-local cwd | ✅ Implemented | Via `AsyncLocalStorage` in bridge |
-| 5. OpenClaw workspace | Anchors tool operations to configured workspace | ✅ **VERIFIED SAFE** | Bridge ignores workspace field; router rebases cwd to worktree; not a runtime isolation issue |
+| Layer                          | Mechanism                                                | Status               | Notes                                                                                         |
+| ------------------------------ | -------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------- |
+| 0. Downstream client isolation | Codebuff shared client must preserve request-local cwd   | ✅ **FIXED (F1)**    | Client now keyed by `costMode + cwd`; regression test passes                                  |
+| 1. Provider URL routing        | OpenClaw's configured symphony-bridge URL                | ✅ **VERIFIED**      | `openclaw.json` wins merge; `models.json` updated to `18790`; conflict eliminated             |
+| 2. Systemd WorkingDirectory    | Bridge process cwd set to worktree                       | ✅ Implemented       | In `anqr-symphony-executor@.service`                                                          |
+| 3. Router cwd rebase           | Discord router rewrites request cwd to worktree path     | ✅ Implemented       | In `discord-request-router.mjs`                                                               |
+| 4. Bridge request-scoped cwd   | Symphony bridge resolves tools against request-local cwd | ✅ Implemented       | Via `AsyncLocalStorage` in bridge                                                             |
+| 5. OpenClaw workspace          | Anchors tool operations to configured workspace          | ✅ **VERIFIED SAFE** | Bridge ignores workspace field; router rebases cwd to worktree; not a runtime isolation issue |
 
 **All layers now verified.** Layer 0 was the strongest proven cause and is fixed. Layers 1-5 have been verified as correct or safe through Phases 3-7 testing.
 
@@ -406,20 +406,20 @@ For the Linear flow, the available evidence supports the intended model that run
 
 ### Port Allocation
 
-| Port | Service | Purpose |
-|------|---------|---------|
-| 4319 | Symphony Agent Router | Control-plane entrypoint (routes to worktree executors) |
-| 4320 | Context7 MCP | Library documentation service |
-| 4321 | Symphony Executor (wt1) | Worktree executor #1 (Linear) |
-| 4322 | Symphony Executor (wt2) | Worktree executor #2 (Linear) |
-| 4323 | Symphony Executor (wt3) | Worktree executor #3 (Linear) |
-| 4324 | Symphony Executor (wt4) | Worktree executor #4 (Linear) |
-| 4325 | Symphony Executor (wt5) | Worktree executor #5 (Discord) |
-| 4326 | Symphony Executor (wt6) | Worktree executor #6 (Discord) |
-| 4327 | Symphony Executor (wt7) | Worktree executor #7 (Discord) |
-| 4328 | Symphony Executor (wt8) | Worktree executor #8 (Discord) |
-| 18789 | OpenClaw Gateway | Discord bot relay (standalone service) |
-| 18790 | Discord Router | Load balancer: Discord → worktree executors |
+| Port  | Service                 | Purpose                                                 |
+| ----- | ----------------------- | ------------------------------------------------------- |
+| 4319  | Symphony Agent Router   | Control-plane entrypoint (routes to worktree executors) |
+| 4320  | Context7 MCP            | Library documentation service                           |
+| 4321  | Symphony Executor (wt1) | Worktree executor #1 (Linear)                           |
+| 4322  | Symphony Executor (wt2) | Worktree executor #2 (Linear)                           |
+| 4323  | Symphony Executor (wt3) | Worktree executor #3 (Linear)                           |
+| 4324  | Symphony Executor (wt4) | Worktree executor #4 (Linear)                           |
+| 4325  | Symphony Executor (wt5) | Worktree executor #5 (Discord)                          |
+| 4326  | Symphony Executor (wt6) | Worktree executor #6 (Discord)                          |
+| 4327  | Symphony Executor (wt7) | Worktree executor #7 (Discord)                          |
+| 4328  | Symphony Executor (wt8) | Worktree executor #8 (Discord)                          |
+| 18789 | OpenClaw Gateway        | Discord bot relay (standalone service)                  |
+| 18790 | Discord Router          | Load balancer: Discord → worktree executors             |
 
 > **Note:** Port 4318 (standalone Codebuff bridge) has been retired per ADR-0003. Codebuff SDK now runs inside each worktree-local Symphony bridge.
 
@@ -436,11 +436,11 @@ Per-worktree bridges remain a valid deployment choice for operational simplicity
 ### Resource and Throughput Impact
 
 | Resource | Idle (per worktree) | Active (execution) | Peak (validation) |
-|----------|---------------------|-------------------|-------------------|
-| Disk | ~200 MB | ~200 MB | ~250 MB |
-| Memory | ~50 MB | 300-500 MB | 1-2 GB |
-| CPU | ~0% | 5-10% | 50-100% |
-| Network | 0 KB/s | 10-50 KB/s (LLM) | 100-500 KB/s |
+| -------- | ------------------- | ------------------ | ----------------- |
+| Disk     | ~200 MB             | ~200 MB            | ~250 MB           |
+| Memory   | ~50 MB              | 300-500 MB         | 1-2 GB            |
+| CPU      | ~0%                 | 5-10%              | 50-100%           |
+| Network  | 0 KB/s              | 10-50 KB/s (LLM)   | 100-500 KB/s      |
 
 **Throughput expectations:**
 
@@ -457,24 +457,24 @@ Symphony execution is **network-bound** (70% of time waiting for LLM API calls),
 
 ### Required Services (Target Minimal Set)
 
-| Service | Type | Purpose | When Needed |
-|---------|------|---------|-------------|
-| `anqr-symphony-router.service` | simple | Agent router / control plane (port 4319) | Always — executors route through it |
-| `anqr-symphony-executor@{1,2,3,4,5,6,7,8}.service` | simple | Worktree executors (ports 4321-4328) | Always |
-| `anqr-discord-router.service` | simple | Load balancer (port 18790) | When Discord is active |
-| `openclaw-gateway.service` | simple | OpenClaw Gateway / Discord bot (port 18789) | When Discord is active |
+| Service                                            | Type   | Purpose                                     | When Needed                         |
+| -------------------------------------------------- | ------ | ------------------------------------------- | ----------------------------------- |
+| `anqr-symphony-router.service`                     | simple | Agent router / control plane (port 4319)    | Always — executors route through it |
+| `anqr-symphony-executor@{1,2,3,4,5,6,7,8}.service` | simple | Worktree executors (ports 4321-4328)        | Always                              |
+| `anqr-discord-router.service`                      | simple | Load balancer (port 18790)                  | When Discord is active              |
+| `openclaw-gateway.service`                         | simple | OpenClaw Gateway / Discord bot (port 18789) | When Discord is active              |
 
 **Total target: 11 explicitly managed units** (1 router + 8 executors + 1 discord router + 1 gateway).
 
 ### Retired/Legacy Units (should not exist)
 
-| Unit | Status | Notes |
-|------|--------|-------|
+| Unit                                       | Status      | Notes                                                                 |
+| ------------------------------------------ | ----------- | --------------------------------------------------------------------- |
 | `anqr-discord-bridge@*.service` / `.timer` | **Retired** | Old gateway singleton pattern; replaced by `openclaw-gateway.service` |
-| `anqr-symphony-bridge.service` | **Retired** | Renamed to `anqr-symphony-router.service` |
-| `anqr-symphony-bridge@*.service` | **Retired** | Renamed to `anqr-symphony-executor@*.service` |
-| `anqr-symphony-runner.service` / `.timer` | **Retired** | Legacy single-runner; replaced by executor model |
-| `anqr-codebuff-bridge.service` | **Retired** | Codebuff SDK integrated into executors per ADR-0003 |
+| `anqr-symphony-bridge.service`             | **Retired** | Renamed to `anqr-symphony-router.service`                             |
+| `anqr-symphony-bridge@*.service`           | **Retired** | Renamed to `anqr-symphony-executor@*.service`                         |
+| `anqr-symphony-runner.service` / `.timer`  | **Retired** | Legacy single-runner; replaced by executor model                      |
+| `anqr-codebuff-bridge.service`             | **Retired** | Codebuff SDK integrated into executors per ADR-0003                   |
 
 ### Service Details
 
@@ -675,33 +675,33 @@ This ensures Discord worktrees stay up to date and share their work with all oth
 
 ### OpenClaw Config Files
 
-| File | Location | Git-Tracked | Key Settings |
-|------|----------|-------------|-------------|
-| `~/.openclaw/openclaw.json` | HOME dir | No | Global: models, gateway, workspace, auth, skills |
-| `~/.openclaw/config.json` | HOME dir | No | TTS, gateway HTTP endpoint config |
-| `~/.openclaw/models.json` | HOME dir | No | Additional model definitions |
-| `.openclaw/openclaw.json` | In-repo | **Yes** | Project: models, agents, workspace, gateway |
-| `.openclaw/models.json` | In-repo | **Yes** | Project: model provider overrides |
+| File                        | Location | Git-Tracked | Key Settings                                     |
+| --------------------------- | -------- | ----------- | ------------------------------------------------ |
+| `~/.openclaw/openclaw.json` | HOME dir | No          | Global: models, gateway, workspace, auth, skills |
+| `~/.openclaw/config.json`   | HOME dir | No          | TTS, gateway HTTP endpoint config                |
+| `~/.openclaw/models.json`   | HOME dir | No          | Additional model definitions                     |
+| `.openclaw/openclaw.json`   | In-repo  | **Yes**     | Project: models, agents, workspace, gateway      |
+| `.openclaw/models.json`     | In-repo  | **Yes**     | Project: model provider overrides                |
 
 **Config merge chain:** HOME `openclaw.json` → project `openclaw.json` → project `models.json` (later wins).
 
 ### Key Config Values (Current State)
 
-| Setting | Value | Source File | Correct? |
-|---------|-------|-------------|----------|
-| Gateway port | 18789 | `~/.openclaw/openclaw.json` | ✅ |
-| Gateway bind | loopback | `~/.openclaw/openclaw.json` | ✅ |
-| symphony-bridge URL | `http://127.0.0.1:18790/v1` | `~/.openclaw/openclaw.json` + `.openclaw/models.json` | ✅ |
-| Discord guilds allowlist | guild `1486262757543121021` | `~/.openclaw/openclaw.json` | ✅ |
-| Default model | `symphony-bridge/symphony/main` | `~/.openclaw/openclaw.json` | ✅ |
+| Setting                  | Value                           | Source File                                           | Correct? |
+| ------------------------ | ------------------------------- | ----------------------------------------------------- | -------- |
+| Gateway port             | 18789                           | `~/.openclaw/openclaw.json`                           | ✅       |
+| Gateway bind             | loopback                        | `~/.openclaw/openclaw.json`                           | ✅       |
+| symphony-bridge URL      | `http://127.0.0.1:18790/v1`     | `~/.openclaw/openclaw.json` + `.openclaw/models.json` | ✅       |
+| Discord guilds allowlist | guild `1486262757543121021`     | `~/.openclaw/openclaw.json`                           | ✅       |
+| Default model            | `symphony-bridge/symphony/main` | `~/.openclaw/openclaw.json`                           | ✅       |
 
 ### Harness Config Files
 
-| File | Purpose |
-|------|---------|
-| `scripts/ops/core/worktree-config.mjs` | Worktree path/branch calculation |
+| File                                   | Purpose                              |
+| -------------------------------------- | ------------------------------------ |
+| `scripts/ops/core/worktree-config.mjs` | Worktree path/branch calculation     |
 | `scripts/ops/core/symphony-config.mjs` | Concurrency and timing configuration |
-| `scripts/ops/core/symphony-state.mjs` | Shared state management with leases |
+| `scripts/ops/core/symphony-state.mjs`  | Shared state management with leases  |
 
 **Centralized worktree config (`worktree-config.mjs`):**
 
@@ -712,16 +712,16 @@ export const WORKTREE_BRANCH_PREFIX = "symphony/wt";
 export const DISCORD_WORKTREE_IDS = ["5", "6", "7", "8"];
 export const SYMPHONY_WORKTREE_IDS = ["main", "1", "2", "3", "4"];
 
-getWorktreePath(1)      // => "/home/user/src/anqr-wt1"
-getWorktreeBranch(1)    // => "symphony/wt1"
-isDiscordWorktree("5")  // => true
-isSymphonyWorktree("1") // => true
+getWorktreePath(1); // => "/home/user/src/anqr-wt1"
+getWorktreeBranch(1); // => "symphony/wt1"
+isDiscordWorktree("5"); // => true
+isSymphonyWorktree("1"); // => true
 ```
 
 **Concurrency config (`symphony-config.mjs`):**
 
 ```javascript
-export const MAX_CONCURRENT_AGENTS = 8;  // 4 Symphony (wt1-wt4) + 4 Discord (wt5-wt8)
+export const MAX_CONCURRENT_AGENTS = 8; // 4 Symphony (wt1-wt4) + 4 Discord (wt5-wt8)
 ```
 
 **State management (`symphony-state.mjs`):**
@@ -775,11 +775,11 @@ const candidates = todoIssues.filter((issue) => {
 
 **Three levels of locking prevent conflicts:**
 
-| Level | Mechanism | Scope | Purpose |
-|-------|-----------|-------|---------|
-| 1. PID lock | `/run/user/${UID}/symphony-runner/lock-wt{i}` | Per-worktree | Prevent multiple systemd instances of same runner |
-| 2. Issue lease | `state.json` with file lock | Cross-worktree | Prevent multiple runners picking same issue |
-| 3. Git branch lock | Git-enforced | All worktrees | Prevent same branch checkout in multiple worktrees |
+| Level              | Mechanism                                     | Scope          | Purpose                                            |
+| ------------------ | --------------------------------------------- | -------------- | -------------------------------------------------- |
+| 1. PID lock        | `/run/user/${UID}/symphony-runner/lock-wt{i}` | Per-worktree   | Prevent multiple systemd instances of same runner  |
+| 2. Issue lease     | `state.json` with file lock                   | Cross-worktree | Prevent multiple runners picking same issue        |
+| 3. Git branch lock | Git-enforced                                  | All worktrees  | Prevent same branch checkout in multiple worktrees |
 
 ---
 
@@ -1065,6 +1065,7 @@ systemctl --user restart <service-name>
 The shared `CodebuffClient` in the retired `codebuff-openai-bridge.mjs:348-371` was keyed by `costMode` only. This class of bug has been eliminated by ADR-0003 — the standalone Codebuff bridge is retired and Codebuff SDK runs inside each worktree-local Symphony bridge.
 
 **Fix options:**
+
 - Key the shared client by `costMode + cwd` (create separate client per unique cwd)
 - Disable shared-client reuse entirely across distinct cwd values
 - Reset the shared client when `cwd` changes
@@ -1146,6 +1147,7 @@ Long-lived dirty Discord worktrees accumulate uncommitted state from multiple in
 ### Recommendation 13: Discord-Facing Security Restrictions (MEDIUM)
 
 Discord is a public-facing input channel. Discord-facing execution should be stricter than internal queue execution:
+
 - Restrict or gate `exec` for Discord-originated requests
 - Consider running Discord bridges under a more restricted user or with reduced capabilities
 - Validate/sanitize incoming requests at the router level
@@ -1368,24 +1370,25 @@ This delivery plan follows the external reviewer's priority order. Proven code d
 
 ### Requirements Traceability Matrix
 
-| Req ID | Requirement | Source | Phase | Validation |
-|--------|-------------|--------|:-----:|------------|
-| **R1** | Discord execution must never modify the main repository | Architecture intent + review | Phase 1, 3, 4 | A1, A2, A3, A4 |
-| **R2** | Shared provider clients must preserve request-local cwd across requests | **F1** | Phase 1 | Alternating-cwd regression test + A1 |
-| **R3** | Bridge startup must not enable or start runner timers | **F3** | Phase 1 | Code inspection + startup smoke test |
-| **R4** | `symphony-control.mjs --start` must enable only runners 1-4 | **F2** | Phase 1 | Code inspection + `systemctl --user list-timers` |
-| **R5** | Deployed systemd topology must contain no wrong-ID runners/bridges, no legacy single runner, and no duplicate gateway | **F4** | Phase 2 | `systemctl --user` snapshot |
-| **R6** | Documentation must describe Discord-created Linear issue routing consistently with `state.source` behavior | **F5** | Phase 0 (done) | Doc review + B2 |
-| **R7** | OpenClaw provider URL merge precedence must be verified at runtime | Reviewer Q1 | Phase 3 | Runtime verification log/evidence |
-| **R8** | OpenClaw workspace behavior must be verified at runtime | Reviewer Q2 | Phase 3 | Runtime verification + A1/A3 |
-| **R9** | Overflow behavior must reject or queue work, never fall back to the main repo | Architecture intent | Phase 4 | A5, C4 |
-| **R10** | Push retry behavior should tolerate contention more robustly | Reviewer Q5 | Phase 5 | Stress validation |
-| **R11** | Discord execution should use a clean scratch model or ephemeral session branches | Reviewer Q6 | Phase 5 | Ops/design acceptance |
-| **R12** | Discord-facing execution must apply stricter security controls, especially around `exec` | Reviewer Q7 | Phase 5 | Security review / deployment check |
-| **R13** | Linear issues routed to wt1-wt4, Discord on-demand goals routed to wt5-wt8 | Architecture intent | Phase 4 | B1, B2, A1 |
-| **R14** | Max 8 concurrent operations enforced | Architecture intent | Phase 4 | C1, C4 |
+| Req ID  | Requirement                                                                                                           | Source                       |     Phase      | Validation                                       |
+| ------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------- | :------------: | ------------------------------------------------ |
+| **R1**  | Discord execution must never modify the main repository                                                               | Architecture intent + review | Phase 1, 3, 4  | A1, A2, A3, A4                                   |
+| **R2**  | Shared provider clients must preserve request-local cwd across requests                                               | **F1**                       |    Phase 1     | Alternating-cwd regression test + A1             |
+| **R3**  | Bridge startup must not enable or start runner timers                                                                 | **F3**                       |    Phase 1     | Code inspection + startup smoke test             |
+| **R4**  | `symphony-control.mjs --start` must enable only runners 1-4                                                           | **F2**                       |    Phase 1     | Code inspection + `systemctl --user list-timers` |
+| **R5**  | Deployed systemd topology must contain no wrong-ID runners/bridges, no legacy single runner, and no duplicate gateway | **F4**                       |    Phase 2     | `systemctl --user` snapshot                      |
+| **R6**  | Documentation must describe Discord-created Linear issue routing consistently with `state.source` behavior            | **F5**                       | Phase 0 (done) | Doc review + B2                                  |
+| **R7**  | OpenClaw provider URL merge precedence must be verified at runtime                                                    | Reviewer Q1                  |    Phase 3     | Runtime verification log/evidence                |
+| **R8**  | OpenClaw workspace behavior must be verified at runtime                                                               | Reviewer Q2                  |    Phase 3     | Runtime verification + A1/A3                     |
+| **R9**  | Overflow behavior must reject or queue work, never fall back to the main repo                                         | Architecture intent          |    Phase 4     | A5, C4                                           |
+| **R10** | Push retry behavior should tolerate contention more robustly                                                          | Reviewer Q5                  |    Phase 5     | Stress validation                                |
+| **R11** | Discord execution should use a clean scratch model or ephemeral session branches                                      | Reviewer Q6                  |    Phase 5     | Ops/design acceptance                            |
+| **R12** | Discord-facing execution must apply stricter security controls, especially around `exec`                              | Reviewer Q7                  |    Phase 5     | Security review / deployment check               |
+| **R13** | Linear issues routed to wt1-wt4, Discord on-demand goals routed to wt5-wt8                                            | Architecture intent          |    Phase 4     | B1, B2, A1                                       |
+| **R14** | Max 8 concurrent operations enforced                                                                                  | Architecture intent          |    Phase 4     | C1, C4                                           |
 
 **How to read this matrix:**
+
 - **Requirement** is derived from the Architecture Intent table (Section 1)
 - **Gap #** references the Gap Analysis (Section 4) — a dash means no gap exists for this requirement
 - **Delivery Phase** shows when the fix/verification happens
@@ -1413,13 +1416,13 @@ This delivery plan follows the external reviewer's priority order. Proven code d
 
 **Gate criteria:**
 
-| Criterion | Evidence | Status |
-|-----------|----------|--------|
-| Documentation covers all components | Sections 1-16 complete | ✅ Done |
-| Gap analysis with root cause | Section 4 — 9 gaps identified | ✅ Done |
-| Delivery plan defined | This section | ✅ Done |
-| E2E test strategy defined | Section 18 | ✅ Done |
-| Reviewer feedback incorporated | 5 proven defects documented in Section 4A, delivery plan restructured | ✅ Done |
+| Criterion                           | Evidence                                                              | Status  |
+| ----------------------------------- | --------------------------------------------------------------------- | ------- |
+| Documentation covers all components | Sections 1-16 complete                                                | ✅ Done |
+| Gap analysis with root cause        | Section 4 — 9 gaps identified                                         | ✅ Done |
+| Delivery plan defined               | This section                                                          | ✅ Done |
+| E2E test strategy defined           | Section 18                                                            | ✅ Done |
+| Reviewer feedback incorporated      | 5 proven defects documented in Section 4A, delivery plan restructured | ✅ Done |
 
 **Evidence artifacts:**
 
@@ -1447,12 +1450,12 @@ This delivery plan follows the external reviewer's priority order. Proven code d
 
 **Gate criteria:**
 
-| Criterion | Evidence | Status |
-|-----------|----------|--------|
-| Codebuff client keyed by `costMode + cwd` | `getSharedClient()` checks both `SHARED_CLIENT_COST_MODE` and `SHARED_CLIENT_CWD` | ✅ Done |
-| Alternating-cwd regression test passes | `codebuff-cwd-isolation.spec.ts` — 6 tests, all pass | ✅ Done |
-| Bridge startup no longer calls symphony-control | Auto-start block replaced with informational log | ✅ Done |
-| `symphony-control.mjs --start` only affects runners 1-4 | `enableAllTimers()` uses `["1", "2", "3", "4"]` only | ✅ Done |
+| Criterion                                               | Evidence                                                                          | Status  |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------- | ------- |
+| Codebuff client keyed by `costMode + cwd`               | `getSharedClient()` checks both `SHARED_CLIENT_COST_MODE` and `SHARED_CLIENT_CWD` | ✅ Done |
+| Alternating-cwd regression test passes                  | `codebuff-cwd-isolation.spec.ts` — 6 tests, all pass                              | ✅ Done |
+| Bridge startup no longer calls symphony-control         | Auto-start block replaced with informational log                                  | ✅ Done |
+| `symphony-control.mjs --start` only affects runners 1-4 | `enableAllTimers()` uses `["1", "2", "3", "4"]` only                              | ✅ Done |
 
 **Evidence artifacts:**
 
@@ -1463,6 +1466,7 @@ This delivery plan follows the external reviewer's priority order. Proven code d
 **Rollback:** Revert the three code fix commits (F1, F2, F3).
 
 **Commit checkpoint:**
+
 ```bash
 git add -A
 git commit -m "fix(harness): Phase 1 — fix F1/F2/F3 proven code defects with regression test"
@@ -1486,13 +1490,13 @@ git push
 
 **Gate criteria:**
 
-| Criterion | Evidence | Status |
-|-----------|----------|--------|
-| Config conflict resolved | `models.json` and `openclaw.json` both use `18790`; `openclaw config get` confirms | ✅ |
-| Workspace verified safe | Bridge has zero references to `workspace`; router rebases cwd | ✅ |
-| Duplicate gateway removed | `ls ~/.config/systemd/user/openclaw*` returns nothing (Phase 2) | ✅ |
-| Changes committed and pushed | `git log --oneline -1` shows fix commit | ⬜ (pending) |
-| All worktrees synced | Config manually synced; git sync after commit | ⬜ (pending) |
+| Criterion                    | Evidence                                                                           | Status       |
+| ---------------------------- | ---------------------------------------------------------------------------------- | ------------ |
+| Config conflict resolved     | `models.json` and `openclaw.json` both use `18790`; `openclaw config get` confirms | ✅           |
+| Workspace verified safe      | Bridge has zero references to `workspace`; router rebases cwd                      | ✅           |
+| Duplicate gateway removed    | `ls ~/.config/systemd/user/openclaw*` returns nothing (Phase 2)                    | ✅           |
+| Changes committed and pushed | `git log --oneline -1` shows fix commit                                            | ⬜ (pending) |
+| All worktrees synced         | Config manually synced; git sync after commit                                      | ⬜ (pending) |
 
 **Evidence artifacts:**
 
@@ -1503,6 +1507,7 @@ git push
 **Rollback:** `git revert <commit>` to restore previous config.
 
 **Commit checkpoint:**
+
 ```bash
 git add .openclaw/ docs/harness/
 git commit -m "fix(config): Phase 2 complete — OpenClaw config conflict resolved, workspace fixed"
@@ -1559,13 +1564,13 @@ done
 
 **Gate criteria:**
 
-| Criterion | Evidence | Status |
-|-----------|----------|--------|
-| No wrong-ID instances | `systemctl` output shows no runner@{5-8} timers; discord-bridge@{1-4} are transient cache entries (no timers, inactive) that clear on reboot | ✅ |
-| No legacy runner | No `anqr-symphony-runner.service` or `.timer` (non-template) | ✅ |
-| All repo services deployed | `diff` between repo and deployed shows no differences | ✅ |
-| No duplicate gateway | No `openclaw-gateway.service` in systemd | ✅ |
-| Clean systemctl output | No FAILED units | ✅ |
+| Criterion                  | Evidence                                                                                                                                     | Status |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| No wrong-ID instances      | `systemctl` output shows no runner@{5-8} timers; discord-bridge@{1-4} are transient cache entries (no timers, inactive) that clear on reboot | ✅     |
+| No legacy runner           | No `anqr-symphony-runner.service` or `.timer` (non-template)                                                                                 | ✅     |
+| All repo services deployed | `diff` between repo and deployed shows no differences                                                                                        | ✅     |
+| No duplicate gateway       | No `openclaw-gateway.service` in systemd                                                                                                     | ✅     |
+| Clean systemctl output     | No FAILED units                                                                                                                              | ✅     |
 
 **Evidence artifacts:**
 
@@ -1576,6 +1581,7 @@ done
 **Rollback:** Re-copy previous deployed files from backup or git history.
 
 **Commit checkpoint:**
+
 ```bash
 git add services/systemd/ docs/harness/
 git commit -m "fix(harness): Phase 3 complete — systemd cleanup and deployment"
@@ -1591,6 +1597,7 @@ git push
 **Tasks:**
 
 - [x] **Start services in dependency order:**
+
   ```bash
   # 1. Main Symphony bridge (dependency for everything)
   systemctl --user enable --now anqr-symphony-bridge.service
@@ -1614,6 +1621,7 @@ git push
   # openclaw-gateway.service is enabled separately
   systemctl --user enable --now openclaw-gateway.service
   ```
+
 - [x] **Verify all ports listening:**
   ```bash
   ss -tln | grep -E '(4319|4325|4326|4327|4328|18789|18790)'
@@ -1628,15 +1636,15 @@ git push
 
 **Gate criteria:**
 
-| Criterion | Evidence | Status |
-|-----------|----------|--------|
-| Main bridge healthy | `curl :4319/health` returns `{"status": "ok"}` | ✅ |
-| All 4 worktree bridges healthy | `:4325-4328/health` all return OK | ✅ |
-| Discord router healthy | `:18790/health` returns OK with 4 worktrees | ✅ |
-| OpenClaw gateway running | Port 18789 listening, Discord bot online | ✅ |
-| Runner timers active | `systemctl --user list-timers` shows 4 runner timers | ✅ |
-| 7 ports listening | `ss -tln` confirms all expected ports | ✅ |
-| No service failures | `systemctl --user --failed` shows nothing anqr-related | ✅ |
+| Criterion                      | Evidence                                               | Status |
+| ------------------------------ | ------------------------------------------------------ | ------ |
+| Main bridge healthy            | `curl :4319/health` returns `{"status": "ok"}`         | ✅     |
+| All 4 worktree bridges healthy | `:4325-4328/health` all return OK                      | ✅     |
+| Discord router healthy         | `:18790/health` returns OK with 4 worktrees            | ✅     |
+| OpenClaw gateway running       | Port 18789 listening, Discord bot online               | ✅     |
+| Runner timers active           | `systemctl --user list-timers` shows 4 runner timers   | ✅     |
+| 7 ports listening              | `ss -tln` confirms all expected ports                  | ✅     |
+| No service failures            | `systemctl --user --failed` shows nothing anqr-related | ✅     |
 
 **Evidence artifacts:**
 
@@ -1648,6 +1656,7 @@ git push
 **Rollback:** `systemctl --user stop` all services; return to Phase 3 state.
 
 **Commit checkpoint:**
+
 ```bash
 mkdir -p reports/worktree-e2e-evidence/phase4
 systemctl --user list-units --type=service | grep anqr > reports/worktree-e2e-evidence/phase4/services.txt
@@ -1760,14 +1769,15 @@ Pass criteria:
 
 **Gate criteria:**
 
-| Criterion | Evidence | Status |
-|-----------|----------|--------|
-| Test 5.1 PASSED — Isolation infrastructure verified | Router routing, cwd rebasing, WorkingDirectory, process cwd, file isolation | ✅ |
-| Test 5.2 PASSED — Streaming works | 6 SSE events, [DONE] marker, provider failover | ✅ |
-| Test 5.3 PASSED — Concurrent requests work | 4 requests → 4 worktrees, 0 active after | ✅ |
-| All evidence saved | reports/worktree-e2e-evidence/phase5/ | ✅ |
+| Criterion                                           | Evidence                                                                    | Status |
+| --------------------------------------------------- | --------------------------------------------------------------------------- | ------ |
+| Test 5.1 PASSED — Isolation infrastructure verified | Router routing, cwd rebasing, WorkingDirectory, process cwd, file isolation | ✅     |
+| Test 5.2 PASSED — Streaming works                   | 6 SSE events, [DONE] marker, provider failover                              | ✅     |
+| Test 5.3 PASSED — Concurrent requests work          | 4 requests → 4 worktrees, 0 active after                                    | ✅     |
+| All evidence saved                                  | reports/worktree-e2e-evidence/phase5/                                       | ✅     |
 
 **If tests FAIL:**
+
 - Check which directory the file appeared in (main? wrong worktree?)
 - Review executor logs: `journalctl --user -u 'anqr-symphony-executor@*.service' --since '10 min ago'`
 - Review router logs: `journalctl --user -u anqr-discord-router.service --since '10 min ago'`
@@ -1776,6 +1786,7 @@ Pass criteria:
 - If no router logs → request bypassed router → verify OpenClaw provider URL
 
 **Commit checkpoint:**
+
 ```bash
 mkdir -p reports/worktree-e2e-evidence/phase5
 journalctl --user -u anqr-discord-router.service --since "30 min ago" \
@@ -1871,19 +1882,21 @@ Pass criteria:
 
 **Gate criteria:**
 
-| Criterion | Evidence | Status |
-|-----------|----------|--------|
-| Test 6.1 PASSED — Linear issue executed (infrastructure) | Issue picked up, lease acquired, agent reached Turn 1/600, 15-provider cascade attempted | ✅ |
-| Test 6.2 PASSED — Source routing works | Symphony runners (wt1-wt4) handle non-Discord; Discord runners (wt5-wt8) have no runner timers | ✅ |
-| All evidence saved | reports/worktree-e2e-evidence/phase6/ (test-results.txt, runner-logs.txt) | ✅ |
+| Criterion                                                | Evidence                                                                                       | Status |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------ |
+| Test 6.1 PASSED — Linear issue executed (infrastructure) | Issue picked up, lease acquired, agent reached Turn 1/600, 15-provider cascade attempted       | ✅     |
+| Test 6.2 PASSED — Source routing works                   | Symphony runners (wt1-wt4) handle non-Discord; Discord runners (wt5-wt8) have no runner timers | ✅     |
+| All evidence saved                                       | reports/worktree-e2e-evidence/phase6/ (test-results.txt, runner-logs.txt)                      | ✅     |
 
 **If tests FAIL:**
+
 - If issue not picked up → check runner timers: `systemctl --user list-timers | grep runner`
 - If issue picked by wrong worktree → check source routing in `symphony-runner.mjs`
 - If validation fails → check worktree code is synced: `git -C /home/user/src/anqr-wt1 log --oneline -1`
 - If push fails → check for merge conflicts: `git -C /home/user/src/anqr-wt1 status`
 
 **Commit checkpoint:**
+
 ```bash
 mkdir -p reports/worktree-e2e-evidence/phase6
 journalctl --user -u 'anqr-symphony-runner@*.service' --since "30 min ago" \
@@ -1962,19 +1975,21 @@ Pass criteria:
 
 **Gate criteria:**
 
-| Criterion | Evidence | Status |
-|-----------|----------|--------|
-| Test 7.1 PASSED — Simultaneous ops work | wt4 acquired ANQ-1140, wt2 acquired ANQ-1141 concurrently; wt1/wt3 backed off; source routing correct (fromDiscord=false) | ✅ |
-| Test 7.2 PASSED — Max concurrency enforced | 5 concurrent requests sent; 4 accepted (HTTP 200), 1 rejected (HTTP 429 "System Overload"); mid-flight health: Active=4, Available=0 | ✅ |
-| Test 7.3 PASSED — Worktree sync works | Commit c53dfc8e2 in wt1 → push to origin/main → wt2 synced and verified file present | ✅ |
-| All evidence saved | reports/worktree-e2e-evidence/phase7/ (test-results.txt, runner-logs.txt, router-logs.txt) | ✅ |
+| Criterion                                  | Evidence                                                                                                                             | Status |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| Test 7.1 PASSED — Simultaneous ops work    | wt4 acquired ANQ-1140, wt2 acquired ANQ-1141 concurrently; wt1/wt3 backed off; source routing correct (fromDiscord=false)            | ✅     |
+| Test 7.2 PASSED — Max concurrency enforced | 5 concurrent requests sent; 4 accepted (HTTP 200), 1 rejected (HTTP 429 "System Overload"); mid-flight health: Active=4, Available=0 | ✅     |
+| Test 7.3 PASSED — Worktree sync works      | Commit c53dfc8e2 in wt1 → push to origin/main → wt2 synced and verified file present                                                 | ✅     |
+| All evidence saved                         | reports/worktree-e2e-evidence/phase7/ (test-results.txt, runner-logs.txt, router-logs.txt)                                           | ✅     |
 
 **If tests FAIL:**
+
 - If cross-contamination → isolation broken at a specific layer → trace which layer (config, router, bridge cwd, workspace)
 - If 5th request not rejected → router concurrency tracking broken → check `MAX_CONCURRENT` config
 - If sync fails → worktree diverged → `git fetch origin main && git reset --hard origin/main`
 
 **Commit checkpoint:**
+
 ```bash
 mkdir -p reports/worktree-e2e-evidence/phase7
 journalctl --user -u 'anqr-symphony-runner@*.service' --since "1 hour ago" \
@@ -2023,21 +2038,21 @@ git push
   git push
   ```
 - [x] **Create final evidence archive:**
-  Evidence saved in `reports/worktree-e2e-evidence/` (phases 5-7)
+      Evidence saved in `reports/worktree-e2e-evidence/` (phases 5-7)
 
 **Gate criteria (ACCEPTANCE):**
 
-| Criterion | Evidence | Status |
-|-----------|----------|--------|
-| All Phase 1-7 gates passed | Checkboxes filled, evidence saved | ✅ |
-| No "UNVERIFIED" language in docs | All instances replaced with verified facts | ✅ |
-| All 9 gaps from Section 4 addressed | All gaps resolved: F1-F4 fixed, Tier 2 all verified/resolved | ✅ |
-| Discord isolation proven | Phase 5 test evidence | ✅ |
-| Linear execution proven | Phase 6 test evidence | ✅ |
-| Concurrent operation proven | Phase 7 test evidence | ✅ |
-| All services running | 7 ports listening (4319, 4325-4328, 18789, 18790), all services active | ✅ |
-| Documentation committed | Git commit hash | ✅ |
-| Operator sign-off | Human confirmation | ⬜ |
+| Criterion                           | Evidence                                                               | Status |
+| ----------------------------------- | ---------------------------------------------------------------------- | ------ |
+| All Phase 1-7 gates passed          | Checkboxes filled, evidence saved                                      | ✅     |
+| No "UNVERIFIED" language in docs    | All instances replaced with verified facts                             | ✅     |
+| All 9 gaps from Section 4 addressed | All gaps resolved: F1-F4 fixed, Tier 2 all verified/resolved           | ✅     |
+| Discord isolation proven            | Phase 5 test evidence                                                  | ✅     |
+| Linear execution proven             | Phase 6 test evidence                                                  | ✅     |
+| Concurrent operation proven         | Phase 7 test evidence                                                  | ✅     |
+| All services running                | 7 ports listening (4319, 4325-4328, 18789, 18790), all services active | ✅     |
+| Documentation committed             | Git commit hash                                                        | ✅     |
+| Operator sign-off                   | Human confirmation                                                     | ⬜     |
 
 **Evidence artifacts (final):**
 
@@ -2095,14 +2110,14 @@ The worktree system spans multiple processes, config files, and services. Unit t
 
 ### Test Environment Requirements
 
-| Requirement | Purpose | How to Verify |
-|-------------|---------|---------------|
-| All services running | Full system under test | Phase 4 gate passed |
-| Discord bot online | Send test messages | Bot appears online in Discord |
-| Linear API access | Create test issues | `LINEAR_API_KEY` set, API responds |
-| Provider API access | AI model calls succeed | At least one provider in cascade available |
-| Clean main repo | Detect any leakage | `git status` shows clean working tree |
-| Clean worktrees | Detect test artifacts | All worktrees synced to HEAD |
+| Requirement          | Purpose                | How to Verify                              |
+| -------------------- | ---------------------- | ------------------------------------------ |
+| All services running | Full system under test | Phase 4 gate passed                        |
+| Discord bot online   | Send test messages     | Bot appears online in Discord              |
+| Linear API access    | Create test issues     | `LINEAR_API_KEY` set, API responds         |
+| Provider API access  | AI model calls succeed | At least one provider in cascade available |
+| Clean main repo      | Detect any leakage     | `git status` shows clean working tree      |
+| Clean worktrees      | Detect test artifacts  | All worktrees synced to HEAD               |
 
 ### Test Categories
 
@@ -2110,31 +2125,31 @@ The worktree system spans multiple processes, config files, and services. Unit t
 
 These tests prove the core requirement: **Discord requests must NOT modify the main repository.**
 
-| Test ID | Description | Pass Criterion |
-|---------|-------------|----------------|
-| A1 | File creation via Discord | File in wt5-8, NOT in main |
-| A2 | File modification via Discord | Modified file in wt5-8, main unchanged |
-| A3 | Code execution via Discord | `exec` output from worktree cwd |
-| A4 | Concurrent Discord requests | Files distributed across wt5-8, none in main |
-| A5 | Discord request when all wt5-8 busy | 429 returned, no fallback to main |
+| Test ID | Description                         | Pass Criterion                               |
+| ------- | ----------------------------------- | -------------------------------------------- |
+| A1      | File creation via Discord           | File in wt5-8, NOT in main                   |
+| A2      | File modification via Discord       | Modified file in wt5-8, main unchanged       |
+| A3      | Code execution via Discord          | `exec` output from worktree cwd              |
+| A4      | Concurrent Discord requests         | Files distributed across wt5-8, none in main |
+| A5      | Discord request when all wt5-8 busy | 429 returned, no fallback to main            |
 
 #### Category B: Linear Execution (Functional Validation)
 
-| Test ID | Description | Pass Criterion |
-|---------|-------------|----------------|
-| B1 | Linear issue picked up and executed | Issue state → Done, commit in git log |
-| B2 | Source routing — Discord issues skipped | Runner logs show skip |
-| B3 | Validation gates run | Typecheck/lint results in commit message |
-| B4 | Push with retry | Commit appears on origin/main |
+| Test ID | Description                             | Pass Criterion                           |
+| ------- | --------------------------------------- | ---------------------------------------- |
+| B1      | Linear issue picked up and executed     | Issue state → Done, commit in git log    |
+| B2      | Source routing — Discord issues skipped | Runner logs show skip                    |
+| B3      | Validation gates run                    | Typecheck/lint results in commit message |
+| B4      | Push with retry                         | Commit appears on origin/main            |
 
 #### Category C: Concurrent Operations (Stress Validation)
 
-| Test ID | Description | Pass Criterion |
-|---------|-------------|----------------|
-| C1 | 4 Linear + 4 Discord simultaneous | All complete, no cross-contamination |
-| C2 | Worktree sync after push | Other worktrees see pushed changes |
-| C3 | Lease conflict prevention | Same issue not picked by 2 runners |
-| C4 | Max concurrency enforcement | 9th request queued or rejected |
+| Test ID | Description                       | Pass Criterion                       |
+| ------- | --------------------------------- | ------------------------------------ |
+| C1      | 4 Linear + 4 Discord simultaneous | All complete, no cross-contamination |
+| C2      | Worktree sync after push          | Other worktrees see pushed changes   |
+| C3      | Lease conflict prevention         | Same issue not picked by 2 runners   |
+| C4      | Max concurrency enforcement       | 9th request queued or rejected       |
 
 ### Emulated Testing (If Live Discord/Linear Unavailable)
 
@@ -2258,38 +2273,45 @@ The external review established the following:
 ### 19.2 Answers to Prior Review Questions
 
 **Q1 — OpenClaw config merge order**
+
 - Not proven by the archive
 - The conflict is real, but runtime verification is still required before treating it as causal
 - Moved to Phase 3 (runtime verification)
 
 **Q2 — OpenClaw workspace vs bridge cwd**
+
 - For the Symphony bridge, request-local cwd handling is clearly implemented via `AsyncLocalStorage`
 - For OpenClaw native workspace behavior, the archive is insufficient to prove override semantics
 - Moved to Phase 3 (runtime verification)
 
 **Q3 — Tool execution in runner vs bridge**
+
 - The intended model appears correct: runners use their own worktree/root context
 - Full proof was not possible because `symphony-agent.mjs` was not included in the review archive
 - Runner passes `ROOT`/`worktreeRoot`/`projectRoot` into agent execution (`symphony-runner.mjs:983-993`)
 
 **Q4 — Gateway singleton pattern**
+
 - The 4-timer lock pattern is not justified by the reviewed evidence
 - A single systemd service with `Restart=on-failure` is the simpler, preferred default
 - Moved to Phase 5 (hardening)
 
 **Q5 — Git push contention**
+
 - Three retries are acceptable under light contention
 - Weak under bursty contention; add jittered exponential backoff
 - Keep the issue in a resumable state instead of hard-failing
 - Moved to Phase 5 (hardening)
 
 **Q6 — Discord worktree accumulation**
+
 - Long-lived dirty Discord worktrees are the wrong model
 - Prefer clean scratch worktrees or ephemeral session branches per request/session
 - Do not let multiple interactive sessions pile uncommitted state forever
 - Moved to Phase 5 (hardening)
 
 **Q7 — Security**
+
 - Discord-facing execution should be more restricted than internal queue execution
 - `exec` should be restricted or explicitly gated for Discord requests
 - Discord-facing bridges should run under a more constrained user/capability model where possible
@@ -2297,20 +2319,20 @@ The external review established the following:
 
 ### 19.3 Documentation Changes Made Based on Review
 
-| Change | Section | What Changed |
-|--------|---------|--------------|
-| Fixed Discord routing contradiction | Section 1 | Rewritten to match `state.source` behavior in code |
-| Downgraded config conflict severity | Section 2 | No longer described as strongest root cause |
-| Downgraded workspace concern severity | Section 2 | Noted that bridge already has request-scoped cwd |
-| Added 5 proven defects | Section 4A | New subsection with code-referenced evidence |
-| Corrected bridge isolation claim | Section 4B | "One bridge per worktree" is a deployment choice, not requirement |
-| Restructured gap prioritization | Section 4C | Proven code defects first, config verification second (all now verified) |
-| Revised root cause analysis | Section 4D | Layer 0 (Codebuff cache) is strongest proven cause |
-| Corrected bridge explanation | Section 5 | Request-scoped cwd via AsyncLocalStorage documented |
-| Reordered recommendations | Section 13 | Code fixes (R1-R3) before config/operational items |
-| Reordered action items | Section 14 | Matches revised delivery phases |
-| Restructured delivery plan | Section 17 | Phase 1 is now code fixes, not discovery |
-| Replaced reviewer questions with answers | Section 19 | This section |
+| Change                                   | Section    | What Changed                                                             |
+| ---------------------------------------- | ---------- | ------------------------------------------------------------------------ |
+| Fixed Discord routing contradiction      | Section 1  | Rewritten to match `state.source` behavior in code                       |
+| Downgraded config conflict severity      | Section 2  | No longer described as strongest root cause                              |
+| Downgraded workspace concern severity    | Section 2  | Noted that bridge already has request-scoped cwd                         |
+| Added 5 proven defects                   | Section 4A | New subsection with code-referenced evidence                             |
+| Corrected bridge isolation claim         | Section 4B | "One bridge per worktree" is a deployment choice, not requirement        |
+| Restructured gap prioritization          | Section 4C | Proven code defects first, config verification second (all now verified) |
+| Revised root cause analysis              | Section 4D | Layer 0 (Codebuff cache) is strongest proven cause                       |
+| Corrected bridge explanation             | Section 5  | Request-scoped cwd via AsyncLocalStorage documented                      |
+| Reordered recommendations                | Section 13 | Code fixes (R1-R3) before config/operational items                       |
+| Reordered action items                   | Section 14 | Matches revised delivery phases                                          |
+| Restructured delivery plan               | Section 17 | Phase 1 is now code fixes, not discovery                                 |
+| Replaced reviewer questions with answers | Section 19 | This section                                                             |
 
 ### 19.4 Additional Reviewer Recommendations (for Phase 5 Hardening)
 
@@ -2324,10 +2346,12 @@ After the proven defects are fixed and validated, the following improvements sho
 ### 19.5 Test Coverage Gaps Identified by Review
 
 Current tests cover:
+
 - Git worktree mechanics and isolation basics (`tests/integration/worktree-concurrency.spec.ts`)
 - Worktree pool disk-space logic (`scripts/ops/orchestration/symphony-worktree-pool.spec.ts`)
 
 Current tests do NOT cover:
+
 - OpenClaw config precedence
 - OpenClaw workspace behavior
 - Router cwd rewriting end-to-end
@@ -2400,48 +2424,48 @@ anqr-worktree-review/
 
 ### Implementation Files
 
-| File | Purpose |
-|------|---------|
-| `scripts/ops/core/worktree-config.mjs` | Worktree path/branch calculation |
-| `scripts/ops/core/symphony-config.mjs` | Concurrency and timing configuration |
-| `scripts/ops/core/symphony-state.mjs` | Shared state management with leases |
-| `scripts/ops/orchestration/symphony-runner.mjs` | Runner execution with issue routing |
-| `scripts/ops/orchestration/symphony-worktree-pool.mjs` | Worktree lifecycle management |
-| `scripts/ops/orchestration/symphony-control.mjs` | Start/stop task execution |
-| `scripts/ops/integrations/model/symphony-openai-bridge.mjs` | Symphony bridge (provider cascade + Codebuff SDK) |
-| `scripts/ops/integrations/model/symphony-agent-router.mjs` | Symphony agent router (control-plane) |
-| `scripts/ops/integrations/model/codebuff-direct.mjs` | Codebuff SDK direct integration |
-| `scripts/ops/integrations/model/discord-request-router.mjs` | Discord load balancer |
-| `scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs` | Gateway singleton wrapper |
+| File                                                         | Purpose                                           |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| `scripts/ops/core/worktree-config.mjs`                       | Worktree path/branch calculation                  |
+| `scripts/ops/core/symphony-config.mjs`                       | Concurrency and timing configuration              |
+| `scripts/ops/core/symphony-state.mjs`                        | Shared state management with leases               |
+| `scripts/ops/orchestration/symphony-runner.mjs`              | Runner execution with issue routing               |
+| `scripts/ops/orchestration/symphony-worktree-pool.mjs`       | Worktree lifecycle management                     |
+| `scripts/ops/orchestration/symphony-control.mjs`             | Start/stop task execution                         |
+| `scripts/ops/integrations/model/symphony-openai-bridge.mjs`  | Symphony bridge (provider cascade + Codebuff SDK) |
+| `scripts/ops/integrations/model/symphony-agent-router.mjs`   | Symphony agent router (control-plane)             |
+| `scripts/ops/integrations/model/codebuff-direct.mjs`         | Codebuff SDK direct integration                   |
+| `scripts/ops/integrations/model/discord-request-router.mjs`  | Discord load balancer                             |
+| `scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs` | Gateway singleton wrapper                         |
 
 ### Systemd Service Files
 
-| File | Purpose |
-|------|---------|
-| `services/systemd/anqr-symphony-router.service` | Symphony agent router (port 4319) |
+| File                                               | Purpose                                      |
+| -------------------------------------------------- | -------------------------------------------- |
+| `services/systemd/anqr-symphony-router.service`    | Symphony agent router (port 4319)            |
 | `services/systemd/anqr-symphony-executor@.service` | Worktree executor template (ports 4321-4328) |
-| `services/systemd/anqr-discord-router.service` | Discord load balancer (port 18790) |
-| `services/systemd/openclaw-gateway.service` | OpenClaw Gateway / Discord bot (port 18789) |
+| `services/systemd/anqr-discord-router.service`     | Discord load balancer (port 18790)           |
+| `services/systemd/openclaw-gateway.service`        | OpenClaw Gateway / Discord bot (port 18789)  |
 
 ### Configuration Files
 
-| File | Purpose |
-|------|---------|
-| `~/.openclaw/openclaw.json` | OpenClaw config: Discord guilds allowlist, model routing, gateway (not git-tracked) |
-| `.openclaw/models.json` | In-repo model provider overrides (git-tracked) |
-| `~/.openclaw/config.json` | OpenClaw basic settings (TTS, etc.) |
-| `~/.config/systemd/user/anqr-ops.env` | API keys and secrets |
-| `~/.config/symphony/anqr.env` | Provider API tokens |
+| File                                  | Purpose                                                                             |
+| ------------------------------------- | ----------------------------------------------------------------------------------- |
+| `~/.openclaw/openclaw.json`           | OpenClaw config: Discord guilds allowlist, model routing, gateway (not git-tracked) |
+| `.openclaw/models.json`               | In-repo model provider overrides (git-tracked)                                      |
+| `~/.openclaw/config.json`             | OpenClaw basic settings (TTS, etc.)                                                 |
+| `~/.config/systemd/user/anqr-ops.env` | API keys and secrets                                                                |
+| `~/.config/symphony/anqr.env`         | Provider API tokens                                                                 |
 
 ### Documentation
 
-| File | Purpose |
-|------|---------|
-| `docs/harness/discord-worktree-routing.md` | Discord routing architecture detail |
-| `docs/harness/discord-voice-integration.md` | Discord voice and notification integration |
-| `docs/harness/WORKTREE-QUICKSTART.md` | Quick setup guide |
-| `services/systemd/WORKTREE-DEPLOYMENT.md` | Deployment procedures |
-| `AGENTS.md` | Agent execution contract (executor restart procedure) |
+| File                                        | Purpose                                               |
+| ------------------------------------------- | ----------------------------------------------------- |
+| `docs/harness/discord-worktree-routing.md`  | Discord routing architecture detail                   |
+| `docs/harness/discord-voice-integration.md` | Discord voice and notification integration            |
+| `docs/harness/WORKTREE-QUICKSTART.md`       | Quick setup guide                                     |
+| `services/systemd/WORKTREE-DEPLOYMENT.md`   | Deployment procedures                                 |
+| `AGENTS.md`                                 | Agent execution contract (executor restart procedure) |
 
 ---
 

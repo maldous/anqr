@@ -27,14 +27,14 @@ The ANQR harness is an AI-assisted engineering automation system that:
 
 ## 2. Systemd Services
 
-| Service                         | Timer        | Purpose                                    | Script                             |
-| -------------------------------- | ------------ | ------------------------------------------ | ---------------------------------- |
-| `anqr-linear-runner@*`         | Every 2 min  | Execute Linear issues via AI (one per @)   | `symphony-runner.mjs`              |
-| `anqr-queue-feeder`    | Every 15 min | Queue maintenance + backup feed            | `symphony-queue-control.mjs --all` |
-| `anqr-nightly`         | Daily 02:00  | Full nightly pipeline                      | `nightly-ops-pass.mjs`             |
-| `anqr-email-ingest`    | Every 5 min  | Email → Linear issues                      | `email-ingest.mjs`                 |
-| `anqr-symphony-router` | Always-on    | Global orchestration (control plane)       | `symphony-agent-router.mjs`        |
-| `anqr-symphony-executor@*` | Always-on | Worktree executors (execution plane) | `symphony-openai-bridge.mjs`       |
+| Service                    | Timer        | Purpose                                  | Script                             |
+| -------------------------- | ------------ | ---------------------------------------- | ---------------------------------- |
+| `anqr-linear-runner@*`     | Every 2 min  | Execute Linear issues via AI (one per @) | `symphony-runner.mjs`              |
+| `anqr-queue-feeder`        | Every 15 min | Queue maintenance + backup feed          | `symphony-queue-control.mjs --all` |
+| `anqr-nightly`             | Daily 02:00  | Full nightly pipeline                    | `nightly-ops-pass.mjs`             |
+| `anqr-email-ingest`        | Every 5 min  | Email → Linear issues                    | `email-ingest.mjs`                 |
+| `anqr-symphony-router`     | Always-on    | Global orchestration (control plane)     | `symphony-agent-router.mjs`        |
+| `anqr-symphony-executor@*` | Always-on    | Worktree executors (execution plane)     | `symphony-openai-bridge.mjs`       |
 
 ### Service Installation
 
@@ -60,13 +60,13 @@ systemctl --user enable --now anqr-linear-runner@{1..4}.timer
 
 ## 3. Ports and Network
 
-| Port  | Service              | Protocol                 | Auth                                   |
-| ----- | ------------------- | ------------------------ | -------------------------------------- |
-| 4319  | Symphony Router     | HTTP (OpenAI-compatible) | Bearer: `local-symphony`               |
+| Port      | Service            | Protocol                 | Auth                                   |
+| --------- | ------------------ | ------------------------ | -------------------------------------- |
+| 4319      | Symphony Router    | HTTP (OpenAI-compatible) | Bearer: `local-symphony`               |
 | 4321-4328 | Symphony Executors | HTTP (OpenAI-compatible) | Bearer: `local-symphony`               |
-| 18789 | OpenClaw            | HTTP (OpenAI-compatible) | Token from `~/.openclaw/openclaw.json` |
-| 18790 | Discord Router      | HTTP                     | -                                      |
-| 11434 | Ollama              | HTTP                     | Local only                             |
+| 18789     | OpenClaw           | HTTP (OpenAI-compatible) | Token from `~/.openclaw/openclaw.json` |
+| 18790     | Discord Router     | HTTP                     | -                                      |
+| 11434     | Ollama             | HTTP                     | Local only                             |
 
 ---
 

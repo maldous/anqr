@@ -37,20 +37,20 @@ const LINEAR_EMBEDDING_CONCURRENCY = Number(process.env.LINEAR_RAG_EMBEDDING_CON
 
 async function saveIndex(indexDir, data) {
   await mkdir(indexDir, { recursive: true });
-  
+
   const { chunks, embeddings } = data;
-  
+
   // Build index entries
   const indexEntries = [];
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
     const embedding = embeddings[i];
-    
+
     if (!Array.isArray(embedding) || embedding.length === 0) {
       logWarn(`Skipping chunk ${chunk.id} — embedding failed`);
       continue;
     }
-    
+
     indexEntries.push({
       id: chunk.id,
       filePath: chunk.filePath,
@@ -62,11 +62,11 @@ async function saveIndex(indexDir, data) {
       metadata: chunk.metadata,
     });
   }
-  
+
   // Write index file
   const indexPath = resolve(indexDir, "index.json");
   await writeFile(indexPath, JSON.stringify(indexEntries, null, 2), "utf-8");
-  
+
   // Write metadata file
   const meta = {
     chunkCount: indexEntries.length,
@@ -76,7 +76,7 @@ async function saveIndex(indexDir, data) {
   };
   const metaPath = resolve(indexDir, "meta.json");
   await writeFile(metaPath, JSON.stringify(meta, null, 2), "utf-8");
-  
+
   logInfo(`Index saved: ${indexEntries.length} entries`);
   logInfo(`Index size: ${(meta.indexSizeBytes / 1024).toFixed(1)} KB`);
 }
@@ -88,14 +88,14 @@ async function writeFile(path, content, encoding) {
 
 async function buildLinearIndex() {
   const startTime = Date.now();
-  
+
   logInfo("========================================");
   logInfo("Linear RAG Index Builder — Starting");
   logInfo("========================================");
   logInfo(`📍 Project root: ${PROJECT_ROOT}`);
   logInfo(`📄 Export path: ${EXPORT_PATH}`);
   logInfo(`📂 Index directory: ${INDEX_DIR}`);
-  
+
   // Check Ollama availability
   const ollamaOk = await isOllamaAvailable({ force: true });
   if (!ollamaOk) {
@@ -106,7 +106,7 @@ async function buildLinearIndex() {
     process.exit(1);
   }
   logInfo("✅ Ollama is available");
-  
+
   // Read exported issues
   let issues;
   try {
@@ -119,37 +119,40 @@ async function buildLinearIndex() {
     logError("Run export script first: node scripts/ops/integrations/linear/export-issues.mjs");
     process.exit(1);
   }
-  
+
   if (!Array.isArray(issues) || issues.length === 0) {
     logWarn("No issues found in export — index will be empty");
     issues = [];
   }
-  
+
   // Chunk issues
   logInfo("🔨 Chunking issues...");
   const chunks = chunkLinearIssues(issues);
   logInfo(`✅ Created ${chunks.length} chunks (1 per issue)`);
-  
+
   if (chunks.length === 0) {
     logWarn("No chunks created — exiting");
     process.exit(0);
   }
-  
+
   // Generate embeddings
   logInfo("🧠 Generating embeddings...");
-  const embeddings = await generateEmbeddings(chunks.map((chunk) => chunk.content), {
-    maxConcurrency: LINEAR_EMBEDDING_CONCURRENCY,
-  });
-  
+  const embeddings = await generateEmbeddings(
+    chunks.map((chunk) => chunk.content),
+    {
+      maxConcurrency: LINEAR_EMBEDDING_CONCURRENCY,
+    },
+  );
+
   const successCount = embeddings.filter((e) => Array.isArray(e) && e.length > 0).length;
   logInfo(`✅ Generated ${successCount}/${chunks.length} embeddings`);
-  
+
   // Save index
   logInfo("💾 Saving index...");
   await saveIndex(INDEX_DIR, { chunks, embeddings });
-  
+
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  
+
   logInfo("========================================");
   logInfo("Linear RAG Index Builder — Complete");
   logInfo("========================================");

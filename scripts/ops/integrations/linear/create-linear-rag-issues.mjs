@@ -2,7 +2,7 @@
 
 /**
  * create-linear-rag-issues.mjs — Create Linear issues for ANQ-1120 Linear RAG integration
- * 
+ *
  * References ANQ-1120: Linear Issue RAG Integration Investigation
  * Status: PROCEED with phased implementation
  */
@@ -737,10 +737,12 @@ async function main() {
   }
 
   console.log(`\n📊 Summary: Created ${created.length}/${issueGroups.length} issues`);
-  console.log(`\n📈 Phase 1 Implementation:`)
+  console.log(`\n📈 Phase 1 Implementation:`);
   console.log(`   Parent: ANQ-1120 (Linear Issue RAG Integration Investigation)`);
   console.log(`   Status: PROCEED with phased implementation`);
-  console.log(`   Total effort: ${issueGroups.reduce((sum, g) => sum + g.estimate, 0)} story points`);
+  console.log(
+    `   Total effort: ${issueGroups.reduce((sum, g) => sum + g.estimate, 0)} story points`,
+  );
   console.log(`   Estimated delivery: 1 sprint (6-8 hours focused work)`);
   console.log(`\n🎯 Next Steps:`);
   console.log(`   1. Review created issues in Linear`);

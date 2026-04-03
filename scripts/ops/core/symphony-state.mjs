@@ -185,7 +185,7 @@ export function loadState() {
     store.global = {
       integrationQueue: [],
       integrationLock: null,
-      ...(data.global || {}),
+      ...data.global,
     };
     store.issues = {};
     for (const [key, value] of Object.entries(data.issues || {})) {
@@ -304,7 +304,11 @@ export function recordTransition(issueIdentifier, transition) {
  * @param {number} maxMs - Maximum cooldown in milliseconds (default: 60 minutes)
  * @returns {number} Cooldown duration in milliseconds
  */
-export function calculateExponentialBackoff(retryCount, baseMs = 10 * 60 * 1000, maxMs = 60 * 60 * 1000) {
+export function calculateExponentialBackoff(
+  retryCount,
+  baseMs = 10 * 60 * 1000,
+  maxMs = 60 * 60 * 1000,
+) {
   // Exponential: base * 2^retryCount, capped at maxMs
   const exponential = Math.min(baseMs * Math.pow(2, retryCount), maxMs);
   // Add random jitter (±20%) to prevent thundering herd
@@ -331,13 +335,13 @@ export function setCooldownWithBackoff(issueIdentifier, reason = "cooldown", sig
   const current = getIssueState(issueIdentifier);
   const retryCount = Number(current.retry_count || 0);
   const cooldownMs = calculateExponentialBackoff(retryCount);
-  
+
   const patch = {
     cooldown_until: new Date(Date.now() + cooldownMs).toISOString(),
     last_failure_reason: reason,
   };
   if (signature !== null) patch.last_failure_signature = signature;
-  
+
   return patchIssueState(issueIdentifier, patch);
 }
 
@@ -462,10 +466,8 @@ export function recordCompletion(issueIdentifier, details = {}) {
  */
 export function recordRetryEvent(issueIdentifier, event = {}) {
   const current = getIssueState(issueIdentifier);
-  const retryEvents = Array.isArray(current.notes?.retry_events) 
-    ? current.notes.retry_events 
-    : [];
-  
+  const retryEvents = Array.isArray(current.notes?.retry_events) ? current.notes.retry_events : [];
+
   const newEvent = {
     timestamp: nowIso(),
     type: event.type || "retry",
@@ -475,10 +477,10 @@ export function recordRetryEvent(issueIdentifier, event = {}) {
     cooldown_ms: event.cooldown_ms || null,
     ...event,
   };
-  
+
   // Keep last 20 retry events
   const updatedEvents = [...retryEvents, newEvent].slice(-20);
-  
+
   return patchIssueState(issueIdentifier, {
     notes: {
       ...current.notes,
@@ -572,7 +574,9 @@ export function dequeueIntegrationCandidate(issueIdentifier) {
   return withStateLock(() => {
     const store = loadState();
     if (!Array.isArray(store.global.integrationQueue)) store.global.integrationQueue = [];
-    store.global.integrationQueue = store.global.integrationQueue.filter(id => id !== issueIdentifier);
+    store.global.integrationQueue = store.global.integrationQueue.filter(
+      (id) => id !== issueIdentifier,
+    );
     saveState(store);
     return store.global.integrationQueue;
   });
@@ -702,9 +706,12 @@ export function getFleetSnapshot() {
   };
   for (const [id, wt] of Object.entries(store.worktreeStates)) {
     snapshot.worktrees[id] = wt;
-    const bucket = wt.state === "dirty_owned" || wt.state === "dirty_orphaned"
-      ? "dirty"
-      : snapshot.summary[wt.state] !== undefined ? wt.state : "unknown";
+    const bucket =
+      wt.state === "dirty_owned" || wt.state === "dirty_orphaned"
+        ? "dirty"
+        : snapshot.summary[wt.state] !== undefined
+          ? wt.state
+          : "unknown";
     snapshot.summary[bucket] = (snapshot.summary[bucket] || 0) + 1;
   }
   return snapshot;

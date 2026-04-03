@@ -74,9 +74,9 @@ export const RUNNER_VALIDATION_REPAIR_MAX = 3; // Phase 2: max same-worktree val
 // ---------------------------------------------------------------------------
 // Recovery daemon configuration (Phase 3)
 // ---------------------------------------------------------------------------
-export const RECOVERY_POLL_INTERVAL_MS = 60_000;        // 1 min scan interval
-export const RECOVERY_MAX_REPAIR_ATTEMPTS = 5;           // per worktree before quarantine
+export const RECOVERY_POLL_INTERVAL_MS = 60_000; // 1 min scan interval
+export const RECOVERY_MAX_REPAIR_ATTEMPTS = 5; // per worktree before quarantine
 export const RECOVERY_QUARANTINE_THRESHOLD_MS = 600_000; // 10 min stuck in repairable → quarantine
-export const RECOVERY_STALE_LEASE_GRACE_MS = 300_000;    // 5 min grace before reclaiming lease
+export const RECOVERY_STALE_LEASE_GRACE_MS = 300_000; // 5 min grace before reclaiming lease
 export const RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7;
 export const RECOVERY_BASELINE_CHECK_INTERVAL_CYCLES = 5; // check baseline every 5 cycles (5 min at 60s poll)

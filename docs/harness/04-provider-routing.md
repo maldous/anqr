@@ -57,13 +57,13 @@ The harness uses a **layered failover model** where each layer handles its own i
 
 OpenClaw is configured with the following failover chain:
 
-| Priority | Model                                     | Fallback behavior                                        |
-| -------- | ----------------------------------------- | -------------------------------------------------------- |
-| Primary  | `symphony-bridge/symphony/main`           | Symphony autoselects the best healthy provider           |
-| 2        | `symphony-bridge/symphony/codex`          | Direct pinned Codex route                                |
+| Priority | Model                                     | Fallback behavior                                         |
+| -------- | ----------------------------------------- | --------------------------------------------------------- |
+| Primary  | `symphony-bridge/symphony/main`           | Symphony autoselects the best healthy provider            |
+| 2        | `symphony-bridge/symphony/codex`          | Direct pinned Codex route                                 |
 | 3        | `symphony-bridge/symphony/codebuff`       | Direct pinned Codebuff route (SDK inside worktree bridge) |
-| 4+       | Other `symphony-bridge/symphony/*` routes | Direct pinned routes matching Symphony inventory         |
-| Final    | `ollama/qwen2.5-coder:0.5b`              | Local Ollama fallback                                     |
+| 4+       | Other `symphony-bridge/symphony/*` routes | Direct pinned routes matching Symphony inventory          |
+| Final    | `ollama/qwen2.5-coder:0.5b`               | Local Ollama fallback                                     |
 
 **Key insight**: OpenClaw should prefer Symphony first, and its fallback inventory mirrors Symphony's provider surface so interactive work keeps going even if the Symphony agent router itself is unavailable.
 

@@ -174,9 +174,7 @@ async function loadIndex() {
   } catch (error_) {
     // Fall back to legacy single-file format
     if (error_?.code !== "ENOENT") {
-      logDebug(
-        `Manifest not found or invalid, trying legacy format: ${error_?.message || error_}`,
-      );
+      logDebug(`Manifest not found or invalid, trying legacy format: ${error_?.message || error_}`);
     }
 
     try {

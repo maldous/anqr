@@ -39,9 +39,11 @@ node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
 #### 📖 Usage Guide
 
 **Required Parameters:**
+
 - `--title` or `-t`: The issue title
 
 **Optional Parameters:**
+
 - `--description` or `-d`: Issue description (defaults to "No description provided")
 - `--priority` or `-p`: Priority level (0=none, 1=urgent, 2=high, 3=normal, 4=low) (default: 3)
 - `--labels` or `-l`: Comma-separated labels (default: "harness")
@@ -49,6 +51,7 @@ node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
 - `--help` or `-h`: Show help message
 
 **Available States:**
+
 - `backlog` - Issues that need to be prioritized
 - `todo` - Issues ready to be worked on
 - `inProgress` - Issues currently being worked on
@@ -57,8 +60,9 @@ node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
 - `canceled` - Canceled issues
 
 **Available Labels:**
+
 - `harness` - Harness and operations work
-- `governance` - Workspace and policy work  
+- `governance` - Workspace and policy work
 - `hygiene` - Cleanup and maintenance
 - `product` - Product features
 - `release` - Release and deployment
@@ -74,15 +78,15 @@ node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
 You can also import and use the workflow function programmatically:
 
 ```javascript
-import { workflowCreateLinearIssue } from './scripts/ops/integrations/linear/agent-workflow-create-issue.mjs';
+import { workflowCreateLinearIssue } from "./scripts/ops/integrations/linear/agent-workflow-create-issue.mjs";
 
 // Create an issue programmatically
 const issue = await workflowCreateLinearIssue({
   title: "Fix validation error in QR generation",
   description: "QR generation fails when input contains special characters",
   priority: 2, // High priority
-  labels: ['harness', 'bug'],
-  stateId: 'todo'
+  labels: ["harness", "bug"],
+  stateId: "todo",
 });
 
 console.log(`Created issue: ${issue.identifier}`);
@@ -113,37 +117,46 @@ The workflow provides detailed output including:
 
 **Example Issue Structure:**
 
-```markdown
+````markdown
 ## Title
+
 Fix validation error in QR generation
 
 ## Description
+
 QR generation fails when input contains special characters like <, >, &, etc.
 
 ## Scope Class
+
 - docs-harness / current-platform / launch-convergence / operational-external
 
 ## Required Context
+
 - README.md
 - AGENTS.md
 - docs/README.md
 
 ## Touched Paths
+
 - apps/web/src/components/QRGenerator.tsx
 - packages/domain/qr/src/validation.ts
 
 ## Constraints
+
 - Must preserve existing QR generation behavior for valid inputs
 - Must handle special characters gracefully
 - Must maintain backward compatibility
 
 ## Verification
+
 ```bash
 npm run test:unit
 npm run test:basic
 ```
+````
 
 ## Expected Evidence
+
 - Summary of changes
 - Commands run with pass/fail results
 - Changed files
@@ -151,9 +164,11 @@ npm run test:basic
 - Rollback note
 
 ## Escalate If
+
 - Paid spend is required
 - Production auth changes are needed
-```
+
+````
 
 ## 🔍 Linear Client Tools
 
@@ -183,7 +198,7 @@ STATES = {
   done: "348275d1-b2a6-481d-81e0-cf2465cbfefd",
   canceled: "eb842399-5ae1-4fd2-a73e-e53801cfba56",
 };
-```
+````
 
 ### Label IDs
 
@@ -278,19 +293,19 @@ This workflow is designed to work seamlessly with Symphony agents. Agents can:
 // Example agent implementation pattern
 
 // 1. Read governing instructions
-const agentsMd = await readFile('AGENTS.md', 'utf8');
-const readme = await readFile('README.md', 'utf8');
+const agentsMd = await readFile("AGENTS.md", "utf8");
+const readme = await readFile("README.md", "utf8");
 
 // 2. Understand the workflow
-const workflow = await import('./scripts/ops/integrations/linear/agent-workflow-create-issue.mjs');
+const workflow = await import("./scripts/ops/integrations/linear/agent-workflow-create-issue.mjs");
 
 // 3. Create the issue using the workflow
 const issue = await workflow.workflowCreateLinearIssue({
   title: "Implement new feature X",
   description: "Detailed description of the feature and acceptance criteria",
   priority: 2,
-  labels: ['product', 'feature'],
-  stateId: 'todo'
+  labels: ["product", "feature"],
+  stateId: "todo",
 });
 
 // 4. Report success

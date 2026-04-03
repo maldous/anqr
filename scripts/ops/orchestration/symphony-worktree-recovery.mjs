@@ -43,9 +43,7 @@ import {
   RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD,
   RECOVERY_BASELINE_CHECK_INTERVAL_CYCLES,
 } from "../symphony-config.mjs";
-import {
-  runCspell,
-} from "../core/symphony-validation.mjs";
+import { runCspell } from "../core/symphony-validation.mjs";
 import {
   getWorktreePath,
   getWorktreeBranch,
@@ -88,12 +86,14 @@ export function classifyWorktree(snapshot) {
 
   const hasDirtyFiles = snapshot.gitDirtyFiles.length > 0;
   const finState = snapshot.finalizationState;
-  const isRepairable = finState && [
-    "validation_failed_repairable",
-    "commit_failed_repairable",
-    "branch_push_failed_repairable",
-    "integration_failed_repairable",
-  ].includes(finState.state);
+  const isRepairable =
+    finState &&
+    [
+      "validation_failed_repairable",
+      "commit_failed_repairable",
+      "branch_push_failed_repairable",
+      "integration_failed_repairable",
+    ].includes(finState.state);
 
   // 1. Active lease with recent heartbeat → executing, skip (checked first — active work trumps all)
   if (snapshot.leaseState && leaseIsActive({ lease: snapshot.leaseState })) {
@@ -125,7 +125,10 @@ export function classifyWorktree(snapshot) {
     result.inferredOwner = snapshot.issueIdentifier;
 
     const finAge = Date.now() - new Date(finState.updatedAt || 0).getTime();
-    if (finAge > RECOVERY_QUARANTINE_THRESHOLD_MS && (finState.attempts || 0) >= RECOVERY_MAX_REPAIR_ATTEMPTS) {
+    if (
+      finAge > RECOVERY_QUARANTINE_THRESHOLD_MS &&
+      (finState.attempts || 0) >= RECOVERY_MAX_REPAIR_ATTEMPTS
+    ) {
       result.repairAction = "quarantine";
     }
     return result;
@@ -140,7 +143,10 @@ export function classifyWorktree(snapshot) {
 
     // Check if stuck in repairable state too long
     const finAge = Date.now() - new Date(finState.updatedAt || 0).getTime();
-    if (finAge > RECOVERY_QUARANTINE_THRESHOLD_MS && (finState.attempts || 0) >= RECOVERY_MAX_REPAIR_ATTEMPTS) {
+    if (
+      finAge > RECOVERY_QUARANTINE_THRESHOLD_MS &&
+      (finState.attempts || 0) >= RECOVERY_MAX_REPAIR_ATTEMPTS
+    ) {
       result.repairAction = "quarantine";
     }
     return result;
@@ -169,9 +175,10 @@ export function classifyWorktree(snapshot) {
       result.classification = "dirty_owned";
       result.confidence = 0.6;
       result.inferredOwner = inferred;
-      result.repairAction = result.confidence >= RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD
-        ? "continue_repair"
-        : "quarantine";
+      result.repairAction =
+        result.confidence >= RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD
+          ? "continue_repair"
+          : "quarantine";
     } else {
       result.classification = "dirty_orphaned";
       result.confidence = 0.3;
@@ -215,7 +222,9 @@ function inferOwnerFromBranch(snapshot) {
     });
     const match = log.match(/ANQ-\d+/i);
     if (match) return match[0];
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   // Check state store for issues assigned to this worktree
   const store = loadState();
@@ -245,7 +254,9 @@ function hasConflictMarkers(worktreePath, dirtyFiles) {
       if (content.includes("<<<<<<<") && content.includes(">>>>>>>")) {
         return true;
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
   return false;
 }
@@ -327,7 +338,12 @@ export async function executeRepair(worktreeId, classification) {
           }
           setFinalizationState(inferredOwner, { attempts });
         }
-        return { ok: false, action: "retry_push", nextState: "branch_push_failed", error: err.message };
+        return {
+          ok: false,
+          action: "retry_push",
+          nextState: "branch_push_failed",
+          error: err.message,
+        };
       }
     }
 
@@ -354,7 +370,12 @@ export async function executeRepair(worktreeId, classification) {
 
     default:
       logWarn(`[recovery] Unknown repair action: ${repairAction}`);
-      return { ok: false, action: repairAction || "unknown", nextState: "unchanged", error: "unknown action" };
+      return {
+        ok: false,
+        action: repairAction || "unknown",
+        nextState: "unchanged",
+        error: "unknown action",
+      };
   }
 }
 
@@ -373,7 +394,9 @@ export async function runRecoveryCycle() {
       const snapshot = getWorktreeHealthSnapshot(id);
       const classification = classifyWorktree(snapshot);
 
-      logDebug(`[recovery] ${wtId}: ${classification.classification} → ${classification.repairAction} (confidence: ${classification.confidence})`);
+      logDebug(
+        `[recovery] ${wtId}: ${classification.classification} → ${classification.repairAction} (confidence: ${classification.confidence})`,
+      );
 
       if (classification.repairAction === "skip") {
         stats.skipped++;
@@ -402,7 +425,9 @@ export async function runRecoveryCycle() {
     logWarn(`[recovery] Failed to write fleet health: ${err.message}`);
   }
 
-  logInfo(`[recovery] Cycle complete: scanned=${stats.scanned} repaired=${stats.repaired} quarantined=${stats.quarantined} skipped=${stats.skipped} errors=${stats.errors.length}`);
+  logInfo(
+    `[recovery] Cycle complete: scanned=${stats.scanned} repaired=${stats.repaired} quarantined=${stats.quarantined} skipped=${stats.skipped} errors=${stats.errors.length}`,
+  );
   return stats;
 }
 
@@ -445,7 +470,9 @@ async function attemptCspellAutoFix(detail) {
 
   const MAX_AUTO_WORDS = 20;
   if (unknownWords.length > MAX_AUTO_WORDS) {
-    logWarn(`[recovery] Too many unknown cspell words (${unknownWords.length}) — needs manual review`);
+    logWarn(
+      `[recovery] Too many unknown cspell words (${unknownWords.length}) — needs manual review`,
+    );
     return false;
   }
 
@@ -457,7 +484,9 @@ async function attemptCspellAutoFix(detail) {
       timeout: 10_000,
     }).trim();
     if (status.length > 0) {
-      logWarn("[recovery] Main repo has uncommitted changes — skipping cspell auto-fix to avoid losing work");
+      logWarn(
+        "[recovery] Main repo has uncommitted changes — skipping cspell auto-fix to avoid losing work",
+      );
       return false;
     }
   } catch (err) {
@@ -479,7 +508,9 @@ async function attemptCspellAutoFix(detail) {
   const existingWords = new Set(cspellConfig.words.map((w) => w.toLowerCase()));
   const newWords = unknownWords.filter((w) => !existingWords.has(w));
   if (newWords.length === 0) {
-    logWarn("[recovery] All unknown words already in dictionary — cspell failure needs manual investigation");
+    logWarn(
+      "[recovery] All unknown words already in dictionary — cspell failure needs manual investigation",
+    );
     return false;
   }
 
@@ -497,10 +528,15 @@ async function attemptCspellAutoFix(detail) {
   // Commit and push
   try {
     // .cspell.json is a symlink to cspell.json — only need to add the real file
-    execFileSync("git", ["add", "cspell.json"], { cwd: MAIN_REPO_ROOT, timeout: 10_000, stdio: "pipe" });
-    const subject = newWords.length <= 5
-      ? `fix: auto-add cspell words: ${newWords.join(", ")}`
-      : `fix: auto-add ${newWords.length} cspell words`;
+    execFileSync("git", ["add", "cspell.json"], {
+      cwd: MAIN_REPO_ROOT,
+      timeout: 10_000,
+      stdio: "pipe",
+    });
+    const subject =
+      newWords.length <= 5
+        ? `fix: auto-add cspell words: ${newWords.join(", ")}`
+        : `fix: auto-add ${newWords.length} cspell words`;
     execFileSync("git", ["commit", "-m", subject], {
       cwd: MAIN_REPO_ROOT,
       timeout: 10_000,
@@ -513,7 +549,9 @@ async function attemptCspellAutoFix(detail) {
       stdio: "pipe",
       env: { ...process.env, ANQR_AUTOMATION_PUSH: "1" },
     });
-    logInfo(`[recovery] ✅ Auto-fixed cspell: added ${newWords.length} word(s): ${newWords.join(", ")}`);
+    logInfo(
+      `[recovery] ✅ Auto-fixed cspell: added ${newWords.length} word(s): ${newWords.join(", ")}`,
+    );
   } catch (err) {
     logError(`[recovery] Failed to commit/push cspell fix: ${err.message}`);
     // Revert local changes so main repo stays clean
@@ -523,7 +561,9 @@ async function attemptCspellAutoFix(detail) {
         timeout: 10_000,
         stdio: "pipe",
       });
-    } catch { /* best-effort revert */ }
+    } catch {
+      /* best-effort revert */
+    }
     return false;
   }
 
@@ -547,8 +587,16 @@ async function propagateBaselineFixToCleanWorktrees() {
 
     const wtPath = getWorktreePath(String(id));
     try {
-      execFileSync("git", ["fetch", "origin", "main"], { cwd: wtPath, timeout: 15_000, stdio: "pipe" });
-      execFileSync("git", ["merge", "--ff-only", "origin/main"], { cwd: wtPath, timeout: 15_000, stdio: "pipe" });
+      execFileSync("git", ["fetch", "origin", "main"], {
+        cwd: wtPath,
+        timeout: 15_000,
+        stdio: "pipe",
+      });
+      execFileSync("git", ["merge", "--ff-only", "origin/main"], {
+        cwd: wtPath,
+        timeout: 15_000,
+        stdio: "pipe",
+      });
       logInfo(`[recovery] ✅ Fast-forwarded wt${id} to include baseline fix`);
     } catch {
       logDebug(`[recovery] Could not fast-forward wt${id} — will pick up fix on next reset`);
@@ -593,7 +641,9 @@ async function checkQuarantinedForReprovisioning() {
   for (const wt of quarantined) {
     const repairAttempts = wt.repairAttempts || 0;
     if (repairAttempts >= RECOVERY_MAX_REPAIR_ATTEMPTS) {
-      logInfo(`[recovery] Quarantined ${wt.worktreeId} eligible for reprovisioning (${repairAttempts} repair attempts)`);
+      logInfo(
+        `[recovery] Quarantined ${wt.worktreeId} eligible for reprovisioning (${repairAttempts} repair attempts)`,
+      );
       try {
         const { reprovisionWorktree } = await import("./symphony-worktree-pool.mjs");
         await reprovisionWorktree(wt.worktreeId.replace(/^wt/, ""));
@@ -618,7 +668,9 @@ function showStatus() {
 
   for (const wt of inventory.worktrees) {
     const classification = classifyWorktree(wt);
-    console.log(`  ${wt.id}: ${wt.classification} → ${classification.repairAction || "none"} (confidence: ${classification.confidence})`);
+    console.log(
+      `  ${wt.id}: ${wt.classification} → ${classification.repairAction || "none"} (confidence: ${classification.confidence})`,
+    );
     if (wt.issueIdentifier) console.log(`    Issue: ${wt.issueIdentifier}`);
     if (wt.gitDirtyFiles.length > 0) console.log(`    Dirty files: ${wt.gitDirtyFiles.length}`);
   }
@@ -629,7 +681,9 @@ function showStatus() {
  * Run in daemon mode — poll periodically.
  */
 export async function runDaemon() {
-  logInfo(`[recovery] Starting daemon mode (poll every ${RECOVERY_POLL_INTERVAL_MS / 1000}s, baseline check every ${RECOVERY_BASELINE_CHECK_INTERVAL_CYCLES} cycles)`);
+  logInfo(
+    `[recovery] Starting daemon mode (poll every ${RECOVERY_POLL_INTERVAL_MS / 1000}s, baseline check every ${RECOVERY_BASELINE_CHECK_INTERVAL_CYCLES} cycles)`,
+  );
 
   let cycleCount = 0;
 

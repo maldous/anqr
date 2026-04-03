@@ -59,6 +59,7 @@ const PROBE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 ```
 
 **Rationale:**
+
 - Provider availability changes slowly (API keys, quotas, etc.)
 - 5 minutes balances freshness vs API quota conservation
 - Failed providers have separate cooldown timers (6 min for free, 2 min for paid)
@@ -89,6 +90,7 @@ saveProbeCache({
 ### symphony-credit-gate.mjs
 
 Exports shared constants:
+
 - `STATE_DIR` — Location for all Symphony state files
 - `ensureStateDir()` — Create state directory if missing
 
@@ -120,12 +122,12 @@ journalctl --user -u 'anqr-symphony-executor@*.service' -f | grep -E "(probe|cac
 
 ### Startup Time
 
-| Metric | Before | After |
-|--------|--------|-------|
-| wt1 startup | 30-60s | 30-60s (probes) |
+| Metric          | Before      | After           |
+| --------------- | ----------- | --------------- |
+| wt1 startup     | 30-60s      | 30-60s (probes) |
 | wt2-wt8 startup | 30-60s each | <1s (cache hit) |
-| Total API calls | 304 | 38 |
-| Rate limit hits | Common | Rare |
+| Total API calls | 304         | 38              |
+| Rate limit hits | Common      | Rare            |
 
 ### Runtime Probe Cycles
 
@@ -134,14 +136,17 @@ Only **1 executor** probes every 30 minutes (whichever hits the timer first). Ot
 ## Failure Modes
 
 ### Cache Corruption
+
 - Executors gracefully fall back to full probe if cache is invalid
 - Next successful probe overwrites corrupt cache
 
 ### Cache Stale (>5 min)
+
 - Executor treats as cache miss and runs full probe
 - Updates cache for other executors
 
 ### No Cache (First Start)
+
 - First executor to start runs full probe
 - Subsequent executors benefit from cache
 
@@ -170,11 +175,13 @@ journalctl --user -u anqr-symphony-executor@2 -n 100 | grep cache
 ## Edge Cases
 
 ### Race Condition: Multiple Executors Start Simultaneously
+
 - First to acquire file lock (via write) wins
 - Others read stale cache briefly, then refresh on next cycle
 - **Not harmful** — at worst, 2-3 executors probe instead of 8
 
 ### Cache vs In-Memory State
+
 - Each executor maintains its own in-memory `providerStatusCache`
 - Cache is only consulted on startup and background probe cycles
 - Runtime selection uses in-memory state (faster)
@@ -189,12 +196,15 @@ journalctl --user -u anqr-symphony-executor@2 -n 100 | grep cache
 ## Maintenance
 
 ### Cache File Cleanup
+
 Not needed — cache is always fresh (5 min TTL) and small (<100KB).
 
 ### Cache Invalidation
+
 Manual invalidation not needed — executors automatically refresh every 30 minutes.
 
 To force refresh:
+
 ```bash
 # Option 1: Delete cache (next executor probes)
 rm -f reports/symphony/provider-probe-cache.json

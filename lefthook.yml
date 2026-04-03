@@ -42,5 +42,6 @@ pre-push:
       run: |
         [ "$ANQR_AUTOMATION_PUSH" = "1" ] && exit 0
         npm run typecheck
+
 #    unit-tests:
 #      run: npm run test:unit

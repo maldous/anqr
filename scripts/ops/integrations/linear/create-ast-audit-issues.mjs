@@ -2,7 +2,7 @@
 
 /**
  * create-ast-audit-issues.mjs — Create Linear issues for ANQ-1131: One AST per file refactor
- * 
+ *
  * Breaks down the entire scripts/** surface into sensible-sized chunks that can each
  * be handled by an agent in a single pass.
  */
@@ -691,10 +691,12 @@ async function main() {
   }
 
   console.log(`\n📊 Summary: Created ${created.length}/${issueGroups.length} issues`);
-  console.log(`\n📈 Refactor Scope:`)
+  console.log(`\n📈 Refactor Scope:`);
   console.log(`   Total files: ~156 .mjs/.ts files in scripts/**`);
   console.log(`   Estimated functions to split: ~200-250 top-level exports`);
-  console.log(`   Total effort: ${issueGroups.reduce((sum, g) => sum + g.estimate, 0)} story points across ${issueGroups.length} phases`);
+  console.log(
+    `   Total effort: ${issueGroups.reduce((sum, g) => sum + g.estimate, 0)} story points across ${issueGroups.length} phases`,
+  );
   console.log(`\n🎯 Execution Strategy:`);
   console.log(`   - Phases 1-5: Critical path (foundation, bridge, Linear, RAG, orchestration)`);
   console.log(`   - Phases 6-8: Secondary services (runtime, notifications, governance)`);

@@ -160,7 +160,10 @@ export async function feedQueue(snap = null, dryRun = false) {
   for (const issue of toFeed) {
     if (dryRun) {
       const fromDiscord = isDiscordSourced(issue);
-      logAction("feed", `[DRY RUN] Would promote ${issue.identifier} to Todo: ${issue.title}${fromDiscord ? " (Discord)" : ""}`);
+      logAction(
+        "feed",
+        `[DRY RUN] Would promote ${issue.identifier} to Todo: ${issue.title}${fromDiscord ? " (Discord)" : ""}`,
+      );
       continue;
     }
     await updateIssue(issue.id, { stateId: STATES.todo });
@@ -177,7 +180,10 @@ export async function feedQueue(snap = null, dryRun = false) {
       from: "Backlog",
       to: "Todo",
     });
-    logAction("feed", `Promoted ${issue.identifier} to Todo: ${issue.title}${fromDiscord ? " (Discord)" : ""}`);
+    logAction(
+      "feed",
+      `Promoted ${issue.identifier} to Todo: ${issue.title}${fromDiscord ? " (Discord)" : ""}`,
+    );
   }
 }
 

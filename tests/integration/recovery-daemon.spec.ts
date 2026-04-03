@@ -12,12 +12,7 @@ import {
   getFinalizationState,
   setWorktreeState,
   getWorktreeState,
-  recordQuarantine,
-  clearQuarantine,
-  enqueueIntegrationCandidate,
-  listIntegrationCandidates,
   acquireLease,
-  releaseLease,
 } from "../../scripts/ops/core/symphony-state.mjs";
 import { executeRepair } from "../../scripts/ops/orchestration/symphony-worktree-recovery.mjs";
 
@@ -159,7 +154,11 @@ describe("Recovery state transitions", () => {
   });
 
   it("repeated failed repair transitions to quarantined", async () => {
-    setWorktreeState("wt3", { state: "dirty_owned", issueIdentifier: "ANQ-500", repairAttempts: 4 });
+    setWorktreeState("wt3", {
+      state: "dirty_owned",
+      issueIdentifier: "ANQ-500",
+      repairAttempts: 4,
+    });
 
     const result = await executeRepair("wt3", {
       classification: "dirty_orphaned",

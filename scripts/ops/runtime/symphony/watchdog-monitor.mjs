@@ -29,7 +29,7 @@ const WATCHDOG_TIMEOUT_MS = Number.parseInt(process.env.WATCHDOG_TIMEOUT_MS || "
 const WATCHDOG_ROLLBACK = process.env.WATCHDOG_ROLLBACK !== "false";
 const SYMPHONY_PORT = 4319;
 const CODEBUFF_PORT = 4318;
-const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || 'main';
+const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || "main";
 
 const args = process.argv.slice(2);
 const bridgeArg = args.find((a) => a.startsWith("--bridge="))?.split("=")[1] || "both";

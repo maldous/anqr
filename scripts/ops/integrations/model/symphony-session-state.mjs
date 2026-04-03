@@ -196,7 +196,9 @@ export function clearSessionProvider(sessionId) {
       lastUsed: Date.now(),
     };
     saveSessionState(state);
-    logDebug(`[session-state] Cleared provider sticky for session ${sessionId.slice(0, 8)}..., preserved ${messages?.length || 0} messages`);
+    logDebug(
+      `[session-state] Cleared provider sticky for session ${sessionId.slice(0, 8)}..., preserved ${messages?.length || 0} messages`,
+    );
   }
 }
 
@@ -267,7 +269,9 @@ export function setSessionMessages(sessionId, messages) {
   session.lastUsed = Date.now(); // Update timestamp
 
   saveSessionState(state);
-  logDebug(`[session-state] Stored ${messagesCopy.length} messages for session ${sessionId.slice(0, 8)}...`);
+  logDebug(
+    `[session-state] Stored ${messagesCopy.length} messages for session ${sessionId.slice(0, 8)}...`,
+  );
 }
 
 /**

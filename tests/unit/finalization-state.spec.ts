@@ -10,8 +10,6 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import {
-  loadState,
-  saveState,
   setFinalizationState,
   getFinalizationState,
   enqueueIntegrationCandidate,
@@ -161,7 +159,9 @@ describe("Integration Lock", () => {
 
     // Wait for expiry
     const start = Date.now();
-    while (Date.now() - start < 10) { /* busy wait */ }
+    while (Date.now() - start < 10) {
+      /* busy wait */
+    }
 
     const result = acquireIntegrationLock("holder-2");
     expect(result.ok).toBe(true);

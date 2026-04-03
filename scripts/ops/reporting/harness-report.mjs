@@ -38,7 +38,13 @@ const DOCS_FRESHNESS_DAYS = 30;
 
 const PROFILES = {
   quick: ["repo-structure", "typecheck", "lint", "cspell-coverage", "ast-density"],
-  continuous: ["repo-structure", "ollama-health", "litellm-routing", "pipeline-latency", "linear-rag-pipeline"],
+  continuous: [
+    "repo-structure",
+    "ollama-health",
+    "litellm-routing",
+    "pipeline-latency",
+    "linear-rag-pipeline",
+  ],
   full: [
     "repo-structure",
     "typecheck",
@@ -512,7 +518,9 @@ async function checkLinearRagPipeline() {
     return { pass: false, detail: issues.join("; ") };
   }
 
-  const exportDetail = exportStats ? `${exportStats.count} issues (${exportStats.ageHours}h)` : "N/A";
+  const exportDetail = exportStats
+    ? `${exportStats.count} issues (${exportStats.ageHours}h)`
+    : "N/A";
   const indexDetail = indexStats
     ? `${indexStats.chunks} chunks, ${indexStats.sizeKB}KB (${indexStats.ageHours}h)`
     : "N/A";

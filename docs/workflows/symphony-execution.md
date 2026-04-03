@@ -462,8 +462,8 @@ The guardian is deterministic, not AI-driven:
 | `scripts/ops/symphony-agent.mjs`                       | Tool-calling AI agent                                  | ANQ-374           |
 | `scripts/ops/symphony-credit-gate.mjs`                 | Provider cascade (credit gate)                         | ANQ-374           |
 | `scripts/ops/symphony/WORKFLOW.md`                     | Agent system prompt (versioned)                        | ANQ-374           |
-| `services/systemd/anqr-linear-runner@.service`        | systemd Linear runner service (worktree template)      | ANQ-374           |
-| `services/systemd/anqr-linear-runner@.timer`          | systemd Linear runner timer (2min)                     | ANQ-374           |
+| `services/systemd/anqr-linear-runner@.service`         | systemd Linear runner service (worktree template)      | ANQ-374           |
+| `services/systemd/anqr-linear-runner@.timer`           | systemd Linear runner timer (2min)                     | ANQ-374           |
 | `scripts/ops/lib/notify.mjs`                           | Email notification helper (msmtp + rate limiting)      | ANQ-377           |
 | `scripts/ops/email-ingest.mjs`                         | Email ingest (mbsync + notmuch → Linear issues)        | ANQ-377           |
 | `services/systemd/anqr-email-ingest.service`           | systemd email ingest service                           | ANQ-377           |

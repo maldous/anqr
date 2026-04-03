@@ -32,7 +32,7 @@ import { updateMemory } from "./update-memory.mjs";
 import { createLogger } from "./logger.mjs";
 
 const { logInfo, logError } = createLogger();
-const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || 'main';
+const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || "main";
 
 /**
  * Get current git commit hash

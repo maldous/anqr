@@ -7,6 +7,7 @@
 ## Symptom
 
 Symphony runners were reporting:
+
 ```
 ℹ️ info: No feed-eligible backlog issues
 [runner] No eligible issues found for execution
@@ -19,6 +20,7 @@ Even though there were 25+ issues in Linear Backlog state.
 All Backlog issues were marked as `retry_exhausted` in the Symphony state file (`/run/user/${UID}/anqr-symphony-state/state.json`), which permanently blocks them from being fed to the queue.
 
 The `canFeedIssue()` and `canExecuteIssue()` filters check the following conditions:
+
 - `human_only`: Issue requires human intervention
 - `retry_exhausted`: Max retries exceeded, blocked from auto-retry
 - `blocked_reason`: Explicit block reason
@@ -43,6 +45,7 @@ node scripts/ops/tools/reset-retry-exhausted.mjs --id=ANQ-1234
 ```
 
 After resetting:
+
 1. Issues can be fed from Backlog → Todo
 2. Queue feeder will automatically promote them (target: 3-8 issues in queue)
 3. Symphony runners will pick them up on next cycle
@@ -70,6 +73,7 @@ import('./scripts/ops/integrations/linear/linear-client.mjs').then(async (m) => 
 ## Prevention
 
 Consider:
+
 1. **Higher retry limit**: Increase `RUNNER_MAX_RETRIES` in `symphony-config.mjs` (currently 2)
 2. **Selective quarantine**: Only quarantine issues that fail with the same signature repeatedly
 3. **Auto-reset cooldown**: Add time-based auto-reset for retry_exhausted issues (e.g., 24 hours)

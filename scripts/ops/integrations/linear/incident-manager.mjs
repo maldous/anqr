@@ -77,12 +77,14 @@ const INCIDENT_TYPES = {
 async function findExistingIncident(fingerprint) {
   try {
     // Search for fingerprint marker in open incidents
-    const openIssues = await findOpenIssuesByDescriptionFragment(`incident-fingerprint: ${fingerprint}`);
-    
+    const openIssues = await findOpenIssuesByDescriptionFragment(
+      `incident-fingerprint: ${fingerprint}`,
+    );
+
     if (openIssues.length === 0) {
       return null;
     }
-    
+
     // Check if any match is within the dedup window
     const now = Date.now();
     for (const issue of openIssues) {
@@ -92,7 +94,7 @@ async function findExistingIncident(fingerprint) {
         return issue;
       }
     }
-    
+
     return null;
   } catch (err) {
     logWarn(`[incident] Failed to search for existing incident: ${err.message}`);
@@ -108,22 +110,22 @@ function buildIncidentTitle(type, context) {
   if (!config) {
     return `Incident: ${type}`;
   }
-  
+
   const { titlePrefix } = config;
   const { service, issueRef, trigger } = context;
-  
+
   if (service) {
     return `${titlePrefix}: ${service}`;
   }
-  
+
   if (issueRef) {
     return `${titlePrefix}: ${issueRef}`;
   }
-  
+
   if (trigger) {
     return `${titlePrefix}: ${trigger}`;
   }
-  
+
   return titlePrefix;
 }
 
@@ -132,14 +134,14 @@ function buildIncidentTitle(type, context) {
  */
 function buildIncidentDescription(type, context, evidence, fingerprint) {
   const lines = [];
-  
+
   // Add fingerprint marker (hidden in UI, used for deduplication)
   lines.push(buildFingerprintMarker(fingerprint));
   lines.push("");
-  
+
   lines.push(`# ${type}`);
   lines.push("");
-  
+
   // Context
   if (context.service) {
     lines.push(`**Service:** ${context.service}`);
@@ -151,10 +153,10 @@ function buildIncidentDescription(type, context, evidence, fingerprint) {
     lines.push(`**Related Issue:** ${context.issueRef}`);
   }
   lines.push("");
-  
+
   // Evidence
   lines.push(formatEvidenceForIssue(evidence));
-  
+
   // Resolution instructions
   lines.push("---");
   lines.push("");
@@ -165,13 +167,13 @@ function buildIncidentDescription(type, context, evidence, fingerprint) {
   lines.push("2. Related issue (if any) moves to Done state");
   lines.push("");
   lines.push("To manually resolve, add evidence of root cause fix and move to Done.");
-  
+
   return lines.join("\n");
 }
 
 /**
  * Create or update incident
- * 
+ *
  * @param {object} params - Incident parameters
  * @param {string} params.type - Incident type (WATCHDOG_ROLLBACK, etc.)
  * @param {string} params.service - Service name (optional)
@@ -183,14 +185,14 @@ function buildIncidentDescription(type, context, evidence, fingerprint) {
 export async function createOrUpdateIncident(params) {
   const { type, service = null, trigger = null, issueRef = null } = params;
   let { evidence } = params;
-  
+
   // Validate type
   if (!INCIDENT_TYPES[type]) {
     throw new Error(`Unknown incident type: ${type}`);
   }
-  
+
   const config = INCIDENT_TYPES[type];
-  
+
   // Collect evidence if not provided
   if (!evidence) {
     evidence = await collectIncidentEvidence(service, {
@@ -200,19 +202,19 @@ export async function createOrUpdateIncident(params) {
       issueRef,
     });
   }
-  
+
   // Generate fingerprint for deduplication
   const fingerprint = generateIncidentFingerprint({
     type,
     service: service || "unknown",
     errorSignature: trigger || "",
   });
-  
+
   logInfo(`[incident] Processing incident: ${type} (fingerprint: ${fingerprint})`);
-  
+
   // Check for existing incident
   const existing = await findExistingIncident(fingerprint);
-  
+
   if (existing) {
     // Add comment to existing incident instead of creating new one
     const commentLines = [
@@ -221,25 +223,30 @@ export async function createOrUpdateIncident(params) {
       `This incident occurred again.`,
       "",
     ];
-    
+
     if (trigger) {
       commentLines.push(`**Trigger:** ${trigger}`);
       commentLines.push("");
     }
-    
+
     commentLines.push("### Evidence");
     commentLines.push(formatEvidenceForIssue(evidence));
-    
+
     await addComment(existing.id, commentLines.join("\n"));
-    
+
     logInfo(`[incident] Added recurrence comment to ${existing.identifier}`);
     return existing;
   }
-  
+
   // Create new incident
   const title = buildIncidentTitle(type, { service, trigger, issueRef });
-  const description = buildIncidentDescription(type, { service, trigger, issueRef }, evidence, fingerprint);
-  
+  const description = buildIncidentDescription(
+    type,
+    { service, trigger, issueRef },
+    evidence,
+    fingerprint,
+  );
+
   const issueInput = {
     title,
     description,
@@ -248,7 +255,7 @@ export async function createOrUpdateIncident(params) {
     priority: config.priority,
     estimate: config.estimate,
   };
-  
+
   try {
     const issue = await createIssue(issueInput);
     logInfo(`[incident] ✅ Created incident: ${issue.identifier} — ${issue.title}`);

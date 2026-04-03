@@ -36,10 +36,10 @@ Linear  → anqr-linear-runner    → anqr-symphony-router → anqr-symphony-exe
 
 ## Worktree mapping
 
-| Worktree | Pool | Service |
-|----------|------|---------|
-| wt1-wt4 | Linear | `anqr-symphony-executor@{1..4}.service` |
-| wt5-wt8 | Discord | `anqr-symphony-executor@{5..8}.service` |
+| Worktree | Pool    | Service                                 |
+| -------- | ------- | --------------------------------------- |
+| wt1-wt4  | Linear  | `anqr-symphony-executor@{1..4}.service` |
+| wt5-wt8  | Discord | `anqr-symphony-executor@{5..8}.service` |
 
 ## Notes
 

@@ -498,9 +498,7 @@ describe("symphony-session-state.mjs", () => {
 
     it("should verify matching message hashes", () => {
       const sessionId = "test-session-verify";
-      const messages = [
-        { role: "user", content: "Test message" },
-      ];
+      const messages = [{ role: "user", content: "Test message" }];
 
       updateSessionProvider(sessionId, { name: "groq", mode: "free", tier: "free-cloud" });
       setSessionMessages(sessionId, messages);

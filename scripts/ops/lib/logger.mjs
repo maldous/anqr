@@ -131,9 +131,10 @@ export function createLogger(scriptName = "", options = {}) {
       };
       // Safely extract cause if present (Node.js Error cause chain)
       if (data.cause && typeof data.cause === "object") {
-        errorProps.cause = data.cause instanceof Error
-          ? { message: data.cause.message, name: data.cause.name }
-          : String(data.cause).slice(0, 100);
+        errorProps.cause =
+          data.cause instanceof Error
+            ? { message: data.cause.message, name: data.cause.name }
+            : String(data.cause).slice(0, 100);
       }
       try {
         return JSON.stringify(errorProps);

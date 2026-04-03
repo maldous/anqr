@@ -21,18 +21,11 @@ import {
   releaseIntegrationLock,
   acquireLease,
   releaseLease,
-  heartbeatLease,
   setWorktreeState,
   getWorktreeState,
   recordQuarantine,
-  clearQuarantine,
   getNextRepairableIssueForWorktree,
   listWorktreesByState,
-  markRetryExhausted,
-  getIssueState,
-  noteAttemptStart,
-  setCooldown,
-  recordTransition,
 } from "../../scripts/ops/core/symphony-state.mjs";
 import { classifyWorktree } from "../../scripts/ops/orchestration/symphony-worktree-recovery.mjs";
 
@@ -176,7 +169,9 @@ describe("Scenario 3: Executor crashes mid-edit → recovery", () => {
     // Simulate crash: lease expires
     // Wait briefly for expiry
     const start = Date.now();
-    while (Date.now() - start < 10) { /* busy wait */ }
+    while (Date.now() - start < 10) {
+      /* busy wait */
+    }
 
     // Recovery daemon detects stale lease
     const snapshot = {
@@ -334,7 +329,9 @@ describe("Scenario 7: Stale lock from crashed process", () => {
 
     // Wait for expiry
     const start = Date.now();
-    while (Date.now() - start < 10) { /* busy wait */ }
+    while (Date.now() - start < 10) {
+      /* busy wait */
+    }
 
     // New process can acquire
     const newLock = acquireIntegrationLock("new-process");
@@ -351,7 +348,9 @@ describe("Scenario 8: Integration crashes while lock held", () => {
 
     // Integrator crashes (no release)
     const start = Date.now();
-    while (Date.now() - start < 10) { /* busy wait */ }
+    while (Date.now() - start < 10) {
+      /* busy wait */
+    }
 
     // Candidates remain in queue
     enqueueIntegrationCandidate("ANQ-S8");

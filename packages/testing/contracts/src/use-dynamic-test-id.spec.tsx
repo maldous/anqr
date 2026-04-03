@@ -32,9 +32,7 @@ describe("useDynamicTestId", () => {
   });
 
   it("should use aria-label with fallback prefix", () => {
-    const { result } = renderHook(() =>
-      useDynamicTestId({ "aria-label": "Close Button" }, "btn"),
-    );
+    const { result } = renderHook(() => useDynamicTestId({ "aria-label": "Close Button" }, "btn"));
 
     expect(result.current).toBe("btn-close-button");
   });
@@ -69,12 +67,9 @@ describe("useDynamicTestId", () => {
   });
 
   it("should handle changing props", () => {
-    const { result, rerender } = renderHook(
-      ({ props }) => useDynamicTestId(props, "fallback"),
-      {
-        initialProps: { props: { id: "initial" } },
-      },
-    );
+    const { result, rerender } = renderHook(({ props }) => useDynamicTestId(props, "fallback"), {
+      initialProps: { props: { id: "initial" } },
+    });
 
     expect(result.current).toBe("initial");
 

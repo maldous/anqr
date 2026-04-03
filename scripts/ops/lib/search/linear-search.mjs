@@ -152,7 +152,8 @@ export async function searchLinearIssues(query, topK = 5) {
     .filter(({ lexicalScore }) => lexicalScore > 0)
     .sort((a, b) => b.lexicalScore - a.lexicalScore);
 
-  const candidateLimit = lexicalRanked.length > 0 ? Math.min(25, lexicalRanked.length) : index.length;
+  const candidateLimit =
+    lexicalRanked.length > 0 ? Math.min(25, lexicalRanked.length) : index.length;
   const candidates =
     lexicalRanked.length > 0
       ? lexicalRanked.slice(0, candidateLimit)

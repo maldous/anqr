@@ -64,6 +64,6 @@ export default defineConfig({
     // Disable parallelism entirely to prevent resource exhaustion crashes
     fileParallelism: false,
     maxWorkers: 1,
-    minWorkers: 1
+    minWorkers: 1,
   },
 });

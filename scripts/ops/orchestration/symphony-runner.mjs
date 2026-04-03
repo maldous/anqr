@@ -81,7 +81,11 @@ import {
   validationManifestHash,
 } from "../symphony-validation.mjs";
 
-import { getWorktreePath, isDiscordWorktree, isSymphonyWorktree } from "../core/worktree-config.mjs";
+import {
+  getWorktreePath,
+  isDiscordWorktree,
+  isSymphonyWorktree,
+} from "../core/worktree-config.mjs";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -101,17 +105,17 @@ try {
     const isFile = gitStat.isFile();
     const isDir = gitStat.isDirectory();
     logDebug(`[worktree-debug] .git isFile: ${isFile}, isDirectory: ${isDir}`);
-    
+
     if (gitStat.isFile()) {
       // This is a worktree - extract the worktree name from the gitdir reference
       const gitContent = readFileSync(gitPath, "utf-8");
       logDebug(`[worktree-debug] .git content: ${gitContent.trim()}`);
-      
+
       const match = gitContent.match(/gitdir:\s*(.+)/);
       if (match && match[1]) {
         const gitDir = match[1].trim();
         logDebug(`[worktree-debug] extracted gitdir: ${gitDir}`);
-        
+
         // gitDir format: /path/to/repo/.git/worktrees/anqr-wt1
         const wtMatch = gitDir.match(/anqr-(wt\d+)$/);
         if (wtMatch) {
@@ -134,8 +138,10 @@ try {
 
 // Determine WORKTREE_ID: prioritize env var, then auto-detect, fail if neither
 let WORKTREE_ID;
-logDebug(`[worktree-debug] ANQR_WORKTREE_ID env var: ${process.env.ANQR_WORKTREE_ID || '(not set)'}`);
-logDebug(`[worktree-debug] auto-detected ID: ${autoDetectedWorktreeId || '(none)'}`);
+logDebug(
+  `[worktree-debug] ANQR_WORKTREE_ID env var: ${process.env.ANQR_WORKTREE_ID || "(not set)"}`,
+);
+logDebug(`[worktree-debug] auto-detected ID: ${autoDetectedWorktreeId || "(none)"}`);
 
 if (process.env.ANQR_WORKTREE_ID) {
   WORKTREE_ID = process.env.ANQR_WORKTREE_ID;
@@ -155,7 +161,9 @@ if (process.env.ANQR_WORKTREE_ID) {
 }
 
 const ROOT = process.env.ANQR_WORKTREE_PATH || getWorktreePath(WORKTREE_ID.replace(/^wt/, ""));
-logDebug(`[worktree-debug] ANQR_WORKTREE_PATH env var: ${process.env.ANQR_WORKTREE_PATH || '(not set)'}`);
+logDebug(
+  `[worktree-debug] ANQR_WORKTREE_PATH env var: ${process.env.ANQR_WORKTREE_PATH || "(not set)"}`,
+);
 logDebug(`[worktree-debug] Final ROOT directory: ${ROOT}`);
 logDebug(`[worktree-debug] ROOT exists: ${existsSync(ROOT)}`);
 logDebug(`[worktree-debug] ROOT is directory: ${existsSync(ROOT) && statSync(ROOT).isDirectory()}`);
@@ -164,8 +172,10 @@ logDebug(`[worktree-debug] ROOT is directory: ${existsSync(ROOT) && statSync(ROO
 const expectedPattern = new RegExp(`anqr-wt\\d+$`);
 const rootMatchesPattern = expectedPattern.test(ROOT);
 logDebug(`[worktree-debug] ROOT matches worktree pattern: ${rootMatchesPattern}`);
-if (!rootMatchesPattern && WORKTREE_ID !== 'main') {
-  logWarn(`[worktree-debug] WARNING: ROOT directory '${ROOT}' does not match expected worktree pattern`);
+if (!rootMatchesPattern && WORKTREE_ID !== "main") {
+  logWarn(
+    `[worktree-debug] WARNING: ROOT directory '${ROOT}' does not match expected worktree pattern`,
+  );
 }
 const WORKFLOW_PATH = resolve(ROOT, "scripts/ops/symphony/WORKFLOW.md");
 
@@ -349,7 +359,9 @@ function getRepoHeadSha(ref = "HEAD") {
 
 function writePreValidationPatch(changedFiles) {
   const patchFile = resolve(ROOT, ".git", `SYMPHONY_PREVALIDATION_${Date.now()}.patch`);
-  const filesToCapture = [...new Set((changedFiles || []).map((file) => normalizeRepoPath(file)).filter(Boolean))];
+  const filesToCapture = [
+    ...new Set((changedFiles || []).map((file) => normalizeRepoPath(file)).filter(Boolean)),
+  ];
   const args = ["diff", "--binary", "--full-index", "HEAD"];
   if (filesToCapture.length > 0) args.push("--", ...filesToCapture);
   const patch = execFileSync("git", args, {
@@ -504,7 +516,12 @@ async function gitPushWorktreeBranch() {
   const branch = currentBranchNameForRunner();
   if (!/^symphony\/wt\d+$/.test(branch)) {
     logError(`[runner] Refusing to push unexpected branch: ${branch}`);
-    return { ok: false, branch, head: getRepoHeadSha("HEAD"), error: `unexpected branch: ${branch}` };
+    return {
+      ok: false,
+      branch,
+      head: getRepoHeadSha("HEAD"),
+      error: `unexpected branch: ${branch}`,
+    };
   }
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
@@ -579,26 +596,30 @@ function isDiscordIssue(issue) {
   const state = getIssueState(issue.identifier);
   const source = state.source || "";
   const isFromDiscord = source.toLowerCase().includes("discord");
-  logDebug(`[worktree-routing] isDiscordIssue(${issue.identifier}) - source: '${source}', result: ${isFromDiscord}`);
+  logDebug(
+    `[worktree-routing] isDiscordIssue(${issue.identifier}) - source: '${source}', result: ${isFromDiscord}`,
+  );
   return isFromDiscord;
 }
 
 async function pickIssue({ excludeIds = new Set(), baselineOnly = false } = {}) {
   const todoIssues = await listIssuesByState(QUEUE_STATES.readyStates);
-  
+
   logDebug(`[worktree-routing] pickIssue() called - WORKTREE_ID: ${WORKTREE_ID}, ROOT: ${ROOT}`);
   logDebug(`[worktree-routing] Total todo issues: ${todoIssues.length}`);
   logDebug(`[worktree-routing] Excluded IDs: ${excludeIds.size}`);
   logDebug(`[worktree-routing] Baseline only: ${baselineOnly}`);
-  
+
   // IMPORTANT: Worktree routing to prevent concurrent conflicts
   // - Discord issues (wt5-wt8) are routed to Discord worktrees only
   // - Symphony issues (wt1-wt4, main) handle all other work
   const isDiscordWt = isDiscordWorktree(WORKTREE_ID);
   const isSymphonyWt = isSymphonyWorktree(WORKTREE_ID);
-  
-  logDebug(`[worktree-routing] This worktree - isDiscord: ${isDiscordWt}, isSymphony: ${isSymphonyWt}`);
-  
+
+  logDebug(
+    `[worktree-routing] This worktree - isDiscord: ${isDiscordWt}, isSymphony: ${isSymphonyWt}`,
+  );
+
   const candidates = todoIssues
     .filter((issue) => !excludeIds.has(issue.id))
     .filter((issue) => canExecuteIssue(issue))
@@ -606,21 +627,27 @@ async function pickIssue({ excludeIds = new Set(), baselineOnly = false } = {}) 
     .filter((issue) => {
       // Worktree routing based on issue source
       const fromDiscord = isDiscordIssue(issue);
-      
-      logDebug(`[worktree-routing] Evaluating issue ${issue.identifier} - fromDiscord: ${fromDiscord}`);
-      
+
+      logDebug(
+        `[worktree-routing] Evaluating issue ${issue.identifier} - fromDiscord: ${fromDiscord}`,
+      );
+
       // Discord worktrees (wt5-wt8) only handle Discord issues
       if (isDiscordWt && !fromDiscord) {
-        logDebug(`[worktree-routing] ✗ Skipping non-Discord issue ${issue.identifier} (Discord worktree)`);
+        logDebug(
+          `[worktree-routing] ✗ Skipping non-Discord issue ${issue.identifier} (Discord worktree)`,
+        );
         return false;
       }
-      
+
       // Symphony worktrees (wt1-wt4, main) only handle non-Discord issues
       if (isSymphonyWt && fromDiscord) {
-        logDebug(`[worktree-routing] ✗ Skipping Discord issue ${issue.identifier} (Symphony worktree)`);
+        logDebug(
+          `[worktree-routing] ✗ Skipping Discord issue ${issue.identifier} (Symphony worktree)`,
+        );
         return false;
       }
-      
+
       logDebug(`[worktree-routing] ✓ Issue ${issue.identifier} matches worktree criteria`);
       return true;
     })
@@ -628,14 +655,14 @@ async function pickIssue({ excludeIds = new Set(), baselineOnly = false } = {}) 
       (a, b) =>
         (a.priority ?? 99) - (b.priority ?? 99) || new Date(a.createdAt) - new Date(b.createdAt),
     );
-  
+
   logDebug(`[worktree-routing] Candidate count after filtering: ${candidates.length}`);
   if (candidates.length > 0) {
     logDebug(`[worktree-routing] Selected issue: ${candidates[0].identifier}`);
   } else {
     logDebug(`[worktree-routing] No candidates available`);
   }
-  
+
   return candidates[0] || null;
 }
 
@@ -695,15 +722,19 @@ async function runSonarPostCommit(issueIdentifier) {
 async function executeIssue(issue, dryRun = false) {
   // Phase 2: Detect repair candidate to skip sync and provide repair context
   const currentFinalization = getFinalizationState(issue.identifier);
-  const isRepairCandidate = currentFinalization && [
-    "validation_failed_repairable",
-    "commit_failed_repairable",
-    "branch_push_failed_repairable",
-    "integration_failed_repairable",
-  ].includes(currentFinalization.state);
+  const isRepairCandidate =
+    currentFinalization &&
+    [
+      "validation_failed_repairable",
+      "commit_failed_repairable",
+      "branch_push_failed_repairable",
+      "integration_failed_repairable",
+    ].includes(currentFinalization.state);
 
   if (isRepairCandidate) {
-    logInfo(`[runner] 🔧 Repair candidate detected: ${issue.identifier} (${currentFinalization.state})`);
+    logInfo(
+      `[runner] 🔧 Repair candidate detected: ${issue.identifier} (${currentFinalization.state})`,
+    );
   }
 
   // Worktree sync: ensure worktree is synced with main before starting
@@ -712,18 +743,20 @@ async function executeIssue(issue, dryRun = false) {
   if (WORKTREE_ID !== "main" && !isRepairCandidate) {
     logDebug(`[worktree-sync] Starting sync for WORKTREE_ID: ${WORKTREE_ID}`);
     logDebug(`[worktree-sync] Sync working directory (ROOT): ${ROOT}`);
-    logDebug(`[worktree-sync] Current sync failure count: ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}`);
-    
+    logDebug(
+      `[worktree-sync] Current sync failure count: ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}`,
+    );
+
     try {
       logInfo(`[runner] 🔄 Syncing worktree ${WORKTREE_ID} with main...`);
       logDebug(`[worktree-sync] Executing: git fetch origin main (cwd: ${ROOT})`);
       execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
-      
+
       logDebug(`[worktree-sync] Executing: git merge origin/main --ff-only (cwd: ${ROOT})`);
       execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
       logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} synced with main`);
       logDebug(`[worktree-sync] Sync successful`);
-      
+
       // Reset failure counter on successful sync
       syncFailCount = 0;
       try {
@@ -734,7 +767,7 @@ async function executeIssue(issue, dryRun = false) {
     } catch (err) {
       // Sync failed - release lock immediately and exit to avoid wasting lease cycles
       syncFailCount++;
-      
+
       // Persist incremented counter for next cycle
       try {
         writeFileSync(SYNC_FAIL_COUNT_FILE, String(syncFailCount));
@@ -743,20 +776,25 @@ async function executeIssue(issue, dryRun = false) {
       logError(
         `[runner] ❌ Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`,
       );
-      
+
       // Check if merge conflict or other error
       const stderr = err.stderr?.toString() || "";
       const stdout = err.stdout?.toString() || "";
-      const isConflict = stderr.includes("conflict") || stdout.includes("conflict") || 
-                        stderr.includes("CONFLICT") || stdout.includes("CONFLICT");
-      
+      const isConflict =
+        stderr.includes("conflict") ||
+        stdout.includes("conflict") ||
+        stderr.includes("CONFLICT") ||
+        stdout.includes("CONFLICT");
+
       if (isConflict) {
         logError(`[runner] Detected merge conflict - divergent changes exist in worktree`);
       } else {
-        logError(`[runner] Sync error type: ${err.code || 'unknown'}`);
+        logError(`[runner] Sync error type: ${err.code || "unknown"}`);
       }
-      
-      logError(`[runner] ⏭️  Releasing lock and exiting immediately to avoid wasting lease acquisition cycle.`);
+
+      logError(
+        `[runner] ⏭️  Releasing lock and exiting immediately to avoid wasting lease acquisition cycle.`,
+      );
 
       // Threshold reached - attempt hard reset
       if (syncFailCount >= SYNC_FAILURE_THRESHOLD) {
@@ -764,12 +802,12 @@ async function executeIssue(issue, dryRun = false) {
           `[runner] ⚠️ Sync failure threshold reached (${syncFailCount}/${SYNC_FAILURE_THRESHOLD})`,
         );
         logWarn(`[runner] Attempting hard reset to origin/main to recover...`);
-        
+
         try {
           execFileSync("git", ["reset", "--hard", "origin/main"], { cwd: ROOT, stdio: "pipe" });
           execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
           logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} reset to origin/main successfully`);
-          
+
           // Reset counter after successful recovery
           syncFailCount = 0;
           try {
@@ -777,10 +815,10 @@ async function executeIssue(issue, dryRun = false) {
               unlinkSync(SYNC_FAIL_COUNT_FILE);
             }
           } catch {}
-          
+
           logInfo(`[runner] ✅ Recovery complete. Next cycle will use clean worktree.`);
           logInfo(`[runner] Releasing lock and exiting cleanly.`);
-          
+
           // ROLLBACK: Release lock and exit after successful reset
           // Next cycle will start fresh with clean worktree
           releaseLock();
@@ -788,8 +826,10 @@ async function executeIssue(issue, dryRun = false) {
         } catch (resetErr) {
           logError(`[runner] ❌ Hard reset failed: ${resetErr.message}`);
           logError(`[runner] ⛔ Manual intervention required for worktree ${WORKTREE_ID}`);
-          logError(`[runner] Recovery command: cd ${ROOT} && git reset --hard origin/main && git clean -fd`);
-          
+          logError(
+            `[runner] Recovery command: cd ${ROOT} && git reset --hard origin/main && git clean -fd`,
+          );
+
           // ROLLBACK: Release lock immediately and exit - manual intervention required
           releaseLock();
           return "skip";
@@ -801,7 +841,7 @@ async function executeIssue(issue, dryRun = false) {
       logError(
         `[runner] Will retry sync on next runner cycle (${syncFailCount}/${SYNC_FAILURE_THRESHOLD} failures so far).`,
       );
-      
+
       // Release lock and exit - don't attempt to acquire lease
       releaseLock();
       return "skip";
@@ -1081,7 +1121,7 @@ async function executeIssue(issue, dryRun = false) {
         const cooldownMs = 2 * 60 * 1000; // Short cooldown for local busy
         await updateIssue(issue.id, { stateId: STATES.todo });
         setCooldown(issue.identifier, cooldownMs, "local_busy");
-        
+
         // Record retry event for evidence
         recordRetryEvent(issue.identifier, {
           type: "failure",
@@ -1090,7 +1130,7 @@ async function executeIssue(issue, dryRun = false) {
           cooldown_ms: cooldownMs,
           error: failureMsg.slice(0, 200),
         });
-        
+
         await addComment(
           issue.id,
           `⏳ **Local model busy** — returned to Todo with short cooldown.\n\nError: ${failureMsg.slice(0, 500)}`,
@@ -1113,7 +1153,11 @@ async function executeIssue(issue, dryRun = false) {
       // Provider failures, stream errors, and gateway errors are now handled entirely by the bridge
       // The bridge tries ALL providers (no limit) until success or all providers exhausted
       // No runner-side retry logic needed - bridge handles fallback automatically
-      if (failureKind === "provider" || failureKind === "stream_error" || failureKind === "gateway_error") {
+      if (
+        failureKind === "provider" ||
+        failureKind === "stream_error" ||
+        failureKind === "gateway_error"
+      ) {
         // Bridge handles all retries - just record the failure and let it propagate
         await addComment(
           issue.id,
@@ -1133,11 +1177,14 @@ async function executeIssue(issue, dryRun = false) {
       if (failureKind === "quota") {
         const currentState = getIssueState(issue.identifier);
         // Use longer base for quota failures (15min base instead of 10min)
-        const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0, 15 * 60 * 1000);
-        
+        const cooldownMs = calculateExponentialBackoff(
+          currentState.retry_count || 0,
+          15 * 60 * 1000,
+        );
+
         await updateIssue(issue.id, { stateId: STATES.todo });
         setCooldown(issue.identifier, cooldownMs, "quota_exhausted");
-        
+
         // Record retry event for evidence
         recordRetryEvent(issue.identifier, {
           type: "failure",
@@ -1146,7 +1193,7 @@ async function executeIssue(issue, dryRun = false) {
           cooldown_ms: cooldownMs,
           error: failureMsg.slice(0, 200),
         });
-        
+
         await addComment(
           issue.id,
           `🚫 **Quota exhausted** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
@@ -1170,10 +1217,10 @@ async function executeIssue(issue, dryRun = false) {
       if (failureKind === "other") {
         const currentState = getIssueState(issue.identifier);
         const cooldownMs = calculateExponentialBackoff(currentState.retry_count || 0);
-        
+
         await updateIssue(issue.id, { stateId: STATES.todo });
         setCooldown(issue.identifier, cooldownMs, "other_failure");
-        
+
         // Record retry event for evidence
         recordRetryEvent(issue.identifier, {
           type: "failure",
@@ -1182,7 +1229,7 @@ async function executeIssue(issue, dryRun = false) {
           cooldown_ms: cooldownMs,
           error: failureMsg.slice(0, 200),
         });
-        
+
         await addComment(
           issue.id,
           `⚠️ **Execution failed** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
@@ -1394,7 +1441,9 @@ async function executeIssue(issue, dryRun = false) {
           recordProviderSuccess(metricsProviderName);
         }
         clearCooldown(issue.identifier);
-        logInfo(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title} (agent completed, no changes needed)`);
+        logInfo(
+          `[runner] ✅ Completed: ${issue.identifier} — ${issue.title} (agent completed, no changes needed)`,
+        );
         return "done";
       }
 
@@ -1659,11 +1708,18 @@ async function executeIssue(issue, dryRun = false) {
     if (!validation.passed) {
       // Phase 2: Check if we should preserve dirty tree for same-worktree repair
       const valFinalization = getFinalizationState(issue.identifier);
-      const valRepairAttempts = (valFinalization?.state === "validation_failed_repairable" ? (valFinalization.attempts || 0) : 0) + 1;
+      const valRepairAttempts =
+        (valFinalization?.state === "validation_failed_repairable"
+          ? valFinalization.attempts || 0
+          : 0) + 1;
       const valSignature = `validation_failed:${validation.signature || "unknown"}`;
       const isRepeatedValSignature = priorFailureSignature === valSignature;
 
-      if (valRepairAttempts <= RUNNER_VALIDATION_REPAIR_MAX && attempt < RUNNER_MAX_RETRIES && !isRepeatedValSignature) {
+      if (
+        valRepairAttempts <= RUNNER_VALIDATION_REPAIR_MAX &&
+        attempt < RUNNER_MAX_RETRIES &&
+        !isRepeatedValSignature
+      ) {
         // Preserve dirty tree for same-worktree repair
         const validationErrors = validation.results
           .filter((r) => !r.pass)
@@ -1672,7 +1728,11 @@ async function executeIssue(issue, dryRun = false) {
 
         // Write full validation output to sidecar file for next repair cycle
         const sidecarPath = resolve(ROOT, ".git", "SYMPHONY_VALIDATION_ERRORS");
-        try { writeFileSync(sidecarPath, validationErrors, "utf-8"); } catch { /* best effort */ }
+        try {
+          writeFileSync(sidecarPath, validationErrors, "utf-8");
+        } catch {
+          /* best effort */
+        }
 
         setFinalizationState(issue.identifier, {
           state: "validation_failed_repairable",
@@ -1758,12 +1818,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
           estimate: issue.estimate,
         });
       } else {
-        setCooldown(
-          issue.identifier,
-          RUNNER_ISSUE_COOLDOWN_MS,
-          "validation_failed",
-          valSignature,
-        );
+        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "validation_failed", valSignature);
         await updateIssue(issue.id, { stateId: STATES.todo });
         await addComment(
           issue.id,
@@ -1806,7 +1861,10 @@ ${String(r.detail).slice(0, 1000)}\n`,
           updatedAt: new Date().toISOString(),
         });
         await updateIssue(issue.id, { stateId: STATES.backlog });
-        await addComment(issue.id, "🚫 **Git commit failed (blocked)** — exceeded repair threshold. Moved to Backlog.");
+        await addComment(
+          issue.id,
+          "🚫 **Git commit failed (blocked)** — exceeded repair threshold. Moved to Backlog.",
+        );
         recordTransition(issue.identifier, {
           actor: "runner",
           reason: "commit_failed_blocked",
@@ -1826,7 +1884,10 @@ ${String(r.detail).slice(0, 1000)}\n`,
           updatedAt: new Date().toISOString(),
         });
         await updateIssue(issue.id, { stateId: STATES.inReview });
-        await addComment(issue.id, "❌ Git commit failed during finalization. Assigned back to same worktree for repair.");
+        await addComment(
+          issue.id,
+          "❌ Git commit failed during finalization. Assigned back to same worktree for repair.",
+        );
         recordTransition(issue.identifier, {
           actor: "runner",
           reason: "commit_failed_repairable",
@@ -1990,7 +2051,11 @@ ${String(r.detail).slice(0, 1000)}\n`,
     }
     // Clean up validation sidecar file on successful completion
     const sidecarCleanup = resolve(ROOT, ".git", "SYMPHONY_VALIDATION_ERRORS");
-    try { if (existsSync(sidecarCleanup)) unlinkSync(sidecarCleanup); } catch { /* best effort */ }
+    try {
+      if (existsSync(sidecarCleanup)) unlinkSync(sidecarCleanup);
+    } catch {
+      /* best effort */
+    }
   }
 }
 
@@ -2049,39 +2114,47 @@ async function main() {
   }
   logInfo(`[runner]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
   logInfo(`[runner] Worktree: ${WORKTREE_ID}, Root: ${ROOT}`);
-  
+
   // Debug: Verify directory variables
   logDebug(`[worktree-verify] ========== WORKTREE DIRECTORY VERIFICATION ==========`);
   logDebug(`[worktree-verify] process.cwd(): ${process.cwd()}`);
   logDebug(`[worktree-verify] ROOT: ${ROOT}`);
   logDebug(`[worktree-verify] WORKTREE_ID: ${WORKTREE_ID}`);
   logDebug(`[worktree-verify] ROOT === process.cwd(): ${ROOT === process.cwd()}`);
-  
+
   // Inline test: Verify they're different for worktrees
-  if (WORKTREE_ID !== 'main' && ROOT === process.cwd()) {
-    logWarn(`[worktree-verify] ⚠️ WARNING: ROOT equals process.cwd() - worktree separation may not be working!`);
-  } else if (WORKTREE_ID !== 'main') {
+  if (WORKTREE_ID !== "main" && ROOT === process.cwd()) {
+    logWarn(
+      `[worktree-verify] ⚠️ WARNING: ROOT equals process.cwd() - worktree separation may not be working!`,
+    );
+  } else if (WORKTREE_ID !== "main") {
     logDebug(`[worktree-verify] ✓ ROOT differs from process.cwd() - worktree separation active`);
   }
-  
+
   // Test: Verify working directory
   try {
-    const gitTopLevel = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: ROOT, encoding: 'utf-8' }).trim();
+    const gitTopLevel = execFileSync("git", ["rev-parse", "--show-toplevel"], {
+      cwd: ROOT,
+      encoding: "utf-8",
+    }).trim();
     logDebug(`[worktree-verify] Git top-level directory: ${gitTopLevel}`);
     logDebug(`[worktree-verify] gitTopLevel === ROOT: ${gitTopLevel === ROOT}`);
   } catch (err) {
     logError(`[worktree-verify] Failed to get git top-level: ${err.message}`);
   }
-  
+
   // Test: List actual worktrees
   try {
-    const worktreeList = execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: ROOT, encoding: 'utf-8' });
+    const worktreeList = execFileSync("git", ["worktree", "list", "--porcelain"], {
+      cwd: ROOT,
+      encoding: "utf-8",
+    });
     logDebug(`[worktree-verify] Git worktree list:\n${worktreeList}`);
   } catch (err) {
     logError(`[worktree-verify] Failed to list worktrees: ${err.message}`);
   }
   logDebug(`[worktree-verify] ====================================================`);
-  
+
   // Log worktree routing configuration
   if (isDiscordWorktree(WORKTREE_ID)) {
     logInfo(`[runner] 🎮 Discord worktree mode: handling ONLY Discord-sourced issues`);
@@ -2090,7 +2163,7 @@ async function main() {
   } else {
     logWarn(`[runner] ⚠️ Unknown worktree type: ${WORKTREE_ID} - will handle all issues`);
   }
-  
+
   if (!process.env.LINEAR_API_KEY) {
     logError("[runner] LINEAR_API_KEY is not set");
     process.exit(1);
@@ -2121,7 +2194,9 @@ async function main() {
       // Phase 2: Allow dirty worktree if marked for repair
       const dirtyWtState = getWorktreeState(WORKTREE_ID);
       if (dirtyWtState?.state === "dirty_owned") {
-        logInfo(`[runner] Dirty worktree allowed for repair candidate (${dirtyWtState.issueIdentifier})`);
+        logInfo(
+          `[runner] Dirty worktree allowed for repair candidate (${dirtyWtState.issueIdentifier})`,
+        );
       } else {
         logError(
           `[runner] Git working tree is dirty — refusing to run in a shared or unsafe worktree (${workingTree.blocked.length} blocking path(s))`,
@@ -2158,12 +2233,14 @@ async function main() {
         const { detectStuckWork } = await import("./symphony-queue-control.mjs");
         await detectStuckWork(snap, false);
       }
-      
+
       // SECOND: Feed the queue to ensure we have enough issues to work on
       // This handles cases where the queue feeder didn't run or issues weren't properly fed
       const freshSnap = await getQueueSnapshot();
       if (freshSnap.readyDepth < TARGET_MIN) {
-        logInfo(`[runner] Queue depth ${freshSnap.readyDepth} < target ${TARGET_MIN} - feeding queue...`);
+        logInfo(
+          `[runner] Queue depth ${freshSnap.readyDepth} < target ${TARGET_MIN} - feeding queue...`,
+        );
         await feedQueue(freshSnap, false);
       }
 
@@ -2177,33 +2254,35 @@ async function main() {
     let executed = false;
     while (!executed) {
       // If --issue flag provided, fetch that specific issue directly
-    let issue = null;
-    if (targetIssue) {
-      logInfo(`[runner] Targeting specific issue: ${targetIssue}`);
-      const { findOpenIssuesByIdentifier } = await import("../linear-client.mjs");
-      const results = await findOpenIssuesByIdentifier(targetIssue);
-      const found = results?.[0];
-      if (found && found.state?.name !== "Done" && found.state?.name !== "Canceled") {
-        issue = found;
-      } else {
-        logWarn(`[runner] Issue ${targetIssue} not found or already completed`);
-      }
-    } else {
-      // Priority 1: sticky repair for this worktree
-      const repairCandidate = getNextRepairableIssueForWorktree(WORKTREE_ID);
-      if (repairCandidate) {
+      let issue = null;
+      if (targetIssue) {
+        logInfo(`[runner] Targeting specific issue: ${targetIssue}`);
         const { findOpenIssuesByIdentifier } = await import("../linear-client.mjs");
-        const results = await findOpenIssuesByIdentifier(repairCandidate.issueIdentifier);
-        if (results?.[0]) {
-          issue = results[0];
-          logInfo(`[runner] 🔧 Picked sticky repair issue: ${issue.identifier} (${repairCandidate.finalization.state})`);
+        const results = await findOpenIssuesByIdentifier(targetIssue);
+        const found = results?.[0];
+        if (found && found.state?.name !== "Done" && found.state?.name !== "Canceled") {
+          issue = found;
+        } else {
+          logWarn(`[runner] Issue ${targetIssue} not found or already completed`);
+        }
+      } else {
+        // Priority 1: sticky repair for this worktree
+        const repairCandidate = getNextRepairableIssueForWorktree(WORKTREE_ID);
+        if (repairCandidate) {
+          const { findOpenIssuesByIdentifier } = await import("../linear-client.mjs");
+          const results = await findOpenIssuesByIdentifier(repairCandidate.issueIdentifier);
+          if (results?.[0]) {
+            issue = results[0];
+            logInfo(
+              `[runner] 🔧 Picked sticky repair issue: ${issue.identifier} (${repairCandidate.finalization.state})`,
+            );
+          }
+        }
+        // Priority 2/3: new work
+        if (!issue) {
+          issue = await pickIssue({ excludeIds, baselineOnly });
         }
       }
-      // Priority 2/3: new work
-      if (!issue) {
-        issue = await pickIssue({ excludeIds, baselineOnly });
-      }
-    }
       if (!issue) break;
       const status = await executeIssue(issue, dryRun);
       if (status === "skip") {

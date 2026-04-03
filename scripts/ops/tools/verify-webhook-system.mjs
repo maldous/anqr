@@ -2,14 +2,14 @@
 
 /**
  * verify-webhook-system.mjs — Verify Linear webhook system is working correctly
- * 
+ *
  * This script checks:
  * 1. Webhook receiver is running
  * 2. Symphony router is running
  * 3. Executors are running
  * 4. Queue state is healthy
  * 5. Issues can be fed from Backlog to Todo
- * 
+ *
  * Usage:
  *   node scripts/ops/tools/verify-webhook-system.mjs
  */
@@ -24,11 +24,9 @@ const { logInfo, logWarn, logError } = createLogger();
 
 function checkSystemdService(serviceName) {
   try {
-    const output = execFileSync(
-      "systemctl",
-      ["--user", "is-active", serviceName],
-      { encoding: "utf-8" }
-    );
+    const output = execFileSync("systemctl", ["--user", "is-active", serviceName], {
+      encoding: "utf-8",
+    });
     return output.trim() === "active";
   } catch {
     return false;
@@ -37,11 +35,9 @@ function checkSystemdService(serviceName) {
 
 function checkSystemdTimer(timerName) {
   try {
-    const output = execFileSync(
-      "systemctl",
-      ["--user", "is-active", timerName],
-      { encoding: "utf-8" }
-    );
+    const output = execFileSync("systemctl", ["--user", "is-active", timerName], {
+      encoding: "utf-8",
+    });
     return output.trim() === "active";
   } catch {
     return false;
@@ -50,11 +46,9 @@ function checkSystemdTimer(timerName) {
 
 function getSystemdStatus(serviceName) {
   try {
-    const output = execFileSync(
-      "systemctl",
-      ["--user", "status", serviceName],
-      { encoding: "utf-8" }
-    );
+    const output = execFileSync("systemctl", ["--user", "status", serviceName], {
+      encoding: "utf-8",
+    });
     return output;
   } catch (error) {
     return error.stdout || error.stderr || `Service ${serviceName} not found`;
@@ -69,7 +63,7 @@ async function main() {
     "anqr-linear-webhook.service",
     "anqr-symphony-router.service",
     "anqr-queue-feeder.service",
-    "anqr-queue-feeder.timer"
+    "anqr-queue-feeder.timer",
   ];
 
   const activeServices = [];
@@ -91,14 +85,14 @@ async function main() {
       logInfo(`    - ${service}`);
     }
   }
-  
+
   if (inactiveServices.length > 0) {
     logWarn("  ⚠️  Inactive services:");
     for (const service of inactiveServices) {
       logWarn(`    - ${service}`);
       // Show status for inactive services
       const status = getSystemdStatus(service);
-      logInfo(`      Status: ${status.split('\n')[0]}`);
+      logInfo(`      Status: ${status.split("\n")[0]}`);
     }
   }
 
@@ -108,7 +102,7 @@ async function main() {
     "anqr-linear-runner@2.timer",
     "anqr-linear-runner@3.timer",
     "anqr-linear-runner@4.timer",
-    "anqr-queue-feeder.timer"
+    "anqr-queue-feeder.timer",
   ];
 
   const activeTimers = [];
@@ -130,7 +124,7 @@ async function main() {
       logInfo(`    - ${timer}`);
     }
   }
-  
+
   if (inactiveTimers.length > 0) {
     logWarn("  ⚠️  Inactive timers:");
     for (const timer of inactiveTimers) {
@@ -142,16 +136,20 @@ async function main() {
   logInfo("\n📋 Queue Health Check:");
   try {
     const snap = await getQueueSnapshot();
-    
-    logInfo(`  Backlog (feed-eligible): ${snap.backlog.automatable.length}/${snap.backlog.all.length}`);
+
+    logInfo(
+      `  Backlog (feed-eligible): ${snap.backlog.automatable.length}/${snap.backlog.all.length}`,
+    );
     logInfo(`  Todo (runnable): ${snap.todo.automatable.length}/${snap.todo.all.length}`);
-    logInfo(`  In Progress (managed): ${snap.inProgress.automatable.length}/${snap.inProgress.all.length}`);
+    logInfo(
+      `  In Progress (managed): ${snap.inProgress.automatable.length}/${snap.inProgress.all.length}`,
+    );
     logInfo(`  Ready depth (Todo count): ${snap.readyDepth}`);
-    
+
     if (snap.readyDepth < 3) {
       logWarn("  ⚠️  Queue is running low - consider feeding more issues");
     }
-    
+
     if (snap.queueDepth > 10) {
       logWarn("  ⚠️  Queue is getting full - consider draining overflow");
     }
@@ -164,18 +162,18 @@ async function main() {
   try {
     const backlogIssues = await listIssuesByState(["Backlog"]);
     const retryExhausted = [];
-    
+
     for (const issue of backlogIssues) {
       const state = getIssueState(issue.identifier);
       if (state.retry_exhausted) {
         retryExhausted.push({
           identifier: issue.identifier,
           title: issue.title,
-          reason: state.blocked_reason || "retry_exhausted"
+          reason: state.blocked_reason || "retry_exhausted",
         });
       }
     }
-    
+
     if (retryExhausted.length > 0) {
       logWarn(`  ⚠️  Found ${retryExhausted.length} retry-exhausted issues:`);
       for (const issue of retryExhausted) {
@@ -195,21 +193,22 @@ async function main() {
     const inProgressIssues = await listIssuesByState(["In Progress"]);
     const staleIssues = [];
     const now = Date.now();
-    
+
     for (const issue of inProgressIssues) {
       const state = getIssueState(issue.identifier);
       const ageMs = now - new Date(issue.updatedAt).getTime();
       const hasActiveLease = state.lease && new Date(state.lease.expires_at).getTime() > now;
-      
-      if (ageMs > 120 * 60 * 1000 && !hasActiveLease) { // 2 hours
+
+      if (ageMs > 120 * 60 * 1000 && !hasActiveLease) {
+        // 2 hours
         staleIssues.push({
           identifier: issue.identifier,
           title: issue.title,
-          ageMinutes: Math.floor(ageMs / 60000)
+          ageMinutes: Math.floor(ageMs / 60000),
         });
       }
     }
-    
+
     if (staleIssues.length > 0) {
       logWarn(`  ⚠️  Found ${staleIssues.length} stale In Progress issues:`);
       for (const issue of staleIssues) {
@@ -228,11 +227,11 @@ async function main() {
   try {
     const snap = await getQueueSnapshot();
     const deficit = 3 - snap.readyDepth;
-    
+
     if (deficit > 0) {
       logInfo(`  📥 Feeding ${deficit} issue(s) from Backlog to Todo...`);
       await feedQueue(snap, false);
-      
+
       const newSnap = await getQueueSnapshot();
       logInfo(`  ✅ Queue depth: ${newSnap.readyDepth} (was ${snap.readyDepth})`);
     } else {

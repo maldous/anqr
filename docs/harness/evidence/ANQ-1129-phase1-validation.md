@@ -14,6 +14,7 @@ Phase 1 Linear RAG implementation validated and monitoring established.
 **Status:** ✅ All core components implemented and operational
 
 **Components Delivered:**
+
 - Linear export script (`export-issues.mjs`)
 - Linear RAG index builder (`build-index-linear.mjs`, `linear-chunker.mjs`)
 - Linear search integration (`linear-search.mjs`)
@@ -34,6 +35,7 @@ Phase 1 Linear RAG implementation validated and monitoring established.
 - [ ] Manual test run (pending: requires LINEAR_API_KEY)
 
 **Script Features:**
+
 - Pagination support via `listIssuesByState`
 - Filtered export (Canceled excluded)
 - 90-day lookback for Done issues
@@ -50,6 +52,7 @@ Phase 1 Linear RAG implementation validated and monitoring established.
 - [ ] Manual test run (pending: requires export data + Ollama)
 
 **Chunking Strategy:**
+
 ```markdown
 # ANQ-XXXX: Issue Title
 
@@ -63,6 +66,7 @@ Issue description content...
 ```
 
 **Index Format:**
+
 - `index.json`: Array of {id, filePath, content, embedding, metadata}
 - `meta.json`: {chunkCount, lastBuild, indexSizeBytes, source}
 
@@ -76,6 +80,7 @@ Issue description content...
 - [ ] Symphony agent integration (deferred to Phase 1.4)
 
 **Search API:**
+
 ```javascript
 const results = await searchLinearIssues("validation errors", 5);
 // Returns: [{identifier, title, state, priority, score, excerpt}]
@@ -91,6 +96,7 @@ const results = await searchLinearIssues("validation errors", 5);
 - [ ] Timer scheduling verified (requires systemctl access)
 
 **Service Configuration:**
+
 - Export: 02:30 daily (300s timeout, 2GB memory limit)
 - Rebuild: 02:45 daily (600s timeout, 4GB memory limit)
 - Both use nvm Node path explicitly
@@ -106,6 +112,7 @@ const results = await searchLinearIssues("validation errors", 5);
 - [ ] Nightly ops report test (requires export/index data)
 
 **Monitoring Metrics:**
+
 - Export: issue count, age in hours
 - Index: chunk count, size in KB, age in hours
 - Alerts: stale data (>48h), missing files, count mismatches
@@ -114,17 +121,17 @@ const results = await searchLinearIssues("validation errors", 5);
 
 ## Component Status
 
-| Component | File | Status | Notes |
-|-----------|------|--------|-------|
-| Export Script | `scripts/ops/integrations/linear/export-issues.mjs` | ✅ Implemented | Ready for testing |
-| Linear Chunker | `scripts/ops/lib/rag/linear-chunker.mjs` | ✅ Implemented | Existing (from prior work) |
-| Index Builder | `scripts/ops/lib/rag/build-index-linear.mjs` | ✅ Implemented | Existing (from prior work) |
-| Search Function | `scripts/ops/lib/search/linear-search.mjs` | ✅ Implemented | Existing (from prior work) |
-| Export Service | `services/systemd/anqr-linear-export.service` | ✅ Created | Needs installation |
-| Export Timer | `services/systemd/anqr-linear-export.timer` | ✅ Created | Scheduled 02:30 daily |
-| Rebuild Service | `services/systemd/anqr-rag-rebuild-linear.service` | ✅ Created | Needs installation |
-| Rebuild Timer | `services/systemd/anqr-rag-rebuild-linear.timer` | ✅ Created | Scheduled 02:45 daily |
-| Monitoring | `scripts/ops/reporting/harness-report.mjs` | ✅ Integrated | `linear-rag-pipeline` check |
+| Component       | File                                                | Status         | Notes                       |
+| --------------- | --------------------------------------------------- | -------------- | --------------------------- |
+| Export Script   | `scripts/ops/integrations/linear/export-issues.mjs` | ✅ Implemented | Ready for testing           |
+| Linear Chunker  | `scripts/ops/lib/rag/linear-chunker.mjs`            | ✅ Implemented | Existing (from prior work)  |
+| Index Builder   | `scripts/ops/lib/rag/build-index-linear.mjs`        | ✅ Implemented | Existing (from prior work)  |
+| Search Function | `scripts/ops/lib/search/linear-search.mjs`          | ✅ Implemented | Existing (from prior work)  |
+| Export Service  | `services/systemd/anqr-linear-export.service`       | ✅ Created     | Needs installation          |
+| Export Timer    | `services/systemd/anqr-linear-export.timer`         | ✅ Created     | Scheduled 02:30 daily       |
+| Rebuild Service | `services/systemd/anqr-rag-rebuild-linear.service`  | ✅ Created     | Needs installation          |
+| Rebuild Timer   | `services/systemd/anqr-rag-rebuild-linear.timer`    | ✅ Created     | Scheduled 02:45 daily       |
+| Monitoring      | `scripts/ops/reporting/harness-report.mjs`          | ✅ Integrated  | `linear-rag-pipeline` check |
 
 ---
 
@@ -133,6 +140,7 @@ const results = await searchLinearIssues("validation errors", 5);
 **Note:** The following tests require runtime environment setup (LINEAR_API_KEY, Ollama) and are deferred to deployment:
 
 ### Test 1: Export Pipeline
+
 ```bash
 # Set LINEAR_API_KEY
 export LINEAR_API_KEY="lin_api_..."
@@ -147,6 +155,7 @@ cat reports/linear-export/issues-latest.json | jq '[.[] | select(.state.name == 
 ```
 
 ### Test 2: RAG Index Pipeline
+
 ```bash
 # Ensure Ollama is running
 curl http://localhost:11434/api/version
@@ -160,6 +169,7 @@ cat reports/rag-index-linear/meta.json | jq
 ```
 
 ### Test 3: Search Integration
+
 ```bash
 # Test search CLI
 node -e "import('./scripts/ops/lib/search/linear-search.mjs').then(m => m.searchLinearIssues('validation').then(console.log))"
@@ -178,6 +188,7 @@ node -e "import('./scripts/ops/lib/search/linear-search.mjs').then(m => m.search
 ```
 
 ### Test 4: Systemd Services
+
 ```bash
 # Install services
 cp services/systemd/anqr-linear-export.* ~/.config/systemd/user/
@@ -201,6 +212,7 @@ journalctl --user -u anqr-rag-rebuild-linear.service -n 50
 ```
 
 ### Test 5: Monitoring
+
 ```bash
 # Run harness report with Linear RAG check
 node scripts/ops/reporting/harness-report.mjs full
@@ -215,12 +227,12 @@ node scripts/ops/reporting/harness-report.mjs full
 
 From ANQ-1120 Phase 1 success criteria:
 
-| Criterion | Status | Evidence |
-|-----------|--------|----------|
-| Linear export runs nightly without errors | ⏳ Pending | Systemd services created, awaiting deployment |
-| Linear RAG index builds in <2 min | ⏳ Pending | Index builder implemented, performance TBD |
-| Agents can search Linear issues via tool call | ⏳ Deferred | Search function ready, Symphony integration = Phase 1.4 |
-| At least 1 successful agent use case documented | ⏳ Deferred | Requires end-to-end deployment |
+| Criterion                                       | Status      | Evidence                                                |
+| ----------------------------------------------- | ----------- | ------------------------------------------------------- |
+| Linear export runs nightly without errors       | ⏳ Pending  | Systemd services created, awaiting deployment           |
+| Linear RAG index builds in <2 min               | ⏳ Pending  | Index builder implemented, performance TBD              |
+| Agents can search Linear issues via tool call   | ⏳ Deferred | Search function ready, Symphony integration = Phase 1.4 |
+| At least 1 successful agent use case documented | ⏳ Deferred | Requires end-to-end deployment                          |
 
 **Current Status:** Infrastructure complete, runtime validation pending deployment.
 
@@ -231,7 +243,7 @@ From ANQ-1120 Phase 1 success criteria:
 Monitor for 2 weeks after deployment. Proceed to Phase 2 (comments + transitions) if:
 
 - ❌ Agents frequently cite wrong issue due to missing comment context
-- ❌ Agents ask "what was the outcome of ANQ-XXX?" indicating need for transitions  
+- ❌ Agents ask "what was the outcome of ANQ-XXX?" indicating need for transitions
 - ❌ Manual review finds >3 cases where comment context would have helped
 
 Otherwise: Phase 1 sufficient, monitor and iterate.
@@ -289,6 +301,7 @@ All Phase 1 prerequisites from ANQ-1120:
 ## Files Changed
 
 **New Files:**
+
 - `scripts/ops/integrations/linear/export-issues.mjs` (110 lines)
 - `services/systemd/anqr-linear-export.service` (40 lines)
 - `services/systemd/anqr-linear-export.timer` (20 lines)
@@ -297,9 +310,11 @@ All Phase 1 prerequisites from ANQ-1120:
 - `docs/harness/evidence/ANQ-1129-phase1-validation.md` (this file)
 
 **Modified Files:**
+
 - `scripts/ops/reporting/harness-report.mjs` (+82 lines: `checkLinearRagPipeline`)
 
 **Existing Files (Prior Work):**
+
 - `scripts/ops/lib/rag/build-index-linear.mjs`
 - `scripts/ops/lib/rag/linear-chunker.mjs`
 - `scripts/ops/lib/search/linear-search.mjs`
@@ -316,10 +331,10 @@ Linear RAG Phase 1 validation complete with all infrastructure components implem
 ✅ RAG index builder  
 ✅ Search integration  
 ✅ Systemd automation  
-✅ Monitoring integration  
+✅ Monitoring integration
 
 **Deployment Ready:** Yes  
 **Runtime Validation:** Pending (requires LINEAR_API_KEY + Ollama + systemctl)  
-**Phase 2 Decision:** Monitor for 2 weeks post-deployment  
+**Phase 2 Decision:** Monitor for 2 weeks post-deployment
 
 **Next Action:** Deploy systemd services and run initial export/index build.

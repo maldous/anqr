@@ -60,6 +60,7 @@ node scripts/ops/orchestration/analyze-worktree-benchmark.mjs --extract "$START_
 ```
 
 **Expected baseline metrics:**
+
 - Throughput: 2-3 issues/hour
 - Conflict rate: 0% (single worktree has no conflicts)
 - CPU utilization: 5-10% average (waiting for LLM)
@@ -93,6 +94,7 @@ node scripts/ops/orchestration/analyze-worktree-benchmark.mjs --extract "$START_
 ```
 
 **Expected concurrent metrics (2 worktrees):**
+
 - Throughput: 4-5 issues/hour (75-100% increase)
 - Conflict rate: <5%
 - CPU utilization: 10-20% average
@@ -122,6 +124,7 @@ node scripts/ops/orchestration/analyze-worktree-benchmark.mjs --extract "$START_
 ```
 
 **Expected concurrent metrics (4 worktrees):**
+
 - Throughput: 6-8 issues/hour (150-200% increase)
 - Conflict rate: <10%
 - CPU utilization: 20-40% average
@@ -165,6 +168,7 @@ node scripts/ops/orchestration/analyze-worktree-benchmark.mjs --compare \
 ```
 
 This generates:
+
 - `reports/symphony/benchmark-results.json` — Raw comparison data
 - `docs/harness/evidence/worktree-benchmark-YYYY-MM-DD.md` — Evidence report with pass/fail
 
@@ -213,25 +217,27 @@ npm run audit:ast
 
 ### Potential Issues
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| High conflict rate (>5%) | Medium | Medium | Review file overlap, consider file-based routing |
-| Throughput <75% increase | Low | High | Investigate lease contention, queue feeding delays |
-| Memory leak | Low | High | Monitor `htop`, add memory limit in systemd |
-| Disk space exhaustion | Low | Medium | Monitor `df -h`, implement automatic cleanup |
-| Worktree corruption | Low | High | Automated repair in nightly-ops-pass |
+| Risk                     | Likelihood | Impact | Mitigation                                         |
+| ------------------------ | ---------- | ------ | -------------------------------------------------- |
+| High conflict rate (>5%) | Medium     | Medium | Review file overlap, consider file-based routing   |
+| Throughput <75% increase | Low        | High   | Investigate lease contention, queue feeding delays |
+| Memory leak              | Low        | High   | Monitor `htop`, add memory limit in systemd        |
+| Disk space exhaustion    | Low        | Medium | Monitor `df -h`, implement automatic cleanup       |
+| Worktree corruption      | Low        | High   | Automated repair in nightly-ops-pass               |
 
 ### Rollback Plan
 
 If validation fails:
 
 1. **Stop all worktree runners:**
+
    ```bash
    systemctl --user stop 'anqr-symphony-runner@*.timer'
    systemctl --user disable 'anqr-symphony-runner@*.timer'
    ```
 
 2. **Return to single-instance runner:**
+
    ```bash
    systemctl --user start anqr-symphony-runner.timer
    ```
@@ -254,12 +260,14 @@ If validation fails:
 **Phase 3: Production Rollout**
 
 1. **Update configuration:**
+
    ```bash
    # Edit scripts/ops/core/symphony-config.mjs
    # MAX_CONCURRENT_AGENTS already set to 8 (4 Symphony + 4 Discord)
    ```
 
 2. **Enable production worktree pool:**
+
    ```bash
    # Production system
    cd /home/user/src/anqr

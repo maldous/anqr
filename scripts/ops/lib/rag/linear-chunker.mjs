@@ -36,7 +36,7 @@ export function chunkLinearIssue(issue) {
   const labels = Array.isArray(issue.labels?.nodes)
     ? issue.labels.nodes.map((l) => l.name).join(", ")
     : "";
-  
+
   const priority = issue.priority || "None";
   const state = issue.state?.name || "Unknown";
   const description = truncateDescription(issue.description || "(no description)");

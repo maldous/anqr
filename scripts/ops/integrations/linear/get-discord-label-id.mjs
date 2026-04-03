@@ -29,7 +29,7 @@ async function getAllLabels() {
         }
       }
     }`,
-    { teamId: TEAM_ID }
+    { teamId: TEAM_ID },
   );
   return result.team.labels.nodes;
 }
@@ -54,7 +54,7 @@ async function createDiscordLabel() {
         description: "Issue created from Discord via OpenClaw Gateway",
         color: "#7289da", // Discord brand color
       },
-    }
+    },
   );
 
   if (!result.issueLabelCreate.success) {
@@ -70,7 +70,7 @@ async function main() {
 
     const labels = await getAllLabels();
     const discordLabel = labels.find(
-      (l) => l.name === "source:discord" || l.name.toLowerCase().includes("discord")
+      (l) => l.name === "source:discord" || l.name.toLowerCase().includes("discord"),
     );
 
     if (discordLabel) {

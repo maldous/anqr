@@ -4,7 +4,7 @@ import { Button, buttonVariants } from "./button";
 
 describe("Button", () => {
   // ── Rendering ──────────────────────────────────────────────────
-  
+
   it("renders as button element by default", () => {
     const { container } = render(<Button>Click me</Button>);
     const button = container.querySelector("button");
@@ -92,7 +92,15 @@ describe("Button", () => {
 
   it("forwards onClick handler", () => {
     let clicked = false;
-    const { container } = render(<Button onClick={() => { clicked = true; }}>Click</Button>);
+    const { container } = render(
+      <Button
+        onClick={() => {
+          clicked = true;
+        }}
+      >
+        Click
+      </Button>,
+    );
     const button = container.querySelector("button");
     button?.click();
     expect(clicked).toBe(true);

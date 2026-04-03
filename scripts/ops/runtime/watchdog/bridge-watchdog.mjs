@@ -34,7 +34,7 @@ const RAPID_RESTART_THRESHOLD = 3; // 3 restarts in 2 minutes = catastrophic fai
 const HEALTH_CHECK_TIMEOUT_MS = 5000;
 
 // Worktree identifier
-const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || 'main';
+const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || "main";
 
 const MONITORED_SERVICES = [
   {
@@ -279,9 +279,7 @@ function detectRapidRestarts(serviceName) {
   history.push(now);
 
   // Filter to only recent restarts within the window
-  const recentRestarts = history.filter(
-    (ts) => now - ts < RAPID_RESTART_WINDOW_MS
-  );
+  const recentRestarts = history.filter((ts) => now - ts < RAPID_RESTART_WINDOW_MS);
 
   rapidRestartHistory.set(serviceName, recentRestarts);
 
@@ -368,32 +366,32 @@ async function verifyAndNotifyRecovery(serviceName, shortName) {
  */
 async function trackWatchdogTrigger(serviceName, reason) {
   const now = Date.now();
-  
+
   // Add current trigger to history
   watchdogTriggerHistory.push({ timestamp: now, service: serviceName, reason });
-  
+
   // Filter to only recent triggers within the window
   const recentTriggers = watchdogTriggerHistory.filter(
-    (trigger) => now - trigger.timestamp < TRIGGER_RATE_WINDOW_MS
+    (trigger) => now - trigger.timestamp < TRIGGER_RATE_WINDOW_MS,
   );
-  
+
   // Update history to only keep recent triggers
   watchdogTriggerHistory.length = 0;
   watchdogTriggerHistory.push(...recentTriggers);
-  
+
   // Check if threshold exceeded
   if (recentTriggers.length > TRIGGER_RATE_THRESHOLD) {
     // Check cooldown to avoid alert spam
     const timeSinceLastAlert = now - lastTriggerRateAlert;
     if (timeSinceLastAlert >= TRIGGER_RATE_ALERT_COOLDOWN_MS) {
       lastTriggerRateAlert = now;
-      
+
       // Send critical alert
       const triggerSummary = recentTriggers
         .slice(-5)
-        .map(t => `• ${t.service}: ${t.reason}`)
+        .map((t) => `• ${t.service}: ${t.reason}`)
         .join("\n");
-      
+
       try {
         await sendDiscordEmbed({
           title: `🚨 WATCHDOG HIGH TRIGGER RATE | ${WORKTREE_ID}`,
@@ -401,7 +399,11 @@ async function trackWatchdogTrigger(serviceName, reason) {
           color: 0xff0000, // Red
           fields: [
             { name: "Worktree", value: WORKTREE_ID, inline: true },
-            { name: "Trigger Count", value: `${recentTriggers.length} (threshold: ${TRIGGER_RATE_THRESHOLD})`, inline: true },
+            {
+              name: "Trigger Count",
+              value: `${recentTriggers.length} (threshold: ${TRIGGER_RATE_THRESHOLD})`,
+              inline: true,
+            },
             { name: "Time Window", value: "Last 60 minutes", inline: true },
             { name: "Recent Triggers", value: triggerSummary, inline: false },
           ],
@@ -410,11 +412,11 @@ async function trackWatchdogTrigger(serviceName, reason) {
       } catch (err) {
         logError(`[watchdog] ⚠️ Failed to send trigger rate alert: ${err.message}`);
       }
-      
+
       await updateMemory(
         `CRITICAL: Watchdog triggered ${recentTriggers.length} times in 1 hour - systemic instability detected`,
       );
-      
+
       logError(
         `[watchdog] 🚨 CRITICAL: Watchdog trigger rate exceeded threshold (${recentTriggers.length} > ${TRIGGER_RATE_THRESHOLD} in 1 hour)`,
       );
@@ -425,7 +427,7 @@ async function trackWatchdogTrigger(serviceName, reason) {
 async function rollbackAndRestart(serviceName, shortName, reason) {
   // Track this watchdog trigger for rate alerting
   await trackWatchdogTrigger(serviceName, reason);
-  
+
   // Create incident for watchdog rollback
   try {
     await createOrUpdateIncident({
@@ -436,7 +438,7 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
   } catch (err) {
     logError(`[watchdog] ⚠️ Failed to create incident: ${err.message}`);
   }
-  
+
   // Check cooldown
   if (isInCooldown(serviceName)) {
     logInfo(`[watchdog] ⏭️ Skipping rollback for ${shortName} - in cooldown period`);
@@ -611,24 +613,26 @@ async function checkService(service) {
       for (const issue of fileIssues) {
         logError(`[watchdog]    - ${issue}`);
       }
-      await rollbackAndRestart(
-        serviceName,
-        shortName,
-        `file corruption: ${fileIssues[0]}`,
-      );
+      await rollbackAndRestart(serviceName, shortName, `file corruption: ${fileIssues[0]}`);
       await verifyAndNotifyRecovery(serviceName, shortName);
       return;
     }
 
     // Check if it's just transient errors (rate limits, etc.)
     if (isTransientError(journalLog)) {
-      logWarn(`[watchdog] ⚠️ ${shortName}: Failed but only transient errors detected - not rolling back`);
+      logWarn(
+        `[watchdog] ⚠️ ${shortName}: Failed but only transient errors detected - not rolling back`,
+      );
     } else {
       // Try health check anyway - maybe service is running but unhealthy
       const health = await checkHealthEndpoint(service);
       if (!health.healthy) {
         logError(`[watchdog] ❌ ${shortName}: Failed + unhealthy endpoint: ${health.reason}`);
-        await rollbackAndRestart(serviceName, shortName, `service failed + unhealthy: ${health.reason}`);
+        await rollbackAndRestart(
+          serviceName,
+          shortName,
+          `service failed + unhealthy: ${health.reason}`,
+        );
         await verifyAndNotifyRecovery(serviceName, shortName);
         return;
       }
@@ -639,10 +643,13 @@ async function checkService(service) {
 
   // Check for rapid restart pattern (even if status is "active")
   // Note: detectRapidRestarts was already called when we detected the new restart above
-  const hasRapidRestarts = (rapidRestartHistory.get(serviceName) || []).length >= RAPID_RESTART_THRESHOLD;
+  const hasRapidRestarts =
+    (rapidRestartHistory.get(serviceName) || []).length >= RAPID_RESTART_THRESHOLD;
   if (hasRapidRestarts) {
     // Service keeps restarting - likely corrupted file that systemd keeps trying to run
-    logError(`[watchdog] 🚨 ${shortName}: Rapid restart pattern detected - checking for file corruption`);
+    logError(
+      `[watchdog] 🚨 ${shortName}: Rapid restart pattern detected - checking for file corruption`,
+    );
 
     const fileIssues = await checkFileIntegrity(service);
     if (fileIssues.length > 0) {
@@ -659,7 +666,11 @@ async function checkService(service) {
     const journalLog = getServiceJournal(serviceName, 30);
     const catastrophicError = detectCatastrophicErrors(journalLog);
     if (catastrophicError) {
-      await rollbackAndRestart(serviceName, shortName, `rapid restarts + error: ${catastrophicError}`);
+      await rollbackAndRestart(
+        serviceName,
+        shortName,
+        `rapid restarts + error: ${catastrophicError}`,
+      );
       await verifyAndNotifyRecovery(serviceName, shortName);
       return;
     }
@@ -703,7 +714,11 @@ async function checkService(service) {
           `stuck activating + file corruption: ${fileIssues[0]}`,
         );
       } else {
-        await rollbackAndRestart(serviceName, shortName, `stuck in activating for ${stuckSeconds}s`);
+        await rollbackAndRestart(
+          serviceName,
+          shortName,
+          `stuck in activating for ${stuckSeconds}s`,
+        );
       }
 
       activatingStateStart.delete(serviceName);
@@ -739,7 +754,9 @@ async function monitorLoop() {
   logInfo(
     `[watchdog]    Monitored services: ${MONITORED_SERVICES.map((s) => s.shortName).join(", ")}`,
   );
-  logInfo(`[watchdog]    Rapid restart threshold: ${RAPID_RESTART_THRESHOLD} in ${RAPID_RESTART_WINDOW_MS / 1000}s`);
+  logInfo(
+    `[watchdog]    Rapid restart threshold: ${RAPID_RESTART_THRESHOLD} in ${RAPID_RESTART_WINDOW_MS / 1000}s`,
+  );
 
   // shuttingDown is modified by signal handlers (SIGTERM, SIGINT)
   // eslint-disable-next-line no-unmodified-loop-condition

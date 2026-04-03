@@ -25,12 +25,11 @@ import {
 } from "./symphony-state.mjs";
 import {
   getWorktreePath,
-  getWorktreeBranch,
   DISCORD_WORKTREE_IDS,
   SYMPHONY_WORKTREE_IDS,
 } from "./worktree-config.mjs";
 
-const { logInfo, logWarn, logDebug } = createLogger();
+const { logInfo } = createLogger();
 
 const ALL_WORKTREE_IDS = [
   ...SYMPHONY_WORKTREE_IDS.filter((id) => id !== "main"),
@@ -172,12 +171,14 @@ export function getWorktreeHealthSnapshot(worktreeId) {
   const hasDirtyFiles = snapshot.gitDirtyFiles.length > 0;
   const hasActiveLease = activeLease && leaseIsActive({ lease: activeLease });
   const finState = snapshot.finalizationState;
-  const isRepairable = finState && [
-    "validation_failed_repairable",
-    "commit_failed_repairable",
-    "branch_push_failed_repairable",
-    "integration_failed_repairable",
-  ].includes(finState.state);
+  const isRepairable =
+    finState &&
+    [
+      "validation_failed_repairable",
+      "commit_failed_repairable",
+      "branch_push_failed_repairable",
+      "integration_failed_repairable",
+    ].includes(finState.state);
 
   if (hasActiveLease) {
     snapshot.classification = "executing";
@@ -234,8 +235,12 @@ export function getFleetInventory() {
 export function writeFleetHealthFile(outputPath) {
   const defaultPath = resolve(
     dirname(new URL(import.meta.url).pathname),
-    "..", "..", "..",
-    "reports", "symphony", "fleet-health.json",
+    "..",
+    "..",
+    "..",
+    "reports",
+    "symphony",
+    "fleet-health.json",
   );
   const targetPath = outputPath || defaultPath;
   const dir = dirname(targetPath);

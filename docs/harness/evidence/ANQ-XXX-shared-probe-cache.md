@@ -40,6 +40,7 @@ const providerStatusCache = {
 ```
 
 Since each executor is a **separate Node.js process**, they don't share memory. Each one:
+
 1. Starts up independently
 2. Runs `refreshProviderStatus()` at startup
 3. Probes all 38 providers in parallel
@@ -81,15 +82,18 @@ function saveProbeCache(cache) {
 ## Behavior After Fix
 
 ### Scenario 1: All Executors Start Fresh (no cache)
+
 - **wt1** starts first → runs full probe → saves to `provider-probe-cache.json`
 - **wt2** starts 2s later → loads cache → skips probe ✅
 - **wt3-wt8** all skip probe ✅
 
 ### Scenario 2: One Executor Restarts (cache exists)
+
 - **wt3** restarts → loads cache from disk → skips probe ✅
 - Other executors continue using their in-memory cache
 
 ### Scenario 3: Cache Expires (5 min)
+
 - Next executor to probe refreshes cache for everyone
 - Only **1 executor probes** per 5-minute window (instead of all 8)
 
@@ -100,6 +104,7 @@ reports/symphony/provider-probe-cache.json
 ```
 
 Example content:
+
 ```json
 {
   "configured": [...],
@@ -116,11 +121,13 @@ Example content:
 ## Impact
 
 ### Before Fix
+
 - **304 API calls** per restart (8 executors × 38 providers)
 - Rate limit storms on OpenRouter, Mistral, Gemini
 - 30-60 second startup time per executor
 
 ### After Fix
+
 - **38 API calls** per restart (only first executor probes)
 - No rate limit storms
 - wt2-wt8 start in <1 second (cache hit)
@@ -147,6 +154,7 @@ cat reports/symphony/provider-probe-cache.json | jq .
 ## Code Changes
 
 **Modified Files:**
+
 - `scripts/ops/integrations/model/symphony-openai-bridge.mjs`
   - Added `loadProbeCache()` and `saveProbeCache()` functions
   - Updated `refreshProviderStatus()` to check cache first

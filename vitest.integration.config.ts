@@ -1,5 +1,4 @@
 import { defineConfig } from "vitest/config";
-import path from "node:path";
 import { buildTsconfigAliases } from "./vite-config/build-tsconfig-aliases.ts";
 
 const repoRoot = ".";

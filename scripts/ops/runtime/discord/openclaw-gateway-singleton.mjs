@@ -13,12 +13,19 @@ const CLI = process.env.OPENCLAW_CLI || "openclaw";
 const WORKTREE_PATH = process.env.ANQR_WORKTREE_PATH || process.cwd();
 const DEFAULT_CONFIG = path.join(WORKTREE_PATH, ".openclaw", "openclaw.json");
 const CONFIG_PATH = process.env.OPENCLAW_CONFIG_PATH || DEFAULT_CONFIG;
-const LOCK_DIR = process.env.OPENCLAW_LOCK_DIR || path.join(os.homedir(), ".cache", "anqr-openclaw");
+const LOCK_DIR =
+  process.env.OPENCLAW_LOCK_DIR || path.join(os.homedir(), ".cache", "anqr-openclaw");
 const LOCK_FILE = path.join(LOCK_DIR, "gateway.lock");
 const FOLLOWER_SLEEP_MS = Number.parseInt(process.env.OPENCLAW_FOLLOWER_SLEEP_MS || "5000", 10);
 const RESTART_BACKOFF_MS = Number.parseInt(process.env.OPENCLAW_RESTART_BACKOFF_MS || "15000", 10);
-const WAIT_LOG_INTERVAL_MS = Number.parseInt(process.env.OPENCLAW_WAIT_LOG_INTERVAL_MS || "60000", 10);
-const PORT_CHECK_INTERVAL_MS = Number.parseInt(process.env.OPENCLAW_PORT_CHECK_INTERVAL_MS || "30000", 10);
+const WAIT_LOG_INTERVAL_MS = Number.parseInt(
+  process.env.OPENCLAW_WAIT_LOG_INTERVAL_MS || "60000",
+  10,
+);
+const PORT_CHECK_INTERVAL_MS = Number.parseInt(
+  process.env.OPENCLAW_PORT_CHECK_INTERVAL_MS || "30000",
+  10,
+);
 
 let stopping = false;
 let lockHeld = false;
@@ -176,9 +183,15 @@ function isPortListening(host, port) {
   return new Promise((resolve) => {
     const socket = new net.Socket();
     socket.setTimeout(2000);
-    socket.once("connect", () => { socket.destroy(); resolve(true); });
+    socket.once("connect", () => {
+      socket.destroy();
+      resolve(true);
+    });
     socket.once("error", () => resolve(false));
-    socket.once("timeout", () => { socket.destroy(); resolve(false); });
+    socket.once("timeout", () => {
+      socket.destroy();
+      resolve(false);
+    });
     socket.connect(port, host);
   });
 }

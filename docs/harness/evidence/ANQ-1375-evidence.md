@@ -32,6 +32,7 @@ proxyReq.on("close", () => {
 ```
 
 **Impact:**
+
 1. Counters go negative after errors
 2. Overload protection check (`globalActiveRequests >= MAX_CONCURRENT`) fails
 3. Router accepts unlimited concurrent requests

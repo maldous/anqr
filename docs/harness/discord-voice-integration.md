@@ -195,7 +195,7 @@ The test script `scripts/ops/integrations/notifications/test-discord.mjs` includ
 
 | Component                  | Owned By         | Repository               | Can Modify |
 | -------------------------- | ---------------- | ------------------------ | ---------- |
-| Discord via OpenClaw      | ANQR Harness     | anqr                     | ✅ Yes     |
+| Discord via OpenClaw       | ANQR Harness     | anqr                     | ✅ Yes     |
 | Voice bot configuration    | OpenClaw Gateway | External                 | ❌ No      |
 | Voice bot dependencies     | OpenClaw Gateway | External                 | ❌ No      |
 | Discord server permissions | Human operators  | Discord UI               | ❌ No      |

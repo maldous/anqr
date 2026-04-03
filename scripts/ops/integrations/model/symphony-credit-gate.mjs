@@ -941,13 +941,17 @@ export function getRankedProviders(options = {}) {
   // First pass: include providers with stats and/or probe data
   for (const name of providersWithData) {
     if (excludeSet && excludeSet.has(name)) continue;
-    
+
     // Skip unhealthy providers from ranking
     const health = getProviderHealthState(name);
-    if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED || health.state === HEALTH_STATES.DISABLED) {
+    if (
+      health.state === HEALTH_STATES.COOLING_DOWN ||
+      health.state === HEALTH_STATES.BLOCKED ||
+      health.state === HEALTH_STATES.DISABLED
+    ) {
       continue;
     }
-    
+
     seenProviders.add(name);
     const score = stats.score[name];
     const provider = PROVIDERS.find((p) => p.name === name);
@@ -978,10 +982,14 @@ export function getRankedProviders(options = {}) {
     for (const provider of PROVIDERS) {
       if (excludeSet && excludeSet.has(provider.name)) continue;
       if (seenProviders.has(provider.name)) continue;
-      
+
       // Skip unhealthy providers from ranking
       const health = getProviderHealthState(provider.name);
-      if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED || health.state === HEALTH_STATES.DISABLED) {
+      if (
+        health.state === HEALTH_STATES.COOLING_DOWN ||
+        health.state === HEALTH_STATES.BLOCKED ||
+        health.state === HEALTH_STATES.DISABLED
+      ) {
         continue;
       }
 
@@ -1469,7 +1477,11 @@ async function tryProvider(provider) {
 
   // Check health state first - skip unhealthy providers
   const health = getProviderHealthState(provider.name);
-  if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED || health.state === HEALTH_STATES.DISABLED) {
+  if (
+    health.state === HEALTH_STATES.COOLING_DOWN ||
+    health.state === HEALTH_STATES.BLOCKED ||
+    health.state === HEALTH_STATES.DISABLED
+  ) {
     logDebug(`${provider.name}: skipped (health state: ${health.state})`, {
       providerName: provider.name,
       healthState: health.state,
@@ -1577,7 +1589,9 @@ export async function selectProvider(options = {}) {
   logDebug(`[selectProvider] Trying preferred providers`, {
     preferredOrder: PREFERRED_PROVIDER_ORDER,
     healthyPreferredProviders,
-    skippedDueToHealth: PREFERRED_PROVIDER_ORDER.filter((n) => !healthyPreferredProviders.includes(n)),
+    skippedDueToHealth: PREFERRED_PROVIDER_ORDER.filter(
+      (n) => !healthyPreferredProviders.includes(n),
+    ),
   });
   for (const providerName of healthyPreferredProviders) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);

@@ -27,7 +27,7 @@ export function isDiscordSourced(issueData) {
   if (discordLabelId) {
     const labels = issueData.labels?.nodes || [];
     const hasDiscordLabel = labels.some(
-      (l) => l.id === discordLabelId || l.name.toLowerCase().includes("discord")
+      (l) => l.id === discordLabelId || l.name.toLowerCase().includes("discord"),
     );
     if (hasDiscordLabel) return true;
   }

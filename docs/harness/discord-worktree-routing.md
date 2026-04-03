@@ -35,6 +35,7 @@ Git Worktrees (wt5-wt8)
 ```
 
 **Key change (2026-03-31):** Symphony bridges now provide all capabilities:
+
 - AI completion (`/v1/chat/completions`)
 - Codebuff SDK operations (integrated, not separate service)
 - Tool execution (file ops, git, etc.)
@@ -52,11 +53,11 @@ This eliminates the separate Codebuff bridge service and caching defects. See `d
 
 **Config files (3 locations with merge behavior):**
 
-| Config | symphony-bridge URL | Notes |
-|--------|-------------------|-------|
-| `~/.openclaw/openclaw.json` | `http://127.0.0.1:18790/v1` | Global config |
-| `.openclaw/openclaw.json` (in-repo) | `http://127.0.0.1:18790/v1` | Project config |
-| `.openclaw/models.json` (in-repo) | `http://127.0.0.1:18790/v1` | ✅ Updated to match router |
+| Config                              | symphony-bridge URL         | Notes                      |
+| ----------------------------------- | --------------------------- | -------------------------- |
+| `~/.openclaw/openclaw.json`         | `http://127.0.0.1:18790/v1` | Global config              |
+| `.openclaw/openclaw.json` (in-repo) | `http://127.0.0.1:18790/v1` | Project config             |
+| `.openclaw/models.json` (in-repo)   | `http://127.0.0.1:18790/v1` | ✅ Updated to match router |
 
 ### 2. Discord Request Router
 
@@ -69,12 +70,12 @@ This eliminates the separate Codebuff bridge service and caching defects. See `d
 
 ### 3. Worktree Symphony Executors
 
-| Worktree | Port | Directory |
-|----------|------|-----------|
-| wt5 | 4325 | `/home/user/src/anqr-wt5` |
-| wt6 | 4326 | `/home/user/src/anqr-wt6` |
-| wt7 | 4327 | `/home/user/src/anqr-wt7` |
-| wt8 | 4328 | `/home/user/src/anqr-wt8` |
+| Worktree | Port | Directory                 |
+| -------- | ---- | ------------------------- |
+| wt5      | 4325 | `/home/user/src/anqr-wt5` |
+| wt6      | 4326 | `/home/user/src/anqr-wt6` |
+| wt7      | 4327 | `/home/user/src/anqr-wt7` |
+| wt8      | 4328 | `/home/user/src/anqr-wt8` |
 
 - **Service:** `anqr-symphony-executor@{5,6,7,8}.service`
 - **Capabilities:** AI completion + Codebuff SDK + tool execution (all integrated)
@@ -133,12 +134,12 @@ Verified that the bridge ignores the `workspace` field. The Discord Router rebas
 
 **All isolation layers verified:**
 
-| Layer | Status | Notes |
-|-------|--------|-------|
-| 1. Provider URL routing (to router, not main bridge) | ✅ **VERIFIED** | `models.json` updated; `openclaw.json` wins merge |
-| 2. Systemd `WorkingDirectory` (bridge cwd = worktree) | ✅ Implemented | Verified Phase 4 |
-| 3. Router cwd rebase (rewrites request paths) | ✅ Implemented | Verified Phase 5 |
-| 4. OpenClaw workspace (anchors tool ops) | ✅ **VERIFIED SAFE** | Bridge ignores workspace; router rebases cwd |
+| Layer                                                 | Status               | Notes                                             |
+| ----------------------------------------------------- | -------------------- | ------------------------------------------------- |
+| 1. Provider URL routing (to router, not main bridge)  | ✅ **VERIFIED**      | `models.json` updated; `openclaw.json` wins merge |
+| 2. Systemd `WorkingDirectory` (bridge cwd = worktree) | ✅ Implemented       | Verified Phase 4                                  |
+| 3. Router cwd rebase (rewrites request paths)         | ✅ Implemented       | Verified Phase 5                                  |
+| 4. OpenClaw workspace (anchors tool ops)              | ✅ **VERIFIED SAFE** | Bridge ignores workspace; router rebases cwd      |
 
 ### Issue 3: Gateway Architecture — ✅ RESOLVED
 

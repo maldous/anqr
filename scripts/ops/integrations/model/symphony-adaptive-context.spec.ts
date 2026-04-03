@@ -109,7 +109,10 @@ describe("dynamic context limits", () => {
     const base = PROVIDER_MAX_INPUT_TOKENS.groq;
     const initialBuffered = Math.floor(base * CONTEXT_INITIAL_BUFFER);
     recordContextError("groq", {});
-    const expected = Math.max(Math.floor(initialBuffered * CONTEXT_SHRINK_FACTOR), MIN_MESSAGE_BUDGET_TOKENS);
+    const expected = Math.max(
+      Math.floor(initialBuffered * CONTEXT_SHRINK_FACTOR),
+      MIN_MESSAGE_BUDGET_TOKENS,
+    );
     expect(getEffectiveMaxTokens("groq")).toBe(expected);
   });
 
@@ -149,7 +152,9 @@ describe("dynamic context limits", () => {
   it("expands after consecutive successes", () => {
     recordContextError("groq", {});
     const shrunkMax = getEffectiveMaxTokens("groq");
-    expect(shrunkMax).toBeLessThan(Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER));
+    expect(shrunkMax).toBeLessThan(
+      Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER),
+    );
 
     for (let i = 0; i < CONTEXT_EXPAND_THRESHOLD; i++) {
       recordContextSuccess("groq");
@@ -187,7 +192,9 @@ describe("dynamic context limits", () => {
     recordContextError("groq", {});
     recordContextError("groq", {});
     const deepShrunk = getEffectiveMaxTokens("groq");
-    expect(deepShrunk).toBeLessThan(Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER));
+    expect(deepShrunk).toBeLessThan(
+      Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER),
+    );
 
     for (let cycle = 0; cycle < 50; cycle++) {
       for (let i = 0; i < CONTEXT_EXPAND_THRESHOLD; i++) {
@@ -707,7 +714,9 @@ describe("getAdaptiveStats", () => {
     expect(stats.groq).toBeDefined();
     expect(stats.cerebras).toBeDefined();
     // After error, dynamic is below the initial 80% buffer
-    expect(stats.groq.dynamicMaxTokens).toBeLessThan(Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER));
+    expect(stats.groq.dynamicMaxTokens).toBeLessThan(
+      Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER),
+    );
     expect(stats.groq.dynamicVsBase).not.toBe("100%");
     // cerebras starts at 80% with no errors, so dynamicVsBase = 100% (since it's at its initial buffer which equals baseMaxTokens * 0.8, but we show ratio of dynamic/base)
     expect(stats.cerebras.dynamicVsBase).toBe("80%");
@@ -743,7 +752,9 @@ describe("resetAdaptiveState", () => {
 
     expect(getAdaptiveStats()).toEqual({});
     // After reset, new providers start at 80% buffer again
-    expect(getEffectiveMaxTokens("groq")).toBe(Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER));
+    expect(getEffectiveMaxTokens("groq")).toBe(
+      Math.floor(PROVIDER_MAX_INPUT_TOKENS.groq * CONTEXT_INITIAL_BUFFER),
+    );
     expect(isProviderThrottled("cerebras")).toBe(false);
     expect(getTokensPerMinute("mistral")).toBe(0);
   });
