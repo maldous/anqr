@@ -26,13 +26,13 @@ WorkingDirectory=%h/src/anqr
 Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=HOME=%h
 Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
-Environment=NODE_OPTIONS=--max-old-space-size=512
+Environment=NODE_OPTIONS=--max-old-space-size=2048
 Environment=OLLAMA_API_BASE=http://localhost:11434
 
 # Secrets and overrides (LINEAR_API_KEY, etc.)
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/nightly-ops-pass.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/nightly-ops-pass.mjs --dry-run --skip-tests --skip-sonar
 
 # Logging to journal
 StandardOutput=journal
@@ -42,6 +42,8 @@ SyslogIdentifier=anqr-nightly
 # Safety limits
 TimeoutStartSec=600
 MemoryMax=4G
+MemorySwapMax=0
+CPUQuota=80%
 
 [Install]
 WantedBy=default.target

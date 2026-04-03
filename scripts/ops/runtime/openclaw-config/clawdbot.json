@@ -20,7 +20,7 @@
     "ackReactionScope": "group-mentions"
   },
   "talk": {
-    "apiKey": "{{ELEVENLABS_API_KEY}}"
+    "apiKey": "CHANGEME"
   },
   "gateway": {
     "mode": "local",
@@ -28,7 +28,7 @@
     "bind": "lan",
     "auth": {
       "mode": "token",
-      "token": "{{GATEWAY_AUTH_TOKEN}}"
+      "token": "CHANGEME"
     },
     "tailscale": {
       "mode": "off",

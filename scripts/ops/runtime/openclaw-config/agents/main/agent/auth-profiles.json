@@ -9,10 +9,10 @@
     "openai-codex:default": {
       "type": "oauth",
       "provider": "openai-codex",
-      "access": "{{CODEX_OAUTH_ACCESS_TOKEN}}",
-      "refresh": "{{CODEX_OAUTH_REFRESH_TOKEN}}",
+      "access": "CHANGEME",
+      "refresh": "CHANGEME",
       "expires": 1775797249000,
-      "accountId": "{{CODEX_ACCOUNT_ID}}"
+      "accountId": "CHANGEME"
     }
   },
   "lastGood": {},

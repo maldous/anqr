@@ -45,22 +45,11 @@ Environment=SYMPHONY_BRIDGE_API_KEY=local-symphony
 Environment=CODEX_SANDBOX_MODE=danger-full-access
 Environment=ANQR_RETRIEVAL_WARMUP=false
 
-# Git finalization policy:
-# - Executor/bridge must NEVER push to origin/main
-# - Bridge owns worktree-local execution only
-# - Auto-finalization is off; runner handles commit+branch-push
-Environment=ANQR_BRIDGE_ENABLE_GIT_AUTOFINALIZE=0
-Environment=ANQR_AUTOMATION_PUSH=1
-Environment=ANQR_AUTOMATION_COMMIT=1
-
 # Provider tokens (loaded from anqr.env)
 EnvironmentFile=-%h/.config/symphony/anqr.env
 
 # Systemd env overrides (LINEAR_API_KEY, etc.)
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
-
-# Discord label ID for detecting Discord-created issues (used for worktree routing)
-# Set in anqr-ops.env: DISCORD_LABEL_ID=9341d965-e21d-4c3d-81b2-73beff08356d
 
 ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc %h/src/anqr/scripts/ops/integrations/model/symphony-openai-bridge.mjs
 

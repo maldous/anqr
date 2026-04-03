@@ -18,7 +18,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 131072,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "qwen/qwen3-next-80b-a3b-instruct:free",
@@ -34,7 +35,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 131072,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "openrouter/auto",
@@ -50,7 +52,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         }
       ],
       "apiKey": "OPENROUTER_API_KEY"
@@ -69,19 +72,52 @@
           "id": "qwen2.5-coder:0.5b",
           "name": "Qwen2.5 Coder 0.5B",
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "api": "ollama"
         },
         {
           "id": "qwen2.5-coder:3b-instruct",
           "name": "Qwen2.5 Coder 3B Instruct",
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "api": "ollama"
         },
         {
           "id": "qwen3-coder-next:latest",
           "name": "Qwen3 Coder Next",
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "api": "ollama"
         }
       ]
     },
@@ -104,7 +140,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/text",
@@ -120,7 +157,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/codex",
@@ -136,7 +174,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/codebuff",
@@ -152,7 +191,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/groq",
@@ -168,7 +208,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/mistral",
@@ -184,7 +225,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/gemini",
@@ -200,7 +242,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/gemini-lite",
@@ -216,7 +259,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/openrouter",
@@ -232,7 +276,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/sambanova",
@@ -248,7 +293,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/cerebras",
@@ -264,7 +310,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         },
         {
           "id": "symphony/ollama-local",
@@ -280,7 +327,8 @@
             "cacheWrite": 0
           },
           "contextWindow": 32768,
-          "maxTokens": 8192
+          "maxTokens": 8192,
+          "api": "openai-completions"
         }
       ]
     }

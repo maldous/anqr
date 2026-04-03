@@ -1,11 +1,11 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.4.2",
-    "lastTouchedAt": "2026-04-02T09:08:28.201Z"
+    "lastTouchedAt": "2026-04-02T09:52:21.254Z"
   },
   "env": {
-    "OPENROUTER_API_KEY": "{{OPENROUTER_API_KEY}}",
-    "ELEVENLABS_API_KEY": "{{ELEVENLABS_API_KEY}}"
+    "OPENROUTER_API_KEY": "CHANGEME",
+    "ELEVENLABS_API_KEY": "CHANGEME"
   },
   "wizard": {
     "lastRunAt": "2026-04-02T06:28:45.373Z",
@@ -458,7 +458,10 @@
           "language": "en"
         }
       ]
-    }
+    },
+    "alsoAllow": [
+      "voice_speak"
+    ]
   },
   "messages": {
     "tts": {
@@ -490,12 +493,15 @@
           "enabled": true
         }
       }
-    }
+    },
+    "enabled": true,
+    "token": "anqr-symphony-hook-test",
+    "allowRequestSessionKey": true
   },
   "channels": {
     "discord": {
       "enabled": true,
-      "token": "{{DISCORD_BOT_TOKEN}}",
+      "token": "CHANGEME",
       "groupPolicy": "allowlist",
       "actions": {
         "voiceStatus": true
@@ -504,8 +510,8 @@
         "enabled": true,
         "autoJoin": [
           {
-            "guildId": "1486262757543121021",
-            "channelId": "1486262758256410647"
+            "guildId": "CHANGEME",
+            "channelId": "CHANGEME"
           }
         ],
         "daveEncryption": true,
@@ -537,7 +543,7 @@
   },
   "talk": {
     "provider": "microsoft",
-    "voiceId": "hpp4J3VqNfWAUOO0d1Us",
+    "voiceId": "CHANGEME",
     "interruptOnSpeech": true,
     "silenceTimeoutMs": 2000,
     "providers": {
@@ -545,7 +551,7 @@
         "voiceId": "nova"
       },
       "elevenlabs": {
-        "voiceId": "hpp4J3VqNfWAUOO0d1Us"
+        "voiceId": "CHANGEME"
       },
       "microsoft": {}
     }
@@ -556,7 +562,7 @@
     "bind": "loopback",
     "auth": {
       "mode": "token",
-      "token": "{{GATEWAY_AUTH_TOKEN}}"
+      "token": "CHANGEME"
     },
     "tailscale": {
       "mode": "off",
@@ -578,6 +584,11 @@
         "calendar.add",
         "reminders.add",
         "sms.send"
+      ]
+    },
+    "tools": {
+      "allow": [
+        "voice_speak"
       ]
     }
   },

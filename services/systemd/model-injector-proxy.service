@@ -1,0 +1,17 @@
+[Unit]
+Description=Model Injector Proxy — fixes Codex CLI model=None bug
+After=litellm-proxy.service
+Requires=litellm-proxy.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/src/anqr/scripts/ops/model-injector-proxy.py
+Restart=always
+RestartSec=3
+Environment=UPSTREAM_HOST=127.0.0.1
+Environment=UPSTREAM_PORT=4010
+Environment=LISTEN_PORT=4011
+Environment=DEFAULT_MODEL=groq-llama-70b
+
+[Install]
+WantedBy=default.target

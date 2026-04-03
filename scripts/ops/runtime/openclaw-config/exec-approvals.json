@@ -1,8 +1,8 @@
 {
   "version": 1,
   "socket": {
-    "path": "{{EXEC_APPROVALS_SOCKET_PATH}}",
-    "token": "{{EXEC_APPROVALS_SOCKET_TOKEN}}"
+    "path": "/home/user/.openclaw/exec-approvals.sock",
+    "token": "CHANGEME"
   },
   "defaults": {},
   "agents": {}

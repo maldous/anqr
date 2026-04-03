@@ -37,7 +37,7 @@ StandardError=journal
 SyslogIdentifier=anqr-rag-rebuild
 
 # Safety limits — embedding generation can be slow
-TimeoutStartSec=1800
+TimeoutStartSec=3600
 MemoryMax=8G
 
 [Install]
