@@ -69,7 +69,7 @@ export function createLogger(scriptName = "", options = {}) {
   const envVarName = scriptName
     ? options.envVar || `${scriptName.toUpperCase().replaceAll("-", "_")}_LOG_LEVEL`
     : "LOG_LEVEL";
-  const defaultLevel = options.defaultLevel || "DEBUG";
+  const defaultLevel = options.defaultLevel || "INFO";
 
   const envLogLevel = process.env[envVarName]?.toUpperCase();
   const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS[defaultLevel];
