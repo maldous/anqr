@@ -9,6 +9,10 @@ ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/orchestrati
 WorkingDirectory=/home/user/src/anqr
 Restart=on-failure
 RestartSec=30
+# Explicit PATH — nvm Node is not on default systemd PATH
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 Environment=NODE_ENV=production
 Environment=ANQR_AUTOMATION_COMMIT=1
 Environment=ANQR_AUTOMATION_PUSH=1

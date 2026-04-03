@@ -6,6 +6,10 @@ After=network.target
 Type=oneshot
 ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/core/worktree-health.mjs write
 WorkingDirectory=/home/user/src/anqr
+# Explicit PATH — nvm Node is not on default systemd PATH
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 Environment=NODE_ENV=production
 StandardOutput=journal
 StandardError=journal

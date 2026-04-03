@@ -498,7 +498,8 @@
     "AUTOFINALIZE",
     "reprovision",
     "reprovisioning",
-    "reprovisioned"
+    "reprovisioned",
+    "mgmt"
   ],
   "dictionaries": [
     "typescript",
