@@ -201,14 +201,14 @@ export async function sendDiscordMessage(message, options = {}) {
 
   const payload = { content };
 
-  // Add reply reference for Discord requests
-  if (options.replyTo && options.source === "discord") {
-    payload.message_reference = { message_id: options.replyTo };
+  // Add thread name for threaded conversations
+  if (options.threadName) {
+    payload.thread_name = options.threadName;
   }
 
-  // Add thread name for Linear requests
-  if (options.threadName && options.source === "linear") {
-    payload.thread_name = options.threadName;
+  // Add reply reference for message replies
+  if (options.replyTo) {
+    payload.message_reference = { message_id: options.replyTo };
   }
 
   return sendDiscordNotification(payload);
@@ -256,14 +256,14 @@ export async function sendDiscordEmbed({
     username: "OpenClaw",
   };
 
-  // Add reply reference for Discord requests
-  if (replyTo && source === "discord") {
-    payload.message_reference = { message_id: replyTo };
+  // Add thread name for threaded conversations
+  if (threadName) {
+    payload.thread_name = threadName;
   }
 
-  // Add thread name for Linear requests
-  if (threadName && source === "linear") {
-    payload.thread_name = threadName;
+  // Add reply reference for message replies
+  if (replyTo) {
+    payload.message_reference = { message_id: replyTo };
   }
 
   return sendDiscordNotification(payload);

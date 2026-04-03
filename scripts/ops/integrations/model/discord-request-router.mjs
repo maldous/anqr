@@ -43,6 +43,65 @@ const WORKTREE_URLS = WORKTREE_IDS.map((id) => ({
 // Track global concurrent requests
 let globalActiveRequests = 0;
 
+// Session → thread name map for consistent thread naming across multi-turn conversations
+// Key: OpenClaw session ID or generated ID, Value: { threadName, createdAt }
+const sessionThreadNames = new Map();
+const SESSION_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+/**
+ * Evict expired session thread name entries to prevent memory leaks.
+ */
+function evictExpiredSessions() {
+  const now = Date.now();
+  for (const [key, entry] of sessionThreadNames) {
+    if (now - entry.createdAt > SESSION_TTL_MS) {
+      sessionThreadNames.delete(key);
+    }
+  }
+}
+
+/**
+ * Extract the last user message from a chat completions messages array
+ * and generate a Discord thread name from it.
+ */
+function generateThreadName(messages) {
+  if (!Array.isArray(messages)) return null;
+  // Find the last user message
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg?.role === "user") {
+      const content = typeof msg.content === "string"
+        ? msg.content
+        : Array.isArray(msg.content)
+          ? msg.content.filter((p) => p?.type === "text").map((p) => p.text).join(" ")
+          : null;
+      if (content && content.trim()) {
+        const preview = content.trim().slice(0, 80).replace(/\n/g, " ");
+        return `🔧 ${preview}`;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Get or create a thread name for a session. Uses cached name if session was seen before.
+ */
+function getSessionThreadName(sessionId, messages) {
+  // Periodic eviction (cheap — runs inline)
+  if (sessionThreadNames.size > 50) evictExpiredSessions();
+
+  if (sessionId && sessionThreadNames.has(sessionId)) {
+    return sessionThreadNames.get(sessionId).threadName;
+  }
+
+  const threadName = generateThreadName(messages);
+  if (threadName && sessionId) {
+    sessionThreadNames.set(sessionId, { threadName, createdAt: Date.now() });
+  }
+  return threadName;
+}
+
 // Round-robin index for distributing requests when loads are equal
 let roundRobinIndex = 0;
 
@@ -145,14 +204,13 @@ function proxyToWorktree(worktree, req, res) {
 
     let originalCwd = "(not provided)";
     let discordMessageId = null;
+    let discordThreadName = null;
     try {
       const parsedBody = JSON.parse(rawBody || "{}");
       originalCwd = parsedBody.cwd || "(not provided)";
       parsedBody.cwd = rebaseCwdToWorktree(parsedBody.cwd, worktree.path);
 
       // Extract Discord message ID from the request for thread/reply functionality
-      // Discord message IDs can come from different sources depending on the integration
-      // Common paths: message.id, discordMessageId, message_id, or metadata
       discordMessageId =
         parsedBody.discordMessageId ||
         parsedBody.message?.id ||
@@ -162,6 +220,13 @@ function proxyToWorktree(worktree, req, res) {
 
       if (discordMessageId) {
         logInfo(`📝 Discord message ID: ${discordMessageId}`);
+      }
+
+      // Generate a Discord thread name from the user's message for thread-based conversations
+      const sessionId = req.headers["x-openclaw-session"] || null;
+      discordThreadName = getSessionThreadName(sessionId, parsedBody.messages);
+      if (discordThreadName) {
+        logInfo(`🧵 Discord thread: "${discordThreadName}"`);
       }
 
       proxyBody = JSON.stringify(parsedBody);
@@ -193,8 +258,9 @@ function proxyToWorktree(worktree, req, res) {
           "Content-Length": Buffer.byteLength(proxyBody),
           "x-worktree-id": `wt${worktree.id}`,
           "x-worktree-path": worktree.path,
-          // Pass Discord message ID for thread/reply functionality
+          // Pass Discord message ID and thread name for thread/reply functionality
           ...(discordMessageId ? { "x-discord-message-id": discordMessageId } : {}),
+          ...(discordThreadName ? { "x-discord-thread-name": encodeURIComponent(discordThreadName) } : {}),
         },
       },
       (proxyRes) => {

@@ -74,15 +74,14 @@ async function sendViaOpenClaw(content, options = {}) {
     to: DISCORD_TEXT_CHANNEL_ID,
   };
 
-  // Add thread/reply options based on source
-  if (options.replyTo && options.source === "discord") {
-    // Reply to the original Discord message
-    messageArgs.replyTo = options.replyTo;
-    logDebug(`Discord reply to message: ${options.replyTo}`);
-  } else if (options.threadName && options.source === "linear") {
-    // Create/use a named thread for Linear webhook requests
+  // Add thread/reply options (source-agnostic)
+  if (options.threadName) {
     messageArgs.threadName = options.threadName;
     logDebug(`Discord thread: ${options.threadName}`);
+  }
+  if (options.replyTo) {
+    messageArgs.replyTo = options.replyTo;
+    logDebug(`Discord reply to message: ${options.replyTo}`);
   }
 
   // Use OpenClaw Gateway's tools/invoke API with message tool

@@ -5555,11 +5555,17 @@ const server = http.createServer(async (req, res) => {
       const worktreeId = req.headers["x-worktree-id"] || null;
       const requestCwd = normalizeRequestCwd(body.cwd);
 
-      // Extract Discord message ID and Linear thread name for thread/reply functionality
+      // Extract Discord message ID, thread name, and Linear thread name for thread/reply functionality
       const discordMessageId = req.headers["x-discord-message-id"] || null;
+      const discordThreadNameRaw = req.headers["x-discord-thread-name"] || null;
+      const discordThreadName = discordThreadNameRaw ? decodeURIComponent(discordThreadNameRaw) : null;
       const linearThreadName = req.headers["x-linear-thread-name"] || null;
-      const discordSource = discordMessageId ? "discord" : linearThreadName ? "linear" : null;
-      const discordOptions = discordMessageId ? { replyTo: discordMessageId, source: "discord" } : (linearThreadName ? { threadName: linearThreadName, source: "linear" } : {});
+      const discordSource = discordMessageId ? "discord" : discordThreadName ? "discord" : linearThreadName ? "linear" : null;
+      const discordOptions = {};
+      if (discordMessageId) discordOptions.replyTo = discordMessageId;
+      if (discordThreadName) discordOptions.threadName = discordThreadName;
+      else if (linearThreadName) discordOptions.threadName = linearThreadName;
+      if (discordSource) discordOptions.source = discordSource;
 
       // Verify worktree freshness (non-blocking, no merge/rebase)
       await verifyWorktreeFreshnessNonBlocking();
