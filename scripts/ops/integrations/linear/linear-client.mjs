@@ -33,6 +33,8 @@ export const LABELS = {
   // Legacy check-failure labels (for guardian use)
   bug: "0c2caa97-5497-461e-bb44-2ee29739e76d",
   reliability: "e0a66df5-7c67-4dec-80b0-ea33af32ab7c",
+  // Source attribution labels (for worktree routing)
+  discord: "9341d965-e21d-4c3d-81b2-73beff08356d", // source:discord label for Discord-created issues
 };
 
 const OPEN_STATE_NAMES = ["Backlog", "Todo", "In Progress", "In Review", "Blocked", "Human Review"];

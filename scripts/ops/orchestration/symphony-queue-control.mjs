@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { listIssuesByState, updateIssue, addComment, STATES } from "../linear-client.mjs";
 import { createLogger } from "../lib/logger.mjs";
+import { isDiscordSourced, markDiscordSource } from "../core/discord-source.mjs";
 
 const { logInfo, logError } = createLogger();
 import {
@@ -158,17 +159,25 @@ export async function feedQueue(snap = null, dryRun = false) {
 
   for (const issue of toFeed) {
     if (dryRun) {
-      logAction("feed", `[DRY RUN] Would promote ${issue.identifier} to Todo: ${issue.title}`);
+      const fromDiscord = isDiscordSourced(issue);
+      logAction("feed", `[DRY RUN] Would promote ${issue.identifier} to Todo: ${issue.title}${fromDiscord ? " (Discord)" : ""}`);
       continue;
     }
     await updateIssue(issue.id, { stateId: STATES.todo });
+
+    // Mark the source in symphony-state if this is a Discord-created issue
+    const fromDiscord = isDiscordSourced(issue);
+    if (fromDiscord) {
+      markDiscordSource(issue.identifier);
+    }
+
     recordTransition(issue.identifier, {
       actor: "queue-control",
       reason: "feed",
       from: "Backlog",
       to: "Todo",
     });
-    logAction("feed", `Promoted ${issue.identifier} to Todo: ${issue.title}`);
+    logAction("feed", `Promoted ${issue.identifier} to Todo: ${issue.title}${fromDiscord ? " (Discord)" : ""}`);
   }
 }
 

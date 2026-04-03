@@ -32,6 +32,9 @@ Environment=LINEAR_WEBHOOK_PORT=18791
 # Use same secret as API key for signature verification
 Environment=LINEAR_WORKTREES=1,2,3,4
 
+# Discord label ID for detecting Discord-created issues (used for worktree routing)
+# Set in anqr-ops.env: DISCORD_LABEL_ID=xxxxxxxxxxxxxxxxxxxx
+
 # Secrets
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 EnvironmentFile=-%h/.config/symphony/anqr.env

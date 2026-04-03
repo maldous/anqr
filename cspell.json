@@ -492,7 +492,9 @@
     "symphony",
     "linear",
     "discord",
-    "codebuff"
+    "codebuff",
+    "autofinalize",
+    "AUTOFINALIZE"
   ],
   "dictionaries": [
     "typescript",

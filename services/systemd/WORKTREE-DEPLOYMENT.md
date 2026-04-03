@@ -60,6 +60,29 @@ Integrator → queued worktree branches → origin/main
 7. Any commit/integration failure stays attached to same issue + same wtN
 ```
 
+## Validation Concurrency Control
+
+When multiple executors run validation simultaneously, heavy commands (vitest, typecheck) are serialized system-wide using `flock` file locks:
+
+| Command | Lock File | Timeout |
+|---------|-----------|--------|
+| vitest | `/tmp/anqr-vitest.lock` | 240s (120s wait + 120s run) |
+| typecheck | `/tmp/anqr-typecheck.lock` | 240s (120s wait + 120s run) |
+
+This prevents resource exhaustion from concurrent vitest/tsc processes across worktrees. The locks are implemented in `scripts/ops/core/symphony-validation.mjs` using the `flock -w 120` fd-redirect pattern.
+
+Additionally, `vitest.config.ts` enforces single-worker mode (`maxWorkers: 1`, `fileParallelism: false`) so each vitest process uses minimal resources.
+
+### Environment variables
+
+| Variable | Purpose |
+|----------|--------|
+| `ANQR_AUTOMATION_COMMIT=1` | Skip lefthook pre-commit hooks during automation |
+| `ANQR_AUTOMATION_PUSH=1` | Skip lefthook pre-push hooks during automation |
+| `ANQR_BRIDGE_ENABLE_GIT_AUTOFINALIZE=0` | Prevent bridge from pushing to main (auto-finalize disabled) |
+
+These are set in `anqr-symphony-executor@.service`.
+
 ## Worktree mapping
 
 | Worktree | Pool | Service |

@@ -23,6 +23,7 @@
 import http from "node:http";
 import crypto from "node:crypto";
 import { createLogger } from "../../lib/logger.mjs";
+import { detectAndMarkDiscordSource } from "../../core/discord-source.mjs";
 
 const { logInfo, logWarn, logError, logDebug } = createLogger();
 
@@ -290,6 +291,18 @@ function handleWebhook(req, res) {
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ status: "ignored" }));
         return;
+      }
+
+      // Try to determine if this issue was created from Discord
+      // This info is used by pickIssue() to route to the correct worktree type
+      try {
+        const { getIssue } = await import("../../integrations/linear/linear-client.mjs");
+        const issueData = await getIssue(processedEvent.identifier);
+        if (issueData && detectAndMarkDiscordSource(issueData, processedEvent.identifier)) {
+          logInfo(`Marked ${processedEvent.identifier} as Discord-sourced`);
+        }
+      } catch (err) {
+        logDebug(`Could not determine Discord source for ${processedEvent.identifier}: ${err.message}`);
       }
 
       // Trigger execution on least-loaded wt1-4 executor
