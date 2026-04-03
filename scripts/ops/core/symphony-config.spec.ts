@@ -27,11 +27,11 @@ import {
 
 describe("symphony-config.mjs", () => {
   describe("queue targets", () => {
-    it("should have TARGET_MIN = 3", () => {
-      expect(TARGET_MIN).toBe(3);
+    it("should have TARGET_MIN = 8", () => {
+      expect(TARGET_MIN).toBe(8);
     });
-    it("should have TARGET_MAX = 8", () => {
-      expect(TARGET_MAX).toBe(8);
+    it("should have TARGET_MAX = 16", () => {
+      expect(TARGET_MAX).toBe(16);
     });
     it("should allow up to 8 concurrent agents", () => {
       expect(MAX_CONCURRENT_AGENTS).toBe(8);
@@ -80,8 +80,8 @@ describe("symphony-config.mjs", () => {
     it("should have RUNNER_MAX_EXECUTION_MS = 120 min", () => {
       expect(RUNNER_MAX_EXECUTION_MS).toBe(7_200_000);
     });
-    it("should have RUNNER_MAX_RETRIES = 2", () => {
-      expect(RUNNER_MAX_RETRIES).toBe(2);
+    it("should have RUNNER_MAX_RETRIES = 10", () => {
+      expect(RUNNER_MAX_RETRIES).toBe(10);
     });
     it("should have default Ollama model defined", () => {
       expect(RUNNER_OLLAMA_MODEL).toBe("qwen2.5-coder:3b-instruct");
@@ -100,8 +100,8 @@ describe("symphony-config.mjs", () => {
       expect(RUNNER_PROVIDER_FAILURE_WINDOW_SECS).toBe(360);
       expect(RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS).toBe(120);
     });
-    it("should have auto push disabled (until stability restored)", () => {
-      expect(RUNNER_AUTO_PUSH).toBe(false);
+    it("should have auto push enabled (Phase 1: branch→integrator flow)", () => {
+      expect(RUNNER_AUTO_PUSH).toBe(true);
     });
     it("should have turn budget warning threshold", () => {
       expect(RUNNER_TURN_BUDGET_WARNING).toBe(5);

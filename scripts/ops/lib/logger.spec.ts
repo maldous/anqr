@@ -32,25 +32,25 @@ describe("logger.mjs", () => {
   });
 
   describe("Default log level", () => {
-    it("should default to DEBUG when no environment variable is set", () => {
-      const { logDebug, getLogLevel } = createLogger("test-script");
+    it("should default to INFO when no environment variable is set", () => {
+      const { logInfo, getLogLevel } = createLogger("test-script");
 
-      expect(getLogLevel()).toBe(0); // DEBUG = 0
+      expect(getLogLevel()).toBe(1); // INFO = 1
 
-      logDebug("test message");
+      logInfo("test message");
       expect(stderrSpy).toHaveBeenCalled();
     });
 
-    it("should use DEBUG as default level (not ERROR)", () => {
+    it("should use INFO as default level (not ERROR)", () => {
       const { logDebug, logInfo, logWarn, logError } = createLogger();
 
-      // All levels should be visible with DEBUG default
+      // DEBUG should be filtered at INFO default level
       logDebug("debug");
       logInfo("info");
       logWarn("warn");
       logError("error");
 
-      expect(stderrSpy).toHaveBeenCalledTimes(4);
+      expect(stderrSpy).toHaveBeenCalledTimes(3);
     });
 
     it("should allow custom default level via options", () => {
@@ -142,18 +142,16 @@ describe("logger.mjs", () => {
     });
 
     it("should include log level in output", () => {
-      const { logDebug, logInfo, logWarn, logError } = createLogger();
+      const { logInfo, logWarn, logError } = createLogger();
 
-      logDebug("debug msg");
       logInfo("info msg");
       logWarn("warn msg");
       logError("error msg");
 
       const calls = stderrSpy.mock.calls.map((c: any) => c[0] as string);
-      expect(calls[0]).toContain("[DEBUG]");
-      expect(calls[1]).toContain("[INFO]");
-      expect(calls[2]).toContain("[WARN]");
-      expect(calls[3]).toContain("[ERROR]");
+      expect(calls[0]).toContain("[INFO]");
+      expect(calls[1]).toContain("[WARN]");
+      expect(calls[2]).toContain("[ERROR]");
     });
 
     it("should serialize structured data as JSON", () => {
@@ -258,8 +256,8 @@ describe("logger.mjs", () => {
       process.env.TEST_LOG_LEVEL = "INVALID";
       const { getLogLevel } = createLogger("test");
 
-      // Should fall back to default (DEBUG = 0)
-      expect(getLogLevel()).toBe(0);
+      // Should fall back to default (INFO = 1)
+      expect(getLogLevel()).toBe(1);
     });
 
     it("should handle undefined data parameter", () => {

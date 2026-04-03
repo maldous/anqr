@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { render } from "@testing-library/react";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { render, cleanup } from "@testing-library/react";
 import {
   Select,
   SelectTrigger,
@@ -7,6 +7,23 @@ import {
   SelectItem,
   SelectValue,
 } from "./select";
+
+// Mock scrollIntoView (not available in jsdom)
+beforeAll(() => {
+  Element.prototype.scrollIntoView = () => {};
+  HTMLElement.prototype.scrollIntoView = () => {};
+});
+
+afterEach(() => {
+  cleanup();
+});
+
+afterAll(() => {
+  // @ts-expect-error - restoring original undefined
+  delete Element.prototype.scrollIntoView;
+  // @ts-expect-error - restoring original undefined
+  delete HTMLElement.prototype.scrollIntoView;
+});
 
 describe("Select", () => {
   // ── SelectTrigger ──────────────────────────────────────────────
@@ -116,7 +133,7 @@ describe("Select", () => {
 
   describe("SelectItem", () => {
     it("assigns dynamic testid", () => {
-      const { container } = render(
+      render(
         <Select open>
           <SelectTrigger>
             <SelectValue />
@@ -126,12 +143,12 @@ describe("Select", () => {
           </SelectContent>
         </Select>
       );
-      const option = container.querySelector('[role="option"]');
+      const option = document.querySelector('[role="option"]');
       expect(option?.getAttribute("data-testid")).toBeTruthy();
     });
 
     it("uses value in testid", () => {
-      const { container } = render(
+      render(
         <Select open>
           <SelectTrigger>
             <SelectValue />
@@ -141,13 +158,13 @@ describe("Select", () => {
           </SelectContent>
         </Select>
       );
-      const option = container.querySelector('[role="option"]');
+      const option = document.querySelector('[role="option"]');
       const testid = option?.getAttribute("data-testid");
       expect(testid).toContain("premium");
     });
 
     it("uses title in testid when provided", () => {
-      const { container } = render(
+      render(
         <Select open>
           <SelectTrigger>
             <SelectValue />
@@ -159,13 +176,13 @@ describe("Select", () => {
           </SelectContent>
         </Select>
       );
-      const option = container.querySelector('[role="option"]');
+      const option = document.querySelector('[role="option"]');
       const testid = option?.getAttribute("data-testid");
       expect(testid).toContain("first-choice");
     });
 
     it("renders children", () => {
-      const { container } = render(
+      render(
         <Select open>
           <SelectTrigger>
             <SelectValue />
@@ -175,11 +192,12 @@ describe("Select", () => {
           </SelectContent>
         </Select>
       );
-      expect(container.textContent).toContain("Test Label");
+      const option = document.querySelector('[role="option"]');
+      expect(option?.textContent).toContain("Test Label");
     });
 
     it("forwards className prop", () => {
-      const { container } = render(
+      render(
         <Select open>
           <SelectTrigger>
             <SelectValue />
@@ -191,7 +209,7 @@ describe("Select", () => {
           </SelectContent>
         </Select>
       );
-      const option = container.querySelector('[role="option"]');
+      const option = document.querySelector('[role="option"]');
       expect(option?.className).toContain("custom-item");
     });
   });
@@ -231,7 +249,7 @@ describe("Select", () => {
     });
 
     it("forwards className prop", () => {
-      render(
+      const { baseElement } = render(
         <Select open>
           <SelectTrigger>
             <SelectValue />
@@ -241,7 +259,7 @@ describe("Select", () => {
           </SelectContent>
         </Select>
       );
-      const content = document.querySelector('[data-testid="content"]');
+      const content = baseElement.ownerDocument.querySelector('[data-testid="content"]');
       expect(content?.className).toContain("custom-content");
     });
   });
@@ -281,7 +299,7 @@ describe("Select", () => {
     });
 
     it("renders multiple items", () => {
-      const { container } = render(
+      render(
         <Select open>
           <SelectTrigger>
             <SelectValue />
@@ -293,7 +311,7 @@ describe("Select", () => {
           </SelectContent>
         </Select>
       );
-      const options = container.querySelectorAll('[role="option"]');
+      const options = document.querySelectorAll('[role="option"]');
       expect(options).toHaveLength(3);
     });
   });

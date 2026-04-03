@@ -61,7 +61,7 @@ import {
 } from "../../symphony-validation.mjs";
 import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
 import { invokeCodebuffDirect } from "../../integrations/model/codebuff-direct.mjs";
-import { inferSymphonyResultFromCompletion } from "./bridge-result.mjs";
+import { inferSymphonyResultFromCompletion } from "../../core/bridge-result.mjs";
 
 const SYMPHONY_BRIDGE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319";
 const SYMPHONY_BRIDGE_API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";

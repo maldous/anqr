@@ -17,9 +17,7 @@ import {
   type ModelsStatusOutput,
   openclawConfig,
   SYMPHONY_BASE_URL,
-  CODEBUFF_BASE_URL,
   SYMPHONY_API_KEY,
-  CODEBUFF_API_KEY,
   symphonyTestScenarios,
   isBridgeReachable,
   sendCompletion,
@@ -311,7 +309,7 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
 
 const DIRECT_PROVIDERS = [
   { name: "codex", model: "gpt-5-codex", envVar: null },
-  { name: "codebuff", model: "codebuff/base@latest", envVar: "CODEBUFF_API_KEY" },
+  // codebuff now runs inside Symphony bridges - removed standalone config
   { name: "groq", model: "llama-3.3-70b-versatile", envVar: "GROQ_TOKEN" },
   { name: "mistral", model: "mistral-small-latest", envVar: "MISTRAL_TOKEN" },
   { name: "gemini", model: "gemini-2.5-flash", envVar: "GEMINI_TOKEN" },
@@ -1496,133 +1494,7 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
   });
 });
 
-test.describe("Live Codebuff Bridge Tests (DEPRECATED - bridge retired per ADR-0003)", () => {
-  test.setTimeout(120_000);
-
-  test("Codebuff bridge health check", async () => {
-    test.skip(true, "Standalone Codebuff bridge retired per ADR-0003 — Codebuff SDK runs inside Symphony bridges");
-
-    const res = await fetch(`${CODEBUFF_BASE_URL}/health`, {
-      signal: AbortSignal.timeout(5_000),
-    });
-
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(data.status).toMatch(/^(ok|initializing)$/);
-    expect(data.model).toBe("codebuff/base");
-    console.log(
-      `[openclaw-e2e] Codebuff health: keyConfigured=${data.apiKeyConfigured}, mode=${data.mode}`,
-    );
-  });
-
-  test("Codebuff bridge /v1/models lists codebuff model", async () => {
-    test.skip(true, "Standalone Codebuff bridge retired per ADR-0003");
-
-    const res = await fetch(`${CODEBUFF_BASE_URL}/v1/models`, {
-      signal: AbortSignal.timeout(5_000),
-    });
-
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    const modelIds = data.data.map((m: { id: string }) => m.id);
-    expect(modelIds).toContain("codebuff/base");
-  });
-
-  test("Codebuff bridge non-streaming completion", async () => {
-    test.skip(true, "Standalone Codebuff bridge retired per ADR-0003");
-
-    const startTime = Date.now();
-    const res = await fetch(`${CODEBUFF_BASE_URL}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${CODEBUFF_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "codebuff/base",
-        messages: [{ role: "user", content: "Say 'ok'." }],
-      }),
-      signal: AbortSignal.timeout(90_000),
-    });
-
-    const elapsed = Date.now() - startTime;
-
-    if (res.status === 200) {
-      const data = await res.json();
-      expect(data.choices).toBeDefined();
-      expect(data.choices[0].message.content).toBeTruthy();
-      console.log(
-        `[openclaw-e2e] Codebuff completion: elapsed=${elapsed}ms, content=${data.choices[0].message.content.slice(0, 200)}`,
-      );
-    } else {
-      const error = await res.json();
-      console.log(
-        `[openclaw-e2e] Codebuff completion failed: status=${res.status}, error=${error.error?.message}`,
-      );
-      expect(error.error).toBeDefined();
-    }
-  });
-
-  test("Codebuff bridge streaming completion", async () => {
-    test.skip(true, "Standalone Codebuff bridge retired per ADR-0003");
-
-    const startTime = Date.now();
-    const res = await fetch(`${CODEBUFF_BASE_URL}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${CODEBUFF_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "codebuff/base",
-        messages: [{ role: "user", content: "Count to 3." }],
-        stream: true,
-      }),
-      signal: AbortSignal.timeout(90_000),
-    });
-
-    if (res.status === 200) {
-      expect(res.headers.get("content-type")).toContain("text/event-stream");
-
-      const chunks: string[] = [];
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let doneReading = false;
-
-      if (reader) {
-        while (!doneReading) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n");
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") {
-                doneReading = true;
-                break;
-              }
-              if (data.trim()) chunks.push(data);
-            }
-          }
-        }
-      }
-
-      const elapsed = Date.now() - startTime;
-      expect(chunks.length).toBeGreaterThan(0);
-      console.log(
-        `[openclaw-e2e] Codebuff streaming: ${chunks.length} chunks, elapsed=${elapsed}ms`,
-      );
-    } else {
-      const error = await res.json();
-      console.log(
-        `[openclaw-e2e] Codebuff streaming failed: status=${res.status}, error=${error.error?.message}`,
-      );
-    }
-  });
-});
+// Live Codebuff Bridge Tests section removed - Codebuff is now integrated into Symphony per ADR-0003
 
 // ---------------------------------------------------------------------------
 // OpenClaw CLI Model Validation

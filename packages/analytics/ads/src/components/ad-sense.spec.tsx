@@ -6,10 +6,17 @@ describe("AdSense", () => {
   beforeEach(() => {
     // Mock adsbygoogle
     (globalThis as any).adsbygoogle = [];
+    // Mock ResizeObserver (not available in jsdom)
+    (globalThis as any).ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
   });
 
   afterEach(() => {
     delete (globalThis as any).adsbygoogle;
+    delete (globalThis as any).ResizeObserver;
     vi.clearAllTimers();
   });
 

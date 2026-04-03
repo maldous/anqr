@@ -24,14 +24,10 @@
 | `file-picker` | `prompt` (string) | `params.directories` (string[]) |
 | `researcher-web` | `prompt` (string) | — |
 | `researcher-docs` | `prompt` (string) | — |
-| `thinker` | `prompt` (string) | — |
+| `code-reviewer-lite` | `prompt` (string) | — |
 | `thinker-gpt` | `prompt` (string) | — |
-| `opus-agent` | `prompt` (string) | `params.filePaths` (string[]) |
-| `gpt-5-agent` | `prompt` (string) | `params.filePaths` (string[]) |
-| `editor` | — (inherits conversation) | — |
-| `code-reviewer` | `prompt` (string) | — |
-| `tmux-cli` | `prompt` (string) | `params.command` (string) |
 | `browser-use` | `prompt` (string) | `params.url` (string) |
+| `tmux-cli` | `prompt` (string) | `params.command` (string) |
 | `harness-helper` | — | `prompt` |
 | `context-pruner` | — (auto-spawned) | `params.maxContextLength`, `params.userBudget`, `params.assistantToolBudget` |
 
@@ -59,12 +55,26 @@ Invalid params for agent basher: expected string, received undefined
 { "agent_type": "basher", "prompt": "git status" }
 ```
 
+### ❌ WRONG — Params without command
+```json
+{ "agent_type": "basher", "prompt": "run tests", "params": {} }
+```
+
 ### ✅ CORRECT — Command in params.command
 ```json
 {
   "agent_type": "basher",
   "prompt": "Check if there are uncommitted changes",
   "params": { "command": "git status" }
+}
+```
+
+### ✅ CORRECT — With timeout
+```json
+{
+  "agent_type": "basher",
+  "prompt": "Run unit tests with coverage",
+  "params": { "command": "npm run test:unit:coverage", "timeout_seconds": 600 }
 }
 ```
 
@@ -127,7 +137,7 @@ Invalid params for agent basher: expected string, received undefined
       "params": { "command": "npm run lint:all" }
     },
     {
-      "agent_type": "code-reviewer",
+      "agent_type": "code-reviewer-lite",
       "prompt": "Review the changes to symphony-agent-router.mjs"
     }
   ]
@@ -189,15 +199,12 @@ Invalid params for agent basher: expected string, received undefined
 
 | What you want to do | agent_type | Where the command/question goes |
 |---|---|---|
-| Run a terminal command | `basher` | `params.command` |
+| Run a terminal command | `basher` | `params.command` (REQUIRED!) |
 | Find files | `file-picker` | `prompt` |
 | Search the web | `researcher-web` | `prompt` |
 | Read library docs | `researcher-docs` | `prompt` |
-| Think about a problem | `thinker` | `prompt` |
-| Implement code changes | `editor` | nowhere (inherits context) |
-| Review code changes | `code-reviewer` | `prompt` |
-| General problem solving | `opus-agent` | `prompt` + optional `params.filePaths` |
-| Complex reasoning | `gpt-5-agent` | `prompt` + optional `params.filePaths` |
+| Think about a problem | `thinker-gpt` | `prompt` |
+| Review code changes | `code-reviewer-lite` | `prompt` |
 | Interactive CLI testing | `tmux-cli` | `prompt` + optional `params.command` |
 | Browser testing | `browser-use` | `prompt` + optional `params.url` |
 | Harness/bridge help | `harness-helper` | optional `prompt` |

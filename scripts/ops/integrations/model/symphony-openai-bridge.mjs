@@ -124,7 +124,7 @@ import {
 
 // MEMORY.md updates for persistence across restarts
 import { updateMemory } from "../../lib/update-memory.mjs";
-import { inferSymphonyResultFromCompletion } from "../../runtime/symphony/bridge-result.mjs";
+import { inferSymphonyResultFromCompletion } from "../../core/bridge-result.mjs";
 
 // Enhancement 1: Context7 documentation via HTTP service (port 4320)
 const CONTEXT7_HTTP_BASE = process.env.CONTEXT7_HTTP_URL || "http://127.0.0.1:4320";

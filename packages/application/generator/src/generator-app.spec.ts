@@ -730,7 +730,8 @@ describe("application/generator", () => {
       const result = toFullQArtPipelineResult(
         input as Parameters<typeof toFullQArtPipelineResult>[0],
       );
-      expect(result.encodedData).toBeInstanceOf(Uint8Array);
+      expect(ArrayBuffer.isView(result.encodedData)).toBe(true);
+      expect(result.encodedData.constructor.name).toBe("Uint8Array");
       expect(new TextDecoder().decode(result.encodedData)).toBe("hello");
     });
 

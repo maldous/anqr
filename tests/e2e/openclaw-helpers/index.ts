@@ -2,9 +2,7 @@ export type { ModelsListOutput, ModelsStatusOutput, TuiPexpectResult } from "./h
 export {
   openclawConfig,
   SYMPHONY_BASE_URL,
-  CODEBUFF_BASE_URL,
   SYMPHONY_API_KEY,
-  CODEBUFF_API_KEY,
 } from "./config";
 export { symphonyTestScenarios } from "./scenarios";
 export { isBridgeReachable } from "./bridge-check";

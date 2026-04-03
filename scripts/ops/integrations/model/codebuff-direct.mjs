@@ -9,7 +9,7 @@
 
 import { CodebuffClient } from "@codebuff/sdk";
 import { createLogger } from "../../lib/logger.mjs";
-import { inferSymphonyResultFromCompletion } from "../../runtime/symphony/bridge-result.mjs";
+import { inferSymphonyResultFromCompletion } from "../../core/bridge-result.mjs";
 
 const { logDebug, logInfo, logWarn } = createLogger();
 
@@ -64,7 +64,7 @@ function getApiKey() {
   return process.env.CODEBUFF_API_KEY || null;
 }
 
-function getSharedClient(apiKey, costMode, cwd) {
+export function getSharedClient(apiKey, costMode, cwd) {
   const normalizedCwd = normalizeCwd(cwd);
   const key = `${apiKey || ""}::${costMode || "paid"}::${normalizedCwd}`;
   if (sharedClient && sharedClientKey === key) {
@@ -83,6 +83,11 @@ function getSharedClient(apiKey, costMode, cwd) {
     cwd: normalizedCwd,
   });
   return sharedClient;
+}
+
+export function resetSharedClient() {
+  sharedClient = null;
+  sharedClientKey = null;
 }
 
 function isRateLimitError(errStr) {

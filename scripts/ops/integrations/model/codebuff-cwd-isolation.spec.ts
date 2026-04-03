@@ -33,14 +33,6 @@ vi.mock("@codebuff/sdk", () => {
   return { CodebuffClient: MockCodebuffClient };
 });
 
-// Mock ai SDK (imported by the bridge but not needed for caching tests)
-vi.mock("ai", () => ({
-  isTextUIPart: vi.fn(),
-  isReasoningUIPart: vi.fn(),
-  isToolUIPart: vi.fn(),
-  isDataUIPart: vi.fn(),
-}));
-
 // Mock logger
 vi.mock("../../lib/logger.mjs", () => ({
   createLogger: () => ({
@@ -49,25 +41,6 @@ vi.mock("../../lib/logger.mjs", () => ({
     logError: vi.fn(),
     logDebug: vi.fn(),
   }),
-}));
-
-// Mock http to prevent server startup
-const mockServer = {
-  listen: vi.fn(),
-  close: vi.fn(),
-  on: vi.fn(),
-};
-vi.mock("node:http", () => ({
-  default: {
-    createServer: vi.fn(() => mockServer),
-  },
-  createServer: vi.fn(() => mockServer),
-}));
-
-// Mock https (imported but not critical)
-vi.mock("node:https", () => ({
-  default: { Agent: vi.fn() },
-  Agent: vi.fn(),
 }));
 
 describe("Codebuff cwd isolation (F1 regression)", () => {
@@ -81,7 +54,7 @@ describe("Codebuff cwd isolation (F1 regression)", () => {
 
     // Dynamic import to get the actual module functions
     // vi.mock hoisting ensures mocks are applied before import
-    const mod = await import("./codebuff-openai-bridge.mjs");
+    const mod = await import("./codebuff-direct.mjs");
     getSharedClient = mod.getSharedClient;
     resetSharedClient = mod.resetSharedClient;
 
@@ -118,7 +91,7 @@ describe("Codebuff cwd isolation (F1 regression)", () => {
     expect(clientConstructorCalls).toHaveLength(2);
   });
 
-  it("should never cross-contaminate when alternating between two worktree cwds", () => {
+  it("should never cross-contaminate when alternating between two worktree directories", () => {
     const cwdA = "/home/user/src/anqr-wt5";
     const cwdB = "/home/user/src/anqr-wt6";
 

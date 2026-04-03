@@ -79,9 +79,9 @@ describe("utils", () => {
       expect(cn({})).toBe("");
     });
 
-    it("deduplicates identical classes", () => {
+    it("preserves non-tailwind duplicate classes (twMerge only deduplicates tailwind utilities)", () => {
       const result = cn("foo", "foo");
-      expect(result).toBe("foo");
+      expect(result).toBe("foo foo");
     });
 
     it("handles undefined and null gracefully", () => {

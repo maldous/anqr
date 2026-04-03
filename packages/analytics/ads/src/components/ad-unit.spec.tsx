@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render } from "@testing-library/react";
+import { render, cleanup } from "@testing-library/react";
+import { Capacitor } from "@capacitor/core";
 import { AdUnit } from "./ad-unit";
 
 // Mock Capacitor
@@ -45,10 +46,11 @@ describe("AdUnit", () => {
   const originalEnv = { ...import.meta.env };
 
   beforeEach(() => {
-    vi.resetModules();
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
   });
 
   afterEach(() => {
+    cleanup();
     Object.assign(import.meta.env, originalEnv);
   });
 
@@ -185,7 +187,7 @@ describe("AdUnit", () => {
     it("does not pass string width to AdSense", () => {
       const { getByTestId } = render(<AdUnit slot="1234567890" width="100%" />);
       const adSense = getByTestId("ad-sense");
-      expect(adSense.getAttribute("data-width")).toBe("undefined");
+      expect(adSense.getAttribute("data-width")).toBeNull();
     });
 
     it("passes height to AdSense", () => {

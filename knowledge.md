@@ -1,5 +1,12 @@
 # Knowledge
 
+## Current Architecture
+
+- **8 Worktree Executors** on ports 4321-4328 (wt1-wt4 for Linear, wt5-wt8 for Discord)
+- **No single bridge** - each worktree runs its own `symphony-openai-bridge.mjs`
+- **Codebuff integrated** into Symphony executors (per ADR-0003) - no separate bridge
+- **Router** routes requests to available worktrees
+
 ## Best Practices
 
 Always test code

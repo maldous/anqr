@@ -5,4 +5,7 @@ export type TestIdProps = {
   title?: string;
   placeholder?: string;
   "aria-label"?: string;
+  // Extended properties for dynamic test ID generation
+  testId?: string;
+  label?: string;
 };

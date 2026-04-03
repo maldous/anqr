@@ -1,9 +1,10 @@
-import { describe, it, expect, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, cleanup } from "@testing-library/react";
 import { AdPlaceholder } from "./ad-placeholder";
 
 describe("AdPlaceholder", () => {
   afterEach(() => {
+    cleanup();
     vi.unstubAllEnvs();
   });
 
