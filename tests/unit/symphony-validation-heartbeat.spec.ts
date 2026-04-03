@@ -5,21 +5,15 @@ vi.mock("node:child_process", async (importOriginal) => {
   const original = await importOriginal<typeof import("node:child_process")>();
 
   function fakeSpawn() {
-    const child = new EventEmitter() as EventEmitter & {
-      stdout: EventEmitter;
-      stderr: EventEmitter;
-      pid: number;
-      kill: () => void;
-    };
-    child.stdout = new EventEmitter();
-    child.stderr = new EventEmitter();
-    child.pid = 9999;
-    child.kill = vi.fn();
-    setTimeout(() => {
-      child.stdout.emit("end");
-      child.stderr.emit("end");
+    const child = Object.assign(new EventEmitter(), {
+      stdout: new EventEmitter(),
+      stderr: new EventEmitter(),
+      pid: 9999,
+      kill: vi.fn(),
+    });
+    process.nextTick(() => {
       child.emit("close", 0);
-    }, 5);
+    });
     return child;
   }
 
@@ -37,12 +31,14 @@ describe("symphony-validation heartbeat", () => {
     vi.clearAllMocks();
   });
 
-  // Skipped: ESM mocking of node:child_process does not reliably intercept
-  // when runValidation runs all 5 sequential checks (typecheck, lint, cspell,
-  // ast-density, tests). The mock works for early-abort paths (heartbeat fail)
-  // but the full pipeline hangs on real execFileSync/spawn calls.
-  // TODO: Refactor to mock individual validation functions instead of child_process.
-  it.skip("should call heartbeat during validation when provided", async () => {
+  it("verifies child_process mock is active", async () => {
+    const cp = await import("node:child_process");
+    expect(vi.isMockFunction(cp.execFileSync)).toBe(true);
+    expect(vi.isMockFunction(cp.spawn)).toBe(true);
+    expect(cp.execFileSync("anything")).toBe("");
+  });
+
+  it("should call heartbeat during validation when provided", { timeout: 30_000 }, async () => {
     const heartbeatMock = vi.fn(() => ({ ok: true }));
     const projectRoot = process.cwd();
 
@@ -52,7 +48,7 @@ describe("symphony-validation heartbeat", () => {
     expect(heartbeatMock.mock.calls.length).toBeGreaterThan(0);
   });
 
-  it("should abort validation when heartbeat fails", async () => {
+  it("should abort validation when heartbeat fails", { timeout: 30_000 }, async () => {
     const heartbeatMock = vi.fn(() => ({ ok: false, reason: "lease_expired" }));
     const projectRoot = process.cwd();
 
@@ -62,9 +58,7 @@ describe("symphony-validation heartbeat", () => {
     expect(result.passed).toBe(false);
   });
 
-  // Skipped: Same ESM mocking limitation — without heartbeat, the validation
-  // uses execFileSync path which the mock cannot intercept reliably.
-  it.skip("should work without heartbeat callback (backwards compatibility)", async () => {
+  it("should work without heartbeat callback (backwards compatibility)", { timeout: 30_000 }, async () => {
     const projectRoot = process.cwd();
 
     const result = await runValidation(projectRoot, []);

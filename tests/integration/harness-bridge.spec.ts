@@ -59,9 +59,13 @@ const chatCompletionResponseSchema = z.object({
   _symphony_duration_ms: z.number().optional(),
 });
 
+// Health schema accepts both direct bridge and router responses.
+// Direct bridge returns model, providersConfigured, etc.
+// Router returns role, worktrees, activeRequests, etc.
 const healthResponseSchema = z.object({
   status: z.string(),
-  model: z.string(),
+  // Direct bridge fields
+  model: z.string().optional(),
   providersConfigured: z.number().optional(),
   providersAvailable: z.number().optional(),
   providersWithStats: z.number().optional(),
@@ -77,12 +81,19 @@ const healthResponseSchema = z.object({
   lastProbeAt: z.string().nullable().optional(),
   rankedProviders: z.array(z.object({ name: z.string(), score: z.number().nullable() })).optional(),
   tools: z.array(z.string()).optional(),
+  // Router fields
+  role: z.string().optional(),
+  activeRequests: z.number().optional(),
+  maxConcurrent: z.number().optional(),
+  queueLength: z.number().optional(),
+  worktrees: z.array(z.object({ id: z.string(), port: z.number() }).passthrough()).optional(),
 });
 
 describe("Symphony Bridge Contract Tests", () => {
   const baseUrl = SYMPHONY_BASE_URL;
   const apiKey = SYMPHONY_API_KEY;
   let bridgeAvailable = false;
+  let isRouter = false;
 
   beforeAll(async () => {
     bridgeAvailable = await isBridgeReachable(baseUrl);
@@ -90,7 +101,25 @@ describe("Symphony Bridge Contract Tests", () => {
       console.warn(
         `[harness-bridge] ⚠️ Symphony bridge not reachable at ${baseUrl} — skipping live tests`,
       );
+      return;
     }
+    // Detect if the endpoint is the symphony-agent-router (not a direct bridge).
+    // The router proxies /v1/models and /v1/chat/completions but does not serve
+    // bridge-specific endpoints like /v1/metrics and /v1/stats.
+    try {
+      const healthRes = await fetch(`${baseUrl}/health`, {
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (healthRes.ok) {
+        const healthData = await healthRes.json();
+        isRouter = healthData.role === "symphony-agent-router";
+        if (isRouter) {
+          console.warn(
+            `[harness-bridge] ℹ️ Detected symphony-agent-router — bridge-specific endpoint tests will be skipped`,
+          );
+        }
+      }
+    } catch {}
   });
 
   describe("GET /v1/models", () => {
@@ -129,7 +158,12 @@ describe("Symphony Bridge Contract Tests", () => {
       const result = healthResponseSchema.safeParse(data);
       expect(result.success).toBe(true);
       expect(data.status).toBe("ok");
-      expect(data.model).toBeTruthy();
+      // Direct bridge provides model; router provides role
+      if (!isRouter) {
+        expect(data.model).toBeTruthy();
+      } else {
+        expect(data.role).toBe("symphony-agent-router");
+      }
     });
 
     it("should not require auth for health check", async () => {
@@ -276,7 +310,7 @@ describe("Symphony Bridge Contract Tests", () => {
 
   describe("GET /v1/metrics", () => {
     it("should return bridge and credit-gate metrics", async () => {
-      if (!bridgeAvailable) return;
+      if (!bridgeAvailable || isRouter) return;
 
       const res = await fetch(`${baseUrl}/v1/metrics`, {
         headers: { Authorization: `Bearer ${apiKey}` },
@@ -294,7 +328,7 @@ describe("Symphony Bridge Contract Tests", () => {
 
   describe("GET /v1/stats", () => {
     it("should return ranked provider stats", async () => {
-      if (!bridgeAvailable) return;
+      if (!bridgeAvailable || isRouter) return;
 
       const res = await fetch(`${baseUrl}/v1/stats`, {
         headers: { Authorization: `Bearer ${apiKey}` },
@@ -593,7 +627,7 @@ describe("Symphony Bridge Contract Tests", () => {
       "should increment totalRequests after a completion",
       { timeout: COMPLETION_TIMEOUT_MS },
       async () => {
-        if (!bridgeAvailable) return;
+        if (!bridgeAvailable || isRouter) return;
 
         const before = await fetch(`${baseUrl}/v1/metrics`, {
           headers: { Authorization: `Bearer ${apiKey}` },
@@ -634,7 +668,7 @@ describe("Symphony Bridge Contract Tests", () => {
       "should track provider usage in stats after completion",
       { timeout: COMPLETION_TIMEOUT_MS },
       async () => {
-        if (!bridgeAvailable) return;
+        if (!bridgeAvailable || isRouter) return;
 
         await fetch(`${baseUrl}/v1/chat/completions`, {
           method: "POST",

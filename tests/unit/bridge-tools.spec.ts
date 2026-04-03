@@ -15,21 +15,40 @@
  * - Proposal tools: propose_str_replace, propose_write_file
  * - Meta tools: ask_user, lookup_agent_info, apply_patch, add_message, set_messages, etc.
  *
- * NOTE: These tests are currently skipped because importing symphony-openai-bridge.mjs
- * starts an HTTP server on port 4319, which conflicts with the running systemd service.
- * TODO: Refactor symphony-openai-bridge.mjs to export tools separately from server startup.
+ * NOTE: node:http is mocked to prevent the bridge from binding to port 4319.
+ * This allows testing tool functions without conflicting with the running systemd service.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+
+// Mock node:http to prevent the bridge from binding to port 4319 during import.
+// The bridge module calls server.listen(PORT, ...) at module level.
+vi.mock("node:http", async (importOriginal) => {
+  const orig = await importOriginal<typeof import("node:http")>();
+  const fakeServer = {
+    listen: vi.fn(),
+    on: vi.fn().mockReturnThis(),
+    close: vi.fn(),
+    address: vi.fn(() => ({ port: 0, address: "127.0.0.1" })),
+  };
+  const mockCreateServer = vi.fn(() => fakeServer);
+  return {
+    ...orig,
+    createServer: mockCreateServer,
+    default: Object.assign(Object.create(orig.default), {
+      createServer: mockCreateServer,
+    }),
+  };
+});
 
 // Test fixtures directory
 const FIXTURES_DIR = path.join(process.cwd(), "tests", "fixtures", "bridge-tools");
 const TEST_FILE = path.join(FIXTURES_DIR, "test-file.txt");
 const TEST_CODE_FILE = path.join(FIXTURES_DIR, "test-code.ts");
 
-describe.skip("Bridge Tools - File Operations", () => {
+describe("Bridge Tools - File Operations", () => {
   beforeEach(() => {
     // Create fixtures directory
     if (!fs.existsSync(FIXTURES_DIR)) {
@@ -268,7 +287,7 @@ describe.skip("Bridge Tools - File Operations", () => {
   });
 });
 
-describe.skip("Bridge Tools - Code Search", () => { // Skipped because importing symphony-openai-bridge.mjs starts an HTTP server on port 4319, which conflicts with the running systemd service.
+describe("Bridge Tools - Code Search", () => {
   beforeEach(() => {
     if (!fs.existsSync(FIXTURES_DIR)) {
       fs.mkdirSync(FIXTURES_DIR, { recursive: true });
@@ -354,7 +373,7 @@ describe.skip("Bridge Tools - Code Search", () => { // Skipped because importing
   });
 });
 
-describe.skip("Bridge Tools - Execution", () => {
+describe("Bridge Tools - Execution", () => {
   describe("exec", () => {
     it("should execute simple command", async () => {
       const { execTool } =
@@ -387,7 +406,7 @@ describe.skip("Bridge Tools - Execution", () => {
   });
 });
 
-describe.skip("Bridge Tools - Memory", () => {
+describe("Bridge Tools - Memory", () => {
   const MEMORY_FILE = path.join(process.cwd(), "MEMORY.md");
   const KNOWLEDGE_FILE = path.join(process.cwd(), "knowledge.md");
 
@@ -486,7 +505,7 @@ describe.skip("Bridge Tools - Memory", () => {
   });
 });
 
-describe.skip("Bridge Tools - Workflow", () => {
+describe("Bridge Tools - Workflow", () => {
   describe("think_deeply", () => {
     it("should acknowledge thought", async () => {
       const { thinkDeeplyTool } =
@@ -548,7 +567,7 @@ describe.skip("Bridge Tools - Workflow", () => {
   });
 });
 
-describe.skip("Bridge Tools - Configuration", () => {
+describe("Bridge Tools - Configuration", () => {
   describe("run_file_change_hooks", () => {
     it("should handle no hooks configured", async () => {
       const { runFileChangeHooksTool } =
@@ -574,7 +593,7 @@ describe.skip("Bridge Tools - Configuration", () => {
   });
 });
 
-describe.skip("Bridge Tools - Proposal Tools", () => {
+describe("Bridge Tools - Proposal Tools", () => {
   beforeEach(() => {
     if (!fs.existsSync(FIXTURES_DIR)) {
       fs.mkdirSync(FIXTURES_DIR, { recursive: true });
@@ -640,7 +659,7 @@ describe.skip("Bridge Tools - Proposal Tools", () => {
   });
 });
 
-describe.skip("Bridge Tools - Meta Tools", () => {
+describe("Bridge Tools - Meta Tools", () => {
   describe("add_message", () => {
     it("should acknowledge message addition", async () => {
       const { addMessageTool } =
@@ -756,7 +775,7 @@ describe.skip("Bridge Tools - Meta Tools", () => {
   });
 });
 
-describe.skip("Bridge Tools - External APIs", () => {
+describe("Bridge Tools - External APIs", () => {
   describe("web_search", () => {
     it("should return error when API key not configured", async () => {
       const { webSearchTool } =

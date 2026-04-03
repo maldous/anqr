@@ -1,250 +1,364 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { selectProvider } from "./symphony-credit-gate.mjs";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// SKIPPED: This test was written for the old tier/score-based selectProvider(score, retryCount) API.
-// The current selectProvider(options) API uses a preferred-provider + dynamic-ranking model
-// (see symphony-credit-gate.mjs). These tests need to be rewritten for the new API.
-describe.skip("Provider Routing Edge Cases", () => {
+// Mock file I/O to prevent state file operations
+vi.mock("node:fs", async (importOriginal) => {
+  const orig = await importOriginal<typeof import("node:fs")>();
+  return {
+    ...orig,
+    readFileSync: vi.fn(() => "{}"),
+    writeFileSync: vi.fn(),
+    existsSync: vi.fn(() => false),
+    mkdirSync: vi.fn(),
+  };
+});
+
+// Mock Codex SDK to prevent real SDK instantiation during probes
+vi.mock("@openai/codex-sdk", () => ({
+  Codex: vi.fn().mockImplementation(() => ({
+    startThread: vi.fn().mockReturnValue({
+      run: vi.fn().mockRejectedValue(new Error("mock: Codex probe disabled in test")),
+    }),
+  })),
+}));
+
+// Mock provider health — all healthy by default
+vi.mock("./symphony-provider-health.mjs", () => ({
+  HEALTH_STATES: {
+    HEALTHY: "healthy",
+    DEGRADED: "degraded",
+    COOLING_DOWN: "cooling-down",
+    DISABLED: "disabled",
+    BLOCKED: "blocked",
+    UNKNOWN: "unknown",
+  },
+  PROVIDER_TIMEOUTS: { LOCAL: 60_000, HOSTED: 30_000 },
+  getProviderTimeout: vi.fn(() => 30_000),
+  getProviderHealthState: vi.fn(() => ({ state: "healthy", lastUpdated: Date.now() })),
+  setProviderHealthState: vi.fn(),
+  recordProviderHealthSuccess: vi.fn(),
+  recordProviderHealthFailure: vi.fn(),
+  shouldRetryProvider: vi.fn(() => true),
+  resetProviderHealth: vi.fn(),
+  checkPreferredProviderHealth: vi.fn(() => true),
+  isLocalProvider: vi.fn(() => false),
+  getAllProviderHealthStates: vi.fn(() => ({})),
+}));
+
+import { selectProvider } from "./symphony-credit-gate.mjs";
+import { getProviderHealthState } from "./symphony-provider-health.mjs";
+import { readFileSync } from "node:fs";
+
+describe("Provider Routing Edge Cases", () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    // Reset environment for each test
-    process.env.SYMPHONY_TIER_1_PROVIDERS = "openai:gpt-4o";
-    process.env.SYMPHONY_TIER_2_PROVIDERS = "anthropic:claude-3-5-sonnet-20241022";
-    process.env.SYMPHONY_TIER_3_PROVIDERS = "groq:llama-3.3-70b-versatile";
-    process.env.SYMPHONY_SAFETY_NET_PROVIDER = "openrouter:openai/gpt-4o";
-    process.env.SYMPHONY_SAFETY_NET_SCORE_CEILING = "75";
+    vi.clearAllMocks();
+    // Set API keys for common providers
+    process.env.GROQ_TOKEN = "test-groq-key";
+    process.env.MISTRAL_TOKEN = "test-mistral-key";
+    process.env.GEMINI_TOKEN = "test-gemini-key";
+    process.env.OPENAI_API_KEY = "test-openai-key";
+    process.env.OPENROUTER_TOKEN = "test-openrouter-key";
+    process.env.SAMBANOVA_TOKEN = "test-sambanova-key";
+    process.env.CEREBRAS_TOKEN = "test-cerebras-key";
+    process.env.GITHUB_MODELS_TOKEN = "test-github-key";
+
+    // Default: all probes fail (fetch returns null / non-ok)
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => null),
+    );
   });
 
   afterEach(() => {
     process.env = { ...originalEnv };
+    vi.unstubAllGlobals();
   });
 
-  describe("Tier Boundary Conditions", () => {
-    it("should select tier 1 when score is exactly at tier 1 minimum (90)", () => {
-      const result = selectProvider(90, 0);
-      expect(result.tier).toBe(1);
-      expect(result.provider).toContain("openai");
+  describe("Provider Selection Shape", () => {
+    it("should return a provider object with expected fields when probe succeeds", async () => {
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        if (String(url).includes("api.groq.com")) {
+          return { ok: true, text: async () => "llama-3.3-70b-versatile" } as Response;
+        }
+        return null as unknown as Response;
+      });
+
+      const result = await selectProvider();
+
+      expect(result).not.toBeNull();
+      expect(result).toHaveProperty("name");
+      expect(result).toHaveProperty("model");
+      expect(result).toHaveProperty("baseUrl");
+      expect(result).toHaveProperty("tier");
     });
 
-    it("should select tier 2 when score is exactly at tier 2 minimum (80)", () => {
-      const result = selectProvider(80, 0);
-      expect(result.tier).toBe(2);
-      expect(result.provider).toContain("anthropic");
-    });
+    it("should return null when no providers are available", async () => {
+      // Remove all API keys
+      delete process.env.GROQ_TOKEN;
+      delete process.env.MISTRAL_TOKEN;
+      delete process.env.GEMINI_TOKEN;
+      delete process.env.OPENAI_API_KEY;
+      delete process.env.OPENROUTER_TOKEN;
+      delete process.env.SAMBANOVA_TOKEN;
+      delete process.env.CEREBRAS_TOKEN;
+      delete process.env.GITHUB_MODELS_TOKEN;
 
-    it("should select tier 3 when score is exactly at tier 3 minimum (70)", () => {
-      const result = selectProvider(70, 0);
-      expect(result.tier).toBe(3);
-      expect(result.provider).toContain("groq");
-    });
+      // All probes fail (default mock)
+      const result = await selectProvider();
 
-    it("should handle score just below tier boundary (89.9 → tier 2)", () => {
-      const result = selectProvider(89.9, 0);
-      expect(result.tier).toBe(2);
-    });
-
-    it("should handle score just above tier boundary (90.1 → tier 1)", () => {
-      const result = selectProvider(90.1, 0);
-      expect(result.tier).toBe(1);
-    });
-
-    it("should handle maximum score (100)", () => {
-      const result = selectProvider(100, 0);
-      expect(result.tier).toBe(1);
-      expect(result.provider).toContain("openai");
-    });
-
-    it("should handle minimum valid score (0)", () => {
-      const result = selectProvider(0, 0);
-      expect(result.tier).toBe(3);
-    });
-
-    it("should handle negative scores (treat as 0)", () => {
-      const result = selectProvider(-10, 0);
-      expect(result.tier).toBe(3);
-    });
-
-    it("should handle scores above 100 (clamp to 100)", () => {
-      const result = selectProvider(150, 0);
-      expect(result.tier).toBe(1);
+      expect(result).toBeNull();
     });
   });
 
-  describe("Safety Net Score Ceiling Validation", () => {
-    it("should use safety net when score is exactly at ceiling (75)", () => {
-      const result = selectProvider(75, 0);
-      expect(result.provider).toContain("openrouter");
-      expect(result.isSafetyNet).toBe(true);
+  describe("Preferred Provider Priority", () => {
+    it("should skip codex when health state is cooling-down", async () => {
+      vi.mocked(getProviderHealthState).mockImplementation((name: string) => {
+        if (name === "codex") {
+          return { state: "cooling-down", lastUpdated: Date.now() };
+        }
+        return { state: "healthy", lastUpdated: Date.now() };
+      });
+
+      // Groq probe succeeds
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        if (String(url).includes("api.groq.com")) {
+          return { ok: true, text: async () => "llama-3.3-70b-versatile" } as Response;
+        }
+        return null as unknown as Response;
+      });
+
+      const result = await selectProvider();
+
+      expect(result).not.toBeNull();
+      expect(result!.name).not.toBe("codex");
     });
 
-    it("should use safety net when score is below ceiling (74)", () => {
-      const result = selectProvider(74, 0);
-      expect(result.provider).toContain("openrouter");
-      expect(result.isSafetyNet).toBe(true);
-    });
+    it("should skip codex when health state is blocked", async () => {
+      vi.mocked(getProviderHealthState).mockImplementation((name: string) => {
+        if (name === "codex") {
+          return { state: "blocked", lastUpdated: Date.now() };
+        }
+        return { state: "healthy", lastUpdated: Date.now() };
+      });
 
-    it("should NOT use safety net when score is just above ceiling (76)", () => {
-      const result = selectProvider(76, 0);
-      expect(result.provider).not.toContain("openrouter");
-      expect(result.isSafetyNet).toBe(false);
-    });
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        if (String(url).includes("api.groq.com")) {
+          return { ok: true, text: async () => "llama-3.3-70b-versatile" } as Response;
+        }
+        return null as unknown as Response;
+      });
 
-    it("should handle safety net ceiling at 0 (never use safety net except score 0)", () => {
-      process.env.SYMPHONY_SAFETY_NET_SCORE_CEILING = "0";
-      const result = selectProvider(0, 0);
-      expect(result.isSafetyNet).toBe(true);
-    });
+      const result = await selectProvider();
 
-    it("should handle safety net ceiling at 100 (always use safety net)", () => {
-      process.env.SYMPHONY_SAFETY_NET_SCORE_CEILING = "100";
-      const result = selectProvider(95, 0);
-      expect(result.isSafetyNet).toBe(true);
-    });
-
-    it("should handle missing safety net ceiling (default to no ceiling check)", () => {
-      delete process.env.SYMPHONY_SAFETY_NET_SCORE_CEILING;
-      const result = selectProvider(50, 0);
-      // Should still route to tier 3, not safety net
-      expect(result.tier).toBe(3);
-    });
-
-    it("should handle invalid safety net ceiling (non-numeric)", () => {
-      process.env.SYMPHONY_SAFETY_NET_SCORE_CEILING = "invalid";
-      const result = selectProvider(50, 0);
-      expect(result.tier).toBe(3); // Fallback to tier routing
-    });
-  });
-
-  describe("Cooldown and Retry Logic", () => {
-    it("should skip tier 1 when retry_count=1 (tier 1 exhausted)", () => {
-      const result = selectProvider(95, 1);
-      expect(result.tier).toBe(2);
-      expect(result.provider).toContain("anthropic");
-    });
-
-    it("should skip tier 1 and 2 when retry_count=2 (both exhausted)", () => {
-      const result = selectProvider(95, 2);
-      expect(result.tier).toBe(3);
-      expect(result.provider).toContain("groq");
-    });
-
-    it("should use safety net when retry_count=3 (all tiers exhausted)", () => {
-      const result = selectProvider(95, 3);
-      expect(result.isSafetyNet).toBe(true);
-      expect(result.provider).toContain("openrouter");
-    });
-
-    it("should handle retry_count=4+ (still use safety net)", () => {
-      const result = selectProvider(95, 4);
-      expect(result.isSafetyNet).toBe(true);
-    });
-
-    it("should respect tier boundaries even with retry_count", () => {
-      // Score 85 normally → tier 2, but retry_count=1 skips tier 1, so still tier 2
-      const result = selectProvider(85, 1);
-      expect(result.tier).toBe(2);
-    });
-
-    it("should handle retry_count with low score (safety net boundary)", () => {
-      // Score 74 normally → safety net, retry_count shouldn't change this
-      const result = selectProvider(74, 0);
-      expect(result.isSafetyNet).toBe(true);
-    });
-
-    it("should handle negative retry_count (treat as 0)", () => {
-      const result = selectProvider(95, -1);
-      expect(result.tier).toBe(1);
-    });
-
-    it("should handle very large retry_count", () => {
-      const result = selectProvider(95, 999);
-      expect(result.isSafetyNet).toBe(true);
+      expect(result).not.toBeNull();
+      expect(result!.name).not.toBe("codex");
     });
   });
 
-  describe("Provider Degradation Scenarios", () => {
-    it("should handle missing tier 1 provider (skip to tier 2)", () => {
-      delete process.env.SYMPHONY_TIER_1_PROVIDERS;
-      const result = selectProvider(95, 0);
-      expect(result.tier).toBe(2);
-      expect(result.provider).toContain("anthropic");
+  describe("Provider Filtering Options", () => {
+    it("should restrict to allowedNames when specified", async () => {
+      // Make groq and mistral probes succeed
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        const urlStr = String(url);
+        if (urlStr.includes("api.groq.com")) {
+          return { ok: true, text: async () => "llama-3.3-70b-versatile" } as Response;
+        }
+        if (urlStr.includes("api.mistral.ai")) {
+          return { ok: true, text: async () => "mistral-small-latest" } as Response;
+        }
+        return null as unknown as Response;
+      });
+
+      const result = await selectProvider({ allowedNames: ["mistral"] });
+
+      expect(result).not.toBeNull();
+      expect(result!.name).toBe("mistral");
     });
 
-    it("should handle missing tier 2 provider (skip to tier 3)", () => {
-      delete process.env.SYMPHONY_TIER_2_PROVIDERS;
-      const result = selectProvider(85, 0);
-      expect(result.tier).toBe(3);
-      expect(result.provider).toContain("groq");
+    it("should exclude providers in excludeNames", async () => {
+      // Groq probe succeeds, but we exclude it
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        const urlStr = String(url);
+        if (urlStr.includes("api.groq.com")) {
+          return { ok: true, text: async () => "llama-3.3-70b-versatile" } as Response;
+        }
+        if (urlStr.includes("api.mistral.ai")) {
+          return { ok: true, text: async () => "mistral-small-latest" } as Response;
+        }
+        return null as unknown as Response;
+      });
+
+      const result = await selectProvider({ excludeNames: ["codex", "groq"] });
+
+      expect(result).not.toBeNull();
+      expect(result!.name).not.toBe("codex");
+      expect(result!.name).not.toBe("groq");
     });
 
-    it("should handle missing all tier providers (use safety net)", () => {
-      delete process.env.SYMPHONY_TIER_1_PROVIDERS;
-      delete process.env.SYMPHONY_TIER_2_PROVIDERS;
-      delete process.env.SYMPHONY_TIER_3_PROVIDERS;
-      const result = selectProvider(95, 0);
-      expect(result.isSafetyNet).toBe(true);
-    });
+    it("should return null when allowedNames has no available providers", async () => {
+      // No probes succeed, restrict to a provider with no key
+      delete process.env.SAMBANOVA_TOKEN;
 
-    it("should handle empty tier provider strings", () => {
-      process.env.SYMPHONY_TIER_1_PROVIDERS = "";
-      const result = selectProvider(95, 0);
-      expect(result.tier).toBe(2);
-    });
+      const result = await selectProvider({ allowedNames: ["sambanova"] });
 
-    it("should handle malformed provider strings (missing colon)", () => {
-      process.env.SYMPHONY_TIER_1_PROVIDERS = "invalid-format";
-      const result = selectProvider(95, 0);
-      // Should skip malformed and use tier 2
-      expect(result.tier).toBe(2);
-    });
-
-    it("should handle multiple providers in tier (round-robin or first)", () => {
-      process.env.SYMPHONY_TIER_1_PROVIDERS = "openai:gpt-4o,anthropic:claude-3-opus";
-      const result = selectProvider(95, 0);
-      expect(result.tier).toBe(1);
-      expect(result.provider).toMatch(/openai|anthropic/);
-    });
-
-    it("should handle missing safety net provider (fall back to tier 3)", () => {
-      delete process.env.SYMPHONY_SAFETY_NET_PROVIDER;
-      const result = selectProvider(50, 0);
-      expect(result.tier).toBe(3);
-    });
-
-    it("should handle safety net provider with retry exhaustion", () => {
-      const result = selectProvider(95, 3);
-      expect(result.isSafetyNet).toBe(true);
-      expect(result.provider).toContain("openrouter");
+      expect(result).toBeNull();
     });
   });
 
-  describe("Combined Edge Cases", () => {
-    it("should handle boundary score + retry count", () => {
-      // Score 90 (tier 1 minimum) + retry 1 (skip tier 1) = tier 2
-      const result = selectProvider(90, 1);
-      expect(result.tier).toBe(2);
+  describe("Failure Memory", () => {
+    it("should skip providers that recently failed", async () => {
+      // Mark groq as recently failed in the state file
+      vi.mocked(readFileSync).mockReturnValue(
+        JSON.stringify({ groq: Math.floor(Date.now() / 1000) }),
+      );
+
+      // Groq and mistral probes both succeed
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        const urlStr = String(url);
+        if (urlStr.includes("api.groq.com")) {
+          return { ok: true, text: async () => "llama-3.3-70b-versatile" } as Response;
+        }
+        if (urlStr.includes("api.mistral.ai")) {
+          return { ok: true, text: async () => "mistral-small-latest" } as Response;
+        }
+        return null as unknown as Response;
+      });
+
+      const result = await selectProvider({ excludeNames: ["codex"] });
+
+      // Groq should be skipped because it recently failed
+      expect(result).not.toBeNull();
+      if (result) {
+        expect(result.name).not.toBe("groq");
+      }
+    });
+  });
+
+  describe("Provider Without Credentials", () => {
+    it("should skip providers with no API key configured", async () => {
+      delete process.env.GROQ_TOKEN;
+
+      // Mistral probe succeeds
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        if (String(url).includes("api.mistral.ai")) {
+          return { ok: true, text: async () => "mistral-small-latest" } as Response;
+        }
+        return null as unknown as Response;
+      });
+
+      const result = await selectProvider({ excludeNames: ["codex"] });
+
+      expect(result).not.toBeNull();
+      expect(result!.name).not.toBe("groq");
+    });
+  });
+
+  describe("Safety Net Activation", () => {
+    it("should activate safety net when all regular providers fail", async () => {
+      // Remove all API keys so all cloud providers are skipped
+      delete process.env.GROQ_TOKEN;
+      delete process.env.MISTRAL_TOKEN;
+      delete process.env.GEMINI_TOKEN;
+      delete process.env.OPENAI_API_KEY;
+      delete process.env.OPENROUTER_TOKEN;
+      delete process.env.SAMBANOVA_TOKEN;
+      delete process.env.CEREBRAS_TOKEN;
+      delete process.env.GITHUB_MODELS_TOKEN;
+
+      // Ollama probe succeeds (safety net)
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        if (String(url).includes("/api/tags")) {
+          return {
+            ok: true,
+            json: async () => ({ models: [{ name: "qwen2.5-coder:3b-instruct" }] }),
+          } as Response;
+        }
+        return null as unknown as Response;
+      });
+
+      const result = await selectProvider();
+
+      expect(result).not.toBeNull();
+      if (result) {
+        expect(result.name).toMatch(/^ollama/);
+        expect(result.tier).toBe("local-safety-net");
+      }
     });
 
-    it("should handle safety net ceiling + retry count", () => {
-      // Score 75 (at ceiling) + retry 0 = safety net
-      const result = selectProvider(75, 0);
-      expect(result.isSafetyNet).toBe(true);
+    it("should bypass excludeNames for P0 safety net override", async () => {
+      // Remove all API keys
+      delete process.env.GROQ_TOKEN;
+      delete process.env.MISTRAL_TOKEN;
+      delete process.env.GEMINI_TOKEN;
+      delete process.env.OPENAI_API_KEY;
+      delete process.env.OPENROUTER_TOKEN;
+      delete process.env.SAMBANOVA_TOKEN;
+      delete process.env.CEREBRAS_TOKEN;
+      delete process.env.GITHUB_MODELS_TOKEN;
+
+      // Ollama probe succeeds
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        if (String(url).includes("/api/tags")) {
+          return {
+            ok: true,
+            json: async () => ({ models: [{ name: "qwen2.5-coder:3b-instruct" }] }),
+          } as Response;
+        }
+        return null as unknown as Response;
+      });
+
+      // Try to exclude ollama — safety net should override
+      const result = await selectProvider({
+        excludeNames: ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
+      });
+
+      expect(result).not.toBeNull();
+      if (result) {
+        expect(result.name).toMatch(/^ollama/);
+      }
+    });
+  });
+
+  describe("Probe Response Handling", () => {
+    it("should reject provider when probe response does not contain model name", async () => {
+      // Groq probe returns wrong model name
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        const urlStr = String(url);
+        if (urlStr.includes("api.groq.com")) {
+          return { ok: true, text: async () => "some-other-model" } as Response;
+        }
+        if (urlStr.includes("api.mistral.ai")) {
+          return { ok: true, text: async () => "mistral-small-latest" } as Response;
+        }
+        return null as unknown as Response;
+      });
+
+      const result = await selectProvider({ excludeNames: ["codex"] });
+
+      // Groq should be skipped (model not found in response)
+      if (result) {
+        expect(result.name).not.toBe("groq");
+      }
     });
 
-    it("should handle missing tier + retry count", () => {
-      delete process.env.SYMPHONY_TIER_1_PROVIDERS;
-      // Score 95 (tier 1) but missing + retry 0 = tier 2
-      const result = selectProvider(95, 0);
-      expect(result.tier).toBe(2);
-    });
+    it("should reject provider when probe returns non-ok response", async () => {
+      vi.mocked(fetch).mockImplementation(async (url: string | URL | Request) => {
+        const urlStr = String(url);
+        if (urlStr.includes("api.groq.com")) {
+          return { ok: false, status: 401 } as Response;
+        }
+        if (urlStr.includes("api.mistral.ai")) {
+          return { ok: true, text: async () => "mistral-small-latest" } as Response;
+        }
+        return null as unknown as Response;
+      });
 
-    it("should handle all degradation + high retry", () => {
-      delete process.env.SYMPHONY_TIER_1_PROVIDERS;
-      delete process.env.SYMPHONY_TIER_2_PROVIDERS;
-      const result = selectProvider(95, 2);
-      // All tiers degraded or exhausted → safety net
-      expect(result.isSafetyNet).toBe(true);
+      const result = await selectProvider({ excludeNames: ["codex"] });
+
+      if (result) {
+        expect(result.name).not.toBe("groq");
+      }
     });
   });
 });
