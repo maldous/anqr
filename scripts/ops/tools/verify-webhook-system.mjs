@@ -16,11 +16,8 @@
 
 import { execFileSync } from "node:child_process";
 import { listIssuesByState } from "../integrations/linear/linear-client.mjs";
-import { 
-  getIssueState, 
-  getQueueSnapshot
-} from "../core/symphony-state.mjs";
-import { feedQueue } from "../symphony-queue-control.mjs";
+import { getIssueState } from "../core/symphony-state.mjs";
+import { getQueueSnapshot, feedQueue } from "../orchestration/symphony-queue-control.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
 const { logInfo, logWarn, logError } = createLogger();
