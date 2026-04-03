@@ -803,15 +803,25 @@ describe("Bridge Tools - External APIs", () => {
       delete process.env.CONTEXT7_API_KEY;
       delete process.env.DOCS_API_KEY;
 
-      const result = await readDocsTool({
-        libraryTitle: "React",
-        topic: "hooks",
-      });
+      // Stub fetch so the Context7 HTTP service (if running locally) doesn't
+      // return real docs — forces the code into the API-key-check fallback path.
+      const origFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn(async () => {
+        throw new Error("mock: Context7 HTTP unavailable");
+      }) as unknown as typeof fetch;
 
-      expect(result.error).toBeDefined();
-      expect(result.message).toContain("not configured");
+      try {
+        const result = await readDocsTool({
+          libraryTitle: "React",
+          topic: "hooks",
+        });
 
-      if (originalKey) process.env.CONTEXT7_API_KEY = originalKey;
+        expect(result.error).toBeDefined();
+        expect(result.message).toContain("not configured");
+      } finally {
+        globalThis.fetch = origFetch;
+        if (originalKey) process.env.CONTEXT7_API_KEY = originalKey;
+      }
     });
 
     it("should enforce minimum max_tokens", async () => {

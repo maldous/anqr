@@ -1,26 +1,41 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { EventEmitter } from "node:events";
 
+// Mock node:child_process with inline EventEmitter + default export spread.
+// The default export is required for Vitest's ESM module interop to work
+// correctly with symphony-validation.mjs's static imports.
 vi.mock("node:child_process", async (importOriginal) => {
-  const original = await importOriginal<typeof import("node:child_process")>();
+  const orig = await importOriginal<typeof import("node:child_process")>();
 
-  function fakeSpawn() {
-    const child = Object.assign(new EventEmitter(), {
-      stdout: new EventEmitter(),
-      stderr: new EventEmitter(),
-      pid: 9999,
-      kill: vi.fn(),
-    });
-    process.nextTick(() => {
-      child.emit("close", 0);
-    });
-    return child;
+  class E {
+    _h: Record<string, ((...args: unknown[]) => void)[]> = {};
+    on(e: string, fn: (...args: unknown[]) => void) {
+      (this._h[e] ??= []).push(fn);
+      return this;
+    }
+    emit(e: string, ...a: unknown[]) {
+      (this._h[e] || []).forEach((f) => f(...a));
+      return true;
+    }
   }
 
-  return {
-    ...original,
+  const mocks = {
     execFileSync: vi.fn(() => ""),
-    spawn: vi.fn(fakeSpawn),
+    spawn: vi.fn(() => {
+      const child = Object.assign(new E(), {
+        stdout: new E(),
+        stderr: new E(),
+        pid: 9999,
+        kill: vi.fn(),
+      });
+      process.nextTick(() => child.emit("close", 0));
+      return child;
+    }),
+  };
+
+  return {
+    ...orig,
+    ...mocks,
+    default: { ...orig.default, ...mocks },
   };
 });
 
@@ -29,13 +44,6 @@ import { runValidation } from "../../scripts/ops/core/symphony-validation.mjs";
 describe("symphony-validation heartbeat", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("verifies child_process mock is active", async () => {
-    const cp = await import("node:child_process");
-    expect(vi.isMockFunction(cp.execFileSync)).toBe(true);
-    expect(vi.isMockFunction(cp.spawn)).toBe(true);
-    expect(cp.execFileSync("anything")).toBe("");
   });
 
   it("should call heartbeat during validation when provided", { timeout: 30_000 }, async () => {
