@@ -731,8 +731,8 @@ describe("application/generator", () => {
         input as Parameters<typeof toFullQArtPipelineResult>[0],
       );
       expect(ArrayBuffer.isView(result.encodedData)).toBe(true);
-      expect(result.encodedData.constructor.name).toBe("Uint8Array");
-      expect(new TextDecoder().decode(result.encodedData)).toBe("hello");
+      expect(result.encodedData!.constructor.name).toBe("Uint8Array");
+      expect(new TextDecoder().decode(result.encodedData!)).toBe("hello");
     });
 
     it("preserves Uint8Array encodedData", () => {

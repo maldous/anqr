@@ -26,7 +26,9 @@ import path from "node:path";
 // Mock node:http to prevent the bridge from binding to port 4319 during import.
 // The bridge module calls server.listen(PORT, ...) at module level.
 vi.mock("node:http", async (importOriginal) => {
-  const orig = await importOriginal<typeof import("node:http")>();
+  const orig = await importOriginal<
+    typeof import("node:http") & { default: Record<string, unknown> }
+  >();
   const fakeServer = {
     listen: vi.fn(),
     on: vi.fn().mockReturnThis(),
@@ -75,12 +77,12 @@ describe("Bridge Tools - File Operations", () => {
       const result = await readFilesTool({ paths: [TEST_FILE, TEST_CODE_FILE] });
 
       expect(result.files).toHaveLength(2);
-      expect(result.files[0]).toMatchObject({
+      expect(result.files![0]).toMatchObject({
         path: TEST_FILE,
         content: expect.stringContaining("Hello World"),
         totalLines: 4,
       });
-      expect(result.files[1]).toMatchObject({
+      expect(result.files![1]).toMatchObject({
         path: TEST_CODE_FILE,
         content: expect.stringContaining("function foo"),
         totalLines: 4,
@@ -94,7 +96,7 @@ describe("Bridge Tools - File Operations", () => {
       const result = await readFilesTool({ paths: ["/nonexistent/file.txt"] });
 
       expect(result.files).toHaveLength(1);
-      expect(result.files[0]).toHaveProperty("error");
+      expect(result.files![0]).toHaveProperty("error");
     });
 
     it("should handle mixed existing and non-existing files", async () => {
@@ -104,8 +106,8 @@ describe("Bridge Tools - File Operations", () => {
       const result = await readFilesTool({ paths: [TEST_FILE, "/nonexistent.txt"] });
 
       expect(result.files).toHaveLength(2);
-      expect(result.files[0]).toHaveProperty("content");
-      expect(result.files[1]).toHaveProperty("error");
+      expect(result.files![0]).toHaveProperty("content");
+      expect(result.files![1]).toHaveProperty("error");
     });
   });
 
@@ -201,7 +203,7 @@ describe("Bridge Tools - File Operations", () => {
       const { readFileTool } =
         await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
-      const result = await readFileTool({ path: TEST_FILE });
+      const result = await readFileTool({ path: TEST_FILE, offset: undefined, lines: undefined });
 
       expect(result.content).toContain("Hello World");
       expect(result.totalLines).toBe(4);
@@ -227,7 +229,7 @@ describe("Bridge Tools - File Operations", () => {
       const largeContent = "x".repeat(200000);
       fs.writeFileSync(TEST_FILE, largeContent);
 
-      const result = await readFileTool({ path: TEST_FILE });
+      const result = await readFileTool({ path: TEST_FILE, offset: undefined, lines: undefined });
 
       expect(result.truncated).toBe(true);
       expect(result.content?.length).toBeLessThan(largeContent.length);
@@ -267,8 +269,8 @@ describe("Bridge Tools - File Operations", () => {
       const result = await readSubtreeTool({ paths: [path.relative(process.cwd(), TEST_FILE)] });
 
       expect(result.entries).toHaveLength(1);
-      expect(result.entries[0].type).toBe("file");
-      expect(result.entries[0].content).toContain("Hello World");
+      expect(result.entries![0].type).toBe("file");
+      expect(result.entries![0].content).toContain("Hello World");
     });
 
     it("should read directory tree", async () => {
@@ -281,8 +283,8 @@ describe("Bridge Tools - File Operations", () => {
 
       const result = await readSubtreeTool({ paths: [path.relative(process.cwd(), FIXTURES_DIR)] });
 
-      expect(result.entries.length).toBeGreaterThan(1);
-      expect(result.entries.some((e) => e.path.includes("nested.txt"))).toBe(true);
+      expect(result.entries!.length).toBeGreaterThan(1);
+      expect(result.entries!.some((e) => e.path.includes("nested.txt"))).toBe(true);
     });
   });
 });
@@ -311,6 +313,7 @@ describe("Bridge Tools - Code Search", () => {
 
       const result = await codeSearchTool({
         pattern: "function",
+        flags: "",
         cwd: FIXTURES_DIR,
       });
 
@@ -324,6 +327,7 @@ describe("Bridge Tools - Code Search", () => {
 
       const result = await codeSearchTool({
         pattern: "function",
+        flags: "",
         cwd: FIXTURES_DIR,
         maxResults: 1,
       });
@@ -337,6 +341,7 @@ describe("Bridge Tools - Code Search", () => {
 
       const result = await codeSearchTool({
         pattern: "nonexistent-pattern-12345",
+        flags: "",
         cwd: FIXTURES_DIR,
       });
 
@@ -379,7 +384,7 @@ describe("Bridge Tools - Execution", () => {
       const { execTool } =
         await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
-      const result = await execTool({ command: "echo hello" });
+      const result = await execTool({ command: "echo hello", cwd: undefined });
 
       expect(result.exitCode).toBe(0);
       expect(result.output).toContain("hello");
@@ -389,7 +394,7 @@ describe("Bridge Tools - Execution", () => {
       const { execTool } =
         await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
-      const result = await execTool({ command: "exit 1" });
+      const result = await execTool({ command: "exit 1", cwd: undefined });
 
       expect(result.exitCode).toBe(1);
       expect(result.error).toBeDefined();
@@ -527,6 +532,7 @@ describe("Bridge Tools - Workflow", () => {
         id: "1",
         status: "IN_PROGRESS",
         log: "Test log",
+        plan: undefined,
       });
 
       expect(result.acknowledged).toBe(true);
@@ -544,6 +550,8 @@ describe("Bridge Tools - Workflow", () => {
         id: "2",
         objective: "Test objective",
         status: "NOT_STARTED",
+        log: undefined,
+        plan: undefined,
       });
 
       expect(result.acknowledged).toBe(true);
@@ -619,7 +627,7 @@ describe("Bridge Tools - Proposal Tools", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.proposed[0].found).toBe(true);
+      expect(result.proposed![0].found).toBe(true);
       // File should not be modified
       expect(fs.readFileSync(TEST_FILE, "utf-8")).toBe(originalContent);
     });
@@ -634,7 +642,7 @@ describe("Bridge Tools - Proposal Tools", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.proposed[0].found).toBe(false);
+      expect(result.proposed![0].found).toBe(false);
     });
   });
 

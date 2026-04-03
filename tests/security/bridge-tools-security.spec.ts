@@ -41,7 +41,7 @@ describe("Bridge Tools Security - Path Traversal Prevention", () => {
     });
 
     // Should handle gracefully (file not found or access denied)
-    expect(result.files[0]).toHaveProperty("error");
+    expect(result.files![0]).toHaveProperty("error");
   });
 
   it("should prevent directory traversal in write tool", async () => {
@@ -62,7 +62,7 @@ describe("Bridge Tools Security - Path Traversal Prevention", () => {
     const { readFileTool } =
       await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
-    const result = await readFileTool({ path: "/etc/passwd" });
+    const result = await readFileTool({ path: "/etc/passwd", offset: undefined, lines: undefined });
 
     // Should handle as out of bounds
     expect(result.error || result.content === undefined).toBeTruthy();
@@ -78,7 +78,11 @@ describe("Bridge Tools Security - Path Traversal Prevention", () => {
       // Create symlink to /etc (if permissions allow)
       fs.symlinkSync("/etc", linkPath);
 
-      const result = await readFileTool({ path: path.join(linkPath, "passwd") });
+      const result = await readFileTool({
+        path: path.join(linkPath, "passwd"),
+        offset: undefined,
+        lines: undefined,
+      });
 
       // Should prevent access
       expect(result.error || result.content === undefined).toBeTruthy();
@@ -97,6 +101,7 @@ describe("Bridge Tools Security - Command Injection Prevention", () => {
     // Attempt command injection via shell operators
     const result = await execTool({
       command: "echo safe; cat /etc/passwd",
+      cwd: undefined,
     });
 
     // Command will execute (using shell), but should be limited by timeout/perms
@@ -127,6 +132,7 @@ describe("Bridge Tools Security - Command Injection Prevention", () => {
     // Malicious regex that could cause ReDoS
     const result = await codeSearchTool({
       pattern: "(a+)+b",
+      flags: "",
       cwd: FIXTURES_DIR,
     });
 
@@ -153,7 +159,7 @@ describe("Bridge Tools Security - Input Validation", () => {
       await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Pass invalid type
-    const result = await readFileTool({ path: null as any });
+    const result = await readFileTool({ path: null as any, offset: undefined, lines: undefined });
 
     expect(result.error).toBeDefined();
   });
@@ -181,6 +187,8 @@ describe("Bridge Tools Security - Input Validation", () => {
     // Null byte injection attempt
     const result = await readFileTool({
       path: "safe.txt\0../../etc/passwd",
+      offset: undefined,
+      lines: undefined,
     });
 
     expect(result.error).toBeDefined();
@@ -206,7 +214,7 @@ describe("Bridge Tools Security - Secret Redaction", () => {
     // Set a test secret
     process.env.TEST_SECRET = "secret123";
 
-    const result = await execTool({ command: "env" });
+    const result = await execTool({ command: "env", cwd: undefined });
 
     // Verify output exists but consider redaction
     expect(result.output).toBeDefined();
@@ -221,6 +229,8 @@ describe("Bridge Tools Security - Secret Redaction", () => {
 
     const result = await readFileTool({
       path: "/home/user/.ssh/id_rsa",
+      offset: undefined,
+      lines: undefined,
     });
 
     // Error should not reveal full system paths
@@ -254,7 +264,7 @@ describe("Bridge Tools Security - File Access Policy", () => {
     const result = await readFilesTool({ paths: systemFiles });
 
     // All should fail
-    result.files.forEach((file) => {
+    result.files!.forEach((file) => {
       expect(file.error || file.content === undefined).toBeTruthy();
     });
   });
@@ -278,7 +288,7 @@ describe("Bridge Tools Security - Resource Limits", () => {
       await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Attempt to read large system file
-    const result = await readFileTool({ path: "/dev/random" });
+    const result = await readFileTool({ path: "/dev/random", offset: undefined, lines: undefined });
 
     // Should timeout or limit read
     if (result.content) {
@@ -291,7 +301,7 @@ describe("Bridge Tools Security - Resource Limits", () => {
       await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const startTime = Date.now();
-    await execTool({ command: "sleep 300" });
+    await execTool({ command: "sleep 300", cwd: undefined });
     const duration = Date.now() - startTime;
 
     // Should timeout before 300 seconds

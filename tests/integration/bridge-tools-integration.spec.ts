@@ -101,7 +101,7 @@ describe("Bridge Tools Integration - File Operations Workflow", () => {
     fs.writeFileSync(testFile, "Step 1\nStep 2\nStep 3\n");
 
     // Read
-    const readResult = await readFileTool({ path: testFile });
+    const readResult = await readFileTool({ path: testFile, offset: undefined, lines: undefined });
     expect(readResult.content).toContain("Step 1");
 
     // Modify
@@ -111,7 +111,11 @@ describe("Bridge Tools Integration - File Operations Workflow", () => {
     });
 
     // Verify
-    const verifyResult = await readFileTool({ path: testFile });
+    const verifyResult = await readFileTool({
+      path: testFile,
+      offset: undefined,
+      lines: undefined,
+    });
     expect(verifyResult.content).toContain("Step 2 (modified)");
   });
 
@@ -125,6 +129,7 @@ describe("Bridge Tools Integration - File Operations Workflow", () => {
     // Search
     const searchResult = await codeSearchTool({
       pattern: "oldName",
+      flags: "",
       cwd: FIXTURES_DIR,
     });
     expect(searchResult.matches.length).toBeGreaterThan(0);
@@ -163,7 +168,7 @@ describe("Bridge Tools Integration - File Operations Workflow", () => {
     const subtreeResult = await readSubtreeTool({
       paths: [path.relative(process.cwd(), FIXTURES_DIR)],
     });
-    expect(subtreeResult.entries.length).toBeGreaterThan(2);
+    expect(subtreeResult.entries!.length).toBeGreaterThan(2);
 
     // Read specific files
     const filesResult = await readFilesTool({
@@ -178,7 +183,11 @@ describe("Bridge Tools Integration - Error Handling", () => {
     const { readFileTool } =
       await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
-    const result = await readFileTool({ path: "/nonexistent/file.txt" });
+    const result = await readFileTool({
+      path: "/nonexistent/file.txt",
+      offset: undefined,
+      lines: undefined,
+    });
     expect(result.error).toBeDefined();
   });
 
@@ -202,6 +211,7 @@ describe("Bridge Tools Integration - Error Handling", () => {
     // Invalid regex should be caught and return empty results
     const result = await codeSearchTool({
       pattern: "[invalid(regex",
+      flags: "",
       cwd: process.cwd(),
     });
 
@@ -215,6 +225,7 @@ describe("Bridge Tools Integration - Error Handling", () => {
 
     const result = await execTool({
       command: "sleep 120", // Will be killed by 60s timeout
+      cwd: undefined,
     });
 
     expect(result.error || result.exitCode !== 0).toBeTruthy();
@@ -281,8 +292,8 @@ describe("Bridge Tools Integration - Proposal Tools Safety", () => {
       ],
     });
 
-    expect(result.proposed[0].found).toBe(true);
-    expect(result.proposed[1].found).toBe(false);
+    expect(result.proposed![0].found).toBe(true);
+    expect(result.proposed![1].found).toBe(false);
   });
 });
 
@@ -352,6 +363,7 @@ describe("Bridge Tools Integration - Execution Safety", () => {
     const startTime = Date.now();
     const result = await execTool({
       command: "sleep 120",
+      cwd: undefined,
     });
     const duration = Date.now() - startTime;
 
@@ -367,6 +379,7 @@ describe("Bridge Tools Integration - Execution Safety", () => {
     // Generate large output
     const result = await execTool({
       command: "seq 1 1000000",
+      cwd: undefined,
     });
 
     // Should not crash, may truncate or error

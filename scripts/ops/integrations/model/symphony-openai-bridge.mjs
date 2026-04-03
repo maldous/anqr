@@ -4998,15 +4998,6 @@ async function invokeWithFallback(messages, route, sessionId = null, cwd = null)
       // Continue to next provider in the loop
     }
   }
-
-  // If we exhausted all attempts
-  const finalError = `All providers failed after ${attemptNumber} attempts (tried ${triedProviders.join(", ")}). Last error: ${lastError || "unknown"}`;
-  logError(`[invokeWithFallback] All providers exhausted`, {
-    attemptCount: attemptNumber,
-    triedProviders,
-    lastError: lastError ? lastError.slice(0, 200) : null,
-  });
-  throw new Error(finalError);
 }
 
 /**
@@ -5372,11 +5363,6 @@ async function invokeWithFallbackStream(
       continue;
     }
   }
-
-  // If we exhausted all attempts
-  throw new Error(
-    `All streaming providers failed after ${attemptNumber} attempts (tried ${triedProviders.join(", ")}). Last error: ${lastError || "unknown"}`,
-  );
 }
 
 // --------------------------------------------------------------------------
@@ -7151,6 +7137,9 @@ export {
   finalizeWorktreeRequest,
   currentBranchName,
   currentHeadSha,
+  // Session state helpers (for integration tests)
+  setCurrentRequestId,
+  getCurrentRequestId,
   // deprecated — kept for backward compatibility
   syncWorktreeFromMain,
   pushWorktreeToMain,

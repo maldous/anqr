@@ -4,7 +4,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const _fsStore = new Map<string, string>();
 
 vi.mock("node:fs", async (importOriginal) => {
-  const orig = await importOriginal<typeof import("node:fs")>();
+  const orig = await importOriginal<
+    typeof import("node:fs") & { default: Record<string, unknown> }
+  >();
   const mocks = {
     readFileSync: vi.fn((p: string) => {
       if (_fsStore.has(p)) return _fsStore.get(p);

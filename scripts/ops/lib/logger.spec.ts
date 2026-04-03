@@ -54,7 +54,7 @@ describe("logger.mjs", () => {
     });
 
     it("should allow custom default level via options", () => {
-      const { logDebug, getLogLevel } = createLogger("test", { defaultLevel: "ERROR" });
+      const { logDebug, getLogLevel } = createLogger("test", { envVar: "", defaultLevel: "ERROR" });
 
       expect(getLogLevel()).toBe(3); // ERROR = 3
 
@@ -96,6 +96,7 @@ describe("logger.mjs", () => {
       process.env.CUSTOM_LOG_VAR = "INFO";
       const { logDebug, logInfo, getLogLevel } = createLogger("test", {
         envVar: "CUSTOM_LOG_VAR",
+        defaultLevel: "INFO",
       });
 
       expect(getLogLevel()).toBe(1); // INFO = 1

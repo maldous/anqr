@@ -30,7 +30,7 @@ describe("Worktree Concurrency Tests", () => {
         removeWorktree(id);
         console.log(`✅ Cleaned up worktree ${id}`);
       } catch (err) {
-        console.warn(`⚠️  Failed to clean up worktree ${id}: ${err.message}`);
+        console.warn(`⚠️  Failed to clean up worktree ${id}: ${(err as Error).message}`);
       }
     }
   });

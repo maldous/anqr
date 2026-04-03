@@ -28,7 +28,7 @@ describe("bridge-result helpers", () => {
 
   it("infers completion from a stop finish reason", () => {
     const result = inferSymphonyResultFromCompletion({
-      finishReason: "stop",
+      finishReason: "stop" as never,
       text: "Completed the task successfully.",
     });
 
@@ -41,7 +41,7 @@ describe("bridge-result helpers", () => {
 
   it("infers continuation from a length finish reason", () => {
     const result = inferSymphonyResultFromCompletion({
-      finishReason: "length",
+      finishReason: "length" as never,
       text: "Still working.",
     });
 
@@ -54,7 +54,7 @@ describe("bridge-result helpers", () => {
 
   it("infers step-limit failures from tool-calls finish reason", () => {
     const result = inferSymphonyResultFromCompletion({
-      finishReason: "tool-calls",
+      finishReason: "tool-calls" as never,
       text: "Partial output.",
     });
 

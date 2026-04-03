@@ -83,8 +83,8 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     it("should select a provider with no restrictions", async () => {
       const provider = await selectProvider({ allowedNames: null, excludeNames: [] });
       expect(provider).toBeDefined();
-      expect(provider.name).toBeTruthy();
-      expect(provider.model).toBeTruthy();
+      expect(provider!.name).toBeTruthy();
+      expect(provider!.model).toBeTruthy();
     });
 
     it("should respect allowedNames filter", async () => {

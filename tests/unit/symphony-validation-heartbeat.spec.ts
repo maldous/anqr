@@ -4,7 +4,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // The default export is required for Vitest's ESM module interop to work
 // correctly with symphony-validation.mjs's static imports.
 vi.mock("node:child_process", async (importOriginal) => {
-  const orig = await importOriginal<typeof import("node:child_process")>();
+  const orig = await importOriginal<
+    typeof import("node:child_process") & { default: Record<string, unknown> }
+  >();
 
   class E {
     _h: Record<string, ((...args: unknown[]) => void)[]> = {};

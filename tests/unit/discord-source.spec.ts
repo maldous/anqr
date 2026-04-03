@@ -113,7 +113,7 @@ describe("discord-source.mjs", () => {
 
   describe("markDiscordSource", () => {
     it("should patch state with source=discord when not already set", () => {
-      vi.mocked(getIssueState).mockReturnValue({});
+      vi.mocked(getIssueState).mockReturnValue({} as ReturnType<typeof getIssueState>);
       markDiscordSource("ANQR-123");
       expect(patchIssueState).toHaveBeenCalledWith("ANQR-123", {
         source: "discord",
@@ -121,7 +121,9 @@ describe("discord-source.mjs", () => {
     });
 
     it("should not patch state when source already is discord", () => {
-      vi.mocked(getIssueState).mockReturnValue({ source: "discord" });
+      vi.mocked(getIssueState).mockReturnValue({ source: "discord" } as ReturnType<
+        typeof getIssueState
+      >);
       markDiscordSource("ANQR-123");
       expect(patchIssueState).not.toHaveBeenCalled();
     });
@@ -129,7 +131,7 @@ describe("discord-source.mjs", () => {
 
   describe("detectAndMarkDiscordSource", () => {
     it("should return true and mark when issue is Discord-sourced", () => {
-      vi.mocked(getIssueState).mockReturnValue({}); // Mock state without source
+      vi.mocked(getIssueState).mockReturnValue({} as ReturnType<typeof getIssueState>); // Mock state without source
       const issue = {
         labels: {
           nodes: [{ id: "test-discord-label-id", name: "source:discord" }],

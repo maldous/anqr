@@ -177,8 +177,8 @@ describe("Symphony Bridge Fallback Logic", () => {
       const provider = await selectProvider({ allowedNames: null, excludeNames: [] });
 
       expect(provider).toBeDefined();
-      expect(provider.name).toBeTruthy();
-      expect(provider.model).toBeTruthy();
+      expect(provider!.name).toBeTruthy();
+      expect(provider!.model).toBeTruthy();
 
       // Record success after fallback succeeds
       if (provider) {

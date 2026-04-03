@@ -43,6 +43,7 @@ declare module "*symphony-openai-bridge.mjs" {
   // Code search
   export const codeSearchTool: (params: {
     pattern: string;
+    flags?: string;
     cwd: string;
     maxResults?: number;
   }) => Promise<{
@@ -84,6 +85,7 @@ declare module "*symphony-openai-bridge.mjs" {
     id: string;
     status: string;
     log?: string;
+    plan?: string;
   }) => Promise<{
     acknowledged: boolean;
     id: string;
@@ -94,6 +96,8 @@ declare module "*symphony-openai-bridge.mjs" {
     id: string;
     objective: string;
     status: string;
+    log?: string;
+    plan?: string;
   }) => Promise<{
     acknowledged: boolean;
     id: string;
