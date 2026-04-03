@@ -1,0 +1,12 @@
+[Unit]
+Description=ANQR Worktree Fleet Health Check
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/core/worktree-health.mjs write
+WorkingDirectory=/home/user/src/anqr
+Environment=NODE_ENV=production
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-health

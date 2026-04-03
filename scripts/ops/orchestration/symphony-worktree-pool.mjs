@@ -329,6 +329,41 @@ export async function cleanupWorktreePool() {
 }
 
 /**
+ * Reprovision a quarantined or damaged worktree.
+ * Force-removes and recreates from origin/main, reinstalls deps, resets upstream.
+ * @param {number|string} id - Worktree ID
+ * @returns {string} - New worktree path
+ */
+export async function reprovisionWorktree(id) {
+  const worktreePath = getWorktreePath(id);
+  logInfo(`[worktree-pool] 🔄 Reprovisioning worktree ${id}...`);
+
+  // Step 1: Force remove existing worktree
+  try {
+    removeWorktree(id);
+  } catch (err) {
+    logWarn(`[worktree-pool] Removal failed during reprovision (continuing): ${err.message}`);
+    // Try manual cleanup
+    try {
+      const { rmSync } = await import("node:fs");
+      if (existsSync(worktreePath)) {
+        rmSync(worktreePath, { recursive: true, force: true });
+      }
+    } catch { /* best effort */ }
+  }
+
+  // Step 2: Prune stale worktree metadata
+  try {
+    execFileSync("git", ["worktree", "prune"], { cwd: PROJECT_ROOT, stdio: "pipe" });
+  } catch { /* best effort */ }
+
+  // Step 3: Recreate from origin/main
+  const newPath = createWorktree(id);
+  logInfo(`[worktree-pool] ✅ Reprovisioned worktree ${id} at ${newPath}`);
+  return newPath;
+}
+
+/**
  * Repair corrupted worktrees
  */
 export async function repairWorktrees() {

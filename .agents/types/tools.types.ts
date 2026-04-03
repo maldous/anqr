@@ -274,16 +274,105 @@ export interface SkillParams {
 }
 
 /**
- * Spawn multiple agents and send a prompt and/or parameters to each of them. These agents will run in parallel. Note that that means they will run independently. If you need to run agents sequentially, use spawn_agents with one agent at a time instead.
+ * Known agent types for spawn_agents.
+ *
+ * - basher: Run terminal commands. REQUIRES params.command (string).
+ * - file-picker: Find relevant files. REQUIRES prompt.
+ * - researcher-web: Web search. REQUIRES prompt.
+ * - researcher-docs: Library/framework docs. REQUIRES prompt.
+ * - thinker / thinker-gpt: Deep reasoning. REQUIRES prompt.
+ * - opus-agent / gpt-5-agent: General problem solving. REQUIRES prompt. Optional params.filePaths.
+ * - editor: Implement code changes. No prompt or params (inherits conversation context).
+ * - code-reviewer: Review code changes. REQUIRES prompt.
+ * - tmux-cli: Interactive CLI testing. REQUIRES prompt. Optional params.command.
+ * - browser-use: Browser automation. REQUIRES prompt. Optional params.url.
+ * - harness-helper: ANQR harness help. Optional prompt, no params needed.
+ * - context-pruner: Auto-prune conversation context. No prompt or params needed (spawned automatically).
+ */
+export type KnownAgentType =
+  | "basher"
+  | "file-picker"
+  | "researcher-web"
+  | "researcher-docs"
+  | "thinker"
+  | "thinker-gpt"
+  | "opus-agent"
+  | "gpt-5-agent"
+  | "editor"
+  | "code-reviewer"
+  | "tmux-cli"
+  | "browser-use"
+  | "harness-helper"
+  | "context-pruner"
+  | (string & {});
+
+/** basher agent params — command is REQUIRED */
+export interface BasherParams {
+  /** Terminal command to run (REQUIRED — omitting causes validation error) */
+  command: string;
+  /** If true, returns full output without summarization */
+  rawOutput?: boolean;
+  /** Timeout in seconds. Set to -1 for no timeout. Default 30. */
+  timeout_seconds?: number;
+}
+
+/** opus-agent / gpt-5-agent params */
+export interface GeneralAgentParams {
+  /** File paths to read before thinking */
+  filePaths?: string[];
+}
+
+/** file-picker params */
+export interface FilePickerParams {
+  /** Directories to search within */
+  directories?: string[];
+}
+
+/** tmux-cli params */
+export interface TmuxCliParams {
+  /** CLI command to start in the tmux session */
+  command?: string;
+}
+
+/** browser-use params */
+export interface BrowserUseParams {
+  /** Starting URL to navigate to */
+  url?: string;
+}
+
+/**
+ * Spawn multiple agents in parallel. They run independently.
+ * For sequential execution, use spawn_agents with one agent at a time.
+ *
+ * CRITICAL: basher agent REQUIRES params.command as a non-empty string.
+ * Omitting params or using empty {} causes: "Invalid params for agent basher: expected string, received undefined"
  */
 export interface SpawnAgentsParams {
   agents: {
-    /** Agent to spawn */
-    agent_type: string;
-    /** Prompt to send to the agent */
+    /**
+     * Agent type to spawn.
+     * See KnownAgentType for the full list and per-agent requirements.
+     */
+    agent_type: KnownAgentType;
+    /**
+     * Prompt to send to the agent.
+     * REQUIRED for: basher, file-picker, researcher-web, researcher-docs, thinker,
+     *   thinker-gpt, opus-agent, gpt-5-agent, code-reviewer, tmux-cli, browser-use.
+     * NOT needed for: editor (inherits context), harness-helper (optional), context-pruner (auto-spawned).
+     */
     prompt?: string;
-    /** Parameters object for the agent (if any) */
-    params?: Record<string, any>;
+    /**
+     * Parameters object for the agent.
+     *
+     * Per-agent requirements:
+     *   basher     → { command: "..." }  (REQUIRED — must be non-empty string)
+     *   file-picker → { directories?: [...] }
+     *   opus-agent / gpt-5-agent → { filePaths?: [...] }
+     *   tmux-cli   → { command?: "..." }
+     *   browser-use → { url?: "..." }
+     *   editor / harness-helper / context-pruner / thinker / researchers → not needed
+     */
+    params?: BasherParams | GeneralAgentParams | FilePickerParams | TmuxCliParams | BrowserUseParams | Record<string, unknown>;
   }[];
 }
 

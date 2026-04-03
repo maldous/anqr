@@ -198,6 +198,10 @@ async function triggerIssueExecution(processedEvent) {
   // The router will route to least-loaded wt1-4 executor
   const routerUrl = "http://127.0.0.1:4319/v1/linear/trigger";
 
+  // Build thread name from Linear issue identifier and title
+  const threadName = `${processedEvent.identifier}: ${processedEvent.title}`;
+  logInfo(`📝 Linear thread name: ${threadName}`);
+
   try {
     // Send minimal trigger payload - the executor will fetch issue details
     const response = await fetch(routerUrl, {
@@ -207,11 +211,14 @@ async function triggerIssueExecution(processedEvent) {
         "Authorization": "Bearer local-symphony",
         "x-linear-identifier": processedEvent.identifier,
         "x-linear-action": processedEvent.action,
+        "x-linear-thread-name": threadName,
       },
       body: JSON.stringify({
         identifier: processedEvent.identifier,
+        title: processedEvent.title,
         action: processedEvent.action,
         source: "linear-webhook",
+        threadName: threadName,
         timestamp: new Date().toISOString(),
       }),
     });
@@ -296,8 +303,8 @@ function handleWebhook(req, res) {
       // Try to determine if this issue was created from Discord
       // This info is used by pickIssue() to route to the correct worktree type
       try {
-        const { getIssue } = await import("../../integrations/linear/linear-client.mjs");
-        const issueData = await getIssue(processedEvent.identifier);
+        const { getIssueDetail } = await import("../../integrations/linear/linear-client.mjs");
+        const issueData = await getIssueDetail(processedEvent.identifier);
         if (issueData && detectAndMarkDiscordSource(issueData, processedEvent.identifier)) {
           logInfo(`Marked ${processedEvent.identifier} as Discord-sourced`);
         }

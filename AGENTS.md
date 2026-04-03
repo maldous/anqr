@@ -173,18 +173,33 @@ Note: `thinker` is a **spawn_agents agent type**, not a tool. Use `think_deeply`
 
 **Agent types and required params (for spawn_agents):**
 
-- `basher` — REQUIRES `params.command` (terminal command). Also accepts `prompt` (what to extract), `params.rawOutput`, `params.timeout_seconds`
-  ⚠️ **CRITICAL**: Always include `{"command": "actual terminal command"}` inside params. Never pass empty `params: {}` — this will fail with validation error.
-- `file-picker` — REQUIRES `prompt` (what files to find). Optionally `params.directories`
-- `researcher-web` — REQUIRES `prompt` (question to research)
-- `researcher-docs` — REQUIRES `prompt` (documentation question)
-- `thinker` / `thinker-gpt` — REQUIRES `prompt` (problem to think about)
-- `opus-agent` / `gpt-5-agent` — REQUIRES `prompt`. Optionally `params.filePaths`
-- `editor` — No prompt or params needed (inherits conversation context)
-- `code-reviewer` — REQUIRES `prompt` (what to review)
-- `tmux-cli` — REQUIRES `prompt` (what to do). Optionally `params.command`
-- `browser-use` — REQUIRES `prompt` (what to do). Optionally `params.url`
-- `harness-helper` — No prompt or params needed
+⚠️ **BASHER CRITICAL**: `params.command` is **ALWAYS REQUIRED** as a non-empty string.
+Never omit `params`, never use `params: {}`. Both cause: `Invalid params for agent basher: expected string, received undefined`.
+
+| Agent | Required | Optional |
+|---|---|---|
+| `basher` | **`params.command`** (string) | `prompt`, `params.rawOutput`, `params.timeout_seconds` |
+| `file-picker` | `prompt` | `params.directories` (string[]) |
+| `researcher-web` | `prompt` | — |
+| `researcher-docs` | `prompt` | — |
+| `thinker` / `thinker-gpt` | `prompt` | — |
+| `opus-agent` / `gpt-5-agent` | `prompt` | `params.filePaths` (string[]) |
+| `editor` | — (inherits context) | — |
+| `code-reviewer` | `prompt` | — |
+| `tmux-cli` | `prompt` | `params.command` |
+| `browser-use` | `prompt` | `params.url` |
+| `harness-helper` | — | `prompt` |
+| `context-pruner` | — (auto-spawned) | `params.maxContextLength`, `params.userBudget`, `params.assistantToolBudget` |
+
+**basher examples:**
+```json
+// ✅ CORRECT
+{ "agent_type": "basher", "prompt": "Check status", "params": { "command": "git status" } }
+
+// ❌ WRONG — missing params.command
+{ "agent_type": "basher", "prompt": "Check status" }
+{ "agent_type": "basher", "prompt": "Check status", "params": {} }
+```
 
 **Codebuff context only:**
 

@@ -165,29 +165,117 @@ function proxyRequest(target, req, res, parsedBody = {}) {
 }
 
 // Linear webhook event handling
-const linearQueue = [];
-
-/**
- * Handle Linear trigger - spawn runner in least-loaded Linear worktree (wt1-4)
- * Returns 202 immediately, processes async
- */
 import { spawn } from "node:child_process";
 
-function handleLinearTrigger(req, res) {
-  // Return 202 immediately - Linear webhooks expect fast response
-  json(res, 202, { status: "accepted" });
+const linearQueue = [];
+const MAX_QUEUE_LENGTH = 50;
+const MAX_QUEUE_AGE_MS = 5 * 60 * 1000; // 5 minutes TTL
+const QUEUE_POLL_INTERVAL_MS = 5000;
 
+// Process queued triggers periodically - spawn runners when worktrees become available
+setInterval(() => {
+  if (linearQueue.length === 0) return;
+
+  // Drop stale items older than MAX_QUEUE_AGE_MS
+  const now = Date.now();
+  const initialLength = linearQueue.length;
+  for (let i = linearQueue.length - 1; i >= 0; i--) {
+    const age = now - new Date(linearQueue[i].queuedAt).getTime();
+    if (age > MAX_QUEUE_AGE_MS) {
+      logWarn(`Dropping stale queued trigger: ${linearQueue[i].identifier} (age: ${Math.round(age/1000)}s)`);
+      linearQueue.splice(i, 1);
+    }
+  }
+  if (linearQueue.length < initialLength) {
+    logInfo(`Queue TTL: dropped ${initialLength - linearQueue.length} stale items`);
+  }
+
+  const linearWorktrees = WORKTREES.filter((w) => w.id >= 1 && w.id <= 4);
+  const available = linearWorktrees.filter((w) => w.activeRequests < 1);
+
+  if (available.length === 0) {
+    logDebug(`Queue length: ${linearQueue.length}, no worktrees available`);
+    return;
+  }
+
+  // Process up to available slots
+  const toProcess = linearQueue.splice(0, available.length);
+  for (const item of toProcess) {
+    logInfo(`Processing queued trigger: ${item.identifier}`);
+    spawnLinearRunner(item.identifier);
+  }
+}, QUEUE_POLL_INTERVAL_MS);
+
+function spawnLinearRunner(identifier) {
+  const linearWorktrees = WORKTREES.filter((w) => w.id >= 1 && w.id <= 4);
+  const target = linearWorktrees.sort((a, b) => a.activeRequests - b.activeRequests)[0];
+
+  if (!target || target.activeRequests >= 1) {
+    if (linearQueue.length >= MAX_QUEUE_LENGTH) {
+      logWarn(`Queue full, dropping re-queue for ${identifier}`);
+      return;
+    }
+    logWarn(`No available worktree for ${identifier}, re-queuing`);
+    linearQueue.push({ identifier, queuedAt: new Date().toISOString() });
+    return;
+  }
+
+  logInfo(`Linear trigger: ${identifier} -> spawning runner in wt${target.id}`);
+
+  // Increment active requests so subsequent triggers route to other worktrees
+  target.activeRequests += 1;
+  globalActiveRequests += 1;
+  logInfo(`Linear worktree load: wt1=${WORKTREES[0].activeRequests}, wt2=${WORKTREES[1].activeRequests}, wt3=${WORKTREES[2].activeRequests}, wt4=${WORKTREES[3].activeRequests}`);
+
+  // Spawn the runner in the target worktree
+  const nodePath = process.execPath || "/home/user/.nvm/versions/node/v25.8.0/bin/node";
+  
+  const runner = spawn(
+    nodePath,
+    [
+      "scripts/ops/orchestration/symphony-runner.mjs",
+      "--once",
+      "--issue",
+      identifier,
+    ],
+    {
+      cwd: target.path,
+      env: {
+        ...process.env,
+        ANQR_WORKTREE_ID: `wt${target.id}`,
+        ANQR_WORKTREE_PATH: target.path,
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+
+  runner.stdout.on("data", (data) => logInfo(`[runner-wt${target.id}] ${data}`));
+  runner.stderr.on("data", (data) => logError(`[runner-wt${target.id}] ${data}`));
+  runner.on("close", (code) => {
+    target.activeRequests = Math.max(0, target.activeRequests - 1);
+    globalActiveRequests = Math.max(0, globalActiveRequests - 1);
+    logInfo(`Runner for ${identifier} exited with code ${code} (load: wt1=${WORKTREES[0].activeRequests}, wt2=${WORKTREES[1].activeRequests}, wt3=${WORKTREES[2].activeRequests}, wt4=${WORKTREES[3].activeRequests})`);
+  });
+  runner.on("error", (err) => {
+    target.activeRequests = Math.max(0, target.activeRequests - 1);
+    globalActiveRequests = Math.max(0, globalActiveRequests - 1);
+    logError(`Failed to spawn runner for ${identifier}: ${err.message}`);
+  });
+}
+
+function handleLinearTrigger(req, res) {
   // Only route to Linear worktrees (wt1-4)
   const linearWorktrees = WORKTREES.filter((w) => w.id >= 1 && w.id <= 4);
   if (linearWorktrees.length === 0) {
     logError("No Linear worktrees available for trigger");
+    json(res, 503, { error: { message: "No worktrees available" } });
     return;
   }
 
   // Select least-loaded Linear worktree
   const target = linearWorktrees.sort((a, b) => a.activeRequests - b.activeRequests)[0];
 
-  // Read the request body async
+  // Read the request body to get identifier
   const chunks = [];
   req.on("data", (chunk) => chunks.push(chunk));
   req.on("end", () => {
@@ -196,49 +284,33 @@ function handleLinearTrigger(req, res) {
       parsedBody = JSON.parse(Buffer.concat(chunks).toString());
     } catch (err) {
       logError(`Invalid JSON in trigger: ${err.message}`);
+      json(res, 400, { error: { message: "Invalid JSON" } });
       return;
     }
 
     const identifier = parsedBody.identifier || req.headers["x-linear-identifier"];
     if (!identifier) {
       logError("Missing identifier in trigger");
+      json(res, 400, { error: { message: "Missing identifier" } });
       return;
     }
 
-    logInfo(`Linear trigger: ${identifier} -> spawning runner in wt${target.id}`);
+    // If all worktrees are busy, queue the trigger
+    if (target.activeRequests >= 1) {
+      if (linearQueue.length >= MAX_QUEUE_LENGTH) {
+        logWarn(`Linear trigger queue full (${MAX_QUEUE_LENGTH}), dropping trigger for ${identifier}`);
+        json(res, 503, { error: { message: "Queue full, try again later" } });
+        return;
+      }
+      logInfo(`All Linear worktrees busy, queuing ${identifier} (queue length: ${linearQueue.length + 1})`);
+      linearQueue.push({ identifier, queuedAt: new Date().toISOString() });
+      json(res, 202, { status: "queued", queueLength: linearQueue.length });
+      return;
+    }
 
-    // Spawn the runner in the target worktree
-    // The runner will pick up the specific issue and execute it
-    // Use "node" to let the system resolve it via PATH, or fall back to explicit path
-    const nodePath = process.execPath || "/home/user/.nvm/versions/node/v25.8.0/bin/node";
-    
-    const runner = spawn(
-      nodePath,
-      [
-        "scripts/ops/orchestration/symphony-runner.mjs",
-        "--once",
-        "--issue",
-        identifier,
-      ],
-      {
-        cwd: target.path,
-        env: {
-          ...process.env,
-          ANQR_WORKTREE_ID: `wt${target.id}`,
-          ANQR_WORKTREE_PATH: target.path,
-        },
-        stdio: ["ignore", "pipe", "pipe"],
-      },
-    );
-
-    runner.stdout.on("data", (data) => logInfo(`[runner-wt${target.id}] ${data}`));
-    runner.stderr.on("data", (data) => logError(`[runner-wt${target.id}] ${data}`));
-    runner.on("close", (code) => {
-      logInfo(`Runner for ${identifier} exited with code ${code}`);
-    });
-    runner.on("error", (err) => {
-      logError(`Failed to spawn runner for ${identifier}: ${err.message}`);
-    });
+    // Spawn the runner
+    json(res, 202, { status: "accepted" });
+    spawnLinearRunner(identifier);
   });
 
   req.on("error", (err) => {

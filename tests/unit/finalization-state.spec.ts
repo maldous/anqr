@@ -225,4 +225,46 @@ describe("Repair Candidate Lookup", () => {
     const result = getNextRepairableIssueForWorktree("wt1");
     expect(result).toBeNull();
   });
+
+  it("should return validation_failed_repairable as repair candidate", () => {
+    setFinalizationState("ANQ-850", {
+      state: "validation_failed_repairable",
+      stickyOwner: "wt2",
+      worktreeId: "wt2",
+      lastError: "typecheck failed",
+      attempts: 1,
+    });
+
+    const result = getNextRepairableIssueForWorktree("wt2");
+    expect(result).not.toBeNull();
+    expect(result!.issueIdentifier).toBe("ANQ-850");
+    expect(result!.finalization.state).toBe("validation_failed_repairable");
+    expect(result!.finalization.attempts).toBe(1);
+  });
+
+  it("should return all four repairable states", () => {
+    setFinalizationState("ANQ-860", {
+      state: "validation_failed_repairable",
+      stickyOwner: "wt3",
+      worktreeId: "wt3",
+    });
+    setFinalizationState("ANQ-861", {
+      state: "commit_failed_repairable",
+      stickyOwner: "wt3",
+      worktreeId: "wt3",
+    });
+    setFinalizationState("ANQ-862", {
+      state: "branch_push_failed_repairable",
+      stickyOwner: "wt3",
+      worktreeId: "wt3",
+    });
+    setFinalizationState("ANQ-863", {
+      state: "integration_failed_repairable",
+      stickyOwner: "wt3",
+      worktreeId: "wt3",
+    });
+
+    const all = listRepairableIssuesForWorktree("wt3");
+    expect(all).toHaveLength(4);
+  });
 });

@@ -92,7 +92,14 @@
     "build:packages": "echo 'No package build step yet'",
     "build:all": "npm run build:packages && npm run build:web",
     "quality": "npm run typecheck && npm run lint && npm run depcruise && npm run test:unit",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "typecheck:scripts": "npx tsc --noEmit --project tsconfig.scripts.json",
+    "lint:scripts": "npx oxlint scripts/ops/integrations/linear/*.mjs",
+    "test:scripts": "npx vitest run scripts/ops/integrations/linear",
+    "depcruise:scripts": "npx depcruise scripts/ops/integrations/linear --validate",
+    "audit:ast:scripts": "npx jscpd --format json --output reports/jscpd/scripts.json scripts/ops/integrations/linear",
+    "cspell:scripts": "npx cspell scripts/ops/integrations/linear/*.mjs",
+    "harness:validate-issues": "node scripts/ops/integrations/linear/validate-issue-creation.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.52",

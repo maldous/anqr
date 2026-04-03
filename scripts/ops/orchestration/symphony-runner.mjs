@@ -26,6 +26,7 @@ import {
   RUNNER_MAX_VALIDATION_FIXES,
   RUNNER_VALIDATION_FIX_TURNS,
   RUNNER_ISSUE_COOLDOWN_MS,
+  RUNNER_VALIDATION_REPAIR_MAX,
   RUNNER_MAX_TURNS,
   RUNNER_MAX_EXECUTION_MS,
   QUEUE_STATES,
@@ -70,6 +71,8 @@ import {
   getFinalizationState,
   enqueueIntegrationCandidate,
   getNextRepairableIssueForWorktree,
+  setWorktreeState,
+  getWorktreeState,
 } from "../symphony-state.mjs";
 import {
   runValidation,
@@ -528,90 +531,6 @@ async function gitPushWorktreeBranch() {
   return { ok: false, branch, head: getRepoHeadSha("HEAD"), error: "exhausted retries" };
 }
 
-/** @deprecated Use gitPushWorktreeBranch — no longer pushes to main. */
-async function gitPush() {
-  const MAX_PUSH_RETRIES = 3;
-
-  // Get current branch name for worktrees
-  const currentBranch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
-    cwd: ROOT,
-    encoding: "utf-8",
-  }).trim();
-
-  for (let attempt = 1; attempt <= MAX_PUSH_RETRIES; attempt++) {
-    try {
-      if (WORKTREE_ID !== "main") {
-        // FIXED: Push to worktree branch first to avoid race conditions
-        // Step 1: Push current branch (e.g., symphony/wt1) to its remote branch
-        // Use -u for first push to set upstream tracking
-        const worktreeBranch = currentBranch || `symphony/${WORKTREE_ID}`;
-        logInfo(`[runner] Pushing to worktree branch: origin ${worktreeBranch}`);
-        execFileSync("git", ["push", "-u", "origin", `HEAD:${worktreeBranch}`], {
-          cwd: ROOT,
-          stdio: "pipe",
-          timeout: 30_000,
-        });
-
-        // Step 2: Push to main (this should now work since we pushed to our branch first)
-        logInfo(`[runner] Syncing to main...`);
-        execFileSync("git", ["push", "origin", "HEAD:main"], {
-          cwd: ROOT,
-          stdio: "pipe",
-          timeout: 30_000,
-        });
-      } else {
-        // Main worktree: push to tracking branch (default behavior)
-        execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
-      }
-      if (attempt > 1) {
-        logInfo(`[runner] Git push succeeded on attempt ${attempt}/${MAX_PUSH_RETRIES}`);
-      }
-      return true;
-    } catch (err) {
-      if (attempt < MAX_PUSH_RETRIES) {
-        // Check if it's a non-fast-forward error (race condition with another worktree)
-        const stderr = err.stderr ? err.stderr.toString() : "";
-        const isRaceCondition =
-          err.message?.includes("non-fast-forward") ||
-          err.message?.includes("rejected") ||
-          stderr.includes("non-fast-forward") ||
-          stderr.includes("rejected");
-
-        if (isRaceCondition) {
-          logWarn(
-            `[runner] Push rejected (attempt ${attempt}/${MAX_PUSH_RETRIES}) - another worktree pushed first. Rebasing...`,
-          );
-          try {
-            // Fetch latest and rebase our commit on top
-            execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
-            execFileSync("git", ["rebase", "origin/main"], { cwd: ROOT, stdio: "pipe" });
-            logInfo(`[runner] Rebase successful, retrying push...`);
-            // Continue to next attempt
-          } catch (rebaseErr) {
-            logError(`[runner] Rebase failed: ${rebaseErr.message}`);
-            // Try to abort rebase and return failure
-            try {
-              execFileSync("git", ["rebase", "--abort"], { cwd: ROOT, stdio: "pipe" });
-            } catch {}
-            return false;
-          }
-        } else {
-          logWarn(`[runner] Push failed (attempt ${attempt}/${MAX_PUSH_RETRIES}): ${err.message}`);
-          // For non-race-condition errors, wait briefly and retry
-          const waitMs = attempt * 1000; // 1s, 2s backoff
-          logInfo(`[runner] Waiting ${waitMs}ms before retry...`);
-          await new Promise((resolve) => setTimeout(resolve, waitMs));
-        }
-      } else {
-        logError(`[runner] Git push failed after ${MAX_PUSH_RETRIES} attempts: ${err.message}`);
-        return false;
-      }
-    }
-  }
-
-  return false;
-}
-
 function isBaselineRepairIssue(issue) {
   return issue.title?.startsWith("Harness");
 }
@@ -774,9 +693,23 @@ async function runSonarPostCommit(issueIdentifier) {
 }
 
 async function executeIssue(issue, dryRun = false) {
+  // Phase 2: Detect repair candidate to skip sync and provide repair context
+  const currentFinalization = getFinalizationState(issue.identifier);
+  const isRepairCandidate = currentFinalization && [
+    "validation_failed_repairable",
+    "commit_failed_repairable",
+    "branch_push_failed_repairable",
+    "integration_failed_repairable",
+  ].includes(currentFinalization.state);
+
+  if (isRepairCandidate) {
+    logInfo(`[runner] 🔧 Repair candidate detected: ${issue.identifier} (${currentFinalization.state})`);
+  }
+
   // Worktree sync: ensure worktree is synced with main before starting
   // IMPORTANT: This happens BEFORE lease acquisition to avoid wasting lease cycles on sync failures
-  if (WORKTREE_ID !== "main") {
+  // Skip sync for repair candidates to preserve dirty tree
+  if (WORKTREE_ID !== "main" && !isRepairCandidate) {
     logDebug(`[worktree-sync] Starting sync for WORKTREE_ID: ${WORKTREE_ID}`);
     logDebug(`[worktree-sync] Sync working directory (ROOT): ${ROOT}`);
     logDebug(`[worktree-sync] Current sync failure count: ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}`);
@@ -944,6 +877,37 @@ async function executeIssue(issue, dryRun = false) {
   let startingCommentId = null;
   let heartbeatTimer = null;
   try {
+    // Phase 0: Set worktree state to executing
+    setWorktreeState(WORKTREE_ID, { state: "executing", issueIdentifier: issue.identifier });
+
+    // Phase 2: Handle branch_push_failed_repairable — retry push before running agent
+    if (isRepairCandidate && currentFinalization.state === "branch_push_failed_repairable") {
+      logInfo(`[runner] 🔧 Retrying branch push for ${issue.identifier}...`);
+      const retryPush = await gitPushWorktreeBranch();
+      if (retryPush.ok) {
+        setFinalizationState(issue.identifier, {
+          state: "integration_pending",
+          branch: retryPush.branch,
+          headSha: retryPush.head,
+          baseMainSha: getRepoHeadSha("origin/main"),
+          attempts: 0,
+          lastError: null,
+        });
+        enqueueIntegrationCandidate(issue.identifier);
+        await updateIssue(issue.id, { stateId: STATES.inReview });
+        await addComment(issue.id, "✅ Branch push retry succeeded — re-enqueued for integration.");
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "branch_push_retry_success",
+          from: "In Review",
+          to: "In Review",
+          runId: RUN_ID,
+        });
+        return "done";
+      }
+      logWarn(`[runner] Branch push retry still failing: ${retryPush.error}`);
+    }
+
     // Set source for routing based on worktree context
     // Discord worktrees (wt5-wt8) mark their issues as discord-sourced
     // Symphony worktrees (wt1-wt4, main) mark as linear-sourced
@@ -983,6 +947,21 @@ async function executeIssue(issue, dryRun = false) {
 
     let systemPrompt = "You are a coding agent. Implement the requested changes.";
     if (existsSync(WORKFLOW_PATH)) systemPrompt = readFileSync(WORKFLOW_PATH, "utf-8");
+
+    // Phase 2: Add repair context for repairable states
+    if (isRepairCandidate) {
+      if (currentFinalization.state === "validation_failed_repairable") {
+        const sidecarPath = resolve(ROOT, ".git", "SYMPHONY_VALIDATION_ERRORS");
+        const validationErrors = existsSync(sidecarPath)
+          ? readFileSync(sidecarPath, "utf-8")
+          : currentFinalization.lastError || "unknown";
+        systemPrompt += `\n\n## REPAIR CONTEXT\n\nThis is a validation repair attempt (${currentFinalization.attempts || 1}/${RUNNER_VALIDATION_REPAIR_MAX}). The previous run's changes are preserved in the working tree. Fix the following validation errors:\n\n${validationErrors}`;
+      } else if (currentFinalization.state === "integration_failed_repairable") {
+        systemPrompt += `\n\n## REPAIR CONTEXT\n\nThis is an integration conflict repair. The changes conflicted with recent main updates during cherry-pick. Error: ${currentFinalization.lastError || "unknown"}\n\nPlease resolve the conflicts and ensure compatibility with current main.`;
+      } else if (currentFinalization.state === "commit_failed_repairable") {
+        systemPrompt += `\n\n## REPAIR CONTEXT\n\nThe previous commit attempt failed. Error: ${currentFinalization.lastError || "unknown"}\n\nPlease fix any issues preventing a clean commit.`;
+      }
+    }
 
     const provider = getRunnerProvider();
     let agentResult = null;
@@ -1678,6 +1657,52 @@ async function executeIssue(issue, dryRun = false) {
     }
 
     if (!validation.passed) {
+      // Phase 2: Check if we should preserve dirty tree for same-worktree repair
+      const valFinalization = getFinalizationState(issue.identifier);
+      const valRepairAttempts = (valFinalization?.state === "validation_failed_repairable" ? (valFinalization.attempts || 0) : 0) + 1;
+      const valSignature = `validation_failed:${validation.signature || "unknown"}`;
+      const isRepeatedValSignature = priorFailureSignature === valSignature;
+
+      if (valRepairAttempts <= RUNNER_VALIDATION_REPAIR_MAX && attempt < RUNNER_MAX_RETRIES && !isRepeatedValSignature) {
+        // Preserve dirty tree for same-worktree repair
+        const validationErrors = validation.results
+          .filter((r) => !r.pass)
+          .map((r) => `### ${r.check}\n${String(r.detail).slice(0, 2000)}\n`)
+          .join("\n");
+
+        // Write full validation output to sidecar file for next repair cycle
+        const sidecarPath = resolve(ROOT, ".git", "SYMPHONY_VALIDATION_ERRORS");
+        try { writeFileSync(sidecarPath, validationErrors, "utf-8"); } catch { /* best effort */ }
+
+        setFinalizationState(issue.identifier, {
+          state: "validation_failed_repairable",
+          worktreeId: WORKTREE_ID,
+          stickyOwner: WORKTREE_ID,
+          lastError: validationErrors.slice(0, 500),
+          attempts: valRepairAttempts,
+        });
+        setWorktreeState(WORKTREE_ID, { state: "dirty_owned", issueIdentifier: issue.identifier });
+        await updateIssue(issue.id, { stateId: STATES.inReview });
+        await addComment(
+          issue.id,
+          `❌ **Validation failed** (repair ${valRepairAttempts}/${RUNNER_VALIDATION_REPAIR_MAX}) — preserving dirty tree for same-worktree repair.\n\n${validationErrors.slice(0, 1500)}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "validation_failed_repairable",
+          from: "In Progress",
+          to: "In Review",
+          runId: RUN_ID,
+        });
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+        return "done";
+      }
+
+      // Threshold exceeded or repeated signature — revert and quarantine
       gitRevert();
       if (attempt >= RUNNER_MAX_RETRIES) {
         await updateIssue(issue.id, { stateId: STATES.backlog });
@@ -1702,61 +1727,61 @@ ${String(r.detail).slice(0, 1000)}\n`,
           to: "Backlog",
           runId: RUN_ID,
         });
-        // Track validation failure (exhausted)
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+      } else if (isRepeatedValSignature) {
+        await updateIssue(issue.id, { stateId: STATES.backlog });
+        markRetryExhausted(issue.identifier, {
+          reason: "validation_failed_repeated",
+          signature: valSignature,
+        });
+        await addComment(
+          issue.id,
+          `🚫 **Validation failed (repeated same signature)** after ${validationFixAttempts} fix attempt(s). Quarantined to Backlog.\n\n${validation.results
+            .filter((r) => !r.pass)
+            .map((r) => `### ${r.check}\n${String(r.detail).slice(0, 1000)}\n`)
+            .join("\n")}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "validation_failed_repeated",
+          from: "In Progress",
+          to: "Backlog",
+          runId: RUN_ID,
+        });
         recordLinearCompletion(metricsProviderName, {
           completed: false,
           priority: issue.priority,
           estimate: issue.estimate,
         });
       } else {
-        const valSignature = `validation_failed:${validation.signature || "unknown"}`;
-        if (priorFailureSignature === valSignature) {
-          await updateIssue(issue.id, { stateId: STATES.backlog });
-          markRetryExhausted(issue.identifier, {
-            reason: "validation_failed_repeated",
-            signature: valSignature,
-          });
-          await addComment(
-            issue.id,
-            `🚫 **Validation failed (repeated same signature)** after ${validationFixAttempts} fix attempt(s). Quarantined to Backlog.\n\n${validation.results
-              .filter((r) => !r.pass)
-              .map((r) => `### ${r.check}\n${String(r.detail).slice(0, 1000)}\n`)
-              .join("\n")}`,
-          );
-          recordTransition(issue.identifier, {
-            actor: "runner",
-            reason: "validation_failed_repeated",
-            from: "In Progress",
-            to: "Backlog",
-            runId: RUN_ID,
-          });
-        } else {
-          setCooldown(
-            issue.identifier,
-            RUNNER_ISSUE_COOLDOWN_MS,
-            "validation_failed",
-            valSignature,
-          );
-          await updateIssue(issue.id, { stateId: STATES.todo });
-          await addComment(
-            issue.id,
-            `❌ **Validation failed** after ${validationFixAttempts} fix attempt(s). Returned to Todo with cooldown.\n\n${validation.results
-              .filter((r) => !r.pass)
-              .map(
-                (r) => `### ${r.check}\n\
+        setCooldown(
+          issue.identifier,
+          RUNNER_ISSUE_COOLDOWN_MS,
+          "validation_failed",
+          valSignature,
+        );
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        await addComment(
+          issue.id,
+          `❌ **Validation failed** after ${validationFixAttempts} fix attempt(s). Returned to Todo with cooldown.\n\n${validation.results
+            .filter((r) => !r.pass)
+            .map(
+              (r) => `### ${r.check}\n\
 ${String(r.detail).slice(0, 1000)}\n`,
-              )
-              .join("\n")}`,
-          );
-          recordTransition(issue.identifier, {
-            actor: "runner",
-            reason: "validation_failed_retryable",
-            from: "In Progress",
-            to: "Todo",
-            runId: RUN_ID,
-          });
-        }
-        // Track Linear issue failure
+            )
+            .join("\n")}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "validation_failed_retryable",
+          from: "In Progress",
+          to: "Todo",
+          runId: RUN_ID,
+        });
         recordLinearCompletion(metricsProviderName, {
           completed: false,
           priority: issue.priority,
@@ -1958,6 +1983,14 @@ ${String(r.detail).slice(0, 1000)}\n`,
   } finally {
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     releaseLease(issue.identifier, leaseNonce);
+    // Phase 0: Reset worktree state unless marked dirty for repair
+    const finalWtState = getWorktreeState(WORKTREE_ID);
+    if (!finalWtState || finalWtState.state === "executing") {
+      setWorktreeState(WORKTREE_ID, { state: "available", issueIdentifier: null });
+    }
+    // Clean up validation sidecar file on successful completion
+    const sidecarCleanup = resolve(ROOT, ".git", "SYMPHONY_VALIDATION_ERRORS");
+    try { if (existsSync(sidecarCleanup)) unlinkSync(sidecarCleanup); } catch { /* best effort */ }
   }
 }
 
@@ -2085,11 +2118,17 @@ async function main() {
       logWorkingTreeEntries("[runner] allowed-dirty", workingTree.allowed);
     }
     if (workingTree.blocked.length > 0) {
-      logError(
-        `[runner] Git working tree is dirty — refusing to run in a shared or unsafe worktree (${workingTree.blocked.length} blocking path(s))`,
-      );
-      logWorkingTreeEntries("[runner] blocking-dirty", workingTree.blocked);
-      process.exit(1);
+      // Phase 2: Allow dirty worktree if marked for repair
+      const dirtyWtState = getWorktreeState(WORKTREE_ID);
+      if (dirtyWtState?.state === "dirty_owned") {
+        logInfo(`[runner] Dirty worktree allowed for repair candidate (${dirtyWtState.issueIdentifier})`);
+      } else {
+        logError(
+          `[runner] Git working tree is dirty — refusing to run in a shared or unsafe worktree (${workingTree.blocked.length} blocking path(s))`,
+        );
+        logWorkingTreeEntries("[runner] blocking-dirty", workingTree.blocked);
+        process.exit(1);
+      }
     }
 
     const preflight = dryRun ? { pass: true } : await maybeRunPreflights();

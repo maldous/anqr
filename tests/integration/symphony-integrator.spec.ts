@@ -21,6 +21,8 @@ import {
   listIntegrationCandidates,
   acquireIntegrationLock,
   releaseIntegrationLock,
+  setWorktreeState,
+  getWorktreeState,
 } from "../../scripts/ops/core/symphony-state.mjs";
 
 beforeEach(() => {
@@ -138,5 +140,109 @@ describe("Integration queue flow", () => {
 
     const lock3 = acquireIntegrationLock("integrator-2");
     expect(lock3.ok).toBe(true);
+  });
+
+  it("repaired candidate can be re-enqueued after conflict repair", () => {
+    // Simulate initial integration_pending
+    setFinalizationState("ANQ-910", {
+      state: "integration_pending",
+      worktreeId: "wt1",
+      stickyOwner: "wt1",
+      branch: "symphony/wt1",
+      headSha: "abc123",
+    });
+    enqueueIntegrationCandidate("ANQ-910");
+
+    // Simulate conflict
+    setFinalizationState("ANQ-910", {
+      state: "integration_failed_repairable",
+      lastError: "CONFLICT in src/main.tsx",
+      attempts: 1,
+    });
+    dequeueIntegrationCandidate("ANQ-910");
+
+    // Simulate repair: runner fixes and re-pushes with new headSha
+    setFinalizationState("ANQ-910", {
+      state: "integration_pending",
+      headSha: "new_sha_456",
+      lastError: null,
+      attempts: 0,
+    });
+    enqueueIntegrationCandidate("ANQ-910");
+
+    const queue = listIntegrationCandidates();
+    expect(queue).toContain("ANQ-910");
+
+    const fin = getFinalizationState("ANQ-910");
+    expect(fin!.state).toBe("integration_pending");
+    expect(fin!.headSha).toBe("new_sha_456");
+    expect(fin!.stickyOwner).toBe("wt1");
+  });
+
+  it("force-pushed branch updates headSha correctly", () => {
+    setFinalizationState("ANQ-911", {
+      state: "integration_pending",
+      worktreeId: "wt2",
+      branch: "symphony/wt2",
+      headSha: "original_sha",
+    });
+
+    // Force push: headSha changes
+    setFinalizationState("ANQ-911", {
+      headSha: "force_pushed_sha",
+    });
+
+    const fin = getFinalizationState("ANQ-911");
+    expect(fin!.headSha).toBe("force_pushed_sha");
+    expect(fin!.branch).toBe("symphony/wt2");
+  });
+
+  it("two branches integrate serially via lock", () => {
+    setFinalizationState("ANQ-920", {
+      state: "integration_pending",
+      worktreeId: "wt1",
+      branch: "symphony/wt1",
+      headSha: "sha1",
+    });
+    setFinalizationState("ANQ-921", {
+      state: "integration_pending",
+      worktreeId: "wt2",
+      branch: "symphony/wt2",
+      headSha: "sha2",
+    });
+    enqueueIntegrationCandidate("ANQ-920");
+    enqueueIntegrationCandidate("ANQ-921");
+
+    // First integrator acquires lock
+    const lock1 = acquireIntegrationLock("int-1", 60_000);
+    expect(lock1.ok).toBe(true);
+
+    // Second integrator blocked
+    const lock2 = acquireIntegrationLock("int-2");
+    expect(lock2.ok).toBe(false);
+
+    // First integrator completes and releases
+    setFinalizationState("ANQ-920", {
+      state: "integrated_main",
+      integratedMainSha: "main_sha_1",
+    });
+    dequeueIntegrationCandidate("ANQ-920");
+    releaseIntegrationLock("int-1");
+
+    // Second integrator can now proceed
+    const lock3 = acquireIntegrationLock("int-2");
+    expect(lock3.ok).toBe(true);
+
+    setFinalizationState("ANQ-921", {
+      state: "integrated_main",
+      integratedMainSha: "main_sha_2",
+    });
+    dequeueIntegrationCandidate("ANQ-921");
+    releaseIntegrationLock("int-2");
+
+    // Both integrated
+    expect(getFinalizationState("ANQ-920")!.state).toBe("integrated_main");
+    expect(getFinalizationState("ANQ-921")!.state).toBe("integrated_main");
+    expect(listIntegrationCandidates()).toHaveLength(0);
   });
 });

@@ -5555,6 +5555,12 @@ const server = http.createServer(async (req, res) => {
       const worktreeId = req.headers["x-worktree-id"] || null;
       const requestCwd = normalizeRequestCwd(body.cwd);
 
+      // Extract Discord message ID and Linear thread name for thread/reply functionality
+      const discordMessageId = req.headers["x-discord-message-id"] || null;
+      const linearThreadName = req.headers["x-linear-thread-name"] || null;
+      const discordSource = discordMessageId ? "discord" : linearThreadName ? "linear" : null;
+      const discordOptions = discordMessageId ? { replyTo: discordMessageId, source: "discord" } : (linearThreadName ? { threadName: linearThreadName, source: "linear" } : {});
+
       // Verify worktree freshness (non-blocking, no merge/rebase)
       await verifyWorktreeFreshnessNonBlocking();
 
@@ -5785,7 +5791,7 @@ const server = http.createServer(async (req, res) => {
           description: embedDescription,
           color: 0xffa500, // Orange
           fields: fields.length > 0 ? fields : undefined,
-        }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+        }, discordOptions).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
         voiceAnnounce(`Starting work on ${issueContext?.title || messagePreview}.`);
       }
@@ -5964,7 +5970,7 @@ const server = http.createServer(async (req, res) => {
               description: issueContext?.title || messagePreview,
               color: 0x00ff00, // Green
               fields: completionFields,
-            }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+            }, discordOptions).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
             voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
           }
@@ -6072,7 +6078,7 @@ const server = http.createServer(async (req, res) => {
               description: issueContext?.title || messagePreview,
               color: 0x00ff00, // Green
               fields: streamCompletionFields,
-            }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+            }, discordOptions).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
             voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
           }
@@ -6181,7 +6187,7 @@ const server = http.createServer(async (req, res) => {
             description: issueContext?.title || messagePreview,
             color: 0x00ff00, // Green
             fields: nonStreamCompletionFields,
-          }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+          }, discordOptions).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
           voiceAnnounce(`Finished ${issueContext?.title || messagePreview}.`);
         }

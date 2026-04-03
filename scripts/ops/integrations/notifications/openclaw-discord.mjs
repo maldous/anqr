@@ -16,6 +16,10 @@
  * Usage:
  *   import { sendDiscordMessage, sendDiscordEmbed, streamDiscordUpdate } from './openclaw-discord.mjs';
  *
+ * Thread/Reply Support:
+ *   - Discord requests: Use replyTo parameter to reply to the original message
+ *   - Linear requests: Use threadName parameter to create/use a named thread
+ *
  * Environment:
  *   OPENCLAW_GATEWAY_HOST - Host for OpenClaw Gateway (default: 127.0.0.1)
  *   OPENCLAW_GATEWAY_PORT - Port for OpenClaw Gateway (default: 18789)
@@ -50,27 +54,45 @@ const STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
  * Send a message to Discord via OpenClaw Gateway's tools/invoke API
  * Uses the message tool to send messages to the Discord text channel.
  * @param {string} content - Message content to send
+ * @param {Object} options - Message options
+ * @param {string} options.replyTo - Discord message ID to reply to (for Discord-initiated requests)
+ * @param {string} options.threadName - Thread name for Linear webhook requests
+ * @param {string} options.source - Source of request: "discord" or "linear"
  * @returns {Promise<{sent: boolean, reason?: string}>}
  */
-async function sendViaOpenClaw(content) {
+async function sendViaOpenClaw(content, options = {}) {
   // If no token is configured, return failure (graceful degradation)
   if (!OPENCLAW_GATEWAY_TOKEN) {
     return { sent: false, reason: "OPENCLAW_GATEWAY_TOKEN not set" };
+  }
+
+  // Build message args
+  const messageArgs = {
+    action: "send",
+    message: content,
+    channel: "discord",
+    to: DISCORD_TEXT_CHANNEL_ID,
+  };
+
+  // Add thread/reply options based on source
+  if (options.replyTo && options.source === "discord") {
+    // Reply to the original Discord message
+    messageArgs.replyTo = options.replyTo;
+    logDebug(`Discord reply to message: ${options.replyTo}`);
+  } else if (options.threadName && options.source === "linear") {
+    // Create/use a named thread for Linear webhook requests
+    messageArgs.threadName = options.threadName;
+    logDebug(`Discord thread: ${options.threadName}`);
   }
 
   // Use OpenClaw Gateway's tools/invoke API with message tool
   // Explicitly target the Discord text channel for notifications
   const requestBody = JSON.stringify({
     tool: "message",
-    args: {
-      action: "send",
-      message: content,
-      channel: "discord",
-      to: DISCORD_TEXT_CHANNEL_ID,
-    },
+    args: messageArgs,
   });
 
-  const options = {
+  const httpOptions = {
     hostname: OPENCLAW_GATEWAY_HOST,
     port: OPENCLAW_GATEWAY_PORT,
     path: "/tools/invoke",
@@ -84,7 +106,7 @@ async function sendViaOpenClaw(content) {
   };
 
   return new Promise((resolve) => {
-    const req = http.request(options, (res) => {
+    const req = http.request(httpOptions, (res) => {
       let data = "";
       res.on("data", (chunk) => (data += chunk));
       res.on("end", () => {
@@ -116,13 +138,17 @@ async function sendViaOpenClaw(content) {
 /**
  * Send a simple text message to Discord
  * @param {string} content - Message content
+ * @param {Object} options - Message options
+ * @param {string} options.replyTo - Discord message ID to reply to (for Discord-initiated requests)
+ * @param {string} options.threadName - Thread name for Linear webhook requests
+ * @param {string} options.source - Source of request: "discord" or "linear"
  * @returns {Promise<{sent: boolean, reason?: string}>}
  */
-export async function sendDiscordMessage(content) {
+export async function sendDiscordMessage(content, options = {}) {
   if (!content || !content.trim()) {
     return { sent: false, reason: "empty content" };
   }
-  return sendViaOpenClaw(content);
+  return sendViaOpenClaw(content, options);
 }
 
 /**
@@ -133,9 +159,20 @@ export async function sendDiscordMessage(content) {
  * @param {number} options.color - Embed color (hex)
  * @param {Array} options.fields - Embed fields
  * @param {string} options.footer - Embed footer
+ * @param {string} options.replyTo - Discord message ID to reply to (for Discord-initiated requests)
+ * @param {string} options.threadName - Thread name for Linear webhook requests
+ * @param {string} options.source - Source of request: "discord" or "linear"
  * @returns {Promise<{sent: boolean, reason?: string}>}
  */
-export async function sendDiscordEmbed({ title, description, fields, footer }) {
+export async function sendDiscordEmbed({
+  title,
+  description,
+  fields,
+  footer,
+  replyTo,
+  threadName,
+  source,
+}) {
   // Build embed as compact formatted text for Discord.
   // Inline fields → single line with " · " separator.
   // Non-inline fields → one per line.
@@ -176,7 +213,7 @@ export async function sendDiscordEmbed({ title, description, fields, footer }) {
     return { sent: false, reason: "empty embed" };
   }
 
-  return sendViaOpenClaw(content.trim());
+  return sendViaOpenClaw(content.trim(), { replyTo, threadName, source });
 }
 
 /**
@@ -189,21 +226,43 @@ export async function sendDiscordEmbed({ title, description, fields, footer }) {
  * @param {string} options.emoji - Emoji prefix (default: 🔄)
  * @param {boolean} options.timestamp - Include timestamp in message
  * @param {string} options.requestId - Request ID for tracking (default: "default")
+ * @param {string} options.replyTo - Discord message ID to reply to (for Discord-initiated requests)
+ * @param {string} options.threadName - Thread name for Linear webhook requests
+ * @param {string} options.source - Source of request: "discord" or "linear"
  * @returns {Promise<{sent: boolean, reason?: string}>}
  */
 export async function streamDiscordUpdate(
   text,
-  { emoji = "🔄", timestamp = false, requestId = "default" } = {},
+  {
+    emoji = "🔄",
+    timestamp = false,
+    requestId = "default",
+    replyTo,
+    threadName,
+    source,
+  } = {},
 ) {
   // Get or create buffer for this request (matching discord-webhook.mjs behavior)
+  // Store thread/reply options with the buffer for use during flush
   if (!discordStreamBuffers.has(requestId)) {
-    discordStreamBuffers.set(requestId, { buffer: "", timer: null });
+    discordStreamBuffers.set(requestId, {
+      buffer: "",
+      timer: null,
+      replyTo: replyTo || null,
+      threadName: threadName || null,
+      source: source || null,
+    });
   }
 
   const state = discordStreamBuffers.get(requestId);
 
   // Accumulate text in per-request buffer
   state.buffer += text;
+
+  // Update thread/reply options if provided
+  if (replyTo) state.replyTo = replyTo;
+  if (threadName) state.threadName = threadName;
+  if (source) state.source = source;
 
   // Send immediately if buffer exceeds max length (matching discord-webhook.mjs)
   if (state.buffer.length >= STREAM_MAX_LENGTH) {
@@ -265,7 +324,12 @@ export async function flushDiscordStream({
   // Clear buffer and remove from map
   discordStreamBuffers.delete(requestId);
 
-  return sendViaOpenClaw(prefix + content + suffix);
+  // Use thread/reply options stored with the buffer
+  return sendViaOpenClaw(prefix + content + suffix, {
+    replyTo: state.replyTo,
+    threadName: state.threadName,
+    source: state.source,
+  });
 }
 
 /**

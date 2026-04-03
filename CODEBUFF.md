@@ -3,9 +3,10 @@
 Read order:
 
 1. [AGENTS.md](/home/user/src/anqr/AGENTS.md) — execution rules
-2. [README.md](/home/user/src/anqr/README.md) — bootstrap truth and scope
-3. [docs/README.md](/home/user/src/anqr/docs/README.md) — documentation index
-4. [docs/harness/00-index.md](/home/user/src/anqr/docs/harness/00-index.md) — harness doctrine
+2. [.agents/SPAWN_AGENTS_GUIDE.md](/home/user/src/anqr/.agents/SPAWN_AGENTS_GUIDE.md) — spawn_agents reference (agent types, required params, basher pitfalls)
+3. [README.md](/home/user/src/anqr/README.md) — bootstrap truth and scope
+4. [docs/README.md](/home/user/src/anqr/docs/README.md) — documentation index
+5. [docs/harness/00-index.md](/home/user/src/anqr/docs/harness/00-index.md) — harness doctrine
 
 ## Harness Context
 
@@ -135,6 +136,16 @@ npm run typecheck:all
 npm run lint:all
 npm run test:unit
 ```
+
+### Agent spawning
+
+See [.agents/SPAWN_AGENTS_GUIDE.md](/home/user/src/anqr/.agents/SPAWN_AGENTS_GUIDE.md) for the full reference on `spawn_agents` usage, including:
+- All agent types and their required/optional params
+- The #1 error: basher `params.command` must be a non-empty string
+- Common pitfalls (empty params, wrong types, editor doesn't take prompt)
+- Working examples for every agent type
+
+The Symphony bridge `spawn_agents` tool is **acknowledgment-only** — it delegates to the parent Codebuff/OpenClaw instance and does not spawn agents itself.
 
 ### Queue behavior
 

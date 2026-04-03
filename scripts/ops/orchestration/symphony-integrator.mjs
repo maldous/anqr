@@ -25,6 +25,8 @@ import {
   getFinalizationState,
   setFinalizationState,
   getIssueState,
+  enqueueIntegrationCandidate,
+  loadState,
 } from "../symphony-state.mjs";
 import { updateIssue, addComment, getIssueDetail, STATES } from "../linear-client.mjs";
 import { PROJECT_ROOT } from "../core/worktree-config.mjs";
@@ -64,10 +66,12 @@ async function integrateCandidate(issueIdentifier) {
   }
 
   logInfo(`[integrator] Integrating ${issueIdentifier}: branch=${branch} head=${headSha.slice(0, 8)}`);
+  const integrationStartMs = Date.now();
 
   try {
-    // Fetch latest refs
-    git("fetch", "origin", "main", branch);
+    // Fetch latest refs — fetch branch explicitly to handle force-pushed branches after conflict repair
+    git("fetch", "origin", "main");
+    git("fetch", "origin", branch);
 
     // Create clean integration workspace
     try {
@@ -117,10 +121,8 @@ async function integrateCandidate(issueIdentifier) {
     git("push", "origin", "HEAD:main");
     const pushedMainSha = git("rev-parse", "HEAD");
 
-    logInfo(`[integrator] ✅ ${issueIdentifier} integrated to main at ${pushedMainSha.slice(0, 8)}`);
-
-    // Return to main branch
-    try { git("checkout", "main"); } catch { /* best effort */ }
+    const integrationMs = Date.now() - integrationStartMs;
+    logInfo(`[integrator] ✅ ${issueIdentifier} integrated to main at ${pushedMainSha.slice(0, 8)} (${integrationMs}ms)`);
 
     // Update finalization state
     await setFinalizationState(issueIdentifier, {
@@ -178,7 +180,34 @@ async function findIssueByIdentifier(identifier) {
 /**
  * Process all candidates in the integration queue.
  */
+/**
+ * Scan for repaired integration_failed_repairable issues that have been re-pushed.
+ * These need to be re-enqueued for another integration attempt.
+ */
+function scanForRepairedCandidates() {
+  const store = loadState();
+  let reenqueued = 0;
+  for (const [identifier, record] of Object.entries(store.issues)) {
+    const fin = record.finalization;
+    if (
+      fin &&
+      fin.state === "integration_pending" &&
+      !listIntegrationCandidates().includes(identifier)
+    ) {
+      logInfo(`[integrator] Re-enqueuing repaired candidate: ${identifier}`);
+      enqueueIntegrationCandidate(identifier);
+      reenqueued++;
+    }
+  }
+  if (reenqueued > 0) {
+    logInfo(`[integrator] Re-enqueued ${reenqueued} repaired candidate(s)`);
+  }
+}
+
 async function processQueue() {
+  // Phase 4: Scan for repaired candidates before processing queue
+  scanForRepairedCandidates();
+
   const candidates = listIntegrationCandidates();
   if (candidates.length === 0) {
     logDebug(`[integrator] Queue empty`);

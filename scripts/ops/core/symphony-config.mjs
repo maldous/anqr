@@ -56,16 +56,26 @@ export const QUEUE_STATES = {
 
 export const RUNNER_MAX_TURNS = 600;
 export const RUNNER_MAX_EXECUTION_MS = 7_200_000; // 120 min hard timeout — local Ollama averages ~1.5 min/turn
-export const RUNNER_MAX_RETRIES = Infinity; // No limit - bridge handles all retries via provider fallback
+export const RUNNER_MAX_RETRIES = 10; // Bounded — spec requires finite retries to prevent infinite repair loops
 export const RUNNER_OLLAMA_MODEL = "qwen2.5-coder:3b-instruct";
 export const RUNNER_OLLAMA_MODELS = ["qwen2.5-coder:3b-instruct", "qwen2.5-coder:0.5b"];
 export const RUNNER_OLLAMA_BASE_URL = "http://localhost:11434/v1";
 export const RUNNER_MAX_OUTPUT_TOKENS = 4096;
 export const RUNNER_PROVIDER_FAILURE_WINDOW_SECS = 360;
 export const RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS = 120; // 2 min — paid providers have temporary rate limits, retry sooner
-export const RUNNER_AUTO_PUSH = false; // Disabled until harness stability is restored (see goal.txt acceptance criteria)
+export const RUNNER_AUTO_PUSH = true; // Phase 1: Enable branch→integrator flow
 export const RUNNER_STUCK_THRESHOLD_MS = 15 * 60 * 1000; // 15 min — if In Progress with no update, assume runner was killed
 export const RUNNER_TURN_BUDGET_WARNING = 5; // inject wrap-up warning when this many turns remain
 export const RUNNER_MAX_VALIDATION_FIXES = 3; // times the agent can attempt to fix validation errors before revert
 export const RUNNER_VALIDATION_FIX_TURNS = 20; // turn budget per validation-fix attempt
 export const RUNNER_ISSUE_COOLDOWN_MS = 10 * 60 * 1000; // 10 min — skip recently-failed issues to prevent tight retry loops
+export const RUNNER_VALIDATION_REPAIR_MAX = 3; // Phase 2: max same-worktree validation repair cycles before quarantine
+
+// ---------------------------------------------------------------------------
+// Recovery daemon configuration (Phase 3)
+// ---------------------------------------------------------------------------
+export const RECOVERY_POLL_INTERVAL_MS = 60_000;        // 1 min scan interval
+export const RECOVERY_MAX_REPAIR_ATTEMPTS = 5;           // per worktree before quarantine
+export const RECOVERY_QUARANTINE_THRESHOLD_MS = 600_000; // 10 min stuck in repairable → quarantine
+export const RECOVERY_STALE_LEASE_GRACE_MS = 300_000;    // 5 min grace before reclaiming lease
+export const RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7;

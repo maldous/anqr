@@ -125,6 +125,7 @@ function emptyStore() {
     updatedAt: new Date().toISOString(),
     hostId: HOST_ID,
     issues: {},
+    worktreeStates: {},
     global: {
       integrationQueue: [],
       integrationLock: null,
@@ -190,6 +191,7 @@ export function loadState() {
     for (const [key, value] of Object.entries(data.issues || {})) {
       store.issues[key] = normalizeRecord({ ...value, issueIdentifier: key });
     }
+    store.worktreeStates = data.worktreeStates || {};
     return store;
   } catch {
     return emptyStore();
@@ -522,6 +524,7 @@ export function getLatencyMetrics() {
 // ── Finalization state helpers ────────────────────────────────────────────────
 
 const REPAIRABLE_FINALIZATION_STATES = new Set([
+  "validation_failed_repairable",
   "commit_failed_repairable",
   "branch_push_failed_repairable",
   "integration_failed_repairable",
@@ -639,6 +642,72 @@ export function listRepairableIssuesForWorktree(worktreeId) {
     }
   }
   return results;
+}
+
+// ── Worktree state helpers ─────────────────────────────────────────────────
+
+export function setWorktreeState(worktreeId, patch) {
+  return withStateLock(() => {
+    const store = loadState();
+    const existing = store.worktreeStates[worktreeId] || {};
+    store.worktreeStates[worktreeId] = {
+      ...existing,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    };
+    saveState(store);
+    return store.worktreeStates[worktreeId];
+  });
+}
+
+export function getWorktreeState(worktreeId) {
+  const store = loadState();
+  return store.worktreeStates[worktreeId] || null;
+}
+
+export function listWorktreesByState(state) {
+  const store = loadState();
+  return Object.entries(store.worktreeStates)
+    .filter(([, wt]) => wt.state === state)
+    .map(([id, wt]) => ({ worktreeId: id, ...wt }));
+}
+
+export function recordQuarantine(worktreeId, details = {}) {
+  return setWorktreeState(worktreeId, {
+    state: "quarantined",
+    reason: details.reason || "unknown",
+    quarantinedAt: new Date().toISOString(),
+    repairAttempts: details.repairAttempts || 0,
+    lastError: details.lastError || null,
+  });
+}
+
+export function clearQuarantine(worktreeId) {
+  return setWorktreeState(worktreeId, {
+    state: "available",
+    issueIdentifier: null,
+    reason: null,
+    quarantinedAt: null,
+    repairAttempts: 0,
+    lastError: null,
+  });
+}
+
+export function getFleetSnapshot() {
+  const store = loadState();
+  const snapshot = {
+    worktrees: {},
+    summary: { available: 0, executing: 0, dirty: 0, quarantined: 0, blocked: 0, unknown: 0 },
+    timestamp: new Date().toISOString(),
+  };
+  for (const [id, wt] of Object.entries(store.worktreeStates)) {
+    snapshot.worktrees[id] = wt;
+    const bucket = wt.state === "dirty_owned" || wt.state === "dirty_orphaned"
+      ? "dirty"
+      : snapshot.summary[wt.state] !== undefined ? wt.state : "unknown";
+    snapshot.summary[bucket] = (snapshot.summary[bucket] || 0) + 1;
+  }
+  return snapshot;
 }
 
 export function checkLatencyBaseline(currentAverageMs) {

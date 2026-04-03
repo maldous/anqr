@@ -8,6 +8,10 @@
  *   DISCORD_WEBHOOK_URL — Discord webhook URL for notifications
  *   DISCORD_WEBHOOK_ENABLED — Enable/disable webhook (default: true if URL set)
  *
+ * Thread/Reply Support:
+ *   - Discord requests: Use replyTo parameter to reply to the original message
+ *   - Linear requests: Use threadName parameter to create/use a named thread
+ *
  * Usage:
  *   import { sendDiscordNotification } from './discord-webhook.mjs';
  *
@@ -91,7 +95,9 @@ function sanitizeDiscordPayload(payload = {}) {
  *     timestamp?: string
  *   }>,
  *   username?: string,
- *   avatar_url?: string
+ *   avatar_url?: string,
+ *   message_reference?: { message_id: string },
+ *   thread_name?: string
  * }} payload
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
@@ -109,6 +115,16 @@ export async function sendDiscordNotification(payload) {
     if (!sanitizedPayload) {
       logWarn(`[discord-webhook] Skipping empty payload`);
       return { sent: false, reason: "empty payload" };
+    }
+
+    // Add message reference for thread replies (Discord requests)
+    if (payload.message_reference) {
+      sanitizedPayload.message_reference = payload.message_reference;
+    }
+
+    // Add thread name for Linear webhook requests
+    if (payload.thread_name) {
+      sanitizedPayload.thread_name = payload.thread_name;
     }
 
     const url = new URL(DISCORD_WEBHOOK_URL);
@@ -172,13 +188,30 @@ export async function sendDiscordNotification(payload) {
 /**
  * Send a simple text message to Discord.
  *
- * @param {string} message
+ * @param {string} message - Message content
+ * @param {Object} options - Message options
+ * @param {string} options.replyTo - Discord message ID to reply to (for Discord-initiated requests)
+ * @param {string} options.threadName - Thread name for Linear webhook requests
+ * @param {string} options.source - Source of request: "discord" or "linear"
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
-export async function sendDiscordMessage(message) {
+export async function sendDiscordMessage(message, options = {}) {
   const content = trimToUndefined(message);
   if (!content) return { sent: false, reason: "empty message" };
-  return sendDiscordNotification({ content });
+
+  const payload = { content };
+
+  // Add reply reference for Discord requests
+  if (options.replyTo && options.source === "discord") {
+    payload.message_reference = { message_id: options.replyTo };
+  }
+
+  // Add thread name for Linear requests
+  if (options.threadName && options.source === "linear") {
+    payload.thread_name = options.threadName;
+  }
+
+  return sendDiscordNotification(payload);
 }
 
 /**
@@ -189,7 +222,10 @@ export async function sendDiscordMessage(message) {
  *   description?: string,
  *   color?: number,
  *   fields?: Array<{ name: string, value: string, inline?: boolean }>,
- *   footer?: string
+ *   footer?: string,
+ *   replyTo?: string,
+ *   threadName?: string,
+ *   source?: string
  * }} options
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
@@ -199,6 +235,9 @@ export async function sendDiscordEmbed({
   color = 0x5865f2,
   fields = [],
   footer,
+  replyTo,
+  threadName,
+  source,
 }) {
   const embed = {
     title: trimToUndefined(title),
@@ -212,10 +251,22 @@ export async function sendDiscordEmbed({
     embed.footer = { text: footer };
   }
 
-  return sendDiscordNotification({
+  const payload = {
     embeds: [embed],
     username: "OpenClaw",
-  });
+  };
+
+  // Add reply reference for Discord requests
+  if (replyTo && source === "discord") {
+    payload.message_reference = { message_id: replyTo };
+  }
+
+  // Add thread name for Linear requests
+  if (threadName && source === "linear") {
+    payload.thread_name = threadName;
+  }
+
+  return sendDiscordNotification(payload);
 }
 
 // Streaming state for Discord updates - send in chunks every 1 second for responsive streaming
@@ -232,22 +283,41 @@ const DISCORD_STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
  * Per-request buffering prevents text from concurrent requests getting mixed.
  *
  * @param {string} message
- * @param {{ emoji?: string, timestamp?: boolean, requestId?: string }} options
+ * @param {{ emoji?: string, timestamp?: boolean, requestId?: string, replyTo?: string, threadName?: string, source?: string }} options
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
 export async function streamDiscordUpdate(
   message,
-  { emoji = "🔄", timestamp = false, requestId = "default" } = {},
+  {
+    emoji = "🔄",
+    timestamp = false,
+    requestId = "default",
+    replyTo,
+    threadName,
+    source,
+  } = {},
 ) {
   // Get or create buffer for this request
+  // Store thread/reply options with the buffer for use during flush
   if (!discordStreamBuffers.has(requestId)) {
-    discordStreamBuffers.set(requestId, { buffer: "", timer: null });
+    discordStreamBuffers.set(requestId, {
+      buffer: "",
+      timer: null,
+      replyTo: replyTo || null,
+      threadName: threadName || null,
+      source: source || null,
+    });
   }
 
   const state = discordStreamBuffers.get(requestId);
 
   // Accumulate text in per-request buffer
   state.buffer += message;
+
+  // Update thread/reply options if provided
+  if (replyTo) state.replyTo = replyTo;
+  if (threadName) state.threadName = threadName;
+  if (source) state.source = source;
 
   // Send immediately if buffer exceeds max length
   if (state.buffer.length >= DISCORD_STREAM_MAX_LENGTH) {
@@ -306,5 +376,10 @@ export async function flushDiscordStream({
   // Clear buffer and remove from map
   discordStreamBuffers.delete(requestId);
 
-  return sendDiscordMessage(prefix + content + suffix);
+  // Use thread/reply options stored with the buffer
+  return sendDiscordMessage(prefix + content + suffix, {
+    replyTo: state.replyTo,
+    threadName: state.threadName,
+    source: state.source,
+  });
 }

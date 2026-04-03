@@ -1,0 +1,10 @@
+[Unit]
+Description=ANQR Worktree Fleet Health Timer
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=300
+Unit=anqr-worktree-health.service
+
+[Install]
+WantedBy=timers.target

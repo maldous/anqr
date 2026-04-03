@@ -144,13 +144,29 @@ function proxyToWorktree(worktree, req, res) {
     let proxyBody = rawBody;
 
     let originalCwd = "(not provided)";
+    let discordMessageId = null;
     try {
       const parsedBody = JSON.parse(rawBody || "{}");
       originalCwd = parsedBody.cwd || "(not provided)";
       parsedBody.cwd = rebaseCwdToWorktree(parsedBody.cwd, worktree.path);
+
+      // Extract Discord message ID from the request for thread/reply functionality
+      // Discord message IDs can come from different sources depending on the integration
+      // Common paths: message.id, discordMessageId, message_id, or metadata
+      discordMessageId =
+        parsedBody.discordMessageId ||
+        parsedBody.message?.id ||
+        parsedBody.messageId ||
+        parsedBody.metadata?.discordMessageId ||
+        null;
+
+      if (discordMessageId) {
+        logInfo(`📝 Discord message ID: ${discordMessageId}`);
+      }
+
       proxyBody = JSON.stringify(parsedBody);
       logInfo(`🧭 ROUTING: Discord request -> wt${worktree.id} | cwd: "${originalCwd}" -> "${parsedBody.cwd}" | port: 432${worktree.id}`);
-      
+
       // CRITICAL ISOLATION CHECK: Log warning if cwd would result in main repo access
       // Only check for exact main repo path, NOT worktree paths (which also start with /home/user/src/anqr)
       if (parsedBody.cwd === PROJECT_ROOT) {
@@ -177,6 +193,8 @@ function proxyToWorktree(worktree, req, res) {
           "Content-Length": Buffer.byteLength(proxyBody),
           "x-worktree-id": `wt${worktree.id}`,
           "x-worktree-path": worktree.path,
+          // Pass Discord message ID for thread/reply functionality
+          ...(discordMessageId ? { "x-discord-message-id": discordMessageId } : {}),
         },
       },
       (proxyRes) => {
