@@ -19,18 +19,25 @@ export async function resolveLibraryIdCloud(libraryTitle, topic) {
   try {
     const url = new URL(`${CLOUD_API_BASE}/api/v2/libs/search`);
     url.searchParams.set("libraryName", normalizedTitle);
-    url.searchParams.set("query", topic ? `Documentation for ${normalizedTitle} about ${topic}` : normalizedTitle);
+    url.searchParams.set(
+      "query",
+      topic ? `Documentation for ${normalizedTitle} about ${topic}` : normalizedTitle,
+    );
 
     const response = await fetchCloud(url, apiKey);
     if (!response.ok) {
       const body = await response.text().catch(() => "");
-      logWarn(`Cloud resolve-library-id failed: HTTP ${response.status}${body ? ` — ${body}` : ""}`);
+      logWarn(
+        `Cloud resolve-library-id failed: HTTP ${response.status}${body ? ` — ${body}` : ""}`,
+      );
       return null;
     }
 
     const data = await response.json();
     if (Array.isArray(data?.results) && data.results.length > 0) {
-      return data.results[0]?.id || extractLibraryId(data.results[0], { preferredText: normalizedTitle });
+      return (
+        data.results[0]?.id || extractLibraryId(data.results[0], { preferredText: normalizedTitle })
+      );
     }
 
     return extractLibraryId(data, { preferredText: normalizedTitle });

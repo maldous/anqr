@@ -3,7 +3,7 @@ import { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
 export async function fetchCloud(url, apiKey, init = {}) {
   const headers = {
     Authorization: `Bearer ${apiKey}`,
-    ...(init.headers || {}),
+    ...init.headers,
   };
 
   return fetch(url, {

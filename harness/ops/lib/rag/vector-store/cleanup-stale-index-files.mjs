@@ -4,11 +4,8 @@ import { basename } from "node:path";
 import { INDEX_DIR } from "./index-dir.mjs";
 import { INDEX_FILE } from "./index-file.mjs";
 import { MANIFEST_FILE } from "./manifest-file.mjs";
+import { toNameSet } from "./to-name-set.mjs";
 import { logDebug, logWarn } from "./logger.mjs";
-
-function toNameSet(filenames) {
-  return new Set((filenames || []).map((value) => basename(String(value))));
-}
 
 export async function cleanupStaleIndexFiles(expectedShardFiles = [], options = {}) {
   const keep = toNameSet(expectedShardFiles);

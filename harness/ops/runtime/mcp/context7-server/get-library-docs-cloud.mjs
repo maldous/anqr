@@ -19,7 +19,10 @@ export async function getLibraryDocsCloud(libraryId, topic, maxTokens = 5000, li
   try {
     const url = new URL(`${CLOUD_API_BASE}/api/v2/context`);
     url.searchParams.set("libraryId", normalizedId);
-    url.searchParams.set("query", topic || `Documentation and examples for ${libraryTitle || normalizedId}`);
+    url.searchParams.set(
+      "query",
+      topic || `Documentation and examples for ${libraryTitle || normalizedId}`,
+    );
     url.searchParams.set("type", "json");
 
     let response = await fetchCloud(url, apiKey);

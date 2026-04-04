@@ -2,16 +2,8 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { writeFile } from "./write-file.mjs";
+import { sortEntries } from "./sort-entries.mjs";
 import { logInfo, logWarn } from "./logger.mjs";
-
-function sortEntries(entries) {
-  return [...entries].sort((a, b) => {
-    return (
-      String(a.filePath || "").localeCompare(String(b.filePath || "")) ||
-      String(a.id || "").localeCompare(String(b.id || ""))
-    );
-  });
-}
 
 export async function saveIndex(indexDir, data) {
   await mkdir(indexDir, { recursive: true });

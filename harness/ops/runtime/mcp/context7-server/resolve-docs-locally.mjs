@@ -1,29 +1,11 @@
-import { callLocalTool } from "./call-local-tool.mjs";
-import { extractDocumentation } from "./extract-documentation.mjs";
-import { extractLibraryId } from "./extract-library-id.mjs";
 import { getLibraryDocsCloud } from "./get-library-docs-cloud.mjs";
-import { buildDocsArguments, buildResolveArguments } from "./local-tool-arguments.mjs";
 import { refreshToolRegistry } from "./refresh-tool-registry.mjs";
 import { resolveLibraryIdCloud } from "./resolve-library-id-cloud.mjs";
+import { resolveLibraryIdLocal } from "./resolve-library-id-local.mjs";
+import { getDocumentationLocal } from "./get-documentation-local.mjs";
 import { serverProcess } from "./server-process.mjs";
 import { serverReady } from "./server-ready.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
-
-async function resolveLibraryIdLocal(registry, libraryTitle, topic) {
-  if (!registry?.resolveTool?.name) return null;
-
-  const resolveArgs = buildResolveArguments(registry.resolveTool, libraryTitle, topic);
-  const resolveResult = await callLocalTool(registry.resolveTool.name, resolveArgs);
-  return extractLibraryId(resolveResult, { preferredText: libraryTitle });
-}
-
-async function getDocumentationLocal(registry, libraryId, libraryTitle, topic, maxTokens) {
-  if (!registry?.docsTool?.name) return null;
-
-  const docsArgs = buildDocsArguments(registry.docsTool, libraryId, libraryTitle, topic, maxTokens);
-  const docsResult = await callLocalTool(registry.docsTool.name, docsArgs);
-  return extractDocumentation(docsResult);
-}
 
 export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 5000 }) {
   const normalizedTitle = String(libraryTitle || "").trim();

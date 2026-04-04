@@ -13,19 +13,8 @@ import { indexDirty, setIndexDirty } from "./index-dirty.mjs";
 import { loadIndex } from "./load-index.mjs";
 import { metaCache } from "./meta-cache.mjs";
 import { sanitizeMetaRecord } from "./sanitize-meta-record.mjs";
+import { sortEntries } from "./sort-entries.mjs";
 import { logInfo } from "./logger.mjs";
-
-function sortEntries(entries) {
-  return [...(entries || [])].sort((a, b) => {
-    return (
-      String(a.filePath || "").localeCompare(String(b.filePath || "")) ||
-      Number(a.startLine || 0) - Number(b.startLine || 0) ||
-      Number(a.endLine || 0) - Number(b.endLine || 0) ||
-      String(a.type || "").localeCompare(String(b.type || "")) ||
-      String(a.id || "").localeCompare(String(b.id || ""))
-    );
-  });
-}
 
 export async function saveIndex() {
   await ensureIndexDir();
@@ -76,10 +65,13 @@ export async function saveIndex() {
     };
 
     await atomicWriteJSON(MANIFEST_FILE, manifest);
-    await cleanupStaleIndexFiles(shards.map((shard) => shard.filename), {
-      keepManifest: true,
-      keepLegacyIndex: false,
-    });
+    await cleanupStaleIndexFiles(
+      shards.map((shard) => shard.filename),
+      {
+        keepManifest: true,
+        keepLegacyIndex: false,
+      },
+    );
     logInfo(`Index saved (sharded): ${indexToWrite.length} entries across ${shards.length} shards`);
   } else {
     await atomicWriteJSON(INDEX_FILE, indexToWrite);

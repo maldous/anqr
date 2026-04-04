@@ -1,12 +1,5 @@
-function addPart(parts, value) {
-  const text = String(value || "").trim();
-  if (text) parts.push(text);
-}
-
-function renderCodeBlock(value) {
-  const text = String(value || "").trim();
-  return text ? `\`\`\`\n${text}\n\`\`\`` : "";
-}
+import { addPart } from "./add-part.mjs";
+import { renderCodeBlock } from "./render-code-block.mjs";
 
 export function formatCloudContext(data) {
   const parts = [];

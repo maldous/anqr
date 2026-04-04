@@ -1,4 +1,4 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { INDEX_DIR } from "./index-dir.mjs";
@@ -7,14 +7,7 @@ import { MANIFEST_FILE } from "./manifest-file.mjs";
 import { META_FILE } from "./meta-file.mjs";
 import { indexCache } from "./index-cache.mjs";
 import { loadIndex } from "./load-index.mjs";
-
-async function getFileSize(path) {
-  try {
-    return (await stat(path)).size;
-  } catch {
-    return 0;
-  }
-}
+import { getFileSize } from "./get-file-size.mjs";
 
 export async function getIndexStats() {
   await loadIndex();

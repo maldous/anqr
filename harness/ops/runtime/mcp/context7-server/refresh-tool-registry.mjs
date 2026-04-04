@@ -1,19 +1,8 @@
 import { sendRequest } from "./send-request.mjs";
 import { extractToolsList } from "./extract-tools-list.mjs";
 import { setToolRegistry, toolRegistry } from "./tool-registry.mjs";
+import { pickTool } from "./pick-tool.mjs";
 import { logDebug, logWarn } from "./logger.mjs";
-
-function normalizeName(name) {
-  return String(name || "").trim().toLowerCase();
-}
-
-function pickTool(tools, preferredNames, fallbackPattern) {
-  for (const preferredName of preferredNames) {
-    const match = tools.find((tool) => normalizeName(tool.name) === normalizeName(preferredName));
-    if (match) return match;
-  }
-  return tools.find((tool) => fallbackPattern.test(normalizeName(tool.name))) || null;
-}
 
 export async function refreshToolRegistry(options = {}) {
   const force = Boolean(options.force);

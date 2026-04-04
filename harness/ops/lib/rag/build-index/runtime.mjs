@@ -5,10 +5,10 @@ import { buildLinearIndex } from "../build-index-linear/build-linear-index.mjs";
 
 import { logInfo, logError } from "./logger.mjs";
 
-main()
+buildLinearIndex()
   .then(() => {
-    logInfo("\n🔄 Now building Linear RAG index...\n");
-    return buildLinearIndex();
+    logInfo("\n🔄 Now building source-code RAG index...\n");
+    return main();
   })
   .catch((err) => {
     logError(`Fatal error: ${err?.message || err}`);

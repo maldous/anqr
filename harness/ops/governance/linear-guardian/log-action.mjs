@@ -1,4 +1,5 @@
 import { actions } from "./actions.mjs";
+import { logDebug, logInfo, logWarn } from "./logger.mjs";
 
 export function logAction(type, detail) {
   const entry = { type, detail, ts: new Date().toISOString() };

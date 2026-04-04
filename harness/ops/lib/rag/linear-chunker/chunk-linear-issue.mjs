@@ -1,14 +1,7 @@
 import { truncateDescription } from "./truncate-description.mjs";
+import { asCommaList } from "./as-comma-list.mjs";
+import { countLines } from "./count-lines.mjs";
 import { logDebug } from "./logger.mjs";
-
-function asCommaList(values) {
-  return values.filter(Boolean).join(", ") || "None";
-}
-
-function countLines(text) {
-  if (!text) return 1;
-  return String(text).split("\n").length;
-}
 
 export function chunkLinearIssue(issue) {
   if (!issue || !issue.identifier || !issue.title) {
