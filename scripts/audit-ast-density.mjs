@@ -180,6 +180,9 @@ const main = () => {
   const project = new Project({
     tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
     skipAddingFilesFromTsConfig: true,
+    compilerOptions: {
+      allowJs: true,
+    },
   });
 
   const globs = options.paths.length > 0 ? options.paths : DEFAULT_GLOBS;

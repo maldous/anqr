@@ -3,11 +3,11 @@ import process from "node:process";
 import { SyntaxKind } from "ts-morph";
 
 export const DEFAULT_GLOBS = [
-  "**/*.{ts,tsx,d.ts}",
+  "**/*.{ts,tsx,js,jsx,mjs,cjs}",
   "!**/node_modules/**",
   "!**/.git/**",
   "!**/dist/**",
-  "!scripts/**",
+  "!**/coverage/**",
 ];
 
 export const normalizePath = (filePath) =>
