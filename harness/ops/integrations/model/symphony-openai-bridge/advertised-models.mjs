@@ -15,6 +15,11 @@ export const ADVERTISED_MODELS = [
     allowedNames: ["codex"],
   },
   {
+    id: "symphony/codebuff",
+    ownedBy: "codebuff",
+    allowedNames: ["codebuff"],
+  },
+  {
     id: "symphony/groq",
     ownedBy: "groq",
     allowedNames: ["groq"],
