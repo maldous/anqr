@@ -1,4 +1,3 @@
-import path from "node:path";
 import fs from "node:fs";
 
 import { resolveRequestPath } from "./resolve-request-path.mjs";
@@ -37,7 +36,7 @@ export async function readFileTool({ path: filePath, offset, lines }) {
 
     return { content, totalLines };
   } catch (error) {
-    logError(`readFileTool failed: ${error.message}`, { path });
+    logError(`readFileTool failed: ${error.message}`, { path: filePath });
     return { error: error.message };
   }
 }
