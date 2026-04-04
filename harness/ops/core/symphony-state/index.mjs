@@ -1,6 +1,5 @@
 // Generated facade index.
 export { __dirname } from "./dirname.mjs";
-export { _PROJECT_ROOT } from "./project-root.mjs";
 export { getStateDir } from "./get-state-dir.mjs";
 export { getStateFile } from "./get-state-file.mjs";
 export { getLockFile } from "./get-lock-file.mjs";
@@ -34,7 +33,6 @@ export { markIssueHumanOnly } from "./mark-issue-human-only.mjs";
 export { recordTransition } from "./record-transition.mjs";
 export { calculateExponentialBackoff } from "./calculate-exponential-backoff.mjs";
 export { setCooldown } from "./set-cooldown.mjs";
-export { setCooldownWithBackoff } from "./set-cooldown-with-backoff.mjs";
 export { clearCooldown } from "./clear-cooldown.mjs";
 export { noteAttemptStart } from "./note-attempt-start.mjs";
 export { markRetryExhausted } from "./mark-retry-exhausted.mjs";

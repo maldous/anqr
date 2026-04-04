@@ -23,17 +23,46 @@
     "packages/ui/mobile"
   ],
 
-  "ignoreBinaries": ["oxlint.json", "sonar-scanner"],
-
-  "ignore": [
-    "apps/web/src/i18n/locales/**",
-    "apps/web/src/i18n/static/**",
-    "apps/web/src/content/gallery/**"
+  "ignoreDependencies": [
+    "@capacitor/*",
+    "@lhci/cli",
+    "@stoplight/spectral-cli",
+    "@testing-library/jest-dom",
+    "@wdio/*",
+    "appium",
+    "appium-uiautomator2-driver",
+    "appium-xcuitest-driver",
+    "autoprefixer",
+    "fast-xml-parser",
+    "jest",
+    "license-checker",
+    "lint-staged",
+    "lockfile-lint",
+    "openapi-generator-cli",
+    "oxc-parser",
+    "oxc-resolver",
+    "oxc-transform",
+    "pixelmatch",
+    "pngjs",
+    "puppeteer",
+    "serve",
+    "sharp",
+    "swagger-cli",
+    "tailwindcss",
+    "type-coverage",
+    "webdriverio"
   ],
+
+  "ignoreBinaries": ["oxlint.json", "sonar-scanner"],
 
   "ignoreIssues": {
     "**/*.d.ts": ["exports", "types"],
-    "**/*.generated.*": ["exports", "types", "enumMembers"]
+    "**/*.generated.*": ["exports", "types", "enumMembers"],
+    "netlify/**": ["exports"],
+    "packages/**/src/**": ["files", "exports", "types", "enumMembers"],
+    "apps/**/src/**": ["files", "exports", "types"],
+    "harness/**/*.mjs": ["exports"],
+    "harness/**/*.ts": ["exports", "files"]
   },
 
   "workspaces": {
@@ -49,7 +78,13 @@
         "eslint.config.*",
         "*.config.{js,ts,mjs,cjs}"
       ],
-      "project": ["harness/**/*.{js,mjs,ts}", "netlify/**/*.{ts,mts}"],
+      "project": [
+        "harness/**/*.{js,mjs,ts}",
+        "netlify/**/*.{ts,mts}",
+        "vite-config/**/*.ts",
+        "tests/**/*.ts",
+        "src/**/*.{ts,tsx}"
+      ],
       "paths": {
         "@/analytics/*": ["packages/analytics/*/src/index.ts", "packages/analytics/*/src/*"],
         "@/application/*": ["packages/application/*/src/index.ts", "packages/application/*/src/*"],
@@ -88,11 +123,11 @@
     },
 
     "packages/domain/qr": {
-      "entry": ["src/index.{ts,tsx}", "src/*/index.{ts,tsx}"],
+      "entry": ["src/index.{ts,tsx}", "src/*/index.{ts,tsx}", "src/*/api.{ts,tsx}"],
       "project": ["src/**/*.{ts,tsx}", "!**/*.d.ts", "!**/*.generated.*"]
     },
     "packages/domain/render": {
-      "entry": ["src/index.{ts,tsx}", "src/*/index.{ts,tsx}"],
+      "entry": ["src/index.{ts,tsx}", "src/*/index.{ts,tsx}", "src/*/api.{ts,tsx}"],
       "project": ["src/**/*.{ts,tsx}", "!**/*.d.ts", "!**/*.generated.*"]
     },
     "packages/domain/share": {
@@ -122,8 +157,8 @@
   },
 
   "vitest": {
-    "config": ["vitest.config.ts"],
-    "entry": ["tests/unit/**/*.{spec,test}.ts"]
+    "config": ["vitest.config.ts", "vitest.integration.config.ts"],
+    "entry": ["tests/unit/**/*.{spec,test}.ts", "tests/integration/**/*.{spec,test}.ts"]
   },
 
   "playwright": {

@@ -31,5 +31,3 @@ export { chunkGenericText } from "./chunk-generic-text.mjs";
 export { isSupportedFile } from "./is-supported-file.mjs";
 export { collectFiles } from "./collect-files.mjs";
 export { chunkFile } from "./chunk-file.mjs";
-export { chunkDirectory } from "./chunk-directory.mjs";
-export { chunkText } from "./chunk-text.mjs";

@@ -4,5 +4,3 @@
  */
 
 export { spawnSymphonyBridge } from "./spawn-symphony-bridge";
-/** @deprecated Standalone Codebuff bridge retired per ADR-0003. Use spawnSymphonyBridge. */
-export { spawnCodebuffBridge } from "./spawn-codebuff-bridge";

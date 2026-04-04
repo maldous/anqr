@@ -6,7 +6,6 @@ export { PRIORITY_LABELS } from "./priority-labels.mjs";
 export { fetchWithTimeout } from "./fetch-with-timeout.mjs";
 export { sonarAuthHeader } from "./sonar-auth-header.mjs";
 export { fetchAllSonarIssues } from "./fetch-all-sonar-issues.mjs";
-export { fetchSonarHotspotCount } from "./fetch-sonar-hotspot-count.mjs";
 export { fetchSonarMeasures } from "./fetch-sonar-measures.mjs";
 export { fetchAllSonarHotspots } from "./fetch-all-sonar-hotspots.mjs";
 export { fetchAllSonarDuplicationIssues } from "./fetch-all-sonar-duplication-issues.mjs";

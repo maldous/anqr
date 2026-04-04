@@ -1,8 +1,6 @@
 // Generated facade index.
-export { __dirname } from "./dirname.mjs";
 export { cwd } from "./cwd.mjs";
 export { gitPath } from "./git-path.mjs";
-export { autoDetectedWorktreeId } from "./auto-detected-worktree-id.mjs";
 export { WORKTREE_ID } from "./worktree-id.mjs";
 export { ROOT } from "./root.mjs";
 export { expectedPattern } from "./expected-pattern.mjs";

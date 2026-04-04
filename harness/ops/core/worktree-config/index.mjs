@@ -9,5 +9,3 @@ export { DISCORD_WORKTREE_IDS } from "./discord-worktree-ids.mjs";
 export { SYMPHONY_WORKTREE_IDS } from "./symphony-worktree-ids.mjs";
 export { isDiscordWorktree } from "./is-discord-worktree.mjs";
 export { isSymphonyWorktree } from "./is-symphony-worktree.mjs";
-export { isWorktreeBranch } from "./is-worktree-branch.mjs";
-export { getIntegrationBranch } from "./get-integration-branch.mjs";

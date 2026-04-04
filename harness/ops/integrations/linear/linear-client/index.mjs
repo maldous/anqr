@@ -16,6 +16,5 @@ export { findOpenIssuesByIdentifier } from "./find-open-issues-by-identifier.mjs
 export { listIssuesByState } from "./list-issues-by-state.mjs";
 export { addComment } from "./add-comment.mjs";
 export { updateComment } from "./update-comment.mjs";
-export { applyLabels } from "./apply-labels.mjs";
 export { getQueueDepth } from "./get-queue-depth.mjs";
 export { getIssueDetail } from "./get-issue-detail.mjs";

@@ -53,8 +53,6 @@ export { probeAllProviders } from "./probe-all-providers.mjs";
 export { matchesAllowedNames } from "./matches-allowed-names.mjs";
 export { matchesExcludedNames } from "./matches-excluded-names.mjs";
 export { PREFERRED_PROVIDER_ORDER } from "./preferred-provider-order.mjs";
-export { getProviderTimeoutMs } from "./get-provider-timeout-ms.mjs";
-export { getAllProviderHealthStates } from "./get-all-provider-health-states.mjs";
 export { resolveProviderApiKey } from "./resolve-provider-api-key.mjs";
 export { toSelectedProvider } from "./to-selected-provider.mjs";
 export { loadProbeResults } from "./load-probe-results.mjs";

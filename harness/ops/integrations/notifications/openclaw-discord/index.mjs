@@ -11,4 +11,3 @@ export { sendDiscordMessage } from "./send-discord-message.mjs";
 export { sendDiscordEmbed } from "./send-discord-embed.mjs";
 export { streamDiscordUpdate } from "./stream-discord-update.mjs";
 export { flushDiscordStream } from "./flush-discord-stream.mjs";
-export { isOpenClawAvailable } from "./is-open-claw-available.mjs";

@@ -12,6 +12,5 @@ export { loadLinearIndex } from "./load-linear-index.mjs";
 export { computeLexicalScore } from "./compute-lexical-score.mjs";
 export { computeRecencyBonus } from "./compute-recency-bonus.mjs";
 export { searchLinearIssues } from "./search-linear-issues.mjs";
-export { isLinearIndexReady } from "./is-linear-index-ready.mjs";
 export { warmLinearIndex } from "./warm-linear-index.mjs";
 export { getLinearIndexStats } from "./get-linear-index-stats.mjs";

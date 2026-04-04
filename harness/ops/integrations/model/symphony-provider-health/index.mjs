@@ -15,5 +15,3 @@ export { recordProviderHealthSuccess } from "./record-provider-health-success.mj
 export { recordProviderHealthFailure } from "./record-provider-health-failure.mjs";
 export { getAllProviderHealthStates } from "./get-all-provider-health-states.mjs";
 export { shouldRetryProvider } from "./should-retry-provider.mjs";
-export { resetProviderHealth } from "./reset-provider-health.mjs";
-export { checkPreferredProviderHealth } from "./check-preferred-provider-health.mjs";
