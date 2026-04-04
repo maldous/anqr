@@ -456,8 +456,30 @@ export async function executeIssue(issue, dryRun = false) {
         actor: "runner",
         reason: "lease_lost",
         from: "In Progress",
-        to: "Abandoned",
+        to: "Todo",
         runId: RUN_ID,
+      });
+      // Best-effort abandonment writeback
+      try {
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        await addComment(
+          issue.id,
+          `⚠️ **Run abandoned** — lease lost during agent execution. Changes reverted. No successful completion occurred.\n\nRun: ${RUN_ID}\nWorktree: ${WORKTREE_ID}`,
+        );
+      } catch (wbErr) { logWarn(`[runner] Abandonment writeback failed: ${wbErr.message}`); }
+      sendDiscordEmbed({
+        title: `⚠️ Abandoned | ${WORKTREE_ID}`,
+        description: `${issue.identifier}: ${issue.title}`,
+        color: 0xff0000,
+        fields: [
+          { name: "Reason", value: "Lease lost during execution", inline: true },
+          { name: "Worktree", value: WORKTREE_ID, inline: true },
+        ],
+      }).catch(() => {});
+      recordLinearCompletion(agentResult?.providerName || provider.name, {
+        completed: false,
+        priority: issue.priority,
+        estimate: issue.estimate,
       });
       return "done";
     }
@@ -697,8 +719,29 @@ export async function executeIssue(issue, dryRun = false) {
             actor: "runner",
             reason: "lease_lost",
             from: "In Progress",
-            to: "Abandoned",
+            to: "Todo",
             runId: RUN_ID,
+          });
+          try {
+            await updateIssue(issue.id, { stateId: STATES.todo });
+            await addComment(
+              issue.id,
+              `⚠️ **Run abandoned** — lease lost during agent continuation. Changes reverted. No successful completion occurred.\n\nRun: ${RUN_ID}\nWorktree: ${WORKTREE_ID}`,
+            );
+          } catch (wbErr) { logWarn(`[runner] Abandonment writeback failed: ${wbErr.message}`); }
+          sendDiscordEmbed({
+            title: `⚠️ Abandoned | ${WORKTREE_ID}`,
+            description: `${issue.identifier}: ${issue.title}`,
+            color: 0xff0000,
+            fields: [
+              { name: "Reason", value: "Lease lost during continuation", inline: true },
+              { name: "Worktree", value: WORKTREE_ID, inline: true },
+            ],
+          }).catch(() => {});
+          recordLinearCompletion(metricsProviderName, {
+            completed: false,
+            priority: issue.priority,
+            estimate: issue.estimate,
           });
           return "done";
         }
@@ -773,33 +816,46 @@ export async function executeIssue(issue, dryRun = false) {
         /* best effort logging */
       }
 
-      // NEW: Check if agent reports completion even with no file changes
-      // This handles cases where agent verified issue is already fixed, duplicate, or resolved without changes
+      // No-file-change completion hardening: require explicit evidence before accepting
       if (agentResult.completed === true && !isExternallyCompleted) {
-        await updateIssue(issue.id, { stateId: STATES.done });
-        await addComment(
-          issue.id,
-          `✅ **Completed by agent** — no file changes required, but agent reported successful completion.\n\nAgent summary: ${agentResult.summary}`,
-        );
-        recordTransition(issue.identifier, {
-          actor: "runner",
-          reason: "agent_completed_no_changes",
-          from: "In Progress",
-          to: "Done",
-          runId: RUN_ID,
-        });
-        // Track as successful completion (agent completed work even without file changes)
+        if (agentResult.toolCalls > 0) {
+          // Agent did real work (tool calls) but produced no file changes — needs human review
+          await updateIssue(issue.id, { stateId: STATES.inReview });
+          await addComment(
+            issue.id,
+            `ℹ️ **Agent completed with no file changes** — moved to In Review for human verification.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "agent_completed_no_changes_review",
+            from: "In Progress",
+            to: "In Review",
+            runId: RUN_ID,
+          });
+        } else {
+          // Agent reported completion with zero tool calls and zero file changes — false positive
+          await updateIssue(issue.id, { stateId: STATES.todo });
+          await addComment(
+            issue.id,
+            `⚠️ **Agent reported completion with no file changes and no tool calls** — returned to Todo. Likely inferred false positive.\n\nAgent summary: ${agentResult.summary}`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "agent_completed_no_evidence",
+            from: "In Progress",
+            to: "Todo",
+            runId: RUN_ID,
+          });
+        }
         if (provider?.name) {
           recordLinearCompletion(metricsProviderName, {
-            completed: true,
+            completed: false,
             priority: issue.priority,
             estimate: issue.estimate,
           });
-          recordProviderSuccess(metricsProviderName);
         }
-        clearCooldown(issue.identifier);
         logInfo(
-          `[runner] ✅ Completed: ${issue.identifier} — ${issue.title} (agent completed, no changes needed)`,
+          `[runner] ⚠️ No-change completion: ${issue.identifier} — ${issue.title} (requires review)`,
         );
         return "done";
       }
@@ -984,15 +1040,35 @@ export async function executeIssue(issue, dryRun = false) {
 
     // Check if validation failed due to heartbeat failure
     if (validation.heartbeatFailed) {
-      logWarn(`[runner] Validation aborted due to heartbeat failure for ${issue.identifier}`);
+      const hbDetail = validation.heartbeatDetail;
+      const hbReason = hbDetail?.reason || "unknown";
+      logWarn(
+        `[runner] Validation aborted due to heartbeat failure for ${issue.identifier}: ${hbReason} (phase=${hbDetail?.phase}, elapsed=${hbDetail?.elapsedMs}ms)`,
+      );
       gitRevert();
       recordTransition(issue.identifier, {
         actor: "runner",
-        reason: "lease_lost_during_validation",
+        reason: `lease_lost_during_validation:${hbReason}`,
         from: "In Progress",
-        to: "Abandoned",
+        to: "Todo",
         runId: RUN_ID,
       });
+      try {
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        await addComment(
+          issue.id,
+          `⚠️ **Run abandoned** — lease lost during validation (${hbReason}). Changes reverted. No successful completion occurred.\n\nPhase: ${hbDetail?.phase || "unknown"}\nElapsed: ${hbDetail?.elapsedMs || "unknown"}ms\nRun: ${RUN_ID}\nWorktree: ${WORKTREE_ID}`,
+        );
+      } catch (wbErr) { logWarn(`[runner] Abandonment writeback failed: ${wbErr.message}`); }
+      sendDiscordEmbed({
+        title: `⚠️ Abandoned | ${WORKTREE_ID}`,
+        description: `${issue.identifier}: ${issue.title}`,
+        color: 0xff0000,
+        fields: [
+          { name: "Reason", value: `Lease lost during validation: ${hbReason}`, inline: true },
+          { name: "Worktree", value: WORKTREE_ID, inline: true },
+        ],
+      }).catch(() => {});
       recordLinearCompletion(metricsProviderName, {
         completed: false,
         priority: issue.priority,
@@ -1056,8 +1132,29 @@ export async function executeIssue(issue, dryRun = false) {
         actor: "runner",
         reason: "lease_lost",
         from: "In Progress",
-        to: "Abandoned",
+        to: "Todo",
         runId: RUN_ID,
+      });
+      try {
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        await addComment(
+          issue.id,
+          `⚠️ **Run abandoned** — lease lost during validation fixes. Changes reverted. No successful completion occurred.\n\nRun: ${RUN_ID}\nWorktree: ${WORKTREE_ID}`,
+        );
+      } catch (wbErr) { logWarn(`[runner] Abandonment writeback failed: ${wbErr.message}`); }
+      sendDiscordEmbed({
+        title: `⚠️ Abandoned | ${WORKTREE_ID}`,
+        description: `${issue.identifier}: ${issue.title}`,
+        color: 0xff0000,
+        fields: [
+          { name: "Reason", value: "Lease lost during validation fixes", inline: true },
+          { name: "Worktree", value: WORKTREE_ID, inline: true },
+        ],
+      }).catch(() => {});
+      recordLinearCompletion(metricsProviderName, {
+        completed: false,
+        priority: issue.priority,
+        estimate: issue.estimate,
       });
       return "done";
     }
@@ -1326,31 +1423,6 @@ ${String(r.detail).slice(0, 1000)}\n`,
       encoding: "utf-8",
     }).trim();
 
-    // Send single consolidated Discord notification on completion
-    // Get queue snapshot for concurrent runner context
-    const queueSnap = await getQueueSnapshot();
-    const activeRunners = queueSnap.inProgress.automatable.length;
-    const maxRunners = MAX_CONCURRENT_AGENTS;
-    const worktreeValue = `${WORKTREE_ID} (${activeRunners}/${maxRunners} active)`;
-    const queueValue = `${queueSnap.readyDepth} issues ready`;
-
-    await sendDiscordEmbed({
-      title: `${issue.identifier} | ${WORKTREE_ID}`,
-      description: issue.title,
-      color: finalStateId === STATES.done ? 0x00ff00 : 0xffa500, // Green for Done, Orange for In Review
-      fields: [
-        { name: "ANQ ID", value: issue.identifier, inline: true },
-        { name: "Worktree", value: worktreeValue, inline: true },
-        { name: "Status", value: finalStateName, inline: true },
-        { name: "Provider", value: metricsProviderName, inline: true },
-        { name: "Queue", value: queueValue, inline: true },
-        { name: "Files Changed", value: String(changedFiles.length), inline: true },
-        { name: "Turns", value: String(agentResult.turns), inline: true },
-        { name: "Validation", value: validation.passed ? "✅ Passed" : "❌ Failed", inline: true },
-        { name: "Commit", value: commitHash || "N/A", inline: true },
-      ],
-    }).catch((err) => logWarn(`Discord notification failed: ${err.message}`));
-
     await runSonarPostCommit(issue.identifier);
     await updateIssue(issue.id, { stateId: finalStateId });
 
@@ -1396,6 +1468,30 @@ ${String(r.detail).slice(0, 1000)}\n`,
         "⚠️ **Branch push failed** — commit exists locally but push to worktree branch failed. Assigned to same worktree for repair.",
       );
     }
+
+    // Send consolidated Discord notification AFTER all Linear writeback is complete
+    const queueSnap = await getQueueSnapshot();
+    const activeRunners = queueSnap.inProgress.automatable.length;
+    const maxRunners = MAX_CONCURRENT_AGENTS;
+    const worktreeValue = `${WORKTREE_ID} (${activeRunners}/${maxRunners} active)`;
+    const queueValue = `${queueSnap.readyDepth} issues ready`;
+
+    sendDiscordEmbed({
+      title: `${issue.identifier} | ${WORKTREE_ID}`,
+      description: issue.title,
+      color: finalStateId === STATES.done ? 0x00ff00 : 0xffa500,
+      fields: [
+        { name: "ANQ ID", value: issue.identifier, inline: true },
+        { name: "Worktree", value: worktreeValue, inline: true },
+        { name: "Status", value: finalStateName, inline: true },
+        { name: "Provider", value: metricsProviderName, inline: true },
+        { name: "Queue", value: queueValue, inline: true },
+        { name: "Files Changed", value: String(changedFiles.length), inline: true },
+        { name: "Turns", value: String(agentResult.turns), inline: true },
+        { name: "Validation", value: validation.passed ? "✅ Passed" : "❌ Failed", inline: true },
+        { name: "Commit", value: commitHash || "N/A", inline: true },
+      ],
+    }).catch((err) => logWarn(`Discord notification failed: ${err.message}`));
 
     return "done";
   } finally {

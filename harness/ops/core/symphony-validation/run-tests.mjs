@@ -9,6 +9,6 @@ export async function runTests(projectRoot, opts = {}) {
     heartbeat: opts.heartbeat,
   });
   if (result.heartbeatFailed)
-    return { pass: false, detail: "Heartbeat failed during tests", heartbeatFailed: true };
+    return { pass: false, detail: "Heartbeat failed during tests", heartbeatFailed: true, heartbeatDetail: result.heartbeatDetail };
   return result.ok ? { pass: true, detail: "" } : { pass: false, detail: result.output };
 }

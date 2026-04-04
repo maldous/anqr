@@ -5,6 +5,8 @@ import {
   MAX_CONCURRENT_AGENTS,
   STALE_THRESHOLD_MS,
   TASK_TIMEOUT_MS,
+  HEARTBEAT_INTERVAL_MS,
+  RECOVERY_GRACE_MS,
   TITLE_PREFIX,
   REQUIRED_LABEL_IDS,
   QUEUE_STATES,
@@ -23,6 +25,7 @@ import {
   RUNNER_MAX_VALIDATION_FIXES,
   RUNNER_VALIDATION_FIX_TURNS,
   RUNNER_ISSUE_COOLDOWN_MS,
+  RECOVERY_STALE_LEASE_GRACE_MS,
 } from "./symphony-config.mjs";
 
 describe("symphony-config.mjs", () => {
@@ -50,6 +53,28 @@ describe("symphony-config.mjs", () => {
     });
     it("should have RUNNER_ISSUE_COOLDOWN_MS = 10 min", () => {
       expect(RUNNER_ISSUE_COOLDOWN_MS).toBe(10 * 60 * 1000);
+    });
+  });
+
+  describe("timing ordering invariants", () => {
+    it("RECOVERY_STALE_LEASE_GRACE_MS must be strictly greater than HEARTBEAT_INTERVAL_MS", () => {
+      expect(RECOVERY_STALE_LEASE_GRACE_MS).toBeGreaterThan(HEARTBEAT_INTERVAL_MS);
+    });
+
+    it("RECOVERY_GRACE_MS must be strictly greater than HEARTBEAT_INTERVAL_MS", () => {
+      expect(RECOVERY_GRACE_MS).toBeGreaterThan(HEARTBEAT_INTERVAL_MS);
+    });
+
+    it("TASK_TIMEOUT_MS must be greater than HEARTBEAT_INTERVAL_MS", () => {
+      expect(TASK_TIMEOUT_MS).toBeGreaterThan(HEARTBEAT_INTERVAL_MS);
+    });
+
+    it("STALE_THRESHOLD_MS must be greater than TASK_TIMEOUT_MS", () => {
+      expect(STALE_THRESHOLD_MS).toBeGreaterThan(TASK_TIMEOUT_MS);
+    });
+
+    it("RUNNER_MAX_EXECUTION_MS must be greater than STALE_THRESHOLD_MS", () => {
+      expect(RUNNER_MAX_EXECUTION_MS).toBeGreaterThan(STALE_THRESHOLD_MS);
     });
   });
 

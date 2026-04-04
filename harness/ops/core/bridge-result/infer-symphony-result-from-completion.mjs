@@ -21,9 +21,9 @@ export function inferSymphonyResultFromCompletion({
     if (!allowTextOnlyCompletion || !hasText) return null;
     return normalizeSymphonyResult(
       {
-        completed: true,
+        completed: false,
         needsContinuation: false,
-        failureClass: null,
+        failureClass: "contract_missing",
       },
       defaults,
     );
@@ -39,7 +39,8 @@ export function inferSymphonyResultFromCompletion({
       ? "step_limit_reached"
       : null;
 
-  const completed = normalizedReason === "stop" && !needsContinuation && !failureClass && hasText;
+  // Fail-closed: inference never produces completed:true — only explicit structured results can
+  const completed = false;
 
   return normalizeSymphonyResult(
     {

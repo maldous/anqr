@@ -26,10 +26,30 @@ describe("bridge-result helpers", () => {
     });
   });
 
-  it("infers completion from a stop finish reason", () => {
+  it("does NOT infer completion from a stop finish reason (fail closed)", () => {
     const result = inferSymphonyResultFromCompletion({
       finishReason: "stop" as never,
       text: "Completed the task successfully.",
+    });
+
+    expect(result).toMatchObject({
+      completed: false,
+      needsContinuation: false,
+    });
+  });
+
+  it("preserves explicit completed:true from existing structured result", () => {
+    const result = inferSymphonyResultFromCompletion({
+      existingResult: {
+        completed: true,
+        needsContinuation: false,
+        failureClass: null,
+        mutationCount: 3,
+        changedFiles: ["a.ts"],
+        validationIntent: true,
+        toolCallCount: 5,
+        stepCount: 2,
+      },
     });
 
     expect(result).toMatchObject({
@@ -78,9 +98,9 @@ describe("bridge-result helpers", () => {
         allowTextOnlyCompletion: true,
       }),
     ).toMatchObject({
-      completed: true,
+      completed: false,
       needsContinuation: false,
-      failureClass: null,
+      failureClass: "contract_missing",
     });
   });
 });

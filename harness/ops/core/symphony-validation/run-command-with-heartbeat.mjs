@@ -4,15 +4,29 @@ import { trimOutput } from "./trim-output.mjs";
 
 export function runCommandWithHeartbeat(command, execOptions, heartbeat) {
   const HEARTBEAT_INTERVAL_MS = 60_000; // Send heartbeat every 60 seconds
+  const startMs = Date.now();
 
   return new Promise((resolve) => {
     // Send initial heartbeat
-    const initialHb = heartbeat();
-    if (!initialHb || !initialHb.ok) {
+    let initialHb;
+    try {
+      initialHb = heartbeat();
+    } catch (err) {
       resolve({
         ok: false,
-        output: "Heartbeat failed before command execution",
+        output: `Heartbeat threw before command execution: ${err.message}`,
         heartbeatFailed: true,
+        heartbeatDetail: { phase: "initial", reason: err.message, elapsedMs: 0 },
+      });
+      return;
+    }
+    if (!initialHb || !initialHb.ok) {
+      const reason = initialHb?.reason || "unknown";
+      resolve({
+        ok: false,
+        output: `Heartbeat failed before command execution: ${reason}`,
+        heartbeatFailed: true,
+        heartbeatDetail: { phase: "initial", reason, elapsedMs: 0 },
       });
       return;
     }
@@ -26,14 +40,26 @@ export function runCommandWithHeartbeat(command, execOptions, heartbeat) {
     let stdout = "";
     let stderr = "";
     let heartbeatFailed = false;
+    let heartbeatDetail = null;
 
     // Set up periodic heartbeat
     const heartbeatTimer = setInterval(() => {
-      const hbResult = heartbeat();
+      let hbResult;
+      try {
+        hbResult = heartbeat();
+      } catch (err) {
+        heartbeatFailed = true;
+        heartbeatDetail = { phase: "periodic", reason: err.message, elapsedMs: Date.now() - startMs };
+        clearInterval(heartbeatTimer);
+        try {
+          child.kill("SIGTERM");
+        } catch {}
+        return;
+      }
       if (!hbResult || !hbResult.ok) {
         heartbeatFailed = true;
+        heartbeatDetail = { phase: "periodic", reason: hbResult?.reason || "unknown", elapsedMs: Date.now() - startMs };
         clearInterval(heartbeatTimer);
-        // Kill the child process if heartbeat fails
         try {
           child.kill("SIGTERM");
         } catch {}
@@ -63,16 +89,26 @@ export function runCommandWithHeartbeat(command, execOptions, heartbeat) {
       clearInterval(heartbeatTimer);
       if (timeoutTimer) clearTimeout(timeoutTimer);
 
-      // Send final heartbeat
+      // Send final heartbeat (best-effort)
       if (!heartbeatFailed) {
-        heartbeat();
+        try {
+          const finalHb = heartbeat();
+          if (!finalHb || !finalHb.ok) {
+            heartbeatFailed = true;
+            heartbeatDetail = { phase: "final", reason: finalHb?.reason || "unknown", elapsedMs: Date.now() - startMs };
+          }
+        } catch (err) {
+          heartbeatFailed = true;
+          heartbeatDetail = { phase: "final", reason: err.message, elapsedMs: Date.now() - startMs };
+        }
       }
 
       if (heartbeatFailed) {
         resolve({
           ok: false,
-          output: "Heartbeat failed during command execution",
+          output: `Heartbeat failed during command execution: ${heartbeatDetail?.reason || "unknown"}`,
           heartbeatFailed: true,
+          heartbeatDetail,
         });
       } else if (code === 0) {
         resolve({ ok: true, output: trimOutput(stdout) });

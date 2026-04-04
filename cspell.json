@@ -498,6 +498,7 @@
     "workerrun",
     "worktrees",
     "worktree",
+    "writeback",
     "xcconfig",
     "xcuitest",
     "xstep",

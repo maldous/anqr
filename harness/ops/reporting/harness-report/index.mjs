@@ -15,6 +15,7 @@ export { checkTypecheck } from "./check-typecheck.mjs";
 export { checkLint } from "./check-lint.mjs";
 export { checkTestUnit } from "./check-test-unit.mjs";
 export { checkDepcruise } from "./check-depcruise.mjs";
+export { checkKnip } from "./check-knip.mjs";
 export { checkDocsFreshness } from "./check-docs-freshness.mjs";
 export { checkOllamaHealth } from "./check-ollama-health.mjs";
 export { checkAstDensity } from "./check-ast-density.mjs";

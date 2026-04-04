@@ -66,6 +66,24 @@ describe("symphony-validation heartbeat", () => {
 
     expect(result.heartbeatFailed).toBe(true);
     expect(result.passed).toBe(false);
+    expect(result.heartbeatDetail).toBeTruthy();
+    expect(result.heartbeatDetail.reason).toBe("lease_expired");
+    expect(result.heartbeatDetail.phase).toBe("initial");
+  });
+
+  it("should surface heartbeat exception as structured detail", { timeout: 30_000 }, async () => {
+    const heartbeatMock = vi.fn(() => {
+      throw new Error("state_lock_failure");
+    });
+    const projectRoot = process.cwd();
+
+    const result = await runValidation(projectRoot, [], { heartbeat: heartbeatMock });
+
+    expect(result.heartbeatFailed).toBe(true);
+    expect(result.passed).toBe(false);
+    expect(result.heartbeatDetail).toBeTruthy();
+    expect(result.heartbeatDetail.reason).toBe("state_lock_failure");
+    expect(result.heartbeatDetail.phase).toBe("initial");
   });
 
   it(

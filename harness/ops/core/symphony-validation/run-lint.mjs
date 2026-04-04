@@ -8,7 +8,7 @@ export async function runLint(projectRoot, opts = {}) {
     heartbeat: opts.heartbeat,
   });
   if (result.heartbeatFailed)
-    return { pass: false, detail: "Heartbeat failed during lint", heartbeatFailed: true };
+    return { pass: false, detail: "Heartbeat failed during lint", heartbeatFailed: true, heartbeatDetail: result.heartbeatDetail };
   if (!result.ok) return { pass: false, detail: result.output };
   const warningMatch = result.output.match(/Found (\d+) warning/);
   const warnings = warningMatch ? Number(warningMatch[1]) : 0;

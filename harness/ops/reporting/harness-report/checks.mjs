@@ -1,6 +1,7 @@
 import { checkAstDensity } from "./check-ast-density.mjs";
 import { checkCspellCoverage } from "./check-cspell-coverage.mjs";
 import { checkDepcruise } from "./check-depcruise.mjs";
+import { checkKnip } from "./check-knip.mjs";
 import { checkDocsFreshness } from "./check-docs-freshness.mjs";
 import { checkLinearRagPipeline } from "./check-linear-rag-pipeline.mjs";
 import { checkSourceRagIndex } from "./check-source-rag-index.mjs";
@@ -19,6 +20,7 @@ export const CHECKS = {
   lint: { fn: checkLint, async: false },
   "test-unit": { fn: checkTestUnit, async: false },
   depcruise: { fn: checkDepcruise, async: false },
+  knip: { fn: checkKnip, async: false },
   "docs-freshness": { fn: checkDocsFreshness, async: false },
   "ollama-health": { fn: checkOllamaHealth, async: true },
   "litellm-routing": { fn: checkLitellmRouting, async: false },

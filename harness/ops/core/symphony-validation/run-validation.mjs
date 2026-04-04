@@ -17,11 +17,13 @@ export async function runValidation(projectRoot, changedFiles = [], opts = {}) {
 
   // Check if any validation failed due to heartbeat failure
   const heartbeatFailed = results.some((r) => r.heartbeatFailed);
+  const heartbeatDetail = results.find((r) => r.heartbeatFailed)?.heartbeatDetail || null;
 
   return {
     passed: results.every((r) => r.pass),
     results,
     heartbeatFailed,
+    heartbeatDetail,
     signature: results
       .filter((r) => !r.pass)
       .map((r) => `${r.check}:${String(r.detail || "").split("\n")[0]}`)

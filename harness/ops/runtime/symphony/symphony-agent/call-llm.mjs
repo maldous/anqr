@@ -30,6 +30,7 @@ export async function callLLM(
       const headers = {
         "Content-Type": "application/json",
         Authorization: `Bearer ${SYMPHONY_BRIDGE_API_KEY}`,
+        "X-Symphony-Origin": "runner",
       };
       if (worktreeId) {
         headers["X-Worktree-ID"] = worktreeId;

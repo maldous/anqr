@@ -636,9 +636,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
 
     // Build structured result contract for runner/agent consumption
     const _symphonyResult = {
-      completed:
-        executionMetrics.taskCompleted ||
-        (finishReason === "stop" && errorCount === 0 && fullText.length > 0),
+      completed: executionMetrics.taskCompleted === true,
       needsContinuation: finishReason === "tool-calls" || finishReason === "length",
       failureClass:
         errorCount > 0
@@ -702,7 +700,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
 
     // Build structured result contract (simplified for non-streaming - no tool execution metrics)
     const _symphonyResult = {
-      completed: result.finishReason === "stop" && text.length > 0,
+      completed: false,
       needsContinuation: result.finishReason === "tool-calls" || result.finishReason === "length",
       failureClass: result.finishReason === "tool-calls" ? "step_limit_reached" : null,
       mutationCount: 0,
