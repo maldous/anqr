@@ -3,6 +3,7 @@ import { checkCspellCoverage } from "./check-cspell-coverage.mjs";
 import { checkDepcruise } from "./check-depcruise.mjs";
 import { checkDocsFreshness } from "./check-docs-freshness.mjs";
 import { checkLinearRagPipeline } from "./check-linear-rag-pipeline.mjs";
+import { checkSourceRagIndex } from "./check-source-rag-index.mjs";
 import { checkLint } from "./check-lint.mjs";
 import { checkLitellmRouting } from "./check-litellm-routing.mjs";
 import { checkOllamaHealth } from "./check-ollama-health.mjs";
@@ -25,5 +26,6 @@ export const CHECKS = {
   "ast-density": { fn: checkAstDensity, async: false },
   "sonar-audit": { fn: checkSonarAudit, async: true },
   "pipeline-latency": { fn: checkPipelineLatency, async: true },
+  "source-rag-index": { fn: checkSourceRagIndex, async: true },
   "linear-rag-pipeline": { fn: checkLinearRagPipeline, async: true },
 };

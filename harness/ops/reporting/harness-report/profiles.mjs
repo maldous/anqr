@@ -5,6 +5,7 @@ export const PROFILES = {
     "ollama-health",
     "litellm-routing",
     "pipeline-latency",
+    "source-rag-index",
     "linear-rag-pipeline",
   ],
   full: [
@@ -19,6 +20,7 @@ export const PROFILES = {
     "litellm-routing",
     "sonar-audit",
     "pipeline-latency",
+    "source-rag-index",
     "linear-rag-pipeline",
   ],
 };
