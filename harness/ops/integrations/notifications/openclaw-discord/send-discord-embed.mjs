@@ -1,11 +1,5 @@
 import { sendViaOpenClaw } from "./send-via-open-claw.mjs";
-
-function colorToEmoji(color) {
-  if (color === 0x00ff00) return "🟢";
-  if (color === 0xff0000) return "🔴";
-  if (color === 0xffa500) return "🟠";
-  return "";
-}
+import { colorToEmoji } from "./color-to-emoji.mjs";
 
 export async function sendDiscordEmbed({
   title,

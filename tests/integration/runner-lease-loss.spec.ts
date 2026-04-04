@@ -226,26 +226,27 @@ import { syncWorktreeBeforeValidation } from "../../harness/ops/orchestration/sy
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
-const mockIssue = {
-  id: "test-issue-id",
-  identifier: "ANQ-TEST-1",
-  title: "Test issue for lease-loss",
-  priority: 2,
-  estimate: 1,
-  state: { name: "Todo" },
-};
-
-const agentSuccessResult = {
-  completed: true,
-  summary: "Implemented the requested changes",
-  error: null,
-  turns: 3,
-  toolCalls: 5,
-  filesChanged: ["src/foo.ts"],
-  timedOut: false,
-  messages: [],
-  providerName: "test-provider",
-  needsContinuation: false,
+const fixtures = {
+  mockIssue: {
+    id: "test-issue-id",
+    identifier: "ANQ-TEST-1",
+    title: "Test issue for lease-loss",
+    priority: 2,
+    estimate: 1,
+    state: { name: "Todo" },
+  },
+  agentSuccessResult: {
+    completed: true,
+    summary: "Implemented the requested changes",
+    error: null,
+    turns: 3,
+    toolCalls: 5,
+    filesChanged: ["src/foo.ts"],
+    timedOut: false,
+    messages: [] as unknown[],
+    providerName: "test-provider",
+    needsContinuation: false,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -279,7 +280,7 @@ beforeEach(() => {
   } as never);
 
   // Agent
-  vi.mocked(runAgent).mockResolvedValue(agentSuccessResult as never);
+  vi.mocked(runAgent).mockResolvedValue(fixtures.agentSuccessResult as never);
 
   // Git operations
   vi.mocked(gitDiffNames).mockReturnValue(["src/foo.ts"] as never);
@@ -339,7 +340,7 @@ describe("Lease-loss during validation", () => {
         signature: null,
       } as never);
 
-      const result = await executeIssue(mockIssue);
+      const result = await executeIssue(fixtures.mockIssue);
       expect(result).toBe("done");
 
       // Discord notification must say Abandoned, not Done
@@ -410,14 +411,14 @@ describe("Lease-loss during execution", () => {
       });
       vi.mocked(runAgent).mockReturnValue(agentPromise as never);
 
-      const execPromise = executeIssue(mockIssue);
+      const execPromise = executeIssue(fixtures.mockIssue);
 
       // Advance time to trigger the heartbeat interval (300_000ms)
       await vi.advanceTimersByTimeAsync(300_000);
 
       // Now resolve the agent — the !leaseValid check fires next
       resolveAgent!({
-        ...agentSuccessResult,
+        ...fixtures.agentSuccessResult,
         filesChanged: ["src/foo.ts"],
       });
 
@@ -453,13 +454,13 @@ describe("No-file-change completion hardening", () => {
     async () => {
       // Agent reports completion with tool calls but no file changes
       vi.mocked(runAgent).mockResolvedValue({
-        ...agentSuccessResult,
+        ...fixtures.agentSuccessResult,
         toolCalls: 5,
         filesChanged: [],
       } as never);
       vi.mocked(gitDiffNames).mockReturnValue([] as never);
 
-      const result = await executeIssue(mockIssue);
+      const result = await executeIssue(fixtures.mockIssue);
       expect(result).toBe("done");
 
       // Issue moved to In Review, NOT Done
@@ -485,13 +486,13 @@ describe("No-file-change completion hardening", () => {
     async () => {
       // Agent reports completion with zero tool calls and zero file changes
       vi.mocked(runAgent).mockResolvedValue({
-        ...agentSuccessResult,
+        ...fixtures.agentSuccessResult,
         toolCalls: 0,
         filesChanged: [],
       } as never);
       vi.mocked(gitDiffNames).mockReturnValue([] as never);
 
-      const result = await executeIssue(mockIssue);
+      const result = await executeIssue(fixtures.mockIssue);
       expect(result).toBe("done");
 
       // Issue moved to Todo, NOT Done
@@ -538,7 +539,7 @@ describe("Success notification ordering", () => {
       });
 
       // Full success path: agent succeeds, validation passes, commit + push succeed
-      const result = await executeIssue(mockIssue);
+      const result = await executeIssue(fixtures.mockIssue);
       expect(result).toBe("done");
 
       // Discord notification must come after both addComment (completion) and updateIssue (final state)
