@@ -24,7 +24,7 @@ Implement nightly Linear issue export to JSON for RAG indexing.
 
 ## Owned Surfaces
 
-- \`scripts/ops/integrations/linear/export-issues.mjs\` (NEW)
+- \`harness/ops/integrations/linear/export-issues.mjs\` (NEW)
 - \`reports/linear-export/\` (NEW directory)
 
 ## Current State
@@ -93,7 +93,7 @@ await writeFile(exportPath, JSON.stringify(allIssues, null, 2));
 
 \`\`\`bash
 # Run export manually
-node scripts/ops/integrations/linear/export-issues.mjs
+node harness/ops/integrations/linear/export-issues.mjs
 
 # Verify output
 cat reports/linear-export/issues-latest.json | jq '.[] | {identifier, title, state}'
@@ -136,8 +136,8 @@ Implement Linear-specific RAG index builder to generate embeddings from exported
 
 ## Owned Surfaces
 
-- \`scripts/ops/lib/rag/build-index-linear.mjs\` (NEW)
-- \`scripts/ops/lib/rag/linear-chunker.mjs\` (NEW)
+- \`harness/ops/lib/rag/build-index-linear.mjs\` (NEW)
+- \`harness/ops/lib/rag/linear-chunker.mjs\` (NEW)
 - \`reports/rag-index-linear/\` (NEW directory)
 
 ## Current State
@@ -153,7 +153,7 @@ Separate Linear RAG index at \`reports/rag-index-linear/\` with embeddings for a
 ### Chunking Strategy (1 chunk per issue)
 
 \`\`\`javascript
-// scripts/ops/lib/rag/linear-chunker.mjs
+// harness/ops/lib/rag/linear-chunker.mjs
 export function chunkLinearIssue(issue) {
   const labels = issue.labels.nodes.map(l => l.name).join(", ");
   const content = \`
@@ -188,7 +188,7 @@ export function chunkLinearIssue(issue) {
 ### Index Builder
 
 \`\`\`javascript
-// scripts/ops/lib/rag/build-index-linear.mjs
+// harness/ops/lib/rag/build-index-linear.mjs
 import { readFile } from 'node:fs/promises';
 import { chunkLinearIssue } from './linear-chunker.mjs';
 import { generateEmbeddings } from './embeddings.mjs';
@@ -231,7 +231,7 @@ await buildLinearIndex();
 
 \`\`\`bash
 # Run Linear RAG build
-node scripts/ops/lib/rag/build-index-linear.mjs
+node harness/ops/lib/rag/build-index-linear.mjs
 
 # Check index stats
 cat reports/rag-index-linear/meta.json | jq
@@ -307,7 +307,7 @@ After=network.target
 Type=oneshot
 WorkingDirectory=/home/user/src/anqr
 EnvironmentFile=/home/user/src/anqr/services/systemd/anqr-ops.env
-ExecStart=/usr/bin/node scripts/ops/integrations/linear/export-issues.mjs
+ExecStart=/usr/bin/node harness/ops/integrations/linear/export-issues.mjs
 StandardOutput=journal
 StandardError=journal
 \`\`\`
@@ -340,7 +340,7 @@ After=anqr-linear-export.service
 Type=oneshot
 WorkingDirectory=/home/user/src/anqr
 EnvironmentFile=/home/user/src/anqr/services/systemd/anqr-ops.env
-ExecStart=/usr/bin/node scripts/ops/lib/rag/build-index-linear.mjs
+ExecStart=/usr/bin/node harness/ops/lib/rag/build-index-linear.mjs
 StandardOutput=journal
 StandardError=journal
 \`\`\`
@@ -431,9 +431,9 @@ Add Linear issue search capability to Symphony agents via new search tool or hyb
 
 ## Owned Surfaces
 
-- \`scripts/ops/lib/search/linear-search.mjs\` (NEW) OR
-- \`scripts/ops/lib/search/hybrid-search.mjs\` (MODIFY)
-- \`scripts/ops/runtime/symphony/symphony-agent.mjs\` (MODIFY - add tool)
+- \`harness/ops/lib/search/linear-search.mjs\` (NEW) OR
+- \`harness/ops/lib/search/hybrid-search.mjs\` (MODIFY)
+- \`harness/ops/runtime/symphony/symphony-agent.mjs\` (MODIFY - add tool)
 
 ## Current State
 
@@ -452,7 +452,7 @@ Agents can search Linear issues via:
 ### Linear Search Function
 
 \`\`\`javascript
-// scripts/ops/lib/search/linear-search.mjs
+// harness/ops/lib/search/linear-search.mjs
 import { loadIndex, vectorSearch } from '../rag/vector-store.mjs';
 
 const LINEAR_INDEX_DIR = 'reports/rag-index-linear';
@@ -529,7 +529,7 @@ export async function searchLinearIssues(query, topK = 5) {
 
 \`\`\`bash
 # Test search function directly
-node -e "import('./scripts/ops/lib/search/linear-search.mjs').then(m => m.searchLinearIssues('validation').then(console.log))"
+node -e "import('./harness/ops/lib/search/linear-search.mjs').then(m => m.searchLinearIssues('validation').then(console.log))"
 
 # Expected output:
 # [
@@ -628,7 +628,7 @@ Validated Phase 1 delivery with ongoing monitoring:
 ### Nightly Ops Report Additions
 
 \`\`\`javascript
-// In scripts/ops/reporting/harness-report.mjs
+// In harness/ops/reporting/harness-report.mjs
 // Add Linear RAG section
 
 const linearExportStatus = checkServiceStatus('anqr-linear-export.service');
@@ -674,10 +674,10 @@ cat reports/linear-export/issues-latest.json | jq 'length'
 cat reports/rag-index-linear/meta.json | jq
 
 # Test search
-node -e "import('./scripts/ops/lib/search/linear-search.mjs').then(m => m.searchLinearIssues('validation').then(console.log))"
+node -e "import('./harness/ops/lib/search/linear-search.mjs').then(m => m.searchLinearIssues('validation').then(console.log))"
 
 # Run nightly ops report
-node scripts/ops/reporting/harness-report.mjs
+node harness/ops/reporting/harness-report.mjs
 \`\`\`
 
 ## Evidence Payload

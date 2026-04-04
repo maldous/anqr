@@ -1,4 +1,4 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index-linear.mjs:89
+// Generated from ../../../../harness/ops/lib/rag/build-index-linear.mjs:89
 
 import { generateEmbeddings, isOllamaAvailable } from "../embeddings.mjs";
 import { readFile } from "node:fs/promises";
@@ -41,7 +41,7 @@ export async function buildLinearIndex() {
   } catch (err) {
     logError(`Failed to read export file: ${err?.message || err}`);
     logError(`Expected path: ${EXPORT_PATH}`);
-    logError("Run export script first: node scripts/ops/integrations/linear/export-issues.mjs");
+    logError("Run export script first: node harness/ops/integrations/linear/export-issues.mjs");
     process.exit(1);
   }
 

@@ -1,4 +1,4 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-agent-router.mjs:211
+// Generated from ../../../../harness/ops/integrations/model/symphony-agent-router.mjs:211
 
 import { spawn } from "node:child_process";
 
@@ -36,7 +36,7 @@ export function spawnLinearRunner(identifier) {
 
   const runner = spawn(
     nodePath,
-    ["scripts/ops/orchestration/symphony-runner.mjs", "--once", "--issue", identifier],
+    ["harness/ops/orchestration/symphony-runner.mjs", "--once", "--issue", identifier],
     {
       cwd: target.path,
       env: {

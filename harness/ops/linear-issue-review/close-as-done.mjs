@@ -1,4 +1,4 @@
-// Generated from ../../scripts/ops/linear-issue-review.mjs:102
+// Generated from ../../harness/ops/linear-issue-review.mjs:102
 
 export const CLOSE_AS_DONE = {
   "ANQ-417": "src/modules/ no longer exists — all module directories dissolved into packages/.",
@@ -27,11 +27,11 @@ export const CLOSE_AS_DONE = {
     "Scheduled operations operational: 4 systemd service/timer pairs (runner, nightly, queue-feeder, email-ingest).",
   "ANQ-366":
     "Guardian + Linear integration implemented: linear-client.mjs, linear-guardian.mjs, notify.mjs.",
-  "ANQ-365": "Symphony bootstrap skeleton complete: all scripts/ops/ files exist on main.",
+  "ANQ-365": "Symphony bootstrap skeleton complete: all harness/ops/ files exist on main.",
   "ANQ-364": "Symphony autonomous operations substrate fully bootstrapped on main.",
   "ANQ-363": "0 .type.ts files remain in src/ or packages/. All migrated to .types.ts.",
   "ANQ-361":
-    "architecture-standards.md now documents full repo topology including apps/, packages/, netlify/, scripts/ops/, services/systemd/.",
+    "architecture-standards.md now documents full repo topology including apps/, packages/, netlify/, harness/ops/, services/systemd/.",
   "ANQ-360": "src/app/ no longer exists — search-context dissolved with full src/ decomposition.",
   "ANQ-359":
     "src/data/ dissolved. src/types/ contains only .d.ts platform type augmentations — correct placement per architecture standards (tsconfig typeRoots).",

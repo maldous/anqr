@@ -7,7 +7,7 @@
  * - Periodic evaluation cycles
  * - Codebuff mode detection
  *
- * Run: npx vitest run scripts/ops/integrations/model/symphony-session-state.spec.ts
+ * Run: npx vitest run harness/ops/integrations/model/symphony-session-state.spec.ts
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";

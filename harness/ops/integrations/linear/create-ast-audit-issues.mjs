@@ -3,7 +3,7 @@
 /**
  * create-ast-audit-issues.mjs — Create Linear issues for ANQ-1131: One AST per file refactor
  *
- * Breaks down the entire scripts/** surface into sensible-sized chunks that can each
+ * Breaks down the entire harness/** surface into sensible-sized chunks that can each
  * be handled by an agent in a single pass.
  */
 
@@ -14,7 +14,7 @@ const issueGroups = [
     title: "AST Audit Phase 1: Core Infrastructure & State Management",
     description: `## Summary
 
-Refactor core infrastructure modules in scripts/ops/core and scripts/ops/lib to export one AST per file.
+Refactor core infrastructure modules in harness/ops/core and harness/ops/lib to export one AST per file.
 
 ## Scope Class
 
@@ -22,12 +22,12 @@ Refactor core infrastructure modules in scripts/ops/core and scripts/ops/lib to 
 
 ## Owned Surfaces
 
-- \`scripts/ops/core/symphony-config.mjs\` (config loading, validation)
-- \`scripts/ops/core/symphony-state.mjs\` (state persistence)
-- \`scripts/ops/core/symphony-validation.mjs\` (validation helpers)
-- \`scripts/ops/core/worktree-config.mjs\` (worktree configuration)
-- \`scripts/ops/lib/logger.mjs\` (logging infrastructure)
-- \`scripts/ops/lib/notify.mjs\` (notification helpers)
+- \`harness/ops/core/symphony-config.mjs\` (config loading, validation)
+- \`harness/ops/core/symphony-state.mjs\` (state persistence)
+- \`harness/ops/core/symphony-validation.mjs\` (validation helpers)
+- \`harness/ops/core/worktree-config.mjs\` (worktree configuration)
+- \`harness/ops/lib/logger.mjs\` (logging infrastructure)
+- \`harness/ops/lib/notify.mjs\` (notification helpers)
 
 **Total:** ~6 files, estimated 15-20 exported functions to split
 
@@ -42,7 +42,7 @@ Refactor core infrastructure modules in scripts/ops/core and scripts/ops/lib to 
 ## Definition Of Done
 
 - [ ] Each file exports exactly one AST node
-- [ ] All imports updated across scripts/**, tests/**, and services/
+- [ ] All imports updated across harness/**, tests/**, and services/
 - [ ] No broken references
 - [ ] \`npm run typecheck:harness\` passes
 - [ ] \`npm run test:integration\` passes
@@ -53,7 +53,7 @@ Refactor core infrastructure modules in scripts/ops/core and scripts/ops/lib to 
 \`\`\`bash
 npm run typecheck:harness
 npm run test:integration
-find scripts/ops/core scripts/ops/lib -name "*.mjs" -exec node -c {} \\;
+find harness/ops/core harness/ops/lib -name "*.mjs" -exec node -c {} \\;
 \`\`\`
 
 ## Evidence Payload
@@ -76,7 +76,7 @@ find scripts/ops/core scripts/ops/lib -name "*.mjs" -exec node -c {} \\;
     title: "AST Audit Phase 2: Model Integration & Bridge Routing",
     description: `## Summary
 
-Refactor model integration modules in scripts/ops/integrations/model to export one AST per file.
+Refactor model integration modules in harness/ops/integrations/model to export one AST per file.
 
 ## Scope Class
 
@@ -84,13 +84,13 @@ Refactor model integration modules in scripts/ops/integrations/model to export o
 
 ## Owned Surfaces
 
-- \`scripts/ops/integrations/model/symphony-openai-bridge.mjs\` (main bridge, tools, routing)
-- \`scripts/ops/integrations/model/symphony-adaptive-context.mjs\` (context management)
-- \`scripts/ops/integrations/model/symphony-credit-gate.mjs\` (credit/quota management)
-- \`scripts/ops/integrations/model/symphony-session-state.mjs\` (session persistence)
-- \`scripts/ops/integrations/model/symphony-provider-health.mjs\` (health checks)
-- \`scripts/ops/integrations/model/codebuff-openai-bridge.mjs\` (Codebuff compatibility)
-- \`scripts/ops/integrations/model/discord-request-router.mjs\` (Discord routing)
+- \`harness/ops/integrations/model/symphony-openai-bridge.mjs\` (main bridge, tools, routing)
+- \`harness/ops/integrations/model/symphony-adaptive-context.mjs\` (context management)
+- \`harness/ops/integrations/model/symphony-credit-gate.mjs\` (credit/quota management)
+- \`harness/ops/integrations/model/symphony-session-state.mjs\` (session persistence)
+- \`harness/ops/integrations/model/symphony-provider-health.mjs\` (health checks)
+- \`harness/ops/integrations/model/codebuff-openai-bridge.mjs\` (Codebuff compatibility)
+- \`harness/ops/integrations/model/discord-request-router.mjs\` (Discord routing)
 
 **Total:** ~7 files, estimated 30-40 exported functions (bridge has many tools)
 
@@ -119,7 +119,7 @@ npm run typecheck:harness
 npm run test:integration
 npm run test:e2e
 # Verify bridge startup
-node scripts/ops/integrations/model/symphony-openai-bridge.mjs &
+node harness/ops/integrations/model/symphony-openai-bridge.mjs &
 sleep 5
 curl http://127.0.0.1:3124/v1/models
 killall node
@@ -147,7 +147,7 @@ killall node
     title: "AST Audit Phase 3: Linear Integration & Issue Management",
     description: `## Summary
 
-Refactor Linear integration modules in scripts/ops/integrations/linear to export one AST per file.
+Refactor Linear integration modules in harness/ops/integrations/linear to export one AST per file.
 
 ## Scope Class
 
@@ -155,14 +155,14 @@ Refactor Linear integration modules in scripts/ops/integrations/linear to export
 
 ## Owned Surfaces
 
-- \`scripts/ops/integrations/linear/linear-client.mjs\` (API client, states, labels)
-- \`scripts/ops/integrations/linear/incident-manager.mjs\` (incident creation, fingerprinting)
-- \`scripts/ops/integrations/linear/incident-resolution.mjs\` (resolution workflows)
-- \`scripts/ops/integrations/linear/incident-evidence.mjs\` (evidence formatting)
-- \`scripts/ops/integrations/linear/incident-fingerprint.mjs\` (deduplication)
-- \`scripts/ops/integrations/linear/issue-hygiene.mjs\` (cleanup automation)
-- \`scripts/ops/integrations/linear/export-issues.mjs\` (issue export)
-- \`scripts/ops/integrations/linear/github-linear-sync-audit.mjs\` (sync validation)
+- \`harness/ops/integrations/linear/linear-client.mjs\` (API client, states, labels)
+- \`harness/ops/integrations/linear/incident-manager.mjs\` (incident creation, fingerprinting)
+- \`harness/ops/integrations/linear/incident-resolution.mjs\` (resolution workflows)
+- \`harness/ops/integrations/linear/incident-evidence.mjs\` (evidence formatting)
+- \`harness/ops/integrations/linear/incident-fingerprint.mjs\` (deduplication)
+- \`harness/ops/integrations/linear/issue-hygiene.mjs\` (cleanup automation)
+- \`harness/ops/integrations/linear/export-issues.mjs\` (issue export)
+- \`harness/ops/integrations/linear/github-linear-sync-audit.mjs\` (sync validation)
 
 **Total:** ~8 files, estimated 25-30 exported functions
 
@@ -188,7 +188,7 @@ Refactor Linear integration modules in scripts/ops/integrations/linear to export
 npm run typecheck:harness
 npm run test:integration
 # Verify Linear export still works
-node scripts/ops/integrations/linear/export-issues.mjs
+node harness/ops/integrations/linear/export-issues.mjs
 test -f reports/linear-export/issues-latest.json
 \`\`\`
 
@@ -212,7 +212,7 @@ test -f reports/linear-export/issues-latest.json
     title: "AST Audit Phase 4: RAG & Search Infrastructure",
     description: `## Summary
 
-Refactor RAG and search modules in scripts/ops/lib/rag and scripts/ops/lib/search to export one AST per file.
+Refactor RAG and search modules in harness/ops/lib/rag and harness/ops/lib/search to export one AST per file.
 
 ## Scope Class
 
@@ -220,14 +220,14 @@ Refactor RAG and search modules in scripts/ops/lib/rag and scripts/ops/lib/searc
 
 ## Owned Surfaces
 
-- \`scripts/ops/lib/rag/build-index.mjs\` (repo RAG index builder)
-- \`scripts/ops/lib/rag/build-index-linear.mjs\` (Linear RAG index builder)
-- \`scripts/ops/lib/rag/embeddings.mjs\` (Ollama embeddings)
-- \`scripts/ops/lib/rag/vector-store.mjs\` (vector store operations)
-- \`scripts/ops/lib/rag/chunker.mjs\` (text chunking)
-- \`scripts/ops/lib/rag/linear-chunker.mjs\` (Linear issue chunking)
-- \`scripts/ops/lib/search/hybrid-search.mjs\` (BM25 + vector search)
-- \`scripts/ops/lib/search/linear-search.mjs\` (Linear issue search)
+- \`harness/ops/lib/rag/build-index.mjs\` (repo RAG index builder)
+- \`harness/ops/lib/rag/build-index-linear.mjs\` (Linear RAG index builder)
+- \`harness/ops/lib/rag/embeddings.mjs\` (Ollama embeddings)
+- \`harness/ops/lib/rag/vector-store.mjs\` (vector store operations)
+- \`harness/ops/lib/rag/chunker.mjs\` (text chunking)
+- \`harness/ops/lib/rag/linear-chunker.mjs\` (Linear issue chunking)
+- \`harness/ops/lib/search/hybrid-search.mjs\` (BM25 + vector search)
+- \`harness/ops/lib/search/linear-search.mjs\` (Linear issue search)
 
 **Total:** ~8 files, estimated 20-25 exported functions
 
@@ -253,8 +253,8 @@ Refactor RAG and search modules in scripts/ops/lib/rag and scripts/ops/lib/searc
 npm run typecheck:harness
 npm run test:integration
 # Verify RAG index builds
-node scripts/ops/lib/rag/build-index.mjs
-node scripts/ops/lib/rag/build-index-linear.mjs
+node harness/ops/lib/rag/build-index.mjs
+node harness/ops/lib/rag/build-index-linear.mjs
 test -f reports/rag-index/meta.json
 test -f reports/rag-index-linear/meta.json
 \`\`\`
@@ -279,7 +279,7 @@ test -f reports/rag-index-linear/meta.json
     title: "AST Audit Phase 5: Orchestration & Queue Management",
     description: `## Summary
 
-Refactor orchestration modules in scripts/ops/orchestration to export one AST per file.
+Refactor orchestration modules in harness/ops/orchestration to export one AST per file.
 
 ## Scope Class
 
@@ -287,14 +287,14 @@ Refactor orchestration modules in scripts/ops/orchestration to export one AST pe
 
 ## Owned Surfaces
 
-- \`scripts/ops/orchestration/symphony-runner.mjs\` (main execution loop)
-- \`scripts/ops/orchestration/symphony-queue-control.mjs\` (queue operations)
-- \`scripts/ops/orchestration/symphony-control.mjs\` (control commands)
-- \`scripts/ops/orchestration/symphony-worktree-pool.mjs\` (worktree management)
-- \`scripts/ops/orchestration/nightly-ops-pass.mjs\` (nightly automation)
-- \`scripts/ops/orchestration/reset-queue.mjs\` (queue reset)
-- \`scripts/ops/orchestration/latency-report.mjs\` (performance reporting)
-- \`scripts/ops/orchestration/analyze-worktree-benchmark.mjs\` (benchmark analysis)
+- \`harness/ops/orchestration/symphony-runner.mjs\` (main execution loop)
+- \`harness/ops/orchestration/symphony-queue-control.mjs\` (queue operations)
+- \`harness/ops/orchestration/symphony-control.mjs\` (control commands)
+- \`harness/ops/orchestration/symphony-worktree-pool.mjs\` (worktree management)
+- \`harness/ops/orchestration/nightly-ops-pass.mjs\` (nightly automation)
+- \`harness/ops/orchestration/reset-queue.mjs\` (queue reset)
+- \`harness/ops/orchestration/latency-report.mjs\` (performance reporting)
+- \`harness/ops/orchestration/analyze-worktree-benchmark.mjs\` (benchmark analysis)
 
 **Total:** ~8 files, estimated 25-30 exported functions
 
@@ -323,7 +323,7 @@ npm run typecheck:harness
 npm run test:integration
 npm run test:e2e
 # Verify queue control
-node scripts/ops/orchestration/symphony-queue-control.mjs --status
+node harness/ops/orchestration/symphony-queue-control.mjs --status
 \`\`\`
 
 ## Evidence Payload
@@ -347,7 +347,7 @@ node scripts/ops/orchestration/symphony-queue-control.mjs --status
     title: "AST Audit Phase 6: Runtime Services & Monitoring",
     description: `## Summary
 
-Refactor runtime service modules in scripts/ops/runtime to export one AST per file.
+Refactor runtime service modules in harness/ops/runtime to export one AST per file.
 
 ## Scope Class
 
@@ -355,13 +355,13 @@ Refactor runtime service modules in scripts/ops/runtime to export one AST per fi
 
 ## Owned Surfaces
 
-- \`scripts/ops/runtime/symphony/symphony-agent.mjs\` (agent wrapper)
-- \`scripts/ops/runtime/symphony/bridge-result.mjs\` (result processing)
-- \`scripts/ops/runtime/symphony/stuck-detection.mjs\` (stuck issue detection)
-- \`scripts/ops/runtime/watchdog/bridge-watchdog.mjs\` (bridge monitoring)
-- \`scripts/ops/runtime/mcp/context7-http-service.mjs\` (Context7 HTTP)
-- \`scripts/ops/runtime/mcp/context7-server.mjs\` (Context7 MCP)
-- \`scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs\` (Discord gateway)
+- \`harness/ops/runtime/symphony/symphony-agent.mjs\` (agent wrapper)
+- \`harness/ops/runtime/symphony/bridge-result.mjs\` (result processing)
+- \`harness/ops/runtime/symphony/stuck-detection.mjs\` (stuck issue detection)
+- \`harness/ops/runtime/watchdog/bridge-watchdog.mjs\` (bridge monitoring)
+- \`harness/ops/runtime/mcp/context7-http-service.mjs\` (Context7 HTTP)
+- \`harness/ops/runtime/mcp/context7-server.mjs\` (Context7 MCP)
+- \`harness/ops/runtime/discord/openclaw-gateway-singleton.mjs\` (Discord gateway)
 
 **Total:** ~7 files, estimated 20-25 exported functions
 
@@ -390,7 +390,7 @@ Refactor runtime service modules in scripts/ops/runtime to export one AST per fi
 npm run typecheck:harness
 npm run test:integration
 # Verify Context7 HTTP service
-node scripts/ops/runtime/mcp/context7-http-service.mjs &
+node harness/ops/runtime/mcp/context7-http-service.mjs &
 sleep 3
 curl http://127.0.0.1:4320/health
 killall node
@@ -416,7 +416,7 @@ killall node
     title: "AST Audit Phase 7: Notifications & Reporting",
     description: `## Summary
 
-Refactor notification and reporting modules in scripts/ops/notifications and scripts/ops/reporting to export one AST per file.
+Refactor notification and reporting modules in harness/ops/notifications and harness/ops/reporting to export one AST per file.
 
 ## Scope Class
 
@@ -424,12 +424,12 @@ Refactor notification and reporting modules in scripts/ops/notifications and scr
 
 ## Owned Surfaces
 
-- \`scripts/ops/integrations/notifications/discord-webhook.mjs\` (Discord webhook client)
-- \`scripts/ops/integrations/notifications/test-discord.mjs\` (Discord test harness)
-- \`scripts/ops/notifications/notify-impl.mjs\` (notification implementation)
-- \`scripts/ops/notifications/notify.mjs\` (notification interface)
-- \`scripts/ops/reporting/harness-report.mjs\` (harness status reporting)
-- \`scripts/ops/lib/service-restart-notify.mjs\` (restart notifications)
+- \`harness/ops/integrations/notifications/discord-webhook.mjs\` (Discord webhook client)
+- \`harness/ops/integrations/notifications/test-discord.mjs\` (Discord test harness)
+- \`harness/ops/notifications/notify-impl.mjs\` (notification implementation)
+- \`harness/ops/notifications/notify.mjs\` (notification interface)
+- \`harness/ops/reporting/harness-report.mjs\` (harness status reporting)
+- \`harness/ops/lib/service-restart-notify.mjs\` (restart notifications)
 
 **Total:** ~6 files, estimated 15-20 exported functions
 
@@ -455,7 +455,7 @@ Refactor notification and reporting modules in scripts/ops/notifications and scr
 npm run typecheck:harness
 npm run test:integration
 # Verify harness report generation
-node scripts/ops/reporting/harness-report.mjs > /tmp/harness-report.txt
+node harness/ops/reporting/harness-report.mjs > /tmp/harness-report.txt
 test -s /tmp/harness-report.txt
 \`\`\`
 
@@ -486,11 +486,11 @@ Refactor governance, email ingest, and Sonar integration modules to export one A
 
 ## Owned Surfaces
 
-- \`scripts/ops/governance/linear-guardian.mjs\` (workspace governance)
-- \`scripts/ops/integrations/email/email-ingest.mjs\` (email → Linear issues)
-- \`scripts/ops/integrations/sonar/sonar-linear-sync.mjs\` (Sonar → Linear sync)
-- \`scripts/ops/integrations/sonar/sonar-linear-audit.mjs\` (sync auditing)
-- \`scripts/ops/lib/sonar-linear-sync.mjs\` (sync implementation)
+- \`harness/ops/governance/linear-guardian.mjs\` (workspace governance)
+- \`harness/ops/integrations/email/email-ingest.mjs\` (email → Linear issues)
+- \`harness/ops/integrations/sonar/sonar-linear-sync.mjs\` (Sonar → Linear sync)
+- \`harness/ops/integrations/sonar/sonar-linear-audit.mjs\` (sync auditing)
+- \`harness/ops/lib/sonar-linear-sync.mjs\` (sync implementation)
 
 **Total:** ~5 files, estimated 15-20 exported functions
 
@@ -516,7 +516,7 @@ Refactor governance, email ingest, and Sonar integration modules to export one A
 npm run typecheck:harness
 npm run test:integration
 # Verify Linear guardian
-node scripts/ops/governance/linear-guardian.mjs --dry-run
+node harness/ops/governance/linear-guardian.mjs --dry-run
 \`\`\`
 
 ## Evidence Payload
@@ -548,12 +548,12 @@ Refactor root-level scripts and utilities to export one AST per file.
 
 ## Owned Surfaces
 
-- \`scripts/generate-openapi.ts\` (OpenAPI generation)
-- \`scripts/contracts-check.mjs\` (contract validation)
-- \`scripts/audit-ast-density.mjs\` (AST audit tooling)
-- \`scripts/list-ast-names.mjs\` (AST inspection)
-- \`scripts/lib/ast-helpers.mjs\` (AST helper utilities)
-- \`scripts/rename-to-standards.mjs\` (codebase refactoring)
+- \`harness/generate-openapi.ts\` (OpenAPI generation)
+- \`harness/contracts-check.mjs\` (contract validation)
+- \`harness/audit-ast-density.mjs\` (AST audit tooling)
+- \`harness/list-ast-names.mjs\` (AST inspection)
+- \`harness/lib/ast-helpers.mjs\` (AST helper utilities)
+- \`harness/rename-to-standards.mjs\` (codebase refactoring)
 
 **Total:** ~6 files, estimated 15-20 exported functions
 
@@ -578,10 +578,10 @@ Refactor root-level scripts and utilities to export one AST per file.
 npm run typecheck:harness
 npm run typecheck:all
 # Verify OpenAPI generation
-node --loader ts-node/esm scripts/generate-openapi.ts
+node --loader ts-node/esm harness/generate-openapi.ts
 test -f public/openapi.yaml
 # Verify AST audit
-node scripts/audit-ast-density.mjs
+node harness/audit-ast-density.mjs
 \`\`\`
 
 ## Evidence Payload
@@ -612,12 +612,12 @@ Refactor or deprecate legacy root-level scripts and complete AST audit cleanup.
 
 ## Owned Surfaces
 
-- \`scripts/ops/email-ingest.mjs\` (root-level shim, deprecate?)
-- \`scripts/ops/harness-report.mjs\` (root-level shim, deprecate?)
-- \`scripts/ops/linear-client.mjs\` (root-level shim, deprecate?)
-- \`scripts/ops/linear-guardian.mjs\` (root-level shim, deprecate?)
-- \`scripts/ops/symphony-*.mjs\` (root-level shims, deprecate?)
-- Any remaining scripts/ops/*.mjs files
+- \`harness/ops/email-ingest.mjs\` (root-level shim, deprecate?)
+- \`harness/ops/harness-report.mjs\` (root-level shim, deprecate?)
+- \`harness/ops/linear-client.mjs\` (root-level shim, deprecate?)
+- \`harness/ops/linear-guardian.mjs\` (root-level shim, deprecate?)
+- \`harness/ops/symphony-*.mjs\` (root-level shims, deprecate?)
+- Any remaining harness/ops/*.mjs files
 
 **Total:** ~10-15 files, mostly shims to remove or update
 
@@ -645,7 +645,7 @@ npm run typecheck:harness
 npm run test:integration
 npm run test:e2e
 # Verify no broken symlinks
-find scripts/ops -type l -exec test ! -e {} \\; -print
+find harness/ops -type l -exec test ! -e {} \\; -print
 \`\`\`
 
 ## Evidence Payload
@@ -692,7 +692,7 @@ async function main() {
 
   console.log(`\n📊 Summary: Created ${created.length}/${issueGroups.length} issues`);
   console.log(`\n📈 Refactor Scope:`);
-  console.log(`   Total files: ~156 .mjs/.ts files in scripts/**`);
+  console.log(`   Total files: ~156 .mjs/.ts files in harness/**`);
   console.log(`   Estimated functions to split: ~200-250 top-level exports`);
   console.log(
     `   Total effort: ${issueGroups.reduce((sum, g) => sum + g.estimate, 0)} story points across ${issueGroups.length} phases`,

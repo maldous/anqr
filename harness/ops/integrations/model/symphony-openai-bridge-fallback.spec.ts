@@ -6,7 +6,7 @@
  * - Fallback to alternate providers on rate limits
  * - Credit gate integration for provider selection
  *
- * Run: npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
+ * Run: npx vitest run harness/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";

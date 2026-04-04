@@ -61,13 +61,13 @@ export function printTestResults(testResults) {
     console.log("   3. linear-client.mjs - Understand Linear API client tools");
     console.log("   4. agent-workflow-create-issue.mjs - Use the reusable workflow");
     console.log(
-      "   5. scripts/ops/integrations/linear/README-workflow.md - Review workflow documentation",
+      "   5. harness/ops/integrations/linear/README-workflow.md - Review workflow documentation",
     );
 
     console.log("\n🔧 PROGRAMMATIC USAGE:");
     console.log("   // Import the workflow function");
     console.log(
-      '   import { workflowCreateLinearIssue } from "./scripts/ops/integrations/linear/agent-workflow-create-issue.mjs";',
+      '   import { workflowCreateLinearIssue } from "./harness/ops/integrations/linear/agent-workflow-create-issue.mjs";',
     );
     console.log("");
     console.log("   // Create an issue programmatically");

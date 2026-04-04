@@ -1,4 +1,4 @@
-// Generated from ../../../scripts/ops/tools/verify-webhook-system.mjs:58
+// Generated from ../../../harness/ops/tools/verify-webhook-system.mjs:58
 
 import { getQueueSnapshot, feedQueue } from "../../orchestration/symphony-queue-control.mjs";
 import { listIssuesByState } from "../../integrations/linear/linear-client.mjs";
@@ -133,7 +133,7 @@ export async function main() {
       for (const issue of retryExhausted) {
         logWarn(`    - ${issue.identifier}: ${issue.reason}`);
       }
-      logInfo("\n  💡 Run: node scripts/ops/tools/reset-retry-exhausted.mjs --all");
+      logInfo("\n  💡 Run: node harness/ops/tools/reset-retry-exhausted.mjs --all");
     } else {
       logInfo("  ✅ No retry-exhausted issues found");
     }
@@ -168,7 +168,7 @@ export async function main() {
       for (const issue of staleIssues) {
         logWarn(`    - ${issue.identifier} (${issue.ageMinutes} minutes old)`);
       }
-      logInfo("\n  💡 Run: node scripts/ops/tools/recover-stale-in-progress.mjs --dry-run");
+      logInfo("\n  💡 Run: node harness/ops/tools/recover-stale-in-progress.mjs --dry-run");
     } else {
       logInfo("  ✅ No stale In Progress issues found");
     }

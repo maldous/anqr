@@ -9,7 +9,7 @@
  * could silently reuse a client created with a different cwd, leaking
  * execution into the wrong directory.
  *
- * Run: npx vitest run scripts/ops/integrations/model/codebuff-cwd-isolation.spec.ts
+ * Run: npx vitest run harness/ops/integrations/model/codebuff-cwd-isolation.spec.ts
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";

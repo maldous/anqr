@@ -15,7 +15,7 @@ Sends email notifications via `msmtp` with rate limiting and deduplication.
 **Usage:**
 
 ```bash
-node scripts/ops/notifications/notify.mjs --channel=email
+node harness/ops/notifications/notify.mjs --channel=email
 ```
 
 ### Discord via OpenClaw (`openclaw-discord.mjs`)
@@ -99,5 +99,5 @@ node -e "import('./openclaw-discord.mjs').then(m => m.sendDiscordMessage('Test n
 Test email notification:
 
 ```bash
-node scripts/ops/notifications/notify.mjs --channel=email --dry-run
+node harness/ops/notifications/notify.mjs --channel=email --dry-run
 ```

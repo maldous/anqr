@@ -1,4 +1,4 @@
-// Generated from ../../scripts/ops/linear-issue-review.mjs:158
+// Generated from ../../harness/ops/linear-issue-review.mjs:158
 
 export const SCOPE_UPDATES = {
   "ANQ-376": {
@@ -71,7 +71,7 @@ export const SCOPE_UPDATES = {
   },
   "ANQ-306": {
     comment:
-      "**Scope review (architecture alignment):** Update reference from 'tools/harness/*' to 'scripts/ops/*'. Current enforcement: .dependency-cruiser.cjs active, .dependency-cruiser.architecture.cjs active, .dependency-cruiser.contracts.cjs active, eslint-plugin-boundaries active. Architecture now enforced at packages/ level, not src/ layers.",
+      "**Scope review (architecture alignment):** Update reference from 'tools/harness/*' to 'harness/ops/*'. Current enforcement: .dependency-cruiser.cjs active, .dependency-cruiser.architecture.cjs active, .dependency-cruiser.contracts.cjs active, eslint-plugin-boundaries active. Architecture now enforced at packages/ level, not src/ layers.",
   },
   "ANQ-302": {
     comment:

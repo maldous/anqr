@@ -58,7 +58,7 @@ Do not imply broader launch readiness unless the docs are updated first.
 ## Scope truth
 
 - `packages/*/*`, `apps/web`, `netlify/*`, and `public/*` are the current product-architecture scope.
-- `scripts/ops/*` and `services/systemd/*` are the harness/runtime surface.
+- `harness/ops/*` and `services/systemd/*` are the harness/runtime surface.
 - `docs/*` is live doctrine.
 - `migration/*` is archive-only historical context.
 - `src/*` is transitional residue, not a target architecture.
@@ -71,7 +71,7 @@ Do not imply broader launch readiness unless the docs are updated first.
 4. Do not add dependencies unless the issue explicitly requires it.
 5. Keep launch truth in docs, not in ad hoc prompt fragments or issue comments.
 6. Escalate secrets, signing material, billing, ads, legal/compliance, and launch-claim changes to humans.
-7. Preserve operator stability for `scripts/ops/*` and `services/systemd/*`.
+7. Preserve operator stability for `harness/ops/*` and `services/systemd/*`.
 
 ## Validation and evidence
 

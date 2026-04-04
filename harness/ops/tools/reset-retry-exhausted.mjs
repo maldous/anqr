@@ -4,8 +4,8 @@
  * reset-retry-exhausted.mjs — Reset retry_exhausted state for blocked issues
  *
  * Usage:
- *   node scripts/ops/tools/reset-retry-exhausted.mjs --dry-run
- *   node scripts/ops/tools/reset-retry-exhausted.mjs [--all] [--id ANQ-1234]
+ *   node harness/ops/tools/reset-retry-exhausted.mjs --dry-run
+ *   node harness/ops/tools/reset-retry-exhausted.mjs [--all] [--id ANQ-1234]
  */
 
 import { listIssuesByState } from "../integrations/linear/linear-client.mjs";

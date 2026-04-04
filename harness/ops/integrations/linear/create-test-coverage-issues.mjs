@@ -267,7 +267,7 @@ Expand harness model routing tests to cover edge cases and policy enforcement
 
 ## Owned Surfaces
 
-- \`scripts/ops/integrations/model/**/*.mjs\`
+- \`harness/ops/integrations/model/**/*.mjs\`
 
 ## Current Coverage
 

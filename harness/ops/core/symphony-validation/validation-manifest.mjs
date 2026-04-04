@@ -1,4 +1,4 @@
-// Generated from ../../../scripts/ops/core/symphony-validation.mjs:6
+// Generated from ../../../harness/ops/core/symphony-validation.mjs:6
 
 export const VALIDATION_MANIFEST = {
   typecheck: {
@@ -7,7 +7,7 @@ export const VALIDATION_MANIFEST = {
     fullProject: true,
   },
   lint: {
-    command: "npx oxlint -c oxlint.json src/ packages/ apps/ scripts/",
+    command: "npx oxlint -c oxlint.json src/ packages/ apps/ harness/",
     timeoutMs: 60_000,
     fullProject: true,
   },
@@ -15,11 +15,11 @@ export const VALIDATION_MANIFEST = {
     command: "npx cspell --no-progress --no-must-find-files",
     timeoutMs: 60_000,
     changedOnly: true,
-    fullProjectGlobs: ['"src/**/*.{ts,tsx}"', '"scripts/**/*.{mjs,js}"', '"docs/**/*.md"'],
+    fullProjectGlobs: ['"src/**/*.{ts,tsx}"', '"harness/**/*.{mjs,js}"', '"docs/**/*.md"'],
     extensions: /\.(ts|tsx|js|mjs|md|json)$/,
   },
   astDensity: {
-    command: "node scripts/audit-ast-density.mjs --threshold 1",
+    command: "node harness/audit-ast-density.mjs --threshold 1",
     timeoutMs: 120_000,
     changedOnly: true,
     fullProject: true,

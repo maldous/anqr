@@ -1,4 +1,4 @@
-// Generated from ../../../../scripts/ops/integrations/linear/review-specified-issues.mjs:36
+// Generated from ../../../../harness/ops/integrations/linear/review-specified-issues.mjs:36
 
 export const COMPLETION_CHECKS = {
   "ANQ-1137": {
@@ -83,10 +83,10 @@ Linear export automation successfully installed and validated:
 All Linear RAG Phase 1 components implemented and ready for deployment:
 
 **Delivered:**
-- Export script: \`scripts/ops/integrations/linear/export-issues.mjs\`
-- RAG index builder: \`scripts/ops/lib/rag/build-index-linear.mjs\`
-- Linear chunker: \`scripts/ops/lib/rag/linear-chunker.mjs\`
-- Search integration: \`scripts/ops/lib/search/linear-search.mjs\`
+- Export script: \`harness/ops/integrations/linear/export-issues.mjs\`
+- RAG index builder: \`harness/ops/lib/rag/build-index-linear.mjs\`
+- Linear chunker: \`harness/ops/lib/rag/linear-chunker.mjs\`
+- Search integration: \`harness/ops/lib/search/linear-search.mjs\`
 - Systemd services: \`anqr-linear-export.{service,timer}\`, \`anqr-rag-rebuild-linear.{service,timer}\`
 - Monitoring: Integrated into \`harness-report.mjs\`
 
@@ -124,14 +124,14 @@ This issue tracks the execution of manual validation steps from ANQ-1129. While 
     evidenceFile: null,
     status: "IMPLEMENTED_AS_PART_OF_1129",
     reason:
-      "Linear Issue Search Integration was implemented as part of ANQ-1129. Search function exists at scripts/ops/lib/search/linear-search.mjs.",
+      "Linear Issue Search Integration was implemented as part of ANQ-1129. Search function exists at harness/ops/lib/search/linear-search.mjs.",
     action: "MARK_DONE",
     comment: `✅ **Implemented in ANQ-1129**
 
 Linear issue search integration completed as part of Phase 1 RAG implementation:
 
 **Delivered:**
-- Search function: \`scripts/ops/lib/search/linear-search.mjs\`
+- Search function: \`harness/ops/lib/search/linear-search.mjs\`
 - Semantic similarity search via cosine distance
 - Returns top-K results with metadata (identifier, title, state, priority, score, excerpt)
 - Hybrid lexical + semantic ranking
@@ -172,15 +172,15 @@ Linear export and RAG index systemd services completed as part of Phase 1 implem
     evidenceFile: null,
     status: "IMPLEMENTED_AS_PART_OF_1129",
     reason:
-      "Linear RAG Index Builder was implemented as part of ANQ-1129. Index builder exists at scripts/ops/lib/rag/build-index-linear.mjs.",
+      "Linear RAG Index Builder was implemented as part of ANQ-1129. Index builder exists at harness/ops/lib/rag/build-index-linear.mjs.",
     action: "MARK_DONE",
     comment: `✅ **Implemented in ANQ-1129**
 
 Linear RAG index builder completed as part of Phase 1 implementation:
 
 **Delivered:**
-- Index builder: \`scripts/ops/lib/rag/build-index-linear.mjs\`
-- Linear chunker: \`scripts/ops/lib/rag/linear-chunker.mjs\`
+- Index builder: \`harness/ops/lib/rag/build-index-linear.mjs\`
+- Linear chunker: \`harness/ops/lib/rag/linear-chunker.mjs\`
 - One chunk per issue strategy
 - Metadata preservation (identifier, state, priority, updatedAt)
 - Embeddings via Ollama

@@ -4,7 +4,7 @@
  * close-anq-1097.mjs — Close ANQ-1097 issue that's stuck in loop
  *
  * ANQ-1097 is stuck in "In Progress" but the work is complete:
- * - File scripts/ops/integrations/linear/reopen-stuck-issues.mjs was already deleted
+ * - File harness/ops/integrations/linear/reopen-stuck-issues.mjs was already deleted
  * - Evidence file confirms resolution
  * - Issue needs to be marked Done to stop the loop
  */
@@ -35,7 +35,7 @@ async function main() {
   // Add completion comment
   await addComment(
     issue.id,
-    `✅ **Manually closed** — The referenced file \`scripts/ops/integrations/linear/reopen-stuck-issues.mjs\` was already deleted in commit \`7238d4904\`.
+    `✅ **Manually closed** — The referenced file \`harness/ops/integrations/linear/reopen-stuck-issues.mjs\` was already deleted in commit \`7238d4904\`.
 
 Evidence file created at \`docs/harness/evidence/ANQ-1097-evidence.md\` confirms resolution.
 

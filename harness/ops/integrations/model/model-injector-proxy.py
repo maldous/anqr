@@ -16,7 +16,7 @@ Responsibilities:
   - Log all routed requests for audit
 
 Usage:
-  python3 scripts/ops/model-injector-proxy.py [--port 8400]
+  python3 harness/ops/model-injector-proxy.py [--port 8400]
 """
 
 import argparse

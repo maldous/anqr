@@ -1,6 +1,6 @@
 # Harness runtime contract
 
-`scripts/ops/` is the canonical harness runtime.
+`harness/ops/` is the canonical harness runtime.
 
 ## Own here
 
@@ -25,7 +25,7 @@
 ## Directory structure
 
 ```
-scripts/ops/
+harness/ops/
 ├── core/                  # Configuration and shared constants
 ├── integrations/          # External service integrations
 │   ├── linear/            # Linear issue tracking

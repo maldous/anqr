@@ -19,13 +19,13 @@ Main execution agent that picks up Linear issues and implements them via AI agen
 
 ```bash
 # Single execution cycle
-node scripts/ops/orchestration/symphony-runner.mjs --once
+node harness/ops/orchestration/symphony-runner.mjs --once
 
 # Dry run (no changes)
-node scripts/ops/orchestration/symphony-runner.mjs --once --dry-run
+node harness/ops/orchestration/symphony-runner.mjs --once --dry-run
 
 # Show status
-node scripts/ops/orchestration/symphony-runner.mjs --status
+node harness/ops/orchestration/symphony-runner.mjs --status
 ```
 
 **Worktree support:**
@@ -40,22 +40,22 @@ Queue management for Symphony execution pipeline.
 
 ```bash
 # Check queue health
-node scripts/ops/orchestration/symphony-queue-control.mjs --check
+node harness/ops/orchestration/symphony-queue-control.mjs --check
 
 # Feed issues from Backlog to Todo
-node scripts/ops/orchestration/symphony-queue-control.mjs --feed
+node harness/ops/orchestration/symphony-queue-control.mjs --feed
 
 # Drain overflow issues from Todo to Backlog
-node scripts/ops/orchestration/symphony-queue-control.mjs --drain
+node harness/ops/orchestration/symphony-queue-control.mjs --drain
 
 # Enforce concurrent limits and detect stuck work
-node scripts/ops/orchestration/symphony-queue-control.mjs --enforce
+node harness/ops/orchestration/symphony-queue-control.mjs --enforce
 
 # Run all operations
-node scripts/ops/orchestration/symphony-queue-control.mjs --all
+node harness/ops/orchestration/symphony-queue-control.mjs --all
 
 # Dry run (no changes)
-node scripts/ops/orchestration/symphony-queue-control.mjs --all --dry-run
+node harness/ops/orchestration/symphony-queue-control.mjs --all --dry-run
 ```
 
 ### symphony-worktree-pool.mjs
@@ -73,22 +73,22 @@ Git worktree pool management for concurrent Symphony execution.
 
 ```bash
 # Initialize worktree pool (default: 2 worktrees)
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init [count]
+node harness/ops/orchestration/symphony-worktree-pool.mjs init [count]
 
 # Initialize with 4 worktrees
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 4
+node harness/ops/orchestration/symphony-worktree-pool.mjs init 4
 
 # Show worktree status (human-readable)
-node scripts/ops/orchestration/symphony-worktree-pool.mjs status
+node harness/ops/orchestration/symphony-worktree-pool.mjs status
 
 # List worktrees (JSON output)
-node scripts/ops/orchestration/symphony-worktree-pool.mjs list
+node harness/ops/orchestration/symphony-worktree-pool.mjs list
 
 # Repair corrupted worktrees
-node scripts/ops/orchestration/symphony-worktree-pool.mjs repair
+node harness/ops/orchestration/symphony-worktree-pool.mjs repair
 
 # Cleanup all Symphony worktrees
-node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
+node harness/ops/orchestration/symphony-worktree-pool.mjs cleanup
 ```
 
 **Worktree naming:**
@@ -105,7 +105,7 @@ This is the canonical execution mode for Symphony runners.
 1. **Initialize worktree pool:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2
+   node harness/ops/orchestration/symphony-worktree-pool.mjs init 2
    ```
 
 2. **Install systemd template services:**
@@ -137,7 +137,7 @@ journalctl --user -u anqr-symphony-runner@1.service -f
 journalctl --user -u anqr-symphony-runner@2.service -f
 
 # Check worktree status
-node scripts/ops/orchestration/symphony-worktree-pool.mjs status
+node harness/ops/orchestration/symphony-worktree-pool.mjs status
 ```
 
 ### Scaling
@@ -146,7 +146,7 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs status
 
 ```bash
 # Create additional worktree
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 3
+node harness/ops/orchestration/symphony-worktree-pool.mjs init 3
 
 # Enable new instance
 systemctl --user enable --now anqr-symphony-runner@3.timer
@@ -169,18 +169,18 @@ systemctl --user disable anqr-symphony-runner@3.timer
 
 ```bash
 # Repair all worktrees
-node scripts/ops/orchestration/symphony-worktree-pool.mjs repair
+node harness/ops/orchestration/symphony-worktree-pool.mjs repair
 
 # If repair fails, recreate:
-node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2
+node harness/ops/orchestration/symphony-worktree-pool.mjs cleanup
+node harness/ops/orchestration/symphony-worktree-pool.mjs init 2
 ```
 
 **Stuck runner:**
 
 ```bash
 # Check for stuck work
-node scripts/ops/orchestration/symphony-queue-control.mjs --enforce
+node harness/ops/orchestration/symphony-queue-control.mjs --enforce
 
 # Restart specific instance
 systemctl --user restart anqr-symphony-runner@1.service
@@ -190,7 +190,7 @@ systemctl --user restart anqr-symphony-runner@1.service
 
 ```bash
 # Check lock status
-node scripts/ops/orchestration/symphony-runner.mjs --status
+node harness/ops/orchestration/symphony-runner.mjs --status
 
 # Locks are worktree-specific: /run/user/${UID}/symphony-runner/lock-wt1
 # Main worktree uses: /run/user/${UID}/symphony-runner/lock-main
@@ -244,7 +244,7 @@ The `symphony-state.mjs` lease system prevents concurrent work on the same issue
 
 ## Configuration
 
-Edit `scripts/ops/core/symphony-config.mjs` to adjust:
+Edit `harness/ops/core/symphony-config.mjs` to adjust:
 
 - `MAX_CONCURRENT_AGENTS` — maximum concurrent issue executions (default: 1)
 - `TARGET_MIN` / `TARGET_MAX` — queue depth targets

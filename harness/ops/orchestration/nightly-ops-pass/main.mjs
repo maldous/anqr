@@ -1,4 +1,4 @@
-// Generated from ../../../scripts/ops/orchestration/nightly-ops-pass.mjs:73
+// Generated from ../../../harness/ops/orchestration/nightly-ops-pass.mjs:73
 
 import { archiveReport } from "./archive-report.mjs";
 import { dryRun } from "./dry-run.mjs";
@@ -25,13 +25,13 @@ export async function main() {
     },
     {
       name: "harness-report",
-      command: "node scripts/ops/harness-report.mjs full",
+      command: "node harness/ops/harness-report.mjs full",
       severity: "advisory",
     },
     {
       name: "ast-density",
       command:
-        'bash -c \'output=$(node scripts/audit-ast-density.mjs --threshold 1); if [ -n "$output" ]; then echo "$output"; exit 1; fi\'',
+        'bash -c \'output=$(node harness/audit-ast-density.mjs --threshold 1); if [ -n "$output" ]; then echo "$output"; exit 1; fi\'',
       severity: "advisory",
     },
     ...(skipTests
@@ -58,13 +58,13 @@ export async function main() {
             severity: "blocking",
             timeout: 600_000,
           },
-          { name: "sonar-export", command: "bash scripts/sonar-export.sh", severity: "blocking" },
+          { name: "sonar-export", command: "bash harness/sonar-export.sh", severity: "blocking" },
           ...(dryRun
             ? []
             : [
                 {
                   name: "sonar-linear-audit",
-                  command: "node scripts/ops/sonar-linear-audit.mjs",
+                  command: "node harness/ops/sonar-linear-audit.mjs",
                   severity: "blocking",
                 },
               ]),
@@ -72,27 +72,27 @@ export async function main() {
       : []),
     {
       name: "issue-hygiene",
-      command: `node scripts/ops/integrations/linear/issue-hygiene.mjs${dryRunFlag}`,
+      command: `node harness/ops/integrations/linear/issue-hygiene.mjs${dryRunFlag}`,
       severity: "independent",
     },
     {
       name: "queue-control",
-      command: `node scripts/ops/symphony-queue-control.mjs --all${dryRunFlag}`,
+      command: `node harness/ops/symphony-queue-control.mjs --all${dryRunFlag}`,
       severity: "independent",
     },
     {
       name: "guardian",
-      command: `node scripts/ops/linear-guardian.mjs${dryRunFlag}`,
+      command: `node harness/ops/linear-guardian.mjs${dryRunFlag}`,
       severity: "independent",
     },
     {
       name: "notify",
-      command: `node scripts/ops/notify.mjs --channel=all${dryRunFlag}`,
+      command: `node harness/ops/notify.mjs --channel=all${dryRunFlag}`,
       severity: "independent",
     },
     {
       name: "latency-report",
-      command: `node scripts/ops/orchestration/latency-report.mjs --alert`,
+      command: `node harness/ops/orchestration/latency-report.mjs --alert`,
       severity: "advisory",
     },
   ];

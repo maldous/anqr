@@ -178,7 +178,7 @@ When the local MCP server is unavailable or returns no results, the wrapper fall
 
 ## Logging
 
-Uses the shared logger from `scripts/ops/lib/logger.mjs`:
+Uses the shared logger from `harness/ops/lib/logger.mjs`:
 
 ```js
 import { createLogger } from "../../lib/logger.mjs";

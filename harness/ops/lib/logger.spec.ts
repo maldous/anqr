@@ -7,7 +7,7 @@
  * - Signal handling (SIGUSR1/SIGUSR2)
  * - Log level control
  *
- * Run: npx vitest run scripts/ops/lib/logger.spec.ts
+ * Run: npx vitest run harness/ops/lib/logger.spec.ts
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";

@@ -1,4 +1,4 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:253
+// Generated from ../../../../harness/ops/runtime/symphony/symphony-agent.mjs:253
 
 import { relative } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -29,7 +29,7 @@ export function toolDeleteFile(projectRoot, args) {
     return "Error: Not inside a git repository — delete_file is disabled.";
   }
 
-  // Guard: block deletion of top-level directories (e.g. src/, scripts/, docs/)
+  // Guard: block deletion of top-level directories (e.g. src/, harness/, docs/)
   const depth = rel.split("/").length;
   if (depth === 1 && existsSync(fullPath) && statSync(fullPath).isDirectory()) {
     return `Error: Cannot delete top-level directory "${rel}/". Delete its contents individually instead.`;

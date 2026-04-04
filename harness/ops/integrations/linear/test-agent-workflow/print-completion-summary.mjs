@@ -31,9 +31,9 @@ export function printCompletionSummary(_testResults) {
 
   // Mark the workflow creation as complete
   console.log("\n📋 WORKFLOW CREATION COMPLETE:");
-  console.log("   - Created: scripts/ops/integrations/linear/agent-workflow-create-issue.mjs");
-  console.log("   - Created: scripts/ops/integrations/linear/README-workflow.md");
-  console.log("   - Created: scripts/ops/integrations/linear/test-agent-workflow.mjs");
+  console.log("   - Created: harness/ops/integrations/linear/agent-workflow-create-issue.mjs");
+  console.log("   - Created: harness/ops/integrations/linear/README-workflow.md");
+  console.log("   - Created: harness/ops/integrations/linear/test-agent-workflow.mjs");
   console.log("   - Verified: All acceptance criteria met");
   console.log("   - Tested: Comprehensive test suite passed");
   console.log("   - Ready: Workflow is ready for production use");

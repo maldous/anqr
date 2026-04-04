@@ -1,4 +1,4 @@
-// Generated from ../../../scripts/ops/orchestration/analyze-worktree-benchmark.mjs:269
+// Generated from ../../../harness/ops/orchestration/analyze-worktree-benchmark.mjs:269
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -25,13 +25,13 @@ export async function main() {
 
 Examples:
   # Extract baseline (1 worktree, 4 hours)
-  node scripts/ops/orchestration/analyze-worktree-benchmark.mjs --extract "2026-01-01T10:00:00Z" "2026-01-01T14:00:00Z" 1 > baseline.json
+  node harness/ops/orchestration/analyze-worktree-benchmark.mjs --extract "2026-01-01T10:00:00Z" "2026-01-01T14:00:00Z" 1 > baseline.json
   
   # Extract concurrent (2 worktrees, 4 hours)
-  node scripts/ops/orchestration/analyze-worktree-benchmark.mjs --extract "2026-01-01T16:00:00Z" "2026-01-01T20:00:00Z" 2 > concurrent.json
+  node harness/ops/orchestration/analyze-worktree-benchmark.mjs --extract "2026-01-01T16:00:00Z" "2026-01-01T20:00:00Z" 2 > concurrent.json
   
   # Compare and generate evidence
-  node scripts/ops/orchestration/analyze-worktree-benchmark.mjs --compare baseline.json concurrent.json
+  node harness/ops/orchestration/analyze-worktree-benchmark.mjs --compare baseline.json concurrent.json
 `);
     process.exit(0);
   }

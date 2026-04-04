@@ -1,4 +1,4 @@
-// Generated from ../../../../scripts/ops/integrations/linear/test-agent-workflow.mjs:159
+// Generated from ../../../../harness/ops/integrations/linear/test-agent-workflow.mjs:159
 
 import { workflowCreateLinearIssue } from "../agent-workflow-create-issue.mjs";
 
@@ -28,8 +28,8 @@ docs-harness / current-platform / launch-convergence / operational-external
 - relevant issue context
 
 ## Touched Paths
-- scripts/ops/integrations/linear/test-agent-workflow.mjs
-- scripts/ops/integrations/linear/agent-workflow-create-issue.mjs
+- harness/ops/integrations/linear/test-agent-workflow.mjs
+- harness/ops/integrations/linear/agent-workflow-create-issue.mjs
 
 ## Constraints
 - Must use existing Linear client tools
@@ -39,7 +39,7 @@ docs-harness / current-platform / launch-convergence / operational-external
 
 ## Verification
 \`\`\`bash
-node scripts/ops/integrations/linear/test-agent-workflow.mjs
+node harness/ops/integrations/linear/test-agent-workflow.mjs
 \`\`\`
 
 ## Expected Evidence

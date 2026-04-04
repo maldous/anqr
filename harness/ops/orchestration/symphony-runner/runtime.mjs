@@ -43,7 +43,7 @@ if (process.env.ANQR_WORKTREE_ID) {
     `[runner] CRITICAL: Cannot run in main repo. Must run in a worktree (e.g., /home/user/src/anqr-wt1) or set ANQR_WORKTREE_ID environment variable.`,
   );
   logError(
-    `[runner] Example: ANQR_WORKTREE_ID=wt1 node scripts/ops/orchestration/symphony-runner.mjs --once`,
+    `[runner] Example: ANQR_WORKTREE_ID=wt1 node harness/ops/orchestration/symphony-runner.mjs --once`,
   );
   process.exit(1);
 }

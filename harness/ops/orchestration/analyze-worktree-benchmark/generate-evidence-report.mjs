@@ -1,4 +1,4 @@
-// Generated from ../../../scripts/ops/orchestration/analyze-worktree-benchmark.mjs:143
+// Generated from ../../../harness/ops/orchestration/analyze-worktree-benchmark.mjs:143
 
 import { resolve } from "node:path";
 import { writeFileSync } from "node:fs";
@@ -88,8 +88,8 @@ ${
 
 Concurrent execution with ${concurrentMetrics.worktreeCount} worktrees is ready for production:
 
-1. Update \`MAX_CONCURRENT_AGENTS\` in \`scripts/ops/core/symphony-config.mjs\` to ${concurrentMetrics.worktreeCount}
-2. Enable production worktree pool: \`node scripts/ops/orchestration/symphony-worktree-pool.mjs init ${concurrentMetrics.worktreeCount}\`
+1. Update \`MAX_CONCURRENT_AGENTS\` in \`harness/ops/core/symphony-config.mjs\` to ${concurrentMetrics.worktreeCount}
+2. Enable production worktree pool: \`node harness/ops/orchestration/symphony-worktree-pool.mjs init ${concurrentMetrics.worktreeCount}\`
 3. Enable systemd timers: \`systemctl --user enable --now anqr-symphony-runner@{1..${concurrentMetrics.worktreeCount}}.timer\`
 4. Monitor for 7 days (Phase 3)
 `

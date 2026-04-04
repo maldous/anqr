@@ -107,10 +107,10 @@ console.log(`${stats.totalEntries} chunks across ${stats.totalFiles} files`);
 
 ```bash
 # Incremental build/update
-node --max-old-space-size=8192 scripts/ops/lib/rag/build-index.mjs
+node --max-old-space-size=8192 harness/ops/lib/rag/build-index.mjs
 
 # Clear and rebuild from scratch
-node --max-old-space-size=8192 scripts/ops/lib/rag/build-index.mjs --clear
+node --max-old-space-size=8192 harness/ops/lib/rag/build-index.mjs --clear
 ```
 
 ## Notes on chunking

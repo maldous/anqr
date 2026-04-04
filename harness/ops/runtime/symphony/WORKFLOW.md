@@ -11,6 +11,6 @@ Use these current sources instead:
 3. `docs/README.md`
 4. `docs/program/01-anqr-1.0-definition.md`
 5. `docs/harness/00-index.md`
-6. `scripts/ops/symphony/WORKFLOW.md`
+6. `harness/ops/symphony/WORKFLOW.md`
 
 If this file disagrees with the current repo or canonical docs, this file is wrong.

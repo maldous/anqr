@@ -259,6 +259,6 @@ Services that should add notifications:
 
 ## See Also
 
-- `scripts/ops/lib/update-memory.mjs` - MEMORY.md update utility (used internally)
-- `scripts/ops/integrations/notifications/openclaw-discord.mjs` - Discord integration via OpenClaw Gateway
+- `harness/ops/lib/update-memory.mjs` - MEMORY.md update utility (used internally)
+- `harness/ops/integrations/notifications/openclaw-discord.mjs` - Discord integration via OpenClaw Gateway
 - `knowledge.md` - Full service restart procedure documentation

@@ -21,14 +21,14 @@ This is the primary workflow script that agents can use to create Linear issues.
 
 ```bash
 # Basic usage
-node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
+node harness/ops/integrations/linear/agent-workflow-create-issue.mjs \
   --title "Fix validation error in QR generation" \
   --description "QR generation fails when input contains special characters" \
   --priority 2 \
   --labels harness,bug
 
 # With state specification
-node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
+node harness/ops/integrations/linear/agent-workflow-create-issue.mjs \
   --title "Update README with new agent workflow" \
   --description "Document the new agent workflow for creating Linear issues" \
   --priority 3 \
@@ -78,7 +78,7 @@ node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
 You can also import and use the workflow function programmatically:
 
 ```javascript
-import { workflowCreateLinearIssue } from "./scripts/ops/integrations/linear/agent-workflow-create-issue.mjs";
+import { workflowCreateLinearIssue } from "./harness/ops/integrations/linear/agent-workflow-create-issue.mjs";
 
 // Create an issue programmatically
 const issue = await workflowCreateLinearIssue({
@@ -223,7 +223,7 @@ LABELS = {
 ### Creating a Documentation Issue
 
 ```bash
-node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
+node harness/ops/integrations/linear/agent-workflow-create-issue.mjs \
   --title "Update AGENTS.md with new workflow documentation" \
   --description "Document the new agent workflow for creating Linear issues following best practices" \
   --priority 3 \
@@ -233,7 +233,7 @@ node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
 ### Creating a Bug Report
 
 ```bash
-node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
+node harness/ops/integrations/linear/agent-workflow-create-issue.mjs \
   --title "Fix: QR generation fails with special characters" \
   --description "When QR input contains <, >, or & characters, generation fails with validation error" \
   --priority 2 \
@@ -243,7 +243,7 @@ node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
 ### Creating a Feature Request
 
 ```bash
-node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs \
+node harness/ops/integrations/linear/agent-workflow-create-issue.mjs \
   --title "Add support for animated QR codes" \
   --description "Implement support for generating animated QR codes using APNG format" \
   --priority 3 \
@@ -297,7 +297,7 @@ const agentsMd = await readFile("AGENTS.md", "utf8");
 const readme = await readFile("README.md", "utf8");
 
 // 2. Understand the workflow
-const workflow = await import("./scripts/ops/integrations/linear/agent-workflow-create-issue.mjs");
+const workflow = await import("./harness/ops/integrations/linear/agent-workflow-create-issue.mjs");
 
 // 3. Create the issue using the workflow
 const issue = await workflow.workflowCreateLinearIssue({
@@ -363,7 +363,7 @@ For debugging, you can run the script with additional logging:
 
 ```bash
 # Enable verbose logging
-DEBUG=linear-workflow* node scripts/ops/integrations/linear/agent-workflow-create-issue.mjs --title "Test issue"
+DEBUG=linear-workflow* node harness/ops/integrations/linear/agent-workflow-create-issue.mjs --title "Test issue"
 ```
 
 ## 📈 Success Metrics

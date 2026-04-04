@@ -4,7 +4,7 @@
  * Covers dynamic context limits, error classification, rate-limit throttling,
  * TPM/RPM sliding-window tracking, and proactive TPM checks.
  *
- * Run: npx vitest run scripts/ops/integrations/model/symphony-adaptive-context.spec.ts
+ * Run: npx vitest run harness/ops/integrations/model/symphony-adaptive-context.spec.ts
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";

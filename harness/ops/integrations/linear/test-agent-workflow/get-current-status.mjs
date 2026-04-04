@@ -1,4 +1,4 @@
-// Generated from ../../../../scripts/ops/integrations/linear/test-agent-workflow.mjs:809
+// Generated from ../../../../harness/ops/integrations/linear/test-agent-workflow.mjs:809
 
 import { readFile } from "node:fs/promises";
 
@@ -21,9 +21,9 @@ export async function getCurrentStatus() {
     const requiredFiles = [
       "AGENTS.md",
       "README.md",
-      "scripts/ops/integrations/linear/linear-client.mjs",
-      "scripts/ops/integrations/linear/agent-workflow-create-issue.mjs",
-      "scripts/ops/integrations/linear/README-workflow.md",
+      "harness/ops/integrations/linear/linear-client.mjs",
+      "harness/ops/integrations/linear/agent-workflow-create-issue.mjs",
+      "harness/ops/integrations/linear/README-workflow.md",
     ];
 
     console.log("\n📁 Required Files:");
@@ -39,7 +39,7 @@ export async function getCurrentStatus() {
     // Check Linear client tools
     console.log("\n🔧 Linear Client Tools:");
     try {
-      const linearClient = await readFile("scripts/ops/integrations/linear/linear-client.mjs");
+      const linearClient = await readFile("harness/ops/integrations/linear/linear-client.mjs");
 
       if (linearClient.includes("export async function createIssue")) {
         console.log("   ✅ createIssue() function available");

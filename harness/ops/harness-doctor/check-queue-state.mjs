@@ -1,4 +1,4 @@
-// Generated from ../../scripts/ops/harness-doctor.mjs:217
+// Generated from ../../harness/ops/harness-doctor.mjs:217
 
 import { execFileSync } from "node:child_process";
 
@@ -6,7 +6,7 @@ import { ROOT } from "./root.mjs";
 
 export function checkQueueState() {
   try {
-    const out = execFileSync("node", ["scripts/ops/symphony-queue-control.mjs", "--check"], {
+    const out = execFileSync("node", ["harness/ops/symphony-queue-control.mjs", "--check"], {
       cwd: ROOT,
       stdio: "pipe",
       encoding: "utf-8",

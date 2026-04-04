@@ -42,7 +42,7 @@ async function main() {
     logInfo(`[close-reviewed] Found: ${issue1093.title} (state: ${issue1093.state?.name})`);
     await addComment(
       issue1093.id,
-      `📋 **Backlog Review Finding** — No longer applicable.\n\nThe referenced file \`scripts/ops/integrations/linear/reopen-stuck-issues.mjs\` was deleted in commit \`7238d4904\`.\n\nThe Sonar issue (S7780 - use String.raw) no longer applies as the code no longer exists.\n\nPlease cancel/close this issue.`,
+      `📋 **Backlog Review Finding** — No longer applicable.\n\nThe referenced file \`harness/ops/integrations/linear/reopen-stuck-issues.mjs\` was deleted in commit \`7238d4904\`.\n\nThe Sonar issue (S7780 - use String.raw) no longer applies as the code no longer exists.\n\nPlease cancel/close this issue.`,
     );
     await updateIssue(issue1093.id, { stateId: STATES.canceled });
     logInfo(`[close-reviewed] ✅ Canceled ${anq1093}`);

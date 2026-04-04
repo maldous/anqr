@@ -1,4 +1,4 @@
-// Generated from ../../scripts/ops/harness-doctor.mjs:284
+// Generated from ../../harness/ops/harness-doctor.mjs:284
 
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
@@ -8,7 +8,7 @@ import { ROOT } from "./root.mjs";
 export function checkHarnessConfig() {
   const configs = [
     resolve(ROOT, ".env"),
-    resolve(ROOT, "scripts/ops/integrations/model/litellm-config.yaml"),
+    resolve(ROOT, "harness/ops/integrations/model/litellm-config.yaml"),
     // Note: symphony-config.yaml is optional (can be generated or use defaults)
   ];
 

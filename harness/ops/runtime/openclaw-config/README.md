@@ -25,7 +25,7 @@ Secrets are replaced with `{{PLACEHOLDER}}` values — see `.env.example` for th
 
 ```bash
 # 1. Copy structure
-cp -r scripts/ops/runtime/openclaw-config/* ~/.openclaw/
+cp -r harness/ops/runtime/openclaw-config/* ~/.openclaw/
 
 # 2. Replace placeholders with real values
 # Edit ~/.openclaw/openclaw.json and replace {{...}} placeholders

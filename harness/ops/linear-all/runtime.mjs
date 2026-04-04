@@ -6,7 +6,7 @@ import { logError } from "./logger.mjs";
 
 if (!API_KEY) {
   logError("Error: LINEAR_API_KEY environment variable is required");
-  logError("Usage: LINEAR_API_KEY=your_key node scripts/ops/linear-all.mjs");
+  logError("Usage: LINEAR_API_KEY=your_key node harness/ops/linear-all.mjs");
   process.exit(1);
 }
 

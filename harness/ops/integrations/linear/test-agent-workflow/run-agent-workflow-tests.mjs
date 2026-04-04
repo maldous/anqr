@@ -1,4 +1,4 @@
-// Generated from ../../../../scripts/ops/integrations/linear/test-agent-workflow.mjs:560
+// Generated from ../../../../harness/ops/integrations/linear/test-agent-workflow.mjs:560
 
 import { results } from "./results.mjs";
 import { testBasicIssueCreation } from "./test-basic-issue-creation.mjs";
@@ -109,10 +109,10 @@ export async function runAgentWorkflowTests() {
     console.log("2. README.md - Understand bootstrap truth and scope");
     console.log("3. linear-client.mjs - Understand Linear API client tools");
     console.log(
-      "4. scripts/ops/integrations/linear/agent-workflow-create-issue.mjs - Use the workflow",
+      "4. harness/ops/integrations/linear/agent-workflow-create-issue.mjs - Use the workflow",
     );
     console.log(
-      "5. scripts/ops/integrations/linear/README-workflow.md - Review workflow documentation",
+      "5. harness/ops/integrations/linear/README-workflow.md - Review workflow documentation",
     );
 
     // Display evidence that the workflow follows best practices

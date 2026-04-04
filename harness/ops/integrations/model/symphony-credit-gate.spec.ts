@@ -4,7 +4,7 @@
  * Tests provider selection, cooldown, retry, and metrics capture
  * as specified in testing-strategy-anqr-1.0.md
  *
- * Run: npx vitest run scripts/ops/integrations/model/symphony-credit-gate.spec.ts
+ * Run: npx vitest run harness/ops/integrations/model/symphony-credit-gate.spec.ts
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
