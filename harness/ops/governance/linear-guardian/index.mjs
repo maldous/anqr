@@ -1,0 +1,17 @@
+// Generated facade index.
+export { __dirname } from "./dirname.mjs";
+export { ROOT } from "./root.mjs";
+export { REPORT_PATH } from "./report-path.mjs";
+export { CHECK_METADATA } from "./check-metadata.mjs";
+export { buildIssueTitle } from "./build-issue-title.mjs";
+export { buildIssueBody } from "./build-issue-body.mjs";
+export { buildCommentBody } from "./build-comment-body.mjs";
+export { isStale } from "./is-stale.mjs";
+export { issueNeedsLabelHygiene } from "./issue-needs-label-hygiene.mjs";
+export { mergedLabelIds } from "./merged-label-ids.mjs";
+export { actions } from "./actions.mjs";
+export { logAction } from "./log-action.mjs";
+export { processFailingCheck } from "./process-failing-check.mjs";
+export { checkStaleIssues } from "./check-stale-issues.mjs";
+export { main } from "./main.mjs";
+export { printSummary } from "./print-summary.mjs";

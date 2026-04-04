@@ -126,7 +126,7 @@ If any test fails, the bridge **refuses to start** with exit code 1.
 A comprehensive test suite validates all normalization logic:
 
 ```bash
-npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-normalization.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-openai-bridge-normalization.spec.ts
 ```
 
 **52 tests** cover:

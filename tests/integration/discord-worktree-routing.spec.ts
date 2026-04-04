@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { isDiscordSourced } from "../../scripts/ops/core/discord-source.mjs";
+import { isDiscordSourced } from "../../harness/ops/core/discord-source.mjs";
 
 // Mock environment
 const DISCORD_LABEL_ID = "9341d965-e21d-4c3d-81b2-73beff08356d";

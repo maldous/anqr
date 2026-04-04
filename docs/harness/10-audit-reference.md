@@ -450,20 +450,20 @@ codebuff-bridge        # Start Codebuff OpenAI-compatible bridge
 
 ```json
 {
-  "harness:quick": "node scripts/ops/harness-report.mjs quick",
-  "harness:continuous": "node scripts/ops/harness-report.mjs continuous",
-  "harness:full": "node scripts/ops/harness-report.mjs full",
-  "harness:doctor": "node scripts/ops/harness-doctor.mjs",
+  "harness:quick": "node harness/ops/harness-report.mjs quick",
+  "harness:continuous": "node harness/ops/harness-report.mjs continuous",
+  "harness:full": "node harness/ops/harness-report.mjs full",
+  "harness:doctor": "node harness/ops/harness-doctor.mjs",
 
-  "symphony:run": "node scripts/ops/symphony-runner.mjs --once",
-  "symphony:run:dry-run": "node scripts/ops/symphony-runner.mjs --once --dry-run",
-  "symphony:status": "node scripts/ops/symphony-runner.mjs --status",
+  "symphony:run": "node harness/ops/symphony-runner.mjs --once",
+  "symphony:run:dry-run": "node harness/ops/symphony-runner.mjs --once --dry-run",
+  "symphony:status": "node harness/ops/symphony-runner.mjs --status",
 
-  "nightly": "node scripts/ops/nightly-ops-pass.mjs",
-  "nightly:dry-run": "node scripts/ops/nightly-ops-pass.mjs --dry-run",
+  "nightly": "node harness/ops/nightly-ops-pass.mjs",
+  "nightly:dry-run": "node harness/ops/nightly-ops-pass.mjs --dry-run",
 
-  "sonar:mail": "node scripts/ops/sonar-linear-mail.mjs",
-  "sonar:export": "bash scripts/sonar-export.sh"
+  "sonar:mail": "node harness/ops/sonar-linear-mail.mjs",
+  "sonar:export": "bash harness/sonar-export.sh"
 }
 ```
 

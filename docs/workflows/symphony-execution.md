@@ -36,8 +36,8 @@ Symphony is the autonomous engineering harness for ANQR. It operates as a govern
 ### Manual
 
 ```bash
-node scripts/ops/harness-report.mjs quick
-node scripts/ops/harness-report.mjs full
+node harness/ops/harness-report.mjs quick
+node harness/ops/harness-report.mjs full
 ```
 
 ### Nightly (systemd)
@@ -62,11 +62,11 @@ Linear (Todo issues)
 ```
 
 **Primary route:** Symphony Bridge with dynamic scoring across 40+ providers
-**Credit gate:** `scripts/ops/integrations/model/symphony-credit-gate.mjs` (tier-based, dynamic scoring)
+**Credit gate:** `harness/ops/integrations/model/symphony-credit-gate.mjs` (tier-based, dynamic scoring)
 **Local safety net:** `qwen3-coder-next:latest` via Ollama (score-capped, always ranks last)
 
-- LiteLLM config: `scripts/ops/integrations/model/litellm-config.yaml` (legacy aliases)
-- Health audit: `scripts/ops/ollama-local-audit.mjs`
+- LiteLLM config: `harness/ops/integrations/model/litellm-config.yaml` (legacy aliases)
+- Health audit: `harness/ops/ollama-local-audit.mjs`
 
 ### Provider Tier System
 
@@ -150,7 +150,7 @@ These must be marked `[HUMAN]` and excluded from the automation queue.
 
 ## Queue Control
 
-The queue controller (`scripts/ops/symphony-queue-control.mjs`) enforces execution constraints:
+The queue controller (`harness/ops/symphony-queue-control.mjs`) enforces execution constraints:
 
 ### Operations
 
@@ -163,7 +163,7 @@ The queue controller (`scripts/ops/symphony-queue-control.mjs`) enforces executi
 
 ### Configuration
 
-All parameters are centralized in `scripts/ops/symphony-config.mjs`:
+All parameters are centralized in `harness/ops/symphony-config.mjs`:
 
 ```javascript
 TARGET_MIN = 1;
@@ -210,7 +210,7 @@ SonarQube static analysis is integrated into both the nightly pipeline and the S
 
 ### Per-Finding Issue Sync
 
-The canonical module `scripts/ops/integrations/sonar/sonar-linear-sync.mjs` provides `syncSonarToLinear()` which:
+The canonical module `harness/ops/integrations/sonar/sonar-linear-sync.mjs` provides `syncSonarToLinear()` which:
 
 1. **Fetches** all open SonarQube issues (paginated, via `/api/issues/search`)
 2. **Fetches** all open `[Sonar]` Linear issues (via GraphQL)
@@ -231,7 +231,7 @@ Each Linear issue description contains:
 
 ### Nightly Audit (blocking)
 
-The nightly sonar audit (`scripts/ops/sonar-linear-audit.mjs`) runs after sonar-scanner in the nightly pipeline:
+The nightly sonar audit (`harness/ops/sonar-linear-audit.mjs`) runs after sonar-scanner in the nightly pipeline:
 
 | Parameter       | Value                                     | Reason                                                      |
 | --------------- | ----------------------------------------- | ----------------------------------------------------------- |
@@ -304,7 +304,7 @@ Each active timer kicks off the execution agent loop:
 
 Agent tools: `read_file`, `write_file`, `patch_file`, `run_command` (allowlisted), `list_directory`, `task_complete`.
 
-System prompt loaded from `scripts/ops/symphony/WORKFLOW.md` (versioned in-repo, per OpenAI Symphony spec).
+System prompt loaded from `harness/ops/symphony/WORKFLOW.md` (versioned in-repo, per OpenAI Symphony spec).
 
 ```bash
 npm run symphony:run          # execute one issue
@@ -344,13 +344,13 @@ The email ingest (`anqr-email-ingest.timer`) syncs mail via mbsync, searches for
 Requires: mbsync, notmuch, msmtp (all installed via system packages).
 
 ```bash
-node scripts/ops/email-ingest.mjs           # process emails
-node scripts/ops/email-ingest.mjs --dry-run  # preview
+node harness/ops/email-ingest.mjs           # process emails
+node harness/ops/email-ingest.mjs --dry-run  # preview
 ```
 
 ### Nightly Pipeline (02:00 daily)
 
-The nightly pipeline (`scripts/ops/nightly-ops-pass.mjs`) runs all operations in sequence:
+The nightly pipeline (`harness/ops/nightly-ops-pass.mjs`) runs all operations in sequence:
 
 ```
 1. harness-report (full)     → reports/latest.json
@@ -426,7 +426,7 @@ The Symphony runner also sends email notifications when:
 - Agent execution errors occur
 - Validation fails
 
-Email delivery uses msmtp with rate limiting (10/hour, 30/day) and deduplication (1-hour window). See `scripts/ops/lib/notify.mjs`.
+Email delivery uses msmtp with rate limiting (10/hour, 30/day) and deduplication (1-hour window). See `harness/ops/lib/notify.mjs`.
 
 ## Guardian Rules
 
@@ -444,30 +444,30 @@ The guardian is deterministic, not AI-driven:
 
 | File                                                   | Purpose                                                | Implemented in    |
 | ------------------------------------------------------ | ------------------------------------------------------ | ----------------- |
-| `scripts/ops/harness-report.mjs`                       | Deterministic checks                                   | ANQ-371 (Phase 3) |
-| `scripts/ops/linear-guardian.mjs`                      | Rule-based issue management                            | ANQ-366 (Phase 4) |
-| `scripts/ops/linear-client.mjs`                        | Linear API helpers                                     | ANQ-366 (Phase 4) |
-| `scripts/ops/ollama-local-audit.mjs`                   | Model health verification                              | ANQ-370 (Phase 2) |
-| `scripts/ops/litellm-config.yaml`                      | Local model aliases                                    | ANQ-370 (Phase 2) |
-| `scripts/ops/model-injector-proxy.py`                  | Request normalization                                  | ANQ-370 (Phase 2) |
-| `scripts/ops/symphony-config.mjs`                      | Centralized queue/execution config                     | ANQ-368 (Phase 5) |
-| `scripts/ops/symphony-queue-control.mjs`               | Queue feeder, drain, enforcement                       | ANQ-368 (Phase 5) |
-| `scripts/ops/nightly-ops-pass.mjs`                     | Nightly orchestration                                  | ANQ-367 (Phase 6) |
-| `scripts/ops/notify.mjs`                               | Notification dispatch                                  | ANQ-367 (Phase 6) |
+| `harness/ops/harness-report.mjs`                       | Deterministic checks                                   | ANQ-371 (Phase 3) |
+| `harness/ops/linear-guardian.mjs`                      | Rule-based issue management                            | ANQ-366 (Phase 4) |
+| `harness/ops/linear-client.mjs`                        | Linear API helpers                                     | ANQ-366 (Phase 4) |
+| `harness/ops/ollama-local-audit.mjs`                   | Model health verification                              | ANQ-370 (Phase 2) |
+| `harness/ops/litellm-config.yaml`                      | Local model aliases                                    | ANQ-370 (Phase 2) |
+| `harness/ops/model-injector-proxy.py`                  | Request normalization                                  | ANQ-370 (Phase 2) |
+| `harness/ops/symphony-config.mjs`                      | Centralized queue/execution config                     | ANQ-368 (Phase 5) |
+| `harness/ops/symphony-queue-control.mjs`               | Queue feeder, drain, enforcement                       | ANQ-368 (Phase 5) |
+| `harness/ops/nightly-ops-pass.mjs`                     | Nightly orchestration                                  | ANQ-367 (Phase 6) |
+| `harness/ops/notify.mjs`                               | Notification dispatch                                  | ANQ-367 (Phase 6) |
 | `services/systemd/anqr-nightly.service`                | systemd user service unit                              | ANQ-367 (Phase 6) |
 | `services/systemd/anqr-nightly.timer`                  | systemd nightly timer (02:00)                          | ANQ-367 (Phase 6) |
 | `services/systemd/anqr-queue-feeder.service`           | systemd queue maintenance + backup feed                | ANQ-373, ANQ-376  |
 | `services/systemd/anqr-queue-feeder.timer`             | systemd queue maintenance timer (15min)                | ANQ-373, ANQ-376  |
-| `scripts/ops/symphony-runner.mjs`                      | Execution orchestrator (self-feeding)                  | ANQ-374, ANQ-376  |
-| `scripts/ops/symphony-agent.mjs`                       | Tool-calling AI agent                                  | ANQ-374           |
-| `scripts/ops/symphony-credit-gate.mjs`                 | Provider cascade (credit gate)                         | ANQ-374           |
-| `scripts/ops/symphony/WORKFLOW.md`                     | Agent system prompt (versioned)                        | ANQ-374           |
+| `harness/ops/symphony-runner.mjs`                      | Execution orchestrator (self-feeding)                  | ANQ-374, ANQ-376  |
+| `harness/ops/symphony-agent.mjs`                       | Tool-calling AI agent                                  | ANQ-374           |
+| `harness/ops/symphony-credit-gate.mjs`                 | Provider cascade (credit gate)                         | ANQ-374           |
+| `harness/ops/symphony/WORKFLOW.md`                     | Agent system prompt (versioned)                        | ANQ-374           |
 | `services/systemd/anqr-linear-runner@.service`         | systemd Linear runner service (worktree template)      | ANQ-374           |
 | `services/systemd/anqr-linear-runner@.timer`           | systemd Linear runner timer (2min)                     | ANQ-374           |
-| `scripts/ops/lib/notify.mjs`                           | Email notification helper (msmtp + rate limiting)      | ANQ-377           |
-| `scripts/ops/email-ingest.mjs`                         | Email ingest (mbsync + notmuch → Linear issues)        | ANQ-377           |
+| `harness/ops/lib/notify.mjs`                           | Email notification helper (msmtp + rate limiting)      | ANQ-377           |
+| `harness/ops/email-ingest.mjs`                         | Email ingest (mbsync + notmuch → Linear issues)        | ANQ-377           |
 | `services/systemd/anqr-email-ingest.service`           | systemd email ingest service                           | ANQ-377           |
 | `services/systemd/anqr-email-ingest.timer`             | systemd email ingest timer (5min)                      | ANQ-377           |
 | `services/systemd/anqr-ops.env`                        | Environment template for secrets                       | ANQ-367 (Phase 6) |
-| `scripts/ops/integrations/sonar/sonar-linear-sync.mjs` | SonarQube ↔ Linear per-finding sync (canonical module) | ANQ-378           |
-| `scripts/ops/sonar-linear-audit.mjs`                   | Nightly sonar audit root compatibility shim            | ANQ-378           |
+| `harness/ops/integrations/sonar/sonar-linear-sync.mjs` | SonarQube ↔ Linear per-finding sync (canonical module) | ANQ-378           |
+| `harness/ops/sonar-linear-audit.mjs`                   | Nightly sonar audit root compatibility shim            | ANQ-378           |

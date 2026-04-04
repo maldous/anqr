@@ -1,0 +1,13 @@
+// Generated facade index.
+export { DEFAULT_COMMENT_THRESHOLD } from "./default-comment-threshold.mjs";
+export { SYSTEMIC_FAILURE_THRESHOLD } from "./systemic-failure-threshold.mjs";
+export { MAX_DESCRIPTION_LENGTH } from "./max-description-length.mjs";
+export { ANALYSIS_DELAY_MS } from "./analysis-delay-ms.mjs";
+export { ACTION_DELAY_MS } from "./action-delay-ms.mjs";
+export { FAILURE_PATTERNS } from "./failure-patterns.mjs";
+export { parseArgs } from "./parse-args.mjs";
+export { analyzeComments } from "./analyze-comments.mjs";
+export { buildFailureSummary } from "./build-failure-summary.mjs";
+export { analyzeIssue } from "./analyze-issue.mjs";
+export { applyHygiene } from "./apply-hygiene.mjs";
+export { main } from "./main.mjs";

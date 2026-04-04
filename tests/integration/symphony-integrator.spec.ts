@@ -21,7 +21,7 @@ import {
   listIntegrationCandidates,
   acquireIntegrationLock,
   releaseIntegrationLock,
-} from "../../scripts/ops/core/symphony-state.mjs";
+} from "../../harness/ops/core/symphony-state.mjs";
 
 beforeEach(() => {
   mutateState((store) => {

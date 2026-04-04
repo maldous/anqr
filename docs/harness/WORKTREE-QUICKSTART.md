@@ -6,7 +6,7 @@
 
 ```bash
 cd /home/user/src/anqr
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 8
+node harness/ops/orchestration/symphony-worktree-pool.mjs init 8
 
 # Copy service files
 cp services/systemd/anqr-symphony-router.service ~/.config/systemd/user/

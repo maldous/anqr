@@ -1,5 +1,9 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "includeEntryExports": true,
+  "ignoreExportsUsedInFile": true,
+  "treatConfigHintsAsErrors": true,
+
   "ignoreWorkspaces": [
     "apps/api",
     "apps/mobile",
@@ -19,6 +23,7 @@
     "packages/ui/design-tokens",
     "packages/ui/mobile"
   ],
+
   "ignoreDependencies": [
     "@capacitor/android",
     "@capacitor/cli",
@@ -26,34 +31,60 @@
     "appium",
     "appium-uiautomator2-driver",
     "appium-xcuitest-driver",
-    "autoprefixer",
-    "lefthook"
+    "autoprefixer"
   ],
-  "ignoreBinaries": ["oxlint.json", "sonar-scanner"],
+
+  "ignoreBinaries": [
+    "oxlint.json",
+    "sonar-scanner"
+  ],
+
+  "ignoreIssues": {
+    "**/*.d.ts": ["exports", "types"],
+    "**/*.generated.*": ["exports", "types", "enumMembers"]
+  },
+
   "workspaces": {
     ".": {
       "entry": [
-        "scripts/**/*.{js,mjs,ts}",
+        "harness/**/*.{js,mjs,ts}",
         "netlify/functions/**/*.ts",
         "netlify/edge-functions/**/*.ts",
-        "apps/web/src/boot/main.tsx",
-        "apps/web/src/index.ts",
-        "packages/**/src/index.ts",
-        "packages/**/src/*/index.ts"
+        "vite.config.*",
+        "vitest.config.*",
+        "playwright.config.*",
+        "eslint.config.*",
+        "*.config.{js,ts,mjs,cjs}"
       ],
       "project": [
-        "scripts/**/*.{js,mjs,ts}",
-        "netlify/**/*.{ts,mts}",
-        "apps/web/src/**/*.{ts,tsx}",
-        "packages/**/*.{ts,tsx}"
+        "harness/**/*.{js,mjs,ts}",
+        "netlify/**/*.{ts,mts}"
       ],
       "paths": {
-        "@/analytics/*": ["packages/analytics/*/src/index.ts", "packages/analytics/*/src/*"],
-        "@/application/*": ["packages/application/*/src/index.ts", "packages/application/*/src/*"],
-        "@/contracts/*": ["packages/contracts/*/src/index.ts", "packages/contracts/*/src/*"],
-        "@/domain/*": ["packages/domain/*/src/index.ts", "packages/domain/*/src/*"],
-        "@/platform/*": ["packages/platform/*/src/index.ts", "packages/platform/*/src/*"],
-        "@/ui/*": ["packages/ui/*/src/index.ts", "packages/ui/*/src/*"],
+        "@/analytics/*": [
+          "packages/analytics/*/src/index.ts",
+          "packages/analytics/*/src/*"
+        ],
+        "@/application/*": [
+          "packages/application/*/src/index.ts",
+          "packages/application/*/src/*"
+        ],
+        "@/contracts/*": [
+          "packages/contracts/*/src/index.ts",
+          "packages/contracts/*/src/*"
+        ],
+        "@/domain/*": [
+          "packages/domain/*/src/index.ts",
+          "packages/domain/*/src/*"
+        ],
+        "@/platform/*": [
+          "packages/platform/*/src/index.ts",
+          "packages/platform/*/src/*"
+        ],
+        "@/ui/*": [
+          "packages/ui/*/src/index.ts",
+          "packages/ui/*/src/*"
+        ],
         "@/infra/*": [
           "packages/observability/*/src/index.ts",
           "packages/observability/*/src/*",
@@ -66,40 +97,40 @@
           "packages/domain/render/src/*"
         ],
         "@/*": ["src/*"]
-      },
-      "ignore": [
-        "src/**",
-        "apps/android/**",
-        "apps/ios/**",
-        "apps/web/src/content/gallery/**",
-        "apps/web/src/i18n/locales/**",
-        "apps/web/src/i18n/static/**",
-        "packages/application/gallery/**",
-        "packages/application/monetization/**",
-        "packages/application/onboarding/**",
-        "packages/analytics/ga4/**",
-        "packages/config/**",
-        "packages/testing/**",
-        "packages/ui/design-tokens/**",
-        "packages/ui/mobile/**",
-        "**/*.d.ts",
-        "**/*.generated.*"
+      }
+    },
+
+    "apps/web": {
+      "entry": [
+        "src/boot/main.tsx",
+        "src/index.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "!src/content/gallery/**",
+        "!src/i18n/locales/**",
+        "!src/i18n/static/**"
       ]
     },
-    "apps/web": {
-      "entry": ["src/boot/main.tsx", "src/index.ts"],
-      "project": ["src/**/*.{ts,tsx}"],
-      "ignore": ["src/content/gallery/**", "src/i18n/locales/**", "src/i18n/static/**"]
-    },
+
     "packages/*/*": {
-      "entry": ["src/index.{ts,tsx}", "src/*/index.{ts,tsx}"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "entry": [
+        "src/index.{ts,tsx}",
+        "src/*/index.{ts,tsx}"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "!**/*.d.ts",
+        "!**/*.generated.*"
+      ]
     }
   },
+
   "vitest": {
     "config": ["vitest.config.ts"],
     "entry": ["tests/unit/**/*.{spec,test}.ts"]
   },
+
   "playwright": {
     "config": ["playwright.config.ts"],
     "entry": ["tests/e2e/**/*.spec.ts"]

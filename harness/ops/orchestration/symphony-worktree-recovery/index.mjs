@@ -1,0 +1,15 @@
+// Generated facade index.
+export { MAIN_REPO_ROOT } from "./main-repo-root.mjs";
+export { ALL_WORKTREE_IDS } from "./all-worktree-ids.mjs";
+export { classifyWorktree } from "./classify-worktree.mjs";
+export { inferOwnerFromBranch } from "./infer-owner-from-branch.mjs";
+export { hasConflictMarkers } from "./has-conflict-markers.mjs";
+export { executeRepair } from "./execute-repair.mjs";
+export { runRecoveryCycle } from "./run-recovery-cycle.mjs";
+export { parseCspellUnknownWords } from "./parse-cspell-unknown-words.mjs";
+export { attemptCspellAutoFix } from "./attempt-cspell-auto-fix.mjs";
+export { propagateBaselineFixToCleanWorktrees } from "./propagate-baseline-fix-to-clean-worktrees.mjs";
+export { checkBaselineHealth } from "./check-baseline-health.mjs";
+export { checkQuarantinedForReprovisioning } from "./check-quarantined-for-reprovisioning.mjs";
+export { showStatus } from "./show-status.mjs";
+export { runDaemon } from "./run-daemon.mjs";

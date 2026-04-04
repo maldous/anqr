@@ -18,9 +18,9 @@ Use [MCP-MIGRATION.md](/home/user/src/anqr/MCP-MIGRATION.md) as the migration le
 
 - **Symphony Bridge** (port 4319): OpenAI-compatible gateway with 38+ providers, AI SDK tool execution, adaptive context
 - **Codebuff Bridge** (port 4318): OpenAI-compatible gateway for Codebuff SDK with paid → free fallback
-- **Key harness modules**: `scripts/ops/integrations/model/symphony-openai-bridge.mjs`, `symphony-credit-gate.mjs`, `symphony-adaptive-context.mjs`, `symphony-bridge-truncation.mjs`
+- **Key harness modules**: `harness/ops/integrations/model/symphony-openai-bridge.mjs`, `symphony-credit-gate.mjs`, `symphony-adaptive-context.mjs`, `symphony-bridge-truncation.mjs`
 - **Bridge restart**: commit & push → wait for zero concurrency → `systemctl --user restart anqr-symphony-bridge`
-- **Harness tests**: `npx vitest run scripts/ops/integrations/model/symphony-adaptive-context.spec.ts` (and similar for truncation, credit-gate, fallback specs)
+- **Harness tests**: `npx vitest run harness/ops/integrations/model/symphony-adaptive-context.spec.ts` (and similar for truncation, credit-gate, fallback specs)
 
 ## Codex fast path
 

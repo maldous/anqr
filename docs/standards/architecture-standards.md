@@ -121,7 +121,7 @@ The layer rules below govern `src/` during the transition period.
 
 Colocated `*.spec.ts` files remain preferred for package-level and feature-level unit tests.
 
-### scripts/ops/
+### harness/ops/
 
 **Purpose:**
 
@@ -130,22 +130,22 @@ Colocated `*.spec.ts` files remain preferred for package-level and feature-level
 
 | Directory / File                                     | Description                                           |
 | ---------------------------------------------------- | ----------------------------------------------------- |
-| `scripts/ops/symphony-runner.mjs`                    | execution orchestrator (picks issues, runs agent)     |
-| `scripts/ops/symphony-agent.mjs`                     | tool-calling AI agent (Ollama)                        |
-| `scripts/ops/symphony-config.mjs`                    | centralized queue/execution config                    |
-| `scripts/ops/symphony-credit-gate.mjs`               | provider cascade (credit gate)                        |
-| `scripts/ops/symphony-queue-control.mjs`             | queue feeder, drain, enforcement                      |
-| `scripts/ops/symphony/WORKFLOW.md`                   | agent system prompt (versioned)                       |
-| `scripts/ops/linear-client.mjs`                      | Linear API helpers                                    |
-| `scripts/ops/linear-guardian.mjs`                    | rule-based issue management                           |
-| `scripts/ops/harness-report.mjs`                     | deterministic health checks                           |
-| `scripts/ops/nightly-ops-pass.mjs`                   | nightly orchestration pipeline                        |
-| `scripts/ops/notify.mjs`                             | notification dispatch (stdout + email)                |
-| `scripts/ops/lib/notify.mjs`                         | email helper (msmtp + rate limiting)                  |
-| `scripts/ops/email-ingest.mjs`                       | email-to-issue ingest (mbsync + notmuch)              |
-| `scripts/ops/ollama-local-audit.mjs`                 | root compatibility shim for model health verification |
-| `scripts/ops/integrations/model/litellm-config.yaml` | local model aliases                                   |
-| `scripts/ops/model-injector-proxy.py`                | root compatibility shim for request normalization     |
+| `harness/ops/symphony-runner.mjs`                    | execution orchestrator (picks issues, runs agent)     |
+| `harness/ops/symphony-agent.mjs`                     | tool-calling AI agent (Ollama)                        |
+| `harness/ops/symphony-config.mjs`                    | centralized queue/execution config                    |
+| `harness/ops/symphony-credit-gate.mjs`               | provider cascade (credit gate)                        |
+| `harness/ops/symphony-queue-control.mjs`             | queue feeder, drain, enforcement                      |
+| `harness/ops/symphony/WORKFLOW.md`                   | agent system prompt (versioned)                       |
+| `harness/ops/linear-client.mjs`                      | Linear API helpers                                    |
+| `harness/ops/linear-guardian.mjs`                    | rule-based issue management                           |
+| `harness/ops/harness-report.mjs`                     | deterministic health checks                           |
+| `harness/ops/nightly-ops-pass.mjs`                   | nightly orchestration pipeline                        |
+| `harness/ops/notify.mjs`                             | notification dispatch (stdout + email)                |
+| `harness/ops/lib/notify.mjs`                         | email helper (msmtp + rate limiting)                  |
+| `harness/ops/email-ingest.mjs`                       | email-to-issue ingest (mbsync + notmuch)              |
+| `harness/ops/ollama-local-audit.mjs`                 | root compatibility shim for model health verification |
+| `harness/ops/integrations/model/litellm-config.yaml` | local model aliases                                   |
+| `harness/ops/model-injector-proxy.py`                | root compatibility shim for request normalization     |
 
 **Rules:**
 

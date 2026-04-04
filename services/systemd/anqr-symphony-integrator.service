@@ -28,7 +28,7 @@ Environment=HOME=%h
 EnvironmentFile=-%h/.config/symphony/anqr.env
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/scripts/ops/orchestration/symphony-integrator.mjs daemon
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/orchestration/symphony-integrator.mjs daemon
 
 Restart=on-failure
 RestartSec=5

@@ -51,7 +51,7 @@ PATH and runtime environment under systemd differ from interactive shells. Servi
 ## Structure
 
 ```
-scripts/ops/       operational scripts (harness, guardian, audit, routing)
+harness/ops/       operational scripts (harness, guardian, audit, routing)
 services/systemd/   systemd service and timer units
 reports/            harness report artifacts
 docs/workflows/     execution workflow documentation

@@ -29,7 +29,7 @@ Environment=OLLAMA_API_BASE=http://localhost:11434
 # Secrets and overrides
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/lib/rag/build-index.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/lib/rag/build-index.mjs
 
 # Logging to journal
 StandardOutput=journal

@@ -59,10 +59,10 @@ journalctl --user -u anqr-symphony-bridge.service -f | grep "Invalid parameters"
 
 ```bash
 # Run normalization tests
-npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-normalization.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-openai-bridge-normalization.spec.ts
 
 # Run all harness tests
-npx vitest run scripts/ops/integrations/model/symphony-*.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-*.spec.ts
 ```
 
 Expected: **171 tests passing** (52 new + 119 existing)

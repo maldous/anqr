@@ -182,7 +182,7 @@ Invalid params for agent basher: expected string, received undefined
     {
       "agent_type": "opus-agent",
       "prompt": "Analyze the provider cascade logic and suggest improvements",
-      "params": { "filePaths": ["scripts/ops/integrations/model/symphony-credit-gate.mjs"] }
+      "params": { "filePaths": ["harness/ops/integrations/model/symphony-credit-gate.mjs"] }
     }
   ]
 }

@@ -33,7 +33,7 @@ module.exports = {
           "\\.d\\.ts$",
           "\\.gitkeep$",
           "^dist/",
-          "^scripts/",
+          "^harness/",
           "(^|/)\\..+\\.c?[jt]s$",
           "^[^/]+\\.config\\.",
           "^packages/(ui/mobile|ui/design-tokens|testing/(playwright|parity|fixtures|fakes)|config/(tsconfig|eslint|depcruise|build)|application/(onboarding|monetization|gallery)|analytics/ga4)/src/index\\.ts$",
@@ -134,7 +134,7 @@ module.exports = {
       severity: "error",
       comment: "Contract packages must not import tools, scripts, generators, or harness code.",
       from: { path: "^packages/contracts/" },
-      to: { path: "^(tools|scripts)/" },
+      to: { path: "^(tools|scripts|harness)/" },
     },
     {
       name: "packages-no-src-imports",
@@ -376,9 +376,9 @@ module.exports = {
     {
       name: "no-harness-in-packages",
       severity: "error",
-      comment: "Production runtime code must not import from scripts/ops/.",
+      comment: "Production runtime code must not import from harness/ops/.",
       from: { path: "^(packages|apps|netlify)/" },
-      to: { path: "^scripts/ops/" },
+      to: { path: "^harness/ops/" },
     },
     {
       name: "no-package-cycles",

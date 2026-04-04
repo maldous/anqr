@@ -1,0 +1,20 @@
+// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:30
+
+export const CODEBUFF_NOISY_TOOLS = new Set([
+  "set_messages",
+  "set_output",
+  "end_turn",
+  "lookup_agent_info",
+  "spawn_agent_inline",
+  "spawn_agents",
+  "context-pruner",
+  "codebuff/context-pruner@0.0.29",
+  "read_files",
+  "read_subtree",
+  "file-explorer",
+  "codebuff/file-explorer@0.0.7",
+  "file-picker",
+  "codebuff/file-picker@0.0.5",
+  "find-all-referencer",
+  "codebuff/find-all-referencer@0.0.4",
+]);

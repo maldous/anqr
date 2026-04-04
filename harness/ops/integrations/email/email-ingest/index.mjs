@@ -1,0 +1,21 @@
+// Generated facade index.
+export { __dirname } from "./dirname.mjs";
+export { PROJECT_ROOT } from "./project-root.mjs";
+export { REPORTS_DIR } from "./reports-dir.mjs";
+export { INGEST_EMAIL } from "./ingest-email.mjs";
+export { HUMAN_USER_NAME } from "./human-user-name.mjs";
+export { ALLOWED_SENDERS } from "./allowed-senders.mjs";
+export { DRY_RUN } from "./dry-run.mjs";
+export { NOTMUCH_QUERY } from "./notmuch-query.mjs";
+export { ensureDir } from "./ensure-dir.mjs";
+export { run } from "./run.mjs";
+export { syncMail } from "./sync-mail.mjs";
+export { indexMail } from "./index-mail.mjs";
+export { searchUnprocessed } from "./search-unprocessed.mjs";
+export { extractTextContent } from "./extract-text-content.mjs";
+export { getMessageContent } from "./get-message-content.mjs";
+export { tagMessage } from "./tag-message.mjs";
+export { lookupHumanAssignee } from "./lookup-human-assignee.mjs";
+export { findExistingByExternalKey } from "./find-existing-by-external-key.mjs";
+export { main } from "./main.mjs";
+export { writeReport } from "./write-report.mjs";

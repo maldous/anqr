@@ -1,0 +1,27 @@
+// Generated facade index.
+export { detectProjectRoot } from "./detect-project-root.mjs";
+export { PROJECT_ROOT } from "./project-root.mjs";
+export { SAVE_INTERVAL } from "./save-interval.mjs";
+export { PROGRESS_EVERY } from "./progress-every.mjs";
+export { MAX_FILE_BYTES } from "./max-file-bytes.mjs";
+export { INCLUDE_I18N } from "./include-i18-n.mjs";
+export { VERBOSE } from "./verbose.mjs";
+export { SUPPORTED_EXTENSIONS } from "./supported-extensions.mjs";
+export { SUPPORTED_BASENAMES } from "./supported-basenames.mjs";
+export { JSON_EXCLUDED_NAMES } from "./json-excluded-names.mjs";
+export { EXCLUDED_PATH_PATTERNS } from "./excluded-path-patterns.mjs";
+export { I18N_EXCLUDED_PATH_PATTERNS } from "./i18-n-excluded-path-patterns.mjs";
+export { MIRROR_PREFERENCES } from "./mirror-preferences.mjs";
+export { PRIORITY_RULES } from "./priority-rules.mjs";
+export { isTruthy } from "./is-truthy.mjs";
+export { toPositiveInt } from "./to-positive-int.mjs";
+export { normalizePath } from "./normalize-path.mjs";
+export { getPriority } from "./get-priority.mjs";
+export { isSupportedEnvName } from "./is-supported-env-name.mjs";
+export { shouldSkipMirroredPath } from "./should-skip-mirrored-path.mjs";
+export { shouldIncludeJson } from "./should-include-json.mjs";
+export { classifyFile } from "./classify-file.mjs";
+export { discoverTrackedFiles } from "./discover-tracked-files.mjs";
+export { buildCandidateList } from "./build-candidate-list.mjs";
+export { logSkipSummary } from "./log-skip-summary.mjs";
+export { main } from "./main.mjs";

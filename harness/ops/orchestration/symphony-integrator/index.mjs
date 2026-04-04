@@ -1,0 +1,12 @@
+// Generated facade index.
+export { INTEGRATOR_ID } from "./integrator-id.mjs";
+export { POLL_INTERVAL_MS } from "./poll-interval-ms.mjs";
+export { LOCK_TTL_MS } from "./lock-ttl-ms.mjs";
+export { git } from "./git.mjs";
+export { integrateCandidate } from "./integrate-candidate.mjs";
+export { findIssueByIdentifier } from "./find-issue-by-identifier.mjs";
+export { scanForRepairedCandidates } from "./scan-for-repaired-candidates.mjs";
+export { processQueue } from "./process-queue.mjs";
+export { showStatus } from "./show-status.mjs";
+export { runDaemon } from "./run-daemon.mjs";
+export { mode } from "./mode.mjs";

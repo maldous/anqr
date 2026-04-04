@@ -102,7 +102,7 @@ Keep or recreate:
 All developers must configure git with weave merge for concurrent worktree execution:
 
 ```bash
-./scripts/git-setup.sh
+./harness/git-setup.sh
 ```
 
 This configures:

@@ -1,0 +1,10 @@
+// Generated facade index.
+export { createWorktree } from "./create-worktree.mjs";
+export { removeWorktree } from "./remove-worktree.mjs";
+export { listWorktrees } from "./list-worktrees.mjs";
+export { getSymphonyWorktrees } from "./get-symphony-worktrees.mjs";
+export { initWorktreePool } from "./init-worktree-pool.mjs";
+export { cleanupWorktreePool } from "./cleanup-worktree-pool.mjs";
+export { reprovisionWorktree } from "./reprovision-worktree.mjs";
+export { repairWorktrees } from "./repair-worktrees.mjs";
+export { printWorktreeStatus } from "./print-worktree-status.mjs";

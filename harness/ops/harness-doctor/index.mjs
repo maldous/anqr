@@ -1,0 +1,13 @@
+// Generated facade index.
+export { __dirname } from "./dirname.mjs";
+export { ROOT } from "./root.mjs";
+export { checkEnvVars } from "./check-env-vars.mjs";
+export { checkNodeModules } from "./check-node-modules.mjs";
+export { checkCreditGate } from "./check-credit-gate.mjs";
+export { checkOllama } from "./check-ollama.mjs";
+export { checkSystemdServices } from "./check-systemd-services.mjs";
+export { checkQueueState } from "./check-queue-state.mjs";
+export { checkReportsDir } from "./check-reports-dir.mjs";
+export { checkHarnessConfig } from "./check-harness-config.mjs";
+export { main } from "./main.mjs";
+export { isMain } from "./is-main.mjs";

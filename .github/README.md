@@ -15,7 +15,7 @@ All issue tracking, project management, and task coordination is managed through
 GitHub Actions CI is currently disabled due to billing constraints. Quality gates are enforced through:
 
 - Local pre-commit hooks (lefthook)
-- Harness automation (`scripts/ops/`)
+- Harness automation (`harness/ops/`)
 - Netlify build pipeline
 
 See `docs/harness/05-quality-gates.md` for the complete quality gate matrix.

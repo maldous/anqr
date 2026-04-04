@@ -72,7 +72,7 @@ describe("Bridge Tools - File Operations", () => {
   describe("read_files", () => {
     it("should read multiple files successfully", async () => {
       const { readFilesTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await readFilesTool({ paths: [TEST_FILE, TEST_CODE_FILE] });
 
@@ -91,7 +91,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should handle non-existent files", async () => {
       const { readFilesTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await readFilesTool({ paths: ["/nonexistent/file.txt"] });
 
@@ -101,7 +101,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should handle mixed existing and non-existing files", async () => {
       const { readFilesTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await readFilesTool({ paths: [TEST_FILE, "/nonexistent.txt"] });
 
@@ -114,7 +114,7 @@ describe("Bridge Tools - File Operations", () => {
   describe("str_replace", () => {
     it("should replace single occurrence", async () => {
       const { strReplaceTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await strReplaceTool({
         path: TEST_FILE,
@@ -129,7 +129,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should replace multiple occurrences with allowMultiple", async () => {
       const { strReplaceTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       fs.writeFileSync(TEST_FILE, "foo bar foo baz foo");
 
@@ -145,7 +145,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should handle multiple replacements in sequence", async () => {
       const { strReplaceTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await strReplaceTool({
         path: TEST_FILE,
@@ -162,7 +162,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should return error when string not found", async () => {
       const { strReplaceTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await strReplaceTool({
         path: TEST_FILE,
@@ -177,7 +177,7 @@ describe("Bridge Tools - File Operations", () => {
   describe("write (writeFileTool)", () => {
     it("should write new file", async () => {
       const { writeFileTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const newFile = path.join(FIXTURES_DIR, "new-file.txt");
       const result = await writeFileTool({ path: newFile, content: "New content" });
@@ -189,7 +189,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should overwrite existing file", async () => {
       const { writeFileTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await writeFileTool({ path: TEST_FILE, content: "Overwritten" });
 
@@ -201,7 +201,7 @@ describe("Bridge Tools - File Operations", () => {
   describe("read (readFileTool)", () => {
     it("should read entire file", async () => {
       const { readFileTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await readFileTool({ path: TEST_FILE, offset: undefined, lines: undefined });
 
@@ -212,7 +212,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should read file with offset", async () => {
       const { readFileTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await readFileTool({ path: TEST_FILE, offset: 1, lines: 2 });
 
@@ -224,7 +224,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should truncate large files", async () => {
       const { readFileTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const largeContent = "x".repeat(200000);
       fs.writeFileSync(TEST_FILE, largeContent);
@@ -239,7 +239,7 @@ describe("Bridge Tools - File Operations", () => {
   describe("list_directory", () => {
     it("should list files and directories", async () => {
       const { listDirectoryTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const subdir = path.join(FIXTURES_DIR, "subdir");
       fs.mkdirSync(subdir);
@@ -253,7 +253,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should handle non-existent directory", async () => {
       const { listDirectoryTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await listDirectoryTool({ path: "/nonexistent/dir" });
 
@@ -264,7 +264,7 @@ describe("Bridge Tools - File Operations", () => {
   describe("read_subtree", () => {
     it("should read single file", async () => {
       const { readSubtreeTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await readSubtreeTool({ paths: [path.relative(process.cwd(), TEST_FILE)] });
 
@@ -275,7 +275,7 @@ describe("Bridge Tools - File Operations", () => {
 
     it("should read directory tree", async () => {
       const { readSubtreeTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const subdir = path.join(FIXTURES_DIR, "subdir");
       fs.mkdirSync(subdir);
@@ -309,7 +309,7 @@ describe("Bridge Tools - Code Search", () => {
   describe("code_search", () => {
     it("should find matches in code", async () => {
       const { codeSearchTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await codeSearchTool({
         pattern: "function",
@@ -323,7 +323,7 @@ describe("Bridge Tools - Code Search", () => {
 
     it("should respect maxResults limit", async () => {
       const { codeSearchTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await codeSearchTool({
         pattern: "function",
@@ -337,7 +337,7 @@ describe("Bridge Tools - Code Search", () => {
 
     it("should handle no matches", async () => {
       const { codeSearchTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await codeSearchTool({
         pattern: "nonexistent-pattern-12345",
@@ -353,7 +353,7 @@ describe("Bridge Tools - Code Search", () => {
   describe("glob", () => {
     it("should find files matching pattern", async () => {
       const { globTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await globTool({
         pattern: "*.ts",
@@ -366,7 +366,7 @@ describe("Bridge Tools - Code Search", () => {
 
     it("should handle no matches", async () => {
       const { globTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await globTool({
         pattern: "*.nonexistent",
@@ -382,7 +382,7 @@ describe("Bridge Tools - Execution", () => {
   describe("exec", () => {
     it("should execute simple command", async () => {
       const { execTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await execTool({ command: "echo hello", cwd: undefined });
 
@@ -392,7 +392,7 @@ describe("Bridge Tools - Execution", () => {
 
     it("should handle command errors", async () => {
       const { execTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await execTool({ command: "exit 1", cwd: undefined });
 
@@ -402,7 +402,7 @@ describe("Bridge Tools - Execution", () => {
 
     it("should respect working directory", async () => {
       const { execTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await execTool({ command: "pwd", cwd: "/tmp" });
 
@@ -450,7 +450,7 @@ describe("Bridge Tools - Memory", () => {
   describe("memory_search", () => {
     it("should search MEMORY.md", async () => {
       const { memorySearchTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await memorySearchTool({ query: "test data" });
 
@@ -460,7 +460,7 @@ describe("Bridge Tools - Memory", () => {
 
     it("should search knowledge.md", async () => {
       const { memorySearchTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await memorySearchTool({ query: "testing" });
 
@@ -469,7 +469,7 @@ describe("Bridge Tools - Memory", () => {
 
     it("should handle no matches", async () => {
       const { memorySearchTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await memorySearchTool({ query: "nonexistent12345" });
 
@@ -481,7 +481,7 @@ describe("Bridge Tools - Memory", () => {
   describe("memory_get", () => {
     it("should get MEMORY.md content", async () => {
       const { memoryGetTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await memoryGetTool({ file: "MEMORY.md" });
 
@@ -491,7 +491,7 @@ describe("Bridge Tools - Memory", () => {
 
     it("should get knowledge.md content", async () => {
       const { memoryGetTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await memoryGetTool({ file: "knowledge.md" });
 
@@ -501,7 +501,7 @@ describe("Bridge Tools - Memory", () => {
 
     it("should reject invalid file names", async () => {
       const { memoryGetTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await memoryGetTool({ file: "invalid.txt" });
 
@@ -514,7 +514,7 @@ describe("Bridge Tools - Workflow", () => {
   describe("think_deeply", () => {
     it("should acknowledge thought", async () => {
       const { thinkDeeplyTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await thinkDeeplyTool({ thought: "Test thought" });
 
@@ -526,7 +526,7 @@ describe("Bridge Tools - Workflow", () => {
   describe("update_subgoal", () => {
     it("should acknowledge subgoal update", async () => {
       const { updateSubgoalTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await updateSubgoalTool({
         id: "1",
@@ -544,7 +544,7 @@ describe("Bridge Tools - Workflow", () => {
   describe("add_subgoal", () => {
     it("should acknowledge new subgoal", async () => {
       const { addSubgoalTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await addSubgoalTool({
         id: "2",
@@ -563,7 +563,7 @@ describe("Bridge Tools - Workflow", () => {
   describe("spawn_agents", () => {
     it("should acknowledge agent spawn request", async () => {
       const { spawnAgentsTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await spawnAgentsTool({
         agents: [{ agent_type: "test-agent", prompt: "test" }],
@@ -579,7 +579,7 @@ describe("Bridge Tools - Configuration", () => {
   describe("run_file_change_hooks", () => {
     it("should handle no hooks configured", async () => {
       const { runFileChangeHooksTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await runFileChangeHooksTool({ files: ["test.ts"] });
 
@@ -589,7 +589,7 @@ describe("Bridge Tools - Configuration", () => {
 
     it("should normalize string to array (SDK bug workaround)", async () => {
       const { runFileChangeHooksTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       // Test both string and array inputs
       const resultString = await runFileChangeHooksTool({ files: "test.ts" as any });
@@ -618,7 +618,7 @@ describe("Bridge Tools - Proposal Tools", () => {
   describe("propose_str_replace", () => {
     it("should propose replacements without applying", async () => {
       const { proposeStrReplaceTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const originalContent = fs.readFileSync(TEST_FILE, "utf-8");
       const result = await proposeStrReplaceTool({
@@ -634,7 +634,7 @@ describe("Bridge Tools - Proposal Tools", () => {
 
     it("should indicate when string not found", async () => {
       const { proposeStrReplaceTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await proposeStrReplaceTool({
         path: TEST_FILE,
@@ -649,7 +649,7 @@ describe("Bridge Tools - Proposal Tools", () => {
   describe("propose_write_file", () => {
     it("should propose file write without applying", async () => {
       const { proposeWriteFileTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const newFile = path.join(FIXTURES_DIR, "new.txt");
       const result = await proposeWriteFileTool({
@@ -671,7 +671,7 @@ describe("Bridge Tools - Meta Tools", () => {
   describe("add_message", () => {
     it("should acknowledge message addition", async () => {
       const { addMessageTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await addMessageTool({
         role: "user",
@@ -686,7 +686,7 @@ describe("Bridge Tools - Meta Tools", () => {
   describe("set_messages", () => {
     it("should acknowledge messages set", async () => {
       const { setMessagesTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await setMessagesTool({
         messages: [
@@ -703,7 +703,7 @@ describe("Bridge Tools - Meta Tools", () => {
   describe("ask_user", () => {
     it("should acknowledge user question request", async () => {
       const { askUserTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await askUserTool({
         questions: [
@@ -722,7 +722,7 @@ describe("Bridge Tools - Meta Tools", () => {
   describe("lookup_agent_info", () => {
     it("should acknowledge agent lookup", async () => {
       const { lookupAgentInfoTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const result = await lookupAgentInfoTool({ agentId: "test-agent" });
 
@@ -746,7 +746,7 @@ describe("Bridge Tools - Meta Tools", () => {
 
     it("should create file", async () => {
       const { applyPatchTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const newFile = path.join(FIXTURES_DIR, "patch-test.txt");
       const result = await applyPatchTool({
@@ -764,7 +764,7 @@ describe("Bridge Tools - Meta Tools", () => {
 
     it("should delete file", async () => {
       const { applyPatchTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const testFile = path.join(FIXTURES_DIR, "delete-me.txt");
       fs.writeFileSync(testFile, "content");
@@ -787,7 +787,7 @@ describe("Bridge Tools - External APIs", () => {
   describe("web_search", () => {
     it("should return error when API key not configured", async () => {
       const { webSearchTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const originalKey = process.env.LINKUP_API_KEY;
       delete process.env.LINKUP_API_KEY;
@@ -805,7 +805,7 @@ describe("Bridge Tools - External APIs", () => {
   describe("read_docs", () => {
     it("should return error when API key not configured", async () => {
       const { readDocsTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const originalKey = process.env.CONTEXT7_API_KEY;
       delete process.env.CONTEXT7_API_KEY;
@@ -834,7 +834,7 @@ describe("Bridge Tools - External APIs", () => {
 
     it("should enforce minimum max_tokens", async () => {
       const { readDocsTool } =
-        await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
       const originalKey = process.env.CONTEXT7_API_KEY;
       process.env.CONTEXT7_API_KEY = "test-key";

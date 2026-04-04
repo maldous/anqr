@@ -50,7 +50,7 @@
       "id": 5,
       "name": "Harness Model Routing",
       "status": "planned",
-      "paths": ["scripts/ops/integrations/model/**/*.mjs"],
+      "paths": ["harness/ops/integrations/model/**/*.mjs"],
       "notes": "Credit gate scoring, provider routing, tier system — critical operational logic"
     },
     {
@@ -58,10 +58,10 @@
       "name": "Harness Orchestration",
       "status": "planned",
       "paths": [
-        "scripts/ops/symphony-runner.mjs",
-        "scripts/ops/symphony-agent.mjs",
-        "scripts/ops/symphony-queue-control.mjs",
-        "scripts/ops/symphony-validation.mjs"
+        "harness/ops/symphony-runner.mjs",
+        "harness/ops/symphony-agent.mjs",
+        "harness/ops/symphony-queue-control.mjs",
+        "harness/ops/symphony-validation.mjs"
       ],
       "notes": "Symphony runner, queue control, validation — operational orchestration"
     },

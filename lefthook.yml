@@ -23,7 +23,7 @@ pre-commit:
       glob: "*.{ts,tsx}"
       run: |
         [ "$ANQR_AUTOMATION_COMMIT" = "1" ] && exit 0
-        output=$(node scripts/audit-ast-density.mjs --threshold 1 {staged_files} 2>&1)
+        output=$(node harness/audit-ast-density.mjs --threshold 1 {staged_files} 2>&1)
         if [ -n "$output" ]; then
           echo "$output"
           echo "AST density violation: files have more than 1 top-level declaration"

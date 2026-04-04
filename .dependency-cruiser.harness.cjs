@@ -1,5 +1,5 @@
 /**
- * Dependency Cruiser configuration for Harness layer (scripts/ops/*)
+ * Dependency Cruiser configuration for Harness layer (harness/ops/*)
  *
  * Enforces hexagonal architecture boundaries within the harness:
  * - core: foundational utilities (config, logging)
@@ -25,7 +25,7 @@ module.exports = {
       name: "harness-not-to-unresolvable",
       severity: "error",
       comment: "All imports in harness must resolve cleanly.",
-      from: { path: "^scripts/ops/" },
+      from: { path: "^harness/ops/" },
       to: { couldNotResolve: true },
     },
     {
@@ -37,7 +37,7 @@ module.exports = {
         "third-party internal cycles. This is simpler than the main config's " +
         "viaOnly approach because harness code is not bundled, so there are no " +
         "dist/assets chunks to worry about — only node_modules needs filtering.",
-      from: { path: "^scripts/ops/" },
+      from: { path: "^harness/ops/" },
       to: { circular: true, pathNot: "^node_modules/" },
     },
     // Core layer - integrations should not import from orchestration or runtime
@@ -45,52 +45,52 @@ module.exports = {
       name: "integrations-no-orchestration-imports",
       severity: "error",
       comment: "Integrations layer must not import orchestration (inversion of control).",
-      from: { path: "^scripts/ops/integrations/" },
-      to: { path: "^scripts/ops/orchestration/" },
+      from: { path: "^harness/ops/integrations/" },
+      to: { path: "^harness/ops/orchestration/" },
     },
     {
       name: "integrations-no-runtime-imports",
       severity: "error",
       comment: "Integrations layer must not import runtime engines directly.",
-      from: { path: "^scripts/ops/integrations/" },
-      to: { path: "^scripts/ops/runtime/" },
+      from: { path: "^harness/ops/integrations/" },
+      to: { path: "^harness/ops/runtime/" },
     },
     // Orchestration should not import from runtime
     {
       name: "orchestration-no-runtime-imports",
       severity: "error",
       comment: "Orchestration must not import runtime engines (runtime is the execution target).",
-      from: { path: "^scripts/ops/orchestration/" },
-      to: { path: "^scripts/ops/runtime/" },
+      from: { path: "^harness/ops/orchestration/" },
+      to: { path: "^harness/ops/runtime/" },
     },
     // Reporting should not import orchestration
     {
       name: "reporting-no-orchestration-imports",
       severity: "error",
       comment: "Reporting layer must not import orchestration workflows.",
-      from: { path: "^scripts/ops/reporting/" },
-      to: { path: "^scripts/ops/orchestration/" },
+      from: { path: "^harness/ops/reporting/" },
+      to: { path: "^harness/ops/orchestration/" },
     },
     // Runtime should not import reporting (runtime is the innermost layer)
     {
       name: "runtime-no-reporting-imports",
       severity: "error",
       comment: "Runtime engines must not import reporting (reporting observes runtime).",
-      from: { path: "^scripts/ops/runtime/" },
-      to: { path: "^scripts/ops/reporting/" },
+      from: { path: "^harness/ops/runtime/" },
+      to: { path: "^harness/ops/reporting/" },
     },
     {
       name: "runtime-no-orchestration-imports",
       severity: "warn",
       comment:
         "Runtime engines should not depend on orchestration (prefer orchestration calling runtime).",
-      from: { path: "^scripts/ops/runtime/" },
-      to: { path: "^scripts/ops/orchestration/" },
+      from: { path: "^harness/ops/runtime/" },
+      to: { path: "^harness/ops/orchestration/" },
     },
   ],
   options: {
     includeOnly: {
-      path: ["^scripts/ops/"],
+      path: ["^harness/ops/"],
     },
     doNotFollow: {
       path: "node_modules",

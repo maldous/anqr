@@ -1,0 +1,3 @@
+// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:207
+
+export const SYMPHONY_BRIDGE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319/v1";

@@ -30,7 +30,7 @@ This strategy covers:
 - `apps/web`
 - `netlify/*`
 - `packages/*`
-- `scripts/ops/*`
+- `harness/ops/*`
 - `services/systemd/*`
 - `tests/*`
 - `packages/testing/*`
@@ -106,7 +106,7 @@ Owned surfaces:
 
 - `packages/platform/*`
 - `netlify/*`
-- `scripts/ops/*`
+- `harness/ops/*`
 - `services/systemd/*`
 
 Required tests:
@@ -320,7 +320,7 @@ Preferred use:
 
 - `packages/domain/*`
 - `packages/application/*`
-- provider scoring and fallback policy in `scripts/ops/integrations/model/*`
+- provider scoring and fallback policy in `harness/ops/integrations/model/*`
 
 Not preferred initially:
 
@@ -367,8 +367,8 @@ Phase-in order:
 3. `packages/application/*`
 4. `netlify/*`
 5. `packages/platform/node/*` and `packages/platform/worker/*`
-6. `scripts/ops/integrations/model/*`
-7. `scripts/ops/orchestration/*`
+6. `harness/ops/integrations/model/*`
+7. `harness/ops/orchestration/*`
 8. `apps/web` critical-path modules
 
 ### Exclusion rules

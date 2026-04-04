@@ -147,4 +147,4 @@ async function runFileChangeHooksTool({ files }) {
 
 - `AGENTS.md` — Tool parameter documentation
 - `docs/harness/05-quality-gates.md` — Validation requirements
-- `scripts/ops/integrations/model/symphony-openai-bridge.mjs` — Implementation
+- `harness/ops/integrations/model/symphony-openai-bridge.mjs` — Implementation

@@ -11,9 +11,9 @@ play-store-key.json
 dist/
 node_modules/
 reports/
-scripts/ops/__pycache__/
-scripts/ops/.workspace/
-scripts/reports/
+harness/ops/__pycache__/
+harness/ops/.workspace/
+harness/reports/
 test-results/
 memory/
 coverage/

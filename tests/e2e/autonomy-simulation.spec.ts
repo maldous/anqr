@@ -26,8 +26,8 @@ import {
   recordQuarantine,
   getNextRepairableIssueForWorktree,
   listWorktreesByState,
-} from "../../scripts/ops/core/symphony-state.mjs";
-import { classifyWorktree } from "../../scripts/ops/orchestration/symphony-worktree-recovery.mjs";
+} from "../../harness/ops/core/symphony-state.mjs";
+import { classifyWorktree } from "../../harness/ops/orchestration/symphony-worktree-recovery.mjs";
 
 beforeEach(() => {
   mutateState((store) => {

@@ -20,7 +20,7 @@ import {
   getNextRepairableIssueForWorktree,
   listRepairableIssuesForWorktree,
   mutateState,
-} from "../../scripts/ops/core/symphony-state.mjs";
+} from "../../harness/ops/core/symphony-state.mjs";
 
 // Reset state before each test
 beforeEach(() => {

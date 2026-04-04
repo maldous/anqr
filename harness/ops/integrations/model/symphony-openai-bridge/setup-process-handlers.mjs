@@ -1,0 +1,34 @@
+// Extracted from runtime.mjs: process-level setup (GC interval, signal handlers).
+
+import { shutdown } from "./shutdown.mjs";
+import { logInfo } from "./logger.mjs";
+
+export function setupProcessHandlers() {
+  if (typeof globalThis.gc === "function") {
+    setInterval(
+      () => {
+        const mem = process.memoryUsage();
+        const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
+        const rssMB = Math.round(mem.rss / 1024 / 1024);
+        logInfo(`[gc] Periodic GC: heap=${heapMB}MB rss=${rssMB}MB`);
+        globalThis.gc();
+        const after = process.memoryUsage();
+        const heapAfter = Math.round(after.heapUsed / 1024 / 1024);
+        const rssAfter = Math.round(after.rss / 1024 / 1024);
+        logInfo(
+          `[gc] After GC: heap=${heapAfter}MB rss=${rssAfter}MB (freed ${heapMB - heapAfter}MB)`,
+        );
+      },
+      5 * 60 * 1000,
+    );
+    logInfo(`[gc] Periodic GC enabled (every 5 minutes)`);
+  }
+
+  process.on("SIGTERM", () => {
+    shutdown("SIGTERM").catch(() => process.exit(1));
+  });
+
+  process.on("SIGINT", () => {
+    shutdown("SIGINT").catch(() => process.exit(1));
+  });
+}

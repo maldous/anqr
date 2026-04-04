@@ -5,7 +5,7 @@ Requires=litellm-proxy.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 %h/src/anqr/scripts/ops/model-injector-proxy.py
+ExecStart=/usr/bin/python3 %h/src/anqr/harness/ops/model-injector-proxy.py
 Restart=always
 RestartSec=3
 Environment=UPSTREAM_HOST=127.0.0.1

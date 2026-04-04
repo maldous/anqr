@@ -1,0 +1,11 @@
+// Generated facade index.
+export { repoRoot } from "./repo-root.mjs";
+export { contractsRoot } from "./contracts-root.mjs";
+export { forbiddenNamePattern } from "./forbidden-name-pattern.mjs";
+export { schemaCarryingPackages } from "./schema-carrying-packages.mjs";
+export { allowedSchemaImportSources } from "./allowed-schema-import-sources.mjs";
+export { errors } from "./errors.mjs";
+export { pathExists } from "./path-exists.mjs";
+export { fileExists } from "./file-exists.mjs";
+export { collectFiles } from "./collect-files.mjs";
+export { main } from "./main.mjs";

@@ -31,17 +31,17 @@ When an issue exhausts retries (default: 2 attempts), it's moved to Backlog and 
 
 ## Solution
 
-Created `scripts/ops/tools/reset-retry-exhausted.mjs` to reset retry state for blocked issues:
+Created `harness/ops/tools/reset-retry-exhausted.mjs` to reset retry state for blocked issues:
 
 ```bash
 # Dry-run to see what would be reset
-node scripts/ops/tools/reset-retry-exhausted.mjs --dry-run
+node harness/ops/tools/reset-retry-exhausted.mjs --dry-run
 
 # Reset all retry_exhausted issues in Backlog
-node scripts/ops/tools/reset-retry-exhausted.mjs --all
+node harness/ops/tools/reset-retry-exhausted.mjs --all
 
 # Reset specific issue
-node scripts/ops/tools/reset-retry-exhausted.mjs --id=ANQ-1234
+node harness/ops/tools/reset-retry-exhausted.mjs --id=ANQ-1234
 ```
 
 After resetting:
@@ -54,15 +54,15 @@ After resetting:
 
 ```bash
 # Check queue status
-node scripts/ops/symphony-queue-control.mjs --check
+node harness/ops/symphony-queue-control.mjs --check
 
 # Manually feed queue (also runs automatically every 2 minutes)
-node scripts/ops/symphony-queue-control.mjs --feed
+node harness/ops/symphony-queue-control.mjs --feed
 
 # Check for retry_exhausted issues
 node -e "
-import('./scripts/ops/integrations/linear/linear-client.mjs').then(async (m) => {
-  const { getIssueState } = await import('./scripts/ops/core/symphony-state.mjs');
+import('./harness/ops/integrations/linear/linear-client.mjs').then(async (m) => {
+  const { getIssueState } = await import('./harness/ops/core/symphony-state.mjs');
   const issues = await m.listIssuesByState(['Backlog']);
   const blocked = issues.filter(i => getIssueState(i.identifier).retry_exhausted);
   console.log('Retry-exhausted issues:', blocked.length);
@@ -81,11 +81,11 @@ Consider:
 
 ## Related Files
 
-- `scripts/ops/core/symphony-state.mjs` - State management and filter logic
-- `scripts/ops/orchestration/symphony-queue-control.mjs` - Queue feeding logic
-- `scripts/ops/orchestration/symphony-runner.mjs` - Issue execution and retry logic
-- `scripts/ops/core/symphony-config.mjs` - Configuration (TARGET_MIN, RUNNER_MAX_RETRIES)
-- `scripts/ops/tools/reset-retry-exhausted.mjs` - Utility to reset blocked issues
+- `harness/ops/core/symphony-state.mjs` - State management and filter logic
+- `harness/ops/orchestration/symphony-queue-control.mjs` - Queue feeding logic
+- `harness/ops/orchestration/symphony-runner.mjs` - Issue execution and retry logic
+- `harness/ops/core/symphony-config.mjs` - Configuration (TARGET_MIN, RUNNER_MAX_RETRIES)
+- `harness/ops/tools/reset-retry-exhausted.mjs` - Utility to reset blocked issues
 
 ## Resolution
 

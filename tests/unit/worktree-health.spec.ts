@@ -17,7 +17,7 @@ import {
   clearQuarantine,
   getFleetSnapshot,
   loadState,
-} from "../../scripts/ops/core/symphony-state.mjs";
+} from "../../harness/ops/core/symphony-state.mjs";
 
 beforeEach(() => {
   mutateState((store) => {

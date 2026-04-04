@@ -34,7 +34,7 @@ Environment=CONTEXT7_HTTP_PORT=4320
 # Systemd env overrides (CONTEXT7_API_KEY, etc.)
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/runtime/mcp/context7-http-service.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/runtime/mcp/context7-http-service.mjs
 
 # Logging to journal
 StandardOutput=journal

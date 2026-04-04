@@ -1,0 +1,25 @@
+// Generated facade index.
+export { generateEmbedding } from "./generate-embedding.mjs";
+export { cosineSimilarity } from "./cosine-similarity.mjs";
+export { isOllamaAvailable } from "./is-ollama-available.mjs";
+export { vectorSearch } from "./vector-search.mjs";
+export { isIndexReady } from "./is-index-ready.mjs";
+export { RRF_K } from "./rrf-k.mjs";
+export { INDEXABLE_EXTENSIONS } from "./indexable-extensions.mjs";
+export { EXCLUDED_DIRS } from "./excluded-dirs.mjs";
+export { MAX_FILE_BYTES } from "./max-file-bytes.mjs";
+export { miniSearchIndex } from "./mini-search-index.mjs";
+export { indexFingerprint } from "./index-fingerprint.mjs";
+export { indexedDocCount } from "./indexed-doc-count.mjs";
+export { indexBuiltAt } from "./index-built-at.mjs";
+export { computeFingerprint } from "./compute-fingerprint.mjs";
+export { extractSnippet } from "./extract-snippet.mjs";
+export { embeddingsAvailable } from "./embeddings-available.mjs";
+export { vectorStoreReady } from "./vector-store-ready.mjs";
+export { createHybridSearchIndex } from "./create-hybrid-search-index.mjs";
+export { reciprocalRankFusion } from "./reciprocal-rank-fusion.mjs";
+export { hybridSearch } from "./hybrid-search.mjs";
+export { collectProjectFiles } from "./collect-project-files.mjs";
+export { warmSearchIndex } from "./warm-search-index.mjs";
+export { searchFiles } from "./search-files.mjs";
+export { getSearchStats } from "./get-search-stats.mjs";

@@ -16,6 +16,7 @@ When spawning the `basher` agent, you must always use this exact schema and no o
 ```
 
 **Requirements:**
+
 - `params.command` is mandatory
 - `params.command` must be a non-empty string
 - never put the shell command in `prompt`
@@ -24,11 +25,11 @@ When spawning the `basher` agent, you must always use this exact schema and no o
 - if you do not know the exact command, do not spawn `basher`
 
 **Validation before every basher spawn:**
+
 - `typeof params.command === "string"`
 - `params.command.trim().length > 0`
 
 **Enforcement:** Reject any basher spawn that does not match this exact schema
-
 
 ### Basher Session Start Contract [MUST RUN EVERY FRESH SESSION]
 

@@ -173,4 +173,4 @@ If issues arise:
 
 - Technical: `docs/known-issues/symphony-bridge-parameter-normalization.md`
 - Summary: `docs/known-issues/PARAMETER-VALIDATION-FIX-SUMMARY.md`
-- Tests: `scripts/ops/integrations/model/symphony-openai-bridge-normalization.spec.ts`
+- Tests: `harness/ops/integrations/model/symphony-openai-bridge-normalization.spec.ts`

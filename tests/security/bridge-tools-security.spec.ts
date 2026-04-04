@@ -33,7 +33,7 @@ describe("Bridge Tools Security - Path Traversal Prevention", () => {
 
   it("should prevent directory traversal in read_files", async () => {
     const { readFilesTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Attempt to read outside project with ../
     const result = await readFilesTool({
@@ -46,7 +46,7 @@ describe("Bridge Tools Security - Path Traversal Prevention", () => {
 
   it("should prevent directory traversal in write tool", async () => {
     const { writeFileTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Attempt to write outside project
     const result = await writeFileTool({
@@ -60,7 +60,7 @@ describe("Bridge Tools Security - Path Traversal Prevention", () => {
 
   it("should prevent absolute path access to system files", async () => {
     const { readFileTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const result = await readFileTool({ path: "/etc/passwd", offset: undefined, lines: undefined });
 
@@ -70,7 +70,7 @@ describe("Bridge Tools Security - Path Traversal Prevention", () => {
 
   it("should prevent symlink-based path traversal", async () => {
     const { readFileTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const linkPath = path.join(FIXTURES_DIR, "bad-link");
 
@@ -96,7 +96,7 @@ describe("Bridge Tools Security - Path Traversal Prevention", () => {
 describe("Bridge Tools Security - Command Injection Prevention", () => {
   it("should not allow command injection in exec tool", async () => {
     const { execTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Attempt command injection via shell operators
     const result = await execTool({
@@ -113,7 +113,7 @@ describe("Bridge Tools Security - Command Injection Prevention", () => {
 
   it("should handle malicious glob patterns safely", async () => {
     const { globTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Attempt directory traversal via glob
     const result = await globTool({
@@ -127,7 +127,7 @@ describe("Bridge Tools Security - Command Injection Prevention", () => {
 
   it("should sanitize regex patterns in code_search", async () => {
     const { codeSearchTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Malicious regex that could cause ReDoS
     const result = await codeSearchTool({
@@ -156,7 +156,7 @@ describe("Bridge Tools Security - Input Validation", () => {
 
   it("should validate file paths are strings", async () => {
     const { readFileTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Pass invalid type
     const result = await readFileTool({ path: null as any, offset: undefined, lines: undefined });
@@ -166,7 +166,7 @@ describe("Bridge Tools Security - Input Validation", () => {
 
   it("should validate replacement arrays in str_replace", async () => {
     const { strReplaceTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const testFile = path.join(FIXTURES_DIR, "validate.txt");
     fs.writeFileSync(testFile, "content");
@@ -182,7 +182,7 @@ describe("Bridge Tools Security - Input Validation", () => {
 
   it("should reject null bytes in file paths", async () => {
     const { readFileTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Null byte injection attempt
     const result = await readFileTool({
@@ -196,7 +196,7 @@ describe("Bridge Tools Security - Input Validation", () => {
 
   it("should validate memory file names", async () => {
     const { memoryGetTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Attempt to access arbitrary file
     const result = await memoryGetTool({ file: "../../../etc/passwd" });
@@ -209,7 +209,7 @@ describe("Bridge Tools Security - Input Validation", () => {
 describe("Bridge Tools Security - Secret Redaction", () => {
   it("should not expose environment variables in exec output", async () => {
     const { execTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Set a test secret
     process.env.TEST_SECRET = "secret123";
@@ -225,7 +225,7 @@ describe("Bridge Tools Security - Secret Redaction", () => {
 
   it("should not leak file paths in error messages", async () => {
     const { readFileTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const result = await readFileTool({
       path: "/home/user/.ssh/id_rsa",
@@ -243,7 +243,7 @@ describe("Bridge Tools Security - Secret Redaction", () => {
 describe("Bridge Tools Security - File Access Policy", () => {
   it("should restrict access to sensitive system directories", async () => {
     const { listDirectoryTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const sensitiveDirectories = ["/etc", "/root", "/sys", "/proc"];
 
@@ -257,7 +257,7 @@ describe("Bridge Tools Security - File Access Policy", () => {
 
   it("should prevent reading hidden system files", async () => {
     const { readFilesTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const systemFiles = ["/etc/shadow", "/etc/sudoers", "/root/.bash_history"];
 
@@ -271,7 +271,7 @@ describe("Bridge Tools Security - File Access Policy", () => {
 
   it("should prevent writing to system directories", async () => {
     const { writeFileTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const result = await writeFileTool({
       path: "/etc/malicious.conf",
@@ -285,7 +285,7 @@ describe("Bridge Tools Security - File Access Policy", () => {
 describe("Bridge Tools Security - Resource Limits", () => {
   it("should limit file read size", async () => {
     const { readFileTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Attempt to read large system file
     const result = await readFileTool({ path: "/dev/random", offset: undefined, lines: undefined });
@@ -298,7 +298,7 @@ describe("Bridge Tools Security - Resource Limits", () => {
 
   it("should limit exec command execution time", async () => {
     const { execTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const startTime = Date.now();
     await execTool({ command: "sleep 300", cwd: undefined });
@@ -310,7 +310,7 @@ describe("Bridge Tools Security - Resource Limits", () => {
 
   it("should limit glob result count", async () => {
     const { globTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Attempt to list massive directory
     const result = await globTool({
@@ -328,7 +328,7 @@ describe("Bridge Tools Security - Resource Limits", () => {
 describe("Bridge Tools Security - SDK Bug Workaround (ANQ-1056)", () => {
   it("should normalize run_file_change_hooks input safely", async () => {
     const { runFileChangeHooksTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Test with malformed input (string instead of array)
     const resultString = await runFileChangeHooksTool({
@@ -348,7 +348,7 @@ describe("Bridge Tools Security - SDK Bug Workaround (ANQ-1056)", () => {
 
   it("should prevent command injection via file names in hooks", async () => {
     const { runFileChangeHooksTool } =
-      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Malicious file name
     const result = await runFileChangeHooksTool({

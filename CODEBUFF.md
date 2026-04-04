@@ -10,7 +10,6 @@ Read order:
 6. [knowledge.md](/home/user/src/anqr/knowledge.md) — persistent local rules
 7. [MEMORY.md](/home/user/src/anqr/MEMORY.md) — recent durable memory
 
-
 ## Native Freebuff startup checklist
 
 Before real work in a fresh session:
@@ -53,7 +52,7 @@ Symphony runner supports concurrent execution via git worktrees with **8 concurr
 - Each runner instance operates in an isolated worktree directory (e.g., `/home/user/src/anqr-wt1`, `/home/user/src/anqr-wt2`)
 - Environment variables: `ANQR_WORKTREE_ID` (e.g., `wt1`, `wt2`, ..., `wt8`, or `main`) and `ANQR_WORKTREE_PATH`
 - Each worktree uses a unique branch (`symphony/wt1`, `symphony/wt2`, ..., `symphony/wt8`) tracking `origin/main`
-- `scripts/ops/orchestration/symphony-runner.mjs` refuses to run from the main repository without worktree context
+- `harness/ops/orchestration/symphony-runner.mjs` refuses to run from the main repository without worktree context
 - Worktrees sync with `origin/main` before each issue execution: `git fetch origin main && git merge origin/main --ff-only`
 - Shared state (`$XDG_RUNTIME_DIR/anqr-symphony-state/state.json`) uses file-based locking for atomicity
 - Lease system prevents concurrent work on the same Linear issue
@@ -65,7 +64,7 @@ Symphony runner supports concurrent execution via git worktrees with **8 concurr
 - **7 ports listening:** 4319 (main bridge), 4325-4328 (worktree bridges), 18789 (gateway), 18790 (router)
 - Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
 
-### Key modules (all under `scripts/ops/integrations/model/`)
+### Key modules (all under `harness/ops/integrations/model/`)
 
 - `symphony-openai-bridge.mjs` — AI SDK bridge with tool execution, provider fallback, streaming
 - `symphony-credit-gate.mjs` — 4-tier provider selection (paid → free-cloud → local-proxy → local-safety-net)
@@ -78,7 +77,7 @@ Symphony runner supports concurrent execution via git worktrees with **8 concurr
 
 - `symphony-openai-bridge.mjs` returns `_symphonyResult` in completion payloads
 - `codebuff-direct.mjs` returns `_symphonyResult` when invoked from within a worktree bridge
-- `scripts/ops/runtime/symphony/symphony-agent.mjs` consumes `_symphonyResult` directly and falls back to inference only when necessary
+- `harness/ops/runtime/symphony/symphony-agent.mjs` consumes `_symphonyResult` directly and falls back to inference only when necessary
 - Symphony bridge requests use a 15-minute request timeout for long-running turns
 - Codex SDK execution through Symphony defaults to `CODEX_SANDBOX_MODE=danger-full-access` unless explicitly overridden
 
@@ -114,14 +113,14 @@ The bridge dynamically adjusts per-provider context limits at runtime:
 1. **STOP TASK EXECUTION FIRST:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-control.mjs --stop
+   node harness/ops/orchestration/symphony-control.mjs --stop
    ```
 
    - **CRITICAL:** This must be the FIRST step before any other actions
    - Disables all 4 Symphony runner timers (wt1-wt4) to prevent new tasks from starting
    - Shows "🛑 STOPPED - no new tasks will be picked up" status
 
-2. **Check concurrent runner status**: `node scripts/ops/orchestration/symphony-runner.mjs --status`
+2. **Check concurrent runner status**: `node harness/ops/orchestration/symphony-runner.mjs --status`
    - Verify all worktree runners are idle (no active leases)
 
 3. **Wait for zero concurrency**: Check Discord for "(0 concurrent)" or verify all locks released
@@ -133,7 +132,7 @@ The bridge dynamically adjusts per-provider context limits at runtime:
 6. **RESTART TASK EXECUTION:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-control.mjs --start
+   node harness/ops/orchestration/symphony-control.mjs --start
    ```
 
    - **CRITICAL:** Must restart task execution after bridge restart
@@ -150,10 +149,10 @@ The bridge dynamically adjusts per-provider context limits at runtime:
 For harness work:
 
 ```bash
-npx vitest run scripts/ops/integrations/model/symphony-adaptive-context.spec.ts
-npx vitest run scripts/ops/integrations/model/symphony-bridge-truncation.spec.ts
-npx vitest run scripts/ops/integrations/model/symphony-credit-gate.spec.ts
-npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-adaptive-context.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-bridge-truncation.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-credit-gate.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
 ```
 
 For product work:
@@ -188,17 +187,17 @@ The Symphony bridge `spawn_agents` tool is **acknowledgment-only** — it delega
 **Check status of all worktrees:**
 
 ```bash
-node scripts/ops/orchestration/symphony-runner.mjs --status
+node harness/ops/orchestration/symphony-runner.mjs --status
 ```
 
 **View worktree pool health:**
 
 ```bash
-node scripts/ops/orchestration/symphony-worktree-pool.mjs status
+node harness/ops/orchestration/symphony-worktree-pool.mjs status
 ```
 
 **Emergency worktree repair:**
 
 ```bash
-node scripts/ops/orchestration/symphony-worktree-pool.mjs repair
+node harness/ops/orchestration/symphony-worktree-pool.mjs repair
 ```

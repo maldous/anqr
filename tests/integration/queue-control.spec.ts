@@ -17,7 +17,7 @@ import { execSync } from "node:child_process";
 describe("Queue Control Scripts", () => {
   describe("Script existence and interfaces", () => {
     it("symphony-queue-control.mjs should be executable", () => {
-      const scriptPath = resolve(process.cwd(), "scripts/ops/symphony-queue-control.mjs");
+      const scriptPath = resolve(process.cwd(), "harness/ops/symphony-queue-control.mjs");
       expect(existsSync(scriptPath)).toBe(true);
     });
 
@@ -25,7 +25,7 @@ describe("Queue Control Scripts", () => {
       let exitCode = 0;
       let output = "";
       try {
-        const result = execSync("node scripts/ops/symphony-queue-control.mjs --help 2>&1", {
+        const result = execSync("node harness/ops/symphony-queue-control.mjs --help 2>&1", {
           stdio: "pipe",
           timeout: 10_000,
         });
@@ -44,7 +44,7 @@ describe("Queue Control Scripts", () => {
       let exitCode = 0;
       try {
         const result = execSync(
-          "node scripts/ops/symphony-queue-control.mjs --all --dry-run 2>&1",
+          "node harness/ops/symphony-queue-control.mjs --all --dry-run 2>&1",
           {
             stdio: "pipe",
             timeout: 10_000,

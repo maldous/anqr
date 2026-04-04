@@ -163,7 +163,7 @@ git config --global merge.weave.name "Weave merge with diff3 markers"
 **Automated setup:**
 
 ```bash
-./scripts/git-setup.sh
+./harness/git-setup.sh
 ```
 
 This script configures:
@@ -361,7 +361,7 @@ describe("parseJSON", () => {
    git config --get merge.weave.driver
 
    # If empty, run setup
-   ./scripts/git-setup.sh
+   ./harness/git-setup.sh
    ```
 
 2. **Actual same-line modifications**
@@ -581,7 +581,7 @@ If conflicts occur despite weave merge:
 - [git merge-file Documentation](https://git-scm.com/docs/git-merge-file) — Merge driver reference
 - [docs/harness/12-concurrent-execution-with-worktrees.md](../harness/12-concurrent-execution-with-worktrees.md) — Concurrent execution context
 - [docs/harness/WORKTREE-QUICKSTART.md](../harness/WORKTREE-QUICKSTART.md) — Worktree setup guide
-- [scripts/git-setup.sh](/home/user/src/anqr/scripts/git-setup.sh) — Automated setup script
+- [harness/git-setup.sh](/home/user/src/anqr/harness/git-setup.sh) — Automated setup script
 - [.gitattributes](../../.gitattributes) — Repository merge strategy configuration
 
 ## Appendix: Alternative Merge Strategies
@@ -654,7 +654,7 @@ git config --global diff.algorithm patience
 **All developers must run:**
 
 ```bash
-./scripts/git-setup.sh
+./harness/git-setup.sh
 ```
 
 **Verify configuration:**

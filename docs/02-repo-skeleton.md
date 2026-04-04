@@ -53,7 +53,7 @@ packages/
     depcruise/
     build/
 
-scripts/
+harness/
   ops/
     lib/
     symphony/
@@ -77,5 +77,5 @@ tests/
 - `apps/*` are delivery targets
 - `packages/*` are the reusable architecture
 - `packages/contracts/*` are portable shape-only boundaries
-- `scripts/ops/*` is the local operating engine (systemd timers, CLI scripts)
+- `harness/ops/*` is the local operating engine (systemd timers, CLI scripts)
 - `docs/*` is canonical governance and doctrine

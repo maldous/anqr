@@ -48,7 +48,7 @@ The SDK incorrectly passes the `files` parameter as a string instead of an array
 - ✅ Object with path/paths properties → extracts to array
 - ✅ Empty/invalid input → returns placeholder: `[""]` → `["<empty>"]`
 
-This transformation is defined in `scripts/ops/integrations/model/symphony-openai-bridge.mjs` (line ~1675) using Zod's `z.any().transform()` function with defensive filtering that:
+This transformation is defined in `harness/ops/integrations/model/symphony-openai-bridge.mjs` (line ~1675) using Zod's `z.any().transform()` function with defensive filtering that:
 
 1. Accepts any input type to prevent SDK errors
 2. Normalizes to array format

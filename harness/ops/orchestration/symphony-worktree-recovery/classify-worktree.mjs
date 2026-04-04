@@ -1,0 +1,149 @@
+// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:73
+
+import { leaseIsActive } from "../../symphony-state.mjs";
+import {
+  RECOVERY_MAX_REPAIR_ATTEMPTS,
+  RECOVERY_QUARANTINE_THRESHOLD_MS,
+  RECOVERY_STALE_LEASE_GRACE_MS,
+  RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD,
+} from "../../symphony-config.mjs";
+
+import { hasConflictMarkers } from "./has-conflict-markers.mjs";
+import { inferOwnerFromBranch } from "./infer-owner-from-branch.mjs";
+
+export function classifyWorktree(snapshot) {
+  const result = {
+    classification: "clean",
+    confidence: 1.0,
+    inferredOwner: null,
+    repairAction: null,
+  };
+
+  if (!snapshot.exists) {
+    result.classification = "missing";
+    result.repairAction = "reprovision";
+    return result;
+  }
+
+  const hasDirtyFiles = snapshot.gitDirtyFiles.length > 0;
+  const finState = snapshot.finalizationState;
+  const isRepairable =
+    finState &&
+    [
+      "validation_failed_repairable",
+      "commit_failed_repairable",
+      "branch_push_failed_repairable",
+      "integration_failed_repairable",
+    ].includes(finState.state);
+
+  // 1. Active lease with recent heartbeat → executing, skip (checked first — active work trumps all)
+  if (snapshot.leaseState && leaseIsActive({ lease: snapshot.leaseState })) {
+    const heartbeatAge = Date.now() - new Date(snapshot.leaseState.heartbeat_at || 0).getTime();
+    if (heartbeatAge < RECOVERY_STALE_LEASE_GRACE_MS) {
+      result.classification = "executing";
+      result.repairAction = "skip";
+      return result;
+    }
+    // Stale heartbeat — lease still technically active but runner may be dead
+    result.classification = "stale_lease";
+    result.confidence = 0.8;
+    result.repairAction = "reclaim_lease";
+    return result;
+  }
+
+  // 2. No dirty files + no active finalization → clean
+  if (!hasDirtyFiles && !isRepairable) {
+    result.classification = "clean";
+    result.repairAction = "skip";
+    return result;
+  }
+
+  // 3a. Specifically: branch_push_failed_repairable → retry push (no dirty files needed)
+  if (finState?.state === "branch_push_failed_repairable" && finState.stickyOwner === snapshot.id) {
+    result.classification = "half_committed";
+    result.repairAction = "retry_push";
+    result.confidence = 1.0;
+    result.inferredOwner = snapshot.issueIdentifier;
+
+    const finAge = Date.now() - new Date(finState.updatedAt || 0).getTime();
+    if (
+      finAge > RECOVERY_QUARANTINE_THRESHOLD_MS &&
+      (finState.attempts || 0) >= RECOVERY_MAX_REPAIR_ATTEMPTS
+    ) {
+      result.repairAction = "quarantine";
+    }
+    return result;
+  }
+
+  // 3b. Other repairable states with stickyOwner match → dirty_owned / continue_repair
+  if (isRepairable && finState.stickyOwner === snapshot.id) {
+    result.classification = "dirty_owned";
+    result.confidence = 1.0;
+    result.inferredOwner = snapshot.issueIdentifier;
+    result.repairAction = "continue_repair";
+
+    // Check if stuck in repairable state too long
+    const finAge = Date.now() - new Date(finState.updatedAt || 0).getTime();
+    if (
+      finAge > RECOVERY_QUARANTINE_THRESHOLD_MS &&
+      (finState.attempts || 0) >= RECOVERY_MAX_REPAIR_ATTEMPTS
+    ) {
+      result.repairAction = "quarantine";
+    }
+    return result;
+  }
+
+  // 4. Dirty files + stale/expired lease
+  if (hasDirtyFiles && snapshot.leaseState && !leaseIsActive({ lease: snapshot.leaseState })) {
+    result.classification = "stale_lease";
+    result.repairAction = "reclaim_lease";
+
+    // Try to infer ownership from finalization state
+    if (finState?.stickyOwner === snapshot.id) {
+      result.confidence = 0.9;
+      result.inferredOwner = snapshot.issueIdentifier;
+    } else {
+      result.confidence = 0.5;
+      result.inferredOwner = inferOwnerFromBranch(snapshot);
+    }
+    return result;
+  }
+
+  // 5. Dirty files + no finalization + no lease → orphaned
+  if (hasDirtyFiles && !isRepairable && !snapshot.leaseState) {
+    const inferred = inferOwnerFromBranch(snapshot);
+    if (inferred) {
+      result.classification = "dirty_owned";
+      result.confidence = 0.6;
+      result.inferredOwner = inferred;
+      result.repairAction =
+        result.confidence >= RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD
+          ? "continue_repair"
+          : "quarantine";
+    } else {
+      result.classification = "dirty_orphaned";
+      result.confidence = 0.3;
+      result.repairAction = "quarantine";
+    }
+    return result;
+  }
+
+  // 6. Has repairable finalization but belongs to different worktree
+  if (isRepairable && finState.stickyOwner !== snapshot.id) {
+    result.classification = "clean";
+    result.repairAction = "skip";
+    return result;
+  }
+
+  // 7. Check for merge conflict markers
+  if (hasDirtyFiles) {
+    const worktreePath = snapshot.path;
+    if (hasConflictMarkers(worktreePath, snapshot.gitDirtyFiles)) {
+      result.classification = "conflicted";
+      result.repairAction = "quarantine";
+      return result;
+    }
+  }
+
+  return result;
+}

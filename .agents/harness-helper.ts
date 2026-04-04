@@ -17,13 +17,13 @@ const definition: AgentDefinition = {
 - **Symphony Worktree Executors** (ports 4321-4328): 8 worktree-based executors running in isolated git worktrees. Each executor runs \`symphony-openai-bridge.mjs\` on its own port.
   - wt1-wt4: Linear work (ports 4321-4324)
   - wt5-wt8: Discord work (ports 4325-4328)
-  - Source: \`scripts/ops/integrations/model/symphony-openai-bridge.mjs\`
+  - Source: \`harness/ops/integrations/model/symphony-openai-bridge.mjs\`
 - **Codebuff Integration**: Codebuff SDK now runs inside Symphony executors (per ADR-0003). No separate bridge.
-- **Credit Gate**: 4-tier provider selection (paid → free-cloud → local-proxy → local-safety-net) with dynamic scoring. Source: \`scripts/ops/integrations/model/symphony-credit-gate.mjs\`
-- **Adaptive Context**: Dynamic per-provider token ceilings, rate-limit throttling, TPM/RPM tracking. Source: \`scripts/ops/integrations/model/symphony-adaptive-context.mjs\`
-- **Truncation**: Static token limits and message truncation. Source: \`scripts/ops/integrations/model/symphony-bridge-truncation.mjs\`
-- **Integrator**: Single-writer service that serially promotes worktree branches to origin/main. Source: \`scripts/ops/orchestration/symphony-integrator.mjs\`
-- **Router**: Routes incoming requests to available worktrees. Source: \`scripts/ops/integrations/model/symphony-router.mjs\`
+- **Credit Gate**: 4-tier provider selection (paid → free-cloud → local-proxy → local-safety-net) with dynamic scoring. Source: \`harness/ops/integrations/model/symphony-credit-gate.mjs\`
+- **Adaptive Context**: Dynamic per-provider token ceilings, rate-limit throttling, TPM/RPM tracking. Source: \`harness/ops/integrations/model/symphony-adaptive-context.mjs\`
+- **Truncation**: Static token limits and message truncation. Source: \`harness/ops/integrations/model/symphony-bridge-truncation.mjs\`
+- **Integrator**: Single-writer service that serially promotes worktree branches to origin/main. Source: \`harness/ops/orchestration/symphony-integrator.mjs\`
+- **Router**: Routes incoming requests to available worktrees. Source: \`harness/ops/integrations/model/symphony-router.mjs\`
 
 ## Provider Tiers (38+ providers)
 
@@ -80,9 +80,9 @@ Note: Codebuff is now integrated into Symphony executors as \`symphony/codebuff\
 flock -w 120 9 npm run test:unit:coverage 9>/tmp/anqr-vitest.lock
 
 # Individual test files
-npx vitest run scripts/ops/integrations/model/symphony-adaptive-context.spec.ts
-npx vitest run scripts/ops/integrations/model/symphony-bridge-truncation.spec.ts
-npx vitest run scripts/ops/integrations/model/symphony-credit-gate.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-adaptive-context.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-bridge-truncation.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-credit-gate.spec.ts
 
 # Finalization / integrator tests
 npx vitest run tests/unit/finalization-state.spec.ts

@@ -7,7 +7,6 @@ Read order:
 3. [docs/README.md](/home/user/src/anqr/docs/README.md) — documentation index
 4. [docs/harness/00-index.md](/home/user/src/anqr/docs/harness/00-index.md) — harness doctrine
 
-
 ## Native session checklist
 
 Before real work in a fresh session:
@@ -66,13 +65,13 @@ Symphony runner supports concurrent execution via git worktrees with **8 concurr
 
 ```bash
 # 1. Initialize all 8 worktrees
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 8
+node harness/ops/orchestration/symphony-worktree-pool.mjs init 8
 
 # 2. Verify creation
-node scripts/ops/orchestration/symphony-worktree-pool.mjs status
+node harness/ops/orchestration/symphony-worktree-pool.mjs status
 
 # 3. Enable all runners
-node scripts/ops/orchestration/symphony-control.mjs --start
+node harness/ops/orchestration/symphony-control.mjs --start
 
 # 4. Verify runners are active
 systemctl --user list-timers | grep symphony
@@ -82,19 +81,19 @@ systemctl --user list-timers | grep symphony
 
 ```bash
 # Check runner status
-node scripts/ops/orchestration/symphony-runner.mjs --status
+node harness/ops/orchestration/symphony-runner.mjs --status
 
 # Check queue depth
-node scripts/ops/orchestration/symphony-queue-control.mjs --check
+node harness/ops/orchestration/symphony-queue-control.mjs --check
 
 # Stop all runners (before bridge restart)
-node scripts/ops/orchestration/symphony-control.mjs --stop
+node harness/ops/orchestration/symphony-control.mjs --stop
 
 # Start all runners (after bridge restart)
-node scripts/ops/orchestration/symphony-control.mjs --start
+node harness/ops/orchestration/symphony-control.mjs --start
 ```
 
-### Key modules (all under `scripts/ops/integrations/model/`)
+### Key modules (all under `harness/ops/integrations/model/`)
 
 - `symphony-openai-bridge.mjs` — AI SDK bridge with tool execution, provider fallback, streaming
 - `symphony-credit-gate.mjs` — 4-tier provider selection (paid → free-cloud → local-proxy → local-safety-net)
@@ -112,13 +111,13 @@ node scripts/ops/orchestration/symphony-control.mjs --start
 1. **STOP TASK EXECUTION FIRST:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-control.mjs --stop
+   node harness/ops/orchestration/symphony-control.mjs --stop
    ```
 
    - **CRITICAL:** This must be the FIRST step before any other actions
    - Disables all Symphony runner timers to prevent new tasks from starting
 
-2. **Check concurrent runner status**: `node scripts/ops/orchestration/symphony-runner.mjs --status`
+2. **Check concurrent runner status**: `node harness/ops/orchestration/symphony-runner.mjs --status`
 
 3. **Wait for zero concurrency**: Check Discord for "(0 concurrent)"
 
@@ -129,7 +128,7 @@ node scripts/ops/orchestration/symphony-control.mjs --start
 6. **RESTART TASK EXECUTION:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-control.mjs --start
+   node harness/ops/orchestration/symphony-control.mjs --start
    ```
 
    - **CRITICAL:** Must restart task execution after bridge restart
@@ -144,10 +143,10 @@ node scripts/ops/orchestration/symphony-control.mjs --start
 For harness work:
 
 ```bash
-npx vitest run scripts/ops/integrations/model/symphony-adaptive-context.spec.ts
-npx vitest run scripts/ops/integrations/model/symphony-bridge-truncation.spec.ts
-npx vitest run scripts/ops/integrations/model/symphony-credit-gate.spec.ts
-npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-adaptive-context.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-bridge-truncation.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-credit-gate.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
 ```
 
 For product work:

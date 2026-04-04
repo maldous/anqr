@@ -6,11 +6,11 @@
     "types": ["node"]
   },
   "include": [
-    "scripts/**/*.ts",
-    "scripts/**/*.mts",
-    "scripts/**/*.cts",
-    "scripts/**/*.mjs",
-    "scripts/**/*.d.ts"
+    "harness/**/*.ts",
+    "harness/**/*.mts",
+    "harness/**/*.cts",
+    "harness/**/*.mjs",
+    "harness/**/*.d.ts"
   ],
-  "exclude": ["scripts/**/*.spec.ts", "scripts/**/*.test.ts"]
+  "exclude": ["harness/**/*.spec.ts", "harness/**/*.test.ts"]
 }

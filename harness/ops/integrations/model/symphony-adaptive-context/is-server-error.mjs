@@ -1,0 +1,10 @@
+// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:263
+
+export function isServerError(errStr) {
+  return (
+    errStr.includes("internal server error") ||
+    errStr.includes("bad gateway") ||
+    errStr.includes("service unavailable") ||
+    errStr.includes("gateway timeout")
+  );
+}

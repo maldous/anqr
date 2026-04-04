@@ -23,8 +23,8 @@
     "vite-config/**/*.ts",
     "vitest.config.ts",
     "playwright.config.ts",
-    "scripts/**/*.ts",
-    "scripts/**/*.mjs",
+    "harness/**/*.ts",
+    "harness/**/*.mjs",
     "tools/**/*.ts"
   ]
 }

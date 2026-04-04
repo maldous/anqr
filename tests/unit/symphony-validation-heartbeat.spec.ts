@@ -41,7 +41,7 @@ vi.mock("node:child_process", async (importOriginal) => {
   };
 });
 
-import { runValidation } from "../../scripts/ops/core/symphony-validation.mjs";
+import { runValidation } from "../../harness/ops/core/symphony-validation.mjs";
 
 describe("symphony-validation heartbeat", () => {
   beforeEach(() => {

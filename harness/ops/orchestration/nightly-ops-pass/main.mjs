@@ -1,0 +1,125 @@
+// Generated from ../../../scripts/ops/orchestration/nightly-ops-pass.mjs:73
+
+import { archiveReport } from "./archive-report.mjs";
+import { dryRun } from "./dry-run.mjs";
+import { dryRunFlag } from "./dry-run-flag.mjs";
+import { printSummary } from "./print-summary.mjs";
+import { runStep } from "./run-step.mjs";
+import { skipSonar } from "./skip-sonar.mjs";
+import { skipTests } from "./skip-tests.mjs";
+import { steps } from "./steps.mjs";
+import { logInfo } from "./logger.mjs";
+
+export async function main() {
+  logInfo(`[nightly]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
+  const plan = [
+    {
+      name: "worktree-prune",
+      command: "git worktree prune",
+      severity: "advisory",
+    },
+    {
+      name: "worktree-repair",
+      command: "git worktree repair",
+      severity: "advisory",
+    },
+    {
+      name: "harness-report",
+      command: "node scripts/ops/harness-report.mjs full",
+      severity: "advisory",
+    },
+    {
+      name: "ast-density",
+      command:
+        'bash -c \'output=$(node scripts/audit-ast-density.mjs --threshold 1); if [ -n "$output" ]; then echo "$output"; exit 1; fi\'',
+      severity: "advisory",
+    },
+    ...(skipTests
+      ? []
+      : [
+          {
+            name: "test-unit-coverage",
+            command: "npm run test:unit:coverage",
+            severity: "blocking",
+            timeout: 400_000,
+          },
+        ]),
+    ...(process.env.SONAR_TOKEN && !skipSonar
+      ? [
+          {
+            name: "sonar-cleanup",
+            command: "rm -rf .scannerwork",
+            severity: "advisory",
+          },
+          {
+            name: "sonar-scan",
+            command:
+              "test -f coverage/lcov.info || { echo 'ERROR: coverage/lcov.info missing'; exit 1; } && NODE_OPTIONS='' SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner",
+            severity: "blocking",
+            timeout: 600_000,
+          },
+          { name: "sonar-export", command: "bash scripts/sonar-export.sh", severity: "blocking" },
+          ...(dryRun
+            ? []
+            : [
+                {
+                  name: "sonar-linear-audit",
+                  command: "node scripts/ops/sonar-linear-audit.mjs",
+                  severity: "blocking",
+                },
+              ]),
+        ]
+      : []),
+    {
+      name: "issue-hygiene",
+      command: `node scripts/ops/integrations/linear/issue-hygiene.mjs${dryRunFlag}`,
+      severity: "independent",
+    },
+    {
+      name: "queue-control",
+      command: `node scripts/ops/symphony-queue-control.mjs --all${dryRunFlag}`,
+      severity: "independent",
+    },
+    {
+      name: "guardian",
+      command: `node scripts/ops/linear-guardian.mjs${dryRunFlag}`,
+      severity: "independent",
+    },
+    {
+      name: "notify",
+      command: `node scripts/ops/notify.mjs --channel=all${dryRunFlag}`,
+      severity: "independent",
+    },
+    {
+      name: "latency-report",
+      command: `node scripts/ops/orchestration/latency-report.mjs --alert`,
+      severity: "advisory",
+    },
+  ];
+
+  let hardFailure = false;
+  for (const step of plan) {
+    if (hardFailure && step.severity === "blocking") {
+      logInfo(`[nightly] Skipping ${step.name} because an earlier blocking step failed`);
+      steps.push({
+        name: step.name,
+        exitCode: 99,
+        duration_ms: 0,
+        severity: step.severity,
+        skipped: true,
+      });
+      continue;
+    }
+    const result = runStep(step);
+    if (result.exitCode !== 0 && step.severity === "blocking") {
+      hardFailure = true;
+    }
+  }
+
+  archiveReport();
+  printSummary();
+
+  // Exit 0 for operational success even if advisory/independent steps found quality issues.
+  // Only exit 1 for blocking step failures (operational/correctness failures).
+  process.exit(hardFailure ? 1 : 0);
+}

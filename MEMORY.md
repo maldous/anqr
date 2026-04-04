@@ -22,7 +22,6 @@
 - Finalization state tracking in `symphony-state.mjs` (commit_failed_repairable, integration_pending, etc.)
 - Sticky repair: failed issues stay assigned to the same worktree for retry
 
-
 ### Basher Rule Hardening (2026-04)
 
 **Problem:** Native Freebuff sessions repeatedly attempted to spawn `basher` with missing or malformed `params.command`, often using natural-language task descriptions instead of exact shell commands.

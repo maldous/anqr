@@ -119,8 +119,8 @@ After deployment:
 
 ## Files Changed
 
-1. `scripts/ops/integrations/model/symphony-openai-bridge.mjs` (10 tool schemas)
-2. `scripts/ops/integrations/model/symphony-openai-bridge-normalization.spec.ts` (new test suite)
+1. `harness/ops/integrations/model/symphony-openai-bridge.mjs` (10 tool schemas)
+2. `harness/ops/integrations/model/symphony-openai-bridge-normalization.spec.ts` (new test suite)
 3. `docs/known-issues/symphony-bridge-parameter-normalization.md` (technical docs)
 4. `docs/known-issues/PARAMETER-VALIDATION-FIX-SUMMARY.md` (this file)
 

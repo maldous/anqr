@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/core/worktree-health.mjs write
+ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node harness/ops/core/worktree-health.mjs write
 WorkingDirectory=/home/user/src/anqr
 # Explicit PATH — nvm Node is not on default systemd PATH
 Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin

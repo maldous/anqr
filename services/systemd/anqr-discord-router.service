@@ -36,7 +36,7 @@ EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 EnvironmentFile=-%h/.config/symphony/anqr.env
 
 # Start the Discord request router
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/scripts/ops/integrations/model/discord-request-router.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/integrations/model/discord-request-router.mjs
 
 # Logging to journal
 StandardOutput=journal

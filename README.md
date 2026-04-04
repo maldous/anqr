@@ -232,7 +232,7 @@ This is now settled for foundation:
 
 This is now settled for foundation:
 
-- `scripts/ops/*` and `services/systemd/*` are the **canonical engineering/harness runtime**
+- `harness/ops/*` and `services/systemd/*` are the **canonical engineering/harness runtime**
 - they are **not** part of the same depcruise architecture claim as `packages/*/*`, `apps/web`, and `netlify/*`
 - the public product runtime is currently `apps/web` + `netlify/*` + `public/*`
 - the harness is required for governed engineering workflow and operational visibility
@@ -247,7 +247,7 @@ This is now settled for foundation:
 - current git history snapshot
 - existing standards documents under `docs/standards/*`
 - current docs layout under `docs/*`
-- current harness/runtime roots under `scripts/ops/*` and `services/systemd/*`
+- current harness/runtime roots under `harness/ops/*` and `services/systemd/*`
 
 ---
 
@@ -279,7 +279,7 @@ Path                    Status                               Notes
 packages/*/*            canonical architecture surface       reusable package-owned logic
 apps/web                canonical delivery surface           current web shell
 netlify/*               canonical delivery surface           current API/MCP perimeter and handlers
-scripts/ops/*           canonical harness/ops surface        operationally canonical, outside depcruise app/package claim
+harness/ops/*           canonical harness/ops surface        operationally canonical, outside depcruise app/package claim
 services/systemd/*      canonical harness runtime surface    operationally canonical, outside depcruise app/package claim
 public/*                canonical static/public surface      assets and public generated artifacts only
 docs/*                  canonical knowledge surface          active doctrine and reference surface
@@ -308,7 +308,7 @@ netlify/*
 They do **not** by themselves prove or govern:
 
 ```text
-scripts/ops/*
+harness/ops/*
 services/systemd/*
 android/*
 ios/*
@@ -955,7 +955,7 @@ Phase 1 exit criteria:
 
 ### Phase 3 — Classify and stabilize the harness runtime ✅ COMPLETE
 
-- [x] classify all `scripts/ops/*` surfaces as required / optional / archival
+- [x] classify all `harness/ops/*` surfaces as required / optional / archival
 - [x] classify all `services/systemd/*` units as required / optional / archival
 - [x] document the maintained control flow:
   - harness-report -> guardian -> queue control -> runner -> notify
@@ -979,17 +979,17 @@ Phase 1 exit criteria:
 Required inventory classified:
 
 ```text
-scripts/ops/harness-report.mjs                              — ✅ canonical (reporting)
-scripts/ops/linear-guardian.mjs                             — ✅ canonical (governance)
-scripts/ops/symphony-queue-control.mjs                      — ✅ canonical (orchestration)
-scripts/ops/symphony-runner.mjs                             — ✅ canonical (orchestration)
-scripts/ops/symphony-agent.mjs                              — ✅ canonical (runtime)
-scripts/ops/symphony-credit-gate.mjs                        — ✅ canonical (provider routing)
-scripts/ops/nightly-ops-pass.mjs                            — ✅ canonical (orchestration)
-scripts/ops/email-ingest.mjs                                — ✅ canonical (integrations)
-scripts/ops/lib/notify.mjs                                  — ✅ canonical (notifications)
-scripts/ops/integrations/model/codebuff-direct.mjs          — ✅ canonical (Codebuff SDK, runs inside worktree bridges)
-scripts/ops/integrations/model/symphony-agent-router.mjs    — ✅ canonical (control-plane router)
+harness/ops/harness-report.mjs                              — ✅ canonical (reporting)
+harness/ops/linear-guardian.mjs                             — ✅ canonical (governance)
+harness/ops/symphony-queue-control.mjs                      — ✅ canonical (orchestration)
+harness/ops/symphony-runner.mjs                             — ✅ canonical (orchestration)
+harness/ops/symphony-agent.mjs                              — ✅ canonical (runtime)
+harness/ops/symphony-credit-gate.mjs                        — ✅ canonical (provider routing)
+harness/ops/nightly-ops-pass.mjs                            — ✅ canonical (orchestration)
+harness/ops/email-ingest.mjs                                — ✅ canonical (integrations)
+harness/ops/lib/notify.mjs                                  — ✅ canonical (notifications)
+harness/ops/integrations/model/codebuff-direct.mjs          — ✅ canonical (Codebuff SDK, runs inside worktree bridges)
+harness/ops/integrations/model/symphony-agent-router.mjs    — ✅ canonical (control-plane router)
 services/systemd/anqr-symphony-runner.service/.timer        — ⚠️ retired (no-op compatibility shim)
 services/systemd/anqr-queue-feeder.service/.timer           — ✅ canonical (scheduled)
 services/systemd/anqr-nightly.service/.timer                — ✅ canonical (scheduled)

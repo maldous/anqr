@@ -107,7 +107,7 @@ For multi-phase issues, the agent MUST validate that previous phases completed s
 1. **STOP task execution FIRST:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-control.mjs --stop
+   node harness/ops/orchestration/symphony-control.mjs --stop
    ```
 
    - This prevents new tasks from starting while you make changes
@@ -116,7 +116,7 @@ For multi-phase issues, the agent MUST validate that previous phases completed s
 2. **Wait for zero concurrency:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-runner.mjs --status
+   node harness/ops/orchestration/symphony-runner.mjs --status
    ```
 
    - All worktree runners must be idle (no active leases)
@@ -128,7 +128,7 @@ For multi-phase issues, the agent MUST validate that previous phases completed s
 4. **RESTART task execution:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-control.mjs --start
+   node harness/ops/orchestration/symphony-control.mjs --start
    ```
 
    - **CRITICAL:** Without this step, the system remains permanently stopped

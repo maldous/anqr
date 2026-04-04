@@ -3,15 +3,15 @@ import {
   isDiscordSourced,
   markDiscordSource,
   detectAndMarkDiscordSource,
-} from "../../scripts/ops/core/discord-source.mjs";
+} from "../../harness/ops/core/discord-source.mjs";
 
 // Mock symphony-state
-vi.mock("../../scripts/ops/core/symphony-state.mjs", () => ({
+vi.mock("../../harness/ops/core/symphony-state.mjs", () => ({
   getIssueState: vi.fn(),
   patchIssueState: vi.fn(),
 }));
 
-import { getIssueState, patchIssueState } from "../../scripts/ops/core/symphony-state.mjs";
+import { getIssueState, patchIssueState } from "../../harness/ops/core/symphony-state.mjs";
 
 describe("discord-source.mjs", () => {
   beforeEach(() => {

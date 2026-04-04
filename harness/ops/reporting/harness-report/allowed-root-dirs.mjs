@@ -1,0 +1,26 @@
+// Generated from ../../../scripts/ops/reporting/harness-report.mjs:74
+
+export const ALLOWED_ROOT_DIRS = new Set([
+  "apps",
+  "packages",
+  "src",
+  "tests",
+  "tools",
+  "netlify",
+  "android",
+  "ios",
+  "docs",
+  "scripts",
+  "services",
+  "reports",
+  "node_modules",
+  ".git",
+  "dist",
+  "coverage",
+  "public",
+  "test-results",
+  "playwright-report",
+  "migration",
+  "vite-config",
+  "memory",
+]);

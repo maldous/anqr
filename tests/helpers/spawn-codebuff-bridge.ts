@@ -34,7 +34,7 @@ export async function spawnCodebuffBridge(
   // Spawn bridge process
   const scriptPath = join(
     process.cwd(),
-    "scripts/ops/integrations/model/codebuff-openai-bridge.mjs",
+    "harness/ops/integrations/model/codebuff-openai-bridge.mjs",
   );
 
   const bridgeProcess = spawn("node", [scriptPath], {

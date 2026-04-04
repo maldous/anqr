@@ -31,8 +31,8 @@ export default defineConfig({
     include: [
       "tests/unit/**/*.spec.{ts,tsx}",
       "tests/unit/**/*.test.{ts,tsx}",
-      "scripts/ops/**/*.spec.{ts,tsx}",
-      "scripts/ops/**/*.test.{ts,tsx}",
+      "harness/ops/**/*.spec.{ts,tsx}",
+      "harness/ops/**/*.test.{ts,tsx}",
       "packages/**/*.spec.{ts,tsx}",
       "packages/**/*.test.{ts,tsx}",
       "apps/**/*.spec.{ts,tsx}",

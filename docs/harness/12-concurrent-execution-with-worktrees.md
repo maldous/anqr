@@ -486,7 +486,7 @@ WorkingDirectory: /home/user/src/anqr (main repo)
 Type:             simple (long-running)
 Restart:          on-failure
 Purpose:          Control-plane router; routes requests to worktree executors
-ExecStart:        node scripts/ops/integrations/model/symphony-agent-router.mjs
+ExecStart:        node harness/ops/integrations/model/symphony-agent-router.mjs
 ```
 
 #### Symphony Executors — `anqr-symphony-executor@{1,2,3,4,5,6,7,8}.service`
@@ -512,7 +512,7 @@ WorkingDirectory: /home/user/src/anqr (main repo)
 Type:             simple (long-running)
 Restart:          on-failure
 Environment:      DISCORD_WORKTREES=5,6,7,8  MAX_CONCURRENT=4
-ExecStart:        node scripts/ops/integrations/model/discord-request-router.mjs
+ExecStart:        node harness/ops/integrations/model/discord-request-router.mjs
 Purpose:          Load balance Discord requests across wt5-wt8 bridges
 ```
 
@@ -842,7 +842,7 @@ Discord notification with results
 
 ```bash
 cd /home/user/src/anqr
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 8
+node harness/ops/orchestration/symphony-worktree-pool.mjs init 8
 ```
 
 ### Step 2: Deploy ALL Systemd Services
@@ -939,10 +939,10 @@ journalctl --user -u anqr-symphony-executor@5.service -f
 journalctl --user -u anqr-discord-router.service -f
 
 # Worktree health
-node scripts/ops/orchestration/symphony-worktree-pool.mjs status
+node harness/ops/orchestration/symphony-worktree-pool.mjs status
 
 # Queue health
-node scripts/ops/orchestration/symphony-queue-control.mjs --check
+node harness/ops/orchestration/symphony-queue-control.mjs --check
 ```
 
 ### Discord Router Health
@@ -974,13 +974,13 @@ curl http://127.0.0.1:18790/health | jq
 
 ```bash
 # Stop task execution first
-node scripts/ops/orchestration/symphony-control.mjs --stop
+node harness/ops/orchestration/symphony-control.mjs --stop
 
 # Wait for zero concurrency, then restart
 systemctl --user restart anqr-symphony-bridge.service
 
 # Resume task execution
-node scripts/ops/orchestration/symphony-control.mjs --start
+node harness/ops/orchestration/symphony-control.mjs --start
 ```
 
 ### Troubleshooting
@@ -1037,10 +1037,10 @@ git clean -fd
 **Problem: Stale worktree state**
 
 ```bash
-node scripts/ops/orchestration/symphony-worktree-pool.mjs repair
+node harness/ops/orchestration/symphony-worktree-pool.mjs repair
 # Nuclear option:
-node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 8
+node harness/ops/orchestration/symphony-worktree-pool.mjs cleanup
+node harness/ops/orchestration/symphony-worktree-pool.mjs init 8
 ```
 
 ### Keeping Deployed Services in Sync
@@ -2185,7 +2185,7 @@ curl -X POST http://127.0.0.1:18790/v1/chat/completions \
 # Manually trigger a runner in a specific worktree
 cd /home/user/src/anqr-wt1
 ANQR_WORKTREE_ID=wt1 ANQR_WORKTREE_PATH=/home/user/src/anqr-wt1 \
-  node scripts/ops/orchestration/symphony-runner.mjs --once --dry-run
+  node harness/ops/orchestration/symphony-runner.mjs --once --dry-run
 ```
 
 ### Evidence Collection

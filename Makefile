@@ -186,13 +186,13 @@ symphony-status: ## Show symphony status
 	done
 
 symphony-router: ## Start the Symphony agent router (control plane)
-	node scripts/ops/integrations/model/symphony-agent-router.mjs
+	node harness/ops/integrations/model/symphony-agent-router.mjs
 
 symphony-bridge: ## Start a worktree-local Symphony execution bridge
-	node scripts/ops/integrations/model/symphony-openai-bridge.mjs
+	node harness/ops/integrations/model/symphony-openai-bridge.mjs
 
 show-metrics: ## Show provider metrics in formatted columns
-	@python3 scripts/show-metrics.py
+	@python3 harness/show-metrics.py
 
 update-metrics: ## Reset provider stats and trigger a fresh probe cycle
 	@echo "🔄 Resetting provider stats..."

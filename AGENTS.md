@@ -205,7 +205,7 @@ Natural-language text like `check git status` or `commit and push changes` is no
 **Pre-spawn validation for every basher call:**
 
 ```ts
-typeof agent.params?.command === "string" && agent.params.command.trim().length > 0
+typeof agent.params?.command === "string" && agent.params.command.trim().length > 0;
 ```
 
 If this validation fails, refuse the basher spawn.
@@ -281,7 +281,7 @@ These tools are available in native Codebuff/Freebuff but **NOT available** in S
 
 ### Symphony bridge acknowledgment-only tools
 
-**Implementation location:** `scripts/ops/integrations/model/symphony-openai-bridge.mjs`
+**Implementation location:** `harness/ops/integrations/model/symphony-openai-bridge.mjs`
 
 These tools are implemented in Symphony bridge as **acknowledgment-only** — they log activity server-side but don't block execution or spawn actual agents:
 
@@ -345,14 +345,14 @@ These tools return graceful error messages with suggestions for alternatives rat
 
 **Symphony bridge tools:**
 
-- Main implementation: `scripts/ops/integrations/model/symphony-openai-bridge.mjs` (lines 664-2200)
+- Main implementation: `harness/ops/integrations/model/symphony-openai-bridge.mjs` (lines 664-2200)
 - Tool definitions use AI SDK `tool()` with Zod schemas
 - Includes defensive parameter normalization for array inputs
 - Catch-all Proxy for unknown tool names (graceful no-ops)
 
 **Codebuff direct execution:**
 
-- Implementation: `scripts/ops/integrations/model/codebuff-direct.mjs`
+- Implementation: `harness/ops/integrations/model/codebuff-direct.mjs`
 - Runs inside each worktree-local Symphony bridge (no standalone service)
 - Full Codebuff tool set available
 
@@ -361,7 +361,7 @@ These tools return graceful error messages with suggestions for alternatives rat
 - Symphony bridge probes all providers at startup
 - Tests structured tool calling with `add(2, 2)` tool
 - Excludes providers that emit raw JSON instead of structured `toolCalls`
-- See `scripts/ops/integrations/model/symphony-openai-bridge.mjs` lines 1800-2000
+- See `harness/ops/integrations/model/symphony-openai-bridge.mjs` lines 1800-2000
 
 ## Core execution rules
 
@@ -409,7 +409,7 @@ npm run test:unit
 npm run build:web
 ```
 
-For harness/ops work (`scripts/ops/*`, `services/systemd/*`):
+For harness/ops work (`harness/ops/*`, `services/systemd/*`):
 
 ```bash
 npm run harness:quick
@@ -486,7 +486,7 @@ Extra artifacts required for:
 
 **Harness (separate from product architecture):**
 
-- `scripts/ops/*` — canonical harness runtime
+- `harness/ops/*` — canonical harness runtime
 - `services/systemd/*` — canonical operator automation
 
 ### Quality gates
@@ -530,7 +530,7 @@ Supporting jobs:
 - Lease system prevents concurrent work on the same Linear issue
 - Default: 8 concurrent agents (4 Symphony runners wt1-wt4 + 4 Discord executors wt5-wt8)
 - Configurable via `MAX_CONCURRENT_AGENTS` in `symphony-config.mjs`
-- Worktree setup: `node scripts/ops/orchestration/symphony-worktree-pool.mjs init [count]`
+- Worktree setup: `node harness/ops/orchestration/symphony-worktree-pool.mjs init [count]`
 - Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
 
 **Worktree execution environment:**
@@ -543,7 +543,7 @@ When running in a worktree (Symphony runner with concurrency enabled):
   - `ANQR_WORKTREE_PATH` — Absolute path to worktree directory
 - **Branch isolation:** Each worktree uses a unique branch (e.g., `symphony/wt1`, `symphony/wt2`) that tracks `origin/main`
 - **Git operations:** All git commands (status, add, commit, push) operate on the worktree's isolated working directory and index
-- **Main repo restriction:** `scripts/ops/orchestration/symphony-runner.mjs` refuses to execute from the main repository without worktree context; use a worktree or set `ANQR_WORKTREE_ID`/`ANQR_WORKTREE_PATH` explicitly
+- **Main repo restriction:** `harness/ops/orchestration/symphony-runner.mjs` refuses to execute from the main repository without worktree context; use a worktree or set `ANQR_WORKTREE_ID`/`ANQR_WORKTREE_PATH` explicitly
 - **Sync workflow (automatic):** The Symphony bridge automatically syncs and pushes git changes for each request:
   - **Before each request:** `syncWorktreeFromMain()` fetches `origin/main` and merges (ff-only first, regular merge fallback, abort on conflict)
   - **After each completion:** `pushWorktreeToMain()` stages, commits, and pushes to `origin/main` (up to 3 retries with rebase)
@@ -566,7 +566,7 @@ Agents running in Symphony bridge should be aware that:
 - Discord notifications include worktree ID to distinguish concurrent executions
 - Worktree failures (sync errors, corruption) are handled with automatic recovery or hard reset
 
-**Important:** Temporary working scripts (e.g., one-off issue creation scripts, test scripts) must be placed in git-ignored directories to ensure concurrent operations do not conflict. Use `scripts/ops/.workspace/` (already in `.gitignore`) for such temporary files.
+**Important:** Temporary working scripts (e.g., one-off issue creation scripts, test scripts) must be placed in git-ignored directories to ensure concurrent operations do not conflict. Use `harness/ops/.workspace/` (already in `.gitignore`) for such temporary files.
 
 **Discord worktree concurrency:**
 
@@ -657,12 +657,12 @@ Use the hybrid Linear model:
 
 Agents can efficiently CRUD Linear issues using the canonical client library:
 
-**Location:** `scripts/ops/integrations/linear/linear-client.mjs`
+**Location:** `harness/ops/integrations/linear/linear-client.mjs`
 
 **Key functions:**
 
 ```javascript
-// Import from: scripts/ops/integrations/linear/linear-client.mjs
+// Import from: harness/ops/integrations/linear/linear-client.mjs
 import {
   createIssue,
   updateIssue,
@@ -730,9 +730,9 @@ const detail = await getIssueDetail(issueId);
 
 **Example scripts for reference:**
 
-- `scripts/ops/integrations/linear/create-*.mjs` — issue creation patterns
-- `scripts/ops/integrations/linear/close-reviewed-issues.mjs` — bulk state transitions
-- `scripts/ops/integrations/linear/reopen-marked-issues.mjs` — conditional updates with comments
+- `harness/ops/integrations/linear/create-*.mjs` — issue creation patterns
+- `harness/ops/integrations/linear/close-reviewed-issues.mjs` — bulk state transitions
+- `harness/ops/integrations/linear/reopen-marked-issues.mjs` — conditional updates with comments
 
 **CRITICAL: Read entire issue before starting work**
 
@@ -787,7 +787,7 @@ The harness uses two OpenAI-compatible bridges:
 - Structured result contract: returns `_symphonyResult` so the runner shares the same completion contract
 - **Worktree-isolated:** Each bridge instance is bound to its worktree via systemd `WorkingDirectory`
 
-**Key modules** (all under `scripts/ops/integrations/model/`):
+**Key modules** (all under `harness/ops/integrations/model/`):
 
 - `symphony-openai-bridge.mjs` — main bridge with streaming, tool execution
 - `symphony-credit-gate.mjs` — 4-tier provider selection
@@ -807,7 +807,7 @@ Restarting during active concurrent requests drops streaming connections and cau
 1. **STOP TASK EXECUTION FIRST:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-control.mjs --stop
+   node harness/ops/orchestration/symphony-control.mjs --stop
    ```
 
    - **CRITICAL:** This must be the FIRST step before any other actions
@@ -818,7 +818,7 @@ Restarting during active concurrent requests drops streaming connections and cau
 2. **Check concurrent runner status:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-runner.mjs --status
+   node harness/ops/orchestration/symphony-runner.mjs --status
    ```
 
    - Shows active worktree runners and their current work
@@ -850,7 +850,7 @@ Restarting during active concurrent requests drops streaming connections and cau
 6. **RESTART TASK EXECUTION:**
 
    ```bash
-   node scripts/ops/orchestration/symphony-control.mjs --start
+   node harness/ops/orchestration/symphony-control.mjs --start
    ```
 
    - **CRITICAL:** Must restart task execution after bridge restart
@@ -919,7 +919,7 @@ After using `--stop`, you MUST use `--start` to resume task execution. Without t
 - `packages/<group>/<package>` — two-level reusable architecture (e.g., `packages/domain/qr`)
 - `apps/web` — canonical web delivery
 - `netlify/*` — canonical API/MCP delivery
-- `scripts/ops/*` — harness runtime (outside depcruise product claim)
+- `harness/ops/*` — harness runtime (outside depcruise product claim)
 - `services/systemd/*` — operator automation (outside depcruise product claim)
 - `public/*` — static/public assets
 - `docs/*` — canonical knowledge

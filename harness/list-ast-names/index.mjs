@@ -1,0 +1,10 @@
+// Generated facade index.
+export { parseArgs } from "./parse-args.mjs";
+export { isExportedNode } from "./is-exported-node.mjs";
+export { describeVariableDeclaration } from "./describe-variable-declaration.mjs";
+export { collectTopLevelEntries } from "./collect-top-level-entries.mjs";
+export { flattenResults } from "./flatten-results.mjs";
+export { groupByFile } from "./group-by-file.mjs";
+export { formatFlat } from "./format-flat.mjs";
+export { formatGroupedFile } from "./format-grouped-file.mjs";
+export { main } from "./main.mjs";

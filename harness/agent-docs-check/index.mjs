@@ -1,0 +1,10 @@
+// Generated facade index.
+export { repoRoot } from "./repo-root.mjs";
+export { errors } from "./errors.mjs";
+export { resolve } from "./resolve.mjs";
+export { read } from "./read.mjs";
+export { parseKnownAgentTypes } from "./parse-known-agent-types.mjs";
+export { parseMarkdownTable } from "./parse-markdown-table.mjs";
+export { sorted } from "./sorted.mjs";
+export { compareSets } from "./compare-sets.mjs";
+export { main } from "./main.mjs";

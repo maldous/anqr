@@ -13,8 +13,8 @@ import {
   setWorktreeState,
   getWorktreeState,
   acquireLease,
-} from "../../scripts/ops/core/symphony-state.mjs";
-import { executeRepair } from "../../scripts/ops/orchestration/symphony-worktree-recovery.mjs";
+} from "../../harness/ops/core/symphony-state.mjs";
+import { executeRepair } from "../../harness/ops/orchestration/symphony-worktree-recovery.mjs";
 
 beforeEach(() => {
   mutateState((store) => {

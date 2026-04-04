@@ -5,7 +5,7 @@ Wants=anqr-symphony-integrator.service
 
 [Service]
 Type=simple
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/orchestration/symphony-worktree-recovery.mjs daemon
+ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node harness/ops/orchestration/symphony-worktree-recovery.mjs daemon
 WorkingDirectory=/home/user/src/anqr
 Restart=on-failure
 RestartSec=30

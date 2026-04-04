@@ -20,7 +20,7 @@ Environment=HOME=%h
 Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 WorkingDirectory=%h/src/anqr
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node scripts/ops/email-ingest.mjs
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/email-ingest.mjs
 TimeoutStartSec=180
 MemoryMax=512M
 MemorySwapMax=0

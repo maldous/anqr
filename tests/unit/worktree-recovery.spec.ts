@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { classifyWorktree } from "../../scripts/ops/orchestration/symphony-worktree-recovery.mjs";
+import { classifyWorktree } from "../../harness/ops/orchestration/symphony-worktree-recovery.mjs";
 
 function makeSnapshot(overrides = {}) {
   return {

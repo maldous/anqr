@@ -7,12 +7,12 @@ import {
   removeWorktree,
   listWorktrees,
   getSymphonyWorktrees,
-} from "../../scripts/ops/orchestration/symphony-worktree-pool.mjs";
+} from "../../harness/ops/orchestration/symphony-worktree-pool.mjs";
 import {
   getWorktreePath,
   getWorktreeBranch,
   PROJECT_ROOT,
-} from "../../scripts/ops/core/worktree-config.mjs";
+} from "../../harness/ops/core/worktree-config.mjs";
 
 describe("Worktree Concurrency Tests", () => {
   const testWorktreeIds = [901, 902]; // Use high IDs to avoid conflicts with production worktrees

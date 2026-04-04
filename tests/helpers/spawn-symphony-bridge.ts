@@ -29,7 +29,7 @@ export async function spawnSymphonyBridge(
   // Spawn bridge process
   const scriptPath = join(
     process.cwd(),
-    "scripts/ops/integrations/model/symphony-openai-bridge.mjs",
+    "harness/ops/integrations/model/symphony-openai-bridge.mjs",
   );
 
   const bridgeProcess = spawn("node", [scriptPath], {
