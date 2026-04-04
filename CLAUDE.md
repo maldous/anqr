@@ -7,6 +7,25 @@ Read order:
 3. [docs/README.md](/home/user/src/anqr/docs/README.md) — documentation index
 4. [docs/harness/00-index.md](/home/user/src/anqr/docs/harness/00-index.md) — harness doctrine
 
+
+## Native session checklist
+
+Before real work in a fresh session:
+
+1. read `AGENTS.md`
+2. read `knowledge.md`
+3. load the permanent basher rule
+4. prefer `run_terminal_command` for direct shell actions
+5. do not spawn `basher` unless `params.command` is an exact non-empty shell command string
+
+Quick self-test:
+
+```json
+{ "agent_type": "basher", "params": { "command": "pwd" } }
+```
+
+If that exact structure is not available, do not use `basher`.
+
 ## Harness Context
 
 ANQR uses an **all-in-one Symphony Bridge** architecture (ADR-0003) where each bridge provides:

@@ -7,6 +7,28 @@ Read order:
 3. [README.md](/home/user/src/anqr/README.md) — bootstrap truth and scope
 4. [docs/README.md](/home/user/src/anqr/docs/README.md) — documentation index
 5. [docs/harness/00-index.md](/home/user/src/anqr/docs/harness/00-index.md) — harness doctrine
+6. [knowledge.md](/home/user/src/anqr/knowledge.md) — persistent local rules
+7. [MEMORY.md](/home/user/src/anqr/MEMORY.md) — recent durable memory
+
+
+## Native Freebuff startup checklist
+
+Before real work in a fresh session:
+
+1. read `AGENTS.md`
+2. read `knowledge.md`
+3. load the permanent basher rule
+4. produce one valid basher payload example
+5. prefer `run_terminal_command` for direct shell actions
+6. do not spawn `basher` until the exact shell command is known
+
+**Basher self-test:**
+
+```json
+{ "agent_type": "basher", "params": { "command": "pwd" } }
+```
+
+If this cannot be produced exactly, do not use `basher` in that session.
 
 ## Harness Context
 
@@ -150,6 +172,8 @@ See [.agents/SPAWN_AGENTS_GUIDE.md](/home/user/src/anqr/.agents/SPAWN_AGENTS_GUI
 - The #1 error: basher `params.command` must be a non-empty string
 - Common pitfalls (empty params, wrong types, editor doesn't take prompt)
 - Working examples for every agent type
+
+**Extra native Freebuff rule:** basher is a command runner, not a task-description agent. Never send natural-language task text as the basher command. Prefer `run_terminal_command` for direct shell actions.
 
 The Symphony bridge `spawn_agents` tool is **acknowledgment-only** — it delegates to the parent Codebuff/OpenClaw instance and does not spawn agents itself.
 

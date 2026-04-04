@@ -9,7 +9,23 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 3. [docs/README.md](/home/user/src/anqr/docs/README.md) — documentation index
 4. [docs/program/01-anqr-1.0-definition.md](/home/user/src/anqr/docs/program/01-anqr-1.0-definition.md) — launch scope
 5. [docs/harness/00-index.md](/home/user/src/anqr/docs/harness/00-index.md) — harness doctrine
-6. Relevant standards, workflows, or issue context
+6. `knowledge.md` — persistent local rules and working memory
+7. `MEMORY.md` — recent durable project memory
+8. `SOUL.md` — continuity and behavior constraints
+9. Relevant standards, workflows, or issue context
+
+## Session start contract for native Codebuff/Freebuff
+
+In every fresh native Codebuff/Freebuff session, before doing real work:
+
+1. read `AGENTS.md`
+2. read `knowledge.md` if present
+3. load the permanent basher rule into working memory
+4. produce one valid basher payload example before any real `spawn_agents` use
+5. prefer `run_terminal_command` for direct shell actions
+6. refuse to spawn `basher` unless `params.command` is an exact non-empty shell command string
+
+If the exact shell command is not yet known, do not spawn `basher`.
 
 ## Tool availability
 
@@ -52,6 +68,7 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 **Important notes:**
 
 - Use `run_terminal_command` (not `exec`) for shell commands
+- For direct shell work, prefer `run_terminal_command` over spawning `basher`
 - All tools that accept array parameters support defensive normalization:
   - `run_file_change_hooks` expects `files` as an array: `{"files": ["path1", "path2"]}`
   - `read_files` expects `paths` as an array: `{"paths": ["file1.ts", "file2.ts"]}`
@@ -182,6 +199,17 @@ Note: `thinker` is a **spawn_agents agent type**, not a tool. Use `think_deeply`
 ⚠️ **BASHER CRITICAL**: `params.command` is **ALWAYS REQUIRED** as a non-empty string.
 Never omit `params`, never use `params: {}`. Both cause: `Invalid params for agent basher: expected string, received undefined`.
 
+**Basher is a command runner, not a task-description agent.**
+Natural-language text like `check git status` or `commit and push changes` is not a valid basher command by itself. Construct the exact shell command first, or do not spawn `basher`.
+
+**Pre-spawn validation for every basher call:**
+
+```ts
+typeof agent.params?.command === "string" && agent.params.command.trim().length > 0
+```
+
+If this validation fails, refuse the basher spawn.
+
 | Agent                        | Required                      | Optional                                                                     |
 | ---------------------------- | ----------------------------- | ---------------------------------------------------------------------------- |
 | `basher`                     | **`params.command`** (string) | `prompt`, `params.rawOutput`, `params.timeout_seconds`                       |
@@ -202,10 +230,15 @@ Never omit `params`, never use `params: {}`. Both cause: `Invalid params for age
 ```json
 // ✅ CORRECT
 { "agent_type": "basher", "prompt": "Check status", "params": { "command": "git status" } }
+{ "agent_type": "basher", "params": { "command": "git add knowledge.md && git diff --cached" } }
 
 // ❌ WRONG — missing params.command
 { "agent_type": "basher", "prompt": "Check status" }
 { "agent_type": "basher", "prompt": "Check status", "params": {} }
+
+// ❌ WRONG — natural-language task text instead of an exact shell command
+{ "agent_type": "basher", "prompt": "Commit the changes and push to origin main", "params": { "command": "" } }
+{ "agent_type": "basher", "prompt": "Show me what changed in knowledge.md" }
 ```
 
 **Codebuff context only:**

@@ -1160,12 +1160,22 @@ AI agents:        AGENTS.md -> README.md -> docs/README.md -> relevant docs
 For AI agents, that means:
 
 1. read `AGENTS.md`
-2. read `README.md`
-3. read `docs/README.md`
-4. read `docs/standards/*`
-5. read `docs/harness/*`
-6. read the relevant issue or runbook
-7. only then touch source files
+2. read `knowledge.md` if present
+3. read `MEMORY.md` if present
+4. read `README.md`
+5. read `docs/README.md`
+6. read `docs/standards/*`
+7. read `docs/harness/*`
+8. read the relevant issue or runbook
+9. only then touch source files
+
+For native Codebuff/Freebuff sessions, run one basher self-test before real delegated agent work:
+
+```json
+{ "agent_type": "basher", "params": { "command": "pwd" } }
+```
+
+If that exact payload cannot be formed, do not use `basher` in that session.
 
 ### 12.2 Planning note
 
