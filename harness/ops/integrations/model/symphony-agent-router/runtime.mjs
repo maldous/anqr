@@ -13,7 +13,7 @@ import {
   spawnLinearRunner,
 } from "./index.mjs";
 
-import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { logInfo, logWarn, logDebug } from "./logger.mjs";
 
 setInterval(() => {
   if (linearQueue.length === 0) return;

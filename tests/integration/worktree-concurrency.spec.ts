@@ -14,6 +14,13 @@ import {
   PROJECT_ROOT,
 } from "../../harness/ops/core/worktree-config.mjs";
 
+interface SymphonyWorktree {
+  id: number | null;
+  path: string;
+  branch: string;
+  prunable: boolean;
+}
+
 describe("Worktree Concurrency Tests", () => {
   const testWorktreeIds = [901, 902]; // Use high IDs to avoid conflicts with production worktrees
   const createdWorktrees: number[] = [];
@@ -57,8 +64,10 @@ describe("Worktree Concurrency Tests", () => {
 
       expect(existsSync(path)).toBe(true);
 
-      const symphonyWorktrees = getSymphonyWorktrees();
-      const testWorktrees = symphonyWorktrees.filter((wt) => testWorktreeIds.includes(wt.id));
+      const symphonyWorktrees = getSymphonyWorktrees() as SymphonyWorktree[];
+      const testWorktrees = symphonyWorktrees.filter(
+        (wt) => wt.id !== null && testWorktreeIds.includes(wt.id),
+      );
 
       expect(testWorktrees.length).toBeGreaterThanOrEqual(2);
     });
@@ -217,20 +226,22 @@ describe("Worktree Concurrency Tests", () => {
 
   describe("Worktree State Management", () => {
     it("should list all Symphony worktrees including test worktrees", () => {
-      const symphonyWorktrees = getSymphonyWorktrees();
-      const testWorktrees = symphonyWorktrees.filter((wt) => testWorktreeIds.includes(wt.id));
+      const symphonyWorktrees = getSymphonyWorktrees() as SymphonyWorktree[];
+      const testWorktrees = symphonyWorktrees.filter(
+        (wt) => wt.id !== null && testWorktreeIds.includes(wt.id),
+      );
 
       expect(testWorktrees.length).toBe(testWorktreeIds.length);
 
       for (const wt of testWorktrees) {
-        expect(wt.path).toBe(getWorktreePath(wt.id));
-        expect(wt.branch).toBe(getWorktreeBranch(wt.id));
+        expect(wt.path).toBe(getWorktreePath(wt.id!));
+        expect(wt.branch).toBe(getWorktreeBranch(wt.id!));
         expect(wt.prunable).toBe(false);
       }
     });
 
     it("should identify worktrees by ID from path", () => {
-      const symphonyWorktrees = getSymphonyWorktrees();
+      const symphonyWorktrees = getSymphonyWorktrees() as SymphonyWorktree[];
 
       for (const id of testWorktreeIds) {
         const wt = symphonyWorktrees.find((w) => w.id === id);
@@ -289,8 +300,10 @@ describe("Worktree Concurrency Tests", () => {
     });
 
     it("should display current test worktree details", () => {
-      const symphonyWorktrees = getSymphonyWorktrees();
-      const testWorktrees = symphonyWorktrees.filter((wt) => testWorktreeIds.includes(wt.id));
+      const symphonyWorktrees = getSymphonyWorktrees() as SymphonyWorktree[];
+      const testWorktrees = symphonyWorktrees.filter(
+        (wt) => wt.id !== null && testWorktreeIds.includes(wt.id),
+      );
 
       console.log("\n📊 Test Worktree Summary:");
       console.log(`   Total test worktrees: ${testWorktrees.length}`);

@@ -6,7 +6,7 @@ import { RESTART_BACKOFF_MS } from "./restart-backoff-ms.mjs";
 import { childProcess, setChildProcess } from "./child-process.mjs";
 import { isLockStillOurs } from "./is-lock-still-ours.mjs";
 import { isPortListening } from "./is-port-listening.mjs";
-import { lockHeld, setLockHeld } from "./lock-held.mjs";
+import { setLockHeld } from "./lock-held.mjs";
 import { logWarn } from "./log-warn.mjs";
 import { monitorExternalGateway } from "./monitor-external-gateway.mjs";
 import { sleep } from "./sleep.mjs";

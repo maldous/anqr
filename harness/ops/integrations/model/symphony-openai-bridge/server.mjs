@@ -42,7 +42,7 @@ import { providerStatusCache } from "./provider-status-cache.mjs";
 import { recordBridgeMetrics } from "./record-bridge-metrics.mjs";
 import { recordSuccessfulMetrics } from "./record-successful-metrics.mjs";
 import { refreshProviderStatus } from "./refresh-provider-status.mjs";
-import { requestIdCounter } from "./request-id-counter.mjs";
+import { requestIdCounter, setRequestIdCounter } from "./request-id-counter.mjs";
 import { resolveRoute } from "./resolve-route.mjs";
 import { safeLogDebug } from "./safe-log-debug.mjs";
 import { sanitizeForDiscordPreview } from "./sanitize-for-discord-preview.mjs";
@@ -400,7 +400,8 @@ export const server = http.createServer(async (req, res) => {
       }
 
       const startTime = Date.now();
-      const requestId = `req-${++requestIdCounter}`;
+      setRequestIdCounter(requestIdCounter + 1);
+      const requestId = `req-${requestIdCounter}`;
 
       // Set current request ID for file change tracking
       setCurrentRequestId(requestId);

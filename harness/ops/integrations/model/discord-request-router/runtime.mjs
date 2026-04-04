@@ -2,7 +2,7 @@
 
 import { MAX_CONCURRENT, PORT, WORKTREE_IDS, server } from "./index.mjs";
 
-import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { logInfo } from "./logger.mjs";
 
 server.listen(PORT, "127.0.0.1", () => {
   logInfo(`========================================`);

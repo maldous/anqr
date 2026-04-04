@@ -37,9 +37,9 @@ import { isRetryableErrorDeep } from "./is-retryable-error-deep.mjs";
 import { lastProbeTimeCheck } from "./last-probe-time-check.mjs";
 import { logBridgeStats } from "./log-bridge-stats.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
-import { probeTurnCounter } from "./probe-turn-counter.mjs";
+import { probeTurnCounter, setProbeTurnCounter } from "./probe-turn-counter.mjs";
 import { recordSuccessfulMetrics } from "./record-successful-metrics.mjs";
-import { requestCount } from "./request-count.mjs";
+import { requestCount, setRequestCount } from "./request-count.mjs";
 import { runContinuousProviderProbe } from "./run-continuous-provider-probe.mjs";
 import { sleep } from "./sleep.mjs";
 import { unwrapAIError } from "./unwrap-aierror.mjs";
@@ -117,8 +117,8 @@ export async function invokeWithFallbackStream(
         setSessionMessages(sessionId, messages);
       }
 
-      requestCount++;
-      probeTurnCounter++; // Track turns for probe triggering
+      setRequestCount(requestCount + 1);
+      setProbeTurnCounter(probeTurnCounter + 1); // Track turns for probe triggering
       if (requestCount % STATS_LOG_INTERVAL === 0) {
         logBridgeStats();
       }

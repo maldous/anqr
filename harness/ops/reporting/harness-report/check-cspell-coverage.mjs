@@ -7,7 +7,7 @@ import { ROOT } from "./root.mjs";
 export function checkCspellCoverage() {
   const result = spawnSync(
     "npx",
-    ["cspell", "--no-progress", "src/**/*.{ts,tsx}", "scripts/**/*.{mjs,js}", "docs/**/*.md"],
+    ["cspell", "--no-progress", "src/**/*.{ts,tsx}", "harness/**/*.{mjs,js}", "docs/**/*.md"],
     {
       cwd: ROOT,
       timeout: 120_000,

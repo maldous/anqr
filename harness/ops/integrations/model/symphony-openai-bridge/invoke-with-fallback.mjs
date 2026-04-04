@@ -38,7 +38,7 @@ import { isRetryableErrorDeep } from "./is-retryable-error-deep.mjs";
 import { logBridgeStats } from "./log-bridge-stats.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { recordSuccessfulMetrics } from "./record-successful-metrics.mjs";
-import { requestCount } from "./request-count.mjs";
+import { requestCount, setRequestCount } from "./request-count.mjs";
 import { sleep } from "./sleep.mjs";
 import { unwrapAIError } from "./unwrap-aierror.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
@@ -140,7 +140,7 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         setSessionMessages(sessionId, messages);
       }
 
-      requestCount++;
+      setRequestCount(requestCount + 1);
       if (requestCount % STATS_LOG_INTERVAL === 0) {
         logBridgeStats();
       }

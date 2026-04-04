@@ -1,7 +1,6 @@
 // Generated from ../../../scripts/ops/governance/linear-guardian.mjs:154
 
 import { actions } from "./actions.mjs";
-import { logInfo, logDebug, logWarn } from "./logger.mjs";
 
 export function logAction(type, detail) {
   const entry = { type, detail, ts: new Date().toISOString() };

@@ -1,7 +1,7 @@
 // Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:135
 
 import { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
-import { nextRequestId } from "./next-request-id.mjs";
+import { nextRequestId, setNextRequestId } from "./next-request-id.mjs";
 import { pendingRequests } from "./pending-requests.mjs";
 import { serverProcess } from "./server-process.mjs";
 import { logDebug } from "./logger.mjs";
@@ -13,7 +13,8 @@ export function sendRequest(method, params = {}, timeoutMs = REQUEST_TIMEOUT_MS)
       return;
     }
 
-    const id = nextRequestId++;
+    const id = nextRequestId;
+    setNextRequestId(nextRequestId + 1);
     const request = { jsonrpc: "2.0", id, method, params };
 
     const timer = setTimeout(() => {

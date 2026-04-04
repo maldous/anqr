@@ -5,7 +5,7 @@ import http from "node:http";
 
 import { MAX_CONCURRENT } from "./max-concurrent.mjs";
 import { getSessionThreadName } from "./get-session-thread-name.mjs";
-import { globalActiveRequests } from "./global-active-requests.mjs";
+import { globalActiveRequests, setGlobalActiveRequests } from "./global-active-requests.mjs";
 import { rebaseCwdToWorktree } from "./rebase-cwd-to-worktree.mjs";
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
 
@@ -22,7 +22,7 @@ export function proxyToWorktree(worktree, req, res) {
   req.on("end", async () => {
     // Update counters BEFORE proxying
     worktree.activeRequests++;
-    globalActiveRequests++;
+    setGlobalActiveRequests(globalActiveRequests + 1);
 
     logInfo(
       `📨 ROUTING: Discord request -> wt${worktree.id} | cwd: ${worktree.path} | active: ${worktree.activeRequests}/${globalActiveRequests}/${MAX_CONCURRENT}`,
@@ -119,7 +119,7 @@ export function proxyToWorktree(worktree, req, res) {
       if (completed) return;
       completed = true;
       worktree.activeRequests--;
-      globalActiveRequests--;
+      setGlobalActiveRequests(globalActiveRequests - 1);
       logDebug(
         `✅ Request complete (wt${worktree.id}, remaining: ${worktree.activeRequests}, global: ${globalActiveRequests})`,
       );

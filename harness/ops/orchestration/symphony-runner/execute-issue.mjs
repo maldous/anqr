@@ -125,7 +125,7 @@ export async function executeIssue(issue, dryRun = false) {
       } catch {}
     } catch (err) {
       // Sync failed - release lock immediately and exit to avoid wasting lease cycles
-      syncFailCount++;
+      setSyncFailCount(syncFailCount + 1);
 
       // Persist incremented counter for next cycle
       try {

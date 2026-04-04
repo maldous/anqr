@@ -8,15 +8,13 @@ import {
   STATE_DIR,
   SYNC_FAIL_COUNT_FILE,
   WORKTREE_ID,
-  autoDetectedWorktreeId,
   cwd,
   gitPath,
   main,
   rootMatchesPattern,
-  syncFailCount,
 } from "./index.mjs";
 
-import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { logWarn, logError, logDebug } from "./logger.mjs";
 import { detectWorktree } from "./detect-worktree.mjs";
 import { setWorktreeId } from "./worktree-id.mjs";
 import { setAutoDetectedWorktreeId } from "./auto-detected-worktree-id.mjs";

@@ -3,7 +3,6 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { execSync, execFileSync } from "node:child_process";
-import path from "node:path";
 import { getSearchStats as getHybridSearchStats } from "../../../lib/search/hybrid-search.mjs";
 import { getLinearIndexStats } from "../../../lib/search/linear-search.mjs";
 

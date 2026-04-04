@@ -21,6 +21,20 @@ const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
 const SESSION_STATE_FILE = resolve(STATE_DIR, "session-state.json");
 const ADAPTIVE_PARAMS_FILE = resolve(STATE_DIR, "adaptive-params.json");
 
+interface AdaptiveParams {
+  freeTurnLimit: {
+    base: number;
+    min: number;
+    max: number;
+    perProvider: Record<string, number>;
+  };
+  evalCycle: {
+    requestThreshold: number;
+    timeThreshold: number;
+    counter: number;
+  };
+}
+
 // Dynamic import for the .mjs module (ESM-compatible)
 const sessionStateModule = await import("./symphony-session-state.mjs");
 
@@ -208,7 +222,7 @@ describe("symphony-session-state.mjs", () => {
 
     it("should use provider-specific limit when available", () => {
       // Manually set a provider-specific limit
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       params.freeTurnLimit.perProvider["test-provider"] = 15;
 
       const limit = getProviderTurnLimit("test-provider");
@@ -216,7 +230,7 @@ describe("symphony-session-state.mjs", () => {
     });
 
     it("should have min and max constraints", () => {
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       expect(params.freeTurnLimit.min).toBeDefined();
       expect(params.freeTurnLimit.max).toBeDefined();
       expect(params.freeTurnLimit.min).toBeLessThan(params.freeTurnLimit.max);
@@ -289,7 +303,7 @@ describe("symphony-session-state.mjs", () => {
     });
 
     it("should respect min and max constraints when tuning", () => {
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       const minLimit = params.freeTurnLimit.min;
       const maxLimit = params.freeTurnLimit.max;
 
@@ -329,7 +343,7 @@ describe("symphony-session-state.mjs", () => {
 
     it("should trigger after request threshold", () => {
       resetAdaptiveParams();
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       const threshold = params.evalCycle.requestThreshold;
 
       // Increment counter to threshold
@@ -343,7 +357,7 @@ describe("symphony-session-state.mjs", () => {
 
     it("should reset counter after triggering", () => {
       resetAdaptiveParams();
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       const threshold = params.evalCycle.requestThreshold;
 
       // Trigger evaluation
@@ -356,13 +370,13 @@ describe("symphony-session-state.mjs", () => {
     });
 
     it("should have configurable request threshold", () => {
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       expect(params.evalCycle.requestThreshold).toBeDefined();
       expect(params.evalCycle.requestThreshold).toBeGreaterThan(0);
     });
 
     it("should have configurable time threshold", () => {
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       expect(params.evalCycle.timeThreshold).toBeDefined();
       expect(params.evalCycle.timeThreshold).toBeGreaterThan(0);
     });
@@ -380,7 +394,7 @@ describe("symphony-session-state.mjs", () => {
 
     it("should select underused provider during evaluation", () => {
       resetAdaptiveParams();
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       const threshold = params.evalCycle.requestThreshold;
 
       // Manually set counter to threshold (don't call shouldTriggerEvalCycle which resets it)
@@ -399,7 +413,7 @@ describe("symphony-session-state.mjs", () => {
 
     it("should handle providers with no stats", () => {
       resetAdaptiveParams();
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       const threshold = params.evalCycle.requestThreshold;
 
       // Manually set counter to threshold (don't call shouldTriggerEvalCycle which resets it)
@@ -416,7 +430,7 @@ describe("symphony-session-state.mjs", () => {
 
     it("should handle empty provider list", () => {
       resetAdaptiveParams();
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       const threshold = params.evalCycle.requestThreshold;
 
       // Manually set counter to threshold (don't call shouldTriggerEvalCycle which resets it)
@@ -430,13 +444,13 @@ describe("symphony-session-state.mjs", () => {
   describe("Adaptive parameters persistence", () => {
     it("should persist adaptive parameters to disk", () => {
       resetAdaptiveParams();
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       params.freeTurnLimit.perProvider["test-provider"] = 20;
 
       tuneAdaptiveParams({}); // Trigger save
 
       // Load fresh params
-      const loaded = getAdaptiveParams();
+      const loaded = getAdaptiveParams() as unknown as AdaptiveParams;
       expect(loaded.freeTurnLimit.perProvider["test-provider"]).toBe(20);
     });
 
@@ -445,19 +459,19 @@ describe("symphony-session-state.mjs", () => {
         unlinkSync(ADAPTIVE_PARAMS_FILE);
       }
 
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       expect(params.freeTurnLimit.base).toBe(10);
       expect(params.freeTurnLimit.min).toBe(3);
       expect(params.freeTurnLimit.max).toBe(25);
     });
 
     it("should reset to defaults when requested", () => {
-      const params = getAdaptiveParams();
+      const params = getAdaptiveParams() as unknown as AdaptiveParams;
       params.freeTurnLimit.base = 999;
 
       resetAdaptiveParams();
 
-      const reset = getAdaptiveParams();
+      const reset = getAdaptiveParams() as unknown as AdaptiveParams;
       expect(reset.freeTurnLimit.base).toBe(10);
     });
   });

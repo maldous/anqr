@@ -1,17 +1,8 @@
-// Generated from ../../../../scripts/ops/lib/rag/embeddings.mjs:29,52
+// Generated from ../../../../scripts/ops/lib/rag/embeddings.mjs:52
 
 import { FAILURE_COOLDOWN_MS } from "./failure-cooldown-ms.mjs";
 import { HEALTH_CACHE_TTL_MS } from "./health-cache-ttl-ms.mjs";
-
-export let healthCache = {
-  value: null,
-  expiresAt: 0,
-  nextRetryAt: 0,
-};
-
-export function setHealthCache(value) {
-  healthCache = value;
-}
+import { setHealthCache } from "./set-health-cache.mjs";
 
 export function rememberHealth(value) {
   const now = Date.now();

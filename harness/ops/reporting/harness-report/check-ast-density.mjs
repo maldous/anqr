@@ -6,7 +6,7 @@ import { ROOT } from "./root.mjs";
 
 export function checkAstDensity() {
   try {
-    const output = execFileSync("node", ["scripts/audit-ast-density.mjs", "--threshold", "1"], {
+    const output = execFileSync("node", ["harness/audit-ast-density.mjs", "--threshold", "1"], {
       cwd: ROOT,
       timeout: 120_000,
       stdio: "pipe",

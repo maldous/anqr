@@ -8,7 +8,7 @@ import { INDEX_FILE } from "./index-file.mjs";
 import { MANIFEST_FILE } from "./manifest-file.mjs";
 import { META_FILE } from "./meta-file.mjs";
 import { indexCache, setIndexCache } from "./index-cache.mjs";
-import { indexDirty, setIndexDirty } from "./index-dirty.mjs";
+import { setIndexDirty } from "./index-dirty.mjs";
 import { indexLoaded, setIndexLoaded } from "./index-loaded.mjs";
 import { isValidEntry } from "./is-valid-entry.mjs";
 import { metaCache, setMetaCache } from "./meta-cache.mjs";

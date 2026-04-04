@@ -2,7 +2,7 @@
 
 import { monitorLoop, shutdown } from "./index.mjs";
 
-import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
+import { logError } from "./logger.mjs";
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 

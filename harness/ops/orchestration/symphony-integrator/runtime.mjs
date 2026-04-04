@@ -2,7 +2,7 @@
 
 import { mode, processQueue, runDaemon, showStatus } from "./index.mjs";
 
-import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { logInfo, logError } from "./logger.mjs";
 
 if (mode === "once") {
   processQueue()

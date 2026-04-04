@@ -2,7 +2,7 @@
 
 import { runDaemon, runRecoveryCycle, showStatus } from "./index.mjs";
 
-import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { logInfo, logError } from "./logger.mjs";
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const mode = process.argv[2];

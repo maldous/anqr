@@ -2,7 +2,7 @@
 
 import { runTests } from "./index.mjs";
 
-import { logInfo, logWarn, logError } from "./logger.mjs";
+import { logError } from "./logger.mjs";
 
 try {
   await runTests();

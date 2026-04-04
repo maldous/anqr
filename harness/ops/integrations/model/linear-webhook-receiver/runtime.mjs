@@ -10,7 +10,7 @@ import {
   server,
 } from "./index.mjs";
 
-import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { logInfo } from "./logger.mjs";
 
 setInterval(() => {
   recentDeliveries.clear();

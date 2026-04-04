@@ -4,7 +4,7 @@ import { promises as fsp } from "node:fs";
 
 import { LOCK_FILE } from "./lock-file.mjs";
 import { PORT } from "./port.mjs";
-import { lockHeld, setLockHeld } from "./lock-held.mjs";
+import { setLockHeld } from "./lock-held.mjs";
 import { logError } from "./log-error.mjs";
 import { logInfo } from "./log-info.mjs";
 import { writeLockMetadata } from "./write-lock-metadata.mjs";

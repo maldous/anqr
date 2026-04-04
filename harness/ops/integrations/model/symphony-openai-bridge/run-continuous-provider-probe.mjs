@@ -11,13 +11,13 @@ import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";
 import { PROBE_COMPLETIONS_BEFORE_RANKING } from "./probe-completions-before-ranking.mjs";
 import { PROBE_CYCLE_INTERVAL_MS } from "./probe-cycle-interval-ms.mjs";
 import { isProbeRunning, setIsProbeRunning } from "./is-probe-running.mjs";
-import { lastProbeStartTime, setLastProbeStartTime } from "./last-probe-start-time.mjs";
-import { lastProbeTimeCheck, setLastProbeTimeCheck } from "./last-probe-time-check.mjs";
+import { setLastProbeStartTime } from "./last-probe-start-time.mjs";
 import { loadProbeCache } from "./load-probe-cache.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { probeAllToolCapability } from "./probe-all-tool-capability.mjs";
 import { probeCompletionCount, setProbeCompletionCount } from "./probe-completion-count.mjs";
-import { probeTurnCounter, setProbeTurnCounter } from "./probe-turn-counter.mjs";
+import { setProbeTurnCounter } from "./probe-turn-counter.mjs";
+import { setLastProbeTimeCheck } from "./last-probe-time-check.mjs";
 import { providerStatusCache } from "./provider-status-cache.mjs";
 import { saveProbeCache } from "./save-probe-cache.mjs";
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
@@ -46,8 +46,8 @@ export async function runContinuousProviderProbe() {
 
   setIsProbeRunning(true);
   setLastProbeStartTime(Date.now());
-  lastProbeTimeCheck = Date.now(); // Reset time check
-  probeTurnCounter = 0; // Reset turn counter
+  setLastProbeTimeCheck(Date.now()); // Reset time check
+  setProbeTurnCounter(0); // Reset turn counter
 
   try {
     logInfo(`🔍 Starting continuous provider probe cycle ${probeCompletionCount + 1}...`);
@@ -99,7 +99,7 @@ export async function runContinuousProviderProbe() {
     logInfo(`✅ PROBE PHASE 2 COMPLETE: Tool capability validation finished`);
 
     // Increment completion counter
-    probeCompletionCount++;
+    setProbeCompletionCount(probeCompletionCount + 1);
 
     // Phase 3: After 3 completions, rank and log all providers in metrics cache
     if (probeCompletionCount >= PROBE_COMPLETIONS_BEFORE_RANKING) {

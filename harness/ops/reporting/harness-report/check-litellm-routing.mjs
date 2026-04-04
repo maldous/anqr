@@ -7,7 +7,7 @@ import { PINNED_MODEL } from "./pinned-model.mjs";
 import { ROOT } from "./root.mjs";
 
 export function checkLitellmRouting() {
-  const configPath = resolve(ROOT, "scripts/ops/integrations/model/litellm-config.yaml");
+  const configPath = resolve(ROOT, "harness/ops/integrations/model/litellm-config.yaml");
   if (!existsSync(configPath)) {
     return { pass: false, detail: "integrations/model/litellm-config.yaml missing" };
   }
@@ -28,7 +28,7 @@ export function checkLitellmRouting() {
     };
   }
 
-  const proxyPath = resolve(ROOT, "scripts/ops/model-injector-proxy.py");
+  const proxyPath = resolve(ROOT, "harness/ops/model-injector-proxy.py");
   if (!existsSync(proxyPath)) {
     return { pass: false, detail: "model-injector-proxy.py missing" };
   }

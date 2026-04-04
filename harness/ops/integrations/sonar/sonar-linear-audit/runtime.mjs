@@ -2,7 +2,7 @@
 
 import { main } from "./index.mjs";
 
-import { logInfo, logError } from "./logger.mjs";
+import { logError } from "./logger.mjs";
 
 try {
   await main();

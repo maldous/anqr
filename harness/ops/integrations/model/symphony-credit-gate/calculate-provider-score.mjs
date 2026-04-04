@@ -1,11 +1,9 @@
 // Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:806
 
 import { MIN_SELECTIONS_FOR_RANKING } from "./min-selections-for-ranking.mjs";
-import { PROVIDERS } from "./providers.mjs";
+import { LOCAL_SAFETY_NET_PROVIDER_NAMES } from "./local-safety-net-provider-names.mjs";
 import { SAFETY_NET_SCORE_CEILING } from "./safety-net-score-ceiling.mjs";
 import { SCORE_WEIGHTS } from "./score-weights.mjs";
-import { TIER_LOCAL_SAFETY_NET } from "./tier-local-safety-net.mjs";
-import { getProviderTier } from "./get-provider-tier.mjs";
 
 export function calculateProviderScore(providerName, stats) {
   const selections = stats.selections[providerName] || 0;
@@ -100,8 +98,7 @@ export function calculateProviderScore(providerName, stats) {
 
   // Apply tier-based score ceiling — safety-net providers are capped to prevent
   // them from outranking cloud providers through accumulated local-only stats.
-  const provider = PROVIDERS.find((p) => p.name === providerName);
-  if (provider && getProviderTier(provider) === TIER_LOCAL_SAFETY_NET) {
+  if (LOCAL_SAFETY_NET_PROVIDER_NAMES.has(providerName)) {
     return Math.min(rounded, SAFETY_NET_SCORE_CEILING);
   }
 

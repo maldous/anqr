@@ -3,7 +3,7 @@
 import { OLLAMA_BASE } from "./ollama-base.mjs";
 import { PING_TIMEOUT_MS } from "./ping-timeout-ms.mjs";
 import { fetchJsonWithTimeout } from "./fetch-json-with-timeout.mjs";
-import { healthCache } from "./remember-health.mjs";
+import { healthCache } from "./health-cache.mjs";
 import { rememberHealth } from "./remember-health.mjs";
 import { logDebug, logWarn } from "./logger.mjs";
 

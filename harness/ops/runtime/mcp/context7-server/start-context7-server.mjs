@@ -4,12 +4,12 @@ import { spawn } from "node:child_process";
 
 import { STARTUP_TIMEOUT_MS } from "./startup-timeout-ms.mjs";
 import { handleStdoutData } from "./handle-stdout-data.mjs";
-import { nextRequestId, setNextRequestId } from "./next-request-id.mjs";
+import { setNextRequestId } from "./next-request-id.mjs";
 import { rejectAllPending } from "./reject-all-pending.mjs";
 import { sendRequest } from "./send-request.mjs";
 import { serverProcess, setServerProcess } from "./server-process.mjs";
-import { serverReady, setServerReady } from "./server-ready.mjs";
-import { stdoutBuffer, setStdoutBuffer } from "./stdout-buffer.mjs";
+import { setServerReady } from "./server-ready.mjs";
+import { setStdoutBuffer } from "./stdout-buffer.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
 export async function startContext7Server() {

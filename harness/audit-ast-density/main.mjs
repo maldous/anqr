@@ -38,10 +38,13 @@ export const main = () => {
 
   if (options.json) {
     process.stdout.write(`${JSON.stringify(results, null, 2)}\n`);
-    return;
+  } else {
+    for (const entry of results) {
+      process.stdout.write(`${formatEntry(entry)}\n`);
+    }
   }
 
-  for (const entry of results) {
-    process.stdout.write(`${formatEntry(entry)}\n`);
+  if (results.length > 0) {
+    process.exitCode = 1;
   }
 };

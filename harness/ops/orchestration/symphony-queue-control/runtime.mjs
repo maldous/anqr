@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { main } from "./index.mjs";
 
-import { logInfo, logError } from "./logger.mjs";
+import { logError } from "./logger.mjs";
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {

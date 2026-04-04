@@ -2,7 +2,7 @@
 
 import { isMain, main } from "./index.mjs";
 
-import { logInfo, logError } from "./logger.mjs";
+import { logError } from "./logger.mjs";
 
 if (isMain) {
   await main().catch((err) => {

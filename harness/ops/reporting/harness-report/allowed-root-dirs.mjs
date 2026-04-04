@@ -11,6 +11,7 @@ export const ALLOWED_ROOT_DIRS = new Set([
   "ios",
   "docs",
   "scripts",
+  "harness",
   "services",
   "reports",
   "node_modules",

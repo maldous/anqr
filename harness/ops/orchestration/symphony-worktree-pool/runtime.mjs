@@ -8,7 +8,7 @@ import {
   repairWorktrees,
 } from "./index.mjs";
 
-import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { logError } from "./logger.mjs";
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);

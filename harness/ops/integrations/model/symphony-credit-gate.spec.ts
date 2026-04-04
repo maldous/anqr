@@ -485,8 +485,8 @@ describe("Symphony Credit Gate - Provider Selection", () => {
       const found = ranked.find((r: any) => r.name === "ranked-probe");
 
       expect(found).toBeDefined();
-      expect(typeof found.score).toBe("number");
-      expect(found.rank).toBeGreaterThan(0);
+      expect(typeof found!.score).toBe("number");
+      expect(found!.rank).toBeGreaterThan(0);
     });
 
     it("should track Linear completion metrics in scoring pipeline", () => {

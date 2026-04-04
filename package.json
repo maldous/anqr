@@ -27,7 +27,7 @@
     "format:check": "oxfmt --check .",
     "depcruise": "npm run depcruise:architecture && npm run depcruise:contracts",
     "cspell": "cspell --config cspell.json --no-progress",
-    "knip": "knip --include duplicates,unlisted,binaries --no-config-hints",
+    "knip": "knip --include duplicates,unlisted,binaries",
     "test": "playwright test",
     "test:unit": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=1",
     "test:unit:coverage": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=1 --coverage",

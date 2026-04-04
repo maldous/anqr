@@ -1,6 +1,6 @@
 // Extracted from runtime.mjs: completion summary with acceptance criteria checklist.
 
-export function printCompletionSummary(testResults) {
+export function printCompletionSummary(_testResults) {
   // Display completion summary
   console.log("\n📝 COMPLETION SUMMARY");
   console.log("=".repeat(70));

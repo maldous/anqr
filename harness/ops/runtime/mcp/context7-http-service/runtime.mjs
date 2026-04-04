@@ -4,7 +4,7 @@ import { startContext7Server } from "../context7-server.mjs";
 
 import { PORT, server, shutdown } from "./index.mjs";
 
-import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
+import { logInfo, logWarn } from "./logger.mjs";
 
 server.timeout = 0;
 

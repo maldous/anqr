@@ -1,6 +1,6 @@
 // Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:778
 
-import { shuttingDown, setShuttingDown } from "./shutting-down.mjs";
+import { setShuttingDown } from "./shutting-down.mjs";
 import { logInfo } from "./logger.mjs";
 
 export function shutdown(signal) {

@@ -1,6 +1,5 @@
 // Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:562
 
-import path from "node:path";
 import fs from "node:fs";
 
 import { getCurrentRequestId } from "./get-current-request-id.mjs";

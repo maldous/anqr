@@ -2,8 +2,6 @@
 
 import { log, main } from "./index.mjs";
 
-import { logInfo } from "./logger.mjs";
-
 try {
   await main();
 } catch (err) {

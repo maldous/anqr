@@ -2,8 +2,6 @@
 
 import { getFleetInventory, getWorktreeHealthSnapshot, writeFleetHealthFile } from "./index.mjs";
 
-import { logInfo } from "./logger.mjs";
-
 if (import.meta.url === `file://${process.argv[1]}`) {
   const cmd = process.argv[2];
   if (cmd === "snapshot") {

@@ -2,8 +2,8 @@
 
 import { rejectAllPending } from "./reject-all-pending.mjs";
 import { serverProcess, setServerProcess } from "./server-process.mjs";
-import { serverReady, setServerReady } from "./server-ready.mjs";
-import { stdoutBuffer, setStdoutBuffer } from "./stdout-buffer.mjs";
+import { setServerReady } from "./server-ready.mjs";
+import { setStdoutBuffer } from "./stdout-buffer.mjs";
 import { logDebug, logInfo, logWarn } from "./logger.mjs";
 
 export async function stopContext7Server() {
