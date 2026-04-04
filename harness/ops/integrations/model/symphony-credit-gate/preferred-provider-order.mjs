@@ -1,1 +1,1 @@
-export const PREFERRED_PROVIDER_ORDER = ["codex"];
+export const PREFERRED_PROVIDER_ORDER = ["codex", "codebuff"];

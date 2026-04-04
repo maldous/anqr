@@ -6,6 +6,7 @@ import {
 import { TIER_LOCAL_SAFETY_NET } from "./tier-local-safety-net.mjs";
 import { TIER_PAID } from "./tier-paid.mjs";
 import { probeCodexSdk } from "./probe-codex-sdk.mjs";
+import { probeCodebuff } from "./probe-codebuff.mjs";
 import { probeGeminiModels } from "./probe-gemini-models.mjs";
 import { probeGitHubModels } from "./probe-git-hub-models.mjs";
 import { probeOllamaModel } from "./probe-ollama-model.mjs";
@@ -20,6 +21,16 @@ export const PROVIDERS = [
     driver: "codex-sdk",
     failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
     probe: (provider) => probeCodexSdk(provider.model),
+  },
+  {
+    name: "codebuff",
+    tier: TIER_PAID,
+    model: process.env.CODEBUFF_MODEL_ID || "codebuff/base",
+    baseUrl: "codebuff-sdk",
+    envVar: "CODEBUFF_API_KEY",
+    driver: "codebuff-sdk",
+    failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
+    probe: () => probeCodebuff(),
   },
 
   {
