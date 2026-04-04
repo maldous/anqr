@@ -164,14 +164,26 @@ queue-all-dry-run: ## Dry-run the full queue control loop
 queue-continuous: ## Run the continuous queue loop
 	npm run queue:continuous
 
-symphony-run: ## Run the symphony runner once
-	npm run symphony:run
+symphony-run: ## Run the symphony runner once on all worktrees
+	@echo "=== Running Symphony on all worktrees ===" && \
+	for wt in wt1 wt2 wt3 wt4 wt5 wt6 wt7 wt8; do \
+		ANQR_WORKTREE_ID=$$wt npm run symphony:run 2>&1 | sed "s/^/$$wt: /" & \
+	done; \
+	wait
 
-symphony-run-dry-run: ## Dry-run the symphony runner
-	npm run symphony:run:dry-run
+symphony-run-dry-run: ## Dry-run the symphony runner on all worktrees
+	@echo "=== Dry-run Symphony on all worktrees ===" && \
+	for wt in wt1 wt2 wt3 wt4 wt5 wt6 wt7 wt8; do \
+		ANQR_WORKTREE_ID=$$wt npm run symphony:run:dry-run 2>&1 | sed "s/^/$$wt: /" & \
+	done; \
+	wait
 
 symphony-status: ## Show symphony status
-	npm run symphony:status
+	@echo "=== Symphony Worktrees Status ===" && \
+	for wt in wt1 wt2 wt3 wt4 wt5 wt6 wt7 wt8; do \
+		echo ""; \
+		ANQR_WORKTREE_ID=$$wt npm run symphony:status 2>&1 | sed "s/^/  /"; \
+	done
 
 symphony-router: ## Start the Symphony agent router (control plane)
 	node scripts/ops/integrations/model/symphony-agent-router.mjs
