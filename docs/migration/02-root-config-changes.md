@@ -104,7 +104,7 @@ Extend architecture boundaries across:
 - `apps/*`
 - `packages/*/*`
 - `netlify/*`
-- `scripts/ops/*`
+- `harness/ops/*`
 
 ### Requirements
 
@@ -113,7 +113,7 @@ Extend architecture boundaries across:
 - forbid package deep imports
 - forbid `apps/*` importing from `src/*` once a package exists
 - forbid production imports from `packages/testing/*`
-- forbid product imports from `scripts/ops/*`
+- forbid product imports from `harness/ops/*`
 
 ## 2.5 `.dependency-cruiser.cjs`
 
@@ -124,7 +124,7 @@ Preserve current `src/` governance and add cross-root governance.
 - `apps/* -> packages/*/*` only
 - `packages/*/*` must not import `src/*`
 - `netlify/*` may import only approved package layers
-- `scripts/ops/*` must not be imported by apps/packages/src
+- `harness/ops/*` must not be imported by apps/packages/src
 - support a measured transition window where `src/*` may still import leaf packages
 
 ## 2.6 `vitest.config.ts`

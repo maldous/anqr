@@ -14,7 +14,7 @@ ANQR's Discord integration consists of two distinct components, plus voice-aware
 
 ### 1. Discord Notifications via OpenClaw (ANQR-owned)
 
-**Location**: `scripts/ops/integrations/notifications/openclaw-discord.mjs`
+**Location**: `harness/ops/integrations/notifications/openclaw-discord.mjs`
 
 **Architecture**: OpenClaw owns the Discord bot integration. Symphony routes Discord messages through OpenClaw Gateway instead of using webhooks directly.
 
@@ -118,7 +118,7 @@ The voice system prompt is placed after existing system messages for proper prec
 
 ## Testing Voice Functionality
 
-The test script `scripts/ops/integrations/notifications/test-discord.mjs` includes a voice announcement test that calls OpenClaw Gateway's message tool.
+The test script `harness/ops/integrations/notifications/test-discord.mjs` includes a voice announcement test that calls OpenClaw Gateway's message tool.
 
 **Prerequisites**:
 
@@ -203,8 +203,8 @@ The test script `scripts/ops/integrations/notifications/test-discord.mjs` includ
 
 ## Related Files
 
-- `scripts/ops/integrations/notifications/openclaw-discord.mjs` - Discord integration via OpenClaw
-- `scripts/ops/integrations/notifications/test-discord.mjs` - Integration tests
+- `harness/ops/integrations/notifications/openclaw-discord.mjs` - Discord integration via OpenClaw
+- `harness/ops/integrations/notifications/test-discord.mjs` - Integration tests
 - `.openclaw/openclaw.json` - OpenClaw Gateway configuration
 - `docs/harness/02-runtime-and-services.md` - Service documentation
 - `knowledge.md` - Service restart procedures and Discord streaming behavior

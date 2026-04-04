@@ -154,8 +154,8 @@ Only **1 executor** probes every 30 minutes (whichever hits the timer first). Ot
 
 ```bash
 # Unit tests (verify no regressions)
-npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
-npx vitest run scripts/ops/integrations/model/symphony-credit-gate.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-credit-gate.spec.ts
 
 # Integration test (verify cache sharing)
 # 1. Delete cache

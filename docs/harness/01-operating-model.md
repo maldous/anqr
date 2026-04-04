@@ -17,7 +17,7 @@ Supporting jobs:
 
 ## Surfaces
 
-- `scripts/ops/*`
+- `harness/ops/*`
   - canonical harness runtime
 - `services/systemd/*`
   - canonical local operator automation runtime

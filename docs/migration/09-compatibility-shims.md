@@ -10,7 +10,7 @@ Keep current root `package.json` script targets working while implementations mo
 
 ### Harness entry shims
 
-Keep `scripts/ops/*.mjs` public entrypoints stable for systemd and operator use.
+Keep `harness/ops/*.mjs` public entrypoints stable for systemd and operator use.
 
 ### Vite/build shims
 

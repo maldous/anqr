@@ -996,7 +996,7 @@ paramName: z
 
 ## References
 
-- Tool implementations: `scripts/ops/integrations/model/symphony-openai-bridge.mjs`
-- Codebuff direct SDK: `scripts/ops/integrations/model/codebuff-direct.mjs`
+- Tool implementations: `harness/ops/integrations/model/symphony-openai-bridge.mjs`
+- Codebuff direct SDK: `harness/ops/integrations/model/codebuff-direct.mjs`
 - Known issues: `docs/known-issues/`
 - Agent rules: `AGENTS.md`

@@ -17,7 +17,7 @@ This migration must be executed as a controlled extraction, not as an opportunis
 - Root configuration is already monorepo-ready.
 - `src/modules`, `src/store`, `src/lib`, and `src/hooks` deserve to survive as package names.
 - Netlify handlers should remain fat forever.
-- The harness should move out of `scripts/ops/`.
+- The harness should move out of `harness/ops/`.
 
 ## Order of truth
 

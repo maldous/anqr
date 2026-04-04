@@ -1,11 +1,11 @@
 # 05. Harness engineering by design contract
 
-The harness is already live under `scripts/ops/`. The correct move is **internal contract separation with stable public entry shims**, not relocation to a new root.
+The harness is already live under `harness/ops/`. The correct move is **internal contract separation with stable public entry shims**, not relocation to a new root.
 
 ## 5.1 Canonical harness target shape
 
 ```text
-scripts/ops/
+harness/ops/
   README.md
   core/
   orchestration/
@@ -23,7 +23,7 @@ scripts/ops/
 
 ## 5.2 Required file moves
 
-### `scripts/ops/core/`
+### `harness/ops/core/`
 
 Own:
 
@@ -38,7 +38,7 @@ Move here:
 - `symphony-state.mjs`
 - `symphony-validation.mjs`
 
-### `scripts/ops/orchestration/`
+### `harness/ops/orchestration/`
 
 Own:
 
@@ -54,7 +54,7 @@ Move here:
 - `nightly-ops-pass.mjs`
 - possibly `email-ingest.mjs` as a root shim over `integrations/email` if preferred
 
-### `scripts/ops/governance/`
+### `harness/ops/governance/`
 
 Own:
 
@@ -66,7 +66,7 @@ Move here:
 
 - `linear-guardian.mjs`
 
-### `scripts/ops/integrations/linear/`
+### `harness/ops/integrations/linear/`
 
 Own:
 
@@ -80,7 +80,7 @@ Move here:
 - `lib/sonar-linear-sync.mjs` only if kept Linear-centric
 - any new Linear-specific helper files
 
-### `scripts/ops/integrations/email/`
+### `harness/ops/integrations/email/`
 
 Own:
 
@@ -92,7 +92,7 @@ Move here:
 - `email-ingest.mjs`
 - keep top-level shim if systemd/package scripts still call the old path
 
-### `scripts/ops/integrations/sonar/`
+### `harness/ops/integrations/sonar/`
 
 Own:
 
@@ -105,7 +105,7 @@ Move here:
 - `sonar-linear-audit.mjs`
 - `lib/sonar-linear-sync.mjs` if treated Sonar-first rather than Linear-first
 
-### `scripts/ops/integrations/model/`
+### `harness/ops/integrations/model/`
 
 Own:
 
@@ -121,7 +121,7 @@ Move here:
 - `litellm-config.yaml`
 - `model-injector-proxy.py`
 
-### `scripts/ops/notifications/`
+### `harness/ops/notifications/`
 
 Own:
 
@@ -133,7 +133,7 @@ Move here:
 - `notify.mjs`
 - `lib/notify.mjs`
 
-### `scripts/ops/reporting/`
+### `harness/ops/reporting/`
 
 Own:
 
@@ -144,7 +144,7 @@ Move here:
 
 - `harness-report.mjs`
 
-### `scripts/ops/runtime/symphony/`
+### `harness/ops/runtime/symphony/`
 
 Own:
 
@@ -161,17 +161,17 @@ Move here:
 
 For the first migration pass, keep these stable public files at their current paths:
 
-- `scripts/ops/symphony-runner.mjs`
-- `scripts/ops/symphony-agent.mjs`
-- `scripts/ops/symphony-credit-gate.mjs`
-- `scripts/ops/symphony-queue-control.mjs`
-- `scripts/ops/nightly-ops-pass.mjs`
-- `scripts/ops/harness-report.mjs`
-- `scripts/ops/linear-client.mjs`
-- `scripts/ops/linear-guardian.mjs`
-- `scripts/ops/email-ingest.mjs`
-- `scripts/ops/notify.mjs`
-- `scripts/ops/sonar-linear-audit.mjs`
+- `harness/ops/symphony-runner.mjs`
+- `harness/ops/symphony-agent.mjs`
+- `harness/ops/symphony-credit-gate.mjs`
+- `harness/ops/symphony-queue-control.mjs`
+- `harness/ops/nightly-ops-pass.mjs`
+- `harness/ops/harness-report.mjs`
+- `harness/ops/linear-client.mjs`
+- `harness/ops/linear-guardian.mjs`
+- `harness/ops/email-ingest.mjs`
+- `harness/ops/notify.mjs`
+- `harness/ops/sonar-linear-audit.mjs`
 
 These should become thin import-and-dispatch shims so that:
 

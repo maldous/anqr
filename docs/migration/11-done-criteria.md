@@ -7,7 +7,7 @@ Migration is done only when all of the following are true.
 - `apps/*` are thin shells
 - `packages/*/*` own reusable contracts
 - `packages/contracts/*` exist only for portable boundary definitions
-- `scripts/ops/*` is internally contract-separated
+- `harness/ops/*` is internally contract-separated
 - `netlify/*` is thin over packages
 - no new broad buckets exist
 
@@ -15,7 +15,7 @@ Migration is done only when all of the following are true.
 
 - no package deep imports
 - no app imports from `src/*`
-- no product imports from `scripts/ops/*`
+- no product imports from `harness/ops/*`
 - no production imports from `packages/testing/*`
 - no forbidden layer inversions
 

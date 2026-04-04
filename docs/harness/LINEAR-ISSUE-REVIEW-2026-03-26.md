@@ -22,10 +22,10 @@ All 129 resolvable issues fall into these categories:
 #### **Sonar Code Quality Issues (127 issues)**
 
 - **File path changes:** These Sonar issues reference files that have been moved or refactored
-  - `scripts/ops/integrations/model/*` → Files moved to `scripts/ops/core/*` and `scripts/ops/integrations/model/*`
-  - `scripts/ops/lib/logger.mjs` → Moved or refactored
-  - `scripts/ops/runtime/watchdog/*` → Restructured
-  - `scripts/ops/runtime/symphony/*` → Restructured
+  - `harness/ops/integrations/model/*` → Files moved to `harness/ops/core/*` and `harness/ops/integrations/model/*`
+  - `harness/ops/lib/logger.mjs` → Moved or refactored
+  - `harness/ops/runtime/watchdog/*` → Restructured
+  - `harness/ops/runtime/symphony/*` → Restructured
   - `tests/e2e/openclaw-symphony.spec.ts` → May have been reorganized
   - `tests/integration/*.spec.ts` → May have been reorganized or deleted
 
@@ -76,7 +76,7 @@ Current state: Most have no labels or generic labels only.
 
 - Add `sonar` label to all Sonar-generated issues
 - Add appropriate package/runtime labels based on file paths:
-  - `runtime:harness` for `scripts/ops/*` files
+  - `runtime:harness` for `harness/ops/*` files
   - `pkg:testing` for `tests/*` files
   - `harness` for harness-related code quality issues
 
@@ -154,11 +154,11 @@ Current state: Most have no labels or generic labels only.
 
 Two new Linear management scripts created:
 
-1. **`scripts/ops/integrations/linear/list-open-issues.mjs`**
+1. **`harness/ops/integrations/linear/list-open-issues.mjs`**
    - Lists all open issues with full metadata
    - Groups by state and label
 
-2. **`scripts/ops/integrations/linear/review-open-issues.mjs`**
+2. **`harness/ops/integrations/linear/review-open-issues.mjs`**
    - Analyzes issues for resolution opportunities
    - Detects duplicates, stale issues, missing labels
    - Cross-references with git and harness reports
@@ -167,10 +167,10 @@ Two new Linear management scripts created:
 
 ```bash
 # List all open issues
-node scripts/ops/integrations/linear/list-open-issues.mjs
+node harness/ops/integrations/linear/list-open-issues.mjs
 
 # Analyze issues for cleanup
-node scripts/ops/integrations/linear/review-open-issues.mjs
+node harness/ops/integrations/linear/review-open-issues.mjs
 ```
 
 ---
@@ -181,12 +181,12 @@ The large number of resolvable Sonar issues is due to recent harness architectur
 
 **Old Structure:**
 
-- `scripts/ops/integrations/model/symphony-openai-bridge.mjs`
-- `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
-- `scripts/ops/integrations/model/symphony-credit-gate.mjs`
-- `scripts/ops/runtime/watchdog/bridge-watchdog.mjs`
-- `scripts/ops/runtime/symphony/watchdog-monitor.mjs`
-- `scripts/ops/lib/logger.mjs`
+- `harness/ops/integrations/model/symphony-openai-bridge.mjs`
+- `harness/ops/integrations/model/codebuff-openai-bridge.mjs`
+- `harness/ops/integrations/model/symphony-credit-gate.mjs`
+- `harness/ops/runtime/watchdog/bridge-watchdog.mjs`
+- `harness/ops/runtime/symphony/watchdog-monitor.mjs`
+- `harness/ops/lib/logger.mjs`
 
 **Status:** These files were either:
 

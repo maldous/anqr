@@ -13,7 +13,7 @@
     },
     {
       "name": "Harness & Automation",
-      "description": "scripts/ops, systemd runtime, queue control, runner, and automation health."
+      "description": "harness/ops, systemd runtime, queue control, runner, and automation health."
     },
     {
       "name": "Web Experience",

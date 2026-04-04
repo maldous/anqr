@@ -63,7 +63,7 @@ This eliminates the separate Codebuff bridge service and caching defects. See `d
 
 - **Port:** 18790
 - **Service:** `anqr-discord-router.service`
-- **Implementation:** `scripts/ops/integrations/model/discord-request-router.mjs`
+- **Implementation:** `harness/ops/integrations/model/discord-request-router.mjs`
 - Least-loaded worktree selection with **round-robin** among equally-loaded worktrees
 - Rebases `cwd` in request payload to target worktree path
 - Returns 429 when all 4 worktrees at capacity
@@ -178,8 +178,8 @@ systemctl --user enable --now openclaw-gateway.service
 
 ## Related Files
 
-- `scripts/ops/integrations/model/discord-request-router.mjs` — Router implementation
-- `scripts/ops/integrations/model/symphony-openai-bridge.mjs` — Executor bridge implementation
+- `harness/ops/integrations/model/discord-request-router.mjs` — Router implementation
+- `harness/ops/integrations/model/symphony-openai-bridge.mjs` — Executor bridge implementation
 - `~/.openclaw/openclaw.json` — OpenClaw config (models, gateway, Discord guilds allowlist)
 - `.openclaw/models.json` — In-repo model provider overrides (✅ updated to match router URL)
 - `services/systemd/anqr-discord-router.service` — Router service

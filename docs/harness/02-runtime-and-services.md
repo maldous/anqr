@@ -4,52 +4,52 @@ This document defines the maintained harness/runtime surfaces.
 
 ## Canonical runtime roots
 
-- `scripts/ops/*`
+- `harness/ops/*`
 - `services/systemd/*`
 
 ## Maintained scripts
 
 Control loop:
 
-- `scripts/ops/harness-report.mjs`
-- `scripts/ops/linear-guardian.mjs`
-- `scripts/ops/symphony-queue-control.mjs`
-- `scripts/ops/symphony-runner.mjs` — compatibility shim to `scripts/ops/orchestration/symphony-runner.mjs`
-- `scripts/ops/symphony-agent.mjs`
-- `scripts/ops/nightly-ops-pass.mjs`
+- `harness/ops/harness-report.mjs`
+- `harness/ops/linear-guardian.mjs`
+- `harness/ops/symphony-queue-control.mjs`
+- `harness/ops/symphony-runner.mjs` — compatibility shim to `harness/ops/orchestration/symphony-runner.mjs`
+- `harness/ops/symphony-agent.mjs`
+- `harness/ops/nightly-ops-pass.mjs`
 
 Integrations and support:
 
-- `scripts/ops/email-ingest.mjs`
-- `scripts/ops/lib/notify.mjs`
-- `scripts/ops/sonar-linear-mail.mjs`
-- `scripts/ops/symphony-credit-gate.mjs`
-- `scripts/ops/integrations/model/symphony-openai-bridge.mjs` — AI SDK-based bridge with tool execution
-- `scripts/ops/integrations/model/codebuff-direct.mjs` — Codebuff SDK execution (runs inside each worktree-local bridge)
-- `scripts/ops/integrations/model/symphony-agent-router.mjs` — Control-plane router for worktree-local bridges
-- `scripts/ops/integrations/model/symphony-adaptive-context.mjs` — dynamic per-provider token ceilings and rate management
-- `scripts/ops/integrations/model/symphony-bridge-truncation.mjs` — static token limits and message truncation
-- `scripts/ops/integrations/model/ollama-local-audit.mjs`
-- `scripts/ops/integrations/model/codebuff-sdk-runner.mjs` (DEPRECATED, exports shared constants only)
-- `scripts/ops/linear-all.mjs` — Fetches all backlog issues from Linear
-- `scripts/ops/linear-issue-review.mjs` — One-time issue review and correction
-- `scripts/ops/integrations/linear/linear-client.mjs` — Linear API helper library
-- `scripts/ops/harness-doctor.mjs` — Runtime diagnostics and health checks
-- `scripts/ops/integrations/sonar/sonar-linear-audit.mjs` — Nightly SonarQube to Linear sync
-- `scripts/ops/notifications/notify-impl.mjs` — Notification implementation details (path constants)
+- `harness/ops/email-ingest.mjs`
+- `harness/ops/lib/notify.mjs`
+- `harness/ops/sonar-linear-mail.mjs`
+- `harness/ops/symphony-credit-gate.mjs`
+- `harness/ops/integrations/model/symphony-openai-bridge.mjs` — AI SDK-based bridge with tool execution
+- `harness/ops/integrations/model/codebuff-direct.mjs` — Codebuff SDK execution (runs inside each worktree-local bridge)
+- `harness/ops/integrations/model/symphony-agent-router.mjs` — Control-plane router for worktree-local bridges
+- `harness/ops/integrations/model/symphony-adaptive-context.mjs` — dynamic per-provider token ceilings and rate management
+- `harness/ops/integrations/model/symphony-bridge-truncation.mjs` — static token limits and message truncation
+- `harness/ops/integrations/model/ollama-local-audit.mjs`
+- `harness/ops/integrations/model/codebuff-sdk-runner.mjs` (DEPRECATED, exports shared constants only)
+- `harness/ops/linear-all.mjs` — Fetches all backlog issues from Linear
+- `harness/ops/linear-issue-review.mjs` — One-time issue review and correction
+- `harness/ops/integrations/linear/linear-client.mjs` — Linear API helper library
+- `harness/ops/harness-doctor.mjs` — Runtime diagnostics and health checks
+- `harness/ops/integrations/sonar/sonar-linear-audit.mjs` — Nightly SonarQube to Linear sync
+- `harness/ops/notifications/notify-impl.mjs` — Notification implementation details (path constants)
 
 RAG pipeline and search:
 
-- `scripts/ops/lib/rag/chunker.mjs` — Semantic code/document chunker (function/class/heading boundaries)
-- `scripts/ops/lib/rag/embeddings.mjs` — Ollama embedding generation (`qwen2.5-coder:3b-instruct`)
-- `scripts/ops/lib/rag/vector-store.mjs` — File-based vector store in `reports/rag-index/` with incremental indexing
-- `scripts/ops/lib/rag/build-index.mjs` — Full-repo RAG index builder using `git ls-files` (respects .gitignore)
-- `scripts/ops/lib/search/hybrid-search.mjs` — BM25 + semantic search with Reciprocal Rank Fusion (RRF)
+- `harness/ops/lib/rag/chunker.mjs` — Semantic code/document chunker (function/class/heading boundaries)
+- `harness/ops/lib/rag/embeddings.mjs` — Ollama embedding generation (`qwen2.5-coder:3b-instruct`)
+- `harness/ops/lib/rag/vector-store.mjs` — File-based vector store in `reports/rag-index/` with incremental indexing
+- `harness/ops/lib/rag/build-index.mjs` — Full-repo RAG index builder using `git ls-files` (respects .gitignore)
+- `harness/ops/lib/search/hybrid-search.mjs` — BM25 + semantic search with Reciprocal Rank Fusion (RRF)
 
 MCP runtime:
 
-- `scripts/ops/runtime/mcp/context7-server.mjs` — Local Context7 MCP server wrapper (JSON-RPC over stdio)
-- `scripts/ops/runtime/mcp/context7-http-service.mjs` — HTTP service wrapping Context7 MCP (port 4320)
+- `harness/ops/runtime/mcp/context7-server.mjs` — Local Context7 MCP server wrapper (JSON-RPC over stdio)
+- `harness/ops/runtime/mcp/context7-http-service.mjs` — HTTP service wrapping Context7 MCP (port 4320)
 
 Restructured copies under subdirectories may exist. The root entrypoints remain the stable operator contract until a deliberate cleanup replaces them.
 

@@ -3,14 +3,14 @@
 Use this exact prompt:
 
 ```text
-Read the repository contract in README.md first, then read every file under migration/ in numeric order, then read every contract README that was added under apps/, packages/, scripts/ops/, netlify/, src/, tests/, services/systemd/, android/, ios/, public/, reports/, and vite-config/.
+Read the repository contract in README.md first, then read every file under migration/ in numeric order, then read every contract README that was added under apps/, packages/, harness/ops/, netlify/, src/, tests/, services/systemd/, android/, ios/, public/, reports/, and vite-config/.
 
 Perform the migration exactly as documented.
 
 Non-negotiable requirements:
 - treat tree.txt as the latest inventory authority
 - do not ignore any top-level directory or root config file
-- keep scripts/ops as the canonical harness runtime
+- keep harness/ops as the canonical harness runtime
 - create internal harness contract separation with compatibility shims
 - do not create a competing tools/harness runtime
 - move reusable product logic from src into packages/*/*
@@ -24,7 +24,7 @@ Non-negotiable requirements:
 Execution order:
 1. apply root config changes
 2. lay down package/app contracts and manifests where still missing
-3. contract-separate scripts/ops with stable entry shims
+3. contract-separate harness/ops with stable entry shims
 4. extract observability/platform packages
 5. extract domain packages
 6. extract application packages

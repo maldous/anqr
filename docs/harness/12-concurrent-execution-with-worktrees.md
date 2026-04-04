@@ -497,7 +497,7 @@ WorkingDirectory: /home/user/src/anqr-wt{i}
 Type:             simple (long-running)
 Restart:          on-failure
 Environment:      ANQR_WORKTREE_ID=wt{i}, ANQR_WORKTREE_PATH=/home/user/src/anqr-wt{i}
-ExecStart:        node /home/user/src/anqr/scripts/ops/integrations/model/symphony-openai-bridge.mjs
+ExecStart:        node /home/user/src/anqr/harness/ops/integrations/model/symphony-openai-bridge.mjs
 Purpose:          AI execution, tool ops, Codebuff SDK — all in isolated worktree
 Routing:          wt1-wt4 for Linear work, wt5-wt8 for Discord work
 ```
@@ -532,7 +532,7 @@ Purpose:          Load balance Discord requests across wt5-wt8 bridges
 Port:             18789
 WorkingDirectory: /home/user/src/anqr-wt{i}
 Type:             timer fires every 1 min → singleton wrapper
-ExecStart:        node /home/user/src/anqr/scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs
+ExecStart:        node /home/user/src/anqr/harness/ops/runtime/discord/openclaw-gateway-singleton.mjs
 Purpose:          Run ONE OpenClaw Gateway process via lock-based coordination
 Lock file:        ~/.cache/anqr-openclaw/gateway.lock
 ```
@@ -549,7 +549,7 @@ The 4-timer gateway singleton pattern (4 competing services for 1 process) is wa
 Type=simple
 Restart=on-failure
 RestartSec=5
-ExecStart=node /home/user/src/anqr/scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs
+ExecStart=node /home/user/src/anqr/harness/ops/runtime/discord/openclaw-gateway-singleton.mjs
 ```
 
 This would replace 8 systemd units (4 timers + 4 services) with 1 service. Systemd's `Restart=on-failure` provides the same crash recovery without lock competition overhead.
@@ -699,9 +699,9 @@ This ensures Discord worktrees stay up to date and share their work with all oth
 
 | File                                   | Purpose                              |
 | -------------------------------------- | ------------------------------------ |
-| `scripts/ops/core/worktree-config.mjs` | Worktree path/branch calculation     |
-| `scripts/ops/core/symphony-config.mjs` | Concurrency and timing configuration |
-| `scripts/ops/core/symphony-state.mjs`  | Shared state management with leases  |
+| `harness/ops/core/worktree-config.mjs` | Worktree path/branch calculation     |
+| `harness/ops/core/symphony-config.mjs` | Concurrency and timing configuration |
+| `harness/ops/core/symphony-state.mjs`  | Shared state management with leases  |
 
 **Centralized worktree config (`worktree-config.mjs`):**
 
@@ -1233,15 +1233,15 @@ cp AGENTS.md /tmp/anqr-worktree-review/
 
 # Implementation files
 mkdir -p /tmp/anqr-worktree-review/implementation
-cp scripts/ops/core/worktree-config.mjs /tmp/anqr-worktree-review/implementation/
-cp scripts/ops/core/symphony-config.mjs /tmp/anqr-worktree-review/implementation/
-cp scripts/ops/core/symphony-state.mjs /tmp/anqr-worktree-review/implementation/
-cp scripts/ops/orchestration/symphony-runner.mjs /tmp/anqr-worktree-review/implementation/
-cp scripts/ops/orchestration/symphony-worktree-pool.mjs /tmp/anqr-worktree-review/implementation/
-cp scripts/ops/orchestration/symphony-control.mjs /tmp/anqr-worktree-review/implementation/
-cp scripts/ops/integrations/model/symphony-openai-bridge.mjs /tmp/anqr-worktree-review/implementation/
-cp scripts/ops/integrations/model/discord-request-router.mjs /tmp/anqr-worktree-review/implementation/
-cp scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/core/worktree-config.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/core/symphony-config.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/core/symphony-state.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/orchestration/symphony-runner.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/orchestration/symphony-worktree-pool.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/orchestration/symphony-control.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/integrations/model/symphony-openai-bridge.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/integrations/model/discord-request-router.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/runtime/discord/openclaw-gateway-singleton.mjs /tmp/anqr-worktree-review/implementation/
 
 # Systemd service files (from repo)
 mkdir -p /tmp/anqr-worktree-review/services-repo
@@ -1271,7 +1271,7 @@ cp .openclaw/models.json /tmp/anqr-worktree-review/config/models-inrepo.json
 cp ~/.openclaw/openclaw.json /tmp/anqr-worktree-review/config/openclaw-home.json 2>/dev/null
 cp ~/.openclaw/config.json /tmp/anqr-worktree-review/config/config-home.json 2>/dev/null
 # Additional implementation files
-cp scripts/ops/integrations/model/codebuff-direct.mjs /tmp/anqr-worktree-review/implementation/
+cp harness/ops/integrations/model/codebuff-direct.mjs /tmp/anqr-worktree-review/implementation/
 
 # MEMORY.md (operational context)
 cp MEMORY.md /tmp/anqr-worktree-review/ 2>/dev/null
@@ -1279,13 +1279,13 @@ cp MEMORY.md /tmp/anqr-worktree-review/ 2>/dev/null
 # Test files (worktree-related tests)
 mkdir -p /tmp/anqr-worktree-review/tests
 cp tests/integration/worktree-concurrency.spec.ts /tmp/anqr-worktree-review/tests/ 2>/dev/null
-cp scripts/ops/orchestration/symphony-worktree-pool.spec.ts /tmp/anqr-worktree-review/tests/ 2>/dev/null
+cp harness/ops/orchestration/symphony-worktree-pool.spec.ts /tmp/anqr-worktree-review/tests/ 2>/dev/null
 
 # Type declarations
-cp scripts/ops/orchestration/symphony-worktree-pool.mjs.d.ts /tmp/anqr-worktree-review/implementation/ 2>/dev/null
+cp harness/ops/orchestration/symphony-worktree-pool.mjs.d.ts /tmp/anqr-worktree-review/implementation/ 2>/dev/null
 
 # Benchmark analysis
-cp scripts/ops/orchestration/analyze-worktree-benchmark.mjs /tmp/anqr-worktree-review/implementation/ 2>/dev/null
+cp harness/ops/orchestration/analyze-worktree-benchmark.mjs /tmp/anqr-worktree-review/implementation/ 2>/dev/null
 
 # Additional harness context docs
 mkdir -p /tmp/anqr-worktree-review/context
@@ -1439,9 +1439,9 @@ This delivery plan follows the external reviewer's priority order. Proven code d
 **Tasks (in reviewer-recommended priority order):**
 
 - [x] **Fix Codebuff cwd caching (F1)** — `getSharedClient()` now keyed by both `costMode` and `cwd`; recreates client when either changes
-  - File: `scripts/ops/integrations/model/codebuff-openai-bridge.mjs` lines 348-390 **(retired per ADR-0003)**
+  - File: `harness/ops/integrations/model/codebuff-openai-bridge.mjs` lines 348-390 **(retired per ADR-0003)**
   - Added `SHARED_CLIENT_CWD` tracking variable alongside `SHARED_CLIENT_COST_MODE`
-  - Regression test: `scripts/ops/integrations/model/codebuff-cwd-isolation.spec.ts` (6 tests, all pass)
+  - Regression test: `harness/ops/integrations/model/codebuff-cwd-isolation.spec.ts` (6 tests, all pass)
 - [x] **Remove bridge startup auto-start of runner timers (F3)** — Removed `symphony-control.mjs --start` call from bridge startup
   - Bridge startup now logs informational message about independent runner management
   - Runner scheduling is now exclusively operator-controlled
@@ -1821,7 +1821,7 @@ Preconditions:
 Steps:
   1. Create a test Linear issue:
      node --input-type=module -e "
-       import { createIssue, STATES, LABELS } from './scripts/ops/integrations/linear/linear-client.mjs';
+       import { createIssue, STATES, LABELS } from './harness/ops/integrations/linear/linear-client.mjs';
        const issue = await createIssue({
          title: 'E2E Test: Create LINEAR-TEST file',
          description: 'Create a file called LINEAR-TEST-{timestamp}.txt containing the text: linear integration test passed. Then run validation (typecheck, lint).',
@@ -2348,7 +2348,7 @@ After the proven defects are fixed and validated, the following improvements sho
 Current tests cover:
 
 - Git worktree mechanics and isolation basics (`tests/integration/worktree-concurrency.spec.ts`)
-- Worktree pool disk-space logic (`scripts/ops/orchestration/symphony-worktree-pool.spec.ts`)
+- Worktree pool disk-space logic (`harness/ops/orchestration/symphony-worktree-pool.spec.ts`)
 
 Current tests do NOT cover:
 
@@ -2426,17 +2426,17 @@ anqr-worktree-review/
 
 | File                                                         | Purpose                                           |
 | ------------------------------------------------------------ | ------------------------------------------------- |
-| `scripts/ops/core/worktree-config.mjs`                       | Worktree path/branch calculation                  |
-| `scripts/ops/core/symphony-config.mjs`                       | Concurrency and timing configuration              |
-| `scripts/ops/core/symphony-state.mjs`                        | Shared state management with leases               |
-| `scripts/ops/orchestration/symphony-runner.mjs`              | Runner execution with issue routing               |
-| `scripts/ops/orchestration/symphony-worktree-pool.mjs`       | Worktree lifecycle management                     |
-| `scripts/ops/orchestration/symphony-control.mjs`             | Start/stop task execution                         |
-| `scripts/ops/integrations/model/symphony-openai-bridge.mjs`  | Symphony bridge (provider cascade + Codebuff SDK) |
-| `scripts/ops/integrations/model/symphony-agent-router.mjs`   | Symphony agent router (control-plane)             |
-| `scripts/ops/integrations/model/codebuff-direct.mjs`         | Codebuff SDK direct integration                   |
-| `scripts/ops/integrations/model/discord-request-router.mjs`  | Discord load balancer                             |
-| `scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs` | Gateway singleton wrapper                         |
+| `harness/ops/core/worktree-config.mjs`                       | Worktree path/branch calculation                  |
+| `harness/ops/core/symphony-config.mjs`                       | Concurrency and timing configuration              |
+| `harness/ops/core/symphony-state.mjs`                        | Shared state management with leases               |
+| `harness/ops/orchestration/symphony-runner.mjs`              | Runner execution with issue routing               |
+| `harness/ops/orchestration/symphony-worktree-pool.mjs`       | Worktree lifecycle management                     |
+| `harness/ops/orchestration/symphony-control.mjs`             | Start/stop task execution                         |
+| `harness/ops/integrations/model/symphony-openai-bridge.mjs`  | Symphony bridge (provider cascade + Codebuff SDK) |
+| `harness/ops/integrations/model/symphony-agent-router.mjs`   | Symphony agent router (control-plane)             |
+| `harness/ops/integrations/model/codebuff-direct.mjs`         | Codebuff SDK direct integration                   |
+| `harness/ops/integrations/model/discord-request-router.mjs`  | Discord load balancer                             |
+| `harness/ops/runtime/discord/openclaw-gateway-singleton.mjs` | Gateway singleton wrapper                         |
 
 ### Systemd Service Files
 

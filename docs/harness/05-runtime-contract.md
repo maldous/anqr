@@ -4,7 +4,7 @@ This document defines the maintained harness runtime contract for ANQR 1.0.
 
 ## Canonical runtime roots
 
-- `scripts/ops/*`
+- `harness/ops/*`
 - `services/systemd/*`
 
 ## Environment sources

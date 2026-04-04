@@ -8,14 +8,14 @@ Static context limits waste capacity and cause repeated failures. The adaptive c
 
 ## Module
 
-**Source**: `scripts/ops/integrations/model/symphony-adaptive-context.mjs`
+**Source**: `harness/ops/integrations/model/symphony-adaptive-context.mjs`
 
-**Tests**: `scripts/ops/integrations/model/symphony-adaptive-context.spec.ts` (75 tests)
+**Tests**: `harness/ops/integrations/model/symphony-adaptive-context.spec.ts` (75 tests)
 
 **Run tests**:
 
 ```bash
-npx vitest run scripts/ops/integrations/model/symphony-adaptive-context.spec.ts
+npx vitest run harness/ops/integrations/model/symphony-adaptive-context.spec.ts
 ```
 
 ## Architecture

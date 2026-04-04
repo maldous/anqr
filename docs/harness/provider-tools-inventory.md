@@ -10,7 +10,7 @@ This document catalogs all tools used by the AI providers in the Symphony bridge
 
 ## 1. Symphony Bridge Tools (AI SDK)
 
-**Location**: `scripts/ops/integrations/model/symphony-openai-bridge.mjs:664-980`
+**Location**: `harness/ops/integrations/model/symphony-openai-bridge.mjs:664-980`
 
 These are the **currently implemented** tools in the Symphony bridge using the AI SDK `tool()` function:
 
@@ -143,7 +143,7 @@ These tools are defined in OpenClaw's configuration as allowed for agents:
 
 ## 4. Symphony Agent Tools (Autonomous Runner)
 
-**Location**: `scripts/ops/runtime/symphony/symphony-agent.mjs:93-180`
+**Location**: `harness/ops/runtime/symphony/symphony-agent.mjs:93-180`
 
 These tools are used by the Symphony autonomous agent runner for Linear issue implementation:
 
@@ -308,13 +308,13 @@ Symphony bridge performs **dynamic tool-capability probing** at startup to verif
 
 ## References
 
-- Symphony Bridge: `scripts/ops/integrations/model/symphony-openai-bridge.mjs`
-- Codebuff Bridge: `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
-- Symphony Agent: `scripts/ops/runtime/symphony/symphony-agent.mjs`
+- Symphony Bridge: `harness/ops/integrations/model/symphony-openai-bridge.mjs`
+- Codebuff Bridge: `harness/ops/integrations/model/codebuff-openai-bridge.mjs`
+- Symphony Agent: `harness/ops/runtime/symphony/symphony-agent.mjs`
 - Tool Types: `.agents/types/tools.types.ts`
 - OpenClaw Config: `.openclaw/models.json`, `.openclaw/openclaw.json`
 - MCP Contracts: `packages/contracts/mcp/src/`
-- Issue Tracker: `scripts/ops/integrations/linear/create-missing-tools-issue.mjs`
+- Issue Tracker: `harness/ops/integrations/linear/create-missing-tools-issue.mjs`
 
 ---
 

@@ -14,7 +14,7 @@ The latest `tree.txt` was treated as the authoritative inventory source for this
 | `packages`    |   ~31 descendant files in latest tree | Primary extraction targets. Every leaf package gets contract README, package manifest, tsconfig, and source entry.                     |
 | `public`      |  ~248 descendant files in latest tree | Web static assets and schemas. Remains content/runtime asset surface, not a logic package.                                             |
 | `reports`     |    ~9 descendant files in latest tree | Operational state and machine memory. Never migrate into product packages.                                                             |
-| `scripts`     |   ~27 descendant files in latest tree | Root automation/tooling. `scripts/ops/` is the canonical harness runtime.                                                              |
+| `scripts`     |   ~27 descendant files in latest tree | Root automation/tooling. `harness/ops/` is the canonical harness runtime.                                                              |
 | `services`    |    ~9 descendant files in latest tree | Systemd/user service surface. Keep entrypoint stability using shims.                                                                   |
 | `src`         | ~4266 descendant files in latest tree | Transitional monolith to be dissolved by ownership seam.                                                                               |
 | `tests`       |    ~3 descendant files in latest tree | Cross-package and cross-app tests. Keep as top-level test subjects.                                                                    |

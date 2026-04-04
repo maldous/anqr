@@ -23,7 +23,7 @@ This section is the canonical harness doctrine for ANQR 1.0 foundation work.
 
 This section governs:
 
-- `scripts/ops/*`
+- `harness/ops/*`
 - `services/systemd/*`
 - the fresh Linear workspace model
 - evidence and gate policy for agent-driven delivery

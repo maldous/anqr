@@ -295,7 +295,7 @@ zip:
 	  tsconfig.json tsconfig.base.json tsconfig.node.json tsconfig.src.json \
 	  tsconfig.apps.json tsconfig.packages.json tsconfig.harness.json \
 	  tsconfig.netlify.json tsconfig.tests.json vite.config.ts vitest.config.ts \
-	  apps packages scripts services src tests docs netlify vite-config public \
+	  apps packages scripts harness src tests docs netlify vite-config public \
 	| tr '\0' '\n' \
 	| grep -Ev '^(android/|ios/)' \
 	| grep -Ev '^(apps/web/src/i18n/static/|apps/web/src/i18n/locales/|apps/web/src/content/generated/)' \

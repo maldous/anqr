@@ -47,7 +47,7 @@ AI Provider - single request
 
 ### Code Change
 
-File: `scripts/ops/integrations/model/symphony-openai-bridge.mjs`
+File: `harness/ops/integrations/model/symphony-openai-bridge.mjs`
 
 ```javascript
 function startDiscordMonitoring() {
@@ -179,7 +179,7 @@ If issues arise after the fix:
 
 ```bash
 # Rollback: restore original symphony-openai-bridge.mjs
-git checkout HEAD -- scripts/ops/integrations/model/symphony-openai-bridge.mjs
+git checkout HEAD -- harness/ops/integrations/model/symphony-openai-bridge.mjs
 
 # Restart executors
 systemctl --user restart anqr-symphony-executor@{5,6,7,8}.service

@@ -9,7 +9,7 @@
     "typecheck:netlify": "tsc -p tsconfig.netlify.json --noEmit",
     "typecheck:tests": "tsc -p tsconfig.tests.json --noEmit",
     "typecheck:all": "npm run typecheck:src && npm run typecheck:apps && npm run typecheck:packages && npm run typecheck:harness && npm run typecheck:netlify && npm run typecheck:tests",
-    "contracts:check": "node scripts/contracts-check.mjs",
+    "contracts:check": "node harness/contracts-check.mjs",
     "depcruise:src": "depcruise src --config .dependency-cruiser.cjs",
     "depcruise:packages": "depcruise packages --config .dependency-cruiser.cjs",
     "depcruise:netlify": "depcruise netlify --config .dependency-cruiser.cjs",

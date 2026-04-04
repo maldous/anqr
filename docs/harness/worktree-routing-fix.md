@@ -113,9 +113,9 @@ The label "source:discord" must exist in your Linear workspace.
 
 ## Files Modified
 
-- `scripts/ops/core/discord-source.mjs` (new shared utility)
-- `scripts/ops/orchestration/symphony-queue-control.mjs` (mark source when feeding)
-- `scripts/ops/integrations/model/linear-webhook-receiver.mjs` (mark source on webhook)
+- `harness/ops/core/discord-source.mjs` (new shared utility)
+- `harness/ops/orchestration/symphony-queue-control.mjs` (mark source when feeding)
+- `harness/ops/integrations/model/linear-webhook-receiver.mjs` (mark source on webhook)
 - `services/systemd/anqr-linear-webhook.service` (documented env var)
 - `services/systemd/anqr-queue-feeder.service` (documented env var)
 - `services/systemd/anqr-symphony-executor@.service` (documented env var)
@@ -167,4 +167,4 @@ After fix:
 
 - `docs/harness/04-provider-routing.md` - Provider cascade architecture
 - `docs/workflows/symphony-execution.md` - Execution workflow
-- `scripts/ops/orchestration/symphony-runner.mjs` - Runner implementation with worktree routing
+- `harness/ops/orchestration/symphony-runner.mjs` - Runner implementation with worktree routing

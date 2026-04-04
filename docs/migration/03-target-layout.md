@@ -55,7 +55,7 @@ packages/
     depcruise/
     build/
 
-scripts/
+harness/
   ops/
     core/
     orchestration/
@@ -115,7 +115,7 @@ Forbidden:
 - compatibility shims
 - platform/runtime bindings
 
-### `scripts/ops/*`
+### `harness/ops/*`
 
 Only harness/runtime automation. No product runtime imports are allowed into this root.
 

@@ -16,7 +16,7 @@ This is the exact migration order.
   - `apps/*`
   - `packages/*`
   - `packages/*/*`
-  - `scripts/ops/*`
+  - `harness/ops/*`
   - `netlify/*`
   - `src/*` transitional roots
   - `tests/*`
@@ -33,7 +33,7 @@ This is the exact migration order.
 
 ## Phase 3 — contract-separate the harness
 
-- create internal harness subdirectories under `scripts/ops/`
+- create internal harness subdirectories under `harness/ops/`
 - move implementations into contract subdirectories
 - keep top-level public entry shims stable
 - keep systemd and root scripts working

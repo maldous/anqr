@@ -558,28 +558,28 @@ codebuff-bridge        # Start Codebuff OpenAI-compatible bridge
 
 ### Root Entry Points (Stable Contract)
 
-- `scripts/ops/harness-report.mjs` - Health monitoring
-- `scripts/ops/linear-guardian.mjs` - Issue hygiene
-- `scripts/ops/symphony-queue-control.mjs` - Queue maintenance
-- `scripts/ops/symphony-runner.mjs` - Issue execution
-- `scripts/ops/nightly-ops-pass.mjs` - Nightly pipeline
-- `scripts/ops/email-ingest.mjs` - Email → issues
-- `scripts/ops/notify.mjs` - Notifications
-- `scripts/ops/harness-doctor.mjs` - Diagnostics
+- `harness/ops/harness-report.mjs` - Health monitoring
+- `harness/ops/linear-guardian.mjs` - Issue hygiene
+- `harness/ops/symphony-queue-control.mjs` - Queue maintenance
+- `harness/ops/symphony-runner.mjs` - Issue execution
+- `harness/ops/nightly-ops-pass.mjs` - Nightly pipeline
+- `harness/ops/email-ingest.mjs` - Email → issues
+- `harness/ops/notify.mjs` - Notifications
+- `harness/ops/harness-doctor.mjs` - Diagnostics
 
 ### Integration Scripts
 
-- `scripts/ops/integrations/model/codebuff-openai-bridge.mjs` - Codebuff bridge
-- `scripts/ops/integrations/model/symphony-openai-bridge.mjs` - Symphony bridge
-- `scripts/ops/integrations/model/symphony-credit-gate.mjs` - Provider selection
-- `scripts/ops/integrations/linear/linear-client.mjs` - Linear API helper
-- `scripts/ops/integrations/sonar/sonar-linear-audit.mjs` - Sonar sync
+- `harness/ops/integrations/model/codebuff-openai-bridge.mjs` - Codebuff bridge
+- `harness/ops/integrations/model/symphony-openai-bridge.mjs` - Symphony bridge
+- `harness/ops/integrations/model/symphony-credit-gate.mjs` - Provider selection
+- `harness/ops/integrations/linear/linear-client.mjs` - Linear API helper
+- `harness/ops/integrations/sonar/sonar-linear-audit.mjs` - Sonar sync
 
 ### Core Modules
 
-- `scripts/ops/core/symphony-state.mjs` - State management
-- `scripts/ops/core/symphony-validation.mjs` - Validation manifest
-- `scripts/ops/symphony-config.mjs` - Configuration constants
+- `harness/ops/core/symphony-state.mjs` - State management
+- `harness/ops/core/symphony-validation.mjs` - Validation manifest
+- `harness/ops/symphony-config.mjs` - Configuration constants
 
 ---
 

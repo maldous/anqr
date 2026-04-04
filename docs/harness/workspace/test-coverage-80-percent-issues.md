@@ -233,7 +233,7 @@ npm run test:integration
 
 **Owned Surfaces**:
 
-- `scripts/ops/integrations/model/**/*.mjs`
+- `harness/ops/integrations/model/**/*.mjs`
 
 **Current Coverage**: Already covered by `tests/integration/` and `tests/e2e/openclaw-symphony.spec.ts` (90 tests)
 
@@ -388,8 +388,8 @@ npm run test:unit -- --coverage
 
 **Owned Surfaces**:
 
-- `scripts/ops/orchestration/**/*.mjs`
-- `scripts/ops/symphony-*.mjs`
+- `harness/ops/orchestration/**/*.mjs`
+- `harness/ops/symphony-*.mjs`
 - `apps/web/src/**/*.{ts,tsx}` (critical paths)
 
 **Rationale for Deferral**:
