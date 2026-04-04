@@ -1,1 +1,0 @@
-export const LOG_BUFFER_THRESHOLD = 150;

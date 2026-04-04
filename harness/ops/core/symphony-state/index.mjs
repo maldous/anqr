@@ -1,5 +1,4 @@
 // Generated facade index.
-export { __dirname } from "./dirname.mjs";
 export { getStateDir } from "./get-state-dir.mjs";
 export { getStateFile } from "./get-state-file.mjs";
 export { getLockFile } from "./get-lock-file.mjs";

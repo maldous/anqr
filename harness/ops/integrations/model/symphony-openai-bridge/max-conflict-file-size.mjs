@@ -1,1 +1,0 @@
-export const MAX_CONFLICT_FILE_SIZE = 100 * 1024;

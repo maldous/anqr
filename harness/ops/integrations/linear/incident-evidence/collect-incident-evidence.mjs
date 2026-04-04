@@ -1,4 +1,4 @@
-import { getAllProviderHealthStates } from "../../model/symphony-provider-health.mjs";
+import { loadHealthState } from "../../model/symphony-provider-health.mjs";
 
 import { getGitContext } from "./get-git-context.mjs";
 import { getServiceJournal } from "./get-service-journal.mjs";
@@ -11,7 +11,7 @@ export async function collectIncidentEvidence(serviceName = null, errorContext =
     errorContext,
     gitContext: getGitContext(),
     systemInfo: getSystemInfo(),
-    providerHealth: getAllProviderHealthStates(),
+    providerHealth: loadHealthState(),
     stateFile: getStateFileInfo(),
   };
 

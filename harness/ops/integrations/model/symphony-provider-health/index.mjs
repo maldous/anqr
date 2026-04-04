@@ -1,17 +1,12 @@
 // Generated facade index.
 export { HEALTH_STATES } from "./health-states.mjs";
-export { PROVIDER_TIMEOUTS } from "./provider-timeouts.mjs";
-export { LOCAL_PROVIDER_PATTERNS } from "./local-provider-patterns.mjs";
 export { PROJECT_ROOT } from "./project-root.mjs";
 export { STATE_DIR } from "./state-dir.mjs";
 export { HEALTH_STATE_FILE } from "./health-state-file.mjs";
-export { isLocalProvider } from "./is-local-provider.mjs";
-export { getProviderTimeout } from "./get-provider-timeout.mjs";
 export { loadHealthState } from "./load-health-state.mjs";
 export { saveHealthState } from "./save-health-state.mjs";
 export { getProviderHealthState } from "./get-provider-health-state.mjs";
 export { setProviderHealthState } from "./set-provider-health-state.mjs";
 export { recordProviderHealthSuccess } from "./record-provider-health-success.mjs";
 export { recordProviderHealthFailure } from "./record-provider-health-failure.mjs";
-export { getAllProviderHealthStates } from "./get-all-provider-health-states.mjs";
 export { shouldRetryProvider } from "./should-retry-provider.mjs";

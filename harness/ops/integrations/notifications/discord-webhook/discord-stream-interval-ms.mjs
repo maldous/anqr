@@ -1,1 +1,0 @@
-export const DISCORD_STREAM_INTERVAL_MS = 1000;

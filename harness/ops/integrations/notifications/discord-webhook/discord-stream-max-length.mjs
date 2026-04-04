@@ -1,1 +1,0 @@
-export const DISCORD_STREAM_MAX_LENGTH = 1900;

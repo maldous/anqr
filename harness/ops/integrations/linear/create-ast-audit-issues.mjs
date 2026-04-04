@@ -357,13 +357,12 @@ Refactor runtime service modules in harness/ops/runtime to export one AST per fi
 
 - \`harness/ops/runtime/symphony/symphony-agent.mjs\` (agent wrapper)
 - \`harness/ops/runtime/symphony/bridge-result.mjs\` (result processing)
-- \`harness/ops/runtime/symphony/stuck-detection.mjs\` (stuck issue detection)
 - \`harness/ops/runtime/watchdog/bridge-watchdog.mjs\` (bridge monitoring)
 - \`harness/ops/runtime/mcp/context7-http-service.mjs\` (Context7 HTTP)
 - \`harness/ops/runtime/mcp/context7-server.mjs\` (Context7 MCP)
 - \`harness/ops/runtime/discord/openclaw-gateway-singleton.mjs\` (Discord gateway)
 
-**Total:** ~7 files, estimated 20-25 exported functions
+**Total:** ~6 files, estimated 18-22 exported functions
 
 ## Constraints
 
@@ -424,14 +423,11 @@ Refactor notification and reporting modules in harness/ops/notifications and har
 
 ## Owned Surfaces
 
-- \`harness/ops/integrations/notifications/discord-webhook.mjs\` (Discord webhook client)
 - \`harness/ops/integrations/notifications/test-discord.mjs\` (Discord test harness)
-- \`harness/ops/notifications/notify-impl.mjs\` (notification implementation)
 - \`harness/ops/notifications/notify.mjs\` (notification interface)
 - \`harness/ops/reporting/harness-report.mjs\` (harness status reporting)
-- \`harness/ops/lib/service-restart-notify.mjs\` (restart notifications)
 
-**Total:** ~6 files, estimated 15-20 exported functions
+**Total:** ~3 files, estimated 8-12 exported functions
 
 ## Constraints
 
