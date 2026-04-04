@@ -19,18 +19,15 @@ export async function buildLinearIndex() {
   logInfo(`📄 Export path: ${EXPORT_PATH}`);
   logInfo(`📂 Index directory: ${INDEX_DIR}`);
 
-  // Check Ollama availability
   const ollamaOk = await isOllamaAvailable({ force: true });
   if (!ollamaOk) {
+    const base = process.env.OLLAMA_API_BASE || "http://127.0.0.1:11434";
     logError("Ollama is not available. Cannot build Linear RAG index.");
-    logError(
-      `Ensure Ollama is running at ${process.env.OLLAMA_API_BASE || "http://127.0.0.1:11434"}`,
-    );
-    process.exit(1);
+    logError(`Ensure Ollama is running at ${base}`);
+    throw new Error(`Ollama unavailable at ${base}`);
   }
   logInfo("✅ Ollama is available");
 
-  // Read exported issues
   let issues;
   try {
     const raw = await readFile(EXPORT_PATH, "utf-8");
@@ -39,38 +36,32 @@ export async function buildLinearIndex() {
   } catch (err) {
     logError(`Failed to read export file: ${err?.message || err}`);
     logError(`Expected path: ${EXPORT_PATH}`);
-    logError("Run export script first: node harness/ops/integrations/linear/export-issues.mjs");
-    process.exit(1);
+    throw new Error(`Linear export unavailable at ${EXPORT_PATH}`);
   }
 
   if (!Array.isArray(issues) || issues.length === 0) {
-    logWarn("No issues found in export — index will be empty");
+    logWarn("No issues found in export — writing empty Linear index");
     issues = [];
   }
 
-  // Chunk issues
   logInfo("🔨 Chunking issues...");
   const chunks = chunkLinearIssues(issues);
-  logInfo(`✅ Created ${chunks.length} chunks (1 per issue)`);
+  logInfo(`✅ Created ${chunks.length} chunks`);
 
-  if (chunks.length === 0) {
-    logWarn("No chunks created — exiting");
-    process.exit(0);
-  }
-
-  // Generate embeddings
   logInfo("🧠 Generating embeddings...");
-  const embeddings = await generateEmbeddings(
-    chunks.map((chunk) => chunk.content),
-    {
-      maxConcurrency: LINEAR_EMBEDDING_CONCURRENCY,
-    },
-  );
+  const embeddings =
+    chunks.length > 0
+      ? await generateEmbeddings(
+          chunks.map((chunk) => chunk.content),
+          {
+            maxConcurrency: LINEAR_EMBEDDING_CONCURRENCY,
+          },
+        )
+      : [];
 
   const successCount = embeddings.filter((e) => Array.isArray(e) && e.length > 0).length;
   logInfo(`✅ Generated ${successCount}/${chunks.length} embeddings`);
 
-  // Save index
   logInfo("💾 Saving index...");
   await saveIndex(INDEX_DIR, { chunks, embeddings });
 
@@ -85,4 +76,12 @@ export async function buildLinearIndex() {
   logInfo(`✅ Embeddings generated: ${successCount}`);
   logInfo(`📂 Index location: ${INDEX_DIR}`);
   logInfo("========================================");
+
+  return {
+    issuesProcessed: issues.length,
+    chunkCount: chunks.length,
+    embeddingCount: successCount,
+    elapsedSeconds: Number(elapsed),
+    indexDir: INDEX_DIR,
+  };
 }

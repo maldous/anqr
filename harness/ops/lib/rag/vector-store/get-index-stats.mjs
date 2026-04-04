@@ -1,8 +1,20 @@
-import { stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
+import { join } from "node:path";
 
+import { INDEX_DIR } from "./index-dir.mjs";
 import { INDEX_FILE } from "./index-file.mjs";
+import { MANIFEST_FILE } from "./manifest-file.mjs";
+import { META_FILE } from "./meta-file.mjs";
 import { indexCache } from "./index-cache.mjs";
 import { loadIndex } from "./load-index.mjs";
+
+async function getFileSize(path) {
+  try {
+    return (await stat(path)).size;
+  } catch {
+    return 0;
+  }
+}
 
 export async function getIndexStats() {
   await loadIndex();
@@ -16,11 +28,25 @@ export async function getIndexStats() {
   }
 
   let indexSizeBytes = 0;
+
   try {
-    indexSizeBytes = (await stat(INDEX_FILE)).size;
+    const manifestRaw = await readFile(MANIFEST_FILE, "utf-8");
+    const manifest = JSON.parse(manifestRaw);
+    if (manifest?.version === 2 && Array.isArray(manifest.shards)) {
+      indexSizeBytes += await getFileSize(MANIFEST_FILE);
+      for (const shard of manifest.shards) {
+        if (shard?.filename) {
+          indexSizeBytes += await getFileSize(join(INDEX_DIR, shard.filename));
+        }
+      }
+    } else {
+      indexSizeBytes += await getFileSize(INDEX_FILE);
+    }
   } catch {
-    // ignore missing index file
+    indexSizeBytes += await getFileSize(INDEX_FILE);
   }
+
+  indexSizeBytes += await getFileSize(META_FILE);
 
   return {
     totalEntries: entries.length,

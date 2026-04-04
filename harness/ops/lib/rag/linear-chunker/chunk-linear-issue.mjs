@@ -1,6 +1,15 @@
 import { truncateDescription } from "./truncate-description.mjs";
 import { logDebug } from "./logger.mjs";
 
+function asCommaList(values) {
+  return values.filter(Boolean).join(", ") || "None";
+}
+
+function countLines(text) {
+  if (!text) return 1;
+  return String(text).split("\n").length;
+}
+
 export function chunkLinearIssue(issue) {
   if (!issue || !issue.identifier || !issue.title) {
     logDebug(`Skipping invalid issue: ${JSON.stringify(issue)}`);
@@ -8,11 +17,16 @@ export function chunkLinearIssue(issue) {
   }
 
   const labels = Array.isArray(issue.labels?.nodes)
-    ? issue.labels.nodes.map((l) => l.name).join(", ")
-    : "";
+    ? issue.labels.nodes.map((label) => label?.name).filter(Boolean)
+    : [];
 
   const priority = issue.priority || "None";
   const state = issue.state?.name || "Unknown";
+  const team = issue.team?.name || "Unknown";
+  const project = issue.project?.name || "None";
+  const assignee = issue.assignee?.name || issue.assignee?.displayName || "Unassigned";
+  const creator = issue.creator?.name || issue.creator?.displayName || "Unknown";
+  const url = issue.url || issue.identifier;
   const description = truncateDescription(issue.description || "(no description)");
 
   const content = `
@@ -20,7 +34,14 @@ export function chunkLinearIssue(issue) {
 
 **Priority:** ${priority}
 **State:** ${state}
-**Labels:** ${labels || "None"}
+**Team:** ${team}
+**Project:** ${project}
+**Assignee:** ${assignee}
+**Creator:** ${creator}
+**Labels:** ${asCommaList(labels)}
+**Updated:** ${issue.updatedAt || "Unknown"}
+**Created:** ${issue.createdAt || "Unknown"}
+**URL:** ${url}
 
 ## Description
 
@@ -32,13 +53,21 @@ ${description}
     filePath: `linear://${issue.identifier}`,
     content,
     startLine: 1,
-    endLine: 1,
+    endLine: countLines(content),
     type: "issue",
     metadata: {
       identifier: issue.identifier,
+      title: issue.title,
       state,
       priority,
+      team,
+      project,
+      assignee,
+      creator,
+      labels,
       updatedAt: issue.updatedAt,
+      createdAt: issue.createdAt,
+      url: issue.url || null,
     },
   };
 

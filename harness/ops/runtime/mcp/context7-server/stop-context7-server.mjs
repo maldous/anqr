@@ -2,6 +2,7 @@ import { rejectAllPending } from "./reject-all-pending.mjs";
 import { serverProcess, setServerProcess } from "./server-process.mjs";
 import { setServerReady } from "./server-ready.mjs";
 import { setStdoutBuffer } from "./stdout-buffer.mjs";
+import { setToolRegistry } from "./tool-registry.mjs";
 import { logDebug, logInfo, logWarn } from "./logger.mjs";
 
 export async function stopContext7Server() {
@@ -28,6 +29,7 @@ export async function stopContext7Server() {
       clearTimeout(forceKillTimer);
       setServerProcess(null);
       setServerReady(false);
+      setToolRegistry(null);
       setStdoutBuffer("");
     }
 

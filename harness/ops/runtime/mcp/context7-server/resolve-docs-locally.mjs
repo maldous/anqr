@@ -1,94 +1,105 @@
+import { callLocalTool } from "./call-local-tool.mjs";
 import { extractDocumentation } from "./extract-documentation.mjs";
 import { extractLibraryId } from "./extract-library-id.mjs";
 import { getLibraryDocsCloud } from "./get-library-docs-cloud.mjs";
+import { buildDocsArguments, buildResolveArguments } from "./local-tool-arguments.mjs";
+import { refreshToolRegistry } from "./refresh-tool-registry.mjs";
 import { resolveLibraryIdCloud } from "./resolve-library-id-cloud.mjs";
-import { sendRequest } from "./send-request.mjs";
 import { serverProcess } from "./server-process.mjs";
 import { serverReady } from "./server-ready.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
+async function resolveLibraryIdLocal(registry, libraryTitle, topic) {
+  if (!registry?.resolveTool?.name) return null;
+
+  const resolveArgs = buildResolveArguments(registry.resolveTool, libraryTitle, topic);
+  const resolveResult = await callLocalTool(registry.resolveTool.name, resolveArgs);
+  return extractLibraryId(resolveResult, { preferredText: libraryTitle });
+}
+
+async function getDocumentationLocal(registry, libraryId, libraryTitle, topic, maxTokens) {
+  if (!registry?.docsTool?.name) return null;
+
+  const docsArgs = buildDocsArguments(registry.docsTool, libraryId, libraryTitle, topic, maxTokens);
+  const docsResult = await callLocalTool(registry.docsTool.name, docsArgs);
+  return extractDocumentation(docsResult);
+}
+
 export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 5000 }) {
-  if (!libraryTitle) {
+  const normalizedTitle = String(libraryTitle || "").trim();
+  if (!normalizedTitle) {
     logError("resolveDocsLocally called without libraryTitle");
     return { source: "error", documentation: null };
   }
 
-  // -----------------------------------------------------------------------
-  // Attempt 1: Local MCP server
-  // -----------------------------------------------------------------------
   if (serverReady && serverProcess && !serverProcess.killed) {
     try {
-      logDebug(`Resolving docs locally: ${libraryTitle}`, { topic, max_tokens });
+      logDebug(`Resolving docs locally: ${normalizedTitle}`, { topic, max_tokens });
 
-      // Step 1 — resolve-library-id via MCP tools/call
-      // The MCP tool requires both query and libraryName as required parameters
-      const resolveResult = await sendRequest("tools/call", {
-        name: "resolve-library-id",
-        arguments: {
-          query: topic
-            ? `Documentation for ${libraryTitle} focusing on ${topic}`
-            : `Documentation for ${libraryTitle}`,
-          libraryName: libraryTitle,
-        },
-      });
+      const registry = await refreshToolRegistry();
+      let libraryId = normalizedTitle.startsWith("/") ? normalizedTitle : null;
 
-      const libraryId = extractLibraryId(resolveResult);
+      if (!libraryId) {
+        libraryId = await resolveLibraryIdLocal(registry, normalizedTitle, topic);
+      }
+
       if (libraryId) {
-        // Step 2 — query-docs via MCP tools/call
-        // The MCP tool requires libraryId and query as required parameters
-        const docsArgs = {
+        const documentation = await getDocumentationLocal(
+          registry,
           libraryId,
-          query: topic || `Documentation and examples for ${libraryTitle}`,
-        };
+          normalizedTitle,
+          topic,
+          max_tokens,
+        );
 
-        const docsResult = await sendRequest("tools/call", {
-          name: "query-docs",
-          arguments: docsArgs,
-        });
-
-        const documentation = extractDocumentation(docsResult);
         if (documentation) {
-          logInfo(`Resolved docs locally for "${libraryTitle}"`, {
+          logInfo(`Resolved docs locally for "${normalizedTitle}"`, {
             topic,
+            libraryId,
             chars: documentation.length,
           });
           return { source: "local", documentation };
         }
 
-        logWarn(`Local get-library-docs returned empty for "${libraryTitle}"`);
+        logWarn(`Local documentation tool returned empty for "${normalizedTitle}"`, {
+          libraryId,
+          docsTool: registry?.docsTool?.name,
+        });
       } else {
-        logWarn(`Local resolve-library-id returned no ID for "${libraryTitle}"`);
-        // Fall through to cloud fallback
+        logWarn(`Local resolve-library-id returned no ID for "${normalizedTitle}"`, {
+          resolveTool: registry?.resolveTool?.name,
+        });
       }
     } catch (err) {
-      logWarn(`Local MCP request failed for "${libraryTitle}": ${err.message}`);
+      logWarn(`Local MCP request failed for "${normalizedTitle}": ${err.message}`);
     }
   } else {
     logDebug("Local MCP server unavailable — skipping to cloud fallback");
   }
 
-  // -----------------------------------------------------------------------
-  // Attempt 2: Cloud API fallback
-  // -----------------------------------------------------------------------
-  logInfo(`Falling back to cloud API for "${libraryTitle}"`);
+  logInfo(`Falling back to cloud API for "${normalizedTitle}"`);
 
   try {
-    const libraryId = await resolveLibraryIdCloud(libraryTitle);
+    const libraryId = normalizedTitle.startsWith("/")
+      ? normalizedTitle
+      : await resolveLibraryIdCloud(normalizedTitle, topic);
+
     if (!libraryId) {
-      logWarn(`Cloud could not resolve library ID for "${libraryTitle}"`);
+      logWarn(`Cloud could not resolve library ID for "${normalizedTitle}"`);
       return { source: "cloud", documentation: null };
     }
 
-    const documentation = await getLibraryDocsCloud(libraryId, topic, max_tokens);
+    const documentation = await getLibraryDocsCloud(libraryId, topic, max_tokens, normalizedTitle);
     if (documentation) {
-      logInfo(`Resolved docs via cloud for "${libraryTitle}"`, {
+      logInfo(`Resolved docs via cloud for "${normalizedTitle}"`, {
         topic,
+        libraryId,
         chars: documentation.length,
       });
     }
     return { source: "cloud", documentation: documentation || null };
   } catch (err) {
-    logError(`Cloud fallback failed for "${libraryTitle}": ${err.message}`);
+    logError(`Cloud fallback failed for "${normalizedTitle}": ${err.message}`);
     return { source: "error", documentation: null };
   }
 }

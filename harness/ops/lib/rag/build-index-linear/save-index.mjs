@@ -4,12 +4,20 @@ import { resolve } from "node:path";
 import { writeFile } from "./write-file.mjs";
 import { logInfo, logWarn } from "./logger.mjs";
 
+function sortEntries(entries) {
+  return [...entries].sort((a, b) => {
+    return (
+      String(a.filePath || "").localeCompare(String(b.filePath || "")) ||
+      String(a.id || "").localeCompare(String(b.id || ""))
+    );
+  });
+}
+
 export async function saveIndex(indexDir, data) {
   await mkdir(indexDir, { recursive: true });
 
   const { chunks, embeddings } = data;
 
-  // Build index entries
   const indexEntries = [];
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
@@ -32,20 +40,21 @@ export async function saveIndex(indexDir, data) {
     });
   }
 
-  // Write index file
-  const indexPath = resolve(indexDir, "index.json");
-  await writeFile(indexPath, JSON.stringify(indexEntries, null, 2), "utf-8");
+  const sortedEntries = sortEntries(indexEntries);
+  const indexJson = JSON.stringify(sortedEntries, null, 2);
 
-  // Write metadata file
+  const indexPath = resolve(indexDir, "index.json");
+  await writeFile(indexPath, indexJson, "utf-8");
+
   const meta = {
-    chunkCount: indexEntries.length,
+    chunkCount: sortedEntries.length,
     lastBuild: new Date().toISOString(),
-    indexSizeBytes: JSON.stringify(indexEntries).length,
+    indexSizeBytes: Buffer.byteLength(indexJson, "utf-8"),
     source: "linear-export",
   };
   const metaPath = resolve(indexDir, "meta.json");
   await writeFile(metaPath, JSON.stringify(meta, null, 2), "utf-8");
 
-  logInfo(`Index saved: ${indexEntries.length} entries`);
+  logInfo(`Index saved: ${sortedEntries.length} entries`);
   logInfo(`Index size: ${(meta.indexSizeBytes / 1024).toFixed(1)} KB`);
 }

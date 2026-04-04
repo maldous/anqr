@@ -1,18 +1,22 @@
 // Generated facade index.
 export { STARTUP_TIMEOUT_MS } from "./startup-timeout-ms.mjs";
 export { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
-export { CLOUD_API_BASE } from "./cloud-api-base.mjs";
+export { CLOUD_API_BASE, LEGACY_CLOUD_API_BASE } from "./cloud-api-base.mjs";
 export { serverProcess } from "./server-process.mjs";
 export { serverReady } from "./server-ready.mjs";
 export { nextRequestId } from "./next-request-id.mjs";
 export { pendingRequests } from "./pending-requests.mjs";
 export { stdoutBuffer } from "./stdout-buffer.mjs";
+export { toolRegistry } from "./tool-registry.mjs";
 export { handleStdoutData } from "./handle-stdout-data.mjs";
 export { handleJsonRpcMessage } from "./handle-json-rpc-message.mjs";
 export { sendRequest } from "./send-request.mjs";
 export { rejectAllPending } from "./reject-all-pending.mjs";
+export { extractToolsList } from "./extract-tools-list.mjs";
+export { refreshToolRegistry } from "./refresh-tool-registry.mjs";
 export { resolveLibraryIdCloud } from "./resolve-library-id-cloud.mjs";
 export { getLibraryDocsCloud } from "./get-library-docs-cloud.mjs";
+export { getLibraryDocsLegacyCloud } from "./get-library-docs-legacy-cloud.mjs";
 export { startContext7Server } from "./start-context7-server.mjs";
 export { stopContext7Server } from "./stop-context7-server.mjs";
 export { isContext7ServerHealthy } from "./is-context7-server-healthy.mjs";

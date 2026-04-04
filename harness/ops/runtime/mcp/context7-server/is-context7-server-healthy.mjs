@@ -1,4 +1,4 @@
-import { sendRequest } from "./send-request.mjs";
+import { refreshToolRegistry } from "./refresh-tool-registry.mjs";
 import { serverProcess } from "./server-process.mjs";
 import { serverReady } from "./server-ready.mjs";
 import { logWarn } from "./logger.mjs";
@@ -9,9 +9,8 @@ export async function isContext7ServerHealthy() {
   }
 
   try {
-    // Use tools/list as a lightweight health probe — it should always succeed
-    await sendRequest("tools/list", {}, 5000);
-    return true;
+    const registry = await refreshToolRegistry({ force: true, timeoutMs: 5000 });
+    return Boolean(registry?.resolveTool?.name && registry?.docsTool?.name);
   } catch (err) {
     logWarn(`Health check failed: ${err.message}`);
     return false;

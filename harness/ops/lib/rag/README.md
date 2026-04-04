@@ -3,24 +3,19 @@
 Local-first RAG pipeline for ANQR codebase search and context retrieval, backed
 by Ollama embeddings on the same machine that serves Symphony agents.
 
-## What changed in this replacement
+## Design goals in this replacement
 
-This drop-in replacement tightens the original implementation in a few places
-that materially affect unattended rebuild quality:
+This drop-in replacement keeps the existing architecture, but tightens the parts
+that matter most for unattended nightly rebuilds and operator trust:
 
-- file discovery remains `git ls-files -z` based, but the builder now resolves
-  the git repo root explicitly instead of relying on the current working
-  directory
-- high-noise i18n trees remain excluded by default, with mirrored `android/`
-  paths de-duplicated in favour of `apps/android/`
-- the chunker now preserves line ranges much more accurately for split chunks
-  instead of guessing with `text.indexOf(...)`
-- chunk IDs are deterministic for the same file/range, which reduces churn when
-  reviewing search output or diffs
-- Ollama health checks are cached, so a full index build does not ping the
-  server once per file
-- the vector store now exposes pruning directly and stores repo-relative paths
-  where possible for cleaner retrieval context
+- deterministic, repo-relative storage where practical
+- atomic writes for source and Linear indexes
+- correct index size reporting for both legacy and sharded formats
+- stale shard cleanup when the storage layout changes
+- safer library-style behavior from builders that are also called programmatically
+- richer Linear issue chunks for better recall
+- a more resilient Context7 wrapper that adapts to tool/schema drift and uses a
+  current cloud fallback path
 
 ## Architecture
 
@@ -61,7 +56,8 @@ console.log(`${stats.totalEntries} chunks across ${stats.totalFiles} files`);
 
 ## Builder behavior
 
-`build-index.mjs` is the primary entry point for the ANQR repo.
+`build-index.mjs` is the primary entry point for the ANQR repo and continues to
+chain into the Linear index build after the source index succeeds.
 
 ### Included by default
 
@@ -103,6 +99,14 @@ console.log(`${stats.totalEntries} chunks across ${stats.totalFiles} files`);
 - `RAG_OLLAMA_HEALTH_CACHE_TTL_MS` — positive health cache TTL
 - `RAG_OLLAMA_FAILURE_COOLDOWN_MS` — negative health retry cooldown
 
+### Context7 wrapper
+
+- `CONTEXT7_API_KEY` — API key for cloud fallback
+- `CONTEXT7_REQUEST_TIMEOUT_MS` — per-call timeout
+- `CONTEXT7_STARTUP_TIMEOUT_MS` — startup timeout for the local MCP child
+- `CONTEXT7_API_BASE` — override current cloud API base (default `https://context7.com`)
+- `CONTEXT7_LEGACY_API_BASE` — override legacy direct docs fallback base (default `https://api.context7.com`)
+
 ## Usage
 
 ```bash
@@ -125,7 +129,8 @@ node --max-old-space-size=8192 harness/ops/lib/rag/build-index.mjs --clear
 
 ## Notes on storage
 
-The index lives in `reports/rag-index/`:
+The source index lives in `reports/rag-index/` and may be stored either as a
+legacy single file or as sharded files tracked by a manifest:
 
 ```text
 reports/rag-index/
@@ -137,21 +142,8 @@ reports/rag-index/
 └── meta.json       # per-file mtime + chunk counts
 ```
 
-### Sharding Strategy
-
-To prevent `JSON.stringify` overflow errors with large indexes (>512MB), the
-vector store automatically shards the index when it exceeds `RAG_MAX_SHARD_SIZE_BYTES`
-(default: 50MB per shard):
-
-- **Small indexes**: Written as a single `index.json` file (legacy format)
-- **Large indexes**: Split across multiple `index-N.json` shards tracked by
-  `manifest.json` (v2 format)
-- **Loading**: Automatically detects and loads either format
-- **Migration**: Existing single-file indexes are automatically migrated to
-  sharded format on the next rebuild if they exceed the size threshold
-
-Stored `filePath` values are repo-relative when the file lives inside the git
-root, which makes retrieved context easier for agents to read and replay.
+The Linear index continues to live in `reports/rag-index-linear/` as a compact
+single-file index for the existing linear-search consumer.
 
 ## Nightly automation
 

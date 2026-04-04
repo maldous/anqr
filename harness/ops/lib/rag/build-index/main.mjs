@@ -19,11 +19,10 @@ export async function main() {
 
   const ollamaOk = await isOllamaAvailable({ force: true });
   if (!ollamaOk) {
+    const base = process.env.OLLAMA_API_BASE || "http://127.0.0.1:11434";
     logError("Ollama is not available. Cannot build RAG index.");
-    logError(
-      `Ensure Ollama is running at ${process.env.OLLAMA_API_BASE || "http://127.0.0.1:11434"}`,
-    );
-    process.exit(1);
+    logError(`Ensure Ollama is running at ${base}`);
+    throw new Error(`Ollama unavailable at ${base}`);
   }
   logInfo("✅ Ollama is available");
 
@@ -127,4 +126,14 @@ export async function main() {
   }
 
   logInfo("========================================");
+
+  return {
+    trackedFiles: discovery.trackedFiles.length,
+    eligibleFiles: discovery.included.length,
+    indexedFiles: totalIndexed,
+    chunkCount: totalChunks,
+    failures,
+    elapsedSeconds: Number(elapsed),
+    finalStats,
+  };
 }

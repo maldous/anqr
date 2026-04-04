@@ -19,6 +19,7 @@ export { sanitizeMetaRecord } from "./sanitize-meta-record.mjs";
 export { isValidEntry } from "./is-valid-entry.mjs";
 export { ensureIndexDir } from "./ensure-index-dir.mjs";
 export { atomicWriteJSON } from "./atomic-write-json.mjs";
+export { cleanupStaleIndexFiles } from "./cleanup-stale-index-files.mjs";
 export { loadIndex } from "./load-index.mjs";
 export { markDirty } from "./mark-dirty.mjs";
 export { saveIndex } from "./save-index.mjs";

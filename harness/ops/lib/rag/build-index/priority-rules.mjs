@@ -1,5 +1,5 @@
 export const PRIORITY_RULES = [
-  [/^scripts\/ops\//i, 0],
+  [/^(?:harness|scripts)\/ops\//i, 0],
   [/^packages\//i, 1],
   [/^apps\/(?:api|mobile|web)\/src\//i, 2],
   [/^apps\/web\//i, 3],

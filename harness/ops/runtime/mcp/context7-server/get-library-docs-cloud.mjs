@@ -1,52 +1,50 @@
 import { CLOUD_API_BASE } from "./cloud-api-base.mjs";
-import { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
+import { fetchCloud } from "./fetch-cloud.mjs";
+import { formatCloudContext } from "./format-cloud-context.mjs";
+import { getLibraryDocsLegacyCloud } from "./get-library-docs-legacy-cloud.mjs";
 import { logWarn, logError } from "./logger.mjs";
 
-export async function getLibraryDocsCloud(libraryId, topic, _maxTokens = 5000) {
+export async function getLibraryDocsCloud(libraryId, topic, maxTokens = 5000, libraryTitle = "") {
   const apiKey = process.env.CONTEXT7_API_KEY;
   if (!apiKey) {
     logWarn("CONTEXT7_API_KEY not set — cloud fallback unavailable");
     return null;
   }
 
-  try {
-    const body = { libraryId };
-    if (topic) body.query = topic;
-
-    const response = await fetch(`${CLOUD_API_BASE}/docs`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-
-    if (!response.ok) {
-      logWarn(`Cloud get-library-docs failed: HTTP ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-    // Context7 returns an array of result objects with snippets
-    if (data?.results && Array.isArray(data.results)) {
-      const docs = data.results
-        .map((r) => {
-          const parts = [];
-          if (r.title) parts.push(`## ${r.title}`);
-          if (r.description) parts.push(r.description);
-          if (r.codeExample) parts.push(`\`\`\`\n${r.codeExample}\n\`\`\``);
-          if (r.snippet) parts.push(r.snippet);
-          if (r.sourceUrl) parts.push(`Source: ${r.sourceUrl}`);
-          return parts.join("\n\n");
-        })
-        .join("\n\n---\n\n");
-      return docs || null;
-    }
-    return data?.documentation || data?.content || JSON.stringify(data);
-  } catch (err) {
-    logError(`Cloud get-library-docs error: ${err.message}`);
+  const normalizedId = String(libraryId || "").trim();
+  if (!normalizedId) {
     return null;
   }
+
+  try {
+    const url = new URL(`${CLOUD_API_BASE}/api/v2/context`);
+    url.searchParams.set("libraryId", normalizedId);
+    url.searchParams.set("query", topic || `Documentation and examples for ${libraryTitle || normalizedId}`);
+    url.searchParams.set("type", "json");
+
+    let response = await fetchCloud(url, apiKey);
+
+    if (response.status === 301) {
+      const redirectUrl = response.headers.get("location");
+      if (redirectUrl) {
+        response = await fetchCloud(redirectUrl, apiKey);
+      }
+    }
+
+    if (response.ok) {
+      const data = await response.json();
+      const documentation = formatCloudContext(data);
+      if (documentation) {
+        return documentation;
+      }
+    } else {
+      const body = await response.text().catch(() => "");
+      logWarn(`Cloud get-library-docs failed: HTTP ${response.status}${body ? ` — ${body}` : ""}`);
+    }
+  } catch (err) {
+    logError(`Cloud get-library-docs error: ${err.message}`);
+  }
+
+  const legacyLibrary = normalizedId.startsWith("/") ? normalizedId : libraryTitle || normalizedId;
+  return getLibraryDocsLegacyCloud(apiKey, legacyLibrary, topic, maxTokens);
 }
