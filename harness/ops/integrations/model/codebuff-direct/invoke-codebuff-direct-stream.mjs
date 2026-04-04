@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:302
-
 import { buildPrompt } from "./build-prompt.mjs";
 import { getApiKey } from "./get-api-key.mjs";
 import { isRecoverableError } from "./is-recoverable-error.mjs";

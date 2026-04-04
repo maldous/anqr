@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3449
-
 import { getConfiguredProviders, probeAllProviders } from "../symphony-credit-gate.mjs";
 
 import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";

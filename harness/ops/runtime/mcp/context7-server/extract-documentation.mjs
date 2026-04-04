@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:603
-
 export function extractDocumentation(result) {
   if (!result) return null;
 

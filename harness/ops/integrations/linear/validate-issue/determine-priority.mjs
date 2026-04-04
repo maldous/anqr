@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/validate-issue.mjs:292
-
 export function determinePriority(impactLevel) {
   const impact = impactLevel?.toLowerCase();
 

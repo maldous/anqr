@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:535
-
 import { loadState } from "./load-state.mjs";
 import { normalizeRecord } from "./normalize-record.mjs";
 import { saveState } from "./save-state.mjs";

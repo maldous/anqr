@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/governance/linear-guardian.mjs:232
-
 import { addComment, listIssuesByState } from "../../linear-client.mjs";
 
 import { isStale } from "./is-stale.mjs";

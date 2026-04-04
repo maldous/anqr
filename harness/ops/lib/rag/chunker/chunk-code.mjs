@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:359
-
 import { extname } from "node:path";
 
 import { buildLineStarts } from "./build-line-starts.mjs";

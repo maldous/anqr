@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/discord-source.mjs:52
-
 import { getIssueState, patchIssueState } from "../symphony-state.mjs";
 
 export function markDiscordSource(issueIdentifier) {

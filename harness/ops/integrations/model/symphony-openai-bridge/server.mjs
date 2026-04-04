@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5542
-
 import http from "node:http";
 import {
   selectProvider,

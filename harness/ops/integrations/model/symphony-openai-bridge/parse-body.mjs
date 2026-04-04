@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5387
-
 export function parseBody(req) {
   return new Promise((resolve, reject) => {
     let data = "";

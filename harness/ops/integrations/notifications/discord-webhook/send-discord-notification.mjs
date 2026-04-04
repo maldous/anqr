@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/discord-webhook.mjs:104
-
 import { URL } from "node:url";
 import https from "node:https";
 

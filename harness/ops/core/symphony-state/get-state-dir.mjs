@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:13
-
 import path from "node:path";
 
 export function getStateDir() {

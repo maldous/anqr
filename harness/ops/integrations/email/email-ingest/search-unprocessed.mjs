@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:67
-
 import { NOTMUCH_QUERY } from "./notmuch-query.mjs";
 import { run } from "./run.mjs";
 

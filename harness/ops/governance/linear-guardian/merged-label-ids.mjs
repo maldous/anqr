@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/governance/linear-guardian.mjs:142
-
 import { REQUIRED_LABEL_IDS } from "../../symphony-config.mjs";
 
 export function mergedLabelIds(issue) {

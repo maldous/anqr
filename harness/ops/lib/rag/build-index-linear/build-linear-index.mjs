@@ -1,5 +1,3 @@
-// Generated from ../../../../harness/ops/lib/rag/build-index-linear.mjs:89
-
 import { generateEmbeddings, isOllamaAvailable } from "../embeddings.mjs";
 import { readFile } from "node:fs/promises";
 import { chunkLinearIssues } from "../linear-chunker.mjs";

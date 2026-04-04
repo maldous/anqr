@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-sync.mjs:71
-
 import { fetchWithTimeout } from "./fetch-with-timeout.mjs";
 import { sonarAuthHeader } from "./sonar-auth-header.mjs";
 

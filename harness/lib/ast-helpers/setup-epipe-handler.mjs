@@ -1,5 +1,3 @@
-// Generated from ../../scripts/lib/ast-helpers.mjs:36
-
 import process from "node:process";
 
 export const setupEpipeHandler = () => {

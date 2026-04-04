@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/latency-report.mjs:37
-
 import { ACCEPTABLE_MS } from "./acceptable-ms.mjs";
 import { TARGET_MS } from "./target-ms.mjs";
 

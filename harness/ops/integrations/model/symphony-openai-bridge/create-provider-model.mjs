@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3054
-
 import { createGroq } from "@ai-sdk/groq";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";

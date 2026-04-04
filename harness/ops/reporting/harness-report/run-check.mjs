@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:558
-
 import { CHECKS } from "./checks.mjs";
 
 export async function runCheck(name) {

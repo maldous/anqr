@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/validate-issue.mjs:23
-
 import { STATES, LABELS } from "../linear-client.mjs";
 
 import { calculateValidationScore } from "./calculate-validation-score.mjs";

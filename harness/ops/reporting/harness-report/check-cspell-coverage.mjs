@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:330
-
 import { spawnSync } from "node:child_process";
 
 import { ROOT } from "./root.mjs";

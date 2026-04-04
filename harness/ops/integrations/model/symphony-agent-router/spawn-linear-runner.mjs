@@ -1,5 +1,3 @@
-// Generated from ../../../../harness/ops/integrations/model/symphony-agent-router.mjs:211
-
 import { spawn } from "node:child_process";
 
 import { MAX_QUEUE_LENGTH } from "./max-queue-length.mjs";

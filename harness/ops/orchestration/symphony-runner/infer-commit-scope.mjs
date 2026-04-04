@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:449
-
 import { SCOPE_RULES } from "./scope-rules.mjs";
 
 export function inferCommitScope(changedFiles) {

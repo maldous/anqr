@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:126
-
 import { execSync } from "node:child_process";
 
 export function getServicePID(serviceName) {

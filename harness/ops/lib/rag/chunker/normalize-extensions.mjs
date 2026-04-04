@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:96
-
 import { DEFAULT_OPTIONS } from "./default-options.mjs";
 
 export function normalizeExtensions(extensions) {

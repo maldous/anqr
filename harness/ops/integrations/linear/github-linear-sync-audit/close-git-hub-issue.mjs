@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/github-linear-sync-audit.mjs:69
-
 import { GITHUB_API } from "./github-api.mjs";
 import { GITHUB_REPO } from "./github-repo.mjs";
 import { getGitHubToken } from "./get-git-hub-token.mjs";

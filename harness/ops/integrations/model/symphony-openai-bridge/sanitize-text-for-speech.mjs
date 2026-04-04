@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1424
-
 import { SPEECH_EMOJI_RE } from "./speech-emoji-re.mjs";
 
 export function sanitizeTextForSpeech(text) {

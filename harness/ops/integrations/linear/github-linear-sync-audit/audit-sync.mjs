@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/github-linear-sync-audit.mjs:130
-
 import { listIssuesByState } from "../linear-client.mjs";
 
 import { closeGitHubIssue } from "./close-git-hub-issue.mjs";

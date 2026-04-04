@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/hybrid-search.mjs:135
-
 import { cosineSimilarity } from "./cosine-similarity.mjs";
 import { generateEmbedding } from "./generate-embedding.mjs";
 import { isOllamaAvailable } from "./is-ollama-available.mjs";

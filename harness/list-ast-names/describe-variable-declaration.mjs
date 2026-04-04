@@ -1,5 +1,3 @@
-// Generated from ../scripts/list-ast-names.mjs:49
-
 import {
   isFunctionLikeInitializer,
   isClassLikeInitializer,

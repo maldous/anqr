@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/hybrid-search.mjs:402
-
 import { execFileSync } from "node:child_process";
 import { extname, join, relative } from "node:path";
 import { readFile } from "node:fs/promises";

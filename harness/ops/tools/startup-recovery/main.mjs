@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/tools/startup-recovery.mjs:43
-
 import { feedQueue, getQueueSnapshot } from "../../symphony-queue-control.mjs";
 import { listIssuesByState } from "../../integrations/linear/linear-client.mjs";
 import {

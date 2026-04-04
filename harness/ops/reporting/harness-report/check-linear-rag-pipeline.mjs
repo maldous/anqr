@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:450
-
 import { resolve } from "node:path";
 import { existsSync, statSync, readFileSync } from "node:fs";
 

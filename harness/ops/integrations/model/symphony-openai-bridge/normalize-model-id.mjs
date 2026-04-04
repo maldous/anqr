@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3493
-
 import { MODEL_ID } from "./model-id.mjs";
 
 export function normalizeModelId(modelId) {

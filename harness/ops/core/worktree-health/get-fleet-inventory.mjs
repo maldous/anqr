@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/worktree-health.mjs:209
-
 import { ALL_WORKTREE_IDS } from "./all-worktree-ids.mjs";
 import { getWorktreeHealthSnapshot } from "./get-worktree-health-snapshot.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:662
-
 import { getFleetInventory } from "../../core/worktree-health.mjs";
 
 import { classifyWorktree } from "./classify-worktree.mjs";

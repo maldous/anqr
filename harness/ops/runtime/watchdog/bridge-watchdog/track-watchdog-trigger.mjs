@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:367
-
 import { sendDiscordEmbed } from "../../../integrations/notifications/openclaw-discord.mjs";
 
 import { TRIGGER_RATE_ALERT_COOLDOWN_MS } from "./trigger-rate-alert-cooldown-ms.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:265
-
 import { FOLLOWER_SLEEP_MS } from "./follower-sleep-ms.mjs";
 import { WAIT_LOG_INTERVAL_MS } from "./wait-log-interval-ms.mjs";
 import { cleanupStaleLock } from "./cleanup-stale-lock.mjs";

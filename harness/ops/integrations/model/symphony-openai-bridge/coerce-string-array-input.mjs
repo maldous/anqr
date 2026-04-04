@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:390
-
 export function coerceStringArrayInput(value, { fallback = undefined } = {}) {
   if (Array.isArray(value)) {
     const cleaned = value

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:352
-
 import { getIssueState } from "./get-issue-state.mjs";
 import { nowIso } from "./now-iso.mjs";
 import { patchIssueState } from "./patch-issue-state.mjs";

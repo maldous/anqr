@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-resolution.mjs:80
-
 import { HEALTHY_DURATION_MS } from "./healthy-duration-ms.mjs";
 import { checkServiceHealth } from "./check-service-health.mjs";
 import { extractServiceName } from "./extract-service-name.mjs";

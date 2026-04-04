@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:76
-
 import { normalize } from "./normalize.mjs";
 
 export const shouldSkip = (filePath) => {

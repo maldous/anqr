@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:238
-
 export const choosePrimaryEntry = (entries) => {
   const named = entries.filter((entry) => entry.name && !entry.name.startsWith("_"));
   const exportedNamed = named.filter((entry) => entry.exported);

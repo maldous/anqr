@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:639
-
 import { listWorktreesByState, clearQuarantine } from "../../symphony-state.mjs";
 import { RECOVERY_MAX_REPAIR_ATTEMPTS } from "../../symphony-config.mjs";
 import { logInfo, logError } from "./logger.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/github-linear-sync-audit.mjs:109
-
 export function extractLinearIdentifier(issue) {
   // Look for Linear identifier patterns in the issue body or title
   // Common patterns: ANQR-123, [ANQR-123], Linear: ANQR-123, etc.

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:137
-
 import { execFileSync } from "node:child_process";
 
 import { ROOT } from "./root.mjs";

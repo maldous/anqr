@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/review-open-issues.mjs:56
-
 import { resolve } from "node:path";
 import { readFileSync, existsSync } from "node:fs";
 

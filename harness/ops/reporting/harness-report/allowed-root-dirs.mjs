@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:74
-
 export const ALLOWED_ROOT_DIRS = new Set([
   "apps",
   "packages",

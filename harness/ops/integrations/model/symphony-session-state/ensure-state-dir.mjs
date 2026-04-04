@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-session-state.mjs:82
-
 import { existsSync, mkdirSync } from "node:fs";
 
 import { STATE_DIR } from "./state-dir.mjs";

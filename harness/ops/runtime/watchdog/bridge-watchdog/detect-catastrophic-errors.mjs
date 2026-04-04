@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:171
-
 import { CATASTROPHIC_PATTERNS } from "./catastrophic-patterns.mjs";
 
 export function detectCatastrophicErrors(journalLog) {

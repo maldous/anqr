@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:90
-
 import { promises as fsp } from "node:fs";
 
 import { LOCK_FILE } from "./lock-file.mjs";

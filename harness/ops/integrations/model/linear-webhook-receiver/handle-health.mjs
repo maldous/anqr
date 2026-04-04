@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/linear-webhook-receiver.mjs:268
-
 import { PORT } from "./port.mjs";
 import { WORKTREE_IDS } from "./worktree-ids.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:334
-
 import { calculateExponentialBackoff } from "./calculate-exponential-backoff.mjs";
 import { getIssueState } from "./get-issue-state.mjs";
 import { patchIssueState } from "./patch-issue-state.mjs";

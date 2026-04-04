@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/discord-request-router.mjs:36
-
 import { getWorktreePath } from "../../../core/worktree-config.mjs";
 
 import { WORKTREE_IDS } from "./worktree-ids.mjs";

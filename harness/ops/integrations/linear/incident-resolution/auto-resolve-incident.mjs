@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-resolution.mjs:127
-
 import { updateIssue, addComment } from "../linear-client.mjs";
 import { STATES } from "../linear-client.mjs";
 import { logInfo } from "./logger.mjs";

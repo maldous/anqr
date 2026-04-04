@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/review-open-issues.mjs:71
-
 import { ROOT } from "./root.mjs";
 import { execAsync } from "./exec-async.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:625
-
 import { stopContext7Server } from "./stop-context7-server.mjs";
 import { logInfo } from "./logger.mjs";
 

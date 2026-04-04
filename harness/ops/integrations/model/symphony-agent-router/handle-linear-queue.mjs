@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-agent-router.mjs:326
-
 import { json } from "./json.mjs";
 import { linearQueue } from "./linear-queue.mjs";
 import { logInfo } from "./logger.mjs";

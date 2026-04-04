@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:574
-
 import { execFileSync } from "node:child_process";
 import { runGlobalPreflights, validationManifestHash } from "../../symphony-validation.mjs";
 import { setGlobalValue, getGlobalValue } from "../../symphony-state.mjs";

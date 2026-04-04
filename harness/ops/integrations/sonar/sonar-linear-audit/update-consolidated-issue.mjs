@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-audit.mjs:91
-
 import { updateIssue } from "../../linear/linear-client.mjs";
 import { logInfo } from "./logger.mjs";
 

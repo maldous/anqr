@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:563
-
 export function extractLibraryId(result) {
   if (!result) return null;
 

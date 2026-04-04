@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:89
-
 import fs from "node:fs";
 import path from "node:path";
 

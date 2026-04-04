@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:53
-
 import { listIssuesByState } from "../../linear-client.mjs";
 import { QUEUE_STATES } from "../../symphony-config.mjs";
 import {

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:91
-
 import { isAbsolute, resolve } from "node:path";
 
 import { PROJECT_ROOT } from "./project-root.mjs";

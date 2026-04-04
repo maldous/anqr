@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:135
-
 import { spawn } from "node:child_process";
 
 import { CLI } from "./cli.mjs";

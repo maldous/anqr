@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/lib/notify.mjs:16
-
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-integrator.mjs:265
-
 import { listIntegrationCandidates, getFinalizationState } from "../../symphony-state.mjs";
 
 export function showStatus() {

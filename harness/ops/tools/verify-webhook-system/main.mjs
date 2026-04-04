@@ -1,5 +1,3 @@
-// Generated from ../../../harness/ops/tools/verify-webhook-system.mjs:58
-
 import { getQueueSnapshot, feedQueue } from "../../orchestration/symphony-queue-control.mjs";
 import { listIssuesByState } from "../../integrations/linear/linear-client.mjs";
 import { getIssueState } from "../../core/symphony-state.mjs";

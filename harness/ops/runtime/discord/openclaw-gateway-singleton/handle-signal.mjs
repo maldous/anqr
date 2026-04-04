@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:287
-
 import { childProcess } from "./child-process.mjs";
 import { logInfo } from "./log-info.mjs";
 import { logWarn } from "./log-warn.mjs";

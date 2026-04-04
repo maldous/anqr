@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:273
-
 import { makeChunkFromOffsets } from "./make-chunk-from-offsets.mjs";
 import { splitRangeBySize } from "./split-range-by-size.mjs";
 

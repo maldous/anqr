@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:325
-
 import { getWorkingTreeStatus } from "./get-working-tree-status.mjs";
 
 export function gitDiffNames() {

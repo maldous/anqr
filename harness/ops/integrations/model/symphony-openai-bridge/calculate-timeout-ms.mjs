@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:436
-
 export function calculateTimeoutMs(seconds) {
   // Convert timeout from seconds to milliseconds
   const DEFAULT_SECONDS = 30;

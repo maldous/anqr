@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:26
-
 import path from "node:path";
 
 import { __dirname } from "./dirname.mjs";

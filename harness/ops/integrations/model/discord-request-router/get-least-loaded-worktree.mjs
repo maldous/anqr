@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/discord-request-router.mjs:148
-
 import { WORKTREE_URLS } from "./worktree-urls.mjs";
 import { roundRobinIndex, setRoundRobinIndex } from "./round-robin-index.mjs";
 

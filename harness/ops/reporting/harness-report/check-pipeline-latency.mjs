@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:404
-
 export async function checkPipelineLatency() {
   try {
     const { getLatencyMetrics, checkLatencyBaseline } =

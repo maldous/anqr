@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-provider-health.mjs:86
-
 import { writeFileSync } from "node:fs";
 
 import { HEALTH_STATE_FILE } from "./health-state-file.mjs";

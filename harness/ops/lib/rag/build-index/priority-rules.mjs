@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index.mjs:117
-
 export const PRIORITY_RULES = [
   [/^scripts\/ops\//i, 0],
   [/^packages\//i, 1],

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:613
-
 import { writeFileSync } from "node:fs";
 
 import { STATS_FILE } from "./stats-file.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:386
-
 import { getWorktreeHealthSnapshot, writeFleetHealthFile } from "../../core/worktree-health.mjs";
 
 import { ALL_WORKTREE_IDS } from "./all-worktree-ids.mjs";

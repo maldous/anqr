@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:4010
-
 import { OPENROUTER_PROVIDER_NAME_SET } from "./openrouter-provider-name-set.mjs";
 
 export function getProviderGateway(name) {

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:377
-
 import { patchIssueState } from "./patch-issue-state.mjs";
 
 export function resetRetryState(issueIdentifier, details = {}) {

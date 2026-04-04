@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:537
-
 import { providerStates } from "./provider-states.mjs";
 import { pruneRequestEvents } from "./prune-request-events.mjs";
 

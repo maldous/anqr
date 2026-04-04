@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:1237
-
 import { runToolLoop } from "./run-tool-loop.mjs";
 
 export async function continueAgent({

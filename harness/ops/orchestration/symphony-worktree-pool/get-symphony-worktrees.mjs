@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-pool.mjs:218
-
 import { WORKTREE_PREFIX, WORKTREE_BRANCH_PREFIX } from "../../core/worktree-config.mjs";
 
 import { listWorktrees } from "./list-worktrees.mjs";

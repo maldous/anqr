@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:146
-
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 

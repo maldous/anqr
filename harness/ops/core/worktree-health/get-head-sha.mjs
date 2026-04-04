@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/worktree-health.mjs:82
-
 import { execFileSync } from "node:child_process";
 
 export function getHeadSha(worktreePath) {

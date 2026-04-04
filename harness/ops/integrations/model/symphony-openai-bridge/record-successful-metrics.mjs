@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3742
-
 import { recordProviderMetrics } from "../symphony-credit-gate.mjs";
 
 import { toProviderMetricsUsage } from "./to-provider-metrics-usage.mjs";

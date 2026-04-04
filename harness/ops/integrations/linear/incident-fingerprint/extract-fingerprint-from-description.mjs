@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-fingerprint.mjs:38
-
 export function extractFingerprintFromDescription(description) {
   if (!description) return null;
 

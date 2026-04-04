@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/openclaw-discord.mjs:281
-
 import { discordStreamBuffers } from "./discord-stream-buffers.mjs";
 import { sendViaOpenClaw } from "./send-via-open-claw.mjs";
 

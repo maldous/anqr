@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:96
-
 import { relative } from "node:path";
 
 import { PROJECT_ROOT } from "./project-root.mjs";

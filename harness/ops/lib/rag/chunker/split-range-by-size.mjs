@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:245
-
 import { DEFAULT_OPTIONS } from "./default-options.mjs";
 import { findPreferredBreak } from "./find-preferred-break.mjs";
 import { logError } from "./logger.mjs";

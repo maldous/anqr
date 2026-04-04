@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3635
-
 export function unwrapAIError(err) {
   let current = err;
   let deepest = err;

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:121
-
 import { run } from "./run.mjs";
 
 export function tagMessage(messageId, addTags = [], removeTags = []) {

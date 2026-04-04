@@ -1,5 +1,3 @@
-// Generated from ../scripts/audit-ast-density.mjs:91
-
 import { SyntaxKind } from "ts-morph";
 
 import { describeVariableDeclaration } from "./describe-variable-declaration.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/ollama-local-audit.mjs:34
-
 import { OLLAMA_BASE } from "./ollama-base.mjs";
 import { PING_TIMEOUT_MS } from "./ping-timeout-ms.mjs";
 import { record } from "./record.mjs";

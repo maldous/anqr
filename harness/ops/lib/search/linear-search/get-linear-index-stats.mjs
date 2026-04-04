@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/linear-search.mjs:223
-
 import { existsSync, statSync } from "node:fs";
 
 import { LINEAR_INDEX_FILE } from "./linear-index-file.mjs";

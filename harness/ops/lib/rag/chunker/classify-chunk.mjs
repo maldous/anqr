@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:177
-
 import { CODE_EXTENSIONS } from "./code-extensions.mjs";
 import { MARKDOWN_EXTENSIONS } from "./markdown-extensions.mjs";
 import { MD_HEADING_PATTERN } from "./md-heading-pattern.mjs";

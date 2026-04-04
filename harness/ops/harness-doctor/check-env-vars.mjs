@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/harness-doctor.mjs:38
-
 export function checkEnvVars() {
   const checks = [];
 

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:201
-
 import fs from "node:fs";
 
 import { ensureDir } from "./ensure-dir.mjs";

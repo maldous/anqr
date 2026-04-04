@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:1021
-
 import { PROVIDERS } from "./providers.mjs";
 import { TIER_FREE_CLOUD } from "./tier-free-cloud.mjs";
 import { getProviderTier } from "./get-provider-tier.mjs";

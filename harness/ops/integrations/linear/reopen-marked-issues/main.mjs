@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/reopen-marked-issues.mjs:25
-
 import { listIssuesByState, updateIssue, addComment, STATES } from "../linear-client.mjs";
 
 import { REOPEN_PATTERNS } from "./reopen-patterns.mjs";

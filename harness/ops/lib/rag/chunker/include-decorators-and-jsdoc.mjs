@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:316
-
 import { DECORATOR_PATTERN } from "./decorator-pattern.mjs";
 import { JSDOC_START_PATTERN } from "./jsdoc-start-pattern.mjs";
 

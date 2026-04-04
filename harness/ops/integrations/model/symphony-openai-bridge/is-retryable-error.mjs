@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3554
-
 import { errorToString } from "./error-to-string.mjs";
 import { logDebug } from "./logger.mjs";
 

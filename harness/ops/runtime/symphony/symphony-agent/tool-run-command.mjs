@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:313
-
 import { execFileSync } from "node:child_process";
 
 import { ALLOWED_COMMANDS } from "./allowed-commands.mjs";

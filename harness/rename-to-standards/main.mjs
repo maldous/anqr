@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:404
-
 import process from "node:process";
 import path from "node:path";
 

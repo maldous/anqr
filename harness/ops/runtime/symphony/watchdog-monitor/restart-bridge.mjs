@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/watchdog-monitor.mjs:201
-
 import { exec } from "./exec.mjs";
 import { log } from "./log.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/watchdog-monitor.mjs:49
-
 import { log } from "./log.mjs";
 
 export async function checkBridgeHealth(port, name) {

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:6550
-
 import { execSync } from "node:child_process";
 import { updateMemory } from "../../../lib/update-memory.mjs";
 import { logProviderStats } from "../symphony-credit-gate.mjs";

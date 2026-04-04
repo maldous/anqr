@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:844
-
 import { logInfo } from "./logger.mjs";
 export async function thinkDeeplyTool({ thought }) {
   // Log the thinking for observability

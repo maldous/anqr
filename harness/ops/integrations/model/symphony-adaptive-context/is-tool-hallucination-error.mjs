@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:272
-
 export function isToolHallucinationError(errStr) {
   return (
     errStr.includes("unknown tool") ||

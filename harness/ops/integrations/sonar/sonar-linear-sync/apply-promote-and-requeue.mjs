@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-sync.mjs:163
-
 import { updateIssue, addComment, STATES } from "../../linear/linear-client.mjs";
 
 import { PRIORITY_LABELS } from "./priority-labels.mjs";

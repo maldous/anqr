@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/agent-workflow-create-issue.mjs:71
-
 export function validatePriority(priority) {
   const priorityNum = parseInt(priority, 10);
   if (isNaN(priorityNum) || priorityNum < 0 || priorityNum > 4) {

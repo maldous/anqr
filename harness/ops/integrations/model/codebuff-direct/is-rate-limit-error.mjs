@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:96
-
 export function isRateLimitError(errStr) {
   const s = String(errStr || "").toLowerCase();
   return (

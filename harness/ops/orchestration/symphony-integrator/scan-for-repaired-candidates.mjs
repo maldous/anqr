@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-integrator.mjs:203
-
 import {
   listIntegrationCandidates,
   enqueueIntegrationCandidate,

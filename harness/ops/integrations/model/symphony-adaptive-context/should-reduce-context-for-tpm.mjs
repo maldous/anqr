@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:544
-
 import { TPM_PROACTIVE_THRESHOLD } from "./tpm-proactive-threshold.mjs";
 import { getOrCreateState } from "./get-or-create-state.mjs";
 import { getTokensPerMinute } from "./get-tokens-per-minute.mjs";

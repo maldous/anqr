@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/harness-doctor.mjs:115
-
 export async function checkCreditGate() {
   try {
     // Try to load and probe the credit gate

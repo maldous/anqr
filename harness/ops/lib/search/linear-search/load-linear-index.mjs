@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/linear-search.mjs:81
-
 import { existsSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 

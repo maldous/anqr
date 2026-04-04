@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index.mjs:265
-
 import { isOllamaAvailable } from "../embeddings.mjs";
 import { clearIndex, flushIndex, getIndexStats, indexFile, pruneIndex } from "../vector-store.mjs";
 

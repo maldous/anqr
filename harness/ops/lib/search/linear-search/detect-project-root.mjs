@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/linear-search.mjs:17
-
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 

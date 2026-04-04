@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/validate-issue.mjs:271
-
 import { LABELS } from "../linear-client.mjs";
 
 export function getRecommendedLabels(currentLabels) {

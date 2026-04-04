@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:283
-
 import { ERROR_TYPES } from "./error-types.mjs";
 import { extractErrorString } from "./extract-error-string.mjs";
 import { getStatusCode } from "./get-status-code.mjs";

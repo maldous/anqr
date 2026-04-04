@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:39
-
 export const PROFILES = {
   quick: ["repo-structure", "typecheck", "lint", "cspell-coverage", "ast-density"],
   continuous: [

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:215
-
 import { execFileSync } from "node:child_process";
 import { loadState } from "../../symphony-state.mjs";
 

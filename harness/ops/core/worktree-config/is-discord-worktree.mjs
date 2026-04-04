@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/worktree-config.mjs:86
-
 import { DISCORD_WORKTREE_IDS } from "./discord-worktree-ids.mjs";
 
 export function isDiscordWorktree(worktreeId) {

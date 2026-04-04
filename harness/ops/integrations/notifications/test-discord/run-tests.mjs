@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/test-discord.mjs:109
-
 import {
   sendDiscordMessage,
   sendDiscordEmbed,

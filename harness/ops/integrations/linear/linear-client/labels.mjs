@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/linear-client.mjs:23
-
 export const LABELS = {
   // Work Type taxonomy (from docs/program/04-taxonomy.md)
   harness: "647b6fd0-4deb-4da2-85f7-becb8a1605c9",

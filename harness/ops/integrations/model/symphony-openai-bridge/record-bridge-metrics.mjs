@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5437
-
 import { BRIDGE_METRICS } from "./bridge-metrics.mjs";
 
 export function recordBridgeMetrics({

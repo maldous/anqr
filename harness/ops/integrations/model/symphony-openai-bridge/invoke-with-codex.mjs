@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:272
-
 import { Codex } from "@openai/codex-sdk";
 
 import { CODEX_SANDBOX_MODE } from "./codex-sandbox-mode.mjs";

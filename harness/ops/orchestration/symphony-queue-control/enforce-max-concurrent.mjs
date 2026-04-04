@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:223
-
 import { MAX_CONCURRENT_AGENTS, RECOVERY_GRACE_MS } from "../../symphony-config.mjs";
 import { getIssueState, leaseIsActive, recordTransition } from "../../symphony-state.mjs";
 import { updateIssue, addComment, STATES } from "../../linear-client.mjs";

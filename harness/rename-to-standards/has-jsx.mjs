@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:214
-
 import { ts } from "./ts.mjs";
 
 export const hasJsx = (sourceFile) => {

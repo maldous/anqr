@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:28
-
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 

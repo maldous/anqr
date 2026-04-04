@@ -1,5 +1,3 @@
-// Generated from ../../../harness/ops/core/symphony-validation.mjs:6
-
 export const VALIDATION_MANIFEST = {
   typecheck: {
     command: "( flock -w 120 9 || exit 1; npx tsc --noEmit ) 9>/tmp/anqr-typecheck.lock",

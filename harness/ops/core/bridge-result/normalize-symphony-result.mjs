@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/bridge-result.mjs:17
-
 import { normalizeCount } from "./normalize-count.mjs";
 import { normalizeFailureClass } from "./normalize-failure-class.mjs";
 import { normalizeStringArray } from "./normalize-string-array.mjs";

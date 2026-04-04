@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:372
-
 import { activeRequests } from "./active-requests.mjs";
 
 export function trackFileChange(requestId) {

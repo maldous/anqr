@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:395
-
 import { isOllamaAvailable } from "../embeddings.mjs";
 import { collectFiles } from "../chunker.mjs";
 import { resolve } from "node:path";

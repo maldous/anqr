@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:605
-
 import { listIssuesByState } from "../../linear-client.mjs";
 import { QUEUE_STATES } from "../../symphony-config.mjs";
 import { isDiscordWorktree, isSymphonyWorktree } from "../../core/worktree-config.mjs";

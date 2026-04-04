@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:310
-
 export const rewriteTextAtSpans = (text, edits) => {
   const ordered = [...edits].sort((a, b) => b.start - a.start);
   let next = text;

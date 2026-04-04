@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:274
-
 import { RAPID_RESTART_THRESHOLD } from "./rapid-restart-threshold.mjs";
 import { RAPID_RESTART_WINDOW_MS } from "./rapid-restart-window-ms.mjs";
 import { rapidRestartHistory } from "./rapid-restart-history.mjs";

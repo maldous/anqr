@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:30
-
 export const CODEBUFF_NOISY_TOOLS = new Set([
   "set_messages",
   "set_output",

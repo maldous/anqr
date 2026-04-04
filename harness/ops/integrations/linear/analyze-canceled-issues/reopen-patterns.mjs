@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/analyze-canceled-issues.mjs:18
-
 export const REOPEN_PATTERNS = {
   REOPENED: /REOPENED:/i,
   RE_EVALUATE: /RE-EVALUATE:/i,

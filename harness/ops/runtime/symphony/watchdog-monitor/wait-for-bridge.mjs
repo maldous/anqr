@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/watchdog-monitor.mjs:69
-
 import { checkBridgeHealth } from "./check-bridge-health.mjs";
 import { log } from "./log.mjs";
 

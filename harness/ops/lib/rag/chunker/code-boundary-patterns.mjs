@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:80
-
 export const CODE_BOUNDARY_PATTERNS = [
   /^export\s+(?:default\s+)?(?:async\s+)?function\b/,
   /^export\s+(?:default\s+)?(?:abstract\s+)?class\b/,

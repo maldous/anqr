@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/agent-workflow-create-issue.mjs:29
-
 import { parseArgs } from "node:util";
 
 export const args = parseArgs({

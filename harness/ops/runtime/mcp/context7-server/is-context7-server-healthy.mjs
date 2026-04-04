@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:442
-
 import { sendRequest } from "./send-request.mjs";
 import { serverProcess } from "./server-process.mjs";
 import { serverReady } from "./server-ready.mjs";

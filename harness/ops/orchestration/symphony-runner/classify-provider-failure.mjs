@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:555
-
 export function classifyProviderFailure(message = "") {
   const msg = String(message || "");
   // All retryable errors are now handled by the bridge - the bridge tries ALL providers

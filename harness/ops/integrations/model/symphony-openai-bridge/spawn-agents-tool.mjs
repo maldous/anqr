@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:868
-
 import { logInfo } from "./logger.mjs";
 export async function spawnAgentsTool({ agents }) {
   // Symphony bridge doesn't support spawning sub-agents

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:120
-
 import { TARGET_MIN, TARGET_MAX, MAX_CONCURRENT_AGENTS } from "../../symphony-config.mjs";
 
 import { validateConcurrencyConfig } from "./validate-concurrency-config.mjs";

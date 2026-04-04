@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:172
-
 export function buildPrompt(messages) {
   return (messages || [])
     .map((message) => {

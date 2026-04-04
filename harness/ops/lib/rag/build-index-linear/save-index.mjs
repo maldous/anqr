@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index-linear.mjs:38
-
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 

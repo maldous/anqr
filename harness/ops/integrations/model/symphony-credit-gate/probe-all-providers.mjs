@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:1282
-
 import { PROVIDERS } from "./providers.mjs";
 import { probeOpenAIModels } from "./probe-open-aimodels.mjs";
 import { resolveProviderApiKey } from "./resolve-provider-api-key.mjs";

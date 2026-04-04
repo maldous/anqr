@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:162
-
 import { extractTextFromUnknown } from "./extract-text-from-unknown.mjs";
 
 export function extractText(output) {

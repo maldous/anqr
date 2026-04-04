@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/analyze-worktree-benchmark.mjs:106
-
 export function compareBenchmarks(baseline, concurrent) {
   const throughputIncrease =
     ((concurrent.throughput - baseline.throughput) / baseline.throughput) * 100;

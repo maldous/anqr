@@ -1,5 +1,3 @@
-// Generated from ../scripts/audit-ast-density.mjs:164
-
 export const formatEntry = (entry) => {
   const grouped = entry.nodes.reduce((acc, node) => {
     acc[node.kind] = (acc[node.kind] ?? 0) + 1;

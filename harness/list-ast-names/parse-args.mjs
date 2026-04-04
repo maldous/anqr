@@ -1,5 +1,3 @@
-// Generated from ../scripts/list-ast-names.mjs:18
-
 export const parseArgs = (argv) => {
   const options = {
     json: false,

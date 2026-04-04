@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-evidence.mjs:90
-
 import { existsSync, statSync } from "node:fs";
 
 export function getStateFileInfo() {

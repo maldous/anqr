@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/governance/linear-guardian.mjs:259
-
 import { readFileSync, existsSync } from "node:fs";
 import { getQueueDepth } from "../../linear-client.mjs";
 import { TARGET_MAX } from "../../symphony-config.mjs";

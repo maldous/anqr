@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3111
-
 export const OPENROUTER_PROVIDER_NAMES = [
   "openrouter-nemotron-super",
   "openrouter-free",

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/nightly-ops-pass.mjs:21
-
 import { execFileSync } from "node:child_process";
 
 import { ROOT } from "./root.mjs";

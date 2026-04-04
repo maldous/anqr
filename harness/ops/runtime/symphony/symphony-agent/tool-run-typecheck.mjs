@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:354
-
 import { runTypecheck } from "../../../symphony-validation.mjs";
 
 export function toolRunTypecheck(projectRoot) {

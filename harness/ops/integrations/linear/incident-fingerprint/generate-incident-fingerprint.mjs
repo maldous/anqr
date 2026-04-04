@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-fingerprint.mjs:20
-
 import { createHash } from "node:crypto";
 
 export function generateIncidentFingerprint(incident) {

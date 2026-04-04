@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/test-discord.mjs:38
-
 import http from "node:http";
 
 import { OPENCLAW_GATEWAY_HOST } from "./openclaw-gateway-host.mjs";

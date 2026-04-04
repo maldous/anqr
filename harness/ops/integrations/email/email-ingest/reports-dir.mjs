@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:27
-
 import path from "node:path";
 
 import { PROJECT_ROOT } from "./project-root.mjs";

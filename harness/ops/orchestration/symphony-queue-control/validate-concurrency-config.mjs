@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:97
-
 import { MAX_CONCURRENT_AGENTS } from "../../symphony-config.mjs";
 
 import { countEnabledTimers } from "./count-enabled-timers.mjs";

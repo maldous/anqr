@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:107
-
 import { pendingRequests } from "./pending-requests.mjs";
 import { logDebug } from "./logger.mjs";
 

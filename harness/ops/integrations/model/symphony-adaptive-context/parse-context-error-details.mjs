@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:301
-
 import { extractErrorString } from "./extract-error-string.mjs";
 
 export function parseContextErrorDetails(err) {

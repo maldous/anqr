@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:95
-
 import { extractTextContent } from "./extract-text-content.mjs";
 import { run } from "./run.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/github-linear-sync-audit.mjs:314
-
 import { auditSync } from "./audit-sync.mjs";
 import { logError, logDebug } from "./logger.mjs";
 

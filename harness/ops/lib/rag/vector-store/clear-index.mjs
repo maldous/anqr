@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:524
-
 import { setIndexCache } from "./index-cache.mjs";
 import { loadIndex } from "./load-index.mjs";
 import { markDirty } from "./mark-dirty.mjs";

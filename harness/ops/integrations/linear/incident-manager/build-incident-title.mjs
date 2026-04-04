@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-manager.mjs:108
-
 import { INCIDENT_TYPES } from "./incident-types.mjs";
 
 export function buildIncidentTitle(type, context) {

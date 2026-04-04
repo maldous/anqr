@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-provider-health.mjs:54
-
 import { LOCAL_PROVIDER_PATTERNS } from "./local-provider-patterns.mjs";
 
 export function isLocalProvider(providerName, baseUrl = "") {

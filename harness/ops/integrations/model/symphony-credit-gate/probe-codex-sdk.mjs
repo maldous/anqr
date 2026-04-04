@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:213
-
 import { Codex } from "@openai/codex-sdk";
 
 import { CODEX_PROBE_TIMEOUT_MS } from "./codex-probe-timeout-ms.mjs";

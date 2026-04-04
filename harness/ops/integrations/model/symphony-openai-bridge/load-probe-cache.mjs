@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3413
-
 import fs from "node:fs";
 
 import { PROBE_CACHE_FILE } from "./probe-cache-file.mjs";

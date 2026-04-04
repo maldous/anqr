@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:288
-
 import { indexCache, setIndexCache } from "./index-cache.mjs";
 import { markDirty } from "./mark-dirty.mjs";
 import { toResolvedPath } from "./to-resolved-path.mjs";

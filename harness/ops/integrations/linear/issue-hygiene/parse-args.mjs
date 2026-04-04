@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/issue-hygiene.mjs:38
-
 import { DEFAULT_COMMENT_THRESHOLD } from "./default-comment-threshold.mjs";
 
 export function parseArgs() {

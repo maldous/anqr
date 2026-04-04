@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/github-linear-sync-audit.mjs:28
-
 import { GITHUB_API } from "./github-api.mjs";
 import { GITHUB_REPO } from "./github-repo.mjs";
 import { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";

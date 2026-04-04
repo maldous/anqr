@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/notifications/notify.mjs:109
-
 import { readFileSync, existsSync } from "node:fs";
 import { sendNotification } from "../../lib/notify.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:2086
-
 import { execFileSync } from "node:child_process";
 import { isDiscordWorktree, isSymphonyWorktree } from "../../core/worktree-config.mjs";
 import { getNextRepairableIssueForWorktree, getWorktreeState } from "../../symphony-state.mjs";

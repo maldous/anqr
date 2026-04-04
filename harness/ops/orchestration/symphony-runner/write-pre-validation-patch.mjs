@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:360
-
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:307
-
 export function calculateExponentialBackoff(
   retryCount,
   baseMs = 10 * 60 * 1000,

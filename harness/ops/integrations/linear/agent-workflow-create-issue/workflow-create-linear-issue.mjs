@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/agent-workflow-create-issue.mjs:197
-
 import { args } from "./args.mjs";
 import { createLinearIssueWorkflow } from "./create-linear-issue-workflow.mjs";
 

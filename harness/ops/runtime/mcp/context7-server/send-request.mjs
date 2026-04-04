@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:135
-
 import { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
 import { nextRequestId, setNextRequestId } from "./next-request-id.mjs";
 import { pendingRequests } from "./pending-requests.mjs";

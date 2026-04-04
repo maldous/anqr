@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:548
-
 import { mkdirSync, existsSync } from "node:fs";
 
 import { STATE_DIR } from "./state-dir.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/embeddings.mjs:68
-
 import { EMBEDDING_TIMEOUT_MS } from "./embedding-timeout-ms.mjs";
 import { OLLAMA_BASE } from "./ollama-base.mjs";
 import { fetchJsonWithTimeout } from "./fetch-json-with-timeout.mjs";

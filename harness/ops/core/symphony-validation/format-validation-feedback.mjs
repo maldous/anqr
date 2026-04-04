@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-validation.mjs:239
-
 export function formatValidationFeedback(validation) {
   const lines = [
     "⚠️ VALIDATION FAILED — your changes did not pass the validation pipeline. Fix the errors below.",

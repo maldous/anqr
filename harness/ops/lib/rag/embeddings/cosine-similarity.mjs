@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/embeddings.mjs:211
-
 export function cosineSimilarity(a, b) {
   if (!Array.isArray(a) || !Array.isArray(b) || a.length === 0 || b.length === 0) {
     throw new Error("cosineSimilarity requires non-empty vectors");

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-agent-router.mjs:63
-
 import { WORKTREES } from "./worktrees.mjs";
 import { roundRobinIndex, setRoundRobinIndex } from "./round-robin-index.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/openclaw-discord.mjs:63
-
 import http from "node:http";
 
 import { DISCORD_TEXT_CHANNEL_ID } from "./discord-text-channel-id.mjs";

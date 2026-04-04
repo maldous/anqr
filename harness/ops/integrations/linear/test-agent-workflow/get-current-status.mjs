@@ -1,5 +1,3 @@
-// Generated from ../../../../harness/ops/integrations/linear/test-agent-workflow.mjs:809
-
 import { readFile } from "node:fs/promises";
 
 export async function getCurrentStatus() {

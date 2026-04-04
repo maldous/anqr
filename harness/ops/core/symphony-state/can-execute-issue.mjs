@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:265
-
 import { getIssueState } from "./get-issue-state.mjs";
 import { leaseIsActive } from "./lease-is-active.mjs";
 

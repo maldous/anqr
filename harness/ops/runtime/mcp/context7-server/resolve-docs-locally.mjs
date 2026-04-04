@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:467
-
 import { extractDocumentation } from "./extract-documentation.mjs";
 import { extractLibraryId } from "./extract-library-id.mjs";
 import { getLibraryDocsCloud } from "./get-library-docs-cloud.mjs";

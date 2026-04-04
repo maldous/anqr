@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/create-issue-template.mjs:24
-
 import { STATES, LABELS } from "../linear-client.mjs";
 
 export const issueTemplate = {

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:70
-
 export const PROVIDER_STATS = {
   // Basic counts
   selections: {},

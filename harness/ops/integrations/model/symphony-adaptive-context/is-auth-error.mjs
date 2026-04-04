@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:244
-
 export function isAuthError(errStr) {
   return (
     errStr.includes("unauthorized") ||

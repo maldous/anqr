@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/review-specified-issues.mjs:22
-
 export const ISSUES_TO_REVIEW = [
   "ANQ-1137",
   "ANQ-1136",

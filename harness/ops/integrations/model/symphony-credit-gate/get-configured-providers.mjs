@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:1230
-
 import { PROVIDERS } from "./providers.mjs";
 import { getProviderTier } from "./get-provider-tier.mjs";
 

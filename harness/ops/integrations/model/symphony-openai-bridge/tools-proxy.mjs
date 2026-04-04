@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:2963
-
 import { tool } from "ai";
 import { z } from "zod";
 

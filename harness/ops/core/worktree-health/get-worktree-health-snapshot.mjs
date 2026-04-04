@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/worktree-health.mjs:112
-
 import { getWorktreePath } from "../worktree-config.mjs";
 import { existsSync } from "node:fs";
 import {

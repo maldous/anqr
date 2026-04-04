@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1373
-
 export function isVoiceNoise(text) {
   if (!text || !text.trim()) return true;
   const t = text.trim();

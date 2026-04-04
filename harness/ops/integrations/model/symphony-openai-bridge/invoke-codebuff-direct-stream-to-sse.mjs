@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5157
-
 import { invokeCodebuffDirectStream } from "../codebuff-direct.mjs";
 
 import { getCurrentRequestCwd } from "./get-current-request-cwd.mjs";

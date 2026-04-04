@@ -1,5 +1,3 @@
-// Generated from ../scripts/agent-docs-check.mjs:28
-
 import { errors } from "./errors.mjs";
 
 export function parseKnownAgentTypes(content) {

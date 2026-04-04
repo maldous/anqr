@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/export-issues.mjs:28
-
 import { query, TEAM_ID } from "../linear-client.mjs";
 
 export async function fetchRecentDoneIssues(days) {

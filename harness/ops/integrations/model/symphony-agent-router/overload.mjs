@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-agent-router.mjs:95
-
 import { json } from "./json.mjs";
 
 export function overload(res) {

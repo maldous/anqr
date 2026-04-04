@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-sync.mjs:247
-
 import { stripProjectPrefix } from "./strip-project-prefix.mjs";
 
 export function buildLinearDescription(sonarIssue, projectKey, sonarHost) {

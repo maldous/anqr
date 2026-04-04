@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:177
-
 import fs from "node:fs";
 
 import { HOST_ID } from "./host-id.mjs";

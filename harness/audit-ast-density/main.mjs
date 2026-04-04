@@ -1,5 +1,3 @@
-// Generated from ../scripts/audit-ast-density.mjs:178
-
 import process from "node:process";
 import { Project } from "ts-morph";
 import path from "node:path";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/hybrid-search.mjs:215
-
 import { RRF_K } from "./rrf-k.mjs";
 
 export function reciprocalRankFusion(bm25Results, embeddingResults, bm25Weight, embeddingWeight) {

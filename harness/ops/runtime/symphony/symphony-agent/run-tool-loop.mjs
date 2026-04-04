@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:750
-
 import { RUNNER_TURN_BUDGET_WARNING } from "../../../symphony-config.mjs";
 
 import { assertMutationContext } from "./assert-mutation-context.mjs";

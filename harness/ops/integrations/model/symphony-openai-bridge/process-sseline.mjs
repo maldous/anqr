@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5018
-
 import { inferSymphonyResultFromCompletion } from "../../../core/bridge-result.mjs";
 
 import { maybeFlushLogBuffer } from "./maybe-flush-log-buffer.mjs";

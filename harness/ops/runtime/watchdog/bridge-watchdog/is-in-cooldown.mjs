@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:300
-
 import { RECOVERY_COOLDOWN_MS } from "./recovery-cooldown-ms.mjs";
 import { lastRecoveryAction } from "./last-recovery-action.mjs";
 import { logInfo } from "./logger.mjs";

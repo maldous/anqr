@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:383
-
 export const partitionCollisions = (plan) => {
   const seen = new Map();
   for (const item of plan) {

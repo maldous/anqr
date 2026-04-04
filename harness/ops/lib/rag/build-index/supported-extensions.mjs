@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index.mjs:42
-
 export const SUPPORTED_EXTENSIONS = new Set([
   ".ts",
   ".tsx",

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:298
-
 import { generateEmbeddings, isOllamaAvailable } from "../embeddings.mjs";
 import { chunkFile } from "../chunker.mjs";
 

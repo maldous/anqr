@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/notifications/notify-impl.mjs:73
-
 import { linearIssueUrl } from "./linear-issue-url.mjs";
 
 export function formatIssueLine({ identifier, title, snippet, meta = [] }) {

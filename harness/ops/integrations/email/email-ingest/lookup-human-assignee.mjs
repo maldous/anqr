@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:132
-
 import { query, TEAM_ID } from "../../../linear-client.mjs";
 
 import { HUMAN_USER_NAME } from "./human-user-name.mjs";

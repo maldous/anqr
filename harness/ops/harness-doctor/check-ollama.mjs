@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/harness-doctor.mjs:142
-
 export async function checkOllama() {
   const base = process.env.OLLAMA_API_BASE || "http://localhost:11434";
 

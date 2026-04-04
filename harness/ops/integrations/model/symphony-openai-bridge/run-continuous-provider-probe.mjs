@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3288
-
 import {
   getProviderStats,
   getRankedProviders,

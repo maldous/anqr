@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-bridge-truncation.mjs:109
-
 import { MESSAGE_TRUNCATION_MARKER } from "./message-truncation-marker.mjs";
 
 export function truncateString(str, maxChars) {

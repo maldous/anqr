@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index.mjs:213
-
 import { resolve } from "node:path";
 import { stat } from "node:fs/promises";
 

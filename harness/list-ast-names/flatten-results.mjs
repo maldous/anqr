@@ -1,5 +1,3 @@
-// Generated from ../scripts/list-ast-names.mjs:172
-
 import { normalizePath } from "../lib/ast-helpers.mjs";
 
 import { collectTopLevelEntries } from "./collect-top-level-entries.mjs";

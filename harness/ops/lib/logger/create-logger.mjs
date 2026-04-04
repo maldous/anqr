@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/lib/logger.mjs:68
-
 import { LOG_LEVELS } from "./log-levels.mjs";
 import { getCallerInfo } from "./get-caller-info.mjs";
 

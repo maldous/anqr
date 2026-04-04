@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:70
-
 import { CodebuffClient } from "@codebuff/sdk";
 
 import { TOOL_PARAMETER_RULES } from "./tool-parameter-rules.mjs";

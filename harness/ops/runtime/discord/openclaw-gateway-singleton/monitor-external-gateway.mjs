@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:199
-
 import { HOST } from "./host.mjs";
 import { PORT } from "./port.mjs";
 import { PORT_CHECK_INTERVAL_MS } from "./port-check-interval-ms.mjs";

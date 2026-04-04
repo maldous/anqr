@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/hybrid-search.mjs:522
-
 import { collectProjectFiles } from "./collect-project-files.mjs";
 import { computeFingerprint } from "./compute-fingerprint.mjs";
 import { createHybridSearchIndex } from "./create-hybrid-search-index.mjs";

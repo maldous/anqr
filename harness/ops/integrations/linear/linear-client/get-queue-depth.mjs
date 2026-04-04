@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/linear-client.mjs:201
-
 import { canExecuteIssue } from "../../../symphony-state.mjs";
 
 import { listIssuesByState } from "./list-issues-by-state.mjs";

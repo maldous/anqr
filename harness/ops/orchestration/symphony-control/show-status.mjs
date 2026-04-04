@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-control.mjs:104
-
 import { getEnabledTimers } from "./get-enabled-timers.mjs";
 import { getTimerStatus } from "./get-timer-status.mjs";
 import { logInfo } from "./logger.mjs";

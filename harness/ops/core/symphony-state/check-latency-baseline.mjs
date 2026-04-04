@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:720
-
 import { getGlobalValue } from "./get-global-value.mjs";
 import { setGlobalValue } from "./set-global-value.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:73
-
 export function extractTextContent(bodyParts) {
   // notmuch JSON body uses numeric string keys: body['0'], body['1'], etc.
   const parts = Array.isArray(bodyParts) ? bodyParts : Object.values(bodyParts || {});

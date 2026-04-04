@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/linear-issue-review.mjs:20
-
 export const STATES = {
   backlog: "d9eeea8d-825b-4aa3-8429-75223a6b3624",
   todo: "ad8eea3e-7f5b-48dc-89c0-14506781a8c9",

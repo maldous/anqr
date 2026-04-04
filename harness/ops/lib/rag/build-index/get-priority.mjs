@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index.mjs:145
-
 import { PRIORITY_RULES } from "./priority-rules.mjs";
 
 export function getPriority(relPath) {

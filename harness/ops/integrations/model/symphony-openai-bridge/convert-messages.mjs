@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3757
-
 export function convertMessages(messages) {
   return messages.map((msg) => {
     const converted = { role: msg.role };

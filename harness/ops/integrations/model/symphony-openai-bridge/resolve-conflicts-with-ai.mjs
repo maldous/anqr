@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1608
-
 import { execSync, execFileSync } from "node:child_process";
 import { selectProvider } from "../symphony-credit-gate.mjs";
 import path from "node:path";

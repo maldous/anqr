@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:600
-
 import { resolve } from "node:path";
 
 import { DEFAULT_OPTIONS } from "./default-options.mjs";

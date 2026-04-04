@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:534
-
 import { join, resolve } from "node:path";
 import { readdir } from "node:fs/promises";
 

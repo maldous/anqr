@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/create-issue-template.mjs:396
-
 import { validateIssueInput, formatValidationResult } from "../linear-client.mjs";
 import { validateIssueInput as validateLocalIssueInput } from "../validate-issue.mjs";
 

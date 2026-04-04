@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:469
-
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { writeFileSync, unlinkSync } from "node:fs";

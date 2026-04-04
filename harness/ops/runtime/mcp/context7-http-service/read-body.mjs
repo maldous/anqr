@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-http-service.mjs:66
-
 export function readBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];

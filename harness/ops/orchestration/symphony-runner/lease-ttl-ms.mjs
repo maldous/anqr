@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:204
-
 import { RUNNER_STUCK_THRESHOLD_MS } from "../../symphony-config.mjs";
 
 export const LEASE_TTL_MS = Number(

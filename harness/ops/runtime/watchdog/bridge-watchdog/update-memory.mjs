@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:103
-
 import { appendFile } from "node:fs/promises";
 import path from "node:path";
 import { logInfo, logWarn } from "./logger.mjs";

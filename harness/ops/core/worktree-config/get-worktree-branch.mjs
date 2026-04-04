@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/worktree-config.mjs:60
-
 import { WORKTREE_BRANCH_PREFIX } from "./worktree-branch-prefix.mjs";
 
 export function getWorktreeBranch(id) {

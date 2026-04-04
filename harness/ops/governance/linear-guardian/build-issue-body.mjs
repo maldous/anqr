@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/governance/linear-guardian.mjs:100
-
 import { CHECK_METADATA } from "./check-metadata.mjs";
 
 export function buildIssueBody(check, report) {

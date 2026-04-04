@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:321
-
 import path from "node:path";
 
 import { ensureDot } from "./ensure-dot.mjs";

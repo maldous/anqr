@@ -1,5 +1,3 @@
-// Generated from ../../harness/ops/linear-issue-review.mjs:158
-
 export const SCOPE_UPDATES = {
   "ANQ-376": {
     comment:

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-bridge-truncation.mjs:27
-
 export const PROVIDER_MAX_INPUT_TOKENS = {
   // --- Paid / managed providers ---
   codex: 100_000, // GPT-5 Codex, 200K context

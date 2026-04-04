@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:618
-
 import { loadStats } from "./load-stats.mjs";
 import { saveStats } from "./save-stats.mjs";
 

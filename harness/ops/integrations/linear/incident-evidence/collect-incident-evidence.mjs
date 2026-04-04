@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-evidence.mjs:117
-
 import { getAllProviderHealthStates } from "../../model/symphony-provider-health.mjs";
 
 import { getGitContext } from "./get-git-context.mjs";

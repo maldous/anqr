@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:140
-
 import { pruneHistory } from "./prune-history.mjs";
 
 export function normalizeRecord(record = {}) {

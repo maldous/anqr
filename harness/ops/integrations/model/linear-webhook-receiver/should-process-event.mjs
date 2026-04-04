@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/linear-webhook-receiver.mjs:113
-
 import { logInfo, logWarn, logDebug } from "./logger.mjs";
 export function shouldProcessEvent(event) {
   const { type, data, action, createdAt, updatedAt } = event;

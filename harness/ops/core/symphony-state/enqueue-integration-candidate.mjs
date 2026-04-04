@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:561
-
 import { loadState } from "./load-state.mjs";
 import { saveState } from "./save-state.mjs";
 import { withStateLock } from "./with-state-lock.mjs";

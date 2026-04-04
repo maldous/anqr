@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/linear-webhook-receiver.mjs:369
-
 import http from "node:http";
 
 import { handleHealth } from "./handle-health.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5096
-
 import { processSSELine } from "./process-sseline.mjs";
 
 export function _handleProxyDataChunk(chunk, res, state, onDiscordChunk) {

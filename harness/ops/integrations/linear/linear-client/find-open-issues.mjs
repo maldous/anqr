@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/linear-client.mjs:97
-
 import { OPEN_STATE_NAMES } from "./open-state-names.mjs";
 import { TEAM_ID } from "./team-id.mjs";
 import { query } from "./query.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-bridge-truncation.mjs:114
-
 import { truncateString } from "./truncate-string.mjs";
 
 export function truncateMessageContent(msg, maxChars) {

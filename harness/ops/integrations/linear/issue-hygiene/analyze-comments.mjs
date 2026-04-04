@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/issue-hygiene.mjs:51
-
 import { FAILURE_PATTERNS } from "./failure-patterns.mjs";
 
 export function analyzeComments(comments) {

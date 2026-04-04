@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-provider-health.mjs:197
-
 import { HEALTH_STATES } from "./health-states.mjs";
 import { setProviderHealthState } from "./set-provider-health-state.mjs";
 

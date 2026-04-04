@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:565
-
 import { extname, resolve } from "node:path";
 import { readFile } from "node:fs/promises";
 

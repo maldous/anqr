@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1314
-
 export const VOICE_SYSTEM_PROMPT = [
   "IMPORTANT: This conversation is happening via a voice channel. The user is speaking to you and your response will be read aloud by text-to-speech.",
   "Rules for your response:",

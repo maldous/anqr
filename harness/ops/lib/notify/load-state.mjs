@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/lib/notify.mjs:28
-
 import fs from "node:fs";
 
 import { RATE_LIMIT_FILE } from "./rate-limit-file.mjs";

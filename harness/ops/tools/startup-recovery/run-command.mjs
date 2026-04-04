@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/tools/startup-recovery.mjs:30
-
 import { execFileSync } from "node:child_process";
 
 export function runCommand(cmd, args = [], cwd = process.cwd()) {

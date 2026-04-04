@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:175
-
 import { pendingRequests } from "./pending-requests.mjs";
 
 export function rejectAllPending(reason) {

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3013
-
 export const OPENROUTER_PROVIDER_NAME_SET = new Set([
   "openrouter-nemotron-super",
   "openrouter",

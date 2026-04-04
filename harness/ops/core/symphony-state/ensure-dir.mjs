@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:41
-
 import fs from "node:fs";
 
 import { getStateDir } from "./get-state-dir.mjs";

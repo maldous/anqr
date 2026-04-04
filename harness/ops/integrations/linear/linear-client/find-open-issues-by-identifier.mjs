@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/linear-client.mjs:128
-
 import { getIssueDetail } from "./get-issue-detail.mjs";
 
 export async function findOpenIssuesByIdentifier(identifier) {

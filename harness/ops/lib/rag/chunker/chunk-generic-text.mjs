@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:511
-
 import { extname } from "node:path";
 
 import { TEXT_CONFIG_EXTENSIONS } from "./text-config-extensions.mjs";

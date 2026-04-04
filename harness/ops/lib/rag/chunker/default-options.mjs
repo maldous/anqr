@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:17
-
 export const DEFAULT_OPTIONS = {
   maxChunkSize: 2_000,
   overlap: 120,

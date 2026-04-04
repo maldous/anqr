@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-http-service.mjs:95
-
 import { resolveDocsLocally, isContext7ServerHealthy } from "../context7-server.mjs";
 
 import { readBody } from "./read-body.mjs";

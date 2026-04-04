@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/lib/service-restart-notify.mjs:56
-
 import { execSync } from "node:child_process";
 
 export function getCommitInfo(cwd = process.cwd()) {

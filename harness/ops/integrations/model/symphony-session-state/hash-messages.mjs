@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-session-state.mjs:239
-
 import { createHash } from "node:crypto";
 import { logError } from "./logger.mjs";
 

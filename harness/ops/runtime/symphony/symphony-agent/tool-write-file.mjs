@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:243
-
 import { dirname } from "node:path";
 import { writeFileSync, existsSync, mkdirSync } from "node:fs";
 

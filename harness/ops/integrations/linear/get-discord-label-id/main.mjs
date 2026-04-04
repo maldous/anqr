@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/get-discord-label-id.mjs:67
-
 import { createDiscordLabel } from "./create-discord-label.mjs";
 import { getAllLabels } from "./get-all-labels.mjs";
 import { logInfo, logError } from "./logger.mjs";

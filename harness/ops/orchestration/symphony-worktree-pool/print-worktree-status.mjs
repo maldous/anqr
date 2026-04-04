@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-pool.mjs:398
-
 import { getSymphonyWorktrees } from "./get-symphony-worktrees.mjs";
 import { listWorktrees } from "./list-worktrees.mjs";
 

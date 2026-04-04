@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:125
-
 import { getDeclarationName } from "./get-declaration-name.mjs";
 import { isExported } from "./is-exported.mjs";
 import { ts } from "./ts.mjs";

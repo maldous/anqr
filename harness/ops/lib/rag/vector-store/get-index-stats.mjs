@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:498
-
 import { stat } from "node:fs/promises";
 
 import { INDEX_FILE } from "./index-file.mjs";

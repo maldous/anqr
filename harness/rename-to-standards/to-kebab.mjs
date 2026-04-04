@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:60
-
 export const toKebab = (value) =>
   value
     .replaceAll(/([a-z\d])([A-Z])/g, "$1-$2")

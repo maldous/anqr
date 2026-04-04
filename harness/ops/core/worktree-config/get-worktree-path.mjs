@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/worktree-config.mjs:46
-
 import { resolve } from "node:path";
 
 import { PROJECT_ROOT } from "./project-root.mjs";

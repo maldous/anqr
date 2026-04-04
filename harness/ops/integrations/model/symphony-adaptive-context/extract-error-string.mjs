@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:141
-
 export function extractErrorString(err) {
   const parts = [];
   if (typeof err === "string") {

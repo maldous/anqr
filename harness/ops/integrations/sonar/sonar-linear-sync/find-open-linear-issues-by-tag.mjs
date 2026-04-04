@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-sync.mjs:142
-
 import { query, TEAM_ID } from "../../linear/linear-client.mjs";
 
 import { OPEN_STATE_NAMES } from "./open-state-names.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:575
-
 import { RAPID_RESTART_THRESHOLD } from "./rapid-restart-threshold.mjs";
 import { STARTUP_GRACE_PERIOD_MS } from "./startup-grace-period-ms.mjs";
 import { activatingStateStart } from "./activating-state-start.mjs";

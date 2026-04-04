@@ -1,5 +1,3 @@
-// Generated from ../scripts/contracts-check.mjs:50
-
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";

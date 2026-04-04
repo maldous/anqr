@@ -1,5 +1,3 @@
-// Generated from ../scripts/audit-ast-density.mjs:52
-
 import {
   isFunctionLikeInitializer,
   isClassLikeInitializer,

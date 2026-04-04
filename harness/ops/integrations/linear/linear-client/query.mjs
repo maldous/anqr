@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/linear-client.mjs:48
-
 import { LINEAR_API } from "./linear-api.mjs";
 import { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
 import { getApiKey } from "./get-api-key.mjs";

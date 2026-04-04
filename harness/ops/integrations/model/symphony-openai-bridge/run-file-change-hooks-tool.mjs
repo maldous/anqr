@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:798
-
 import path from "node:path";
 import fs from "node:fs";
 import { execSync } from "node:child_process";

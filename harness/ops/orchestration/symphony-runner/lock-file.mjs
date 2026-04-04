@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:190
-
 import { resolve } from "node:path";
 
 import { STATE_DIR } from "./state-dir.mjs";

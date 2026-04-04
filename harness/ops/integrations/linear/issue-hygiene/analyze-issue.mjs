@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/issue-hygiene.mjs:146
-
 import { getIssueDetail } from "../linear-client.mjs";
 
 import { SYSTEMIC_FAILURE_THRESHOLD } from "./systemic-failure-threshold.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/hybrid-search.mjs:169
-
 import MiniSearch from "minisearch";
 import { basename } from "node:path";
 

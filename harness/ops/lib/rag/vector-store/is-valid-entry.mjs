@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:112
-
 export function isValidEntry(entry) {
   return (
     entry &&

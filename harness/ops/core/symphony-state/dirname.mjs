@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:8
-
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 

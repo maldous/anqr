@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:245
-
 import path from "node:path";
 
 import { choosePrimaryEntry } from "./choose-primary-entry.mjs";

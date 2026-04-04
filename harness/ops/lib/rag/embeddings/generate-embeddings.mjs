@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/embeddings.mjs:173
-
 import { MAX_CONCURRENCY } from "./max-concurrency.mjs";
 import { generateEmbedding } from "./generate-embedding.mjs";
 import { isOllamaAvailable } from "./is-ollama-available.mjs";

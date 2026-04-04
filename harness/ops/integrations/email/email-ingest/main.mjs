@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:157
-
 import { createIssue, STATES } from "../../../linear-client.mjs";
 import {
   addExternalKey,

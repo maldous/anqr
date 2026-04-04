@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:418
-
 import { REPORTS_DIR, PROJECT_ROOT } from "../../../integrations/model/codebuff-sdk-runner.mjs";
 import { inferSymphonyResultFromCompletion } from "../../../core/bridge-result.mjs";
 import { invokeCodebuffDirect } from "../../../integrations/model/codebuff-direct.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/linear-client.mjs:135
-
 import { TEAM_ID } from "./team-id.mjs";
 import { query } from "./query.mjs";
 

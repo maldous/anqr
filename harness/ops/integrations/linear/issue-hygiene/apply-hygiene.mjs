@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/issue-hygiene.mjs:185
-
 import { updateIssue, addComment } from "../linear-client.mjs";
 
 import { MAX_DESCRIPTION_LENGTH } from "./max-description-length.mjs";

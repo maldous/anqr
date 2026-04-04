@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:47
-
 export function isPidAlive(pid) {
   if (!pid || Number.isNaN(pid)) return false;
   try {

@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/linear-all.mjs:68
-
 import { TEAM_ID } from "./team-id.mjs";
 import { fetchPage } from "./fetch-page.mjs";
 import { logInfo } from "./logger.mjs";

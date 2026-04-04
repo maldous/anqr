@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:582
-
 import { getWorktreeHealthSnapshot } from "../../core/worktree-health.mjs";
 import { leaseIsActive } from "../../symphony-state.mjs";
 import { getWorktreePath } from "../../core/worktree-config.mjs";

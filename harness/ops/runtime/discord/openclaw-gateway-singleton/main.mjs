@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:306
-
 import { ensureLockDir } from "./ensure-lock-dir.mjs";
 import { followerLoop } from "./follower-loop.mjs";
 import { logInfo } from "./log-info.mjs";

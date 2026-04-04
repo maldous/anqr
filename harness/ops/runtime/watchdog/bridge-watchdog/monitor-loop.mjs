@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:750
-
 import { CHECK_INTERVAL_MS } from "./check-interval-ms.mjs";
 import { MONITORED_SERVICES } from "./monitored-services.mjs";
 import { RAPID_RESTART_THRESHOLD } from "./rapid-restart-threshold.mjs";

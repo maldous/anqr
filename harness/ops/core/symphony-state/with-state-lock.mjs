@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:111
-
 import { acquireStateLock } from "./acquire-state-lock.mjs";
 import { releaseStateLock } from "./release-state-lock.mjs";
 

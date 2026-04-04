@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-session-state.mjs:350
-
 export function detectCodebuffMode(response) {
   // Check X-Codebuff-Mode header (to be added to codebuff-bridge)
   if (response?.headers?.["x-codebuff-mode"]) {

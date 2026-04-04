@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:451
-
 import fs from "node:fs";
 
 import { coerceStringArrayInput } from "./coerce-string-array-input.mjs";

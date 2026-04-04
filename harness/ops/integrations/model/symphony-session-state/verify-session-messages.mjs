@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-session-state.mjs:303
-
 import { hashMessages } from "./hash-messages.mjs";
 import { loadSessionState } from "./load-session-state.mjs";
 import { logWarn } from "./logger.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/openclaw-discord.mjs:229
-
 import { STREAM_INTERVAL_MS } from "./stream-interval-ms.mjs";
 import { STREAM_MAX_LENGTH } from "./stream-max-length.mjs";
 import { discordStreamBuffers } from "./discord-stream-buffers.mjs";

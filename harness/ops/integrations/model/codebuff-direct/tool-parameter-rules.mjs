@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:21
-
 export const TOOL_PARAMETER_RULES = `# Tool Parameter Format Rules
 Array-typed parameters MUST be JSON arrays.
 - read_files.paths => ["file.ts"]

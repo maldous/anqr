@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:218
-
 import { HOST } from "./host.mjs";
 import { PORT } from "./port.mjs";
 import { RESTART_BACKOFF_MS } from "./restart-backoff-ms.mjs";

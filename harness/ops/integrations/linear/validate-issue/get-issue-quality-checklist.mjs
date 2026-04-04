@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/validate-issue.mjs:216
-
 export function getIssueQualityChecklist(input) {
   return [
     `✅ Title is clear and descriptive (${input.title?.length || 0}/200 chars)`,

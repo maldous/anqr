@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/notifications/notify.mjs:69
-
 export function formatEmailBody(report) {
   const { profile, timestamp, total_duration_ms, summary, checks } = report;
   const failures = checks.filter((c) => !c.pass);

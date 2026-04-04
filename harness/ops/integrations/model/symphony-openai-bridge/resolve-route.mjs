@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3506
-
 import { ADVERTISED_MODELS } from "./advertised-models.mjs";
 import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";
 import { MODEL_ID } from "./model-id.mjs";

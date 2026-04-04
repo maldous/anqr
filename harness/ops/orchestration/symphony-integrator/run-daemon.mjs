@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-integrator.mjs:281
-
 import { releaseIntegrationLock } from "../../symphony-state.mjs";
 
 import { INTEGRATOR_ID } from "./integrator-id.mjs";

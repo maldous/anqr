@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-sync.mjs:30
-
 import { FETCH_TIMEOUT_MS } from "./fetch-timeout-ms.mjs";
 
 export function fetchWithTimeout(url, headers) {

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/embeddings.mjs:52
-
 import { FAILURE_COOLDOWN_MS } from "./failure-cooldown-ms.mjs";
 import { HEALTH_CACHE_TTL_MS } from "./health-cache-ttl-ms.mjs";
 import { setHealthCache } from "./set-health-cache.mjs";

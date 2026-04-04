@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:678
-
 import { HIGH_PRIORITY_THRESHOLD } from "./high-priority-threshold.mjs";
 import { MEDIUM_PRIORITY_THRESHOLD } from "./medium-priority-threshold.mjs";
 import { calculateProviderScore } from "./calculate-provider-score.mjs";

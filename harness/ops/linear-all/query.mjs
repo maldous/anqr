@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/linear-all.mjs:27
-
 export const query = `
 query BacklogCount($after: String) {
   issues(

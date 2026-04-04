@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/analyze-worktree-benchmark.mjs:33
-
 import { resolve } from "node:path";
 import { readFileSync, existsSync } from "node:fs";
 

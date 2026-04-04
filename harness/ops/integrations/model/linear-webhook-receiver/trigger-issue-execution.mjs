@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/linear-webhook-receiver.mjs:210
-
 import { activeIssues } from "./active-issues.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../scripts/lib/ast-helpers.mjs:13
-
 import path from "node:path";
 import process from "node:process";
 

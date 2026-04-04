@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:202
-
 import { getHeaderValue } from "./get-header-value.mjs";
 
 export function parseResetHeader(headers, key) {

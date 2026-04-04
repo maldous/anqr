@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:263
-
 export function isServerError(errStr) {
   return (
     errStr.includes("internal server error") ||

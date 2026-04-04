@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/discord-webhook.mjs:289
-
 import { DISCORD_STREAM_INTERVAL_MS } from "./discord-stream-interval-ms.mjs";
 import { DISCORD_STREAM_MAX_LENGTH } from "./discord-stream-max-length.mjs";
 import { discordStreamBuffers } from "./discord-stream-buffers.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../scripts/lib/ast-helpers.mjs:26
-
 import { SyntaxKind } from "ts-morph";
 
 export const isIifeInitializer = (initializer) => {

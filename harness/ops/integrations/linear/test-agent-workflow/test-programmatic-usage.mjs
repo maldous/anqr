@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/test-agent-workflow.mjs:433
-
 import { assertCondition } from "./assert-condition.mjs";
 import { logTestResult } from "./log-test-result.mjs";
 

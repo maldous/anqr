@@ -1,5 +1,3 @@
-// Generated from ../scripts/contracts-check.mjs:27
-
 import { readFile } from "node:fs/promises";
 
 export async function fileExists(targetPath) {

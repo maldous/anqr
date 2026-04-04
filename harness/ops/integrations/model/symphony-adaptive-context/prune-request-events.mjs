@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:127
-
 import { MAX_WINDOW_EVENTS } from "./max-window-events.mjs";
 import { REQUEST_WINDOW_MS } from "./request-window-ms.mjs";
 

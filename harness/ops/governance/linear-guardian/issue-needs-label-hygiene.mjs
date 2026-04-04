@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/governance/linear-guardian.mjs:137
-
 import { REQUIRED_LABEL_IDS } from "../../symphony-config.mjs";
 
 export function issueNeedsLabelHygiene(issue) {

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:335
-
 import { extractErrorString } from "./extract-error-string.mjs";
 import { getHeaderValue } from "./get-header-value.mjs";
 import { getResponseHeaders } from "./get-response-headers.mjs";

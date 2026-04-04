@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:190
-
 import { TARGET_MAX } from "../../symphony-config.mjs";
 import { updateIssue, addComment, STATES } from "../../linear-client.mjs";
 import { recordTransition } from "../../symphony-state.mjs";

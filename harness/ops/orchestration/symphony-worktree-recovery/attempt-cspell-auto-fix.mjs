@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:464
-
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";

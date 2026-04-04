@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:275
-
 import { probeWithTimeout } from "./probe-with-timeout.mjs";
 
 export async function probeGitHubModels(apiKey, model) {

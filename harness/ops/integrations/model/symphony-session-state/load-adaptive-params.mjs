@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-session-state.mjs:102
-
 import { readFileSync, existsSync } from "node:fs";
 
 import { ADAPTIVE_PARAMS_FILE } from "./adaptive-params-file.mjs";

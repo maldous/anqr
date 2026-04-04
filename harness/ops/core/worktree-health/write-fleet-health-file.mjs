@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/worktree-health.mjs:235
-
 import { resolve, dirname } from "node:path";
 import { existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { getFleetSnapshot } from "../symphony-state.mjs";
@@ -10,6 +8,7 @@ import { logInfo } from "./logger.mjs";
 export function writeFleetHealthFile(outputPath) {
   const defaultPath = resolve(
     dirname(new URL(import.meta.url).pathname),
+    "..",
     "..",
     "..",
     "..",

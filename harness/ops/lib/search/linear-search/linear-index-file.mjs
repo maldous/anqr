@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/linear-search.mjs:31
-
 import { resolve } from "node:path";
 
 import { LINEAR_INDEX_DIR } from "./linear-index-dir.mjs";

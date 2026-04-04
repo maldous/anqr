@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-manager.mjs:135
-
 import { buildFingerprintMarker } from "../incident-fingerprint.mjs";
 import { formatEvidenceForIssue } from "../incident-evidence.mjs";
 

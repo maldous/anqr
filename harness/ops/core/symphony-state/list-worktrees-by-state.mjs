@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:672
-
 import { loadState } from "./load-state.mjs";
 
 export function listWorktreesByState(state) {

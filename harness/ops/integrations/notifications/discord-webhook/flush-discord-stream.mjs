@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/discord-webhook.mjs:338
-
 import { discordStreamBuffers } from "./discord-stream-buffers.mjs";
 import { sendDiscordMessage } from "./send-discord-message.mjs";
 

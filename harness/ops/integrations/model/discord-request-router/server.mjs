@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/discord-request-router.mjs:360
-
 import http from "node:http";
 
 import { MAX_CONCURRENT } from "./max-concurrent.mjs";

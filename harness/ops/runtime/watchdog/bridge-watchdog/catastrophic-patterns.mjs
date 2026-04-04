@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:55
-
 export const CATASTROPHIC_PATTERNS = [
   /SyntaxError.*does not provide an export/,
   /SyntaxError.* Unexpected token/,

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-agent-router.mjs:33
-
 import path from "node:path";
 
 export function isPathWithinRoot(candidatePath, rootPath) {

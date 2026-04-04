@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:614
-
 import { runCspell } from "../../core/symphony-validation.mjs";
 
 import { MAIN_REPO_ROOT } from "./main-repo-root.mjs";

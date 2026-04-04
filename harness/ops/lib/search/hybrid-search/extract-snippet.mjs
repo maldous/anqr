@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/hybrid-search.mjs:99
-
 export function extractSnippet(content, query, radius = 120) {
   if (!content || !query) return "";
 

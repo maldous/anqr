@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/linear-client.mjs:208
-
 import { query } from "./query.mjs";
 
 export async function getIssueDetail(identifier) {

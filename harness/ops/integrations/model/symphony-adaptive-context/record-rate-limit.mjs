@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:459
-
 import { RATE_LIMIT_DEFAULT_BACKOFF_MS } from "./rate-limit-default-backoff-ms.mjs";
 import { RATE_LIMIT_MAX_BACKOFF_MS } from "./rate-limit-max-backoff-ms.mjs";
 import { getOrCreateState } from "./get-or-create-state.mjs";

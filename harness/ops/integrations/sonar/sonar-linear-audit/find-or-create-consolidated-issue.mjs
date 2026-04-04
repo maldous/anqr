@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-audit.mjs:75
-
 import { createIssue, STATES, LABELS } from "../../linear/linear-client.mjs";
 
 import { CONSOLIDATED_ISSUE_TITLE } from "./consolidated-issue-title.mjs";

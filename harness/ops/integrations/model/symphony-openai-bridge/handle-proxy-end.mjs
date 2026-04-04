@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5111
-
 import { flushDiscordStream } from "../../notifications/openclaw-discord.mjs";
 
 import { processSSELine } from "./process-sseline.mjs";

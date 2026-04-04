@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:138
-
 import { TARGET_MIN } from "../../symphony-config.mjs";
 import { isDiscordSourced, markDiscordSource } from "../../core/discord-source.mjs";
 import { updateIssue, STATES } from "../../linear-client.mjs";

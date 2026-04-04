@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-session-state.mjs:378
-
 import { TIER_FREE } from "./tier-free.mjs";
 import { TIER_LOCAL } from "./tier-local.mjs";
 import { TIER_PAID } from "./tier-paid.mjs";

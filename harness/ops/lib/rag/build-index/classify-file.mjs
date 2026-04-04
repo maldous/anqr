@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index.mjs:173
-
 import { basename, extname } from "node:path";
 
 import { EXCLUDED_PATH_PATTERNS } from "./excluded-path-patterns.mjs";

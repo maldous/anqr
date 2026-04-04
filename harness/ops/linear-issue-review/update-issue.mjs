@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/linear-issue-review.mjs:55
-
 import { query } from "./query.mjs";
 
 export async function updateIssue(issueId, input) {

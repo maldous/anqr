@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:76
-
 import { execFileSync } from "node:child_process";
 
 export function countEnabledTimers() {

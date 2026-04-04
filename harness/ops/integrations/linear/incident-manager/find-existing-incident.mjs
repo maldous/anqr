@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-manager.mjs:77
-
 import { findOpenIssuesByDescriptionFragment } from "../linear-client.mjs";
 
 import { DEDUP_WINDOW_MS } from "./dedup-window-ms.mjs";

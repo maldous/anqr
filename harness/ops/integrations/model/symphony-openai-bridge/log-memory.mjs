@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:167
-
 import { logDebug } from "./logger.mjs";
 export function logMemory(label) {
   const mem = process.memoryUsage();

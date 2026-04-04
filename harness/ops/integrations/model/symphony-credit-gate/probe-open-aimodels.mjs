@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:201
-
 import { LOCAL_PROBE_TIMEOUT_MS } from "./local-probe-timeout-ms.mjs";
 import { PROBE_TIMEOUT_MS } from "./probe-timeout-ms.mjs";
 import { probeWithTimeout } from "./probe-with-timeout.mjs";

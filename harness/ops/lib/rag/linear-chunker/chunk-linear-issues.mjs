@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/linear-chunker.mjs:80
-
 import { chunkLinearIssue } from "./chunk-linear-issue.mjs";
 
 export function chunkLinearIssues(issues) {

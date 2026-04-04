@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:220
-
 export function isContextError(errStr) {
   return (
     errStr.includes("request too large") ||

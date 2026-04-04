@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:699
-
 export function buildIssuePrompt(issue) {
   const lines = [`## Goal: ${issue.identifier} — ${issue.title}`, ""];
 

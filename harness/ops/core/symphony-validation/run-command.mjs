@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-validation.mjs:48
-
 import { execFileSync } from "node:child_process";
 
 import { runCommandWithHeartbeat } from "./run-command-with-heartbeat.mjs";

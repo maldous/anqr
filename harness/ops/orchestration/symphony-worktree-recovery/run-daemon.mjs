@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:683
-
 import {
   RECOVERY_POLL_INTERVAL_MS,
   RECOVERY_BASELINE_CHECK_INTERVAL_CYCLES,

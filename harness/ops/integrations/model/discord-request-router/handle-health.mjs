@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/discord-request-router.mjs:338
-
 import { MAX_CONCURRENT } from "./max-concurrent.mjs";
 import { WORKTREE_URLS } from "./worktree-urls.mjs";
 import { globalActiveRequests } from "./global-active-requests.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-manager.mjs:21
-
 export const INCIDENT_TYPES = {
   WATCHDOG_ROLLBACK: {
     priority: 0, // P0

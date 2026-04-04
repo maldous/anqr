@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:567
-
 import { RUNNER_PROVIDER_FAILURE_WINDOW_SECS } from "../../../symphony-config.mjs";
 import { shouldRetryProvider } from "../symphony-provider-health.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../harness/ops/harness-doctor.mjs:284
-
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
 

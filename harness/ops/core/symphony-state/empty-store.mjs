@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:122
-
 import { HOST_ID } from "./host-id.mjs";
 
 export function emptyStore() {

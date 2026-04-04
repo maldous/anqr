@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:425
-
 import { CONTEXT_EXPAND_FACTOR } from "./context-expand-factor.mjs";
 import { CONTEXT_EXPAND_THRESHOLD } from "./context-expand-threshold.mjs";
 import { getOrCreateState } from "./get-or-create-state.mjs";

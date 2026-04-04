@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/discord-request-router.mjs:187
-
 import { PROJECT_ROOT } from "../../../core/worktree-config.mjs";
 import http from "node:http";
 

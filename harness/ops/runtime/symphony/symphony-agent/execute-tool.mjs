@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:379
-
 import { toolDeleteFile } from "./tool-delete-file.mjs";
 import { toolListDirectory } from "./tool-list-directory.mjs";
 import { toolPatchFile } from "./tool-patch-file.mjs";

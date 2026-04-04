@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/linear-search.mjs:40
-
 import { normalizeText } from "./normalize-text.mjs";
 
 export function tokenize(value) {

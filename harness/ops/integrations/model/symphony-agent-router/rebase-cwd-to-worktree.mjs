@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-agent-router.mjs:39
-
 import path from "node:path";
 import { PROJECT_ROOT } from "../../../core/worktree-config.mjs";
 

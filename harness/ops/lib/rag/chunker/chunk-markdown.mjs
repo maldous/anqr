@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:387
-
 import { extname } from "node:path";
 
 import { MD_HEADING_PATTERN } from "./md-heading-pattern.mjs";

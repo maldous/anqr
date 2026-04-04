@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:279
-
 import { stat } from "node:fs/promises";
 
 import { toResolvedPath } from "./to-resolved-path.mjs";

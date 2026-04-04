@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:110
-
 export function isPaymentRequiredError(errStr) {
   const s = String(errStr || "").toLowerCase();
   return (

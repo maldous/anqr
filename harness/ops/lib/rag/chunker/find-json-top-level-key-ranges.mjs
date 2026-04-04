@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:420
-
 export function findJsonTopLevelKeyRanges(text) {
   try {
     const parsed = JSON.parse(text);

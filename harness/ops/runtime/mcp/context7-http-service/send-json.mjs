@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-http-service.mjs:81
-
 export function sendJSON(res, status, data) {
   const body = JSON.stringify(data);
   res.writeHead(status, {

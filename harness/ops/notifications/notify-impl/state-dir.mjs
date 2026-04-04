@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/notifications/notify-impl.mjs:18
-
 import path from "node:path";
 
 import { PROJECT_ROOT } from "./project-root.mjs";

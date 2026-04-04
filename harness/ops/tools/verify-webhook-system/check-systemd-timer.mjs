@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/tools/verify-webhook-system.mjs:36
-
 import { execFileSync } from "node:child_process";
 
 export function checkSystemdTimer(timerName) {

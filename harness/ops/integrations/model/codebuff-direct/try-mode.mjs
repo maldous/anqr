@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:183
-
 import { inferSymphonyResultFromCompletion } from "../../../core/bridge-result.mjs";
 
 import { CODEBUFF_MAX_CONTINUATIONS } from "./codebuff-max-continuations.mjs";

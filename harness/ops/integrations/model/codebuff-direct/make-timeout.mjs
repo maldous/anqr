@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:52
-
 import { CODEBUFF_TIMEOUT_MS } from "./codebuff-timeout-ms.mjs";
 
 export function makeTimeout() {

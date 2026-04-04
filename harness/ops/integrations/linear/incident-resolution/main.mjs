@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-resolution.mjs:162
-
 import { listIssuesByState } from "../linear-client.mjs";
 
 import { autoResolveIncident } from "./auto-resolve-incident.mjs";

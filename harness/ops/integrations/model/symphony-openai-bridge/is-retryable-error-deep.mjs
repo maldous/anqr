@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3652
-
 import { isRetryableError } from "./is-retryable-error.mjs";
 import { unwrapAIError } from "./unwrap-aierror.mjs";
 

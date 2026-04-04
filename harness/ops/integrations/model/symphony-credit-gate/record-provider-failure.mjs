@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:584
-
 import { recordProviderHealthFailure } from "../symphony-provider-health.mjs";
 
 import { loadFailures } from "./load-failures.mjs";

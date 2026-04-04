@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/analyze-canceled-issues.mjs:33
-
 import { listIssuesByState } from "../linear-client.mjs";
 
 import { CORRECT_CANCEL_PATTERNS } from "./correct-cancel-patterns.mjs";

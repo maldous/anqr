@@ -1,5 +1,3 @@
-// Generated from ../../harness/ops/harness-doctor.mjs:217
-
 import { execFileSync } from "node:child_process";
 
 import { ROOT } from "./root.mjs";

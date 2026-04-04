@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:569
-
 import { getRequestsPerMinute } from "./get-requests-per-minute.mjs";
 import { getTokensPerMinute } from "./get-tokens-per-minute.mjs";
 import { isProviderThrottled } from "./is-provider-throttled.mjs";

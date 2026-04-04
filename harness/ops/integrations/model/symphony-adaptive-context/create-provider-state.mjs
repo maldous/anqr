@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:67
-
 import {
   PROVIDER_MAX_INPUT_TOKENS,
   DEFAULT_MAX_INPUT_TOKENS,

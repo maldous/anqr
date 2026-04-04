@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/linear-all.mjs:50
-
 import { API_KEY } from "./api-key.mjs";
 import { TEAM_ID } from "./team-id.mjs";
 

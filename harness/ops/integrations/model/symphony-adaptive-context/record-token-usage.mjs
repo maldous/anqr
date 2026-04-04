@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:512
-
 import { getOrCreateState } from "./get-or-create-state.mjs";
 import { pruneRequestEvents } from "./prune-request-events.mjs";
 import { pruneTokenEvents } from "./prune-token-events.mjs";

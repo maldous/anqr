@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-session-state.mjs:127
-
 import { SESSION_TTL_MS } from "./session-ttl-ms.mjs";
 import { loadSessionState } from "./load-session-state.mjs";
 import { saveSessionState } from "./save-session-state.mjs";

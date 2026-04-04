@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:276
-
 import { PING_TIMEOUT_MS } from "./ping-timeout-ms.mjs";
 
 export async function checkSonarAudit() {

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:534
-
 import { existsSync, statSync } from "node:fs";
 
 import { INDEX_FILE } from "./index-file.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/discord-source.mjs:21
-
 export function isDiscordSourced(issueData) {
   if (!issueData) return false;
 

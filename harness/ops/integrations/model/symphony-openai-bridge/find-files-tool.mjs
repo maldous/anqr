@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1073
-
 import { searchFiles as hybridSearchFiles } from "../../../lib/search/hybrid-search.mjs";
 import { execSync } from "node:child_process";
 

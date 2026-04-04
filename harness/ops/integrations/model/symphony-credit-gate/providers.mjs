@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:304
-
 import {
   RUNNER_OLLAMA_BASE_URL,
   RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,

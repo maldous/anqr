@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/review-open-issues.mjs:81
-
 import { listIssuesByState } from "../linear-client.mjs";
 
 import { OPEN_STATES } from "./open-states.mjs";

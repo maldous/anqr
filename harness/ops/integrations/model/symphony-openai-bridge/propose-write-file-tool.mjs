@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:913
-
 import { logInfo } from "./logger.mjs";
 
 export async function proposeWriteFileTool({ path: filePath, instructions, content }) {

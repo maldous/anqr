@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-validation.mjs:72
-
 import { spawn } from "node:child_process";
 
 import { trimOutput } from "./trim-output.mjs";

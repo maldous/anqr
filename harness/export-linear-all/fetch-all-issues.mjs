@@ -1,5 +1,3 @@
-// Generated from ../scripts/export-linear-all.mjs:18
-
 import { query, TEAM_ID } from "../ops/integrations/linear/linear-client.mjs";
 
 export async function fetchAllIssues() {

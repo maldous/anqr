@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/linear-webhook-receiver.mjs:90
-
 import { recentDeliveries } from "./recent-deliveries.mjs";
 import { logWarn } from "./logger.mjs";
 

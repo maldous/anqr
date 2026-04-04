@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/ollama-local-audit.mjs:49
-
 import { OLLAMA_BASE } from "./ollama-base.mjs";
 import { PINNED_MODEL } from "./pinned-model.mjs";
 import { record } from "./record.mjs";

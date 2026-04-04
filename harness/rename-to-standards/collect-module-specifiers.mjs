@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:183
-
 import { ts } from "./ts.mjs";
 
 export const collectModuleSpecifiers = (sourceFile) => {

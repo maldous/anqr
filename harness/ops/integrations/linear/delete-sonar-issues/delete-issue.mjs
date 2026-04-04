@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/delete-sonar-issues.mjs:12
-
 import { query } from "../linear-client.mjs";
 
 export async function deleteIssue(issueId) {

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:192
-
 import { CLOUD_API_BASE } from "./cloud-api-base.mjs";
 import { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
 import { logWarn, logError } from "./logger.mjs";

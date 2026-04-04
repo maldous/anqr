@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/discord-source.mjs:65
-
 import { isDiscordSourced } from "./is-discord-sourced.mjs";
 import { markDiscordSource } from "./mark-discord-source.mjs";
 

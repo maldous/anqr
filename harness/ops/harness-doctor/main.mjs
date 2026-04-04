@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/harness-doctor.mjs:315
-
 import { resolve } from "node:path";
 
 import { ROOT } from "./root.mjs";

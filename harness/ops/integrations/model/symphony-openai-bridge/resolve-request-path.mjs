@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:248
-
 import path from "node:path";
 
 import { getCurrentRequestCwd } from "./get-current-request-cwd.mjs";

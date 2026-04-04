@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1508
-
 import http from "node:http";
 
 import { OPENCLAW_GATEWAY_HOST } from "./openclaw-gateway-host.mjs";

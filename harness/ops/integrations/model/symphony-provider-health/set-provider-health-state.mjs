@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-provider-health.mjs:112
-
 import { loadHealthState } from "./load-health-state.mjs";
 import { saveHealthState } from "./save-health-state.mjs";
 import { logInfo } from "./logger.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/discord-webhook.mjs:44
-
 import { trimToUndefined } from "./trim-to-undefined.mjs";
 
 export function sanitizeDiscordEmbed(embed = {}) {

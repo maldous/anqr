@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:234
-
 export function isRateLimitError(errStr) {
   return (
     errStr.includes("rate_limit") ||

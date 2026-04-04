@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/linear-chunker.mjs:30
-
 import { truncateDescription } from "./truncate-description.mjs";
 import { logDebug } from "./logger.mjs";
 

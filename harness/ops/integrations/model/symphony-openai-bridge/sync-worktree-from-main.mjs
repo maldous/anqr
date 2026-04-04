@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1821
-
 import { execSync } from "node:child_process";
 
 import { BRIDGE_ROOT } from "./bridge-root.mjs";

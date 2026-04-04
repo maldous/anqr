@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:108
-
 export function hashString(input) {
   let hash = 2166136261;
   for (let i = 0; i < input.length; i++) {

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:538
-
 import { checkAstDensity } from "./check-ast-density.mjs";
 import { checkCspellCoverage } from "./check-cspell-coverage.mjs";
 import { checkDepcruise } from "./check-depcruise.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:676
-
 import fs from "node:fs";
 
 import { resolveRequestPath } from "./resolve-request-path.mjs";

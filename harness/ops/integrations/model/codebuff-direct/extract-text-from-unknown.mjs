@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:136
-
 export function extractTextFromUnknown(value, parts = []) {
   if (value == null) return parts;
   if (typeof value === "string") {

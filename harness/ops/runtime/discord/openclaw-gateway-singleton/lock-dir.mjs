@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:16
-
 import path from "node:path";
 import os from "node:os";
 

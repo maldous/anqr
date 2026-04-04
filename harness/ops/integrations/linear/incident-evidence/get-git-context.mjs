@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-evidence.mjs:32
-
 import { execSync } from "node:child_process";
 import { logWarn } from "./logger.mjs";
 

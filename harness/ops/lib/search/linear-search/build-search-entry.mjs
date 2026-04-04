@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/linear-search.mjs:52
-
 import { extractTitle } from "./extract-title.mjs";
 import { normalizeText } from "./normalize-text.mjs";
 import { tokenize } from "./tokenize.mjs";

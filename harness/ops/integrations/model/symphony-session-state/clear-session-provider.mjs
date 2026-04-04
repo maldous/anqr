@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-session-state.mjs:185
-
 import { loadSessionState } from "./load-session-state.mjs";
 import { saveSessionState } from "./save-session-state.mjs";
 import { logDebug } from "./logger.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:462
-
 export function sanitizeCommitSubject(title) {
   let subject = title.trim();
   while (subject.endsWith(".")) subject = subject.slice(0, -1);

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/lib/notify.mjs:96
-
 import { spawnSync } from "node:child_process";
 
 import { RECIPIENT } from "./recipient.mjs";

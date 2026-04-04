@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:595
-
 import { getIssueState } from "../../symphony-state.mjs";
 import { logDebug } from "./logger.mjs";
 

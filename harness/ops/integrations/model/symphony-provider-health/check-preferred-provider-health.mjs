@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-provider-health.mjs:208
-
 import { HEALTH_STATES } from "./health-states.mjs";
 import { isLocalProvider } from "./is-local-provider.mjs";
 import { loadHealthState } from "./load-health-state.mjs";

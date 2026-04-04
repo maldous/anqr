@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:39
-
 import { spawnSync } from "node:child_process";
 
 export function run(cmd, args, opts = {}) {

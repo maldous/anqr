@@ -1,5 +1,3 @@
-// Generated from ../scripts/list-ast-names.mjs:217
-
 import process from "node:process";
 import { Project } from "ts-morph";
 import path from "node:path";

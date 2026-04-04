@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/lib/logger.mjs:22
-
 export function getCallerInfo() {
   try {
     // SONAR S7722: Pass a message to the Error constructor

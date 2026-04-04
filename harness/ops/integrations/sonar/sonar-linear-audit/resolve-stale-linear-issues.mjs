@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-audit.mjs:56
-
 import { findOpenLinearIssuesByTag } from "../../../lib/sonar-linear-sync.mjs";
 import { updateIssue, STATES } from "../../linear/linear-client.mjs";
 

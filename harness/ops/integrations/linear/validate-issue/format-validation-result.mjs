@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/validate-issue.mjs:176
-
 export function formatValidationResult(result) {
   let output = "";
 

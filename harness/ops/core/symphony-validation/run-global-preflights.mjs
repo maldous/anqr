@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-validation.mjs:282
-
 import { runAstDensity } from "./run-ast-density.mjs";
 import { runCspell } from "./run-cspell.mjs";
 import { runLint } from "./run-lint.mjs";

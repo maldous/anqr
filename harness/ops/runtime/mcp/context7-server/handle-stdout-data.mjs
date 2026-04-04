@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:81
-
 import { handleJsonRpcMessage } from "./handle-json-rpc-message.mjs";
 import { stdoutBuffer, setStdoutBuffer } from "./stdout-buffer.mjs";
 import { logDebug, logWarn } from "./logger.mjs";

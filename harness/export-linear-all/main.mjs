@@ -1,5 +1,3 @@
-// Generated from ../scripts/export-linear-all.mjs:64
-
 import { writeFile } from "node:fs/promises";
 
 import { fetchAllIssues } from "./fetch-all-issues.mjs";

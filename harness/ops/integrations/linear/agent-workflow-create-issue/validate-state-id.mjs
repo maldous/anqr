@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/agent-workflow-create-issue.mjs:80
-
 import { AVAILABLE_STATES } from "./available-states.mjs";
 
 export function validateStateId(stateId) {

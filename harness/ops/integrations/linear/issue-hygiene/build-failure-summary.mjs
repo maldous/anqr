@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/issue-hygiene.mjs:91
-
 import { SYSTEMIC_FAILURE_THRESHOLD } from "./systemic-failure-threshold.mjs";
 
 export function buildFailureSummary(issue, comments, analysis) {

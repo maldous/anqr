@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:806
-
 import { MIN_SELECTIONS_FOR_RANKING } from "./min-selections-for-ranking.mjs";
 import { LOCAL_SAFETY_NET_PROVIDER_NAMES } from "./local-safety-net-provider-names.mjs";
 import { SAFETY_NET_SCORE_CEILING } from "./safety-net-score-ceiling.mjs";

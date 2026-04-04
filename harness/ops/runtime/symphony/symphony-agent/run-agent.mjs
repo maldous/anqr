@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:1202
-
 import { RUNNER_MAX_TURNS, RUNNER_MAX_EXECUTION_MS } from "../../../symphony-config.mjs";
 
 import { buildIssuePrompt } from "./build-issue-prompt.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:196
-
 import { classifyChunk } from "./classify-chunk.mjs";
 import { lineNumberForOffset } from "./line-number-for-offset.mjs";
 import { makeChunkId } from "./make-chunk-id.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:443
-
 export function parseCspellUnknownWords(detail) {
   const words = new Set();
   const regex = /Unknown word \(([\w-]+)\)/g;

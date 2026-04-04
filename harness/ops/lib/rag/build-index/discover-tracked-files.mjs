@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index.mjs:199
-
 import { execFileSync } from "node:child_process";
 
 import { PROJECT_ROOT } from "./project-root.mjs";

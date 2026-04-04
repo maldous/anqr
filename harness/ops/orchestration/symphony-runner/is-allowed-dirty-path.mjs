@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:234
-
 import { DEFAULT_ALLOWED_DIRTY_PATH_PATTERNS } from "./default-allowed-dirty-path-patterns.mjs";
 import { normalizeRepoPath } from "./normalize-repo-path.mjs";
 import { parseAllowedDirtyPathEnv } from "./parse-allowed-dirty-path-env.mjs";

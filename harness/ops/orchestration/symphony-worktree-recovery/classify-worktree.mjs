@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:73
-
 import { leaseIsActive } from "../../symphony-state.mjs";
 import {
   RECOVERY_MAX_REPAIR_ATTEMPTS,

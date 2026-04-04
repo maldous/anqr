@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:50
-
 export const DEFAULT_EXTENSIONS = [
   ".ts",
   ".tsx",

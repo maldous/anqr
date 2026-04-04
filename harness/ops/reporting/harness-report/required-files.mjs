@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:66
-
 export const REQUIRED_FILES = [
   "tsconfig.json",
   "package.json",

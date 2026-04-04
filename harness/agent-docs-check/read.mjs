@@ -1,5 +1,3 @@
-// Generated from ../scripts/agent-docs-check.mjs:15
-
 import { readFile } from "node:fs/promises";
 
 import { errors } from "./errors.mjs";

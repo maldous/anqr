@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5480
-
 import { getProviderStats, logProviderStats } from "../symphony-credit-gate.mjs";
 import {
   cleanupExpiredSessions,

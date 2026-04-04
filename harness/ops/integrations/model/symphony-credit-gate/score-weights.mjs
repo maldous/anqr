@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:153
-
 export const SCORE_WEIGHTS = {
   successRate: 0.15, // 15% - general success rate
   avgDuration: 0.08, // 8% - faster is better (normalized)

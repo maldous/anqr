@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:300
-
 import fs from "node:fs";
 
 import { detectSuggestion } from "./detect-suggestion.mjs";

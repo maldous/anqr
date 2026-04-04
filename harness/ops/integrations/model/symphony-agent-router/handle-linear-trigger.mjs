@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-agent-router.mjs:267
-
 import { MAX_QUEUE_LENGTH } from "./max-queue-length.mjs";
 import { WORKTREES } from "./worktrees.mjs";
 import { json } from "./json.mjs";

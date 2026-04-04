@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-pool.mjs:36
-
 import { PROJECT_ROOT, getWorktreePath, getWorktreeBranch } from "../../core/worktree-config.mjs";
 import { existsSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";

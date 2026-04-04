@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/hybrid-search.mjs:281
-
 import { cosineSimilarity } from "./cosine-similarity.mjs";
 import { embeddingsAvailable } from "./embeddings-available.mjs";
 import { extractSnippet } from "./extract-snippet.mjs";

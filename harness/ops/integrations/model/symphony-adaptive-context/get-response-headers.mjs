@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:173
-
 export function getResponseHeaders(err) {
   if (err?.responseHeaders) return err.responseHeaders;
   let current = err;

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:1565
-
 import { getProviderHealthState, HEALTH_STATES } from "../symphony-provider-health.mjs";
 
 import { PREFERRED_PROVIDER_ORDER } from "./preferred-provider-order.mjs";

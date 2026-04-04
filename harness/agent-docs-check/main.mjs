@@ -1,5 +1,3 @@
-// Generated from ../scripts/agent-docs-check.mjs:80
-
 import process from "node:process";
 
 import { compareSets } from "./compare-sets.mjs";

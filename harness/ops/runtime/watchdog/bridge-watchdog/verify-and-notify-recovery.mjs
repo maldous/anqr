@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:343
-
 import { sendDiscordEmbed } from "../../../integrations/notifications/openclaw-discord.mjs";
 
 import { WORKTREE_ID } from "./worktree-id.mjs";

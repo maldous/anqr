@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/ollama-local-audit.mjs:125
-
 import { results } from "./results.mjs";
 import { logInfo } from "./logger.mjs";
 

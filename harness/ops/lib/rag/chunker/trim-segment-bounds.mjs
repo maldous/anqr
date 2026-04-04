@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:148
-
 export function trimSegmentBounds(text, startOffset, endOffset) {
   let start = Math.max(0, startOffset);
   let end = Math.max(start, endOffset);

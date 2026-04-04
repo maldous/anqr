@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/openclaw-discord.mjs:166
-
 import { sendViaOpenClaw } from "./send-via-open-claw.mjs";
 
 export async function sendDiscordEmbed({

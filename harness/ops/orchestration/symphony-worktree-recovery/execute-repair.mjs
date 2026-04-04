@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:270
-
 import {
   setWorktreeState,
   getWorktreeState,

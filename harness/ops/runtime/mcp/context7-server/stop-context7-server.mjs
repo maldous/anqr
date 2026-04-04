@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:390
-
 import { rejectAllPending } from "./reject-all-pending.mjs";
 import { serverProcess, setServerProcess } from "./server-process.mjs";
 import { setServerReady } from "./server-ready.mjs";

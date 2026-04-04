@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:225
-
 export function findPreferredBreak(text, startOffset, candidateEnd, hardEnd) {
   if (candidateEnd >= hardEnd) return hardEnd;
 

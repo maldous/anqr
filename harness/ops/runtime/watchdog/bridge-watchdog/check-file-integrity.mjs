@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:196
-
 import path from "node:path";
 import { readFile, stat } from "node:fs/promises";
 

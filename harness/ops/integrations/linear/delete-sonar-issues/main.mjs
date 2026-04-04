@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/delete-sonar-issues.mjs:27
-
 import { listIssuesByState } from "../linear-client.mjs";
 
 import { deleteIssue } from "./delete-issue.mjs";

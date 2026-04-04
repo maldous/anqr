@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/embeddings.mjs:125
-
 import { EMBEDDING_MODEL } from "./embedding-model.mjs";
 import { EMBEDDING_TIMEOUT_MS } from "./embedding-timeout-ms.mjs";
 import { isOllamaAvailable } from "./is-ollama-available.mjs";

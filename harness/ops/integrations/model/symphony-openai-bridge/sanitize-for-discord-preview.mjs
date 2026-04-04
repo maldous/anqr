@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1331
-
 export function sanitizeForDiscordPreview(text) {
   if (!text || !text.trim()) return "";
   let s = text;

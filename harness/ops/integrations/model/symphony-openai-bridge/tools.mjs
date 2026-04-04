@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:2006
-
 import { tool } from "ai";
 import { z } from "zod";
 import { execSync, execFileSync } from "node:child_process";

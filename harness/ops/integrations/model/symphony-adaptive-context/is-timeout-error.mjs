@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:254
-
 export function isTimeoutError(errStr) {
   return (
     errStr.includes("timeout") ||

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1204
-
 import { CONTEXT7_HTTP_BASE } from "./context7-http-base.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 

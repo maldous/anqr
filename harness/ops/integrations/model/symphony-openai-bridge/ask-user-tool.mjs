@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1033
-
 import { logInfo } from "./logger.mjs";
 export async function askUserTool({ questions }) {
   logInfo(`❓ Ask user: ${questions.length} questions`);

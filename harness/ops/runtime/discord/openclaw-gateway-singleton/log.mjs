@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:34
-
 import { WORKTREE_ID } from "./worktree-id.mjs";
 
 export function log(level, message) {

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/latency-report.mjs:57
-
 import { getLatencyMetrics, checkLatencyBaseline } from "../../core/symphony-state.mjs";
 import { sendDiscordEmbed } from "../../integrations/notifications/openclaw-discord.mjs";
 

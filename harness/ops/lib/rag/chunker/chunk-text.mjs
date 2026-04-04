@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:621
-
 import { DEFAULT_OPTIONS } from "./default-options.mjs";
 import { buildLineStarts } from "./build-line-starts.mjs";
 import { pushSegmentedRange } from "./push-segmented-range.mjs";

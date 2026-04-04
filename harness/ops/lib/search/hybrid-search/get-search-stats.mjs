@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/hybrid-search.mjs:590
-
 import { generateEmbedding } from "./generate-embedding.mjs";
 import { indexBuiltAt } from "./index-built-at.mjs";
 import { indexedDocCount } from "./indexed-doc-count.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-agent-router.mjs:104
-
 import http from "node:http";
 
 import { MAX_CONCURRENT } from "./max-concurrent.mjs";

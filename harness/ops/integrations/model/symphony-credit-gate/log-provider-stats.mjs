@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:1164
-
 import { MIN_SELECTIONS_FOR_RANKING } from "./min-selections-for-ranking.mjs";
 import { PROVIDERS } from "./providers.mjs";
 import { getProviderStats } from "./get-provider-stats.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/linear-search.mjs:118
-
 export function computeRecencyBonus(updatedAt) {
   if (!updatedAt) return 0;
   const ageMs = Date.now() - new Date(updatedAt).getTime();

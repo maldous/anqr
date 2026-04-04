@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/lib/service-restart-notify.mjs:166
-
 import { sendDiscordEmbed } from "../../integrations/notifications/openclaw-discord.mjs";
 import { updateMemory } from "../update-memory.mjs";
 

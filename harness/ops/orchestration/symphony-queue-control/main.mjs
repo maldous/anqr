@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:317
-
 import { actions } from "./actions.mjs";
 import { detectStuckWork } from "./detect-stuck-work.mjs";
 import { drainOverflow } from "./drain-overflow.mjs";

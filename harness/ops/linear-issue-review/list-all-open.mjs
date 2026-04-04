@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/linear-issue-review.mjs:76
-
 import { TEAM_ID } from "./team-id.mjs";
 import { query } from "./query.mjs";
 

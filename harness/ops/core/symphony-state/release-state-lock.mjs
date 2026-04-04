@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:101
-
 import fs from "node:fs";
 
 import { getLockFile } from "./get-lock-file.mjs";

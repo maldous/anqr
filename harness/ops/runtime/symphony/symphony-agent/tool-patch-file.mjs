@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:298
-
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 
 import { validatePath } from "./validate-path.mjs";

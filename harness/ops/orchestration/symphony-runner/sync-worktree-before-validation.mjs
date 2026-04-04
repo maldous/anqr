@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:383
-
 import { execFileSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
 

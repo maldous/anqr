@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-audit.mjs:148
-
 import {
   fetchAllSonarIssues,
   fetchAllSonarHotspots,

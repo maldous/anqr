@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:55
-
 import fs from "node:fs";
 
 import { LOCK_MAX_RETRIES } from "./lock-max-retries.mjs";

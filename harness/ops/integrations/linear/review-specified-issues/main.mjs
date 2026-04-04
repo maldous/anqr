@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/review-specified-issues.mjs:230
-
 import { updateIssue, addComment, STATES, listIssuesByState } from "../linear-client.mjs";
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";

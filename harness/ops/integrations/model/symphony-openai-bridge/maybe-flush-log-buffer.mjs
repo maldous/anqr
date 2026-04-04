@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5075
-
 import { INTERNAL_PATTERNS } from "./internal-patterns.mjs";
 import { LOG_BUFFER_THRESHOLD } from "./log-buffer-threshold.mjs";
 import { logDebug } from "./logger.mjs";

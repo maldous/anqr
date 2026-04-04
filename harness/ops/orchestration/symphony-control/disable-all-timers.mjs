@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-control.mjs:55
-
 import { execFileSync } from "node:child_process";
 import { logInfo, logError } from "./logger.mjs";
 

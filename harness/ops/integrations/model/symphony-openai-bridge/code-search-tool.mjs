@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:582
-
 import { execSync } from "node:child_process";
 
 import { resolveRequestDir } from "./resolve-request-dir.mjs";

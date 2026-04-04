@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/notifications/notify.mjs:46
-
 export function formatStdout(report) {
   const { profile, timestamp, total_duration_ms, summary, checks } = report;
   const timing = (total_duration_ms / 1000).toFixed(1);

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/linear-search.mjs:134
-
 import { generateEmbedding, cosineSimilarity } from "../../rag/embeddings.mjs";
 
 import { computeLexicalScore } from "./compute-lexical-score.mjs";

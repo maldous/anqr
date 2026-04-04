@@ -1,5 +1,3 @@
-// Generated from ../../harness/ops/linear-issue-review.mjs:102
-
 export const CLOSE_AS_DONE = {
   "ANQ-417": "src/modules/ no longer exists — all module directories dissolved into packages/.",
   "ANQ-415":

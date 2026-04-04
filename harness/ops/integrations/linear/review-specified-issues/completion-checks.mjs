@@ -1,5 +1,3 @@
-// Generated from ../../../../harness/ops/integrations/linear/review-specified-issues.mjs:36
-
 export const COMPLETION_CHECKS = {
   "ANQ-1137": {
     evidenceFile: "docs/harness/evidence/ANQ-1137-discord-voice-bot-visibility.md",

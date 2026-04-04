@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1805
-
 import { currentBranchName } from "./current-branch-name.mjs";
 import { currentHeadSha } from "./current-head-sha.mjs";
 import { hasTrackedChanges } from "./has-tracked-changes.mjs";

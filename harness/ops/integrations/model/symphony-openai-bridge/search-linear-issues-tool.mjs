@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1288
-
 import { getLinearIndexStats, searchLinearIssues } from "../../../lib/search/linear-search.mjs";
 
 export async function searchLinearIssuesTool({ query, limit = 5 }) {

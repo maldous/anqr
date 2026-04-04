@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:306
-
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 
 import { LOCK_FILE } from "./lock-file.mjs";

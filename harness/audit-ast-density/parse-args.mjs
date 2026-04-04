@@ -1,5 +1,3 @@
-// Generated from ../scripts/audit-ast-density.mjs:20
-
 import { DEFAULT_THRESHOLD } from "./default-threshold.mjs";
 
 export const parseArgs = (argv) => {

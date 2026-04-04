@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/validate-issue.mjs:322
-
 import { formatValidationResult } from "./format-validation-result.mjs";
 import { validateIssueInput } from "./validate-issue-input.mjs";
 

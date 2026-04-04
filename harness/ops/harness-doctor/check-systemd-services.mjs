@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/harness-doctor.mjs:176
-
 import { execFileSync } from "node:child_process";
 
 export function checkSystemdServices() {

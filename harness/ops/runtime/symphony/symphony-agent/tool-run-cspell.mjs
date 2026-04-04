@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:364
-
 import { runCspell } from "../../../symphony-validation.mjs";
 
 export function toolRunCspell(projectRoot, changedFiles) {

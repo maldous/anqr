@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-bridge-truncation.mjs:214
-
 import { CHARS_PER_TOKEN } from "./chars-per-token.mjs";
 import { DEFAULT_MAX_INPUT_TOKENS } from "./default-max-input-tokens.mjs";
 import { MIN_MESSAGE_BUDGET_TOKENS } from "./min-message-budget-tokens.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-sync.mjs:517
-
 import { createIssue, STATES } from "../../linear/linear-client.mjs";
 
 import { applyPromoteAndRequeue } from "./apply-promote-and-requeue.mjs";

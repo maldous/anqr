@@ -1,5 +1,3 @@
-// Generated from ../../../../harness/ops/integrations/linear/agent-workflow-create-issue.mjs:42
-
 import { AVAILABLE_STATES } from "./available-states.mjs";
 
 export function showHelp() {

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/validate-issue.mjs:162
-
 export function calculateValidationScore(errors, warnings) {
   const errorPenalty = errors.length * 20;
   const warningPenalty = warnings.length * 5;

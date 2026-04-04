@@ -1,5 +1,3 @@
-// Generated from ../scripts/agent-docs-check.mjs:49
-
 import { errors } from "./errors.mjs";
 
 export function parseMarkdownTable(content, label) {

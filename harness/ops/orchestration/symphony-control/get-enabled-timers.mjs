@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-control.mjs:36
-
 import { execFileSync } from "node:child_process";
 
 export function getEnabledTimers() {

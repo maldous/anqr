@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:229
-
 import { HEALTH_CHECK_TIMEOUT_MS } from "./health-check-timeout-ms.mjs";
 
 export async function checkHealthEndpoint(service) {

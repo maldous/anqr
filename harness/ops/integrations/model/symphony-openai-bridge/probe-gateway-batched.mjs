@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:4021
-
 import { probeToolCapabilityForProvider } from "./probe-tool-capability-for-provider.mjs";
 import { sleep } from "./sleep.mjs";
 import { logDebug } from "./logger.mjs";

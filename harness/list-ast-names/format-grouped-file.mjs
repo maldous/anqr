@@ -1,5 +1,3 @@
-// Generated from ../scripts/list-ast-names.mjs:207
-
 export const formatGroupedFile = (group) => {
   const lines = [group.path];
   for (const entry of group.entries) {

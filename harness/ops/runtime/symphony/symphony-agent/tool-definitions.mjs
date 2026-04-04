@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:126
-
 import { noParamTool } from "./no-param-tool.mjs";
 import { paramTool } from "./param-tool.mjs";
 import { pathParam } from "./path-param.mjs";

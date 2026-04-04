@@ -1,5 +1,3 @@
-// Generated from ../../../../harness/ops/runtime/symphony/symphony-agent.mjs:253
-
 import { relative } from "node:path";
 import { execFileSync } from "node:child_process";
 import { existsSync, statSync, unlinkSync, rmSync } from "node:fs";

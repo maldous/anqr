@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/test-agent-workflow.mjs:478
-
 import { workflowCreateLinearIssue } from "../agent-workflow-create-issue.mjs";
 
 import { assertCondition } from "./assert-condition.mjs";

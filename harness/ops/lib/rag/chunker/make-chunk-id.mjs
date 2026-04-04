@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:117
-
 import { hashString } from "./hash-string.mjs";
 import { normalizePathFragment } from "./normalize-path-fragment.mjs";
 

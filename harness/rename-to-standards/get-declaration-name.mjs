@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:116
-
 import { ts } from "./ts.mjs";
 
 export const getDeclarationName = (node) => {

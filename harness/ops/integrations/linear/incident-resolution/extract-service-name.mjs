@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-resolution.mjs:59
-
 export function extractServiceName(issue) {
   const { title, description } = issue;
 

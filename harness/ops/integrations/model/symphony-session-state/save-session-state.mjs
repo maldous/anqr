@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-session-state.mjs:97
-
 import { writeFileSync } from "node:fs";
 
 import { SESSION_STATE_FILE } from "./session-state-file.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/watchdog/bridge-watchdog.mjs:184
-
 import { TRANSIENT_PATTERNS } from "./transient-patterns.mjs";
 
 export function isTransientError(journalLog) {

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/bridge-result.mjs:31
-
 import { normalizeSymphonyResult } from "./normalize-symphony-result.mjs";
 
 export function inferSymphonyResultFromCompletion({

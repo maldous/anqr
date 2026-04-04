@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/linear-client.mjs:183
-
 import { query } from "./query.mjs";
 
 export async function updateComment(commentId, body) {

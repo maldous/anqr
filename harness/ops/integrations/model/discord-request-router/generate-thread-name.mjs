@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/discord-request-router.mjs:67
-
 export function generateThreadName(messages) {
   if (!Array.isArray(messages)) return null;
   // Find the last user message

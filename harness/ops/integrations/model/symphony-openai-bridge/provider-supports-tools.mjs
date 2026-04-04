@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3802
-
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
 

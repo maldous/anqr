@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/linear-client.mjs:169
-
 import { query } from "./query.mjs";
 
 export async function addComment(issueId, body) {

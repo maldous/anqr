@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:216
-
 import { resolve, relative } from "node:path";
 
 export function validatePath(projectRoot, filePath) {

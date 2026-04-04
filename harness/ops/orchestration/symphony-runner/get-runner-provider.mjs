@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:280
-
 import { SYMPHONY_BRIDGE_MODEL } from "./symphony-bridge-model.mjs";
 import { SYMPHONY_BRIDGE_URL } from "./symphony-bridge-url.mjs";
 

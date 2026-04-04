@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:1150
-
 import { logInfo, logWarn, logError } from "./logger.mjs";
 export async function webSearchTool({ query, depth = "standard" }) {
   try {

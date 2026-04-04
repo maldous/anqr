@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-agent-router.mjs:22
-
 import { getWorktreePath } from "../../../core/worktree-config.mjs";
 
 import { WORKTREE_IDS } from "./worktree-ids.mjs";

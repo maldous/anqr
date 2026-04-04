@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/discord-request-router.mjs:94
-
 import { evictExpiredSessions } from "./evict-expired-sessions.mjs";
 import { generateThreadName } from "./generate-thread-name.mjs";
 import { sessionThreadNames } from "./session-thread-names.mjs";

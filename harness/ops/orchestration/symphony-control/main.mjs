@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-control.mjs:124
-
 import { disableAllTimers } from "./disable-all-timers.mjs";
 import { enableAllTimers } from "./enable-all-timers.mjs";
 import { showStatus } from "./show-status.mjs";

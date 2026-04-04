@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/notifications/notify-impl.mjs:41
-
 import { DEDUP_WINDOW_MS } from "./dedup-window-ms.mjs";
 
 export function checkDedup(state, subject) {

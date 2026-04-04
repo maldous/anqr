@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:213
-
 import path from "node:path";
 
 import { BRIDGE_PARENT_ROOT } from "./bridge-parent-root.mjs";

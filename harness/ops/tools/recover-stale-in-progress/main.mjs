@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/tools/recover-stale-in-progress.mjs:38
-
 import { getQueueSnapshot } from "../../symphony-queue-control.mjs";
 import {
   getIssueState,

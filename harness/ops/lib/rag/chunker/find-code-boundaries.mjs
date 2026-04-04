@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/chunker.mjs:338
-
 import { CODE_BOUNDARY_PATTERNS } from "./code-boundary-patterns.mjs";
 import { includeDecoratorsAndJSDoc } from "./include-decorators-and-jsdoc.mjs";
 

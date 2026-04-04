@@ -1,5 +1,3 @@
-// Generated from ../scripts/list-ast-names.mjs:186
-
 export const groupByFile = (items) => {
   const map = new Map();
 

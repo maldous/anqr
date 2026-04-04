@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:440
-
 import { cosineSimilarity, generateEmbedding } from "../embeddings.mjs";
 
 import { indexCache } from "./index-cache.mjs";

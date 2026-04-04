@@ -1,5 +1,3 @@
-// Generated from ../../../../harness/ops/runtime/watchdog/bridge-watchdog.mjs:39
-
 export const MONITORED_SERVICES = [
   {
     name: "anqr-symphony-bridge.service",

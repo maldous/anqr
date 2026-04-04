@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-resolution.mjs:24
-
 import { HEALTH_ENDPOINTS } from "./health-endpoints.mjs";
 
 export async function checkServiceHealth(service) {

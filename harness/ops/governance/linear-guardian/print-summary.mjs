@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/governance/linear-guardian.mjs:308
-
 import { actions } from "./actions.mjs";
 import { logInfo } from "./logger.mjs";
 

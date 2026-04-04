@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:556
-
 import { ERROR_TYPES } from "./error-types.mjs";
 import { getOrCreateState } from "./get-or-create-state.mjs";
 

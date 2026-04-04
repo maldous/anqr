@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:288
-
 import { RUNNER_OLLAMA_BASE_URL } from "../../../symphony-config.mjs";
 
 import { probeWithTimeout } from "./probe-with-timeout.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../harness/ops/orchestration/symphony-runner.mjs:180
-
 import { resolve } from "node:path";
 
 import { ROOT } from "./root.mjs";

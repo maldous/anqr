@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:562
-
 import { writeFileSync } from "node:fs";
 
 import { FAILURE_STATE_FILE } from "./failure-state-file.mjs";

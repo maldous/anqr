@@ -1,5 +1,3 @@
-// Generated from ../../../harness/ops/orchestration/analyze-worktree-benchmark.mjs:269
-
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/notifications/discord-webhook.mjs:232
-
 import { sendDiscordNotification } from "./send-discord-notification.mjs";
 import { trimToUndefined } from "./trim-to-undefined.mjs";
 

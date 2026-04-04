@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:188
-
 import { PROBE_TIMEOUT_MS } from "./probe-timeout-ms.mjs";
 
 export async function probeWithTimeout(url, options = {}) {

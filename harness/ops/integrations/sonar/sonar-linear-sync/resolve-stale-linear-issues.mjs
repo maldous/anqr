@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/sonar/sonar-linear-sync.mjs:206
-
 import { updateIssue, addComment, STATES } from "../../linear/linear-client.mjs";
 import { logInfo } from "./logger.mjs";
 

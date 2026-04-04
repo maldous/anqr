@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:3140
-
 import { OPENROUTER_PROVIDER_NAMES } from "./openrouter-provider-names.mjs";
 
 export const ADVERTISED_MODELS = [

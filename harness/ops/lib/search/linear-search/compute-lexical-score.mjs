@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/search/linear-search.mjs:105
-
 export function computeLexicalScore(queryTokens, entry) {
   if (queryTokens.length === 0) return 0;
   const tokenSet = new Set(entry.searchTokens);

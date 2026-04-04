@@ -1,5 +1,3 @@
-// Generated from ../scripts/rename-to-standards.mjs:69
-
 import path from "node:path";
 
 import { CODE_EXTENSIONS } from "./code-extensions.mjs";

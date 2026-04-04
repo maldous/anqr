@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:48
-
 import { run } from "./run.mjs";
 
 export function syncMail() {

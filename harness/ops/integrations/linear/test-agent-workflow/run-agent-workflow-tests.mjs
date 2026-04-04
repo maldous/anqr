@@ -1,5 +1,3 @@
-// Generated from ../../../../harness/ops/integrations/linear/test-agent-workflow.mjs:560
-
 import { results } from "./results.mjs";
 import { testBasicIssueCreation } from "./test-basic-issue-creation.mjs";
 import { testErrorHandling } from "./test-error-handling.mjs";

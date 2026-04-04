@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:250
-
 import { loadState } from "./load-state.mjs";
 
 export function getGlobalValue(key, fallback = null) {

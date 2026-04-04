@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5408
-
 import { VALID_TOKENS } from "./valid-tokens.mjs";
 import { logDebug } from "./logger.mjs";
 

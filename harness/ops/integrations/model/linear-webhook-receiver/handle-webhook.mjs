@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/linear-webhook-receiver.mjs:282
-
 import { detectAndMarkDiscordSource } from "../../../core/discord-source.mjs";
 
 import { isDuplicate } from "./is-duplicate.mjs";

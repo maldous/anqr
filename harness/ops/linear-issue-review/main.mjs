@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/linear-issue-review.mjs:244
-
 import { CLOSE_AS_CANCELED } from "./close-as-canceled.mjs";
 import { CLOSE_AS_DONE } from "./close-as-done.mjs";
 import { SCOPE_UPDATES } from "./scope-updates.mjs";

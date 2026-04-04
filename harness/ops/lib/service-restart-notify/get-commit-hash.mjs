@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/lib/service-restart-notify.mjs:40
-
 import { execSync } from "node:child_process";
 import { logError } from "./logger.mjs";
 

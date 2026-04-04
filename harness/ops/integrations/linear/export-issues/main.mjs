@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/export-issues.mjs:67
-
 import { listIssuesByState } from "../linear-client.mjs";
 import { writeFile, mkdir } from "node:fs/promises";
 

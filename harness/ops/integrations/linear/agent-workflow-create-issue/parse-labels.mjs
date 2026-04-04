@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/agent-workflow-create-issue.mjs:88
-
 import { LABELS } from "../linear-client.mjs";
 
 import { AVAILABLE_LABELS } from "./available-labels.mjs";

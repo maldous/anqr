@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:31
-
 import { actions } from "./actions.mjs";
 import { logInfo } from "./logger.mjs";
 

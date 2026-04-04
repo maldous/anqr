@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/discord-request-router.mjs:112
-
 import path from "node:path";
 
 export function isPathWithinRoot(candidatePath, rootPath) {

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/latency-report.mjs:44
-
 export function getLatencyColor(classification) {
   switch (classification) {
     case "excellent":

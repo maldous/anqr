@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-credit-gate.mjs:602
-
 import { readFileSync, existsSync } from "node:fs";
 
 import { PROVIDER_STATS } from "./provider-stats.mjs";

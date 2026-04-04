@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/latency-report.mjs:159
-
 import { generateReport } from "./generate-report.mjs";
 import { logError } from "./logger.mjs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/linear-webhook-receiver.mjs:54
-
 import crypto from "node:crypto";
 
 import { WEBHOOK_SECRET } from "./webhook-secret.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/codebuff-direct.mjs:125
-
 import { isRecoverableError } from "./is-recoverable-error.mjs";
 
 export function ensureNoSdkError(resultOutput) {

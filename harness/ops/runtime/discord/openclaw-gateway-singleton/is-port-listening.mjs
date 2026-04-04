@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/discord/openclaw-gateway-singleton.mjs:182
-
 import net from "node:net";
 
 export function isPortListening(host, port) {

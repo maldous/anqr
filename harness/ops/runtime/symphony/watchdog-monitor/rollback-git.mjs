@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/watchdog-monitor.mjs:92
-
 import { sendDiscordEmbed } from "../../../integrations/notifications/openclaw-discord.mjs";
 import { writeFileSync } from "node:fs";
 

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:227
-
 import { normalizeRepoPath } from "./normalize-repo-path.mjs";
 
 export function parseAllowedDirtyPathEnv() {

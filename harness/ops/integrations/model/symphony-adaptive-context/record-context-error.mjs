@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:384
-
 import { MIN_MESSAGE_BUDGET_TOKENS } from "../symphony-bridge-truncation.mjs";
 
 import { CONTEXT_SHRINK_BUFFER } from "./context-shrink-buffer.mjs";

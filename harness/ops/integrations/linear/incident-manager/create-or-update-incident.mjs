@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/incident-manager.mjs:185
-
 import { collectIncidentEvidence, formatEvidenceForIssue } from "../incident-evidence.mjs";
 import { generateIncidentFingerprint } from "../incident-fingerprint.mjs";
 import { createIssue, addComment } from "../linear-client.mjs";

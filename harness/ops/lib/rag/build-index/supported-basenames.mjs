@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/build-index.mjs:71
-
 export const SUPPORTED_BASENAMES = new Set([
   "Makefile",
   "Dockerfile",

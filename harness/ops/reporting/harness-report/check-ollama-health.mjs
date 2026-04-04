@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/reporting/harness-report.mjs:217
-
 import { OLLAMA_BASE } from "./ollama-base.mjs";
 import { PING_TIMEOUT_MS } from "./ping-timeout-ms.mjs";
 import { PINNED_MODEL } from "./pinned-model.mjs";

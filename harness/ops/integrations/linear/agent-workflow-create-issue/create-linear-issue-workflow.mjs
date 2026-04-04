@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/agent-workflow-create-issue.mjs:104
-
 import { createIssue, STATES, LABELS, TEAM_ID } from "../linear-client.mjs";
 
 import { args } from "./args.mjs";

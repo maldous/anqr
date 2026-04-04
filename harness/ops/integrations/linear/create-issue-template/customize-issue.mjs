@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/create-issue-template.mjs:327
-
 export function customizeIssue(baseTemplate) {
   // Example customization - replace with your actual values
   const customized = { ...baseTemplate };

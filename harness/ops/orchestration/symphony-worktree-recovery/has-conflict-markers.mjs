@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-worktree-recovery.mjs:246
-
 import { resolve } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 

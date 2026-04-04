@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:4150
-
 import {
   truncateMessagesForProvider,
   estimateMessagesTokens,

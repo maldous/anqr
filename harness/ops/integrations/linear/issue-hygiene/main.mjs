@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/issue-hygiene.mjs:255
-
 import { listIssuesByState } from "../linear-client.mjs";
 
 import { ACTION_DELAY_MS } from "./action-delay-ms.mjs";

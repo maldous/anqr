@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/mcp/context7-server.mjs:291
-
 import { spawn } from "node:child_process";
 
 import { STARTUP_TIMEOUT_MS } from "./startup-timeout-ms.mjs";

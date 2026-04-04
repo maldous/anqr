@@ -1,5 +1,3 @@
-// Generated from ../../scripts/ops/linear-issue-review.mjs:66
-
 import { query } from "./query.mjs";
 
 export async function addComment(issueId, body) {

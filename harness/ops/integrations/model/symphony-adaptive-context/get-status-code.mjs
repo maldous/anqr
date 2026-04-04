@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-adaptive-context.mjs:161
-
 export function getStatusCode(err) {
   if (err?.statusCode) return err.statusCode;
   let current = err;

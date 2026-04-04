@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:389
-
 import { DEFAULT_LEASE_MS } from "./default-lease-ms.mjs";
 import { HOST_ID } from "./host-id.mjs";
 import { leaseIsActive } from "./lease-is-active.mjs";

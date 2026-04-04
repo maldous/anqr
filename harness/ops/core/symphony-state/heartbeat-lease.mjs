@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:414
-
 import { DEFAULT_LEASE_MS } from "./default-lease-ms.mjs";
 import { loadState } from "./load-state.mjs";
 import { normalizeRecord } from "./normalize-record.mjs";

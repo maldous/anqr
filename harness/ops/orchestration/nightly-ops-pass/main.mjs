@@ -1,5 +1,3 @@
-// Generated from ../../../harness/ops/orchestration/nightly-ops-pass.mjs:73
-
 import { archiveReport } from "./archive-report.mjs";
 import { dryRun } from "./dry-run.mjs";
 import { dryRunFlag } from "./dry-run-flag.mjs";

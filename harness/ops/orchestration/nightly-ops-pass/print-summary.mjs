@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/nightly-ops-pass.mjs:62
-
 import { steps } from "./steps.mjs";
 import { logInfo } from "./logger.mjs";
 

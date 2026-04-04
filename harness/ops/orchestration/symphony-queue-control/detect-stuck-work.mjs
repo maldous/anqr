@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-queue-control.mjs:267
-
 import { STALE_THRESHOLD_MS, TASK_TIMEOUT_MS, RECOVERY_GRACE_MS } from "../../symphony-config.mjs";
 import {
   getIssueState,

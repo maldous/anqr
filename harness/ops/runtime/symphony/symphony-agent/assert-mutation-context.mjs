@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/runtime/symphony/symphony-agent.mjs:74
-
 import { MAIN_REPO_ROOT } from "./main-repo-root.mjs";
 
 export function assertMutationContext(ctx) {

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/symphony-runner.mjs:163
-
 import { getWorktreePath } from "../../core/worktree-config.mjs";
 
 import { WORKTREE_ID } from "./worktree-id.mjs";

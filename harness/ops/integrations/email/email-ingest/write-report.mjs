@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/email/email-ingest.mjs:303
-
 import fs from "node:fs";
 import path from "node:path";
 

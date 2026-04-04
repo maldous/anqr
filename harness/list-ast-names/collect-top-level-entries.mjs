@@ -1,5 +1,3 @@
-// Generated from ../scripts/list-ast-names.mjs:99
-
 import { SyntaxKind } from "ts-morph";
 
 import { describeVariableDeclaration } from "./describe-variable-declaration.mjs";

@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/linear/test-agent-workflow.mjs:27
-
 import { results } from "./results.mjs";
 
 export function logTestResult(testName, passed, details = "") {

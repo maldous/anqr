@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-state.mjs:635
-
 import { REPAIRABLE_FINALIZATION_STATES } from "./repairable-finalization-states.mjs";
 import { loadState } from "./load-state.mjs";
 import { normalizeRecord } from "./normalize-record.mjs";

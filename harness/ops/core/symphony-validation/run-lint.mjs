@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/core/symphony-validation.mjs:171
-
 import { VALIDATION_MANIFEST } from "./validation-manifest.mjs";
 import { runCommand } from "./run-command.mjs";
 

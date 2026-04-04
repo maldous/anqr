@@ -1,5 +1,3 @@
-// Generated from ../scripts/agent-docs-check.mjs:67
-
 import { errors } from "./errors.mjs";
 
 export function compareSets(source, sourceLabel, target, targetLabel) {

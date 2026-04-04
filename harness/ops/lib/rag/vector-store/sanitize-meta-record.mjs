@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/lib/rag/vector-store.mjs:103
-
 export function sanitizeMetaRecord(value) {
   const lastModified = Number(value?.lastModified || 0);
   const chunkCount = Number(value?.chunkCount || 0);

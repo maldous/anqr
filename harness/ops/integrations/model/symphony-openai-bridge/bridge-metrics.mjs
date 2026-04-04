@@ -1,5 +1,3 @@
-// Generated from ../../../../scripts/ops/integrations/model/symphony-openai-bridge.mjs:5420
-
 export const BRIDGE_METRICS = {
   totalRequests: 0,
   streamingRequests: 0,

@@ -1,5 +1,3 @@
-// Generated from ../../../scripts/ops/orchestration/nightly-ops-pass.mjs:52
-
 import { existsSync, copyFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
