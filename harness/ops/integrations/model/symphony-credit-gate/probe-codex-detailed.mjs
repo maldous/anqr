@@ -7,11 +7,17 @@ import { classifyProviderProbeError } from "./classify-provider-probe-error.mjs"
 import { providerProbeStage } from "./provider-probe-stage.mjs";
 import { providerProbeTruncate } from "./provider-probe-truncate.mjs";
 
-export async function probeCodexDetailed(provider, apiKey) {
+export async function probeCodexDetailed(provider, apiKey, options = {}) {
   const startedAt = Date.now();
   const stages = [];
+  const progress = options.progress || null;
 
   if (!apiKey?.trim()) {
+    progress?.({
+      type: "stage",
+      providerName: provider?.name || "codex",
+      stage: "sdk:env-missing",
+    });
     return {
       available: false,
       status: "auth_missing",
@@ -30,6 +36,7 @@ export async function probeCodexDetailed(provider, apiKey) {
         model: provider?.model || null,
       }),
     );
+    progress?.({ type: "stage", providerName: provider?.name || "codex", stage: "sdk:started" });
 
     const codex = new Codex({ env: process.env });
     const thread = codex.startThread({
@@ -57,6 +64,7 @@ export async function probeCodexDetailed(provider, apiKey) {
         responsePreview: finalResponse,
       }),
     );
+    progress?.({ type: "stage", providerName: provider?.name || "codex", stage: "sdk:succeeded" });
 
     return {
       available: Boolean(finalResponse),
@@ -76,6 +84,11 @@ export async function probeCodexDetailed(provider, apiKey) {
         message: providerProbeTruncate(message),
       }),
     );
+    progress?.({
+      type: "stage",
+      providerName: provider?.name || "codex",
+      stage: `sdk:failed:${classified.status}`,
+    });
 
     return {
       available: false,

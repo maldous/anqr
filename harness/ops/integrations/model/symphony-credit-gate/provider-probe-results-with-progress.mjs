@@ -1,9 +1,9 @@
 import { KNOWN_TOOL_CAPABLE } from "../symphony-openai-bridge/known-tool-capable.mjs";
 
-import { probeProviderDetailed } from "./probe-provider-detailed.mjs";
-import { toolProbeForProvider } from "./tool-probe-for-provider.mjs";
-import { shouldSkipToolProbeForResult } from "./should-skip-tool-probe-for-result.mjs";
 import { makeSkippedToolProbeResult } from "./make-skipped-tool-probe-result.mjs";
+import { probeProviderDetailed } from "./probe-provider-detailed.mjs";
+import { shouldSkipToolProbeForResult } from "./should-skip-tool-probe-for-result.mjs";
+import { toolProbeForProvider } from "./tool-probe-for-provider.mjs";
 
 export async function providerProbeResultsWithProgress(providers, progress) {
   const results = [];
@@ -38,6 +38,7 @@ export async function providerProbeResultsWithProgress(providers, progress) {
         providerName: provider.name,
         status: toolProbe.toolStatus || toolProbe.status,
         reason: toolProbe.reason || toolProbe.status,
+        answer: toolProbe.answer || "",
       });
     }
     results.push({ ...result, toolProbe });

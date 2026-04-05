@@ -35,7 +35,7 @@ export async function probeProviderDetailed(provider, options = {}) {
   }
   let details;
   if (provider.name === "codex" || provider.driver === "codex-sdk") {
-    details = await probeCodexDetailed(provider, apiKey);
+    details = await probeCodexDetailed(provider, apiKey, { progress });
   } else if (provider.name === "codebuff" || provider.driver === "codebuff-sdk") {
     details = await probeCodebuffDetailed(provider, { progress });
   } else if (provider.name === "gemini" || provider.name === "gemini-lite") {

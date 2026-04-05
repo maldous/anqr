@@ -23,7 +23,7 @@ export async function probeOpenrouterDetailed(provider, apiKey, options = {}) {
     { method: "POST", headers, body },
     timeoutMs,
   );
-  const text = providerProbeTruncate(await response.text());
+  const text = providerProbeTruncate(await response.text(), 12000);
   stages.push(providerProbeStage("invoke_completed", { status: response.status }));
   if (!response.ok) {
     const http = classifyProviderProbeHttpStatus(response.status);

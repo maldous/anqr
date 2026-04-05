@@ -11,7 +11,8 @@ export async function runProviderProbeDiagnostics(options = {}) {
   const outputDir = options.outputDir || path.join(PROJECT_ROOT, "reports", "provider-probes");
   const generatedAt = new Date().toISOString();
   const providerIndex = new Map(PROVIDERS.map((provider, index) => [provider.name, index + 1]));
-  const progress = options.progress
+  const showProgress = options.progress !== false;
+  const progress = showProgress
     ? makeProviderProbeProgressCallback({ total: PROVIDERS.length, providerIndex })
     : null;
   const results = await providerProbeResultsWithProgress(PROVIDERS, progress);

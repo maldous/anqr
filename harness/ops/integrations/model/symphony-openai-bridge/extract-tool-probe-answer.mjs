@@ -1,16 +1,21 @@
 export function extractToolProbeAnswer(result) {
-  if (result?.text) return result.text;
   const steps = Array.isArray(result?.steps) ? result.steps : [];
   for (const step of steps) {
     const results = Array.isArray(step?.toolResults) ? step.toolResults : [];
     for (const toolResult of results) {
-      if (typeof toolResult?.output === "string" && toolResult.output.trim())
-        return toolResult.output.trim();
-      if (typeof toolResult?.result === "string" && toolResult.result.trim())
-        return toolResult.result.trim();
-      if (typeof toolResult?.content === "string" && toolResult.content.trim())
-        return toolResult.content.trim();
+      const candidates = [toolResult?.output, toolResult?.result, toolResult?.content];
+      for (const candidate of candidates) {
+        if (candidate === undefined || candidate === null) continue;
+        const text = typeof candidate === "string" ? candidate.trim() : JSON.stringify(candidate);
+        if (text) return text;
+      }
     }
   }
-  return "";
+  const text = String(result?.text || "").trim();
+  if (!text) return "";
+  const finalNumber = text.match(/(?:^|\n|\s)(-?\d+(?:\.\d+)?)\s*$/);
+  if (finalNumber?.[1]) return finalNumber[1];
+  const embeddedNumber = text.match(/\b(-?\d+(?:\.\d+)?)\b/g);
+  if (embeddedNumber?.length === 1) return embeddedNumber[0];
+  return text;
 }

@@ -1,13 +1,19 @@
 export function extractToolProbeAnswer(result) {
-  const text = String(result?.text || "").trim();
-  if (text) return text;
   for (const step of result?.steps || []) {
     for (const toolResult of step?.toolResults || []) {
-      const value = toolResult?.result;
-      if (value === undefined || value === null) continue;
-      const str = typeof value === "string" ? value.trim() : JSON.stringify(value);
-      if (str) return str;
+      const candidates = [toolResult?.output, toolResult?.result, toolResult?.content];
+      for (const candidate of candidates) {
+        if (candidate === undefined || candidate === null) continue;
+        const text = typeof candidate === "string" ? candidate.trim() : JSON.stringify(candidate);
+        if (text) return text;
+      }
     }
   }
-  return "";
+  const text = String(result?.text || "").trim();
+  if (!text) return "";
+  const finalNumber = text.match(/(?:^|\n|\s)(-?\d+(?:\.\d+)?)\s*$/);
+  if (finalNumber?.[1]) return finalNumber[1];
+  const embeddedNumber = text.match(/\b(-?\d+(?:\.\d+)?)\b/g);
+  if (embeddedNumber?.length === 1) return embeddedNumber[0];
+  return text;
 }

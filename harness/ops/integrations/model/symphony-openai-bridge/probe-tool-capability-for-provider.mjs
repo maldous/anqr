@@ -21,10 +21,16 @@ export async function probeToolCapabilityForProvider(providerDef) {
   const name = providerDef.name;
   if (providerDef.tier === "local-safety-net") {
     toolCapableProviders.add(name);
+    logInfo(`🔧 TOOL PROBE START: ${name} - Testing structured tool calling with add(2, 2)`);
+    logInfo(`[?] ${name} safety-net-always-allowed`);
     return { name, status: "safety-net-always-allowed" };
   }
   if (providerDef.requiresSdk || providerDef.driver === "codex-sdk") {
     toolCapableProviders.add(name);
+    logInfo(`🔧 TOOL PROBE START: ${name} - Testing structured tool calling with add(2, 2)`);
+    logInfo(
+      `[?] ${name} sdk-capable (via ${providerDef.requiresSdk ? "requiresSdk" : "codex-sdk"})`,
+    );
     return { name, status: "sdk-capable" };
   }
   if (KNOWN_TOOL_CAPABLE.has(name)) {

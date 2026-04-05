@@ -1,57 +1,69 @@
-import { catalogModelLookup } from "./catalog-model-lookup.mjs";
-import { classifyProviderProbeError } from "./classify-provider-probe-error.mjs";
 import { classifyProviderProbeHttpStatus } from "./classify-provider-probe-http-status.mjs";
 import { providerProbeFetchWithTimeout } from "./provider-probe-fetch-with-timeout.mjs";
 import { providerProbeStage } from "./provider-probe-stage.mjs";
+import { providerProbeCatalogAvailable } from "./provider-probe-catalog-available.mjs";
+import { providerProbeCatalogMatchedNeedle } from "./provider-probe-catalog-matched-needle.mjs";
 import { providerProbeTruncate } from "./provider-probe-truncate.mjs";
 
 export async function probeHttpModelListDetailed(provider, apiKey, options = {}) {
   const startedAt = Date.now();
   const stages = [];
   const timeoutMs = options.timeoutMs;
-  const url = options.url || `${provider.baseUrl}/models`;
-  const headers = options.headers || { Authorization: `Bearer ${apiKey}` };
+  const headers = provider.envVar ? { Authorization: `Bearer ${apiKey}` } : {};
+  stages.push(providerProbeStage("fetch_started", { url: provider.modelsUrl, timeoutMs }));
   try {
-    stages.push(providerProbeStage("fetch_started", { url, timeoutMs }));
-    const response = await providerProbeFetchWithTimeout(url, { headers }, timeoutMs);
+    const response = await providerProbeFetchWithTimeout(
+      provider.modelsUrl,
+      { headers },
+      timeoutMs,
+    );
     const bodyText = await response.text();
-    const body = providerProbeTruncate(bodyText);
+    const body = providerProbeTruncate(bodyText, 12000);
     stages.push(providerProbeStage("fetch_completed", { status: response.status }));
     if (!response.ok) {
       const http = classifyProviderProbeHttpStatus(response.status);
-      const bodySummary = body ? `: ${body}` : "";
       return {
         available: false,
         status: http.status,
-        reason: `${http.reason}${bodySummary}`,
+        reason: `${http.reason}: ${body}`,
         durationMs: Date.now() - startedAt,
         message: body,
         httpStatus: response.status,
         stages,
       };
     }
-    const lookup = catalogModelLookup(bodyText, provider);
-    stages.push(providerProbeStage("catalog_checked", lookup));
+    const matchedNeedle = providerProbeCatalogMatchedNeedle(provider, bodyText);
+    const available = providerProbeCatalogAvailable(provider, bodyText);
+    stages.push(
+      providerProbeStage("catalog_checked", {
+        available,
+        matchedNeedle,
+        parsedFormat: /^[[{]/.test(bodyText.trim()) ? "json" : "text",
+      }),
+    );
     return {
-      available: lookup.available,
-      status: lookup.available ? "success" : "unsupported",
-      reason: lookup.available
-        ? `model found in provider catalog (${lookup.parsedFormat}, matched ${lookup.matchedNeedle})`
-        : `model missing from provider catalog (${lookup.parsedFormat})`,
+      available,
+      status: available ? "success" : "unavailable",
+      reason: available
+        ? `model found in provider catalog (${/^[[{]/.test(bodyText.trim()) ? "json" : "text"}, matched ${matchedNeedle})`
+        : `model not found in provider catalog (${/^[[{]/.test(bodyText.trim()) ? "json" : "text"})`,
       durationMs: Date.now() - startedAt,
       message: body,
       httpStatus: response.status,
       stages,
     };
   } catch (error) {
-    const classified = classifyProviderProbeError(error?.message || error);
-    stages.push(providerProbeStage("fetch_failed", { status: classified.status }));
+    stages.push(
+      providerProbeStage("fetch_failed", {
+        message: providerProbeTruncate(error?.message || error, 12000),
+      }),
+    );
     return {
       available: false,
-      status: classified.status,
-      reason: classified.reason,
+      status: "network_error",
+      reason: `provider probe failed: ${error?.message || error}`,
       durationMs: Date.now() - startedAt,
-      message: providerProbeTruncate(error?.message || error),
+      message: providerProbeTruncate(error?.message || error, 12000),
       stages,
     };
   }
