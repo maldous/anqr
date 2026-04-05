@@ -17,6 +17,23 @@ export function buildProviderProbeMarkdown(report) {
     `- Selector would choose: ${report.selector.wouldChoose ? `${report.selector.wouldChoose.providerName} via ${report.selector.wouldChoose.source} (${report.selector.wouldChoose.status})` : "none"}`,
   );
   lines.push("");
+  lines.push("## Healthy ranked pool");
+  lines.push("");
+  lines.push(
+    "| Rank | Provider | Model | Tier | Score | Selections | Success rate | Probe selections | Probe successes | Probe failures | Probe avg ms | Reason |",
+  );
+  lines.push("|---:|---|---|---|---|---:|---:|---:|---:|---:|---:|---|");
+  for (const entry of report.rankedHealthy || []) {
+    lines.push(
+      `| ${entry.rank ?? "-"} | ${entry.providerName} | ${escapeProviderProbeMarkdownCell(entry.model)} | ${entry.tier} | ${entry.score} | ${entry.selections} | ${entry.successRate} | ${entry.probeSelections} | ${entry.probeSuccesses} | ${entry.probeFailures} | ${entry.probeAvgDurationMs} | ${escapeProviderProbeMarkdownCell(entry.reason)} |`,
+    );
+  }
+  if (!Array.isArray(report.rankedHealthy) || report.rankedHealthy.length === 0) {
+    lines.push(
+      "| - | none | - | - | - | 0 | 0% | 0 | 0 | 0 | 0 | no currently healthy selectable providers |",
+    );
+  }
+  lines.push("");
   lines.push("## Tool-capability summary");
   lines.push("");
   lines.push(`- Confirmed tool-capable providers: ${report.toolSummary.total}`);

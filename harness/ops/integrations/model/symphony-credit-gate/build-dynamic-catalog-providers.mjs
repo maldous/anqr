@@ -16,6 +16,14 @@ export function buildDynamicCatalogProviders(staticProviders) {
         name: `${provider.name}-${sanitizeModelSegment(model)}`,
         model,
         dynamic: true,
+        contextLength: row?.contextLength || provider.contextLength || null,
+        supportedParameters: Array.isArray(row?.supportedParameters)
+          ? row.supportedParameters
+          : Array.isArray(provider?.supportedParameters)
+            ? provider.supportedParameters
+            : [],
+        catalogToolSupport: row?.toolSupport || "unknown",
+        catalogToolSupportReason: row?.toolSupportReason || "catalog has no explicit tool metadata",
       });
     }
   }

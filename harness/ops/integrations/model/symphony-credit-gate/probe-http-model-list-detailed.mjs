@@ -9,16 +9,26 @@ export async function probeHttpModelListDetailed(provider, apiKey, options = {})
   const startedAt = Date.now();
   const stages = [];
   const timeoutMs = options.timeoutMs;
-  const headers = provider.envVar ? { Authorization: `Bearer ${apiKey}` } : {};
-  stages.push(providerProbeStage("fetch_started", { url: provider.modelsUrl, timeoutMs }));
+  const url =
+    options.url || provider.modelsUrl || (provider.baseUrl ? `${provider.baseUrl}/models` : null);
+  const headers = options.headers || (provider.envVar ? { Authorization: `Bearer ${apiKey}` } : {});
+  stages.push(providerProbeStage("fetch_started", { url, timeoutMs }));
+  if (!url) {
+    const message = `provider probe misconfigured: no modelsUrl/baseUrl for ${provider.name}`;
+    stages.push(providerProbeStage("fetch_failed", { message }));
+    return {
+      available: false,
+      status: "configuration_error",
+      reason: message,
+      durationMs: Date.now() - startedAt,
+      message,
+      stages,
+    };
+  }
   try {
-    const response = await providerProbeFetchWithTimeout(
-      provider.modelsUrl,
-      { headers },
-      timeoutMs,
-    );
+    const response = await providerProbeFetchWithTimeout(url, { headers }, timeoutMs);
     const bodyText = await response.text();
-    const body = providerProbeTruncate(bodyText, 12000);
+    const body = providerProbeTruncate(bodyText, 48000);
     stages.push(providerProbeStage("fetch_completed", { status: response.status }));
     if (!response.ok) {
       const http = classifyProviderProbeHttpStatus(response.status);

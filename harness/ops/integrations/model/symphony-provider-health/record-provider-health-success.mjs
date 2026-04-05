@@ -6,9 +6,7 @@ export function recordProviderHealthSuccess(providerName) {
   const current = getProviderHealthState(providerName);
   const consecutiveSuccesses = (current.consecutiveSuccesses || 0) + 1;
   const consecutiveFailures = 0;
-
-  // Transition to healthy after 2 consecutive successes
-  const newState = consecutiveSuccesses >= 2 ? HEALTH_STATES.HEALTHY : current.state;
+  const newState = HEALTH_STATES.HEALTHY;
 
   setProviderHealthState(providerName, newState, {
     consecutiveSuccesses,

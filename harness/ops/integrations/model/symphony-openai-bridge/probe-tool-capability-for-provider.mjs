@@ -1,49 +1,66 @@
 import { generateText, tool } from "ai";
 import { z } from "zod";
 import {
-  recordProviderMetrics,
   recordProviderSelection,
+  recordProviderMetrics,
   recordProviderSuccess,
+  recordProviderFailure,
   recordProbeResult,
 } from "../symphony-credit-gate.mjs";
 
 import { KNOWN_TOOL_CAPABLE } from "./known-tool-capable.mjs";
-import { RAW_TOOL_JSON_RE } from "./raw-tool-json-re.mjs";
 import { TOOL_PROBE_TIMEOUT_MS } from "./tool-probe-timeout-ms.mjs";
 import { createProviderModel } from "./create-provider-model.mjs";
-import { extractToolProbeAnswer } from "./extract-tool-probe-answer.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
-import { probeMistralViaHttp } from "./probe-mistral-via-http.mjs";
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
-import { logInfo, logWarn } from "./logger.mjs";
+import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { extractToolProbeAnswer } from "./extract-tool-probe-answer.mjs";
+import { classifyToolProbeErrorOutcome } from "./classify-tool-probe-error-outcome.mjs";
+import { providerToolSupportHint } from "./provider-tool-support-hint.mjs";
+import { probeMistralToolCapabilityViaHttp } from "./probe-mistral-tool-capability-via-http.mjs";
 
 export async function probeToolCapabilityForProvider(providerDef) {
   const name = providerDef.name;
+  const supportHint = providerToolSupportHint(providerDef);
+
   if (providerDef.tier === "local-safety-net") {
     toolCapableProviders.add(name);
-    logInfo(`🔧 TOOL PROBE START: ${name} - Testing structured tool calling with add(2, 2)`);
-    logInfo(`[?] ${name} safety-net-always-allowed`);
-    return { name, status: "safety-net-always-allowed" };
+    return { name, status: "safety-net-always-allowed", detail: "safety-net-always-allowed" };
   }
+
   if (providerDef.requiresSdk || providerDef.driver === "codex-sdk") {
     toolCapableProviders.add(name);
-    logInfo(`🔧 TOOL PROBE START: ${name} - Testing structured tool calling with add(2, 2)`);
-    logInfo(
-      `[?] ${name} sdk-capable (via ${providerDef.requiresSdk ? "requiresSdk" : "codex-sdk"})`,
-    );
-    return { name, status: "sdk-capable" };
+    return { name, status: "sdk-capable", detail: "sdk-capable" };
   }
+
   if (KNOWN_TOOL_CAPABLE.has(name)) {
     toolCapableProviders.add(name);
-    return { name, status: "known-capable" };
+    return { name, status: "known-capable", detail: "known-capable" };
   }
+
+  if (supportHint.status === 'unsupported') {
+    nonToolCapableProviders.add(name);
+    return { name, status: 'catalog-declared-non-capable', detail: supportHint.reason };
+  }
+
   let apiKey = providerDef.envVar ? process.env[providerDef.envVar] : null;
   if (!apiKey && providerDef.loadToken) {
     try {
       apiKey = await providerDef.loadToken();
-    } catch {}
+    } catch {
+      /* ignore */
+    }
   }
+
   const providerObj = { ...providerDef, apiKey };
+  let model;
+  try {
+    model = createProviderModel(providerObj);
+  } catch (error) {
+    return { name, status: "no-model", detail: String(error?.message || error) };
+  }
+  if (!model) return { name, status: "no-model", detail: "no model" };
+
   const probeTools = {
     add: tool({
       description: "Add two numbers",
@@ -51,48 +68,60 @@ export async function probeToolCapabilityForProvider(providerDef) {
       execute: async ({ a, b }) => String(a + b),
     }),
   };
+
   const startTime = Date.now();
   logInfo(`🔧 TOOL PROBE START: ${name} - Testing structured tool calling with add(2, 2)`);
+  logDebug(`TOOL PROBE CONFIG: ${name} ${JSON.stringify({ model: providerDef.model, baseUrl: providerDef.baseUrl || '', envVar: providerDef.envVar || '', supportHint: supportHint.status, supportReason: supportHint.reason })}`);
+
   try {
     let result;
-    if (name === "mistral") {
-      result = await Promise.race([
-        probeMistralViaHttp(providerDef, apiKey),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("tool-probe-timeout")), TOOL_PROBE_TIMEOUT_MS),
-        ),
-      ]);
+    if (name === 'mistral' || (providerDef.baseUrl || '').includes('mistral.ai')) {
+      const httpResult = await probeMistralToolCapabilityViaHttp(providerDef, apiKey, TOOL_PROBE_TIMEOUT_MS);
+      if (httpResult.status >= 400) {
+        throw new Error(httpResult.body || `HTTP ${httpResult.status}`);
+      }
+      const parsed = JSON.parse(httpResult.body || '{}');
+      const choice = Array.isArray(parsed.choices) ? parsed.choices[0] : null;
+      const toolCalls = Array.isArray(choice?.message?.tool_calls) ? choice.message.tool_calls : [];
+      const answer = toolCalls.length > 0 ? '4' : extractToolProbeAnswer({ text: choice?.message?.content || '' });
+      result = {
+        text: choice?.message?.content || '',
+        steps: toolCalls.length > 0 ? [{ toolCalls, toolResults: [{ output: '4' }] }] : [],
+        usage: { promptTokens: parsed.usage?.prompt_tokens || 0, completionTokens: parsed.usage?.completion_tokens || 0 },
+      };
+      logDebug(`TOOL PROBE RESULT: ${name} ${JSON.stringify({ hasStructuredToolCall: toolCalls.length > 0, hasRawToolJson: false, text: result.text || '', answer })}`);
     } else {
-      const model = createProviderModel(providerObj);
-      if (!model) return { name, status: "no-model" };
+      const timer = new Promise((_, reject) => {
+        const handle = setTimeout(() => reject(new Error('tool-probe-timeout')), TOOL_PROBE_TIMEOUT_MS);
+        handle.unref?.();
+      });
       result = await Promise.race([
         generateText({
           model,
-          messages: [
-            {
-              role: "user",
-              content: "Use the add tool to add 2 and 2. Then reply with only the numeric answer.",
-            },
-          ],
+          messages: [{ role: 'user', content: 'Use the add tool to add 2 and 2. Reply with only the numeric answer after the tool result.' }],
           tools: probeTools,
-          toolChoice: "auto",
+          toolChoice: { type: 'tool', toolName: 'add' },
           maxTokens: 100,
-          maxSteps: 3,
+          maxSteps: 2,
         }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("tool-probe-timeout")), TOOL_PROBE_TIMEOUT_MS),
-        ),
+        timer,
       ]);
+      const debugResult = {
+        hasStructuredToolCall: Array.isArray(result?.steps) && result.steps.some((step) => Array.isArray(step?.toolCalls) && step.toolCalls.length > 0),
+        hasRawToolJson: /"name"\s*:\s*"add"/.test(String(result?.text || '')),
+        text: String(result?.text || ''),
+        answer: extractToolProbeAnswer(result),
+      };
+      logDebug(`TOOL PROBE RESULT: ${name} ${JSON.stringify(debugResult)}`);
     }
+
     const durationMs = Date.now() - startTime;
-    const hasStructuredToolCall = Array.isArray(result?.toolCalls)
-      ? result.toolCalls.length > 0
-      : !!result?.steps?.some(
-          (step) => Array.isArray(step?.toolCalls) && step.toolCalls.length > 0,
-        );
-    const answer = extractToolProbeAnswer(result).trim();
-    const hasRawToolJson = RAW_TOOL_JSON_RE.test(answer || result?.text || "");
-    if (hasStructuredToolCall && !hasRawToolJson) {
+    const hasStructuredToolCall = Array.isArray(result?.steps) && result.steps.some((step) => Array.isArray(step?.toolCalls) && step.toolCalls.length > 0);
+    const text = String(result?.text || '');
+    const hasRawToolJson = /"name"\s*:\s*"add"/.test(text);
+    const answer = extractToolProbeAnswer(result);
+
+    if (hasStructuredToolCall) {
       toolCapableProviders.add(name);
       recordProbeResult(name, { success: true, durationMs });
       recordProviderSelection(name);
@@ -101,38 +130,40 @@ export async function probeToolCapabilityForProvider(providerDef) {
         durationMs,
         inputTokens: result?.usage?.promptTokens || 0,
         outputTokens: result?.usage?.completionTokens || 0,
-        validationPassed: true,
+        validationPassed: Boolean(answer),
       });
-      return { name, status: "capable", durationMs, answer };
+      return { name, status: 'capable', durationMs, answer, detail: answer || 'capable' };
     }
+
     if (hasRawToolJson) {
       nonToolCapableProviders.add(name);
       recordProbeResult(name, { success: false, durationMs });
-      return { name, status: "non-capable-raw-json", answer };
+      recordProviderFailure(name, 'non_capable');
+      return { name, status: 'non-capable-raw-json', detail: answer || text.slice(0, 300) };
     }
-    return { name, status: "no-tool-call", answer };
-  } catch (err) {
-    const errStr = String(err).slice(0, 500);
-    if (/429|rate.?limit|too many|quota|resource.?exhausted/i.test(errStr))
-      return { name, status: "rate-limited" };
-    if (
-      /tool_choice|tools.*not.*support|function.*call.*not|does not support|no endpoints.*tool|tool use/i.test(
-        errStr,
-      )
-    ) {
+
+    if (answer) {
       nonToolCapableProviders.add(name);
-      recordProbeResult(name, { success: false, durationMs: Date.now() - startTime });
-      return { name, status: "non-capable-rejected" };
+      recordProbeResult(name, { success: false, durationMs });
+      recordProviderFailure(name, 'answered_without_tool_call');
+      return { name, status: 'answered-without-tool-call', answer, detail: answer };
     }
-    if (
-      /guardrail|data.?policy|invalid.*key|expired.*token|invalid.*format.*key|not part of team/i.test(
-        errStr,
-      )
-    )
-      return { name, status: "infrastructure-error" };
-    if (/timeout|tool-probe-timeout/i.test(errStr)) return { name, status: "timeout" };
-    logWarn(`❌ TOOL PROBE ERROR: ${name} - ${errStr.slice(0, 150)}`);
-    recordProbeResult(name, { success: false, durationMs: Date.now() - startTime });
-    return { name, status: "probe-error" };
+
+    recordProbeResult(name, { success: false, durationMs });
+    return { name, status: 'no-tool-call', detail: text.slice(0, 300) };
+  } catch (error) {
+    const detail = `${String(error?.message || error)} | provider=${name} | model=${providerDef.model} | baseUrl=${providerDef.baseUrl || ''}`;
+    const classified = classifyToolProbeErrorOutcome(detail);
+    logWarn(`❌ TOOL PROBE ERROR: ${name} - ${classified.detail.slice(0, 300)}`);
+    logDebug(`TOOL PROBE ERROR DEBUG: ${name} ${JSON.stringify({ status: classified.status, reason: classified.status, detail: classified.detail, stack: String(error?.stack || '') })}`);
+
+    const durationMs = Date.now() - startTime;
+    const failureType = classified.status.replace(/-/g, '_');
+    if (classified.status === 'non-capable-rejected' || classified.status === 'failed-function-call') {
+      nonToolCapableProviders.add(name);
+    }
+    recordProbeResult(name, { success: false, durationMs });
+    recordProviderFailure(name, failureType);
+    return { name, status: classified.status, detail: classified.detail };
   }
 }

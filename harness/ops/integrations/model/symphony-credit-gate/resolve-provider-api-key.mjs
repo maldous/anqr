@@ -1,9 +1,9 @@
 export async function resolveProviderApiKey(provider) {
-  let apiKey = provider.envVar ? process.env[provider.envVar] : null;
-  if (!apiKey && provider.driver === "codex-sdk") {
-    apiKey = process.env.OPENAI_API_KEY || null;
+  if (provider?.driver === "codex-sdk") {
+    return process.env.OPENAI_API_KEY || null;
   }
-  if (!apiKey && provider.loadToken) {
+  let apiKey = provider?.envVar ? process.env[provider.envVar] : null;
+  if (!apiKey && provider?.loadToken) {
     apiKey = await provider.loadToken();
   }
   return apiKey;

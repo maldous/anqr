@@ -9,5 +9,7 @@ export function buildOpenrouterProvidersFromCatalog() {
     dynamic: true,
     contextLength: entry.contextLength,
     supportedParameters: entry.supportedParameters,
+    catalogToolSupport: "supported",
+    catalogToolSupportReason: `supported_parameters=${(entry.supportedParameters || []).join(",")}`,
   }));
 }

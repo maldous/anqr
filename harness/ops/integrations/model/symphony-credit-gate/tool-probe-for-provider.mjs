@@ -9,5 +9,6 @@ export async function toolProbeForProvider(provider) {
     ...raw,
     toolStatus: providerProbeToolStatus(raw),
     reason: providerProbeToolReason(raw),
+    detail: raw?.detail || raw?.answer || raw?.reason || raw?.status || "unknown",
   };
 }

@@ -1,4 +1,5 @@
 import { getProviderDefinitions } from "../symphony-credit-gate.mjs";
+import { shouldRetryProvider } from "../symphony-provider-health.mjs";
 
 import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";
 import { GATEWAY_BATCH_DELAY_MS } from "./gateway-batch-delay-ms.mjs";
@@ -7,6 +8,7 @@ import { TOOL_PROBE_RETRY_DELAY_MS } from "./tool-probe-retry-delay-ms.mjs";
 import { getProviderGateway } from "./get-provider-gateway.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { probeGatewayBatched } from "./probe-gateway-batched.mjs";
+import { shuffleArray } from "../symphony-credit-gate/shuffle-array.mjs";
 import { probeToolCapabilityForProvider } from "./probe-tool-capability-for-provider.mjs";
 import { providerStatusCache } from "./provider-status-cache.mjs";
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
@@ -30,7 +32,7 @@ export async function probeAllToolCapability() {
   // even if they're already classified. This ensures we get comprehensive
   // metrics from every provider after startup while still allowing fast startup
   // via cached classification for provider selection.
-  const toProbe = allDefs.filter((p) => availableSet.has(p.name));
+  const toProbe = shuffleArray(allDefs.filter((p) => availableSet.has(p.name) && shouldRetryProvider(p.name)));
 
   if (toProbe.length === 0) {
     logDebug(`🔧 Tool probe: no available providers to probe`);
@@ -55,7 +57,7 @@ export async function probeAllToolCapability() {
   for (const [gw, providers] of gateways) {
     if (providers.length <= GATEWAY_BATCH_SIZE) {
       gatewayPromises.push(
-        Promise.allSettled(providers.map((p) => probeToolCapabilityForProvider(p))).then(
+        Promise.allSettled(shuffleArray(providers).map((p) => probeToolCapabilityForProvider(p))).then(
           (settled) => settled.filter((r) => r.status === "fulfilled").map((r) => r.value),
         ),
       );

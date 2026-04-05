@@ -2,10 +2,10 @@
 
 QUALITY_FAST_TARGETS := \
 	openapi-generate format-check cspell knip typecheck-all lint-all lint-boundaries \
-	depcruise-all contracts-check audit-ast build-web
+	depcruise-all contracts-check audit-ast test-unit build-web
 
 QUALITY_RELEASE_TARGETS := \
-	quality-fast test-basic test-advanced sonar-scan sonar-export
+	quality-fast test-basic test-advanced sonar-export
 
 QUALITY_HARNESS_TARGETS := \
 	harness-quick harness-full harness-doctor guardian-dry-run queue-check queue-all-dry-run \
@@ -21,7 +21,7 @@ QUALITY_MOBILE_TARGETS := \
   test test-unit test-unit-coverage test-e2e test-basic test-advanced \
   test-appium test-appium-android test-appium-ios \
   openapi-generate \
-  audit-ast sonar-export sonar-audit sonar-mail sonar-scan \
+  audit-ast sonar-audit sonar-mail sonar-scan \
   harness-quick harness-continuous harness-full \
   guardian-run guardian-dry-run \
   queue-check queue-feed queue-enforce queue-all queue-all-dry-run queue-continuous \
@@ -118,7 +118,7 @@ openapi-generate: ## Regenerate OpenAPI artifacts
 audit-ast: ## Run the AST density audit
 	npm run audit:ast
 
-sonar-export: ## Export Sonar data into sonar-report.json
+sonar-export: sonar-scan ## Export Sonar data into sonar-report.json (requires fresh scan)
 	npm run sonar:export
 
 sonar-mail: ## Mail the latest Sonar summary

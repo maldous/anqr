@@ -31,6 +31,8 @@
     "apps/**/i18n/**"
   ],
   "words": [
+    "precheck",
+    "Precheck",
     "ANMF",
     "ANQR",
     "AUTOFINALIZE",
