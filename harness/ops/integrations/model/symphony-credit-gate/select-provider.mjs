@@ -7,6 +7,7 @@ import { clearProviderFailure } from "./clear-provider-failure.mjs";
 import { ensureStateDir } from "./ensure-state-dir.mjs";
 import { getProviderTier } from "./get-provider-tier.mjs";
 import { getRankedProviders } from "./get-ranked-providers.mjs";
+import { getCachedProbeEntry } from "./get-cached-probe-entry.mjs";
 import { matchesAllowedNames } from "./matches-allowed-names.mjs";
 import { matchesExcludedNames } from "./matches-excluded-names.mjs";
 import { tryProvider } from "./try-provider.mjs";
@@ -64,6 +65,14 @@ export async function selectProvider(options = {}) {
       });
       continue;
     }
+    const cachedProbe = getCachedProbeEntry(provider.name);
+    if (provider.name === "codebuff" && cachedProbe?.mode === "free") {
+      logDebug(`[selectProvider] Skipping preferred provider`, {
+        providerName: provider.name,
+        reason: "cached free-only fallback",
+      });
+      continue;
+    }
     const selected = await tryProvider(provider);
     if (selected) {
       logInfo(`[selectProvider] Selected preferred provider`, {
@@ -75,7 +84,7 @@ export async function selectProvider(options = {}) {
   }
 
   // PRIMARY: try providers in dynamic ranking order - this is now the main path
-  const ranked = getRankedProviders();
+  const ranked = getRankedProviders({ excludeNames: ["codex"] });
   logDebug(`[selectProvider] Dynamic ranking`, {
     rankedCount: ranked.length,
     topProviders: ranked.slice(0, 5).map((r) => ({ name: r.name, score: r.score, rank: r.rank })),

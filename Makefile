@@ -69,6 +69,7 @@ lint-boundaries: ## Run legacy src/ boundary lint checks
 
 format: ## Format the repository
 	npm run format
+	npm run format:reports
 
 format-check: ## Check formatting without changing files
 	npm run format:check

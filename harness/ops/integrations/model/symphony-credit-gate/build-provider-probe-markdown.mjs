@@ -1,3 +1,4 @@
+import { buildRankedHealthyMarkdownLines } from "./build-ranked-healthy-markdown-lines.mjs";
 import { escapeProviderProbeMarkdownCell } from "./escape-provider-probe-markdown-cell.mjs";
 
 export function buildProviderProbeMarkdown(report) {
@@ -17,23 +18,7 @@ export function buildProviderProbeMarkdown(report) {
     `- Selector would choose: ${report.selector.wouldChoose ? `${report.selector.wouldChoose.providerName} via ${report.selector.wouldChoose.source} (${report.selector.wouldChoose.status})` : "none"}`,
   );
   lines.push("");
-  lines.push("## Healthy ranked pool");
-  lines.push("");
-  lines.push(
-    "| Rank | Provider | Model | Tier | Score | Selections | Success rate | Probe selections | Probe successes | Probe failures | Probe avg ms | Reason |",
-  );
-  lines.push("|---:|---|---|---|---|---:|---:|---:|---:|---:|---:|---|");
-  for (const entry of report.rankedHealthy || []) {
-    lines.push(
-      `| ${entry.rank ?? "-"} | ${entry.providerName} | ${escapeProviderProbeMarkdownCell(entry.model)} | ${entry.tier} | ${entry.score} | ${entry.selections} | ${entry.successRate} | ${entry.probeSelections} | ${entry.probeSuccesses} | ${entry.probeFailures} | ${entry.probeAvgDurationMs} | ${escapeProviderProbeMarkdownCell(entry.reason)} |`,
-    );
-  }
-  if (!Array.isArray(report.rankedHealthy) || report.rankedHealthy.length === 0) {
-    lines.push(
-      "| - | none | - | - | - | 0 | 0% | 0 | 0 | 0 | 0 | no currently healthy selectable providers |",
-    );
-  }
-  lines.push("");
+  lines.push(...buildRankedHealthyMarkdownLines(report.rankedHealthy));
   lines.push("## Tool-capability summary");
   lines.push("");
   lines.push(`- Confirmed tool-capable providers: ${report.toolSummary.total}`);
@@ -63,15 +48,17 @@ export function buildProviderProbeMarkdown(report) {
     "| Source | Provider | Status | Probe selectable | Bridge selectable | Selectable | Reason |",
   );
   lines.push("|---|---|---|---|---|---|---|");
-  for (const entry of report.selector.sequence)
+  for (const entry of report.selector.sequence) {
     lines.push(
       `| ${entry.source} | ${entry.providerName} | ${entry.status} | ${entry.probeSelectable ? "yes" : "no"} | ${entry.bridgeSelectable ? "yes" : "no"} | ${entry.selectable ? "yes" : "no"} | ${escapeProviderProbeMarkdownCell(entry.reason)} |`,
     );
+  }
   lines.push("");
   lines.push("## Failure breakdown");
   lines.push("");
-  for (const [status, count] of Object.entries(report.failureBreakdown))
+  for (const [status, count] of Object.entries(report.failureBreakdown)) {
     lines.push(`- ${status}: ${count}`);
+  }
   lines.push("");
   lines.push("## Codebuff transitions");
   lines.push("");
@@ -79,10 +66,11 @@ export function buildProviderProbeMarkdown(report) {
   if (codebuff.length === 0) lines.push("- codebuff not present in provider registry");
   for (const result of codebuff) {
     lines.push(`- status: ${result.status}, reason: ${result.reason}`);
-    for (const stage of result.stages || [])
+    for (const stage of result.stages || []) {
       lines.push(
         `  - ${stage.name}${stage.mode ? ` (${stage.mode})` : ""}${stage.status ? ` [${stage.status}]` : ""}`,
       );
+    }
   }
   lines.push("");
   return `${lines.join("\n")}\n`;

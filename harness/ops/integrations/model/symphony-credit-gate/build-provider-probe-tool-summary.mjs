@@ -2,7 +2,7 @@ export function buildProviderProbeToolSummary(results) {
   const entries = results.map((result) => ({
     providerName: result.providerName,
     status: result.status,
-    bridgeStatus: result.bridgeRoute.status,
+    bridgeStatus: result.bridgeRoute?.status || "missing",
     toolStatus: result.toolProbe?.toolStatus || "not_probed",
     reason: result.toolProbe?.reason || result.reason,
     detail: result.toolProbe?.detail || null,
@@ -14,7 +14,7 @@ export function buildProviderProbeToolSummary(results) {
     selectable: results.filter(
       (result) =>
         ["success", "degraded"].includes(result.status) &&
-        result.bridgeRoute.status === "advertised" &&
+        result.bridgeRoute?.status === "advertised" &&
         result.toolProbe?.toolStatus === "capable",
     ).length,
     entries,

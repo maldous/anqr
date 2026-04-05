@@ -8,7 +8,7 @@ export function buildProviderProbeSelectorSummary(results) {
     const probeSelectable = Boolean(
       result && (result.status === "success" || result.status === "degraded"),
     );
-    const bridgeSelectable = Boolean(result) && result.bridgeRoute.status === "advertised";
+    const bridgeSelectable = Boolean(result) && result.bridgeRoute?.status === "advertised";
     const toolingSelectable =
       !result?.routeInfo?.knownToolCapable ||
       ["capable", "inconclusive"].includes(result?.toolProbe?.toolStatus || "not_probed");

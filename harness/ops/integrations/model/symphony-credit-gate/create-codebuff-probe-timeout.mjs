@@ -12,6 +12,7 @@ export function createCodebuffProbeTimeout() {
               reject(new Error(`Codebuff probe timed out after ${CODEBUFF_PROBE_TIMEOUT_MS}ms`)),
             CODEBUFF_PROBE_TIMEOUT_MS,
           );
+          timer.unref?.();
         }),
       ]);
     },

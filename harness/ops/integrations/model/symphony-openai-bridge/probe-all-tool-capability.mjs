@@ -32,7 +32,9 @@ export async function probeAllToolCapability() {
   // even if they're already classified. This ensures we get comprehensive
   // metrics from every provider after startup while still allowing fast startup
   // via cached classification for provider selection.
-  const toProbe = shuffleArray(allDefs.filter((p) => availableSet.has(p.name) && shouldRetryProvider(p.name)));
+  const toProbe = shuffleArray(
+    allDefs.filter((p) => availableSet.has(p.name) && shouldRetryProvider(p.name)),
+  );
 
   if (toProbe.length === 0) {
     logDebug(`🔧 Tool probe: no available providers to probe`);
@@ -57,9 +59,9 @@ export async function probeAllToolCapability() {
   for (const [gw, providers] of gateways) {
     if (providers.length <= GATEWAY_BATCH_SIZE) {
       gatewayPromises.push(
-        Promise.allSettled(shuffleArray(providers).map((p) => probeToolCapabilityForProvider(p))).then(
-          (settled) => settled.filter((r) => r.status === "fulfilled").map((r) => r.value),
-        ),
+        Promise.allSettled(
+          shuffleArray(providers).map((p) => probeToolCapabilityForProvider(p)),
+        ).then((settled) => settled.filter((r) => r.status === "fulfilled").map((r) => r.value)),
       );
     } else {
       gatewayPromises.push(

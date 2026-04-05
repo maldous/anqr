@@ -40,7 +40,7 @@ export async function probeProviderDetailed(provider, options = {}) {
     details = await probeCodebuffDetailed(provider, { progress });
   } else if (provider.name === "gemini" || provider.name === "gemini-lite") {
     details = await probeGeminiDetailed(provider, apiKey);
-  } else if (provider.name === "github-models") {
+  } else if (provider.name === "github-models" || provider.name.startsWith("github-models-")) {
     details = await probeGitHubModelsDetailed(provider, apiKey);
   } else if (provider.baseUrl?.includes("localhost") || provider.baseUrl?.includes("127.0.0.1")) {
     details = await probeOllamaDetailed(provider);

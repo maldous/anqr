@@ -13,7 +13,7 @@ import { TOOL_PROBE_TIMEOUT_MS } from "./tool-probe-timeout-ms.mjs";
 import { createProviderModel } from "./create-provider-model.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
-import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { logInfo, logWarn, logDebug } from "./logger.mjs";
 import { extractToolProbeAnswer } from "./extract-tool-probe-answer.mjs";
 import { classifyToolProbeErrorOutcome } from "./classify-tool-probe-error-outcome.mjs";
 import { providerToolSupportHint } from "./provider-tool-support-hint.mjs";
@@ -38,9 +38,9 @@ export async function probeToolCapabilityForProvider(providerDef) {
     return { name, status: "known-capable", detail: "known-capable" };
   }
 
-  if (supportHint.status === 'unsupported') {
+  if (supportHint.status === "unsupported") {
     nonToolCapableProviders.add(name);
-    return { name, status: 'catalog-declared-non-capable', detail: supportHint.reason };
+    return { name, status: "catalog-declared-non-capable", detail: supportHint.reason };
   }
 
   let apiKey = providerDef.envVar ? process.env[providerDef.envVar] : null;
@@ -71,53 +71,83 @@ export async function probeToolCapabilityForProvider(providerDef) {
 
   const startTime = Date.now();
   logInfo(`🔧 TOOL PROBE START: ${name} - Testing structured tool calling with add(2, 2)`);
-  logDebug(`TOOL PROBE CONFIG: ${name} ${JSON.stringify({ model: providerDef.model, baseUrl: providerDef.baseUrl || '', envVar: providerDef.envVar || '', supportHint: supportHint.status, supportReason: supportHint.reason })}`);
+  logDebug(
+    `TOOL PROBE CONFIG: ${name} ${JSON.stringify({ model: providerDef.model, baseUrl: providerDef.baseUrl || "", envVar: providerDef.envVar || "", supportHint: supportHint.status, supportReason: supportHint.reason })}`,
+  );
 
   try {
     let result;
-    if (name === 'mistral' || (providerDef.baseUrl || '').includes('mistral.ai')) {
-      const httpResult = await probeMistralToolCapabilityViaHttp(providerDef, apiKey, TOOL_PROBE_TIMEOUT_MS);
+    if (name === "mistral" || (providerDef.baseUrl || "").includes("mistral.ai")) {
+      const httpResult = await probeMistralToolCapabilityViaHttp(
+        providerDef,
+        apiKey,
+        TOOL_PROBE_TIMEOUT_MS,
+      );
       if (httpResult.status >= 400) {
         throw new Error(httpResult.body || `HTTP ${httpResult.status}`);
       }
-      const parsed = JSON.parse(httpResult.body || '{}');
+      const parsed = JSON.parse(httpResult.body || "{}");
       const choice = Array.isArray(parsed.choices) ? parsed.choices[0] : null;
       const toolCalls = Array.isArray(choice?.message?.tool_calls) ? choice.message.tool_calls : [];
-      const answer = toolCalls.length > 0 ? '4' : extractToolProbeAnswer({ text: choice?.message?.content || '' });
+      const answer =
+        toolCalls.length > 0
+          ? "4"
+          : extractToolProbeAnswer({ text: choice?.message?.content || "" });
       result = {
-        text: choice?.message?.content || '',
-        steps: toolCalls.length > 0 ? [{ toolCalls, toolResults: [{ output: '4' }] }] : [],
-        usage: { promptTokens: parsed.usage?.prompt_tokens || 0, completionTokens: parsed.usage?.completion_tokens || 0 },
+        text: choice?.message?.content || "",
+        steps: toolCalls.length > 0 ? [{ toolCalls, toolResults: [{ output: "4" }] }] : [],
+        usage: {
+          promptTokens: parsed.usage?.prompt_tokens || 0,
+          completionTokens: parsed.usage?.completion_tokens || 0,
+        },
       };
-      logDebug(`TOOL PROBE RESULT: ${name} ${JSON.stringify({ hasStructuredToolCall: toolCalls.length > 0, hasRawToolJson: false, text: result.text || '', answer })}`);
+      logDebug(
+        `TOOL PROBE RESULT: ${name} ${JSON.stringify({ hasStructuredToolCall: toolCalls.length > 0, hasRawToolJson: false, text: result.text || "", answer })}`,
+      );
     } else {
       const timer = new Promise((_, reject) => {
-        const handle = setTimeout(() => reject(new Error('tool-probe-timeout')), TOOL_PROBE_TIMEOUT_MS);
+        const handle = setTimeout(
+          () => reject(new Error("tool-probe-timeout")),
+          TOOL_PROBE_TIMEOUT_MS,
+        );
         handle.unref?.();
       });
       result = await Promise.race([
         generateText({
           model,
-          messages: [{ role: 'user', content: 'Use the add tool to add 2 and 2. Reply with only the numeric answer after the tool result.' }],
+          messages: [
+            {
+              role: "user",
+              content:
+                "Use the add tool to add 2 and 2. Reply with only the numeric answer after the tool result.",
+            },
+          ],
           tools: probeTools,
-          toolChoice: { type: 'tool', toolName: 'add' },
+          toolChoice:
+            name === "github-models" || name.startsWith("github-models-")
+              ? "auto"
+              : { type: "tool", toolName: "add" },
           maxTokens: 100,
           maxSteps: 2,
         }),
         timer,
       ]);
       const debugResult = {
-        hasStructuredToolCall: Array.isArray(result?.steps) && result.steps.some((step) => Array.isArray(step?.toolCalls) && step.toolCalls.length > 0),
-        hasRawToolJson: /"name"\s*:\s*"add"/.test(String(result?.text || '')),
-        text: String(result?.text || ''),
+        hasStructuredToolCall:
+          Array.isArray(result?.steps) &&
+          result.steps.some((step) => Array.isArray(step?.toolCalls) && step.toolCalls.length > 0),
+        hasRawToolJson: /"name"\s*:\s*"add"/.test(String(result?.text || "")),
+        text: String(result?.text || ""),
         answer: extractToolProbeAnswer(result),
       };
       logDebug(`TOOL PROBE RESULT: ${name} ${JSON.stringify(debugResult)}`);
     }
 
     const durationMs = Date.now() - startTime;
-    const hasStructuredToolCall = Array.isArray(result?.steps) && result.steps.some((step) => Array.isArray(step?.toolCalls) && step.toolCalls.length > 0);
-    const text = String(result?.text || '');
+    const hasStructuredToolCall =
+      Array.isArray(result?.steps) &&
+      result.steps.some((step) => Array.isArray(step?.toolCalls) && step.toolCalls.length > 0);
+    const text = String(result?.text || "");
     const hasRawToolJson = /"name"\s*:\s*"add"/.test(text);
     const answer = extractToolProbeAnswer(result);
 
@@ -132,34 +162,39 @@ export async function probeToolCapabilityForProvider(providerDef) {
         outputTokens: result?.usage?.completionTokens || 0,
         validationPassed: Boolean(answer),
       });
-      return { name, status: 'capable', durationMs, answer, detail: answer || 'capable' };
+      return { name, status: "capable", durationMs, answer, detail: answer || "capable" };
     }
 
     if (hasRawToolJson) {
       nonToolCapableProviders.add(name);
       recordProbeResult(name, { success: false, durationMs });
-      recordProviderFailure(name, 'non_capable');
-      return { name, status: 'non-capable-raw-json', detail: answer || text.slice(0, 300) };
+      recordProviderFailure(name, "non_capable");
+      return { name, status: "non-capable-raw-json", detail: answer || text.slice(0, 300) };
     }
 
     if (answer) {
       nonToolCapableProviders.add(name);
       recordProbeResult(name, { success: false, durationMs });
-      recordProviderFailure(name, 'answered_without_tool_call');
-      return { name, status: 'answered-without-tool-call', answer, detail: answer };
+      recordProviderFailure(name, "answered_without_tool_call");
+      return { name, status: "answered-without-tool-call", answer, detail: answer };
     }
 
     recordProbeResult(name, { success: false, durationMs });
-    return { name, status: 'no-tool-call', detail: text.slice(0, 300) };
+    return { name, status: "no-tool-call", detail: text.slice(0, 300) };
   } catch (error) {
-    const detail = `${String(error?.message || error)} | provider=${name} | model=${providerDef.model} | baseUrl=${providerDef.baseUrl || ''}`;
+    const detail = `${String(error?.message || error)} | provider=${name} | model=${providerDef.model} | baseUrl=${providerDef.baseUrl || ""}`;
     const classified = classifyToolProbeErrorOutcome(detail);
     logWarn(`❌ TOOL PROBE ERROR: ${name} - ${classified.detail.slice(0, 300)}`);
-    logDebug(`TOOL PROBE ERROR DEBUG: ${name} ${JSON.stringify({ status: classified.status, reason: classified.status, detail: classified.detail, stack: String(error?.stack || '') })}`);
+    logDebug(
+      `TOOL PROBE ERROR DEBUG: ${name} ${JSON.stringify({ status: classified.status, reason: classified.status, detail: classified.detail, stack: String(error?.stack || "") })}`,
+    );
 
     const durationMs = Date.now() - startTime;
-    const failureType = classified.status.replace(/-/g, '_');
-    if (classified.status === 'non-capable-rejected' || classified.status === 'failed-function-call') {
+    const failureType = classified.status.replace(/-/g, "_");
+    if (
+      classified.status === "non-capable-rejected" ||
+      classified.status === "failed-function-call"
+    ) {
       nonToolCapableProviders.add(name);
     }
     recordProbeResult(name, { success: false, durationMs });

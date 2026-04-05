@@ -1,6 +1,6 @@
 import { getProviderStats } from "./get-provider-stats.mjs";
 import { getRankedProviders } from "./get-ranked-providers.mjs";
-import { isProviderCurrentPoolHealthy } from "./is-provider-current-pool-healthy.mjs";
+import { isProviderRankedPoolEligible } from "./is-provider-ranked-pool-eligible.mjs";
 
 export function buildProviderProbeRankedHealthy(results) {
   const stats = getProviderStats();
@@ -9,7 +9,7 @@ export function buildProviderProbeRankedHealthy(results) {
   const seen = new Set();
   for (const rankedProvider of getRankedProviders()) {
     const result = byName.get(rankedProvider.name);
-    if (!isProviderCurrentPoolHealthy(result)) continue;
+    if (!isProviderRankedPoolEligible(result)) continue;
     seen.add(rankedProvider.name);
     const providerStats = stats[rankedProvider.name] || {};
     ranked.push({
@@ -28,7 +28,7 @@ export function buildProviderProbeRankedHealthy(results) {
     });
   }
   for (const result of results) {
-    if (!isProviderCurrentPoolHealthy(result) || seen.has(result.providerName)) continue;
+    if (!isProviderRankedPoolEligible(result) || seen.has(result.providerName)) continue;
     const providerStats = stats[result.providerName] || {};
     ranked.push({
       rank: null,
