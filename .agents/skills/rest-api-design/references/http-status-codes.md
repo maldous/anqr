@@ -22,7 +22,6 @@ Server Errors:
 503 Service Unavailable   - Temporary unavailability
 ```
 
-
 ## API Versioning
 
 ```http
@@ -38,7 +37,6 @@ Accept: application/vnd.myapi.v1+json
 GET /api/users?version=1
 ```
 
-
 ## Authentication & Security
 
 ```http
@@ -53,7 +51,6 @@ X-API-Key: your-api-key-here
 # Always use HTTPS in production
 https://api.example.com/v1/users
 ```
-
 
 ## Rate Limiting Headers
 

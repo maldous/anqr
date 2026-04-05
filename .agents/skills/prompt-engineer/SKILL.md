@@ -77,16 +77,16 @@ Request step-by-step reasoning
 
 ## ⚠️ Sharp Edges
 
-| Issue | Severity | Solution |
-|-------|----------|----------|
-| Using imprecise language in prompts | high | Be explicit: |
-| Expecting specific format without specifying it | high | Specify format explicitly: |
-| Only saying what to do, not what to avoid | medium | Include explicit don'ts: |
-| Changing prompts without measuring impact | medium | Systematic evaluation: |
-| Including irrelevant context 'just in case' | medium | Curate context: |
-| Biased or unrepresentative examples | medium | Diverse examples: |
-| Using default temperature for all tasks | medium | Task-appropriate temperature: |
-| Not considering prompt injection in user input | high | Defend against injection: |
+| Issue                                           | Severity | Solution                      |
+| ----------------------------------------------- | -------- | ----------------------------- |
+| Using imprecise language in prompts             | high     | Be explicit:                  |
+| Expecting specific format without specifying it | high     | Specify format explicitly:    |
+| Only saying what to do, not what to avoid       | medium   | Include explicit don'ts:      |
+| Changing prompts without measuring impact       | medium   | Systematic evaluation:        |
+| Including irrelevant context 'just in case'     | medium   | Curate context:               |
+| Biased or unrepresentative examples             | medium   | Diverse examples:             |
+| Using default temperature for all tasks         | medium   | Task-appropriate temperature: |
+| Not considering prompt injection in user input  | high     | Defend against injection:     |
 
 ## Related Skills
 

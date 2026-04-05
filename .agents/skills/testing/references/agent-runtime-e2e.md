@@ -37,8 +37,8 @@ Different tests need different LLM responses. `vi.spyOn` provides:
 ### Database Setup
 
 ```typescript
-import { LobeChatDatabase } from '@lobechat/database';
-import { getTestDB } from '@lobechat/database/test-utils';
+import { LobeChatDatabase } from "@lobechat/database";
+import { getTestDB } from "@lobechat/database/test-utils";
 
 let testDB: LobeChatDatabase;
 
@@ -53,9 +53,9 @@ beforeEach(async () => {
 export const createOpenAIStreamResponse = (options: {
   content?: string;
   toolCalls?: Array<{ id: string; name: string; arguments: string }>;
-  finishReason?: 'stop' | 'tool_calls';
+  finishReason?: "stop" | "tool_calls";
 }) => {
-  const { content, toolCalls, finishReason = 'stop' } = options;
+  const { content, toolCalls, finishReason = "stop" } = options;
 
   return new Response(
     new ReadableStream({
@@ -64,9 +64,9 @@ export const createOpenAIStreamResponse = (options: {
 
         if (content) {
           const chunk = {
-            id: 'chatcmpl-mock',
-            object: 'chat.completion.chunk',
-            model: 'gpt-5',
+            id: "chatcmpl-mock",
+            object: "chat.completion.chunk",
+            model: "gpt-5",
             choices: [{ index: 0, delta: { content }, finish_reason: null }],
           };
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
@@ -74,11 +74,11 @@ export const createOpenAIStreamResponse = (options: {
 
         // ... tool_calls handling
         // ... finish chunk
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       },
     }),
-    { headers: { 'content-type': 'text/event-stream' } },
+    { headers: { "content-type": "text/event-stream" } },
   );
 };
 ```
@@ -89,7 +89,7 @@ export const createOpenAIStreamResponse = (options: {
 import {
   InMemoryAgentStateManager,
   InMemoryStreamEventManager,
-} from '@/server/modules/AgentRuntime';
+} from "@/server/modules/AgentRuntime";
 
 const stateManager = new InMemoryAgentStateManager();
 const streamEventManager = new InMemoryStreamEventManager();
@@ -104,24 +104,24 @@ const service = new AgentRuntimeService(serverDB, userId, {
 ### Mock OpenAI API
 
 ```typescript
-const fetchSpy = vi.spyOn(globalThis, 'fetch');
+const fetchSpy = vi.spyOn(globalThis, "fetch");
 
-it('should handle text response', async () => {
-  fetchSpy.mockResolvedValueOnce(createOpenAIStreamResponse({ content: 'Response text' }));
+it("should handle text response", async () => {
+  fetchSpy.mockResolvedValueOnce(createOpenAIStreamResponse({ content: "Response text" }));
   // ... execute test
 });
 
-it('should handle tool calls', async () => {
+it("should handle tool calls", async () => {
   fetchSpy.mockResolvedValueOnce(
     createOpenAIStreamResponse({
       toolCalls: [
         {
-          id: 'call_123',
-          name: 'lobe-web-browsing____search____builtin',
-          arguments: JSON.stringify({ query: 'weather' }),
+          id: "call_123",
+          name: "lobe-web-browsing____search____builtin",
+          arguments: JSON.stringify({ query: "weather" }),
         },
       ],
-      finishReason: 'tool_calls',
+      finishReason: "tool_calls",
     }),
   );
   // ... execute test

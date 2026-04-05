@@ -76,10 +76,10 @@ function MyComponent() {
 
 ## Key Points
 
-* **Offset-based**: Uses page number and page size (offset = (page - 1) * pageSize).
-* **Automatic calculations**: Computes `pageCount`, `isFirstPage`, `isLastPage` automatically.
-* **Boundary handling**: `pageChange()` and navigation methods respect page boundaries.
-* **Page size change**: Automatically resets to page 1 when page size changes.
-* **Callbacks**: `onChange`, `onPageSizeChange`, `onPageCountChange` fire on respective changes.
-* **Return value**: Returns pagination object with state and control methods.
-* **Use cases**: Data tables, lists, search results, any paginated content.
+- **Offset-based**: Uses page number and page size (offset = (page - 1) \* pageSize).
+- **Automatic calculations**: Computes `pageCount`, `isFirstPage`, `isLastPage` automatically.
+- **Boundary handling**: `pageChange()` and navigation methods respect page boundaries.
+- **Page size change**: Automatically resets to page 1 when page size changes.
+- **Callbacks**: `onChange`, `onPageSizeChange`, `onPageCountChange` fire on respective changes.
+- **Return value**: Returns pagination object with state and control methods.
+- **Use cases**: Data tables, lists, search results, any paginated content.

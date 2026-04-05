@@ -51,15 +51,15 @@ GET    /api/user/123  (inconsistent singular/plural)
 
 Detailed implementations in the `references/` directory:
 
-| Guide | Contents |
-|---|---|
-| [Resource Naming](references/resource-naming.md) | Resource Naming, HTTP Methods & Operations |
-| [Request Examples](references/request-examples.md) | Request Examples |
-| [Query Parameters](references/query-parameters.md) | Query Parameters |
-| [Response Formats](references/response-formats.md) | Response Formats |
-| [HTTP Status Codes](references/http-status-codes.md) | HTTP Status Codes, API Versioning, Authentication & Security, Rate Limiting Headers |
-| [OpenAPI Documentation](references/openapi-documentation.md) | OpenAPI Documentation |
-| [Complete Example: Express.js](references/complete-example-expressjs.md) | const express = require("express"); |
+| Guide                                                                    | Contents                                                                            |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| [Resource Naming](references/resource-naming.md)                         | Resource Naming, HTTP Methods & Operations                                          |
+| [Request Examples](references/request-examples.md)                       | Request Examples                                                                    |
+| [Query Parameters](references/query-parameters.md)                       | Query Parameters                                                                    |
+| [Response Formats](references/response-formats.md)                       | Response Formats                                                                    |
+| [HTTP Status Codes](references/http-status-codes.md)                     | HTTP Status Codes, API Versioning, Authentication & Security, Rate Limiting Headers |
+| [OpenAPI Documentation](references/openapi-documentation.md)             | OpenAPI Documentation                                                               |
+| [Complete Example: Express.js](references/complete-example-expressjs.md) | const express = require("express");                                                 |
 
 ## Best Practices
 

@@ -11,18 +11,18 @@ metadata:
 
 ## Core References
 
-| Topic | Description | Reference |
-|-------|-------------|-----------|
-| Async Hooks | Async state management and callback handling | [core-async-hooks](references/core-async-hooks.md) |
-| Watch Hooks | Reactive value watching and change detection | [core-watch-hooks](references/core-watch-hooks.md) |
-| Lifecycle Hooks | Component lifecycle and mounting utilities | [core-lifecycle-hooks](references/core-lifecycle-hooks.md) |
-| Conditional Components | If/Else, Switch/Case components for conditional rendering | [core-conditional](references/core-conditional.md) |
-| Try Hooks | Error-safe React hooks with fallback behavior | [core-try-hooks](references/core-try-hooks.md) |
+| Topic                  | Description                                               | Reference                                                  |
+| ---------------------- | --------------------------------------------------------- | ---------------------------------------------------------- |
+| Async Hooks            | Async state management and callback handling              | [core-async-hooks](references/core-async-hooks.md)         |
+| Watch Hooks            | Reactive value watching and change detection              | [core-watch-hooks](references/core-watch-hooks.md)         |
+| Lifecycle Hooks        | Component lifecycle and mounting utilities                | [core-lifecycle-hooks](references/core-lifecycle-hooks.md) |
+| Conditional Components | If/Else, Switch/Case components for conditional rendering | [core-conditional](references/core-conditional.md)         |
+| Try Hooks              | Error-safe React hooks with fallback behavior             | [core-try-hooks](references/core-try-hooks.md)             |
 
 ## Advanced Features
 
-| Topic | Description | Reference |
-|-------|-------------|-----------|
-| Event Bus | Cross-component event communication | [advanced-event-bus](references/advanced-event-bus.md) |
-| Pagination | Offset-based pagination hook | [advanced-pagination](references/advanced-pagination.md) |
+| Topic           | Description                             | Reference                                                          |
+| --------------- | --------------------------------------- | ------------------------------------------------------------------ |
+| Event Bus       | Cross-component event communication     | [advanced-event-bus](references/advanced-event-bus.md)             |
+| Pagination      | Offset-based pagination hook            | [advanced-pagination](references/advanced-pagination.md)           |
 | Fetch Intercept | Request/response interception utilities | [advanced-fetch-intercept](references/advanced-fetch-intercept.md) |

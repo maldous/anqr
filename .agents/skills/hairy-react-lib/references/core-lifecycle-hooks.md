@@ -45,8 +45,8 @@ function MyComponent() {
 
 ## Key Points
 
-* **`useMounted`**: Returns `true` after first render. Useful for SSR/hydration scenarios.
-* **`useUpdate`**: Returns function that forces re-render. Use sparingly, prefer state updates.
-* **SSR**: `useMounted` helps avoid hydration mismatches by deferring client-only content.
-* **Use `useMounted` for**: Conditional rendering based on mount status, avoiding SSR issues.
-* **Use `useUpdate` for**: Emergency re-renders when state management isn't feasible.
+- **`useMounted`**: Returns `true` after first render. Useful for SSR/hydration scenarios.
+- **`useUpdate`**: Returns function that forces re-render. Use sparingly, prefer state updates.
+- **SSR**: `useMounted` helps avoid hydration mismatches by deferring client-only content.
+- **Use `useMounted` for**: Conditional rendering based on mount status, avoiding SSR issues.
+- **Use `useUpdate` for**: Emergency re-renders when state management isn't feasible.

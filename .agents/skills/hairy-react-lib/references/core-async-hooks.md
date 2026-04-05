@@ -70,8 +70,8 @@ function MyComponent() {
 
 ## Key Points
 
-* **`useAsyncState`**: Returns `[{ value, loading, error }, refetch]`. Automatically executes on mount if `immediate: true`.
-* **`useAsyncCallback`**: Returns `[loading, callback, error]`. Callback can be invoked manually.
-* **Error handling**: Both hooks catch errors and set error state. Promise rejection is preserved in `useAsyncCallback`.
-* **Dependencies**: `useAsyncState` accepts dependency array for automatic refetching.
-* **Initial value**: Provide `initial` option to set starting state value.
+- **`useAsyncState`**: Returns `[{ value, loading, error }, refetch]`. Automatically executes on mount if `immediate: true`.
+- **`useAsyncCallback`**: Returns `[loading, callback, error]`. Callback can be invoked manually.
+- **Error handling**: Both hooks catch errors and set error state. Promise rejection is preserved in `useAsyncCallback`.
+- **Dependencies**: `useAsyncState` accepts dependency array for automatic refetching.
+- **Initial value**: Provide `initial` option to set starting state value.

@@ -23,9 +23,11 @@ progressive_disclosure:
 # Docker Containerization Skill
 
 ## Summary
+
 Docker provides containerization for packaging applications with their dependencies into isolated, portable units. Containers ensure consistency across development, testing, and production environments, eliminating "works on my machine" problems.
 
 ## When to Use
+
 - **Local Development**: Consistent dev environments across team members
 - **CI/CD Pipelines**: Reproducible build and test environments
 - **Microservices**: Isolated services with independent scaling
@@ -36,6 +38,7 @@ Docker provides containerization for packaging applications with their dependenc
 ## Quick Start
 
 ### 1. Create Dockerfile
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app
@@ -47,11 +50,13 @@ CMD ["node", "server.js"]
 ```
 
 ### 2. Build Image
+
 ```bash
 docker build -t myapp:1.0 .
 ```
 
 ### 3. Run Container
+
 ```bash
 docker run -p 3000:3000 myapp:1.0
 ```
@@ -61,11 +66,13 @@ docker run -p 3000:3000 myapp:1.0
 ## Core Concepts
 
 ### Images vs Containers
+
 - **Image**: Read-only template with application code, runtime, and dependencies
 - **Container**: Running instance of an image with writable layer
 - **Registry**: Storage for images (Docker Hub, GitHub Container Registry)
 
 ### Layers and Caching
+
 Each Dockerfile instruction creates a layer. Docker caches unchanged layers for faster builds.
 
 ```dockerfile
@@ -82,6 +89,7 @@ RUN pip install -r requirements.txt  # Reinstalls on every build
 ```
 
 ### Volumes
+
 Persistent data storage that survives container restarts.
 
 ```bash
@@ -96,6 +104,7 @@ docker run -v /app/data myapp
 ```
 
 ### Networks
+
 Containers communicate through Docker networks.
 
 ```bash
@@ -172,6 +181,7 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 ```
 
 ### .dockerignore
+
 Exclude files from build context (faster builds, smaller images).
 
 ```
@@ -219,6 +229,7 @@ CMD ["node", "dist/server.js"]
 ```
 
 **Benefits**:
+
 - Build dependencies (TypeScript, webpack) excluded from final image
 - Final image: ~50MB vs ~500MB with build tools
 - Faster deployments and reduced attack surface
@@ -270,7 +281,7 @@ Define multi-container applications in YAML.
 ### Basic Structure
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -282,7 +293,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./src:/app/src  # Hot reload in development
+      - ./src:/app/src # Hot reload in development
 
   db:
     image: postgres:15-alpine
@@ -326,7 +337,7 @@ docker-compose run app npm test
 ### Full Stack Example
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   # Frontend
@@ -413,8 +424,8 @@ services:
   app:
     build: .
     volumes:
-      - ./src:/app/src        # Sync source code
-      - /app/node_modules     # Prevent overwriting container's node_modules
+      - ./src:/app/src # Sync source code
+      - /app/node_modules # Prevent overwriting container's node_modules
     command: npm run dev
 ```
 
@@ -454,10 +465,7 @@ services:
   "workspaceFolder": "/app",
   "customizations": {
     "vscode": {
-      "extensions": [
-        "ms-python.python",
-        "ms-python.vscode-pylance"
-      ],
+      "extensions": ["ms-python.python", "ms-python.vscode-pylance"],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python"
       }
@@ -526,13 +534,13 @@ CMD ["node", "server.js"]
 
 ```javascript
 // healthcheck.js
-const http = require('http');
+const http = require("http");
 
 const options = {
-  host: 'localhost',
+  host: "localhost",
   port: 3000,
-  path: '/health',
-  timeout: 2000
+  path: "/health",
+  timeout: 2000,
 };
 
 const request = http.request(options, (res) => {
@@ -543,7 +551,7 @@ const request = http.request(options, (res) => {
   }
 });
 
-request.on('error', () => process.exit(1));
+request.on("error", () => process.exit(1));
 request.end();
 ```
 
@@ -572,6 +580,7 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
 ```
 
 **Additional Security Measures**:
+
 - Use minimal base images (alpine, distroless)
 - Scan images for vulnerabilities: `docker scan myapp:latest`
 - Don't include secrets in images (use environment variables or secret managers)
@@ -586,7 +595,7 @@ echo "db_password_here" | docker secret create db_password -
 ```
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   app:
     image: myapp
@@ -607,7 +616,7 @@ secrets:
 services:
   app:
     env_file:
-      - .env.production  # Never commit this file
+      - .env.production # Never commit this file
 ```
 
 ```bash
@@ -625,10 +634,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 512M
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 256M
       restart_policy:
         condition: on-failure
@@ -685,7 +694,7 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "myproject.wsgi:app
 **docker-compose.yml**:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   web:
@@ -768,8 +777,8 @@ CMD ["node", "server.js"]
 
 ```javascript
 module.exports = {
-  output: 'standalone',
-}
+  output: "standalone",
+};
 ```
 
 ### Node.js: Express
@@ -842,16 +851,17 @@ docker stack rm myapp
 
 ### Kubernetes Comparison
 
-| Feature | Docker Compose | Docker Swarm | Kubernetes |
-|---------|---------------|--------------|------------|
-| **Complexity** | Low | Medium | High |
-| **Use Case** | Local dev | Small clusters | Production at scale |
-| **Setup** | Single file | Built-in | Separate installation |
-| **Scaling** | Manual | Automatic | Automatic + Advanced |
-| **HA** | No | Yes | Yes |
-| **Ecosystem** | Limited | Docker | Massive |
+| Feature        | Docker Compose | Docker Swarm   | Kubernetes            |
+| -------------- | -------------- | -------------- | --------------------- |
+| **Complexity** | Low            | Medium         | High                  |
+| **Use Case**   | Local dev      | Small clusters | Production at scale   |
+| **Setup**      | Single file    | Built-in       | Separate installation |
+| **Scaling**    | Manual         | Automatic      | Automatic + Advanced  |
+| **HA**         | No             | Yes            | Yes                   |
+| **Ecosystem**  | Limited        | Docker         | Massive               |
 
 **When to use each**:
+
 - **Docker Compose**: Local development, simple deployments
 - **Docker Swarm**: Small production clusters, simpler than K8s
 - **Kubernetes**: Large-scale production, multi-cloud, advanced orchestration
@@ -1272,6 +1282,7 @@ CMD ["node", "server.js"]
 ### Development vs Production
 
 **Development**:
+
 ```dockerfile
 FROM node:18
 WORKDIR /app
@@ -1282,6 +1293,7 @@ CMD ["npm", "run", "dev"]
 ```
 
 **Production**:
+
 ```dockerfile
 FROM node:18-alpine AS builder
 WORKDIR /app
@@ -1311,16 +1323,18 @@ CMD ["node", "server.js", ">", "app.log"]  # Bad
 
 ```javascript
 // Application logging
-console.log('Info message');   // stdout
-console.error('Error message'); // stderr
+console.log("Info message"); // stdout
+console.error("Error message"); // stderr
 
 // Use structured logging
-console.log(JSON.stringify({
-  level: 'info',
-  timestamp: new Date().toISOString(),
-  message: 'Request processed',
-  requestId: '123'
-}));
+console.log(
+  JSON.stringify({
+    level: "info",
+    timestamp: new Date().toISOString(),
+    message: "Request processed",
+    requestId: "123",
+  }),
+);
 ```
 
 ### Environment Configuration
@@ -1362,10 +1376,10 @@ services:
 
 ```javascript
 // Node.js example
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, closing server...');
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, closing server...");
   server.close(() => {
-    console.log('Server closed');
+    console.log("Server closed");
     process.exit(0);
   });
 });
@@ -1456,6 +1470,7 @@ HEALTHCHECK CMD command  # Health check
 ## Summary
 
 Docker containerization provides:
+
 - **Consistency**: Identical environments from dev to production
 - **Isolation**: Dependencies don't conflict between applications
 - **Portability**: Run anywhere Docker runs (cloud, local, CI)
@@ -1463,11 +1478,13 @@ Docker containerization provides:
 - **Scalability**: Easy horizontal scaling with orchestration
 
 **Key Workflows**:
+
 1. **Development**: docker-compose with hot reload volumes
 2. **CI/CD**: Build, test, push images to registry
 3. **Production**: Pull images, run with resource limits and health checks
 
 **Next Steps**:
+
 - Master multi-stage builds for optimal image sizes
 - Implement health checks and graceful shutdown
 - Set up docker-compose for local development

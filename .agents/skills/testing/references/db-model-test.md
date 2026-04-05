@@ -45,23 +45,23 @@ update = async (id: string, data: Partial<MyModel>) => {
 
 ```typescript
 // @vitest-environment node
-describe('MyModel', () => {
-  describe('create', () => {
+describe("MyModel", () => {
+  describe("create", () => {
     /* ... */
   });
-  describe('queryAll', () => {
+  describe("queryAll", () => {
     /* ... */
   });
-  describe('update', () => {
-    it('should update own records');
-    it('should NOT update other users records'); // 🔒 Security
+  describe("update", () => {
+    it("should update own records");
+    it("should NOT update other users records"); // 🔒 Security
   });
-  describe('delete', () => {
-    it('should delete own records');
-    it('should NOT delete other users records'); // 🔒 Security
+  describe("delete", () => {
+    it("should delete own records");
+    it("should NOT delete other users records"); // 🔒 Security
   });
-  describe('user isolation', () => {
-    it('should enforce user data isolation'); // 🔒 Core security
+  describe("user isolation", () => {
+    it("should enforce user data isolation"); // 🔒 Core security
   });
 });
 ```
@@ -69,27 +69,27 @@ describe('MyModel', () => {
 ## Security Test Example
 
 ```typescript
-it('should not update records of other users', async () => {
+it("should not update records of other users", async () => {
   const [otherUserRecord] = await serverDB
     .insert(myTable)
-    .values({ userId: 'other-user', data: 'original' })
+    .values({ userId: "other-user", data: "original" })
     .returning();
 
-  const result = await myModel.update(otherUserRecord.id, { data: 'hacked' });
+  const result = await myModel.update(otherUserRecord.id, { data: "hacked" });
 
   expect(result).toBeUndefined();
   const unchanged = await serverDB.query.myTable.findFirst({
     where: eq(myTable.id, otherUserRecord.id),
   });
-  expect(unchanged?.data).toBe('original');
+  expect(unchanged?.data).toBe("original");
 });
 ```
 
 ## Data Management
 
 ```typescript
-const userId = 'test-user';
-const otherUserId = 'other-user';
+const userId = "test-user";
+const otherUserId = "other-user";
 
 beforeEach(async () => {
   await serverDB.delete(users);
@@ -105,7 +105,7 @@ afterEach(async () => {
 
 ```typescript
 // ❌ Wrong: Invalid foreign key
-const testData = { asyncTaskId: 'invalid-uuid', fileId: 'non-existent' };
+const testData = { asyncTaskId: "invalid-uuid", fileId: "non-existent" };
 
 // ✅ Correct: Use null
 const testData = { asyncTaskId: null, fileId: null };
@@ -114,7 +114,7 @@ const testData = { asyncTaskId: null, fileId: null };
 beforeEach(async () => {
   const [asyncTask] = await serverDB
     .insert(asyncTasks)
-    .values({ id: 'valid-id', status: 'pending' })
+    .values({ id: "valid-id", status: "pending" })
     .returning();
   testData.asyncTaskId = asyncTask.id;
 });
@@ -124,8 +124,8 @@ beforeEach(async () => {
 
 ```typescript
 // ✅ Use explicit timestamps
-const oldDate = new Date('2024-01-01T10:00:00Z');
-const newDate = new Date('2024-01-02T10:00:00Z');
+const oldDate = new Date("2024-01-01T10:00:00Z");
+const newDate = new Date("2024-01-02T10:00:00Z");
 await serverDB.insert(table).values([
   { ...data1, createdAt: oldDate },
   { ...data2, createdAt: newDate },

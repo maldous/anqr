@@ -16,7 +16,6 @@ POST   /api/createProduct
 GET    /api/user/123  (inconsistent singular/plural)
 ```
 
-
 ## HTTP Methods & Operations
 
 ```http

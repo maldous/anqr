@@ -5,10 +5,10 @@ For Electron IPC tests, use **Mock return values** instead of real Electron envi
 ## Basic Mock Setup
 
 ```typescript
-import { vi } from 'vitest';
-import { electronIpcClient } from '@/server/modules/ElectronIPCClient';
+import { vi } from "vitest";
+import { electronIpcClient } from "@/server/modules/ElectronIPCClient";
 
-vi.mock('@/server/modules/ElectronIPCClient', () => ({
+vi.mock("@/server/modules/ElectronIPCClient", () => ({
   electronIpcClient: {
     getFilePathById: vi.fn(),
     deleteFiles: vi.fn(),
@@ -21,7 +21,7 @@ vi.mock('@/server/modules/ElectronIPCClient', () => ({
 ```typescript
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(electronIpcClient.getFilePathById).mockResolvedValue('/path/to/file.txt');
+  vi.mocked(electronIpcClient.getFilePathById).mockResolvedValue("/path/to/file.txt");
   vi.mocked(electronIpcClient.deleteFiles).mockResolvedValue({ success: true });
 });
 ```
@@ -29,19 +29,19 @@ beforeEach(() => {
 ## Testing Different Scenarios
 
 ```typescript
-it('should handle successful file deletion', async () => {
+it("should handle successful file deletion", async () => {
   vi.mocked(electronIpcClient.deleteFiles).mockResolvedValue({ success: true });
 
-  const result = await service.deleteFiles(['desktop://file1.txt']);
+  const result = await service.deleteFiles(["desktop://file1.txt"]);
 
-  expect(electronIpcClient.deleteFiles).toHaveBeenCalledWith(['desktop://file1.txt']);
+  expect(electronIpcClient.deleteFiles).toHaveBeenCalledWith(["desktop://file1.txt"]);
   expect(result.success).toBe(true);
 });
 
-it('should handle file deletion failure', async () => {
-  vi.mocked(electronIpcClient.deleteFiles).mockRejectedValue(new Error('Delete failed'));
+it("should handle file deletion failure", async () => {
+  vi.mocked(electronIpcClient.deleteFiles).mockRejectedValue(new Error("Delete failed"));
 
-  const result = await service.deleteFiles(['desktop://file1.txt']);
+  const result = await service.deleteFiles(["desktop://file1.txt"]);
 
   expect(result.success).toBe(false);
   expect(result.errors).toBeDefined();

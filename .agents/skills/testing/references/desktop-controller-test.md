@@ -18,14 +18,14 @@ apps/desktop/src/main/controllers/
 ## Basic Test File Structure
 
 ```typescript
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { App } from '@/core/App';
+import type { App } from "@/core/App";
 
-import YourController from '../YourControllerName';
+import YourController from "../YourControllerName";
 
 // Mock dependencies
-vi.mock('dependency-module', () => ({
+vi.mock("dependency-module", () => ({
   dependencyFunction: vi.fn(),
 }));
 
@@ -34,7 +34,7 @@ const mockApp = {
   // Mock necessary App properties and methods as needed
 } as unknown as App;
 
-describe('YourController', () => {
+describe("YourController", () => {
   let controller: YourController;
 
   beforeEach(() => {
@@ -42,8 +42,8 @@ describe('YourController', () => {
     controller = new YourController(mockApp);
   });
 
-  describe('methodName', () => {
-    it('test scenario description', async () => {
+  describe("methodName", () => {
+    it("test scenario description", async () => {
       // Prepare test data
 
       // Execute method under test
@@ -63,7 +63,7 @@ describe('YourController', () => {
 ```typescript
 const mockFunction = vi.fn();
 
-vi.mock('module-name', () => ({
+vi.mock("module-name", () => ({
   functionName: mockFunction,
 }));
 ```
@@ -75,13 +75,13 @@ Example: mocking `child_process.exec` and `util.promisify`:
 ```typescript
 const mockExecImpl = vi.fn();
 
-vi.mock('child_process', () => ({
+vi.mock("child_process", () => ({
   exec: vi.fn((cmd, callback) => {
     return mockExecImpl(cmd, callback);
   }),
 }));
 
-vi.mock('util', () => ({
+vi.mock("util", () => ({
   promisify: vi.fn((fn) => {
     return async (cmd: string) => {
       return new Promise((resolve, reject) => {
@@ -106,19 +106,19 @@ vi.mock('util', () => ({
 ## Example: Testing IPC Event Handler
 
 ```typescript
-it('should handle IPC event correctly', async () => {
-  mockSomething.mockReturnValue({ result: 'success' });
+it("should handle IPC event correctly", async () => {
+  mockSomething.mockReturnValue({ result: "success" });
 
   const result = await controller.ipcMethodName({
-    param1: 'value1',
-    param2: 'value2',
+    param1: "value1",
+    param2: "value2",
   });
 
   expect(result).toEqual({
     success: true,
-    data: { result: 'success' },
+    data: { result: "success" },
   });
 
-  expect(mockSomething).toHaveBeenCalledWith('value1', 'value2');
+  expect(mockSomething).toHaveBeenCalledWith("value1", "value2");
 });
 ```

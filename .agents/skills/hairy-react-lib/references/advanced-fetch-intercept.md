@@ -21,10 +21,10 @@ function App() {
       // Handle unauthorized
       window.location.href = '/login'
     }
-    
+
     // Log responses
     console.log('Response:', response.url, response.status)
-    
+
     return response
   })
 
@@ -44,10 +44,10 @@ function App() {
     // Add auth token
     const headers = new Headers(init?.headers)
     headers.set('Authorization', `Bearer ${token}`)
-    
+
     // Log requests
     console.log('Request:', input)
-    
+
     return originalFetch(input, {
       ...init,
       headers
@@ -61,9 +61,9 @@ function App() {
 ### Combined Interception
 
 ```typescript
-import { 
-  useFetchRequestIntercept, 
-  useFetchResponseIntercept 
+import {
+  useFetchRequestIntercept,
+  useFetchResponseIntercept
 } from '@hairy/react-lib'
 
 function App() {
@@ -89,10 +89,10 @@ function App() {
 
 ## Key Points
 
-* **Global interception**: Hooks modify `window.fetch` globally. Use at app root level.
-* **Request intercept**: Modify requests before they're sent (add headers, log, transform).
-* **Response intercept**: Modify responses after they're received (handle errors, transform data).
-* **Mount-only**: Hooks run once on mount. Interceptors persist for app lifetime.
-* **Order matters**: Multiple interceptors stack. Last registered runs first.
-* **Return value**: Must return Response (or Promise<Response>). Can clone and modify.
-* **Use cases**: Authentication, error handling, logging, request/response transformation.
+- **Global interception**: Hooks modify `window.fetch` globally. Use at app root level.
+- **Request intercept**: Modify requests before they're sent (add headers, log, transform).
+- **Response intercept**: Modify responses after they're received (handle errors, transform data).
+- **Mount-only**: Hooks run once on mount. Interceptors persist for app lifetime.
+- **Order matters**: Multiple interceptors stack. Last registered runs first.
+- **Return value**: Must return Response (or Promise<Response>). Can clone and modify.
+- **Use cases**: Authentication, error handling, logging, request/response transformation.

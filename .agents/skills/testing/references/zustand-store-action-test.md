@@ -3,24 +3,24 @@
 ## Basic Structure
 
 ```typescript
-import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useChatStore } from '../../store';
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useChatStore } from "../../store";
 
-vi.mock('zustand/traditional');
+vi.mock("zustand/traditional");
 
 beforeEach(() => {
   vi.clearAllMocks();
   useChatStore.setState(
     {
-      activeId: 'test-session-id',
+      activeId: "test-session-id",
       messagesMap: {},
       loadingIds: [],
     },
     false,
   );
 
-  vi.spyOn(messageService, 'createMessage').mockResolvedValue('new-message-id');
+  vi.spyOn(messageService, "createMessage").mockResolvedValue("new-message-id");
 
   act(() => {
     useChatStore.setState({
@@ -70,11 +70,11 @@ beforeEach(() => {
 ### 3. Use act() for Async Operations
 
 ```typescript
-it('should send message', async () => {
+it("should send message", async () => {
   const { result } = renderHook(() => useChatStore());
 
   await act(async () => {
-    await result.current.sendMessage({ message: 'Hello' });
+    await result.current.sendMessage({ message: "Hello" });
   });
 
   expect(messageService.createMessage).toHaveBeenCalled();
@@ -84,16 +84,16 @@ it('should send message', async () => {
 ### 4. Test Organization
 
 ```typescript
-describe('sendMessage', () => {
-  describe('validation', () => {
-    it('should not send when session is inactive');
-    it('should not send when message is empty');
+describe("sendMessage", () => {
+  describe("validation", () => {
+    it("should not send when session is inactive");
+    it("should not send when message is empty");
   });
-  describe('message creation', () => {
-    it('should create user message and trigger AI processing');
+  describe("message creation", () => {
+    it("should create user message and trigger AI processing");
   });
-  describe('error handling', () => {
-    it('should handle message creation errors gracefully');
+  describe("error handling", () => {
+    it("should handle message creation errors gracefully");
   });
 });
 ```
@@ -122,9 +122,9 @@ it('should handle streaming chunks', async () => {
 ## SWR Hook Testing
 
 ```typescript
-it('should fetch data', async () => {
-  const mockData = [{ id: '1', name: 'Item 1' }];
-  vi.spyOn(discoverService, 'getPluginCategories').mockResolvedValue(mockData);
+it("should fetch data", async () => {
+  const mockData = [{ id: "1", name: "Item 1" }];
+  vi.spyOn(discoverService, "getPluginCategories").mockResolvedValue(mockData);
 
   const { result } = renderHook(() => useStore.getState().usePluginCategories(params));
 

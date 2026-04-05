@@ -40,7 +40,7 @@ cd packages/database && TEST_SERVER_DB=1 bunx vitest run --silent='passed-only' 
 ## Basic Test Structure
 
 ```typescript
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -50,9 +50,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('ModuleName', () => {
-  describe('functionName', () => {
-    it('should handle normal case', () => {
+describe("ModuleName", () => {
+  describe("functionName", () => {
+    it("should handle normal case", () => {
       // Arrange → Act → Assert
     });
   });
@@ -63,14 +63,14 @@ describe('ModuleName', () => {
 
 ```typescript
 // ✅ Spy on direct dependencies
-vi.spyOn(messageService, 'createMessage').mockResolvedValue('id');
+vi.spyOn(messageService, "createMessage").mockResolvedValue("id");
 
 // ✅ Use vi.stubGlobal for browser APIs
-vi.stubGlobal('Image', mockImage);
-vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
+vi.stubGlobal("Image", mockImage);
+vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
 
 // ❌ Avoid mocking entire modules globally
-vi.mock('@/services/chat'); // Too broad
+vi.mock("@/services/chat"); // Too broad
 ```
 
 ## Detailed Guides
