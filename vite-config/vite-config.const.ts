@@ -338,7 +338,8 @@ export const viteConfig = defineConfig({
     // Enable source maps for Sentry (they're deleted after upload)
     sourcemap: true,
     // Target modern browsers for smaller bundles
-    target: "es2020",
+    // es2022+ supports top-level await (used in main.tsx)
+    target: "es2022",
     // Enable CSS code splitting for better caching
     cssCodeSplit: true,
     // Increase chunk size warning limit (we'll optimize chunks manually)

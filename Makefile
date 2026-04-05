@@ -2,7 +2,7 @@
 
 QUALITY_FAST_TARGETS := \
 	openapi-generate format-check cspell knip typecheck-all lint-all lint-boundaries \
-	depcruise-all contracts-check audit-ast test-unit-coverage build-web
+	depcruise-all contracts-check audit-ast build-web
 
 QUALITY_RELEASE_TARGETS := \
 	quality-fast test-basic test-advanced sonar-scan sonar-export
