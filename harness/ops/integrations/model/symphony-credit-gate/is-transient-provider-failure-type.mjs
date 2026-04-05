@@ -1,9 +1,9 @@
 export function isTransientProviderFailureType(errorType) {
-  const value = String(errorType || "").toLowerCase();
+  const text = String(errorType || "").toLowerCase();
   return (
-    value === "rate_limited" ||
-    value === "timeout" ||
-    value === "provider_error" ||
-    value === "unknown"
+    text === "rate_limited" ||
+    text === "timeout" ||
+    text === "network_error" ||
+    text === "provider_error"
   );
 }

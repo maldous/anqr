@@ -20,11 +20,14 @@ export function buildProviderProbeRankedHealthy(results) {
       (routeInfo?.isBridgeBlocked
         ? { status: "blocked", reason: "bridge blocked" }
         : routeInfo?.advertisedRouteIds?.length
-          ? { status: "advertised", reason: routeInfo.advertisedRouteIds.join(", ") || "advertised" }
+          ? {
+              status: "advertised",
+              reason: routeInfo.advertisedRouteIds.join(", ") || "advertised",
+            }
           : { status: "not_advertised", reason: "not advertised" });
     const candidate = {
-      ...(cachedProbe || {}),
-      ...(result || {}),
+      ...cachedProbe,
+      ...result,
       routeInfo,
       bridgeRoute,
       toolProbe:

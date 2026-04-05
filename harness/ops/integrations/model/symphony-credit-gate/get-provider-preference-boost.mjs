@@ -1,7 +1,5 @@
-export function getProviderPreferenceBoost(providerName, cachedProbe) {
-  if (providerName === "codex") return 0.18;
-  if (providerName === "codebuff") {
-    return cachedProbe?.mode === "free" ? 0.02 : 0.14;
-  }
+export function getProviderPreferenceBoost(providerName) {
+  if (providerName === "codex") return 0.22;
+  if (providerName === "codebuff") return 0.18;
   return 0;
 }

@@ -5,6 +5,7 @@ export function isRecentlyProbed(providerName) {
   const results = loadProbeResults();
   const entry = results[providerName];
   if (!entry || !entry.ts) return null;
+  if (entry.permanentSkip) return entry;
   const age = Date.now() - entry.ts;
   if (age > PROBE_RESULT_TTL_MS) return null;
   return entry;

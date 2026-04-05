@@ -14,6 +14,7 @@ export function buildDynamicCatalogProviders(staticProviders) {
       dynamicProviders.push({
         ...provider,
         name: `${provider.name}-${sanitizeModelSegment(model)}`,
+        baseProviderName: provider.name,
         model,
         dynamic: true,
         contextLength: row?.contextLength || provider.contextLength || null,

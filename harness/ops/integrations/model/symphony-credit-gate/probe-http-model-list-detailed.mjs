@@ -54,9 +54,7 @@ export async function probeHttpModelListDetailed(provider, apiKey, options = {})
     return {
       available,
       status: available ? "success" : "unavailable",
-      reason: available
-        ? `model found in provider catalog`
-        : `model not found in provider catalog`,
+      reason: available ? `model found in provider catalog` : `model not found in provider catalog`,
       durationMs: Date.now() - startedAt,
       message: body,
       httpStatus: response.status,

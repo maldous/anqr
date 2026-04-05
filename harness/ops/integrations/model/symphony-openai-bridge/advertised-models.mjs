@@ -12,6 +12,11 @@ export const ADVERTISED_MODELS = [
   { id: "symphony/openrouter", ownedBy: "openrouter", allowedNames: OPENROUTER_PROVIDER_NAMES },
   { id: "symphony/sambanova", ownedBy: "sambanova", allowedNames: ["sambanova"] },
   { id: "symphony/cerebras", ownedBy: "cerebras", allowedNames: ["cerebras"] },
+  {
+    id: "symphony/github-models",
+    ownedBy: "github-models",
+    allowedNames: ["github-models"],
+  },
   { id: "symphony/huggingface", ownedBy: "huggingface", allowedNames: ["huggingface"] },
   { id: "symphony/fireworks", ownedBy: "fireworks", allowedNames: ["fireworks"] },
   { id: "symphony/together", ownedBy: "together", allowedNames: ["together"] },
