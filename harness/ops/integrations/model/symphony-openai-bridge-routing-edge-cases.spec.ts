@@ -91,6 +91,9 @@ describe("Provider Routing Edge Cases", () => {
     process.env.CEREBRAS_TOKEN = "test-cerebras-key";
     process.env.GITHUB_MODELS_TOKEN = "test-github-key";
 
+    // Remove SDK-based provider keys to prevent real env leakage
+    delete process.env.CODEBUFF_API_KEY;
+
     // Default: all probes fail (fetch returns null)
     globalThis.fetch = vi.fn(async () => null) as unknown as typeof fetch;
   });

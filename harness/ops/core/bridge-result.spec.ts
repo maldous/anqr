@@ -50,7 +50,7 @@ describe("bridge-result helpers", () => {
         toolCallCount: 5,
         stepCount: 2,
       },
-    });
+    } as Record<string, unknown>);
 
     expect(result).toMatchObject({
       completed: true,

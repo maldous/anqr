@@ -82,7 +82,7 @@ depcruise-all: ## Run all dependency-cruiser gates
 cspell: ## Run spellcheck on configured repo surfaces
 	npm run cspell
 
-knip: ## Run the scoped Knip hygiene pass
+knip: ## Run the full Knip dead-code and hygiene analysis
 	npm run knip
 
 test-unit: ## Run unit tests

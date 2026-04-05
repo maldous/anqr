@@ -1,16 +1,8 @@
 import { sendViaOpenClaw } from "./send-via-open-claw.mjs";
 import { colorToEmoji } from "./color-to-emoji.mjs";
 
-export async function sendDiscordEmbed({
-  title,
-  description,
-  fields,
-  footer,
-  color,
-  replyTo,
-  threadName,
-  source,
-}) {
+export async function sendDiscordEmbed(options) {
+  const { title, description, fields, footer, color, replyTo, threadName, source } = options || {};
   // Build embed as compact formatted text for Discord.
   // Inline fields → single line with " · " separator.
   // Non-inline fields → one per line.
