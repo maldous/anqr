@@ -16,6 +16,7 @@ import {
   ERROR_TYPES,
 } from "../symphony-adaptive-context.mjs";
 import { estimateMessagesTokens } from "../symphony-bridge-truncation.mjs";
+import { releaseProviderLease } from "../symphony-credit-gate/release-provider-lease.mjs";
 import {
   updateSessionProvider,
   clearSessionProvider,
@@ -139,6 +140,7 @@ export async function invokeWithFallbackStream(
         }, 0);
       }
 
+      releaseProviderLease(provider);
       return {
         text: result.text,
         providerName: provider.name,
@@ -173,6 +175,7 @@ export async function invokeWithFallbackStream(
       // Clear sticky session immediately so concurrent requests on the same
       // session don't keep trying the failed provider. The next call to
       // buildSelectionOptions will see no sticky and allow all providers.
+      releaseProviderLease(provider);
       if (sessionId) {
         clearSessionProvider(sessionId);
         logInfo(

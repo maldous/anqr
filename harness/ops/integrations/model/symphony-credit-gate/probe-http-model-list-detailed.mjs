@@ -55,8 +55,8 @@ export async function probeHttpModelListDetailed(provider, apiKey, options = {})
       available,
       status: available ? "success" : "unavailable",
       reason: available
-        ? `model found in provider catalog (${/^[[{]/.test(bodyText.trim()) ? "json" : "text"}, matched ${matchedNeedle})`
-        : `model not found in provider catalog (${/^[[{]/.test(bodyText.trim()) ? "json" : "text"})`,
+        ? `model found in provider catalog`
+        : `model not found in provider catalog`,
       durationMs: Date.now() - startedAt,
       message: body,
       httpStatus: response.status,

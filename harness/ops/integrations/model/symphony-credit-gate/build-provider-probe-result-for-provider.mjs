@@ -5,6 +5,7 @@ import { providerProbeDirectStatus } from "./provider-probe-direct-status.mjs";
 import { providerProbeRouteInfo } from "./provider-probe-route-info.mjs";
 import { probeProviderDetailed } from "./probe-provider-detailed.mjs";
 import { resolveProviderApiKey } from "./resolve-provider-api-key.mjs";
+import { isTransientProviderFailureType } from "./is-transient-provider-failure-type.mjs";
 
 export async function buildProviderProbeResultForProvider(provider, gatewayCooldowns) {
   const gateway = providerGatewayKey(provider);
@@ -32,7 +33,7 @@ export async function buildProviderProbeResultForProvider(provider, gatewayCoold
     };
   }
   const result = await probeProviderDetailed(provider);
-  if (["rate_limited", "quota_exhausted", "auth_invalid"].includes(result.status)) {
+  if (isTransientProviderFailureType(result.status)) {
     gatewayCooldowns.set(gateway, { status: result.status, reason: result.reason });
   }
   return result;

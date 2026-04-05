@@ -1,6 +1,8 @@
 import { getProviderHealthState, HEALTH_STATES } from "../symphony-provider-health.mjs";
 
+import { acquireProviderLease } from "./acquire-provider-lease.mjs";
 import { clearProviderFailure } from "./clear-provider-failure.mjs";
+import { isProviderLeaseAllowed } from "./is-provider-lease-allowed.mjs";
 import { isRecentlyFailed } from "./is-recently-failed.mjs";
 import { isRecentlyProbed } from "./is-recently-probed.mjs";
 import { probeOpenAIModels } from "./probe-open-aimodels.mjs";
@@ -9,21 +11,35 @@ import { resolveProviderApiKey } from "./resolve-provider-api-key.mjs";
 import { saveProbeResult } from "./save-probe-result.mjs";
 import { shouldSkipProviderFromCache } from "./should-skip-provider-from-cache.mjs";
 import { toSelectedProvider } from "./to-selected-provider.mjs";
-import { logDebug, logInfo } from "./logger.mjs";
 import { getCachedProbeEntry } from "./get-cached-probe-entry.mjs";
+import { logDebug, logInfo } from "./logger.mjs";
+import { providerGatewayKey } from "./provider-gateway-key.mjs";
 
-export async function tryProvider(provider) {
+export async function tryProvider(provider, options = {}) {
+  const leasePhase = options.leasePhase || "shared";
+  const gatewayKey = providerGatewayKey(provider);
   logDebug(`[tryProvider] Attempting provider`, {
     providerName: provider.name,
+    gatewayKey,
     tier: provider.tier,
+    leasePhase,
     hasEnvVar: !!provider.envVar,
     requiresSdk: !!provider.requiresSdk,
   });
 
-  const health = getProviderHealthState(provider.name);
+  if (!isProviderLeaseAllowed(provider, leasePhase)) {
+    logDebug(`${provider.name}: skipped (lease phase ${leasePhase})`, {
+      providerName: provider.name,
+      gatewayKey,
+    });
+    return null;
+  }
+
+  const health = getProviderHealthState(gatewayKey);
   if (health.state === HEALTH_STATES.BLOCKED || health.state === HEALTH_STATES.DISABLED) {
     logDebug(`${provider.name}: skipped (health state: ${health.state})`, {
       providerName: provider.name,
+      gatewayKey,
       healthState: health.state,
     });
     return null;
@@ -31,15 +47,14 @@ export async function tryProvider(provider) {
 
   const apiKey = await resolveProviderApiKey(provider);
   if (provider.envVar && !apiKey) {
-    logDebug(`${provider.name}: skipped (no ${provider.envVar})`, {
-      envVar: provider.envVar,
-    });
+    logDebug(`${provider.name}: skipped (no ${provider.envVar})`, { envVar: provider.envVar });
     return null;
   }
 
   if (isRecentlyFailed(provider.name)) {
     logDebug(`${provider.name}: skipped (recently failed)`, {
       providerName: provider.name,
+      gatewayKey,
     });
     return null;
   }
@@ -60,6 +75,7 @@ export async function tryProvider(provider) {
       });
       clearProviderFailure(provider.name);
       recordProviderSelection(provider.name);
+      acquireProviderLease(provider);
       return toSelectedProvider(provider, apiKey);
     }
     if (shouldSkipProviderFromCache(cachedProbeEntry)) {
@@ -78,6 +94,7 @@ export async function tryProvider(provider) {
     });
     clearProviderFailure(provider.name);
     recordProviderSelection(provider.name);
+    acquireProviderLease(provider);
     return toSelectedProvider(provider, apiKey);
   }
 
@@ -90,6 +107,7 @@ export async function tryProvider(provider) {
       });
       clearProviderFailure(provider.name);
       recordProviderSelection(provider.name);
+      acquireProviderLease(provider);
       return toSelectedProvider(provider, apiKey);
     }
     logDebug(`${provider.name}: unavailable (shared cache, ${ageSecs}s old)`, {
@@ -101,6 +119,7 @@ export async function tryProvider(provider) {
   logDebug(`${provider.name}: probing...`, {
     providerName: provider.name,
     hasCustomProbe: !!provider.probe,
+    leasePhase,
   });
   const available = provider.probe
     ? await provider.probe(provider, apiKey)
@@ -108,9 +127,7 @@ export async function tryProvider(provider) {
 
   saveProbeResult(provider.name, !!available);
   if (!available) {
-    logDebug(`${provider.name}: unavailable ❌`, {
-      providerName: provider.name,
-    });
+    logDebug(`${provider.name}: unavailable ❌`, { providerName: provider.name });
     return null;
   }
 
@@ -121,5 +138,6 @@ export async function tryProvider(provider) {
   });
   clearProviderFailure(provider.name);
   recordProviderSelection(provider.name);
+  acquireProviderLease(provider);
   return toSelectedProvider(provider, apiKey);
 }

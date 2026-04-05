@@ -24,6 +24,7 @@ import {
   ERROR_TYPES,
 } from "../symphony-adaptive-context.mjs";
 import { estimateMessagesTokens } from "../symphony-bridge-truncation.mjs";
+import { releaseProviderLease } from "../symphony-credit-gate/release-provider-lease.mjs";
 
 import { BRIDGE_METRICS } from "./bridge-metrics.mjs";
 import { FALLBACK_DELAY_MS } from "./fallback-delay-ms.mjs";
@@ -143,6 +144,7 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         logBridgeStats();
       }
 
+      releaseProviderLease(provider);
       return {
         text: result.text,
         usage: result.usage,
@@ -187,6 +189,7 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
 
       // Clear sticky session immediately so concurrent requests on the same
       // session don't keep trying the failed provider.
+      releaseProviderLease(provider);
       if (sessionId) {
         clearSessionProvider(sessionId);
         logInfo(`🔓 Cleared sticky session after ${provider.name} failure (${errorType})`);
