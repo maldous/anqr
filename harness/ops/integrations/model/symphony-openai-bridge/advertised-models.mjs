@@ -15,8 +15,24 @@ export const ADVERTISED_MODELS = [
   { id: "symphony/huggingface", ownedBy: "huggingface", allowedNames: ["huggingface"] },
   { id: "symphony/fireworks", ownedBy: "fireworks", allowedNames: ["fireworks"] },
   { id: "symphony/together", ownedBy: "together", allowedNames: ["together"] },
-  { id: "symphony/ollama-local", ownedBy: "ollama-local", allowedNames: ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"] },
-  { id: "symphony/ollama-qwen2.5-coder-3b", ownedBy: "ollama-qwen2.5-coder-3b", allowedNames: ["ollama-qwen2.5-coder-3b"] },
-  { id: "symphony/ollama-qwen2.5-coder-0.5b", ownedBy: "ollama-qwen2.5-coder-0.5b", allowedNames: ["ollama-qwen2.5-coder-0.5b"] },
-  { id: "symphony/ollama-qwen3-coder-next", ownedBy: "ollama-local", allowedNames: ["ollama-local"] },
+  {
+    id: "symphony/ollama-local",
+    ownedBy: "ollama-local",
+    allowedNames: ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
+  },
+  {
+    id: "symphony/ollama-qwen2.5-coder-3b",
+    ownedBy: "ollama-qwen2.5-coder-3b",
+    allowedNames: ["ollama-qwen2.5-coder-3b"],
+  },
+  {
+    id: "symphony/ollama-qwen2.5-coder-0.5b",
+    ownedBy: "ollama-qwen2.5-coder-0.5b",
+    allowedNames: ["ollama-qwen2.5-coder-0.5b"],
+  },
+  {
+    id: "symphony/ollama-qwen3-coder-next",
+    ownedBy: "ollama-local",
+    allowedNames: ["ollama-local"],
+  },
 ];

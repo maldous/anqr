@@ -8,6 +8,7 @@ import { ensureNoSdkError } from "./ensure-no-sdk-error.mjs";
 import { extractText } from "./extract-text.mjs";
 import { getSharedClient } from "./get-shared-client.mjs";
 import { makeTimeout } from "./make-timeout.mjs";
+import { runClientQuietly } from "./run-client-quietly.mjs";
 import { logDebug, logInfo, logWarn } from "./logger.mjs";
 
 export async function tryMode(apiKey, cwd, costMode, prompt, onTextChunk = null) {
@@ -61,7 +62,7 @@ export async function tryMode(apiKey, cwd, costMode, prompt, onTextChunk = null)
   };
   if (costMode) runOpts.costMode = costMode;
 
-  let result = await Promise.race([client.run(runOpts), makeTimeout()]);
+  let result = await Promise.race([runClientQuietly(client, runOpts), makeTimeout()]);
   ensureNoSdkError(result.output);
 
   let continuation = 0;
@@ -79,7 +80,7 @@ export async function tryMode(apiKey, cwd, costMode, prompt, onTextChunk = null)
       handleStreamChunk,
     };
     if (costMode) contOpts.costMode = costMode;
-    result = await Promise.race([client.run(contOpts), makeTimeout()]);
+    result = await Promise.race([runClientQuietly(client, contOpts), makeTimeout()]);
     ensureNoSdkError(result.output);
   }
 

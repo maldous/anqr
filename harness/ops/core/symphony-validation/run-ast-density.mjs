@@ -15,7 +15,12 @@ export async function runAstDensity(projectRoot, changedFiles = [], opts = {}) {
     },
   );
   if (result.heartbeatFailed)
-    return { pass: false, detail: "Heartbeat failed during ast-density", heartbeatFailed: true, heartbeatDetail: result.heartbeatDetail };
+    return {
+      pass: false,
+      detail: "Heartbeat failed during ast-density",
+      heartbeatFailed: true,
+      heartbeatDetail: result.heartbeatDetail,
+    };
   if (!result.ok) return { pass: false, detail: result.output };
   return result.output.trim().length > 0
     ? { pass: false, detail: result.output }

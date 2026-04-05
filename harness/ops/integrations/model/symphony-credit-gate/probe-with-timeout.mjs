@@ -1,4 +1,4 @@
-import { PROBE_TIMEOUT_MS } from './probe-timeout-ms.mjs';
+import { PROBE_TIMEOUT_MS } from "./probe-timeout-ms.mjs";
 
 export async function probeWithTimeout(url, options = {}) {
   const controller = new AbortController();

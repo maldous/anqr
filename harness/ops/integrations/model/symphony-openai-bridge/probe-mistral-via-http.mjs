@@ -7,8 +7,27 @@ export async function probeMistralViaHttp(providerDef, apiKey) {
     },
     body: JSON.stringify({
       model: providerDef.model,
-      messages: [{ role: "user", content: "Use the add tool to add 2 and 2. Then reply with only the numeric answer." }],
-      tools: [{ type: "function", function: { name: "add", description: "Add two integers", parameters: { type: "object", properties: { a: { type: "integer" }, b: { type: "integer" } }, required: ["a", "b"], additionalProperties: false } } }],
+      messages: [
+        {
+          role: "user",
+          content: "Use the add tool to add 2 and 2. Then reply with only the numeric answer.",
+        },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "add",
+            description: "Add two integers",
+            parameters: {
+              type: "object",
+              properties: { a: { type: "integer" }, b: { type: "integer" } },
+              required: ["a", "b"],
+              additionalProperties: false,
+            },
+          },
+        },
+      ],
       tool_choice: "auto",
     }),
   });

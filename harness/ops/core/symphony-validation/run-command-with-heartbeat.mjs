@@ -49,7 +49,11 @@ export function runCommandWithHeartbeat(command, execOptions, heartbeat) {
         hbResult = heartbeat();
       } catch (err) {
         heartbeatFailed = true;
-        heartbeatDetail = { phase: "periodic", reason: err.message, elapsedMs: Date.now() - startMs };
+        heartbeatDetail = {
+          phase: "periodic",
+          reason: err.message,
+          elapsedMs: Date.now() - startMs,
+        };
         clearInterval(heartbeatTimer);
         try {
           child.kill("SIGTERM");
@@ -58,7 +62,11 @@ export function runCommandWithHeartbeat(command, execOptions, heartbeat) {
       }
       if (!hbResult || !hbResult.ok) {
         heartbeatFailed = true;
-        heartbeatDetail = { phase: "periodic", reason: hbResult?.reason || "unknown", elapsedMs: Date.now() - startMs };
+        heartbeatDetail = {
+          phase: "periodic",
+          reason: hbResult?.reason || "unknown",
+          elapsedMs: Date.now() - startMs,
+        };
         clearInterval(heartbeatTimer);
         try {
           child.kill("SIGTERM");
@@ -95,11 +103,19 @@ export function runCommandWithHeartbeat(command, execOptions, heartbeat) {
           const finalHb = heartbeat();
           if (!finalHb || !finalHb.ok) {
             heartbeatFailed = true;
-            heartbeatDetail = { phase: "final", reason: finalHb?.reason || "unknown", elapsedMs: Date.now() - startMs };
+            heartbeatDetail = {
+              phase: "final",
+              reason: finalHb?.reason || "unknown",
+              elapsedMs: Date.now() - startMs,
+            };
           }
         } catch (err) {
           heartbeatFailed = true;
-          heartbeatDetail = { phase: "final", reason: err.message, elapsedMs: Date.now() - startMs };
+          heartbeatDetail = {
+            phase: "final",
+            reason: err.message,
+            elapsedMs: Date.now() - startMs,
+          };
         }
       }
 

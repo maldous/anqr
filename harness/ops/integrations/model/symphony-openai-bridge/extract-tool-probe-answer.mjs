@@ -4,9 +4,12 @@ export function extractToolProbeAnswer(result) {
   for (const step of steps) {
     const results = Array.isArray(step?.toolResults) ? step.toolResults : [];
     for (const toolResult of results) {
-      if (typeof toolResult?.output === "string" && toolResult.output.trim()) return toolResult.output.trim();
-      if (typeof toolResult?.result === "string" && toolResult.result.trim()) return toolResult.result.trim();
-      if (typeof toolResult?.content === "string" && toolResult.content.trim()) return toolResult.content.trim();
+      if (typeof toolResult?.output === "string" && toolResult.output.trim())
+        return toolResult.output.trim();
+      if (typeof toolResult?.result === "string" && toolResult.result.trim())
+        return toolResult.result.trim();
+      if (typeof toolResult?.content === "string" && toolResult.content.trim())
+        return toolResult.content.trim();
     }
   }
   return "";

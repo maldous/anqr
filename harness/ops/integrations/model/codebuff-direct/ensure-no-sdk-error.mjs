@@ -6,7 +6,11 @@ export function ensureNoSdkError(resultOutput) {
   if (message.includes("Symbol(vercel.ai.error)")) {
     throw new Error("Codebuff SDK error");
   }
-  if (isRecoverableError(message) || message.includes("AI_RetryError") || message.includes("Too Many Requests")) {
+  if (
+    isRecoverableError(message) ||
+    message.includes("AI_RetryError") ||
+    message.includes("Too Many Requests")
+  ) {
     throw new Error(message);
   }
 }

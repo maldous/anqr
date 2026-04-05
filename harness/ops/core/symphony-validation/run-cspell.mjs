@@ -14,6 +14,11 @@ export async function runCspell(projectRoot, changedFiles = [], opts = {}) {
     heartbeat: opts.heartbeat,
   });
   if (result.heartbeatFailed)
-    return { pass: false, detail: "Heartbeat failed during cspell", heartbeatFailed: true, heartbeatDetail: result.heartbeatDetail };
+    return {
+      pass: false,
+      detail: "Heartbeat failed during cspell",
+      heartbeatFailed: true,
+      heartbeatDetail: result.heartbeatDetail,
+    };
   return result.ok ? { pass: true, detail: "" } : { pass: false, detail: result.output };
 }

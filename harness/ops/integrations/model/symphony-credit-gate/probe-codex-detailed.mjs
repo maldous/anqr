@@ -1,11 +1,11 @@
-import { Codex } from '@openai/codex-sdk';
+import { Codex } from "@openai/codex-sdk";
 
-import { PROJECT_ROOT } from './project-root.mjs';
-import { CODEX_PROBE_TIMEOUT_MS } from './codex-probe-timeout-ms.mjs';
-import { CODEX_SANDBOX_MODE } from './codex-sandbox-mode.mjs';
-import { classifyProviderProbeError } from './classify-provider-probe-error.mjs';
-import { providerProbeStage } from './provider-probe-stage.mjs';
-import { providerProbeTruncate } from './provider-probe-truncate.mjs';
+import { PROJECT_ROOT } from "./project-root.mjs";
+import { CODEX_PROBE_TIMEOUT_MS } from "./codex-probe-timeout-ms.mjs";
+import { CODEX_SANDBOX_MODE } from "./codex-sandbox-mode.mjs";
+import { classifyProviderProbeError } from "./classify-provider-probe-error.mjs";
+import { providerProbeStage } from "./provider-probe-stage.mjs";
+import { providerProbeTruncate } from "./provider-probe-truncate.mjs";
 
 export async function probeCodexDetailed(provider, apiKey) {
   const startedAt = Date.now();
@@ -14,10 +14,10 @@ export async function probeCodexDetailed(provider, apiKey) {
   if (!apiKey?.trim()) {
     return {
       available: false,
-      status: 'auth_missing',
-      reason: 'OPENAI_API_KEY is not set for Codex SDK',
+      status: "auth_missing",
+      reason: "OPENAI_API_KEY is not set for Codex SDK",
       durationMs: Date.now() - startedAt,
-      message: 'OPENAI_API_KEY is not set',
+      message: "OPENAI_API_KEY is not set",
       stages,
     };
   }
@@ -26,7 +26,7 @@ export async function probeCodexDetailed(provider, apiKey) {
 
   try {
     stages.push(
-      providerProbeStage('sdk_started', {
+      providerProbeStage("sdk_started", {
         model: provider?.model || null,
       }),
     );
@@ -36,7 +36,7 @@ export async function probeCodexDetailed(provider, apiKey) {
       model: provider?.model || undefined,
       workingDirectory: PROJECT_ROOT,
       sandboxMode: CODEX_SANDBOX_MODE,
-      approvalPolicy: 'never',
+      approvalPolicy: "never",
       webSearchEnabled: false,
       networkAccessEnabled: false,
     });
@@ -48,25 +48,20 @@ export async function probeCodexDetailed(provider, apiKey) {
       timeoutHandle.unref?.();
     });
 
-    const result = await Promise.race([
-      thread.run('Reply with exactly: ok'),
-      timeoutPromise,
-    ]);
+    const result = await Promise.race([thread.run("Reply with exactly: ok"), timeoutPromise]);
 
-    const finalResponse = providerProbeTruncate(result?.finalResponse || '');
+    const finalResponse = providerProbeTruncate(result?.finalResponse || "");
 
     stages.push(
-      providerProbeStage('sdk_succeeded', {
+      providerProbeStage("sdk_succeeded", {
         responsePreview: finalResponse,
       }),
     );
 
     return {
       available: Boolean(finalResponse),
-      status: finalResponse ? 'success' : 'unavailable',
-      reason: finalResponse
-        ? 'Codex SDK probe succeeded'
-        : 'Codex SDK returned empty response',
+      status: finalResponse ? "success" : "unavailable",
+      reason: finalResponse ? "Codex SDK probe succeeded" : "Codex SDK returned empty response",
       durationMs: Date.now() - startedAt,
       message: finalResponse,
       stages,
@@ -76,7 +71,7 @@ export async function probeCodexDetailed(provider, apiKey) {
     const classified = classifyProviderProbeError(message);
 
     stages.push(
-      providerProbeStage('sdk_failed', {
+      providerProbeStage("sdk_failed", {
         status: classified.status,
         message: providerProbeTruncate(message),
       }),

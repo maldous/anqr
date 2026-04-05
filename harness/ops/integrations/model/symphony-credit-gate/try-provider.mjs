@@ -1,25 +1,32 @@
-import { getProviderHealthState, HEALTH_STATES } from '../symphony-provider-health.mjs';
+import { getProviderHealthState, HEALTH_STATES } from "../symphony-provider-health.mjs";
 
-import { clearProviderFailure } from './clear-provider-failure.mjs';
-import { isRecentlyFailed } from './is-recently-failed.mjs';
-import { isRecentlyProbed } from './is-recently-probed.mjs';
-import { probeOpenAIModels } from './probe-open-aimodels.mjs';
-import { recordProviderSelection } from './record-provider-selection.mjs';
-import { resolveProviderApiKey } from './resolve-provider-api-key.mjs';
-import { saveProbeResult } from './save-probe-result.mjs';
-import { toSelectedProvider } from './to-selected-provider.mjs';
-import { logDebug, logInfo } from './logger.mjs';
+import { clearProviderFailure } from "./clear-provider-failure.mjs";
+import { isRecentlyFailed } from "./is-recently-failed.mjs";
+import { isRecentlyProbed } from "./is-recently-probed.mjs";
+import { probeOpenAIModels } from "./probe-open-aimodels.mjs";
+import { recordProviderSelection } from "./record-provider-selection.mjs";
+import { resolveProviderApiKey } from "./resolve-provider-api-key.mjs";
+import { saveProbeResult } from "./save-probe-result.mjs";
+import { toSelectedProvider } from "./to-selected-provider.mjs";
+import { logDebug, logInfo } from "./logger.mjs";
 
 export async function tryProvider(provider) {
-  logDebug('[tryProvider] Attempting provider', {
+  logDebug("[tryProvider] Attempting provider", {
     providerName: provider.name,
     tier: provider.tier,
     hasEnvVar: !!provider.envVar,
     requiresSdk: !!provider.requiresSdk,
   });
   const health = getProviderHealthState(provider.name);
-  if ([HEALTH_STATES.COOLING_DOWN, HEALTH_STATES.BLOCKED, HEALTH_STATES.DISABLED].includes(health.state)) {
-    logDebug(`${provider.name}: skipped (health state: ${health.state})`, { providerName: provider.name, healthState: health.state });
+  if (
+    [HEALTH_STATES.COOLING_DOWN, HEALTH_STATES.BLOCKED, HEALTH_STATES.DISABLED].includes(
+      health.state,
+    )
+  ) {
+    logDebug(`${provider.name}: skipped (health state: ${health.state})`, {
+      providerName: provider.name,
+      healthState: health.state,
+    });
     return null;
   }
   const apiKey = await resolveProviderApiKey(provider);
@@ -32,7 +39,10 @@ export async function tryProvider(provider) {
     return null;
   }
   if (provider.requiresSdk) {
-    logInfo(`${provider.name}: using SDK ✅`, { providerName: provider.name, model: provider.model });
+    logInfo(`${provider.name}: using SDK ✅`, {
+      providerName: provider.name,
+      model: provider.model,
+    });
     clearProviderFailure(provider.name);
     recordProviderSelection(provider.name);
     return toSelectedProvider(provider, apiKey);
@@ -41,22 +51,35 @@ export async function tryProvider(provider) {
   if (cached) {
     const ageSecs = Math.round((Date.now() - cached.ts) / 1000);
     if (cached.available) {
-      logDebug(`${provider.name}: available (shared cache, ${ageSecs}s old)`, { providerName: provider.name });
+      logDebug(`${provider.name}: available (shared cache, ${ageSecs}s old)`, {
+        providerName: provider.name,
+      });
       clearProviderFailure(provider.name);
       recordProviderSelection(provider.name);
       return toSelectedProvider(provider, apiKey);
     }
-    logDebug(`${provider.name}: unavailable (shared cache, ${ageSecs}s old)`, { providerName: provider.name });
+    logDebug(`${provider.name}: unavailable (shared cache, ${ageSecs}s old)`, {
+      providerName: provider.name,
+    });
     return null;
   }
-  logDebug(`${provider.name}: probing...`, { providerName: provider.name, hasCustomProbe: !!provider.probe });
-  const available = provider.probe ? await provider.probe(provider, apiKey) : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey, false, provider.name);
+  logDebug(`${provider.name}: probing...`, {
+    providerName: provider.name,
+    hasCustomProbe: !!provider.probe,
+  });
+  const available = provider.probe
+    ? await provider.probe(provider, apiKey)
+    : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey, false, provider.name);
   saveProbeResult(provider.name, !!available);
   if (!available) {
     logDebug(`${provider.name}: unavailable ❌`, { providerName: provider.name });
     return null;
   }
-  logInfo(`${provider.name}: available ✅`, { providerName: provider.name, model: provider.model, tier: provider.tier });
+  logInfo(`${provider.name}: available ✅`, {
+    providerName: provider.name,
+    model: provider.model,
+    tier: provider.tier,
+  });
   clearProviderFailure(provider.name);
   recordProviderSelection(provider.name);
   return toSelectedProvider(provider, apiKey);

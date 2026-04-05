@@ -1,6 +1,6 @@
-import { PROVIDERS } from './providers.mjs';
-import { PREFERRED_PROVIDER_ORDER } from './preferred-provider-order.mjs';
-import { getRankedProviders } from './get-ranked-providers.mjs';
+import { PROVIDERS } from "./providers.mjs";
+import { PREFERRED_PROVIDER_ORDER } from "./preferred-provider-order.mjs";
+import { getRankedProviders } from "./get-ranked-providers.mjs";
 
 export function buildProviderProbeSequence() {
   const sequence = [];
@@ -10,8 +10,8 @@ export function buildProviderProbeSequence() {
     seen.add(name);
     sequence.push({ name, source });
   };
-  for (const name of PREFERRED_PROVIDER_ORDER) pushName(name, 'preferred');
-  for (const ranked of getRankedProviders()) pushName(ranked.name, 'ranked');
-  for (const provider of PROVIDERS) pushName(provider.name, 'fallback');
+  for (const name of PREFERRED_PROVIDER_ORDER) pushName(name, "preferred");
+  for (const ranked of getRankedProviders()) pushName(ranked.name, "ranked");
+  for (const provider of PROVIDERS) pushName(provider.name, "fallback");
   return sequence;
 }
