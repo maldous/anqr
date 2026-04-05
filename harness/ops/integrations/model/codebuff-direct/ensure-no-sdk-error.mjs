@@ -1,12 +1,12 @@
+import { extractSdkMessage } from "./extract-sdk-message.mjs";
 import { isRecoverableError } from "./is-recoverable-error.mjs";
 
 export function ensureNoSdkError(resultOutput) {
-  const str = typeof resultOutput === "string" ? resultOutput : JSON.stringify(resultOutput);
-  if (str.includes("Symbol(vercel.ai.error)")) {
-    const match = str.match(/"message":"([^"]+)"/);
-    throw new Error(match ? match[1] : "Codebuff SDK error");
+  const message = extractSdkMessage(resultOutput);
+  if (message.includes("Symbol(vercel.ai.error)")) {
+    throw new Error("Codebuff SDK error");
   }
-  if (isRecoverableError(str)) {
-    throw new Error(str);
+  if (isRecoverableError(message) || message.includes("AI_RetryError") || message.includes("Too Many Requests")) {
+    throw new Error(message);
   }
 }

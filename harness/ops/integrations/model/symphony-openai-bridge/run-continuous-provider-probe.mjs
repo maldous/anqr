@@ -19,6 +19,8 @@ import { setLastProbeTimeCheck } from "./last-probe-time-check.mjs";
 import { providerStatusCache } from "./provider-status-cache.mjs";
 import { saveProbeCache } from "./save-probe-cache.mjs";
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
+import { refreshLiveProviderCatalogs } from "./refresh-live-provider-catalogs.mjs";
+import { reloadProvidersFromCatalogCache } from "../symphony-credit-gate/providers.mjs";
 import { logDebug, logInfo, logError } from "./logger.mjs";
 
 export async function runContinuousProviderProbe() {
@@ -49,6 +51,12 @@ export async function runContinuousProviderProbe() {
 
   try {
     logInfo(`🔍 Starting continuous provider probe cycle ${probeCompletionCount + 1}...`);
+    try {
+      await refreshLiveProviderCatalogs();
+      reloadProvidersFromCatalogCache();
+    } catch (catalogError) {
+      logDebug(`provider catalog refresh skipped: ${catalogError.message}`);
+    }
 
     // Phase 1: Check reachability and API keys (parallel, all eligible providers)
     const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];

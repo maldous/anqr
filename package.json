@@ -98,7 +98,8 @@
     "test:scripts": "npx vitest run harness/ops/integrations/linear",
     "depcruise:scripts": "npx depcruise harness/ops/integrations/linear --validate",
     "audit:ast:scripts": "npx jscpd --format json --output reports/jscpd/scripts.json harness/ops/integrations/linear",
-    "cspell:scripts": "npx cspell harness/ops/integrations/linear/*.mjs"
+    "cspell:scripts": "npx cspell harness/ops/integrations/linear/*.mjs",
+    "probe:providers": "node harness/ops/provider-probe-report.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.52",

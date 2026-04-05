@@ -8,43 +8,18 @@ import { logError } from "./logger.mjs";
 
 export function createProviderModel(provider) {
   const { name, model, baseUrl, apiKey } = provider;
-
-  if (name === "groq") {
-    return createGroq({ apiKey })(model);
-  }
-  if (name === "gemini" || name === "gemini-lite") {
-    return createGoogleGenerativeAI({ apiKey })(model);
-  }
-  if (OPENROUTER_PROVIDER_NAME_SET.has(name)) {
-    return createOpenRouter({ apiKey })(model);
-  }
-  if (name === "mistral") {
-    return createOpenAiCompatibleModel(model, apiKey, "https://api.mistral.ai/v1");
-  }
-  if (name === "codex") {
-    return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.openai.com/v1");
-  }
-  if (name === "sambanova") {
-    return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.sambanova.ai/v1");
-  }
-  if (name === "cerebras") {
-    return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.cerebras.ai/v1");
-  }
-  if (name === "github-models") {
-    return createOpenAiCompatibleModel(
-      model,
-      apiKey,
-      baseUrl || "https://models.github.ai/inference/v1",
-    );
-  }
-  if (name === "ollama-local" || name.startsWith("ollama-qwen")) {
-    return createOpenAiCompatibleModel(
-      model,
-      apiKey,
-      baseUrl || "http://127.0.0.1:11434/v1",
-      "ollama",
-    );
-  }
+  if (name === "groq") return createGroq({ apiKey })(model);
+  if (name === "gemini" || name === "gemini-lite") return createGoogleGenerativeAI({ apiKey })(model);
+  if (OPENROUTER_PROVIDER_NAME_SET.has(name)) return createOpenRouter({ apiKey })(model);
+  if (name === "mistral") return createOpenAiCompatibleModel(model, apiKey, "https://api.mistral.ai/v1");
+  if (name === "codex") return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.openai.com/v1");
+  if (name === "sambanova") return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.sambanova.ai/v1");
+  if (name === "cerebras") return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.cerebras.ai/v1");
+  if (name === "github-models") return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://models.github.ai/inference/v1");
+  if (name === "huggingface") return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://router.huggingface.co/v1");
+  if (name === "fireworks") return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.fireworks.ai/inference/v1");
+  if (name === "together") return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.together.xyz/v1");
+  if (name === "ollama-local" || name.startsWith("ollama-qwen")) return createOpenAiCompatibleModel(model, apiKey, baseUrl || "http://127.0.0.1:11434/v1", "ollama");
   if (!baseUrl) {
     logError(`Provider ${name} not supported - no baseUrl for default fallback`);
     throw new Error(`Provider ${name} not supported - no baseUrl for default fallback`);

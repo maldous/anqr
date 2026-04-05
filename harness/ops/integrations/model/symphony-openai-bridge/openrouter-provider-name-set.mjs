@@ -1,30 +1,3 @@
-export const OPENROUTER_PROVIDER_NAME_SET = new Set([
-  "openrouter-nemotron-super",
-  "openrouter",
-  "openrouter-free",
-  "openrouter-nemotron-nano-30b",
-  "openrouter-qwen3-next-80b",
-  "openrouter-step3-5-flash",
-  "openrouter-trinity-mini",
-  "openrouter-nemotron-nano-9b",
-  "openrouter-minimax-m2.5",
-  "openrouter-qwen3-coder",
-  "openrouter-lfm-2.5-thinking",
-  "openrouter-lfm-2.5-instruct",
-  "openrouter-nemotron-nano-12b-vl",
-  "openrouter-trinity-large",
-  "openrouter-mistral-small-3.1",
-  "openrouter-llama-3.3-70b",
-  "openrouter-qwen3-4b",
-  "openrouter-gpt-oss-120b",
-  "openrouter-gpt-oss-20b",
-  "openrouter-llama-3.2-3b",
-  "openrouter-dolphin-mistral",
-  "openrouter-gemma-3-27b",
-  "openrouter-glm-4.5-air",
-  "openrouter-gemma-3n-e2b",
-  "openrouter-gemma-3-4b",
-  "openrouter-gemma-3n-e4b",
-  "openrouter-gemma-3-12b",
-  "openrouter-hermes-3-405b",
-]);
+import { OPENROUTER_PROVIDER_NAMES } from "./openrouter-provider-names.mjs";
+
+export const OPENROUTER_PROVIDER_NAME_SET = new Set(["openrouter", ...OPENROUTER_PROVIDER_NAMES]);

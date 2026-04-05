@@ -1,0 +1,1 @@
+export const CODEBUFF_PROBE_TIMEOUT_MS = Number(process.env.CODEBUFF_PROBE_TIMEOUT_MS || 90000);

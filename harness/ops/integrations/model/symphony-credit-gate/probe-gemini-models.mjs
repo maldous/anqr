@@ -1,10 +1,6 @@
-import { probeWithTimeout } from "./probe-with-timeout.mjs";
+import { probeGenerateTextDetailed } from './probe-generate-text-detailed.mjs';
 
 export async function probeGeminiModels(apiKey, model) {
-  const res = await probeWithTimeout(
-    `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
-  );
-  if (!res || !res.ok) return false;
-  const text = await res.text();
-  return text.includes(model);
+  const result = await probeGenerateTextDetailed({ name: 'gemini', model, envVar: 'GEMINI_TOKEN' }, apiKey);
+  return result.available;
 }

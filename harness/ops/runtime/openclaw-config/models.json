@@ -42,6 +42,18 @@
           "name": "Symphony OpenRouter"
         },
         {
+          "id": "symphony/huggingface",
+          "name": "Symphony Hugging Face"
+        },
+        {
+          "id": "symphony/fireworks",
+          "name": "Symphony Fireworks"
+        },
+        {
+          "id": "symphony/together",
+          "name": "Symphony Together"
+        },
+        {
           "id": "symphony/sambanova",
           "name": "Symphony SambaNova"
         },
@@ -90,6 +102,9 @@
         "symphony-bridge/symphony/gemini",
         "symphony-bridge/symphony/gemini-lite",
         "symphony-bridge/symphony/openrouter",
+        "symphony-bridge/symphony/huggingface",
+        "symphony-bridge/symphony/fireworks",
+        "symphony-bridge/symphony/together",
         "symphony-bridge/symphony/sambanova",
         "symphony-bridge/symphony/cerebras",
         "symphony-bridge/symphony/ollama-local",

@@ -250,6 +250,18 @@
           "api": "openai-completions"
         },
         {
+          "id": "symphony/huggingface",
+          "name": "Symphony Hugging Face"
+        },
+        {
+          "id": "symphony/fireworks",
+          "name": "Symphony Fireworks"
+        },
+        {
+          "id": "symphony/together",
+          "name": "Symphony Together"
+        },
+        {
           "id": "symphony/sambanova",
           "name": "Symphony SambaNova",
           "reasoning": false,
