@@ -25,6 +25,7 @@ import { activeRequests } from "./active-requests.mjs";
 import { buildSelectionOptions } from "./build-selection-options.mjs";
 import { checkAuth } from "./check-auth.mjs";
 import { ensureString } from "./ensure-string.mjs";
+import { executeLinearIssueRequest } from "./execute-linear-issue-request.mjs";
 import { finalizeWorktreeRequest } from "./finalize-worktree-request.mjs";
 import { formatElapsed } from "./format-elapsed.mjs";
 import { invokeCodebuffDirectStreamToSSE } from "./invoke-codebuff-direct-stream-to-sse.mjs";
@@ -216,6 +217,10 @@ export const server = http.createServer(async (req, res) => {
           ? "Provider probe started. Check /v1/providers for results."
           : "A probe is already in progress. Check /v1/providers for current results.",
       });
+    }
+
+    if (req.method === "POST" && req.url === "/v1/linear/execute") {
+      return executeLinearIssueRequest(req, res);
     }
 
     // POST /v1/chat/completions

@@ -6,6 +6,8 @@ export { FAILURE_STATE_FILE } from "./failure-state-file.mjs";
 export { STATS_FILE } from "./stats-file.mjs";
 export { PROBE_RESULTS_FILE } from "./probe-results-file.mjs";
 export { PROBE_RESULT_TTL_MS } from "./probe-result-ttl-ms.mjs";
+export { PROBE_CACHE_FILE } from "./probe-cache-file.mjs";
+export { PROBE_CACHE_TTL_MS } from "./probe-cache-ttl-ms.mjs";
 export { PROVIDER_STATS } from "./provider-stats.mjs";
 export { TIER_PAID } from "./tier-paid.mjs";
 export { TIER_FREE_CLOUD } from "./tier-free-cloud.mjs";

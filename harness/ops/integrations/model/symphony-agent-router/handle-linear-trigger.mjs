@@ -1,8 +1,8 @@
 import { MAX_QUEUE_LENGTH } from "./max-queue-length.mjs";
 import { WORKTREES } from "./worktrees.mjs";
+import { dispatchLinearExecution } from "./dispatch-linear-execution.mjs";
 import { json } from "./json.mjs";
 import { linearQueue } from "./linear-queue.mjs";
-import { spawnLinearRunner } from "./spawn-linear-runner.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
 export function handleLinearTrigger(req, res) {
@@ -54,9 +54,9 @@ export function handleLinearTrigger(req, res) {
       return;
     }
 
-    // Spawn the runner
+    // Dispatch directly to the selected worktree executor HTTP surface
     json(res, 202, { status: "accepted" });
-    spawnLinearRunner(identifier);
+    dispatchLinearExecution(identifier);
   });
 
   req.on("error", (err) => {

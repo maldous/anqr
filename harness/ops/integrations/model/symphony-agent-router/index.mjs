@@ -15,7 +15,7 @@ export { linearQueue } from "./linear-queue.mjs";
 export { MAX_QUEUE_LENGTH } from "./max-queue-length.mjs";
 export { MAX_QUEUE_AGE_MS } from "./max-queue-age-ms.mjs";
 export { QUEUE_POLL_INTERVAL_MS } from "./queue-poll-interval-ms.mjs";
-export { spawnLinearRunner } from "./spawn-linear-runner.mjs";
+export { dispatchLinearExecution } from "./dispatch-linear-execution.mjs";
 export { handleLinearTrigger } from "./handle-linear-trigger.mjs";
 export { handleLinearQueue } from "./handle-linear-queue.mjs";
 export { server } from "./server.mjs";

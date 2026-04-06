@@ -24,6 +24,7 @@ export function buildSelectionOptions(route, excludedNames = [], sessionId = nul
     safeLogDebug(`🔍 Evaluation cycle: forcing sample of "${evaluationSample}"`);
     return {
       allowedNames: [evaluationSample],
+      allowSafetyNetOverride: true,
       excludeNames: [...excludeSet],
     };
   }
@@ -50,6 +51,7 @@ export function buildSelectionOptions(route, excludedNames = [], sessionId = nul
         safeLogDebug(`📌 Session sticky: ${providerName} (paid mode, ${turnCount} turns)`);
         return {
           allowedNames: [providerName],
+          allowSafetyNetOverride: true,
           excludeNames: [...excludeSet],
         };
       } else if (turnCount < turnLimit) {
@@ -57,6 +59,7 @@ export function buildSelectionOptions(route, excludedNames = [], sessionId = nul
         safeLogDebug(`📌 Session sticky: ${providerName} (${turnCount}/${turnLimit} turns)`);
         return {
           allowedNames: [providerName],
+          allowSafetyNetOverride: true,
           excludeNames: [...excludeSet],
         };
       }
@@ -69,6 +72,7 @@ export function buildSelectionOptions(route, excludedNames = [], sessionId = nul
 
   return {
     allowedNames: route.allowedNames,
+    allowSafetyNetOverride: true,
     excludeNames: [...excludeSet],
   };
 }

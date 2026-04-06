@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * create-ast-audit-issues.mjs — Create Linear issues for ANQ-1131: One AST per file refactor
+ * create-ast-audit-issues.mjs — Create generic Linear issues for the one-AST-per-file refactor
  *
  * Breaks down the entire harness/** surface into sensible-sized chunks that can each
  * be handled by an agent in a single pass.
@@ -287,7 +287,7 @@ Refactor orchestration modules in harness/ops/orchestration to export one AST pe
 
 ## Owned Surfaces
 
-- \`harness/ops/orchestration/symphony-runner.mjs\` (main execution loop)
+- \`harness/ops/integrations/model/symphony-agent-router.mjs\` (Linear trigger routing into worktree executors)
 - \`harness/ops/orchestration/symphony-queue-control.mjs\` (queue operations)
 - \`harness/ops/orchestration/symphony-control.mjs\` (control commands)
 - \`harness/ops/orchestration/symphony-worktree-pool.mjs\` (worktree management)
@@ -662,7 +662,7 @@ find harness/ops -type l -exec test ! -e {} \\; -print
 ];
 
 async function main() {
-  console.log("Creating AST Audit Linear issues for ANQ-1131...\n");
+  console.log("Creating AST audit Linear issues...\n");
 
   const created = [];
   for (const group of issueGroups) {

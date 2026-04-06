@@ -62,7 +62,7 @@ import {
   recordProviderFailure,
   resetProviderStats,
 } from "./symphony-credit-gate.mjs";
-import { getProviderHealthState } from "./symphony-provider-health.mjs";
+import { getProviderHealthState, shouldRetryProvider } from "./symphony-provider-health.mjs";
 
 const _origFetch = globalThis.fetch;
 
@@ -80,6 +80,7 @@ describe("Provider Routing Edge Cases", () => {
       state: "healthy",
       lastUpdated: Date.now(),
     }));
+    vi.mocked(shouldRetryProvider).mockImplementation(() => false);
 
     // Set API keys for common providers
     process.env.GROQ_TOKEN = "test-groq-key";
@@ -259,7 +260,7 @@ describe("Provider Routing Edge Cases", () => {
     it("should skip providers that recently failed", async () => {
       // Record a failure for groq — uses the exported function which writes
       // to the virtual FS via the mocked writeFileSync/readFileSync.
-      recordProviderFailure("groq");
+      recordProviderFailure("groq", "provider_error");
 
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(
         async (url: string | URL | Request) => {
@@ -304,7 +305,7 @@ describe("Provider Routing Edge Cases", () => {
   });
 
   describe("Safety Net Activation", () => {
-    it("should activate safety net when all regular providers fail", async () => {
+    it("should activate safety net when all regular providers fail and override is enabled", async () => {
       // Remove all API keys so all cloud providers are skipped
       delete process.env.GROQ_TOKEN;
       delete process.env.MISTRAL_TOKEN;
@@ -317,17 +318,17 @@ describe("Provider Routing Edge Cases", () => {
 
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(
         async (url: string | URL | Request) => {
-          if (String(url).includes("/api/tags")) {
+          if (String(url).includes("/models")) {
             return {
               ok: true,
-              json: async () => ({ models: [{ name: "qwen2.5-coder:3b-instruct" }] }),
+              text: async () => "qwen2.5-coder:3b-instruct",
             } as Response;
           }
           return null as unknown as Response;
         },
       );
 
-      const result = await selectProvider();
+      const result = await selectProvider({ allowSafetyNetOverride: true });
 
       expect(result).not.toBeNull();
       if (result) {
@@ -336,7 +337,7 @@ describe("Provider Routing Edge Cases", () => {
       }
     });
 
-    it("should bypass excludeNames for P0 safety net override", async () => {
+    it("should bypass excludeNames for explicit safety net override", async () => {
       // Remove all API keys
       delete process.env.GROQ_TOKEN;
       delete process.env.MISTRAL_TOKEN;
@@ -349,10 +350,10 @@ describe("Provider Routing Edge Cases", () => {
 
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(
         async (url: string | URL | Request) => {
-          if (String(url).includes("/api/tags")) {
+          if (String(url).includes("/models")) {
             return {
               ok: true,
-              json: async () => ({ models: [{ name: "qwen2.5-coder:3b-instruct" }] }),
+              text: async () => "qwen2.5-coder:3b-instruct",
             } as Response;
           }
           return null as unknown as Response;
@@ -361,6 +362,7 @@ describe("Provider Routing Edge Cases", () => {
 
       // Try to exclude ollama — safety net should override
       const result = await selectProvider({
+        allowSafetyNetOverride: true,
         excludeNames: ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
       });
 
@@ -398,7 +400,7 @@ describe("Provider Routing Edge Cases", () => {
         async (url: string | URL | Request) => {
           const urlStr = String(url);
           if (urlStr.includes("api.groq.com")) {
-            return { ok: false, status: 401 } as Response;
+            return { ok: false, status: 401, text: async () => "unauthorized" } as Response;
           }
           if (urlStr.includes("api.mistral.ai")) {
             return { ok: true, text: async () => "mistral-small-latest" } as Response;

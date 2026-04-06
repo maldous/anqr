@@ -98,7 +98,7 @@ console.log(`URL: https://linear.app/anqr/issue/${issue.identifier}`);
 The workflow provides detailed output including:
 
 - Issue URL for direct access
-- Issue identifier (e.g., ANQ-1234)
+- Issue identifier (e.g., ISSUE-1234)
 - Issue ID (internal Linear ID)
 - Labels applied
 - State and priority information

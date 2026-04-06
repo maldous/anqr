@@ -1,15 +1,20 @@
 import { execFileSync } from "node:child_process";
 
 export function checkSystemdServices() {
-  const runnerUnits =
-    process.env.ANQR_HARNESS_DOCTOR_RUNNERS || "anqr-symphony-runner@1,anqr-symphony-runner@2";
+  const executorUnits =
+    process.env.ANQR_HARNESS_DOCTOR_EXECUTORS ||
+    process.env.ANQR_HARNESS_DOCTOR_RUNNERS ||
+    "anqr-symphony-executor@1,anqr-symphony-executor@2";
   const services = [
-    ...runnerUnits
+    ...executorUnits
       .split(",")
       .map((value) => value.trim())
       .filter(Boolean),
-    "anqr-nightly",
-    "anqr-queue-feeder",
+    "anqr-symphony-router",
+    "anqr-symphony-integrator",
+    "anqr-symphony-worktree-recovery",
+    "anqr-worktree-health",
+    "anqr-watchdog",
   ];
 
   const results = [];

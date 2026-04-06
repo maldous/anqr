@@ -8,7 +8,7 @@ export function generateEvidenceReport(comparison, baselineMetrics, concurrentMe
   const timestamp = new Date().toISOString().split("T")[0];
   const reportPath = resolve(EVIDENCE_DIR, `worktree-benchmark-${timestamp}.md`);
 
-  const report = `# ANQ-1104: Worktree Concurrent Execution Benchmark Results
+  const report = `# Worktree Concurrent Execution Benchmark Results
 
 ## Executive Summary
 
@@ -118,7 +118,7 @@ ${
 ---
 
 **Generated:** ${new Date().toISOString()}
-**Validation:** Phase 2 (ANQ-1104)
+**Validation:** Worktree concurrency benchmark
 `;
 
   writeFileSync(reportPath, report, "utf-8");

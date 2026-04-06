@@ -2,7 +2,7 @@
 
 ## 1. Directory Overview
 
-This directory implements **ANQR Orchestration** within the ANQR harness. Key immediate entries include `symphony-worktree-pool.spec.ts`, `symphony-worktree-recovery.mjs`, `symphony-worktree-pool.mjs`, `symphony-queue-control.mjs`. The current inventory is 12 non-README files and 9 subdirectories.
+This directory implements **ANQR Orchestration** within the ANQR harness. Key immediate entries include `symphony-worktree-pool.spec.ts`, `symphony-worktree-recovery.mjs`, `symphony-worktree-pool.mjs`, `symphony-queue-control.mjs`. The maintained concurrency surface now centers on executor services and worktree recovery rather than legacy runner timers. The current inventory is 12 non-README files and 9 subdirectories.
 
 ## 2. File Summaries
 
@@ -15,7 +15,6 @@ This directory implements **ANQR Orchestration** within the ANQR harness. Key im
 - **symphony-control.mjs** - Facade module that re-exports public members from `./symphony-control/index.mjs`, `./symphony-control/runtime.mjs`.
 - **symphony-integrator.mjs** - Facade module that re-exports public members from `./symphony-integrator/index.mjs`, `./symphony-integrator/runtime.mjs`.
 - **symphony-queue-control.mjs** - Facade module that re-exports public members from `./symphony-queue-control/index.mjs`, `./symphony-queue-control/runtime.mjs`.
-- **symphony-runner.mjs** - Facade module that re-exports public members from `./symphony-runner/index.mjs`, `./symphony-runner/runtime.mjs`.
 - **symphony-worktree-pool.mjs** - Facade module that re-exports public members from `./symphony-worktree-pool/index.mjs`, `./symphony-worktree-pool/runtime.mjs`.
 - **symphony-worktree-pool.mjs.d.ts** - Facade module that re-exports public members from `./symphony-worktree-pool/index.d.ts`.
 - **symphony-worktree-pool.spec.ts** - Module that implements symphony worktree pool.spec.
@@ -29,7 +28,7 @@ This directory implements **ANQR Orchestration** within the ANQR harness. Key im
 - **symphony-control/** - Contains **ANQR Symphony Control**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 - **symphony-integrator/** - Contains **ANQR Symphony Integrator**; it contains 14 immediate files and has 0 child directories.
 - **symphony-queue-control/** - Contains **ANQR Queue Control**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **symphony-runner/** - Contains **ANQR Symphony Runner**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
+- **symphony-runner/** - Contains **ANQR Symphony Runner internals**; execution logic retained behind the active executor HTTP surface while legacy runner facades have been removed.
 - **symphony-worktree-pool/** - Contains **ANQR Symphony Worktree Pool**; it contains 21 immediate files and has 0 child directories.
 - **symphony-worktree-recovery/** - Contains **ANQR Worktree Recovery**; it contains 17 immediate files and has 0 child directories.
 

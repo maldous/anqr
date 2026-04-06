@@ -2,7 +2,7 @@
 
 ## 1. Directory Overview
 
-This directory implements **ANQR Model Integrations** within the ANQR harness. Key immediate entries include `symphony-openai-bridge-routing-edge-cases.spec.ts`, `symphony-openai-bridge-normalization.spec.ts`, `symphony-adaptive-context.spec.ts`, `symphony-session-state.spec.ts`. The current inventory is 24 non-README files and 11 subdirectories.
+This directory implements **ANQR Model Integrations** within the ANQR harness. Key immediate entries include `symphony-openai-bridge-routing-edge-cases.spec.ts`, `symphony-openai-bridge-normalization.spec.ts`, `symphony-adaptive-context.spec.ts`, `symphony-session-state.spec.ts`. Linear issue execution now routes through the worktree executor HTTP surface instead of spawning legacy runner entrypoints. The current inventory is 24 non-README files and 11 subdirectories.
 
 ## 2. File Summaries
 

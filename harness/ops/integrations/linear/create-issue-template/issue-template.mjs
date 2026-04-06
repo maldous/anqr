@@ -191,8 +191,8 @@ Error: Maximum call stack size exceeded
 [Related issues, documentation, external resources]
 
 **Related issues:**
-- ANQ-1234: Previous attempt to fix similar issue
-- ANQ-5678: Related feature request
+- Previous attempt to fix similar issue
+- Related feature request
 - PR #1234: Previous implementation attempt
 
 **Documentation:**
@@ -211,7 +211,7 @@ Error: Maximum call stack size exceeded
 [Any additional information that helps understand the problem or solution]
 
 **Background:**
-This issue was discovered while working on ANQ-1401 (Document agents instructions and create Linear issue workflow) when testing the new issue creation validation system.
+This issue was discovered while testing the current issue creation validation workflow.
 
 **Dependencies:**
 - QR generation component version 2.1.0

@@ -18,7 +18,7 @@ import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
 
 export async function main() {
   const args = new Map();
-  // Parse arguments with values (e.g., --issue ANQ-123)
+  // Parse arguments with values (e.g., --issue ISSUE-123)
   for (let i = 2; i < process.argv.length; i++) {
     const arg = process.argv[i];
     if (arg === "--dry-run") args.set("dryRun", true);

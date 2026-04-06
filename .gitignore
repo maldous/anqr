@@ -23,3 +23,4 @@ ok.txt
 test-output.log
 .sonar_tmp/
 harness/.structurizr
+harness/.structurizr-export

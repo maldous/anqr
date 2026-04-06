@@ -80,6 +80,16 @@ Symphony Bridge uses the credit-gate provider cascade with **tier-based dynamic 
 
 The credit-gate selects providers based on dynamic scoring and health state, with `codex` always retried first when healthy. Provider rotation on failure uses health state tracking to skip cooling-down providers. The exploration mechanism clears old failures every 2-6 minutes (depending on tier) to re-discover providers whose rate-limit windows may have reset.
 
+## Constraint semantics
+
+`allowedNames` and `excludeNames` are authoritative by default.
+
+- Explicit or pinned routes must respect the requested provider set.
+- If the requested provider set is exhausted, `selectProvider()` returns `null` by default.
+- The local safety-net may bypass those constraints only when the caller explicitly opts in with `allowSafetyNetOverride: true`.
+
+Use `allowSafetyNetOverride: true` only for autonomous production-style execution paths where liveness is more important than strict route pinning.
+
 ### Codebuff SDK execution (inside worktree bridges)
 
 When Codebuff is selected by the credit-gate, it runs directly inside the worktree-local Symphony bridge via `codebuff-direct.mjs`:

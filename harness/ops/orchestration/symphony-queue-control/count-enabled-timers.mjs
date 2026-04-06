@@ -7,7 +7,7 @@ export function countEnabledTimers() {
       [
         "--user",
         "list-unit-files",
-        "anqr-symphony-runner@*.timer",
+        "anqr-symphony-executor@*.service",
         "--state=enabled",
         "--no-legend",
       ],

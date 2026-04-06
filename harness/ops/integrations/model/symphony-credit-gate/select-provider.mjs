@@ -16,6 +16,7 @@ import { logDebug, logInfo, logWarn } from "./logger.mjs";
 export async function selectProvider(options = {}) {
   ensureStateDir();
   const probeResults = loadProbeResults();
+  const allowSafetyNetOverride = options.allowSafetyNetOverride === true;
   const allowedNames =
     Array.isArray(options.allowedNames) && options.allowedNames.length > 0
       ? new Set(options.allowedNames)
@@ -28,6 +29,7 @@ export async function selectProvider(options = {}) {
   logDebug(`[selectProvider] Entry`, {
     allowedCount: allowedNames?.size || 0,
     excludedCount: excludedNames?.size || 0,
+    allowSafetyNetOverride,
     allowedNames: allowedNames ? Array.from(allowedNames) : null,
     excludedNames: excludedNames ? Array.from(excludedNames) : null,
   });
@@ -83,14 +85,20 @@ export async function selectProvider(options = {}) {
     }
   }
 
-  logWarn(
-    `[selectProvider] All providers exhausted — invoking P0 safety-net override (ignoring allowedNames/excludedNames)`,
-    {
+  if (!allowSafetyNetOverride) {
+    logWarn(`[selectProvider] No provider available within requested constraints`, {
       allowedCount: allowedNames?.size || 0,
       excludedCount: excludedNames?.size || 0,
       totalProviders: PROVIDERS.length,
-    },
-  );
+    });
+    return null;
+  }
+
+  logWarn(`[selectProvider] All providers exhausted — invoking explicit safety-net override`, {
+    allowedCount: allowedNames?.size || 0,
+    excludedCount: excludedNames?.size || 0,
+    totalProviders: PROVIDERS.length,
+  });
   for (const provider of PROVIDERS) {
     if (getProviderTier(provider) !== TIER_LOCAL_SAFETY_NET) continue;
     clearProviderFailure(provider.name);

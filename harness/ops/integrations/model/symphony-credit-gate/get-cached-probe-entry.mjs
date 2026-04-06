@@ -1,4 +1,4 @@
-import { loadProbeCache } from "../symphony-openai-bridge/load-probe-cache.mjs";
+import { loadProbeCache } from "./load-probe-cache.mjs";
 
 export function getCachedProbeEntry(providerName) {
   const cache = loadProbeCache();

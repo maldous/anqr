@@ -9,7 +9,7 @@ This directory implements **ANQR Queue Control** within the ANQR harness. The im
 ### Files
 
 - **actions.mjs** - Exports `actions`, an initially empty array used by sibling modules.
-- **count-enabled-timers.mjs** - Exports `countEnabledTimers`, which implements count enabled timers.
+- **count-enabled-timers.mjs** - Exports `countEnabledTimers`, which counts enabled Symphony executor services for concurrency validation.
 - **detect-stuck-work.mjs** - Exports `detectStuckWork`, which detects stuck work.
 - **drain-overflow.mjs** - Exports `drainOverflow`, which implements drain overflow.
 - **enforce-max-concurrent.mjs** - Exports `enforceMaxConcurrent`, which implements enforce max concurrent.
@@ -27,7 +27,7 @@ This directory implements **ANQR Queue Control** within the ANQR harness. The im
 
 ## 3. Overall Directory Function
 
-The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Discord integration, and Symphony integration. Environment-driven configuration is present in the immediate code.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Discord integration, and Symphony integration. Environment-driven configuration is present in the immediate code. Concurrency checks now validate enabled `anqr-symphony-executor@*.service` instances rather than legacy runner timers.
 
 ## 4. Usage Instructions
 

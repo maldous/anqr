@@ -2,7 +2,7 @@
 
 ## 1. Directory Overview
 
-This directory implements **ANQR Symphony Agent Router** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 24 non-README files and 0 subdirectories.
+This directory implements **ANQR Symphony Agent Router** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. Linear triggers are dispatched directly to worktree executor HTTP endpoints rather than spawning legacy runner entrypoints. The current inventory is 24 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
@@ -28,14 +28,14 @@ This directory implements **ANQR Symphony Agent Router** within the ANQR harness
 - **runtime.mjs** - Executable runtime entry point for this directory.
 - **select-worktree.mjs** - Exports `selectWorktree`, which implements select worktree.
 - **server.mjs** - Exports `server`, which implements server.
-- **spawn-linear-runner.mjs** - Exports `spawnLinearRunner`, which implements spawn linear runner.
+- **dispatch-linear-execution.mjs** - Exports `dispatchLinearExecution`, which dispatches targeted Linear execution to a selected worktree executor.
 - **target-host.mjs** - Exports `TARGET_HOST`, a shared constant used by sibling modules.
 - **worktree-ids.mjs** - Exports `WORKTREE_IDS`, a shared constant used by sibling modules.
 - **worktrees.mjs** - Exports `WORKTREES`, a shared constant used by sibling modules.
 
 ## 3. Overall Directory Function
 
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
@@ -45,7 +45,7 @@ node ops/integrations/model/symphony-agent-router/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js built-ins** - `node:child_process`, `node:http`, `node:path`
+- **Node.js built-ins** - `node:http`, `node:path`
 - **Internal relative modules** - `../../../core/worktree-config.mjs`, `../../../lib/logger.mjs`, `./global-active-requests.mjs`, `./handle-linear-queue.mjs`, `./handle-linear-trigger.mjs`, `./is-path-within-root.mjs`, `./json.mjs`, `./linear-queue.mjs`, `./logger.mjs`, `./max-concurrent.mjs`, `./max-queue-length.mjs`, `./overload.mjs`
 
 ## 6. Additional Comments

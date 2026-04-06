@@ -6,9 +6,9 @@ import {
   TARGET_HOST,
   WORKTREES,
   WORKTREE_IDS,
+  dispatchLinearExecution,
   linearQueue,
   server,
-  spawnLinearRunner,
 } from "./index.mjs";
 
 import { logInfo, logWarn, logDebug } from "./logger.mjs";
@@ -44,7 +44,7 @@ setInterval(() => {
   const toProcess = linearQueue.splice(0, available.length);
   for (const item of toProcess) {
     logInfo(`Processing queued trigger: ${item.identifier}`);
-    spawnLinearRunner(item.identifier);
+    dispatchLinearExecution(item.identifier);
   }
 }, QUEUE_POLL_INTERVAL_MS);
 

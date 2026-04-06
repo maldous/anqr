@@ -2,7 +2,7 @@
 
 ## 1. Directory Overview
 
-This directory implements **ANQR Symphony OpenAI Bridge** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 185 non-README files and 0 subdirectories.
+This directory implements **ANQR Symphony OpenAI Bridge** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. Worktree executors now expose targeted Linear execution through the bridge HTTP surface, replacing the old spawned runner trigger path. The current inventory is 185 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
@@ -43,6 +43,7 @@ This directory implements **ANQR Symphony OpenAI Bridge** within the ANQR harnes
 - **detect-control-repo-root.mjs** - Exports `detectControlRepoRoot`, which detects control repo root.
 - **ensure-string.mjs** - Exports `ensureString`, which ensures string.
 - **error-to-string.mjs** - Exports `errorToString`, which implements error to string.
+- **execute-linear-issue-request.mjs** - Exports `executeLinearIssueRequest`, which executes a targeted Linear issue within the current worktree executor.
 - **exec-tool.mjs** - Exports `execTool`, which implements exec tool.
 - **extract-tool-probe-answer.mjs** - Exports `extractToolProbeAnswer`, which implements extract tool probe answer.
 - **fallback-delay-ms.mjs** - Exports `FALLBACK_DELAY_MS`, a shared constant used by sibling modules.

@@ -53,8 +53,8 @@ Error: Process out of memory
   customized.description = customized.description.replace(
     "**Related issues:**",
     `**Related issues:**
-- ANQ-1401: Document agents instructions and create Linear issue workflow
-- ANQ-1397: Previous memory leak investigation
+- Prior investigation into QR generation memory use
+- Related issue addressing QR rendering stability
 
 **Documentation:**
 - [QR Generation Architecture](https://docs.example.com/qr-architecture)

@@ -1,5 +1,5 @@
 import { runProviderProbeDiagnostics } from "./integrations/model/symphony-credit-gate/provider-probe-diagnostics.mjs";
-import { saveProbeCache } from "./integrations/model/symphony-openai-bridge/save-probe-cache.mjs";
+import { saveProbeCache } from "./integrations/model/symphony-credit-gate/save-probe-cache.mjs";
 
 const result = await runProviderProbeDiagnostics();
 saveProbeCache({ lastProbeAt: result.report.generatedAt, probeResults: result.report.results });

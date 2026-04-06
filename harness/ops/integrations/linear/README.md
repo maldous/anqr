@@ -2,7 +2,7 @@
 
 ## 1. Directory Overview
 
-This directory implements **ANQR Linear Integrations** within the ANQR harness. Key immediate entries include `create-linear-rag-issues.mjs`, `create-ast-audit-issues.mjs`, `create-run-file-change-hooks-bug.mjs`, `create-test-coverage-issues.mjs`. The current inventory is 29 non-README files and 18 subdirectories.
+This directory implements **ANQR Linear Integrations** within the ANQR harness. Key immediate entries include `linear-client.mjs`, `create-linear-rag-issues.mjs`, `create-ast-audit-issues.mjs`, `create-run-file-change-hooks-bug.mjs`, and `create-test-coverage-issues.mjs`. Legacy hard-coded issue-review automation has been removed; maintained code is limited to direct Linear API creation, updates, export, hygiene, and active issue handling.
 
 ## 2. File Summaries
 
@@ -11,8 +11,6 @@ This directory implements **ANQR Linear Integrations** within the ANQR harness. 
 - **README-workflow.md** - Markdown document titled **Linear Agent Workflow Documentation**.
 - **agent-workflow-create-issue.mjs** - Facade module that re-exports public members from `./agent-workflow-create-issue/index.mjs`, `./agent-workflow-create-issue/runtime.mjs`.
 - **analyze-canceled-issues.mjs** - Facade module that re-exports public members from `./analyze-canceled-issues/index.mjs`, `./analyze-canceled-issues/runtime.mjs`.
-- **close-anq-1097.mjs** - Defines `main`, which orchestrates the main workflow for this directory.
-- **close-reviewed-issues.mjs** - Defines `main`, which orchestrates the main workflow for this directory.
 - **create-ast-audit-issues.mjs** - Defines `main`, which orchestrates the main workflow for this directory.
 - **create-issue-template.mjs** - Facade module that re-exports public members from `./create-issue-template/index.mjs`, `./create-issue-template/runtime.mjs`.
 - **create-linear-rag-issues.mjs** - Exports `chunkLinearIssue`, `searchLinearIssues`, providing the reusable API for this directory concern.
@@ -33,9 +31,7 @@ This directory implements **ANQR Linear Integrations** within the ANQR harness. 
 - **list-open-issues.mjs** - Module that lists open issues.
 - **reopen-marked-issues.mjs** - Facade module that re-exports public members from `./reopen-marked-issues/index.mjs`, `./reopen-marked-issues/runtime.mjs`.
 - **review-open-issues.mjs** - Facade module that re-exports public members from `./review-open-issues/index.mjs`, `./review-open-issues/runtime.mjs`.
-- **review-specified-issues.mjs** - Facade module that re-exports public members from `./review-specified-issues/index.mjs`, `./review-specified-issues/runtime.mjs`.
 - **test-agent-workflow.mjs** - Facade module that re-exports public members from `./test-agent-workflow/index.mjs`, `./test-agent-workflow/runtime.mjs`.
-- **update-anq-1063.mjs** - Defines `main`, which orchestrates the main workflow for this directory.
 - **validate-issue.mjs** - Facade module that re-exports public members from `./validate-issue/index.mjs`, `./validate-issue/runtime.mjs`.
 
 ### Subdirectories
@@ -55,13 +51,12 @@ This directory implements **ANQR Linear Integrations** within the ANQR harness. 
 - **linear-client/** - Contains **ANQR Linear Client**; it contains 20 immediate files and has 0 child directories.
 - **reopen-marked-issues/** - Contains **ANQR Linear Reopen Marked Issues**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 - **review-open-issues/** - Contains **ANQR Linear Review Open Issues**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **review-specified-issues/** - Contains **ANQR Linear Issue Review**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 - **test-agent-workflow/** - Contains **ANQR Linear Agent Workflow Test Suite**; it contains 17 immediate files and has 0 child directories.
 - **validate-issue/** - Contains **ANQR Linear Issue Validation**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, network/API integration, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Discord integration, OpenClaw integration, Symphony integration, SonarQube integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, network/API integration, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Discord integration, OpenClaw integration, Symphony integration, SonarQube integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code. Legacy one-off scripts for stale external issue identifiers are no longer part of the maintained surface.
 
 ## 4. Usage Instructions
 

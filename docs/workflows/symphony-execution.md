@@ -81,6 +81,8 @@ The credit-gate classifies every provider into one of four tiers:
 
 **Key constraint:** `SAFETY_NET_SCORE_CEILING = 0.25` — safety-net providers are capped at this score in dynamic ranking so they never outrank even a mediocre cloud provider. `getRankedProviders()` partitions providers into two groups (normal + safety-net) and always appends safety nets after all other providers regardless of their raw score.
 
+**Selection contract:** provider constraints are strict by default. The local safety-net is only allowed to bypass `allowedNames` / `excludeNames` when the caller explicitly opts into emergency override behavior for autonomous execution.
+
 ## Execution Constraints
 
 | Parameter                 | Value               | Reason                              |

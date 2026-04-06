@@ -12,16 +12,16 @@ export function validateConcurrencyConfig() {
   if (enabledTimers > MAX_CONCURRENT_AGENTS) {
     logAction(
       "info",
-      `⚠️  WARNING: ${enabledTimers} timers enabled but MAX_CONCURRENT_AGENTS=${MAX_CONCURRENT_AGENTS}`,
+      `⚠️  WARNING: ${enabledTimers} executor services enabled but MAX_CONCURRENT_AGENTS=${MAX_CONCURRENT_AGENTS}`,
     );
     logAction(
       "info",
-      `⚠️  ${enabledTimers - MAX_CONCURRENT_AGENTS} runner(s) may starve. Update MAX_CONCURRENT_AGENTS in symphony-config.mjs`,
+      `⚠️  ${enabledTimers - MAX_CONCURRENT_AGENTS} executor slot(s) may starve. Update MAX_CONCURRENT_AGENTS in symphony-config.mjs`,
     );
   } else if (enabledTimers < MAX_CONCURRENT_AGENTS) {
     logAction(
       "info",
-      `ℹ️  ${enabledTimers} timers enabled, MAX_CONCURRENT_AGENTS=${MAX_CONCURRENT_AGENTS} (${MAX_CONCURRENT_AGENTS - enabledTimers} unused slot(s))`,
+      `ℹ️  ${enabledTimers} executor services enabled, MAX_CONCURRENT_AGENTS=${MAX_CONCURRENT_AGENTS} (${MAX_CONCURRENT_AGENTS - enabledTimers} unused slot(s))`,
     );
   }
 }

@@ -31,6 +31,10 @@
     "apps/**/i18n/**"
   ],
   "words": [
+    "Graphviz",
+    "Maildir",
+    "structurizr",
+    "Structurizr",
     "precheck",
     "Precheck",
     "ANMF",

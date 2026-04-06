@@ -1,22 +1,17 @@
 #!/usr/bin/env node
 
 /**
- * create-linear-rag-issues.mjs — Create Linear issues for ANQ-1120 Linear RAG integration
- *
- * References ANQ-1120: Linear Issue RAG Integration Investigation
- * Status: PROCEED with phased implementation
+ * create-linear-rag-issues.mjs — Create generic Linear issues for phased Linear RAG integration
  */
 
 import { createIssue, STATES, LABELS } from "./linear-client.mjs";
 
 const issueGroups = [
   {
-    title: "Linear Issue Export Script (ANQ-1120 Phase 1.1)",
+    title: "Linear Issue Export Script",
     description: `## Summary
 
 Implement nightly Linear issue export to JSON for RAG indexing.
-
-**Parent:** ANQ-1120 (Linear Issue RAG Integration Investigation)
 
 ## Scope Class
 
@@ -59,8 +54,8 @@ await writeFile(exportPath, JSON.stringify(allIssues, null, 2));
 [
   {
     "id": "...",
-    "identifier": "ANQ-1120",
-    "title": "Linear Issue RAG Integration Investigation",
+    "identifier": "ISSUE-0000",
+    "title": "Linear RAG Integration Initiative",
     "description": "...",
     "state": { "name": "Done" },
     "labels": { "nodes": [{ "id": "...", "name": "harness" }] },
@@ -114,7 +109,7 @@ jq '[.[] | select(.state.name == "Canceled")] | length' reports/linear-export/is
 
 ## Dependencies
 
-- Blocks ANQ-1122 (Linear RAG builder needs export output)
+- Blocks the downstream RAG builder work
 
 ## Estimated Effort
 
@@ -123,12 +118,10 @@ jq '[.[] | select(.state.name == "Canceled")] | length' reports/linear-export/is
     estimate: 1,
   },
   {
-    title: "Linear RAG Index Builder (ANQ-1120 Phase 1.2)",
+    title: "Linear RAG Index Builder",
     description: `## Summary
 
 Implement Linear-specific RAG index builder to generate embeddings from exported issues.
-
-**Parent:** ANQ-1120 (Linear Issue RAG Integration Investigation)
 
 ## Scope Class
 
@@ -255,8 +248,8 @@ cat reports/rag-index-linear/meta.json | jq
 
 ## Dependencies
 
-- Depends on ANQ-1121 (needs export output)
-- Blocks ANQ-1123 (systemd automation needs working builder)
+- Depends on the export output
+- Blocks the systemd automation work
 
 ## Estimated Effort
 
@@ -265,12 +258,10 @@ cat reports/rag-index-linear/meta.json | jq
     estimate: 2,
   },
   {
-    title: "Linear Export & Index Systemd Services (ANQ-1120 Phase 1.3)",
+    title: "Linear Export & Index Systemd Services",
     description: `## Summary
 
 Create systemd services and timers for automated nightly Linear export and RAG indexing.
-
-**Parent:** ANQ-1120 (Linear Issue RAG Integration Investigation)
 
 ## Scope Class
 
@@ -407,9 +398,9 @@ systemctl --user list-timers | grep linear
 
 ## Dependencies
 
-- Depends on ANQ-1121 (export script)
-- Depends on ANQ-1122 (RAG builder script)
-- Blocks ANQ-1124 (search integration needs index)
+- Depends on the export script
+- Depends on the RAG builder script
+- Blocks the search integration work
 
 ## Estimated Effort
 
@@ -418,12 +409,10 @@ systemctl --user list-timers | grep linear
     estimate: 1,
   },
   {
-    title: "Linear Issue Search Integration (ANQ-1120 Phase 1.4)",
+    title: "Linear Issue Search Integration",
     description: `## Summary
 
 Add Linear issue search capability to Symphony agents via new search tool or hybrid search integration.
-
-**Parent:** ANQ-1120 (Linear Issue RAG Integration Investigation)
 
 ## Scope Class
 
@@ -534,12 +523,12 @@ node -e "import('./harness/ops/lib/search/linear-search.mjs').then(m => m.search
 # Expected output:
 # [
 #   {
-#     "identifier": "ANQ-1120",
-#     "title": "Linear Issue RAG Integration Investigation",
+#     "identifier": "ISSUE-0000",
+#     "title": "Linear RAG Integration Initiative",
 #     "state": "Done",
 #     "priority": 1,
 #     "score": 0.87,
-#     "excerpt": "# ANQ-1120: Linear Issue RAG Integration..."
+#     "excerpt": "# Linear RAG integration initiative..."
 #   }
 # ]
 
@@ -559,7 +548,7 @@ node -e "import('./harness/ops/lib/search/linear-search.mjs').then(m => m.search
 
 ## Dependencies
 
-- Depends on ANQ-1123 (needs Linear RAG index)
+- Depends on the Linear RAG index
 
 ## Estimated Effort
 
@@ -568,12 +557,10 @@ node -e "import('./harness/ops/lib/search/linear-search.mjs').then(m => m.search
     estimate: 2,
   },
   {
-    title: "Linear RAG Phase 1 Validation & Monitoring (ANQ-1120 Phase 1.5)",
+    title: "Linear RAG Phase 1 Validation & Monitoring",
     description: `## Summary
 
 Validate Phase 1 implementation and establish monitoring for Linear RAG pipeline.
-
-**Parent:** ANQ-1120 (Linear Issue RAG Integration Investigation)
 
 ## Scope Class
 
@@ -581,7 +568,7 @@ Validate Phase 1 implementation and establish monitoring for Linear RAG pipeline
 
 ## Owned Surfaces
 
-- \`docs/harness/evidence/ANQ-1120-phase1-validation.md\` (NEW)
+- \`docs/harness/evidence/linear-rag-phase1-validation.md\` (NEW)
 - Nightly ops report (MODIFY to include Linear RAG stats)
 
 ## Current State
@@ -620,7 +607,7 @@ Validated Phase 1 delivery with ongoing monitoring:
 ### 4. End-to-End Test
 - [ ] Create test issue: "Find prior work on validation errors"
 - [ ] Agent calls \`search_linear_issues("validation errors")\`
-- [ ] Results include relevant issues (e.g., ANQ-1120)
+- [ ] Results include relevant issues returned by the export
 - [ ] Agent cites Linear issues in response
 
 ## Monitoring Integration
@@ -644,7 +631,7 @@ const linearStats = {
 // Include in daily report
 \`\`\`
 
-## Success Criteria (from ANQ-1120)
+## Success Criteria
 
 - ✅ Linear export runs nightly without errors
 - ✅ Linear RAG index builds in <2 min
@@ -692,7 +679,7 @@ node harness/ops/reporting/harness-report.mjs
 
 ## Dependencies
 
-- Depends on ANQ-1121, ANQ-1122, ANQ-1123, ANQ-1124 (all Phase 1 components)
+- Depends on all earlier Phase 1 components
 
 ## Phase 2 Trigger Criteria
 
@@ -712,7 +699,7 @@ Otherwise: Phase 1 complete, monitor for 2 weeks before deciding.
 ];
 
 async function main() {
-  console.log("Creating Linear RAG integration issues (ANQ-1120 implementation)...\n");
+  console.log("Creating Linear RAG integration issues...\n");
 
   const created = [];
   for (const group of issueGroups) {
@@ -738,8 +725,7 @@ async function main() {
 
   console.log(`\n📊 Summary: Created ${created.length}/${issueGroups.length} issues`);
   console.log(`\n📈 Phase 1 Implementation:`);
-  console.log(`   Parent: ANQ-1120 (Linear Issue RAG Integration Investigation)`);
-  console.log(`   Status: PROCEED with phased implementation`);
+  console.log("   Status: PROCEED with phased implementation");
   console.log(
     `   Total effort: ${issueGroups.reduce((sum, g) => sum + g.estimate, 0)} story points`,
   );
@@ -747,7 +733,7 @@ async function main() {
   console.log(`\n🎯 Next Steps:`);
   console.log(`   1. Review created issues in Linear`);
   console.log(`   2. Assign to appropriate sprint`);
-  console.log(`   3. Begin with ANQ-1121 (Export Script)`);
+  console.log("   3. Begin with the export script issue");
 }
 
 await main();

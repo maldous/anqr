@@ -22,6 +22,7 @@ export { resolveRequestPath } from "./resolve-request-path.mjs";
 export { resolveRequestDir } from "./resolve-request-dir.mjs";
 export { invokeWithCodex } from "./invoke-with-codex.mjs";
 export { execTool } from "./exec-tool.mjs";
+export { executeLinearIssueRequest } from "./execute-linear-issue-request.mjs";
 export { trackFileChange } from "./track-file-change.mjs";
 export { currentRequestId } from "./current-request-id.mjs";
 export { setCurrentRequestId } from "./set-current-request-id.mjs";

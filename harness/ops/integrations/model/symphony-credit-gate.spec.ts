@@ -250,12 +250,13 @@ describe("Symphony Credit Gate - Provider Selection", () => {
       expect(stats["probe-only"].score).toBeGreaterThan(0);
     });
 
-    it("should leave score as pending with < 3 probes", () => {
+    it("should bootstrap score with < 3 probes when capability is demonstrated", () => {
       recordProbeResult("probe-few", { success: true, durationMs: 200 });
       recordProbeResult("probe-few", { success: true, durationMs: 300 });
       const stats = getProviderStats();
 
-      expect(stats["probe-few"].score).toBe("pending");
+      expect(typeof stats["probe-few"].score).toBe("number");
+      expect(stats["probe-few"].score).toBeGreaterThan(0);
     });
 
     it("should calculate score on failure via recordProviderFailureCount", () => {
@@ -283,7 +284,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
       globalThis.fetch = originalFetch;
     });
 
-    it("should activate safety-net override when sticky provider is both allowed and excluded", async () => {
+    it("should activate safety-net override when explicitly enabled", async () => {
       // Mock fetch: ollama returns success, everything else fails
       globalThis.fetch = vi.fn().mockImplementation(async (url: string | URL) => {
         const urlStr = String(url);
@@ -305,6 +306,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
       // Exact scenario from P0 incident: sticky=cerebras, but cerebras is also excluded
       const result = await selectProvider({
         allowedNames: ["cerebras"],
+        allowSafetyNetOverride: true,
         excludeNames: ["cerebras", "ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
       });
 
@@ -314,7 +316,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
       expect(result!.tier).toBe("local-safety-net");
     });
 
-    it("should activate safety-net when all providers are excluded by allowedNames", async () => {
+    it("should activate safety-net when all providers are excluded and override is enabled", async () => {
       // Mock fetch: ollama returns success
       globalThis.fetch = vi.fn().mockImplementation(async (url: string | URL) => {
         const urlStr = String(url);
@@ -336,6 +338,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
       // allowedNames restricts to a nonexistent provider — everything is "not allowed"
       const result = await selectProvider({
         allowedNames: ["nonexistent-provider"],
+        allowSafetyNetOverride: true,
       });
 
       // Safety-net override should still find ollama
@@ -353,15 +356,9 @@ describe("Symphony Credit Gate - Provider Selection", () => {
       // If ollama was probed <5min ago, it will return ollama from cache.
       // This is CORRECT behavior - safety-net prevents outage using recent probe knowledge.
       // Only returns null if no safety-net has recent probe data.
-      const result = await selectProvider({
-        allowedNames: ["nonexistent-provider"],
-      });
+      const result = await selectProvider({ allowedNames: ["nonexistent-provider"] });
 
-      // Either returns ollama (from cache) OR null (no recent probe data)
-      // Both are acceptable - ensures P0 never causes total outage
-      if (result) {
-        expect(result.name).toMatch(/^ollama/);
-      }
+      expect(result).toBeNull();
     });
 
     it("should verify safety-net tier providers exist in PROVIDERS list", () => {
