@@ -24,3 +24,4 @@ test-output.log
 .sonar_tmp/
 harness/.structurizr
 harness/.structurizr-export
+harness/__pycache__

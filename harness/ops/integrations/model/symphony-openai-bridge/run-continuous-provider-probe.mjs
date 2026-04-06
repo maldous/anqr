@@ -67,7 +67,12 @@ export async function runContinuousProviderProbe() {
     logInfo(`⏳ PROBE CYCLE STARTED: Beginning provider accessibility validation...`);
 
     providerStatusCache.configured = getConfiguredProviders({ excludeNames });
-    providerStatusCache.probeResults = await probeAllProviders({ excludeNames });
+    // Bypass health state on continuous probe — this is a periodic full re-assessment
+    // that should check ALL providers regardless of cooling_down status
+    providerStatusCache.probeResults = await probeAllProviders({
+      excludeNames,
+      respectHealthState: false,
+    });
     providerStatusCache.lastProbeAt = new Date().toISOString();
 
     // Save to shared cache immediately after probe

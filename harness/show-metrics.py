@@ -1,18 +1,31 @@
 #!/usr/bin/env python3
 
+import argparse
 import json
 import sys
 import urllib.error
 import urllib.request
 
 
-URL = "http://127.0.0.1:4319/v1/stats"
 TOKEN = "local-symphony"
 
 
-def fetch_stats() -> dict:
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Show Symphony provider metrics")
+    parser.add_argument(
+        "-w",
+        "--worktree",
+        type=int,
+        default=1,
+        choices=range(1, 9),
+        help="Worktree number (1-8, default: 1)",
+    )
+    return parser.parse_args()
+
+
+def fetch_stats(url: str) -> dict:
     req = urllib.request.Request(
-        URL,
+        url,
         headers={
             "Authorization": f"Bearer {TOKEN}",
             "Accept": "application/json",
@@ -28,10 +41,13 @@ def sort_key(name: str, rank_map: dict) -> tuple:
 
 
 def main() -> int:
+    args = parse_args()
+    url = f"http://127.0.0.1:432{args.worktree}/v1/stats"
+
     try:
-        data = fetch_stats()
+        data = fetch_stats(url)
     except urllib.error.URLError:
-        print("\n❌ Symphony bridge not reachable at http://127.0.0.1:4319", file=sys.stderr)
+        print(f"\n❌ Symphony bridge not reachable at {url}", file=sys.stderr)
         return 1
     except Exception as exc:
         print(f"\n❌ Failed to fetch stats: {exc}", file=sys.stderr)

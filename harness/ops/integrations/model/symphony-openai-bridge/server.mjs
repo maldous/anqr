@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import http from "node:http";
 import {
   selectProvider,
@@ -8,12 +9,14 @@ import {
   getRankedProviders,
   resetProviderStats,
 } from "../symphony-credit-gate.mjs";
+import { saveHealthState } from "../symphony-provider-health.mjs";
 import { getAdaptiveStats } from "../symphony-adaptive-context.mjs";
 import { streamDiscordUpdate, sendDiscordEmbed } from "../../notifications/openclaw-discord.mjs";
 import { updateSessionProvider, setSessionMessages } from "../symphony-session-state.mjs";
 
 import { ADVERTISED_MODELS } from "./advertised-models.mjs";
 import { BRIDGE_METRICS } from "./bridge-metrics.mjs";
+import { PROBE_CACHE_FILE } from "./probe-cache-file.mjs";
 import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";
 import { BRIDGE_PROVIDER_BLOCKLIST_REASONS } from "./bridge-provider-blocklist-reasons.mjs";
 import { MAX_CONCURRENT_REQUESTS } from "./max-concurrent-requests.mjs";
@@ -193,30 +196,55 @@ export const server = http.createServer(async (req, res) => {
       });
     }
 
-    // POST /v1/stats/reset — reset all provider stats (operational use)
+    // POST /v1/stats/reset — reset all provider stats, health state, and probe cache
     if (req.method === "POST" && req.url === "/v1/stats/reset") {
-      logInfo(`🔄 Stats reset requested via API`);
+      logInfo(`🔄 Full stats reset requested via API`);
       resetProviderStats();
+      saveHealthState({});
+      logInfo(`🔄 Provider health state cleared`);
+      try {
+        if (fs.existsSync(PROBE_CACHE_FILE)) {
+          fs.unlinkSync(PROBE_CACHE_FILE);
+          logInfo(`🔄 Probe cache deleted`);
+        }
+      } catch (err) {
+        logWarn(`Failed to delete probe cache: ${err.message}`);
+      }
       return sendJson(res, 200, {
         status: "reset",
         message:
-          "Provider stats have been reset. Fresh metrics will accumulate from new probes and requests.",
+          "Provider stats, health state, and probe cache have been reset. Run /v1/providers/refresh for a full re-probe.",
         timestamp: new Date().toISOString(),
       });
     }
 
-    // POST /v1/providers/refresh — manually trigger a provider re-probe
+    // POST /v1/providers/refresh — manually trigger a provider re-probe (synchronous)
     if (req.method === "POST" && req.url === "/v1/providers/refresh") {
-      const started = refreshProviderStatus().catch((err) => {
+      req.setTimeout(0); // Probing 600+ providers can take minutes
+      if (providerStatusCache.probing) {
+        return sendJson(res, 200, {
+          status: "already_probing",
+          message: "A probe is already in progress. Check /v1/providers for current results.",
+        });
+      }
+      try {
+        await refreshProviderStatus({ force: true });
+        const available = providerStatusCache.probeResults.filter((r) => r.available).length;
+        const total = providerStatusCache.configured.length;
+        return sendJson(res, 200, {
+          status: "refreshed",
+          available,
+          total,
+          message: `Probe complete: ${available}/${total} providers available`,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
         logError(`Manual probe error: ${err.message}`);
-      });
-      const isNew = started !== false;
-      return sendJson(res, 200, {
-        status: isNew ? "refreshing" : "already_probing",
-        message: isNew
-          ? "Provider probe started. Check /v1/providers for results."
-          : "A probe is already in progress. Check /v1/providers for current results.",
-      });
+        return sendJson(res, 500, {
+          status: "error",
+          message: `Probe failed: ${err.message}`,
+        });
+      }
     }
 
     if (req.method === "POST" && req.url === "/v1/linear/execute") {

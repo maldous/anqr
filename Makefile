@@ -15,7 +15,7 @@ QUALITY_MOBILE_TARGETS := \
 	test-appium-android test-appium-ios
 
 .PHONY: \
-  help fix update-metrics show-metrics \
+  help fix update-metrics reset-metrics reset-health show-metrics \
   dev build build-web preview \
   typecheck lint lint-fix lint-boundaries format format-check depcruise cspell knip \
   test test-unit test-unit-coverage test-e2e test-basic test-advanced \
@@ -195,14 +195,29 @@ symphony-bridge: ## Start a worktree-local Symphony execution bridge
 show-metrics: ## Show provider metrics in formatted columns
 	@python3 harness/show-metrics.py
 
-update-metrics: ## Reset provider stats and trigger a fresh probe cycle
-	@echo "🔄 Resetting provider stats..."
-	@curl -s -X POST http://127.0.0.1:4319/v1/stats/reset \
-		-H "Authorization: Bearer local-symphony" | python3 -m json.tool
-	@echo "\n🔍 Triggering provider re-probe..."
-	@curl -s -X POST http://127.0.0.1:4319/v1/providers/refresh \
-		-H "Authorization: Bearer local-symphony" | python3 -m json.tool
-	@echo "\n✅ Metrics reset and probe started. Check: curl http://127.0.0.1:4319/v1/stats"
+update-metrics: ## Run a full provider probe and show results
+	@npm run probe:providers
+	@echo ""
+	@python3 harness/show-metrics.py
+
+reset-metrics: ## Reset all provider state, run full probe, and show results
+	@echo "🔄 Clearing provider health state and probe cache..."
+	@rm -f reports/symphony/provider-health.json
+	@rm -f reports/symphony/provider-probe-cache.json
+	@echo "🔄 Resetting in-memory stats (if bridge is running)..."
+	@curl -s -X POST http://127.0.0.1:4321/v1/stats/reset \
+		-H "Authorization: Bearer local-symphony" 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "   (bridge not reachable — skipped)"
+	@echo "\n🔍 Running full provider probe..."
+	@npm run probe:providers
+	@echo ""
+	@python3 harness/show-metrics.py
+
+reset-health: ## Delete health state + probe cache files directly (no running bridge needed)
+	@echo "🔄 Deleting provider health state and probe cache files..."
+	@rm -f reports/symphony/provider-health.json
+	@rm -f reports/symphony/provider-probe-cache.json
+	@echo "✅ Health state and probe cache deleted."
+	@echo "   Restart executors for a clean probe: systemctl --user restart anqr-symphony-executor@1"
 
 email-ingest: ## Run email ingest
 	npm run email:ingest

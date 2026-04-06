@@ -23,7 +23,6 @@ export { LOCAL_PROBE_TIMEOUT_MS } from "./local-probe-timeout-ms.mjs";
 export { CODEX_PROBE_TIMEOUT_MS } from "./codex-probe-timeout-ms.mjs";
 export { CODEX_SUCCESS_WINDOW_MS } from "./codex-success-window-ms.mjs";
 export { probeWithTimeout } from "./probe-with-timeout.mjs";
-export { probeOpenAIModels } from "./probe-open-aimodels.mjs";
 export { probeCodexSdk } from "./probe-codex-sdk.mjs";
 export { probeGeminiModels } from "./probe-gemini-models.mjs";
 export { probeGitHubModels } from "./probe-git-hub-models.mjs";

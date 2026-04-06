@@ -318,7 +318,8 @@ describe("Provider Routing Edge Cases", () => {
 
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(
         async (url: string | URL | Request) => {
-          if (String(url).includes("/models")) {
+          const urlStr = String(url);
+          if (urlStr.includes("/api/tags") || urlStr.includes("/models")) {
             return {
               ok: true,
               text: async () => "qwen2.5-coder:3b-instruct",
@@ -350,7 +351,8 @@ describe("Provider Routing Edge Cases", () => {
 
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(
         async (url: string | URL | Request) => {
-          if (String(url).includes("/models")) {
+          const urlStr = String(url);
+          if (urlStr.includes("/api/tags") || urlStr.includes("/models")) {
             return {
               ok: true,
               text: async () => "qwen2.5-coder:3b-instruct",

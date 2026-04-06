@@ -49,7 +49,7 @@ The **shared probe cache** solves this by storing probe results in a filesystem 
    - Save results to cache after completion
 
 3. **Manual refresh** (`POST /v1/providers/refresh`)
-   - Force re-probe regardless of cache
+   - Force re-probe regardless of cache AND health state (cooling_down bypassed)
    - Update cache for all executors
 
 ## TTL and Freshness
@@ -206,9 +206,12 @@ Manual invalidation not needed — executors automatically refresh every 30 minu
 To force refresh:
 
 ```bash
-# Option 1: Delete cache (next executor probes)
-rm -f reports/symphony/provider-probe-cache.json
+# Option 1: Delete cache + health state (next executor probes from scratch)
+rm -f reports/symphony/provider-probe-cache.json reports/symphony/provider-health.json
 
-# Option 2: API endpoint (triggers immediate probe)
-curl -X POST http://127.0.0.1:4319/v1/providers/refresh
+# Option 2: API endpoint (triggers immediate force probe, bypasses cooling_down)
+curl -X POST http://127.0.0.1:4321/v1/providers/refresh -H 'Authorization: Bearer local-symphony'
+
+# Option 3: Full reset (stats + health + cache) then re-probe
+make reset-metrics
 ```

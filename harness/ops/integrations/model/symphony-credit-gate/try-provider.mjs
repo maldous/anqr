@@ -3,7 +3,7 @@ import { clearProviderFailure } from "./clear-provider-failure.mjs";
 import { isProviderLeaseAllowed } from "./is-provider-lease-allowed.mjs";
 import { isRecentlyFailed } from "./is-recently-failed.mjs";
 import { isRecentlyProbed } from "./is-recently-probed.mjs";
-import { probeOpenAIModels } from "./probe-open-aimodels.mjs";
+import { probeProviderDetailed } from "./probe-provider-detailed.mjs";
 import { recordProviderSelection } from "./record-provider-selection.mjs";
 import { resolveProviderApiKey } from "./resolve-provider-api-key.mjs";
 import { saveProbeResult } from "./save-probe-result.mjs";
@@ -75,18 +75,21 @@ export async function tryProvider(provider) {
   }
 
   logDebug(`${provider.name}: probing...`, { providerName: provider.name, model: provider.model });
-  const available = await probeOpenAIModels(
-    provider.name,
-    provider.baseUrl,
-    provider.model,
-    apiKey,
-    provider.baseUrl?.includes("localhost") || provider.baseUrl?.includes("127.0.0.1"),
-  );
-  if (!available) {
+  try {
+    const probeResult = await probeProviderDetailed(provider);
+    saveProbeResult(provider.name, probeResult.available, {
+      status: probeResult.status,
+      reason: probeResult.reason,
+      message: probeResult.message,
+    });
+    if (!probeResult.available) {
+      return null;
+    }
+  } catch (probeErr) {
     saveProbeResult(provider.name, false, {
-      status: "unavailable",
-      reason: "probe failed",
-      message: "probe failed",
+      status: "probe_error",
+      reason: probeErr.message,
+      message: probeErr.message,
     });
     return null;
   }

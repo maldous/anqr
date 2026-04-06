@@ -3,10 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockShouldRetryProvider = vi.fn();
 const mockRecordProviderHealthFailure = vi.fn();
 const mockRecordProviderHealthSuccess = vi.fn();
-const mockProbeOpenAIModels = vi.fn();
-const mockResolveProviderApiKey = vi.fn();
+const mockProbeProviderDetailed = vi.fn();
 const mockShuffleArray = vi.fn((items) => items);
-const mockClassifyProbeFailureStatus = vi.fn(() => "timeout");
 const mockGetProviderDefinitions = vi.fn();
 const mockProbeToolCapabilityForProvider = vi.fn();
 
@@ -26,20 +24,12 @@ vi.mock("./symphony-credit-gate/providers.mjs", () => ({
   ],
 }));
 
-vi.mock("./symphony-credit-gate/probe-open-aimodels.mjs", () => ({
-  probeOpenAIModels: mockProbeOpenAIModels,
-}));
-
-vi.mock("./symphony-credit-gate/resolve-provider-api-key.mjs", () => ({
-  resolveProviderApiKey: mockResolveProviderApiKey,
+vi.mock("./symphony-credit-gate/probe-provider-detailed.mjs", () => ({
+  probeProviderDetailed: mockProbeProviderDetailed,
 }));
 
 vi.mock("./symphony-credit-gate/shuffle-array.mjs", () => ({
   shuffleArray: mockShuffleArray,
-}));
-
-vi.mock("./symphony-credit-gate/classify-probe-failure-status.mjs", () => ({
-  classifyProbeFailureStatus: mockClassifyProbeFailureStatus,
 }));
 
 vi.mock("./symphony-credit-gate.mjs", () => ({
@@ -107,8 +97,6 @@ describe("startup probe bootstrap mode", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockShouldRetryProvider.mockReturnValue(false);
-    mockResolveProviderApiKey.mockResolvedValue("test-key");
-    mockClassifyProbeFailureStatus.mockReturnValue("timeout");
     mockGetProviderDefinitions.mockReturnValue([
       {
         name: "alpha",
@@ -122,7 +110,7 @@ describe("startup probe bootstrap mode", () => {
   });
 
   it("probes through cooldown during bootstrap without recording failure state", async () => {
-    mockProbeOpenAIModels.mockRejectedValue(new Error("timed out"));
+    mockProbeProviderDetailed.mockRejectedValue(new Error("timed out"));
     const { probeAllProviders } = await import("./symphony-credit-gate/probe-all-providers.mjs");
 
     const results = await probeAllProviders({
@@ -130,12 +118,12 @@ describe("startup probe bootstrap mode", () => {
       recordHealthFailures: false,
     });
 
-    expect(mockProbeOpenAIModels).toHaveBeenCalledOnce();
+    expect(mockProbeProviderDetailed).toHaveBeenCalledOnce();
     expect(mockRecordProviderHealthFailure).not.toHaveBeenCalled();
     expect(results).toEqual([
       expect.objectContaining({
         name: "alpha",
-        status: "timeout",
+        status: "probe_error",
         available: false,
       }),
     ]);
@@ -146,7 +134,7 @@ describe("startup probe bootstrap mode", () => {
 
     const results = await probeAllProviders();
 
-    expect(mockProbeOpenAIModels).not.toHaveBeenCalled();
+    expect(mockProbeProviderDetailed).not.toHaveBeenCalled();
     expect(results).toEqual([
       expect.objectContaining({
         name: "alpha",
@@ -157,9 +145,8 @@ describe("startup probe bootstrap mode", () => {
   });
 
   it("probes tool capability for reachable providers during bootstrap even if health says cooldown", async () => {
-    const { probeAllToolCapability } = await import(
-      "./symphony-openai-bridge/probe-all-tool-capability.mjs"
-    );
+    const { probeAllToolCapability } =
+      await import("./symphony-openai-bridge/probe-all-tool-capability.mjs");
 
     await probeAllToolCapability({ respectHealthState: false });
 

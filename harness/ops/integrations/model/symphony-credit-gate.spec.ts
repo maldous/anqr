@@ -19,6 +19,7 @@ const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
 const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
 const HEALTH_STATE_FILE = resolve(STATE_DIR, "provider-health.json");
 const PROBE_CACHE_FILE = resolve(STATE_DIR, "provider-probe-cache.json");
+const PROBE_RESULTS_FILE = resolve(STATE_DIR, "provider-probe-results.json");
 
 // Dynamic import for the .mjs module (ESM-compatible)
 const creditGate = await import("./symphony-credit-gate.mjs");
@@ -42,17 +43,14 @@ const {
 describe("Symphony Credit Gate - Provider Selection", () => {
   beforeEach(() => {
     try {
-      if (existsSync(FAILURE_STATE_FILE)) {
-        unlinkSync(FAILURE_STATE_FILE);
-      }
-      if (existsSync(STATS_FILE)) {
-        unlinkSync(STATS_FILE);
-      }
-      if (existsSync(HEALTH_STATE_FILE)) {
-        unlinkSync(HEALTH_STATE_FILE);
-      }
-      if (existsSync(PROBE_CACHE_FILE)) {
-        unlinkSync(PROBE_CACHE_FILE);
+      for (const f of [
+        FAILURE_STATE_FILE,
+        STATS_FILE,
+        HEALTH_STATE_FILE,
+        PROBE_CACHE_FILE,
+        PROBE_RESULTS_FILE,
+      ]) {
+        if (existsSync(f)) unlinkSync(f);
       }
     } catch {
       // Ignore errors
@@ -62,17 +60,14 @@ describe("Symphony Credit Gate - Provider Selection", () => {
 
   afterEach(() => {
     try {
-      if (existsSync(FAILURE_STATE_FILE)) {
-        unlinkSync(FAILURE_STATE_FILE);
-      }
-      if (existsSync(STATS_FILE)) {
-        unlinkSync(STATS_FILE);
-      }
-      if (existsSync(HEALTH_STATE_FILE)) {
-        unlinkSync(HEALTH_STATE_FILE);
-      }
-      if (existsSync(PROBE_CACHE_FILE)) {
-        unlinkSync(PROBE_CACHE_FILE);
+      for (const f of [
+        FAILURE_STATE_FILE,
+        STATS_FILE,
+        HEALTH_STATE_FILE,
+        PROBE_CACHE_FILE,
+        PROBE_RESULTS_FILE,
+      ]) {
+        if (existsSync(f)) unlinkSync(f);
       }
     } catch {
       // Ignore errors
@@ -110,7 +105,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     });
 
     it("should skip recently failed providers", async () => {
-      recordProviderFailure("groq");
+      recordProviderFailure("groq", "provider_error");
 
       const provider = await selectProvider({
         allowedNames: ["groq", "gemini"],
