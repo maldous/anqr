@@ -4,7 +4,21 @@ export const ADVERTISED_MODELS = [
   { id: "symphony/main", ownedBy: "symphony-bridge" },
   { id: "symphony/text", ownedBy: "symphony-bridge" },
   { id: "symphony/codex", ownedBy: "codex", allowedNames: ["codex"] },
-  { id: "symphony/codebuff", ownedBy: "codebuff", allowedNames: ["codebuff"] },
+  {
+    id: "symphony/codebuff",
+    ownedBy: "codebuff",
+    allowedNames: ["codebuff-paid", "codebuff-free"],
+  },
+  {
+    id: "symphony/codebuff-paid",
+    ownedBy: "codebuff-paid",
+    allowedNames: ["codebuff-paid"],
+  },
+  {
+    id: "symphony/codebuff-free",
+    ownedBy: "codebuff-free",
+    allowedNames: ["codebuff-free"],
+  },
   { id: "symphony/groq", ownedBy: "groq", allowedNames: ["groq"] },
   { id: "symphony/mistral", ownedBy: "mistral", allowedNames: ["mistral"] },
   { id: "symphony/gemini", ownedBy: "gemini", allowedNames: ["gemini"] },

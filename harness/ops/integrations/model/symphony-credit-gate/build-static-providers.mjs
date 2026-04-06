@@ -2,6 +2,7 @@ import {
   RUNNER_OLLAMA_BASE_URL,
   RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
 } from "../../../symphony-config.mjs";
+import { TIER_FREE_CLOUD } from "./tier-free-cloud.mjs";
 import { TIER_LOCAL_SAFETY_NET } from "./tier-local-safety-net.mjs";
 import { TIER_PAID } from "./tier-paid.mjs";
 import { probeCodexSdk } from "./probe-codex-sdk.mjs";
@@ -23,14 +24,28 @@ export function buildStaticProviders() {
       probe: (provider) => probeCodexSdk(provider.model),
     },
     {
-      name: "codebuff",
+      name: "codebuff-paid",
       tier: TIER_PAID,
       model: process.env.CODEBUFF_MODEL_ID || "codebuff/base",
       baseUrl: "codebuff-sdk",
       envVar: "CODEBUFF_API_KEY",
       driver: "codebuff-sdk",
       requiresSdk: true,
+      costMode: "paid",
+      sessionMode: "paid",
       failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
+      probe: (provider) => probeCodebuff(provider),
+    },
+    {
+      name: "codebuff-free",
+      tier: TIER_FREE_CLOUD,
+      model: process.env.CODEBUFF_MODEL_ID || "codebuff/base",
+      baseUrl: "codebuff-sdk",
+      envVar: "CODEBUFF_API_KEY",
+      driver: "codebuff-sdk",
+      requiresSdk: true,
+      costMode: "free",
+      sessionMode: "free",
       probe: (provider) => probeCodebuff(provider),
     },
     {

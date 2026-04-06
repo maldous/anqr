@@ -6,8 +6,6 @@ import { buildProviderSelectionCandidateNames } from "./build-provider-selection
 import { clearProviderFailure } from "./clear-provider-failure.mjs";
 import { ensureStateDir } from "./ensure-state-dir.mjs";
 import { getProviderTier } from "./get-provider-tier.mjs";
-import { isPreferredPaidProviderEligible } from "./is-preferred-paid-provider-eligible.mjs";
-import { loadProbeResults } from "./load-probe-results.mjs";
 import { matchesAllowedNames } from "./matches-allowed-names.mjs";
 import { matchesExcludedNames } from "./matches-excluded-names.mjs";
 import { tryProvider } from "./try-provider.mjs";
@@ -15,7 +13,6 @@ import { logDebug, logInfo, logWarn } from "./logger.mjs";
 
 export async function selectProvider(options = {}) {
   ensureStateDir();
-  const probeResults = loadProbeResults();
   const allowSafetyNetOverride = options.allowSafetyNetOverride === true;
   const allowedNames =
     Array.isArray(options.allowedNames) && options.allowedNames.length > 0
@@ -34,12 +31,7 @@ export async function selectProvider(options = {}) {
     excludedNames: excludedNames ? Array.from(excludedNames) : null,
   });
 
-  const preferredPaid = new Set(
-    buildProviderSelectionCandidateNames().filter((name) =>
-      isPreferredPaidProviderEligible(name, probeResults[name]),
-    ),
-  );
-  const orderedNames = buildProviderSelectionCandidateNames();
+  const orderedNames = buildProviderSelectionCandidateNames({ excludeNames: excludedNames });
 
   logDebug(`[selectProvider] Candidate order`, {
     candidateCount: orderedNames.length,
@@ -52,32 +44,16 @@ export async function selectProvider(options = {}) {
       !provider ||
       !matchesAllowedNames(provider, allowedNames) ||
       matchesExcludedNames(provider, excludedNames)
-    )
+    ) {
       continue;
-    const health = getProviderHealthState(provider.name);
-    if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED)
-      continue;
-    const selected = await tryProvider(provider);
-    if (selected) {
-      const source = preferredPaid.has(providerName) ? "preferred" : "ranked";
-      logInfo(`[selectProvider] Selected ${source} provider`, {
-        providerName: selected.name,
-        tier: selected.tier,
-      });
-      return selected;
     }
-  }
-
-  logDebug(`[selectProvider] Trying fixed provider order (fallback)`);
-  for (const provider of PROVIDERS) {
-    if (
-      !matchesAllowedNames(provider, allowedNames) ||
-      matchesExcludedNames(provider, excludedNames)
-    )
+    const health = getProviderHealthState(provider.name);
+    if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED) {
       continue;
+    }
     const selected = await tryProvider(provider);
     if (selected) {
-      logInfo(`[selectProvider] Selected fallback provider`, {
+      logInfo(`[selectProvider] Selected ranked provider`, {
         providerName: selected.name,
         tier: selected.tier,
       });
@@ -94,18 +70,21 @@ export async function selectProvider(options = {}) {
     return null;
   }
 
-  logWarn(`[selectProvider] All providers exhausted — invoking explicit safety-net override`, {
-    allowedCount: allowedNames?.size || 0,
-    excludedCount: excludedNames?.size || 0,
-    totalProviders: PROVIDERS.length,
-  });
+  logWarn(
+    `[selectProvider] All ranked providers exhausted — invoking explicit safety-net override`,
+    {
+      allowedCount: allowedNames?.size || 0,
+      excludedCount: excludedNames?.size || 0,
+      totalProviders: PROVIDERS.length,
+    },
+  );
   for (const provider of PROVIDERS) {
     if (getProviderTier(provider) !== TIER_LOCAL_SAFETY_NET) continue;
     clearProviderFailure(provider.name);
     const selected = await tryProvider(provider);
     if (selected) {
       logWarn(
-        `[selectProvider] P0 SAFETY NET activated: ${selected.name} (all restrictions bypassed)`,
+        `[selectProvider] P0 SAFETY NET activated: ${selected.name} (all ranked candidates exhausted)`,
         {
           providerName: selected.name,
           tier: selected.tier,

@@ -60,12 +60,16 @@ export function buildProviderProbeMarkdown(report) {
     lines.push(`- ${status}: ${count}`);
   }
   lines.push("");
-  lines.push("## Codebuff transitions");
+  lines.push("## Codebuff providers");
   lines.push("");
-  const codebuff = report.results.filter((result) => result.providerName === "codebuff");
-  if (codebuff.length === 0) lines.push("- codebuff not present in provider registry");
-  for (const result of codebuff) {
-    lines.push(`- status: ${result.status}, reason: ${result.reason}`);
+  const codebuffProviders = report.results.filter((result) =>
+    result.providerName.startsWith("codebuff"),
+  );
+  if (codebuffProviders.length === 0) {
+    lines.push("- no codebuff providers present in provider registry");
+  }
+  for (const result of codebuffProviders) {
+    lines.push(`- ${result.providerName}: status=${result.status}, reason=${result.reason}`);
     for (const stage of result.stages || []) {
       lines.push(
         `  - ${stage.name}${stage.mode ? ` (${stage.mode})` : ""}${stage.status ? ` [${stage.status}]` : ""}`,

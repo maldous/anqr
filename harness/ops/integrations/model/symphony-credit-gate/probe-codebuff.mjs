@@ -20,7 +20,7 @@ export async function probeCodebuff(provider = {}) {
   });
 
   if (!success) {
-    logWarn(`codebuff: unavailable (${result.reason})`);
+    logWarn(`${providerName}: unavailable (${result.reason})`);
     recordProviderFailure(providerName, result.status || "unknown");
   }
 

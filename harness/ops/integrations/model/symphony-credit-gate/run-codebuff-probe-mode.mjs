@@ -3,10 +3,18 @@ import { tryMode } from "../codebuff-direct/try-mode.mjs";
 import { providerProbeStage } from "./provider-probe-stage.mjs";
 import { sanitizeCodebuffProbeError } from "./sanitize-codebuff-probe-error.mjs";
 
-export async function runCodebuffProbeMode({ apiKey, cwd, prompt, costMode, stages, progress }) {
+export async function runCodebuffProbeMode({
+  apiKey,
+  cwd,
+  prompt,
+  costMode,
+  stages,
+  progress,
+  providerName = "codebuff",
+}) {
   const mode = costMode || "paid";
   stages.push(providerProbeStage("mode_started", { mode }));
-  progress?.({ type: "stage", providerName: "codebuff", stage: `mode:${mode}:started` });
+  progress?.({ type: "stage", providerName, stage: `mode:${mode}:started` });
   let result;
   try {
     result = await tryMode(apiKey, cwd, costMode, prompt, null);
@@ -20,6 +28,6 @@ export async function runCodebuffProbeMode({ apiKey, cwd, prompt, costMode, stag
       textLength: String(result?.text || "").length,
     }),
   );
-  progress?.({ type: "stage", providerName: "codebuff", stage: `mode:${mode}:succeeded` });
+  progress?.({ type: "stage", providerName, stage: `mode:${mode}:succeeded` });
   return result;
 }

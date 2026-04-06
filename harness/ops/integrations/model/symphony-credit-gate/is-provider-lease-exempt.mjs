@@ -1,4 +1,4 @@
 export function isProviderLeaseExempt(provider) {
   const name = typeof provider === "string" ? provider : provider?.name;
-  return name === "codex" || name === "codebuff";
+  return name === "codex" || name === "codebuff-paid" || name === "codebuff-free";
 }

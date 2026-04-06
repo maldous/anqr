@@ -18,9 +18,6 @@ export function loadProbeCache() {
       }
       return null;
     }
-    logDebug(
-      `Loaded probe cache (${Math.round(age / 1000)}s old, ${data.probeResults.length} results)`,
-    );
     return data;
   } catch (err) {
     logDebug(`Failed to load probe cache: ${err.message}`);

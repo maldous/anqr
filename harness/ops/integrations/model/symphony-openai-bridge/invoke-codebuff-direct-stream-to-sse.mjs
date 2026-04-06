@@ -7,14 +7,20 @@ export async function invokeCodebuffDirectStreamToSSE(
   res,
   onDiscordChunk = null,
   cwd = null,
+  provider = null,
 ) {
   const completionId = `chatcmpl-symphony-${Date.now()}`;
   const created = Math.floor(Date.now() / 1000);
+  const selectedProvider = provider || {};
+  const providerName = selectedProvider.name || "codebuff-paid";
+  const model = selectedProvider.model || "codebuff/base";
+  const costMode = selectedProvider.costMode === "free" ? "free" : undefined;
   let fullText = "";
 
   const result = await invokeCodebuffDirectStream({
     messages,
     cwd: cwd || getCurrentRequestCwd(),
+    costMode,
     onTextChunk: (text) => {
       fullText += text;
       if (onDiscordChunk) {
@@ -28,7 +34,7 @@ export async function invokeCodebuffDirectStreamToSSE(
         id: completionId,
         object: "chat.completion.chunk",
         created,
-        model: "codebuff/base",
+        model,
         choices: [{ index: 0, delta: { content: text }, finish_reason: null }],
       };
       res.write(`data: ${JSON.stringify(chunk)}\n\n`);
@@ -39,7 +45,7 @@ export async function invokeCodebuffDirectStreamToSSE(
     id: completionId,
     object: "chat.completion.chunk",
     created,
-    model: "codebuff/base",
+    model,
     choices: [
       {
         index: 0,
@@ -54,9 +60,10 @@ export async function invokeCodebuffDirectStreamToSSE(
 
   return {
     text: result.text || fullText,
-    providerName: "codebuff",
+    providerName,
+    model,
     finishReason: result.finishReason || (result.needsContinuation ? "length" : "stop"),
     _symphonyResult: result._symphonyResult,
-    mode: result.mode,
+    mode: result.mode || selectedProvider.sessionMode || (costMode ? "free" : "paid"),
   };
 }

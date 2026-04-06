@@ -16,6 +16,7 @@ import {
   ERROR_TYPES,
 } from "../symphony-adaptive-context.mjs";
 import { estimateMessagesTokens } from "../symphony-bridge-truncation.mjs";
+import { invokeCodebuffDirectStream } from "../codebuff-direct.mjs";
 import { releaseProviderLease } from "../symphony-credit-gate/release-provider-lease.mjs";
 import {
   updateSessionProvider,
@@ -56,11 +57,9 @@ export async function invokeWithFallbackStream(
   let lastError = null;
   let attemptNumber = 0;
 
-  // Keep trying providers until we run out (no limit - try ALL providers)
   while (true) {
     attemptNumber++;
 
-    // Get next provider from credit-gate (excluding already-tried ones)
     const provider = await selectProvider(buildSelectionOptions(route, triedProviders, sessionId));
 
     if (!provider) {
@@ -87,12 +86,24 @@ export async function invokeWithFallbackStream(
       await sleep(FALLBACK_DELAY_MS);
     }
 
-    // Note: Codebuff transparent relay is handled in the main POST /v1/chat/completions handler
-    // to enable direct SSE passthrough without going through invokeWithFallbackStream
-
     try {
       const startedAt = Date.now();
-      const result = await invokeWithAI(provider, messages, { stream: true, onChunk, cwd });
+      const isCodebuffProvider =
+        provider.driver === "codebuff-sdk" ||
+        provider.name === "codebuff" ||
+        provider.name.startsWith("codebuff-");
+      const result = isCodebuffProvider
+        ? await invokeCodebuffDirectStream({
+            messages,
+            cwd,
+            costMode: provider.costMode === "free" ? "free" : undefined,
+            onTextChunk: (text) => {
+              if (onChunk) {
+                onChunk({ type: "text", text });
+              }
+            },
+          })
+        : await invokeWithAI(provider, messages, { stream: true, onChunk, cwd });
 
       const textPreview = result.text?.slice(0, 100) || "";
       logInfo(
@@ -107,22 +118,20 @@ export async function invokeWithFallbackStream(
         outputTokens: Math.ceil((result.text?.length || 0) / 4),
       });
 
-      // Update session state
       if (sessionId) {
         const mode =
-          detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
+          detectCodebuffMode(result) ||
+          (isCodebuffProvider ? provider.sessionMode || provider.costMode || "paid" : null);
         updateSessionProvider(sessionId, { name: provider.name, mode, tier: provider.tier });
-        // Store server-side message history for context verification on provider switches
         setSessionMessages(sessionId, messages);
       }
 
       setRequestCount(requestCount + 1);
-      setProbeTurnCounter(probeTurnCounter + 1); // Track turns for probe triggering
+      setProbeTurnCounter(probeTurnCounter + 1);
       if (requestCount % STATS_LOG_INTERVAL === 0) {
         logBridgeStats();
       }
 
-      // Trigger probe cycle if turn threshold reached OR 30 minutes elapsed
       const timeSinceProbe = Date.now() - lastProbeTimeCheck;
       const shouldProbeByTurns = probeTurnCounter >= PROBE_CYCLE_TURN_THRESHOLD;
       const shouldProbeByTime = timeSinceProbe >= PROBE_CYCLE_INTERVAL_MS;
@@ -132,7 +141,6 @@ export async function invokeWithFallbackStream(
           ? `turn threshold (${probeTurnCounter}/${PROBE_CYCLE_TURN_THRESHOLD})`
           : `time threshold (${Math.round(timeSinceProbe / 60000)}min / 30min)`;
         logInfo(`🔍 Probe trigger: ${reason}, scheduling probe cycle...`);
-        // Schedule probe asynchronously (don't block response)
         setTimeout(() => {
           runContinuousProviderProbe().catch((err) => {
             logError(`Scheduled probe failed: ${err.message}`);
@@ -161,7 +169,6 @@ export async function invokeWithFallbackStream(
         recordProviderFailureCount(provider.name);
       }
 
-      // Adaptive context: classify error and update provider limits dynamically
       const errorType = classifyError(err);
       recordErrorType(provider.name, errorType);
       if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
@@ -172,9 +179,6 @@ export async function invokeWithFallbackStream(
         recordRateLimit(provider.name, rlInfo);
       }
 
-      // Clear sticky session immediately so concurrent requests on the same
-      // session don't keep trying the failed provider. The next call to
-      // buildSelectionOptions will see no sticky and allow all providers.
       releaseProviderLease(provider);
       if (sessionId) {
         clearSessionProvider(sessionId);
@@ -183,18 +187,17 @@ export async function invokeWithFallbackStream(
         );
       }
 
-      // Send error notification to client (but don't end the stream yet)
       if (onChunk) {
-        // Include actual error details when errorType is generic/unknown
         const errorDetail =
           errorType === ERROR_TYPES.UNKNOWN || errorType === "unknown"
             ? errStr.slice(0, 100)
             : errorType;
-        const errorNotice = `\n⚠️ ${provider.name} failed (${errorDetail}), trying next provider...\n`;
+        const errorNotice = `
+⚠️ ${provider.name} failed (${errorDetail}), trying next provider...
+`;
         onChunk({ type: "text", text: errorNotice });
       }
 
-      // Continue to next provider in the loop
       continue;
     }
   }

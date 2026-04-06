@@ -54,12 +54,10 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
     messageCount: messages?.length,
   });
 
-  // Check if it's time for periodic evaluation
   if (shouldTriggerEvalCycle()) {
     logInfo(`🔍 Periodic evaluation cycle: sampling underused providers`);
   }
 
-  // Keep trying providers until we run out (no limit - try ALL providers)
   while (true) {
     attemptNumber++;
     logDebug(`[invokeWithFallback] Attempt ${attemptNumber}/10`, {
@@ -67,7 +65,6 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
       lastError: lastError ? lastError.slice(0, 100) : null,
     });
 
-    // Get next provider from credit-gate (excluding already-tried ones)
     const provider = await selectProvider(buildSelectionOptions(route, triedProviders, sessionId));
 
     if (!provider) {
@@ -92,6 +89,11 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
       throw new Error(errorMsg);
     }
 
+    const isCodebuffProvider =
+      provider.driver === "codebuff-sdk" ||
+      provider.name === "codebuff" ||
+      provider.name.startsWith("codebuff-");
+
     logInfo(
       `${attemptNumber === 1 ? "Selected" : "Fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
     );
@@ -108,13 +110,13 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         providerName: provider.name,
         attemptNumber,
       });
-      const result =
-        provider.name === "codebuff"
-          ? await invokeCodebuffDirect({
-              messages,
-              cwd: cwd || getCurrentRequestCwd(),
-            })
-          : await invokeWithAI(provider, messages, { stream: false, cwd });
+      const result = isCodebuffProvider
+        ? await invokeCodebuffDirect({
+            messages,
+            cwd: cwd || getCurrentRequestCwd(),
+            costMode: provider.costMode === "free" ? "free" : undefined,
+          })
+        : await invokeWithAI(provider, messages, { stream: false, cwd });
 
       const durationMs = Date.now() - startedAt;
       const textPreview = result.text?.slice(0, 100) || "";
@@ -130,12 +132,11 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         outputTokens: Math.ceil((result.text?.length || 0) / 4),
       });
 
-      // Update session state
       if (sessionId) {
         const mode =
-          detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
+          detectCodebuffMode(result) ||
+          (isCodebuffProvider ? provider.sessionMode || provider.costMode || "paid" : null);
         updateSessionProvider(sessionId, { name: provider.name, mode, tier: provider.tier });
-        // Store server-side message history for context verification on provider switches
         setSessionMessages(sessionId, messages);
       }
 
@@ -176,7 +177,6 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         recordProviderFailureCount(provider.name);
       }
 
-      // Adaptive context: classify error and update provider limits dynamically
       const errorType = classifyError(err);
       recordErrorType(provider.name, errorType);
       if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
@@ -187,15 +187,13 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         recordRateLimit(provider.name, rlInfo);
       }
 
-      // Clear sticky session immediately so concurrent requests on the same
-      // session don't keep trying the failed provider.
       releaseProviderLease(provider);
       if (sessionId) {
         clearSessionProvider(sessionId);
         logInfo(`🔓 Cleared sticky session after ${provider.name} failure (${errorType})`);
       }
 
-      // Continue to next provider in the loop
+      continue;
     }
   }
 }

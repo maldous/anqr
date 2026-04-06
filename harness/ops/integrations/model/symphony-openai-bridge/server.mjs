@@ -655,7 +655,12 @@ export const server = http.createServer(async (req, res) => {
           `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
         );
 
-        if (selectedProvider?.name === "codebuff") {
+        const isSelectedCodebuff =
+          selectedProvider?.driver === "codebuff-sdk" ||
+          selectedProvider?.name === "codebuff" ||
+          selectedProvider?.name?.startsWith("codebuff-");
+
+        if (isSelectedCodebuff) {
           try {
             logInfo(
               `🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
@@ -688,6 +693,7 @@ export const server = http.createServer(async (req, res) => {
               res,
               streamToDiscord,
               requestCwd,
+              selectedProvider,
             );
 
             clearInterval(heartbeat);
@@ -703,13 +709,13 @@ export const server = http.createServer(async (req, res) => {
             setCurrentRequestId(null);
 
             logInfo(
-              `✅ Finished: ${issueContext?.identifier || "Request"} (provider: codebuff, ${result.text.length} chars)`,
+              `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName}, ${result.text.length} chars)`,
             );
 
             // Send compact completion notification (non-blocking)
             const completionFields = [
               { name: "Output", value: `${result.text.length} chars`, inline: true },
-              { name: "Model", value: "codebuff", inline: true },
+              { name: "Model", value: result.providerName, inline: true },
             ];
             if (issueContext?.identifier) {
               completionFields.unshift({
@@ -743,19 +749,23 @@ export const server = http.createServer(async (req, res) => {
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
-              provider: "codebuff",
+              provider: result.providerName,
               durationMs,
               isStream: true,
               isError: false,
             });
-            recordProviderSuccess("codebuff");
-            recordSuccessfulMetrics("codebuff", startTime);
+            recordProviderSuccess(result.providerName);
+            recordSuccessfulMetrics(result.providerName, startTime);
 
             // Update session state for codebuff
             if (sessionId) {
               // Detect mode from response or errors
               const mode = result.mode || "unknown";
-              updateSessionProvider(sessionId, { name: "codebuff", mode, tier: "paid" });
+              updateSessionProvider(sessionId, {
+                name: result.providerName,
+                mode,
+                tier: selectedProvider?.tier || "paid",
+              });
               // Store server-side message history for context verification on provider switches
               setSessionMessages(sessionId, messages);
             }
@@ -767,16 +777,19 @@ export const server = http.createServer(async (req, res) => {
 
             // Record failure and fall through to standard cascade
             if (isRetryableErrorDeep(error_)) {
-              recordProviderFailure("codebuff");
-              recordProviderFailureCount("codebuff");
+              recordProviderFailure(selectedProvider.name);
+              recordProviderFailureCount(selectedProvider.name);
             }
-            logInfo(`🔄 Falling back to standard provider cascade (excluding codebuff)...`);
+            logInfo(
+              `🔄 Falling back to standard provider cascade (excluding ${selectedProvider.name})...`,
+            );
             // Fall through to standard fallback cascade, excluding the failed codebuff
           }
         }
 
         // If codebuff was tried and failed, exclude it from the cascade
-        const excludeAfterCodebuff = selectedProvider?.name === "codebuff" ? ["codebuff"] : [];
+        const excludeAfterCodebuff =
+          isSelectedCodebuff && selectedProvider?.name ? [selectedProvider.name] : [];
 
         try {
           const result = await invokeWithFallbackStream(

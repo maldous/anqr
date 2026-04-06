@@ -1,5 +1,4 @@
 import { getApiKey } from "../codebuff-direct/get-api-key.mjs";
-import { isRecoverableError } from "../codebuff-direct/is-recoverable-error.mjs";
 import { normalizeCwd } from "../codebuff-direct/normalize-cwd.mjs";
 
 import { classifyCodebuffProbeError } from "./classify-codebuff-probe-error.mjs";
@@ -11,120 +10,81 @@ export async function probeCodebuffDetailed(provider = {}, options = {}) {
   const apiKey = getApiKey();
   const startedAt = Date.now();
   const stages = [];
+  const providerName = provider.name || "codebuff-paid";
   const model = provider.model || process.env.CODEBUFF_MODEL_ID || "codebuff/base";
   const progress = options.progress || null;
+  const costMode = provider.costMode === "free" ? "free" : undefined;
+  const mode = provider.costMode === "free" ? "free" : "paid";
+
   if (!apiKey) {
     stages.push(providerProbeStage("env_missing", { envVar: "CODEBUFF_API_KEY" }));
     return {
-      providerName: provider.name || "codebuff",
+      providerName,
       model,
       available: false,
       status: "auth_missing",
       reason: "CODEBUFF_API_KEY is not set",
       durationMs: Date.now() - startedAt,
       stages,
-      mode: null,
+      mode,
       message: "CODEBUFF_API_KEY is not set",
     };
   }
+
   const cwd = normalizeCwd(process.cwd());
   const prompt = "Reply with exactly: ok";
-  const paidTimeout = createCodebuffProbeTimeout();
+  const timeout = createCodebuffProbeTimeout();
+
   try {
-    const paidResult = await paidTimeout.race(
-      runCodebuffProbeMode({ apiKey, cwd, prompt, costMode: undefined, stages, progress }),
+    const probeResult = await timeout.race(
+      runCodebuffProbeMode({
+        apiKey,
+        cwd,
+        prompt,
+        costMode,
+        stages,
+        progress,
+        providerName,
+      }),
     );
-    const text = String(paidResult?.text || "").trim();
+    const text = String(probeResult?.text || "").trim();
     return {
-      providerName: provider.name || "codebuff",
+      providerName,
       model,
       available: text.length > 0,
       status: text.length > 0 ? "success" : "unavailable",
-      reason: text.length > 0 ? "paid mode probe succeeded" : "paid mode returned no text",
+      reason: text.length > 0 ? `${mode} mode probe succeeded` : `${mode} mode returned no text`,
       durationMs: Date.now() - startedAt,
       stages,
-      mode: paidResult?.mode || "paid",
+      mode: probeResult?.mode || mode,
       message: text,
     };
   } catch (error) {
-    const initial = classifyCodebuffProbeError(error);
+    const classified = classifyCodebuffProbeError(error);
     stages.push(
       providerProbeStage("mode_failed", {
-        mode: "paid",
-        status: initial.status,
-        message: initial.message,
+        mode,
+        status: classified.status,
+        message: classified.message,
       }),
     );
     progress?.({
       type: "stage",
-      providerName: "codebuff",
-      stage: `mode:paid:failed:${initial.status}`,
+      providerName,
+      stage: `mode:${mode}:failed:${classified.status}`,
     });
-    if (!isRecoverableError(initial.message)) {
-      return {
-        providerName: provider.name || "codebuff",
-        model,
-        available: false,
-        status: initial.status,
-        reason: initial.reason,
-        durationMs: Date.now() - startedAt,
-        stages,
-        mode: "paid",
-        message: initial.message,
-      };
-    }
-    stages.push(providerProbeStage("fallback_started", { fromMode: "paid", toMode: "free" }));
-    progress?.({ type: "stage", providerName: "codebuff", stage: "fallback:paid->free" });
-    const freeTimeout = createCodebuffProbeTimeout();
-    try {
-      const freeResult = await freeTimeout.race(
-        runCodebuffProbeMode({ apiKey, cwd, prompt, costMode: "free", stages, progress }),
-      );
-      const text = String(freeResult?.text || "").trim();
-      return {
-        providerName: provider.name || "codebuff",
-        model,
-        available: text.length > 0,
-        status: text.length > 0 ? "degraded" : "unavailable",
-        reason:
-          text.length > 0
-            ? `paid mode ${initial.status}, free mode succeeded`
-            : "free mode returned no text after paid-mode fallback",
-        durationMs: Date.now() - startedAt,
-        stages,
-        mode: freeResult?.mode || "free",
-        message: text || initial.message,
-      };
-    } catch (fallbackError) {
-      const finalError = classifyCodebuffProbeError(fallbackError);
-      stages.push(
-        providerProbeStage("fallback_failed", {
-          fromMode: "paid",
-          toMode: "free",
-          status: finalError.status,
-          message: finalError.message,
-        }),
-      );
-      progress?.({
-        type: "stage",
-        providerName: "codebuff",
-        stage: `mode:free:failed:${finalError.status}`,
-      });
-      return {
-        providerName: provider.name || "codebuff",
-        model,
-        available: false,
-        status: finalError.status,
-        reason: `paid mode failed (${initial.status}), free mode failed (${finalError.status})`,
-        durationMs: Date.now() - startedAt,
-        stages,
-        mode: "free",
-        message: finalError.message,
-      };
-    } finally {
-      freeTimeout.clear();
-    }
+    return {
+      providerName,
+      model,
+      available: false,
+      status: classified.status,
+      reason: `${mode} mode failed (${classified.status})`,
+      durationMs: Date.now() - startedAt,
+      stages,
+      mode,
+      message: classified.message,
+    };
   } finally {
-    paidTimeout.clear();
+    timeout.clear();
   }
 }
