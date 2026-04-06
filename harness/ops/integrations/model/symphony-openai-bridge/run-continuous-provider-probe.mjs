@@ -13,6 +13,10 @@ import { setLastProbeStartTime } from "./last-probe-start-time.mjs";
 import { loadProbeCache } from "./load-probe-cache.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { probeAllToolCapability } from "./probe-all-tool-capability.mjs";
+import { applyCacheToStatus } from "./apply-cache-to-status.mjs";
+import { releaseProbeLock } from "./release-probe-lock.mjs";
+import { tryAcquireProbeLock } from "./try-acquire-probe-lock.mjs";
+import { waitForProbeCache } from "./wait-for-probe-cache.mjs";
 import { probeCompletionCount, setProbeCompletionCount } from "./probe-completion-count.mjs";
 import { setProbeTurnCounter } from "./probe-turn-counter.mjs";
 import { setLastProbeTimeCheck } from "./last-probe-time-check.mjs";
@@ -32,22 +36,55 @@ export async function runContinuousProviderProbe() {
       logInfo(
         `🔍 Skipping probe - another executor probed ${Math.round(age / 1000)}s ago (using shared cache)`,
       );
-      providerStatusCache.configured = cached.configured;
-      providerStatusCache.probeResults = cached.probeResults;
-      providerStatusCache.lastProbeAt = cached.lastProbeAt;
+      applyCacheToStatus(cached);
       return;
     }
   }
 
+  // In-memory guard: prevent same-process concurrent probes
   if (isProbeRunning) {
     logDebug(`🔍 Probe already running, skipping duplicate`);
     return;
   }
 
+  // Cross-process lock: prevent multiple executors probing simultaneously
+  let lockAcquired = tryAcquireProbeLock();
+  if (!lockAcquired) {
+    logInfo(`🔒 Another executor is running continuous probe — waiting for shared cache...`);
+    const waitedCache = await waitForProbeCache(loadProbeCache);
+    if (waitedCache) {
+      applyCacheToStatus(waitedCache);
+      logInfo(
+        `🔒 Got probe results from another executor (${waitedCache.probeResults.filter((r) => r.available).length}/${waitedCache.configured.length} available)`,
+      );
+      return;
+    }
+    // Wait timed out — try once more (stale lock gets cleaned by tryAcquire)
+    lockAcquired = tryAcquireProbeLock();
+    if (!lockAcquired) {
+      logInfo(`🔒 Cannot acquire probe lock — skipping continuous probe cycle`);
+      return;
+    }
+  }
+
+  // Double-check: re-check cache after acquiring lock
+  const freshCache = loadProbeCache();
+  if (freshCache) {
+    const age = Date.now() - new Date(freshCache.lastProbeAt).getTime();
+    if (age < PROBE_CYCLE_INTERVAL_MS) {
+      applyCacheToStatus(freshCache);
+      logInfo(
+        `🔒 Cache appeared after lock acquired (${freshCache.probeResults.filter((r) => r.available).length}/${freshCache.configured.length} available) — skipping probe`,
+      );
+      releaseProbeLock();
+      return;
+    }
+  }
+
   setIsProbeRunning(true);
   setLastProbeStartTime(Date.now());
-  setLastProbeTimeCheck(Date.now()); // Reset time check
-  setProbeTurnCounter(0); // Reset turn counter
+  setLastProbeTimeCheck(Date.now());
+  setProbeTurnCounter(0);
 
   try {
     logInfo(`🔍 Starting continuous provider probe cycle ${probeCompletionCount + 1}...`);
@@ -127,11 +164,9 @@ export async function runContinuousProviderProbe() {
           );
         }
         logInfo(`🔍 Full ranking cached in provider stats`);
-
-        // SKIP: Don't send Discord notifications during probe cycles
-        // Sending probe results to Discord creates bridge requests that trigger more probes
-        // causing a feedback loop that leads to OOM
-        // Provider rankings are logged server-side via logInfo above
+        // Don't send Discord notifications during probe cycles — sending probe results
+        // to Discord creates bridge requests that trigger more probes, causing a
+        // feedback loop that leads to OOM. Rankings are logged server-side only.
         logInfo(`📊 Provider rankings logged server-side (not sent to Discord)`);
       }
       // Reset counter but keep probing
@@ -146,5 +181,6 @@ export async function runContinuousProviderProbe() {
     logError(`🔍 Continuous probe error: ${err.message}`);
   } finally {
     setIsProbeRunning(false);
+    if (lockAcquired) releaseProbeLock();
   }
 }

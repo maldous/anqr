@@ -4,6 +4,10 @@ import { reloadProvidersFromCatalogCache } from "../symphony-credit-gate/provide
 import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";
 import { loadProbeCache } from "./load-probe-cache.mjs";
 import { probeAllToolCapability } from "./probe-all-tool-capability.mjs";
+import { applyCacheToStatus } from "./apply-cache-to-status.mjs";
+import { releaseProbeLock } from "./release-probe-lock.mjs";
+import { tryAcquireProbeLock } from "./try-acquire-probe-lock.mjs";
+import { waitForProbeCache } from "./wait-for-probe-cache.mjs";
 import { providerStatusCache } from "./provider-status-cache.mjs";
 import { refreshLiveProviderCatalogs } from "./refresh-live-provider-catalogs.mjs";
 import { saveProbeCache } from "./save-probe-cache.mjs";
@@ -11,29 +15,58 @@ import { logDebug, logInfo, logError } from "./logger.mjs";
 
 export async function refreshProviderStatus(options = {}) {
   const { respectHealthState = true, recordHealthFailures = true, force = false } = options;
-  // When force=true (manual refresh), bypass BOTH cache AND health state
-  // so all providers get a true re-probe regardless of cooling_down status
   const effectiveRespectHealth = force ? false : respectHealthState;
 
-  // Skip cache check if force=true (manual refresh requested)
-  let cached = null;
+  // Fast path: use shared cache if fresh
   if (!force) {
-    cached = loadProbeCache();
-  }
-  if (cached) {
-    providerStatusCache.configured = cached.configured;
-    providerStatusCache.probeResults = cached.probeResults;
-    providerStatusCache.lastProbeAt = cached.lastProbeAt;
-    logInfo(
-      `📊 Using shared probe cache from ${cached.lastProbeAt} (${providerStatusCache.probeResults.filter((r) => r.available).length}/${providerStatusCache.configured.length} available)`,
-    );
-    return false;
+    const cached = loadProbeCache();
+    if (cached) {
+      applyCacheToStatus(cached);
+      logInfo(
+        `📊 Using shared probe cache from ${cached.lastProbeAt} (${cached.probeResults.filter((r) => r.available).length}/${cached.configured.length} available)`,
+      );
+      return false;
+    }
   }
 
+  // In-memory guard: prevent same-process re-entrant probing
   if (providerStatusCache.probing) return false;
-  providerStatusCache.probing = true;
 
+  // Cross-process lock: prevent multiple executors probing simultaneously
+  let lockAcquired = tryAcquireProbeLock();
+  if (!lockAcquired) {
+    logInfo(`🔒 Another executor is probing — waiting for shared cache...`);
+    const waitedCache = await waitForProbeCache(loadProbeCache);
+    if (waitedCache) {
+      applyCacheToStatus(waitedCache);
+      logInfo(
+        `🔒 Got probe results from another executor (${waitedCache.probeResults.filter((r) => r.available).length}/${waitedCache.configured.length} available)`,
+      );
+      return false;
+    }
+    // Wait timed out — try once more (stale lock gets cleaned by tryAcquire)
+    lockAcquired = tryAcquireProbeLock();
+    if (!lockAcquired) {
+      logInfo(`🔒 Cannot acquire probe lock — skipping probe`);
+      return false;
+    }
+  }
+
+  providerStatusCache.probing = true;
   try {
+    // Double-check: re-check cache after acquiring lock
+    // (another executor may have saved results while we waited for the lock)
+    if (!force) {
+      const freshCache = loadProbeCache();
+      if (freshCache) {
+        applyCacheToStatus(freshCache);
+        logInfo(
+          `📊 Cache appeared after lock acquired (${freshCache.probeResults.filter((r) => r.available).length}/${freshCache.configured.length} available)`,
+        );
+        return false;
+      }
+    }
+
     try {
       await refreshLiveProviderCatalogs();
       reloadProvidersFromCatalogCache();
@@ -73,5 +106,6 @@ export async function refreshProviderStatus(options = {}) {
     logError(`Provider probe error: ${err.message}`);
   } finally {
     providerStatusCache.probing = false;
+    if (lockAcquired) releaseProbeLock();
   }
 }

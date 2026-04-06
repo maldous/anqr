@@ -13,9 +13,12 @@ import { runContinuousProviderProbe } from "./run-continuous-provider-probe.mjs"
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { PROBE_CYCLE_INTERVAL_MS } from "./probe-cycle-interval-ms.mjs";
+import { parseWorktreeNumber } from "./parse-worktree-number.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
 export function initializeProbes() {
+  const wtNum = parseWorktreeNumber(process.env.ANQR_WORKTREE_ID);
+
   // Check for shared probe cache from other executors FIRST before doing expensive startup probe
   const cachedProbe = loadProbeCache();
   if (cachedProbe) {
@@ -62,6 +65,32 @@ export function initializeProbes() {
         logInfo(`Ready to accept requests (using cached probe)`);
         logInfo(`========================================`);
         return;
+      }
+
+      // Stagger startup probe by worktree number to prevent thundering herd
+      // wt1=0s, wt2=3s, wt3=6s, ... wt8=21s — gives wt1 time to populate shared cache
+      const staggerMs = (wtNum - 1) * 3_000;
+      if (staggerMs > 0) {
+        logInfo(`🔒 Startup stagger: waiting ${staggerMs / 1000}s (worktree ${wtNum})...`);
+        await new Promise((resolve) => setTimeout(resolve, staggerMs));
+        // Re-check cache after stagger — another executor may have probed while we waited
+        const freshCache = loadProbeCache();
+        if (freshCache) {
+          providerStatusCache.configured = freshCache.configured;
+          providerStatusCache.probeResults = freshCache.probeResults;
+          providerStatusCache.lastProbeAt = freshCache.lastProbeAt;
+          const age = Math.round((Date.now() - new Date(freshCache.lastProbeAt).getTime()) / 1000);
+          logInfo(`========================================`);
+          logInfo(`Startup probe SKIPPED - cache appeared during stagger`);
+          logInfo(`========================================`);
+          logInfo(
+            `Cache age: ${age}s (${providerStatusCache.probeResults.filter((r) => r.available).length}/${providerStatusCache.configured.length} available)`,
+          );
+          logInfo(`========================================`);
+          logInfo(`Ready to accept requests (using cached probe)`);
+          logInfo(`========================================`);
+          return;
+        }
       }
 
       logInfo(`🔍 Starting startup exploration (1 cycle)...`);
@@ -186,10 +215,8 @@ export function initializeProbes() {
     }, delayMs);
   };
 
-  // Stagger continuous probe startup by worktree ID to prevent thundering herd
-  // On cold start (no cache): wt1 after 5s, wt2 after 10s, etc. — first executor
-  // populates shared cache before others start. With cache: no stagger needed.
-  const wtId = parseInt(process.env.ANQR_WORKTREE_ID || "1", 10);
-  const probeStartDelay = cachedProbe ? 0 : wtId * 5_000;
+  // Stagger continuous probe by worktree number to prevent thundering herd
+  // With cache: use full 30min interval (no rush). Without cache: stagger by worktree.
+  const probeStartDelay = cachedProbe ? PROBE_CYCLE_INTERVAL_MS : wtNum * 5_000;
   scheduleContinuousProbe(probeStartDelay);
 }
