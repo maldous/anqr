@@ -22,3 +22,4 @@ err.txt
 ok.txt
 test-output.log
 .sonar_tmp/
+harness/.structurizr

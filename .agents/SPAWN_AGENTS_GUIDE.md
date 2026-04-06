@@ -18,18 +18,22 @@
 
 ## Agent Types and Required Params
 
-| Agent Type           | Required                      | Optional                                                                     |
-| -------------------- | ----------------------------- | ---------------------------------------------------------------------------- |
-| `basher`             | **`params.command`** (string) | `prompt`, `params.rawOutput`, `params.timeout_seconds`                       |
-| `file-picker`        | `prompt` (string)             | `params.directories` (string[])                                              |
-| `researcher-web`     | `prompt` (string)             | —                                                                            |
-| `researcher-docs`    | `prompt` (string)             | —                                                                            |
-| `code-reviewer-lite` | `prompt` (string)             | —                                                                            |
-| `thinker-gpt`        | `prompt` (string)             | —                                                                            |
-| `browser-use`        | `prompt` (string)             | `params.url` (string)                                                        |
-| `tmux-cli`           | `prompt` (string)             | `params.command` (string)                                                    |
-| `harness-helper`     | —                             | `prompt`                                                                     |
-| `context-pruner`     | — (auto-spawned)              | `params.maxContextLength`, `params.userBudget`, `params.assistantToolBudget` |
+| Agent Type        | Required                      | Optional                                                                     |
+| ----------------- | ----------------------------- | ---------------------------------------------------------------------------- |
+| `basher`          | **`params.command`** (string) | `prompt`, `params.rawOutput`, `params.timeout_seconds`                       |
+| `file-picker`     | `prompt` (string)             | `params.directories` (string[])                                              |
+| `researcher-web`  | `prompt` (string)             | —                                                                            |
+| `researcher-docs` | `prompt` (string)             | —                                                                            |
+| `thinker`         | `prompt` (string)             | —                                                                            |
+| `thinker-gpt`     | `prompt` (string)             | —                                                                            |
+| `opus-agent`      | `prompt` (string)             | `params.filePaths` (string[])                                                |
+| `gpt-5-agent`     | `prompt` (string)             | `params.filePaths` (string[])                                                |
+| `editor`          | — (inherits context)          | —                                                                            |
+| `code-reviewer`   | `prompt` (string)             | —                                                                            |
+| `browser-use`     | `prompt` (string)             | `params.url` (string)                                                        |
+| `tmux-cli`        | `prompt` (string)             | `params.command` (string)                                                    |
+| `harness-helper`  | —                             | `prompt`                                                                     |
+| `context-pruner`  | — (auto-spawned)              | `params.maxContextLength`, `params.userBudget`, `params.assistantToolBudget` |
 
 ## ⚠️ basher: The #1 Source of Errors
 
@@ -149,7 +153,7 @@ Invalid params for agent basher: expected string, received undefined
       "params": { "command": "npm run lint:all" }
     },
     {
-      "agent_type": "code-reviewer-lite",
+      "agent_type": "code-reviewer",
       "prompt": "Review the changes to symphony-agent-router.mjs"
     }
   ]
@@ -211,15 +215,16 @@ Invalid params for agent basher: expected string, received undefined
 
 ## Quick Reference: What Goes Where
 
-| What you want to do        | agent_type           | Where the command/question goes           |
-| -------------------------- | -------------------- | ----------------------------------------- |
-| Run a terminal command     | `basher`             | `params.command` (REQUIRED!)              |
-| Find files                 | `file-picker`        | `prompt`                                  |
-| Search the web             | `researcher-web`     | `prompt`                                  |
-| Read library docs          | `researcher-docs`    | `prompt`                                  |
-| Think about a problem      | `thinker-gpt`        | `prompt`                                  |
-| Review code changes        | `code-reviewer-lite` | `prompt`                                  |
-| Interactive CLI testing    | `tmux-cli`           | `prompt` + optional `params.command`      |
-| Browser testing            | `browser-use`        | `prompt` + optional `params.url`          |
-| Harness/bridge help        | `harness-helper`     | optional `prompt`                         |
-| Prune conversation context | `context-pruner`     | nowhere (auto-spawned, optional `params`) |
+| What you want to do        | agent_type        | Where the command/question goes           |
+| -------------------------- | ----------------- | ----------------------------------------- |
+| Run a terminal command     | `basher`          | `params.command` (REQUIRED!)              |
+| Find files                 | `file-picker`     | `prompt`                                  |
+| Search the web             | `researcher-web`  | `prompt`                                  |
+| Read library docs          | `researcher-docs` | `prompt`                                  |
+| Think about a problem      | `thinker`         | `prompt`                                  |
+| Think deeply (GPT)         | `thinker-gpt`     | `prompt`                                  |
+| Review code changes        | `code-reviewer`   | `prompt`                                  |
+| Interactive CLI testing    | `tmux-cli`        | `prompt` + optional `params.command`      |
+| Browser testing            | `browser-use`     | `prompt` + optional `params.url`          |
+| Harness/bridge help        | `harness-helper`  | optional `prompt`                         |
+| Prune conversation context | `context-pruner`  | nowhere (auto-spawned, optional `params`) |

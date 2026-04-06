@@ -1,23 +1,46 @@
-# RAG Pipeline — Retrieval Augmented Generation
+# RAG Pipeline - Retrieval Augmented Generation
 
-Local-first RAG pipeline for ANQR codebase search and context retrieval, backed
-by Ollama embeddings on the same machine that serves Symphony agents.
+## 1. Directory Overview
 
-## Design goals in this replacement
+This directory contains a local-first RAG (Retrieval Augmented Generation) pipeline for ANQR codebase search and context retrieval, backed by Ollama embeddings on the same machine that serves Symphony agents. The pipeline provides semantic search capabilities across the codebase by chunking files into semantic units, generating vector embeddings, and storing them in a vector database for cosine similarity search.
 
-This drop-in replacement keeps the existing architecture, but tightens the parts
-that matter most for unattended nightly rebuilds and operator trust:
+The drop-in replacement architecture maintains existing behavior while tightening critical areas for unattended nightly rebuilds and operator trust: deterministic repo-relative storage, atomic writes, correct index size reporting, stale shard cleanup, safer library-style behavior, richer Linear issue chunks, and a more resilient Context7 wrapper.
 
-- deterministic, repo-relative storage where practical
-- atomic writes for source and Linear indexes
-- correct index size reporting for both legacy and sharded formats
-- stale shard cleanup when the storage layout changes
-- safer library-style behavior from builders that are also called programmatically
-- richer Linear issue chunks for better recall
-- a more resilient Context7 wrapper that adapts to tool/schema drift and uses a
-  current cloud fallback path
+## 2. File Summaries
 
-## Architecture
+### Facade Modules (Auto-Generated)
+
+These facade files re-export from sibling modules under matching directories, maintaining backwards compatibility after decomposition:
+
+- **chunker.mjs** - Facade exporting from `./chunker/index.mjs`. Splits code, docs, and config into line-aware semantic chunks using lightweight declaration-boundary heuristics with fallback to line-aware size splitting.
+
+- **embeddings.mjs** - Facade exporting from `./embeddings/index.mjs`. Generates vector embeddings via Ollama API with cached health checks for reliability.
+
+- **vector-store.mjs** - Facade exporting from `./vector-store/index.mjs`. Persists, prunes, indexes, and searches embeddings with support for both legacy single-file and sharded formats.
+
+- **build-index.mjs** - Facade exporting from `./build-index/index.mjs` and `./build-index/runtime.mjs`. Full-repo tracked-file index builder with noise filtering. Primary entry point for ANQR repo that chains into Linear index build.
+
+- **linear-chunker.mjs** - Facade exporting from `./linear-chunker/index.mjs`. Specialized chunker for Linear issues providing richer chunks for better recall.
+
+- **build-index-linear.mjs** - Facade exporting from `./build-index-linear/index.mjs` and `./build-index-linear/runtime.mjs`. Builds the Linear issue index in `reports/rag-index-linear/`.
+
+### Core Modules
+
+- **chunker/** - Contains the chunker implementation with submodules for different file types (code, markdown, JSON, generic text).
+
+- **embeddings/** - Contains Ollama API integration with health check caching and concurrency management.
+
+- **vector-store/** - Contains vector storage implementation supporting both legacy and sharded formats.
+
+- **build-index/** - Contains the main index builder logic with file tracking and noise filtering.
+
+- **linear-chunker/** - Contains the specialized Linear issue chunker.
+
+- **build-index-linear/** - Contains the Linear index builder.
+
+## 3. Overall Directory Function
+
+This directory serves as the semantic search foundation for the ANQR harness. The pipeline architecture follows:
 
 ```text
 ┌─────────────┐     ┌──────────────┐     ┌───────────────┐
@@ -28,18 +51,35 @@ that matter most for unattended nightly rebuilds and operator trust:
 └─────────────┘     └──────────────┘     └───────────────┘
 ```
 
-## Modules
+The **chunker** module splits files into semantic chunks:
+- Code uses declaration-boundary heuristics with line-aware fallback
+- Markdown splits on headings, then re-splits large sections by size
+- JSON prefers top-level key boundaries with line-aware fallback
+- Generic text/config formats use size-based chunking with overlap
 
-| Module        | File               | Purpose                                                         |
-| ------------- | ------------------ | --------------------------------------------------------------- |
-| Chunker       | `chunker.mjs`      | Split code, docs, and config into line-aware semantic chunks    |
-| Embeddings    | `embeddings.mjs`   | Generate vector embeddings via Ollama with cached health checks |
-| Vector Store  | `vector-store.mjs` | Persist, prune, index, and search embeddings                    |
-| Index Builder | `build-index.mjs`  | Full-repo tracked-file index builder with noise filtering       |
+The **embeddings** module generates vector embeddings via Ollama API with cached health checks to avoid repeated failed connection attempts.
 
-## Quick start
+The **vector-store** module persists embeddings to disk in either legacy single-file format (for small indexes) or sharded format (for large indexes), tracked by a manifest. It provides cosine similarity search and index statistics.
 
-```js
+The **build-index** module is the primary entry point for building the source code index, filtering noise like node_modules, generated files, and oversized files. It chains into the Linear index builder after source index succeeds.
+
+The **Context7 wrapper** provides a resilient integration that adapts to tool/schema drift and uses a cloud fallback path when local MCP is unavailable.
+
+## 4. Usage Instructions
+
+### Basic Indexing
+
+```bash
+# Incremental build/update
+node --max-old-space-size=8192 harness/ops/lib/rag/build-index.mjs
+
+# Clear and rebuild from scratch
+node --max-old-space-size=8192 harness/ops/lib/rag/build-index.mjs --clear
+```
+
+### Programmatic Usage
+
+```javascript
 import { indexDirectory, search, getIndexStats } from "./vector-store.mjs";
 
 await indexDirectory("src/");
@@ -54,101 +94,97 @@ const stats = await getIndexStats();
 console.log(`${stats.totalEntries} chunks across ${stats.totalFiles} files`);
 ```
 
-## Builder behavior
+### Included by Default
 
-`build-index.mjs` is the primary entry point for the ANQR repo and continues to
-chain into the Linear index build after the source index succeeds.
+- Core source files: TS/JS, Python, shell, Java/Kotlin/Swift
+- Docs and markdown
+- Common config formats: JSON, YAML, HTML, CSS, XML, Gradle, service/timer, plist/pbxproj/xcconfig
+- Selected high-signal basenames: Makefile, Dockerfile, .gitignore, .npmrc, .nvmrc, .prettierrc, .env_*
 
-### Included by default
-
-- core source files: TS/JS, Python, shell, Java/Kotlin/Swift
-- docs and markdown
-- common config formats: JSON, YAML, HTML, CSS, XML, Gradle, service/timer,
-  plist/pbxproj/xcconfig
-- selected high-signal basenames such as `Makefile`, `Dockerfile`, `.gitignore`,
-  `.npmrc`, `.nvmrc`, `.prettierrc`, and `.env*`
-
-### Excluded by default
+### Excluded by Default
 
 - `apps/web/src/i18n/locales/**/*.json`
 - `apps/web/src/i18n/static/**`
 - `node_modules`, `coverage`, `dist`, `build`, `reports`, `.yarn`, `.git`
-- obvious generated/template trees and oversized files
-- mirrored legacy `android/**` files when the corresponding `apps/android/**`
-  file exists
+- Obvious generated/template trees and oversized files
+- Mirrored legacy `android/**` files when corresponding `apps/android/**` exists
 
-## Environment overrides
+## 5. Dependencies
 
-### Builder
+### Runtime Dependencies
 
-- `RAG_BUILD_MAX_FILE_BYTES` — max bytes per file before skip (default `262144`)
-- `RAG_BUILD_SAVE_INTERVAL` — flush every N indexed files (default `25`)
-- `RAG_BUILD_PROGRESS_EVERY` — progress log cadence in files (default `200`)
-- `RAG_BUILD_INCLUDE_I18N` — set `1/true` to include excluded i18n trees
-- `RAG_BUILD_VERBOSE` — set `1/true` for per-file skip logging
-- `RAG_PROJECT_ROOT` — force the repo root used by the vector store
-- `RAG_MAX_SHARD_SIZE_BYTES` — max shard size before splitting (default `52428800` = 50MB)
+- **Node.js** - ESM modules with .mjs extension, 8GB+ heap recommended for indexing
+- **Ollama** - Local embedding model server (default: http://127.0.0.1:11434)
+- **Context7** - Optional cloud fallback for MCP documentation retrieval
 
-### Embeddings
+### Environment Variables
 
-- `OLLAMA_API_BASE` — Ollama base URL (default `http://127.0.0.1:11434`)
-- `RAG_EMBEDDING_MODEL` or `OLLAMA_EMBEDDING_MODEL` — embedding model name
-- `RAG_EMBEDDING_TIMEOUT_MS` — request timeout per embedding
-- `RAG_EMBEDDING_MAX_CONCURRENCY` — concurrent embedding requests
-- `RAG_OLLAMA_PING_TIMEOUT_MS` — health-check timeout
-- `RAG_OLLAMA_HEALTH_CACHE_TTL_MS` — positive health cache TTL
-- `RAG_OLLAMA_FAILURE_COOLDOWN_MS` — negative health retry cooldown
+#### Builder
+- `RAG_BUILD_MAX_FILE_BYTES` - Max bytes per file before skip (default: 262144)
+- `RAG_BUILD_SAVE_INTERVAL` - Flush every N indexed files (default: 25)
+- `RAG_BUILD_PROGRESS_EVERY` - Progress log cadence in files (default: 200)
+- `RAG_BUILD_INCLUDE_I18N` - Set to include excluded i18n trees
+- `RAG_BUILD_VERBOSE` - Set for per-file skip logging
+- `RAG_PROJECT_ROOT` - Force repo root used by vector store
+- `RAG_MAX_SHARD_SIZE_BYTES` - Max shard size before splitting (default: 52428800 = 50MB)
 
-### Context7 wrapper
+#### Embeddings
+- `OLLAMA_API_BASE` - Ollama base URL (default: http://127.0.0.1:11434)
+- `RAG_EMBEDDING_MODEL` or `OLLAMA_EMBEDDING_MODEL` - Embedding model name
+- `RAG_EMBEDDING_TIMEOUT_MS` - Request timeout per embedding
+- `RAG_EMBEDDING_MAX_CONCURRENCY` - Concurrent embedding requests
+- `RAG_OLLAMA_PING_TIMEOUT_MS` - Health-check timeout
+- `RAG_OLLAMA_HEALTH_CACHE_TTL_MS` - Positive health cache TTL
+- `RAG_OLLAMA_FAILURE_COOLDOWN_MS` - Negative health retry cooldown
 
-- `CONTEXT7_API_KEY` — API key for cloud fallback
-- `CONTEXT7_REQUEST_TIMEOUT_MS` — per-call timeout
-- `CONTEXT7_STARTUP_TIMEOUT_MS` — startup timeout for the local MCP child
-- `CONTEXT7_API_BASE` — override current cloud API base (default `https://context7.com`)
-- `CONTEXT7_LEGACY_API_BASE` — override legacy direct docs fallback base (default `https://api.context7.com`)
+#### Context7 Wrapper
+- `CONTEXT7_API_KEY` - API key for cloud fallback
+- `CONTEXT7_REQUEST_TIMEOUT_MS` - Per-call timeout
+- `CONTEXT7_STARTUP_TIMEOUT_MS` - Startup timeout for local MCP child
+- `CONTEXT7_API_BASE` - Override cloud API base (default: https://context7.com)
+- `CONTEXT7_LEGACY_API_BASE` - Override legacy direct docs fallback base (default: https://api.context7.com)
 
-## Usage
+### Storage Locations
 
-```bash
-# Incremental build/update
-node --max-old-space-size=8192 harness/ops/lib/rag/build-index.mjs
+- Source index: `reports/rag-index/` (legacy single-file or sharded with manifest)
+- Linear index: `reports/rag-index-linear/` (compact single-file)
 
-# Clear and rebuild from scratch
-node --max-old-space-size=8192 harness/ops/lib/rag/build-index.mjs --clear
+## 6. Additional Comments
+
+### Index Storage Format
+
+The source index may be stored in either legacy single-file format or sharded format:
+
 ```
-
-## Notes on chunking
-
-- code uses lightweight declaration-boundary heuristics and falls back to
-  line-aware size splitting when needed
-- markdown splits on headings, then re-splits large sections by size
-- JSON prefers top-level key boundaries when it can identify them safely,
-  otherwise it falls back to line-aware size splitting
-- generic text/config formats are chunked by size with overlap and exact line
-  mapping from source offsets
-
-## Notes on storage
-
-The source index lives in `reports/rag-index/` and may be stored either as a
-legacy single file or as sharded files tracked by a manifest:
-
-```text
 reports/rag-index/
-├── index.json      # legacy single-file format (small indexes)
-├── manifest.json   # shard manifest (v2 format, large indexes)
-├── index-0.json    # shard 0 (when sharded)
-├── index-1.json    # shard 1 (when sharded)
-├── ...             # additional shards as needed
-└── meta.json       # per-file mtime + chunk counts
+  index.json      # legacy single-file format (small indexes)
+  manifest.json   # shard manifest (v2 format, large indexes)
+  index-0.json    # shard 0 (when sharded)
+  index-1.json    # shard 1 (when sharded)
+  ...             # additional shards as needed
+  meta.json       # per-file mtime + chunk counts
 ```
 
-The Linear index continues to live in `reports/rag-index-linear/` as a compact
-single-file index for the existing linear-search consumer.
+### Nightly Automation
 
-## Nightly automation
-
-The existing automation model still applies:
-
+The existing automation model applies:
 - `anqr-rag-rebuild.timer` fires nightly
-- `anqr-rag-rebuild.service` runs the rebuild with a larger heap
-- a mid-run flush still bounds data loss if the host or Ollama fails
+- `anqr-rag-rebuild.service` runs rebuild with larger heap
+- Mid-run flush still bounds data loss if host or Ollama fails
+
+### Design Goals in This Replacement
+
+- Deterministic, repo-relative storage where practical
+- Atomic writes for source and Linear indexes
+- Correct index size reporting for both legacy and sharded formats
+- Stale shard cleanup when storage layout changes
+- Safer library-style behavior from builders that are also called programmatically
+- Richer Linear issue chunks for better recall
+- Resilient Context7 wrapper adapting to tool/schema drift with cloud fallback
+
+### Chunking Notes
+
+- Code uses lightweight declaration-boundary heuristics with line-aware fallback
+- Markdown splits on headings, then re-splits large sections by size
+- JSON prefers top-level key boundaries when safely identifiable, otherwise line-aware fallback
+- Generic text/config formats chunked by size with overlap and exact line mapping from source offsets
