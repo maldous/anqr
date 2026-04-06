@@ -1,10 +1,35 @@
+function sanitizeText(value) {
+  return String(value || "")
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
+    .replace(/("?(?:authorization|api[_-]?key|token|password|secret|cookie|set-cookie)"?\s*[:=]\s*)[^,\s}]+/gi, '$1[redacted]')
+    .replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g, "[email]")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function summarizeResponseBody(body) {
+  if (!body) return "";
+  if (typeof body === "string") {
+    return sanitizeText(body).slice(0, 160);
+  }
+  if (typeof body === "object") {
+    const message = body.message || body.error?.message || body.error || body.detail || body.reason;
+    if (message) return sanitizeText(message).slice(0, 160);
+    return `[responsebody:${Object.keys(body).slice(0, 8).join(",")}]`;
+  }
+  return sanitizeText(body).slice(0, 160);
+}
+
 export function extractErrorString(err) {
   const parts = [];
   if (typeof err === "string") {
     parts.push(err);
   } else if (err && typeof err === "object") {
     if (err.message) parts.push(err.message);
-    if (err.responseBody) parts.push(String(err.responseBody));
+    if (err.code) parts.push(`code=${err.code}`);
+    if (err.statusCode || err.status) parts.push(`status=${err.statusCode || err.status}`);
+    const body = summarizeResponseBody(err.responseBody);
+    if (body) parts.push(body);
   }
   let current = err;
   const seen = new Set();
@@ -13,7 +38,12 @@ export function extractErrorString(err) {
     current = current.cause;
     if (typeof current === "string") parts.push(current);
     else if (current?.message) parts.push(current.message);
-    if (current?.responseBody) parts.push(String(current.responseBody));
+    if (current?.code) parts.push(`code=${current.code}`);
+    if (current?.statusCode || current?.status) {
+      parts.push(`status=${current.statusCode || current.status}`);
+    }
+    const body = summarizeResponseBody(current?.responseBody);
+    if (body) parts.push(body);
   }
-  return parts.join(" | ").toLowerCase();
+  return sanitizeText(parts.join(" | ")).toLowerCase();
 }

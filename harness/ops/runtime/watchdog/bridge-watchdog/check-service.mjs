@@ -183,6 +183,14 @@ export async function checkService(service) {
     activatingStateStart.delete(serviceName);
   }
 
+  const watchdogUptimeMs = Math.floor(process.uptime() * 1000);
+  if (status === "inactive" && watchdogUptimeMs < STARTUP_GRACE_PERIOD_MS) {
+    logDebug(
+      `[watchdog] ⏳ ${shortName}: inactive during startup grace (${Math.round(watchdogUptimeMs / 1000)}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s)`,
+    );
+    return;
+  }
+
   // Normal status
   if (status === "active") {
     logDebug(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"})`);

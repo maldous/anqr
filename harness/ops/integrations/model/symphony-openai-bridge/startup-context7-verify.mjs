@@ -5,17 +5,21 @@ import { logInfo, logWarn } from "./logger.mjs";
 
 export function verifyContext7Health() {
   fetch(`${CONTEXT7_HTTP_BASE}/health`, { signal: AbortSignal.timeout(5000) })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.serverReady) {
+    .then(async (res) => ({ status: res.status, data: await res.json().catch(() => ({})) }))
+    .then(({ status, data }) => {
+      if (status >= 200 && status < 300 && data.status === "ok") {
         logInfo(`✅ Context7 HTTP service reachable (uptime: ${data.uptime}s)`);
-      } else {
-        logWarn(`⚠️ Context7 HTTP service degraded — will use cloud API fallback`);
+        return;
       }
+      if (status >= 200 && status < 300) {
+        logInfo(`ℹ️ Context7 HTTP service reachable but still warming (${data.status || "starting"})`);
+        return;
+      }
+      logWarn(`⚠️ Context7 HTTP service returned ${status} — local docs may fall back to cloud`);
     })
-    .catch(() => {
+    .catch((err) => {
       logWarn(
-        `⚠️ Context7 HTTP service not reachable at ${CONTEXT7_HTTP_BASE} — will use cloud API fallback`,
+        `⚠️ Context7 HTTP service not reachable at ${CONTEXT7_HTTP_BASE} — local docs unavailable (${err?.message || "request failed"})`,
       );
     });
 }

@@ -1,22 +1,68 @@
-import { getProviderDefinitions } from "../symphony-credit-gate.mjs";
+import { getProviderDefinitions, getRankedProviders } from "../symphony-credit-gate.mjs";
 import { shouldRetryProvider } from "../symphony-provider-health.mjs";
 
 import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";
 import { GATEWAY_BATCH_DELAY_MS } from "./gateway-batch-delay-ms.mjs";
 import { GATEWAY_BATCH_SIZE } from "./gateway-batch-size.mjs";
 import { TOOL_PROBE_RETRY_DELAY_MS } from "./tool-probe-retry-delay-ms.mjs";
+import { KNOWN_TOOL_CAPABLE } from "./known-tool-capable.mjs";
 import { getProviderGateway } from "./get-provider-gateway.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { probeGatewayBatched } from "./probe-gateway-batched.mjs";
 import { shuffleArray } from "../symphony-credit-gate/shuffle-array.mjs";
 import { probeToolCapabilityForProvider } from "./probe-tool-capability-for-provider.mjs";
 import { providerStatusCache } from "./provider-status-cache.mjs";
+import { providerToolSupportHint } from "./provider-tool-support-hint.mjs";
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
 import {
   toolProbeRetryScheduled,
   setToolProbeRetryScheduled,
 } from "./tool-probe-retry-scheduled.mjs";
 import { logDebug, logError } from "./logger.mjs";
+
+const TOOL_PROBE_MAX_UNKNOWN_PROVIDERS_PER_CYCLE = 24;
+
+function rankIndexByName() {
+  const ranked = getRankedProviders({ includeAvailable: true });
+  return new Map(ranked.map((entry, index) => [entry.name, index]));
+}
+
+function sortDefinitionsByRank(definitions) {
+  const rankedIndex = rankIndexByName();
+  return [...definitions].sort(
+    (a, b) =>
+      (rankedIndex.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
+        (rankedIndex.get(b.name) ?? Number.MAX_SAFE_INTEGER) ||
+      a.name.localeCompare(b.name),
+  );
+}
+
+function preclassifyProvider(providerDef) {
+  const name = providerDef.name;
+  const supportHint = providerToolSupportHint(providerDef);
+
+  if (providerDef.tier === "local-safety-net") {
+    toolCapableProviders.add(name);
+    return true;
+  }
+  if (providerDef.requiresSdk || providerDef.driver === "codex-sdk") {
+    toolCapableProviders.add(name);
+    return true;
+  }
+  if (KNOWN_TOOL_CAPABLE.has(name)) {
+    toolCapableProviders.add(name);
+    return true;
+  }
+  if (supportHint.status === "supported") {
+    toolCapableProviders.add(name);
+    return true;
+  }
+  if (supportHint.status === "unsupported") {
+    nonToolCapableProviders.add(name);
+    return true;
+  }
+  return false;
+}
 
 export async function probeAllToolCapability(options = {}) {
   const { respectHealthState = true } = options;
@@ -25,104 +71,101 @@ export async function probeAllToolCapability(options = {}) {
     .map((r) => r.name);
   const availableSet = new Set(available);
 
-  // Use full provider definitions (with envVar, baseUrl, loadToken) for probing
   const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
-  const allDefs = getProviderDefinitions({ excludeNames });
-
-  // CHANGED: Always probe ALL available providers to collect fresh metrics,
-  // even if they're already classified. This ensures we get comprehensive
-  // metrics from every provider after startup while still allowing fast startup
-  // via cached classification for provider selection.
-  const toProbe = shuffleArray(
-    allDefs.filter(
-      (p) => availableSet.has(p.name) && (!respectHealthState || shouldRetryProvider(p.name)),
-    ),
+  const allDefs = sortDefinitionsByRank(getProviderDefinitions({ excludeNames }));
+  const eligibleDefs = allDefs.filter(
+    (provider) => availableSet.has(provider.name) && (!respectHealthState || shouldRetryProvider(provider.name)),
   );
 
-  if (toProbe.length === 0) {
-    logDebug(`🔧 Tool probe: no available providers to probe`);
+  if (eligibleDefs.length === 0) {
+    logDebug(`🔧 Tool probe: no available providers to classify`);
     return;
   }
 
-  // Group by API gateway to avoid rate-limit storms (e.g., 27 OpenRouter models share one key)
-  const gateways = new Map();
-  for (const p of toProbe) {
-    const gw = getProviderGateway(p.name);
-    if (!gateways.has(gw)) gateways.set(gw, []);
-    gateways.get(gw).push(p);
+  const toProbe = [];
+  for (const providerDef of eligibleDefs) {
+    if (toolCapableProviders.has(providerDef.name) || nonToolCapableProviders.has(providerDef.name)) {
+      continue;
+    }
+    if (preclassifyProvider(providerDef)) continue;
+    toProbe.push(providerDef);
   }
 
-  const gatewayNames = [...gateways.entries()].map(([gw, ps]) => `${gw}(${ps.length})`);
+  if (toProbe.length === 0) {
+    logDebug(
+      `🔧 Tool capability probe: classification already complete (${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded)`,
+    );
+    return;
+  }
+
+  const limitedProbeList = toProbe.slice(0, TOOL_PROBE_MAX_UNKNOWN_PROVIDERS_PER_CYCLE);
+  const deferredCount = Math.max(toProbe.length - limitedProbeList.length, 0);
+  const gateways = new Map();
+  for (const provider of limitedProbeList) {
+    const gateway = getProviderGateway(provider.name);
+    if (!gateways.has(gateway)) gateways.set(gateway, []);
+    gateways.get(gateway).push(provider);
+  }
+
+  const gatewayNames = [...gateways.entries()].map(([gateway, providers]) => `${gateway}(${providers.length})`);
   logDebug(
-    `🔧 Tool capability probe: ${toProbe.length} providers across ${gateways.size} gateways: ${gatewayNames.join(", ")}`,
+    `🔧 Tool capability probe: ${limitedProbeList.length}/${toProbe.length} unknown providers across ${gateways.size} gateways: ${gatewayNames.join(", ")}`,
   );
 
-  // Probe gateways in parallel; batch sequentially within large gateways
   const gatewayPromises = [];
-  for (const [gw, providers] of gateways) {
+  for (const [gateway, providers] of gateways) {
     if (providers.length <= GATEWAY_BATCH_SIZE) {
       gatewayPromises.push(
-        Promise.allSettled(
-          shuffleArray(providers).map((p) => probeToolCapabilityForProvider(p)),
-        ).then((settled) => settled.filter((r) => r.status === "fulfilled").map((r) => r.value)),
+        Promise.allSettled(shuffleArray(providers).map((provider) => probeToolCapabilityForProvider(provider))).then((settled) =>
+          settled.filter((result) => result.status === "fulfilled").map((result) => result.value),
+        ),
       );
     } else {
       gatewayPromises.push(
-        probeGatewayBatched(gw, providers, GATEWAY_BATCH_SIZE, GATEWAY_BATCH_DELAY_MS),
+        probeGatewayBatched(gateway, providers, GATEWAY_BATCH_SIZE, GATEWAY_BATCH_DELAY_MS),
       );
     }
   }
 
   const gatewayResults = await Promise.allSettled(gatewayPromises);
   const results = [];
-  for (const gr of gatewayResults) {
-    if (gr.status === "fulfilled" && Array.isArray(gr.value)) {
-      results.push(...gr.value);
+  for (const result of gatewayResults) {
+    if (result.status === "fulfilled" && Array.isArray(result.value)) {
+      results.push(...result.value);
     }
   }
 
-  for (const r of results) {
+  for (const result of results) {
     let icon = "❓";
-    if (toolCapableProviders.has(r.name)) {
-      icon = "✅";
-    } else if (nonToolCapableProviders.has(r.name)) {
-      icon = "🚫";
-    }
-    logDebug(`  ${icon} ${r.name}: ${r.status}`);
+    if (toolCapableProviders.has(result.name)) icon = "✅";
+    else if (nonToolCapableProviders.has(result.name)) icon = "🚫";
+    logDebug(`  ${icon} ${result.name}: ${result.status}`);
   }
 
   logDebug(
-    `🔧 Tool probe complete: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
+    `🔧 Tool probe complete: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded, ${deferredCount} deferred`,
   );
 
-  // Schedule a delayed retry for unclassified providers (rate-limited, probe-error, etc.)
-  if (!toolProbeRetryScheduled) {
-    const stillUnclassified = allDefs.filter(
-      (p) =>
-        availableSet.has(p.name) &&
-        !toolCapableProviders.has(p.name) &&
-        !nonToolCapableProviders.has(p.name),
+  const stillUnclassified = eligibleDefs
+    .filter(
+      (provider) =>
+        !toolCapableProviders.has(provider.name) && !nonToolCapableProviders.has(provider.name),
+    )
+    .map((provider) => provider.name);
+
+  if (stillUnclassified.length > 0 && !toolProbeRetryScheduled) {
+    setToolProbeRetryScheduled(true);
+    const names = stillUnclassified.slice(0, TOOL_PROBE_MAX_UNKNOWN_PROVIDERS_PER_CYCLE);
+    logDebug(
+      `🔧 Scheduling tool probe retry in ${TOOL_PROBE_RETRY_DELAY_MS / 1000}s for ${names.length} still-unclassified providers`,
     );
-    if (stillUnclassified.length > 0) {
-      setToolProbeRetryScheduled(true);
-      const names = stillUnclassified.map((p) => p.name);
-      logDebug(
-        `🔧 Scheduling tool probe retry in ${TOOL_PROBE_RETRY_DELAY_MS / 1000}s for ${names.length} unclassified: ${names.join(", ")}`,
-      );
-      setTimeout(async () => {
-        try {
-          logDebug(`🔧 Retry tool probe for ${names.length} unclassified providers...`);
-          await probeAllToolCapability({ respectHealthState });
-          const remaining = names.filter(
-            (n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n),
-          );
-          if (remaining.length > 0) {
-            logDebug(`🔧 Still unclassified after retry: ${remaining.join(", ")}`);
-          }
-        } catch (err) {
-          logError(`Tool probe retry failed: ${err.message}`);
-        }
-      }, TOOL_PROBE_RETRY_DELAY_MS);
-    }
+    setTimeout(async () => {
+      try {
+        setToolProbeRetryScheduled(false);
+        await probeAllToolCapability({ respectHealthState });
+      } catch (err) {
+        logError(`Tool probe retry failed: ${err.message}`);
+      }
+    }, TOOL_PROBE_RETRY_DELAY_MS);
   }
 }

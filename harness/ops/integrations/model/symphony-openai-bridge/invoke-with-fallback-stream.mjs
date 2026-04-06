@@ -160,16 +160,25 @@ export async function invokeWithFallbackStream(
       const rootErr = unwrapAIError(err);
       const errStr = errorToString(rootErr === err ? err : rootErr);
       lastError = errStr;
+      const errorType = classifyError(err);
+      const isRetryable =
+        err?.retryable === true ||
+        isRetryableErrorDeep(err) ||
+        [
+          ERROR_TYPES.CONTEXT_TOO_LARGE,
+          ERROR_TYPES.RATE_LIMITED,
+          ERROR_TYPES.TIMEOUT,
+          ERROR_TYPES.SERVER_ERROR,
+        ].includes(errorType);
       logWarn(
         `❌ Streaming ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`,
       );
 
-      if (isRetryableErrorDeep(err)) {
+      if (isRetryable) {
         recordProviderFailure(provider.name);
         recordProviderFailureCount(provider.name);
       }
 
-      const errorType = classifyError(err);
       recordErrorType(provider.name, errorType);
       if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
         const details = parseContextErrorDetails(err);

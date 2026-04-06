@@ -158,7 +158,16 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
       const rootErr = unwrapAIError(err);
       const errStr = errorToString(rootErr === err ? err : rootErr);
       lastError = errStr;
-      const isRetryable = isRetryableErrorDeep(err);
+      const errorType = classifyError(err);
+      const isRetryable =
+        err?.retryable === true ||
+        isRetryableErrorDeep(err) ||
+        [
+          ERROR_TYPES.CONTEXT_TOO_LARGE,
+          ERROR_TYPES.RATE_LIMITED,
+          ERROR_TYPES.TIMEOUT,
+          ERROR_TYPES.SERVER_ERROR,
+        ].includes(errorType);
       logWarn(`❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`, {
         providerName: provider.name,
         attemptNumber,
@@ -177,7 +186,6 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         recordProviderFailureCount(provider.name);
       }
 
-      const errorType = classifyError(err);
       recordErrorType(provider.name, errorType);
       if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
         const details = parseContextErrorDetails(err);

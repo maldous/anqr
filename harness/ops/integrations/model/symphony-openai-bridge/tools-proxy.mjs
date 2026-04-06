@@ -3,29 +3,51 @@ import { z } from "zod";
 
 import { knownToolNames } from "./known-tool-names.mjs";
 import { tools } from "./tools.mjs";
-import { logWarn } from "./logger.mjs";
+import { logDebug, logWarn } from "./logger.mjs";
+
+const UNKNOWN_TOOL_WARNED_KEY = Symbol.for("anqr.tools-proxy.warned");
+const SELF_TEST_UNKNOWN_TOOL = "completely_hallucinated_tool_name_xyz";
+
+function getWarnedTools() {
+  if (!globalThis[UNKNOWN_TOOL_WARNED_KEY]) {
+    globalThis[UNKNOWN_TOOL_WARNED_KEY] = new Set();
+  }
+  return globalThis[UNKNOWN_TOOL_WARNED_KEY];
+}
 
 export const toolsProxy = new Proxy(tools, {
   get(target, prop, receiver) {
-    // Pass through existing tools, symbols, and non-string properties
     if (typeof prop !== "string" || prop in target) {
       return Reflect.get(target, prop, receiver);
     }
 
-    // Ignore internal JS/Node properties that aren't tool names
     if (prop === "then" || prop === "toJSON" || prop === "constructor" || prop.startsWith("_")) {
       return undefined;
     }
 
-    logWarn(`⚠️ Unknown tool requested: "${prop}" — returning graceful no-op`);
+    if (prop === SELF_TEST_UNKNOWN_TOOL) {
+      logDebug(`Tool proxy self-test requested unknown tool "${prop}"`);
+    } else {
+      const warned = getWarnedTools();
+      if (!warned.has(prop)) {
+        warned.add(prop);
+        logWarn(`⚠️ Unknown tool requested: "${prop}" — returning graceful no-op`);
+      }
+    }
 
     return tool({
       description: `Unknown tool "${prop}" (catch-all — this tool is not available)`,
       inputSchema: z.object({}).passthrough(),
       execute: async (args) => {
-        logWarn(`🔧 Catch-all invoked for unknown tool "${prop}"`, {
-          argsKeys: Object.keys(args || {}),
-        });
+        if (prop === SELF_TEST_UNKNOWN_TOOL) {
+          logDebug(`Tool proxy self-test executed unknown tool "${prop}"`, {
+            argsKeys: Object.keys(args || {}),
+          });
+        } else {
+          logWarn(`🔧 Catch-all invoked for unknown tool "${prop}"`, {
+            argsKeys: Object.keys(args || {}),
+          });
+        }
         return {
           error: `Tool "${prop}" is not available in this environment`,
           message: `The tool "${prop}" does not exist. Available tools: ${[...knownToolNames].slice(0, 20).join(", ")}...`,
@@ -38,8 +60,6 @@ export const toolsProxy = new Proxy(tools, {
   },
 
   has(target, prop) {
-    // Report all string properties as present so the AI SDK doesn't reject
-    // unknown tool calls before they reach our execute handler
     if (typeof prop === "string" && prop !== "then" && !prop.startsWith("_")) {
       return true;
     }

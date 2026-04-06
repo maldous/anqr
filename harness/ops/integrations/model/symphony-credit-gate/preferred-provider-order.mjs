@@ -1,1 +1,1 @@
-export const PREFERRED_PROVIDER_ORDER = [];
+// Deprecated: provider ordering now comes strictly from ranked candidates.

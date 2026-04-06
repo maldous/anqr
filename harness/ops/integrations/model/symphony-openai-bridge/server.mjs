@@ -147,7 +147,7 @@ export const server = http.createServer(async (req, res) => {
           stream: req.stream,
           filesChanged: req.filesChanged,
           runtimeMs: Date.now() - req.startTime,
-          requestPreview: req.requestText?.slice(0, 100) || "(no description)",
+          requestPreview: req.requestText || "request in progress",
         })),
       };
 
@@ -444,10 +444,13 @@ export const server = http.createServer(async (req, res) => {
           error: { message: "Too many concurrent requests. Please try again later." },
         });
       }
+      const safeRequestLabel =
+        issueContext?.identifier || (contentStr ? `request (${contentStr.length} chars)` : "(system task)");
+
       activeRequests.set(requestId, {
         startTime,
         issueId: issueContext?.identifier || null,
-        requestText: sanitizeForDiscordPreview(contentStr) || contentStr.slice(0, 50),
+        requestText: safeRequestLabel,
         model: route.responseModelId,
         stream,
         filesChanged: 0,
@@ -499,8 +502,8 @@ export const server = http.createServer(async (req, res) => {
       if (concurrentCount > 0) {
         // Build detailed concurrent request summary with actual request text
         const concurrentSummaries = concurrentRequests.slice(0, 3).map((r) => {
-          const prefix = r.issueId ? `${r.issueId}: ` : "";
-          return prefix + (r.requestText || "(no text)");
+          if (r.issueId) return `${r.issueId}: in progress`;
+          return r.requestText || "request in progress";
         });
 
         let concurrentText = concurrentSummaries.join("\n");

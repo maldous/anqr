@@ -1,4 +1,1 @@
-export function isPreferredPaidProviderEligible(providerName, probeEntry) {
-  if (providerName !== "codebuff") return true;
-  return !(probeEntry?.status === "degraded" && probeEntry?.mode === "free");
-}
+// Deprecated: Codebuff paid/free are now independent ranked providers with no preferred-paid shortcut.

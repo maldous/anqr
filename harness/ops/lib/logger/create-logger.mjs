@@ -1,6 +1,155 @@
 import { LOG_LEVELS } from "./log-levels.mjs";
 import { getCallerInfo } from "./get-caller-info.mjs";
 
+const LOGGER_REGISTRY_KEY = Symbol.for("anqr.logger.registry");
+const LOGGER_SIGNAL_SETUP_KEY = Symbol.for("anqr.logger.signal-setup");
+const REDACTED = "[redacted]";
+const MAX_LOG_STRING_LENGTH = 240;
+const MAX_LOG_ARRAY_ITEMS = 8;
+const MAX_LOG_OBJECT_KEYS = 20;
+const MAX_LOG_DEPTH = 3;
+
+function getLoggerRegistry() {
+  if (!globalThis[LOGGER_REGISTRY_KEY]) {
+    globalThis[LOGGER_REGISTRY_KEY] = new Set();
+  }
+  return globalThis[LOGGER_REGISTRY_KEY];
+}
+
+function sanitizeText(value) {
+  return String(value || "")
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
+    .replace(
+      /("?(?:authorization|api[_-]?key|token|password|secret|cookie|set-cookie)"?\s*[:=]\s*)[^,\s}]+/gi,
+      `$1${REDACTED}`,
+    )
+    .replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g, "[email]");
+}
+
+function truncateText(value, limit = MAX_LOG_STRING_LENGTH) {
+  const text = sanitizeText(value);
+  return text.length > limit ? `${text.slice(0, limit)}…` : text;
+}
+
+function isSensitiveKey(key) {
+  return /authorization|api[_-]?key|token|password|secret|cookie|set-cookie/i.test(String(key || ""));
+}
+
+function summarizeObjectKeys(value) {
+  return Object.keys(value || {}).slice(0, MAX_LOG_OBJECT_KEYS);
+}
+
+function sanitizeValue(value, key = "", depth = 0, seen = new WeakSet()) {
+  if (value === null || value === undefined) return value;
+  if (depth > MAX_LOG_DEPTH) return "[depth-limited]";
+
+  if (typeof value === "string") {
+    if (/^requestBodyValues$|^responseBody$|^body$|^stack$/i.test(key)) {
+      return truncateText(value, 160);
+    }
+    return truncateText(value);
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "function" || typeof value === "symbol") {
+    return `[${typeof value}]`;
+  }
+
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: truncateText(value.message, 200),
+      code: value.code || null,
+      statusCode: value.statusCode || value.status || null,
+      cause:
+        value.cause && typeof value.cause === "object"
+          ? sanitizeValue(value.cause, "cause", depth + 1, seen)
+          : value.cause
+            ? truncateText(value.cause, 120)
+            : null,
+    };
+  }
+
+  if (Array.isArray(value)) {
+    const prefix = value
+      .slice(0, MAX_LOG_ARRAY_ITEMS)
+      .map((item) => sanitizeValue(item, key, depth + 1, seen));
+    if (value.length > MAX_LOG_ARRAY_ITEMS) {
+      prefix.push(`[+${value.length - MAX_LOG_ARRAY_ITEMS} more]`);
+    }
+    return prefix;
+  }
+
+  if (typeof value === "object") {
+    if (seen.has(value)) return "[circular]";
+    seen.add(value);
+
+    if (/headers/i.test(key)) {
+      const entries = Object.entries(value).slice(0, MAX_LOG_OBJECT_KEYS);
+      return Object.fromEntries(
+        entries.map(([childKey, childValue]) => [
+          childKey,
+          isSensitiveKey(childKey) ? REDACTED : truncateText(childValue, 80),
+        ]),
+      );
+    }
+
+    if (/requestBodyValues|responseBody|body|raw/i.test(key)) {
+      return {
+        summary: summarizeObjectKeys(value),
+        type: Array.isArray(value) ? "array" : "object",
+      };
+    }
+
+    if (key === "tools") {
+      const sample = Array.isArray(value)
+        ? value.slice(0, MAX_LOG_ARRAY_ITEMS).map((item) => item?.name || item?.toolName || item?.type || "tool")
+        : summarizeObjectKeys(value);
+      return {
+        count: Array.isArray(value) ? value.length : Object.keys(value).length,
+        sample,
+      };
+    }
+
+    const entries = Object.entries(value).slice(0, MAX_LOG_OBJECT_KEYS);
+    const sanitized = {};
+    for (const [childKey, childValue] of entries) {
+      sanitized[childKey] = isSensitiveKey(childKey)
+        ? REDACTED
+        : sanitizeValue(childValue, childKey, depth + 1, seen);
+    }
+    const totalKeys = Object.keys(value).length;
+    if (totalKeys > MAX_LOG_OBJECT_KEYS) {
+      sanitized.__truncatedKeys = totalKeys - MAX_LOG_OBJECT_KEYS;
+    }
+    return sanitized;
+  }
+
+  return truncateText(value);
+}
+
+function ensureSignalHandlers() {
+  if (globalThis[LOGGER_SIGNAL_SETUP_KEY]) return;
+
+  const applyToAllLoggers = (direction, signal) => {
+    const registry = getLoggerRegistry();
+    process.stderr.write(
+      `[logger] [INFO] Received ${signal} - ${direction} verbosity for ${registry.size} logger(s)\n`,
+    );
+    for (const logger of registry) {
+      if (direction === "decrease") logger.incrementLogLevel();
+      else logger.decrementLogLevel();
+    }
+  };
+
+  process.on("SIGUSR1", () => applyToAllLoggers("decrease", "SIGUSR1"));
+  process.on("SIGUSR2", () => applyToAllLoggers("increase", "SIGUSR2"));
+  globalThis[LOGGER_SIGNAL_SETUP_KEY] = true;
+}
+
 export function createLogger(scriptName = "", options = {}) {
   const envVarName = scriptName
     ? options.envVar || `${scriptName.toUpperCase().replaceAll("-", "_")}_LOG_LEVEL`
@@ -13,9 +162,8 @@ export function createLogger(scriptName = "", options = {}) {
   let currentLogLevel = initialLevel;
 
   function setLogLevel(level) {
-    const levelName = Object.keys(LOG_LEVELS).find((k) => LOG_LEVELS[k] === level);
+    const levelName = Object.keys(LOG_LEVELS).find((key) => LOG_LEVELS[key] === level);
     currentLogLevel = level;
-    // Always write log level changes directly to stderr, bypassing level filtering
     process.stderr.write(`${prefix} [INFO] 📊 Log level: ${levelName}\n`);
   }
 
@@ -35,104 +183,35 @@ export function createLogger(scriptName = "", options = {}) {
     }
   }
 
-  // Signal handlers for dynamic log level control
-  process.on("SIGUSR1", () => {
-    // Always write signal receipts directly to stderr, bypassing level filtering
-    process.stderr.write(`${prefix} [INFO] Received SIGUSR1 - decreasing verbosity\n`);
-    incrementLogLevel();
-  });
+  const loggerControls = { incrementLogLevel, decrementLogLevel };
+  ensureSignalHandlers();
+  getLoggerRegistry().add(loggerControls);
 
-  process.on("SIGUSR2", () => {
-    // Always write signal receipts directly to stderr, bypassing level filtering
-    process.stderr.write(`${prefix} [INFO] Received SIGUSR2 - increasing verbosity\n`);
-    decrementLogLevel();
-  });
-
-  /**
-   * Safely serialize data for logging, handling circular references and Error objects
-   * @param {any} data - Data to serialize
-   * @returns {string} Serialized string or placeholder
-   */
   function safeSerialize(data) {
     if (data === null || data === undefined) {
       return "";
     }
 
-    // Handle Error objects - extract properties without circular references
-    if (data instanceof Error) {
-      const errorProps = {
-        message: data.message,
-        name: data.name,
-        stack: data.stack?.split("\n").slice(0, 3).join("\n"), // First 3 lines of stack
-      };
-      // Safely extract cause if present (Node.js Error cause chain)
-      if (data.cause && typeof data.cause === "object") {
-        errorProps.cause =
-          data.cause instanceof Error
-            ? { message: data.cause.message, name: data.cause.name }
-            : String(data.cause).slice(0, 100);
-      }
-      try {
-        return JSON.stringify(errorProps);
-      } catch {
-        // Fallback with escaped quotes
-        const msg = (data.message || "").replace(/"/g, '\\"');
-        const nm = (data.name || "").replace(/"/g, '\\"');
-        return `{"message":"${msg}","name":"${nm}"}`;
-      }
-    }
-
-    // Handle plain objects with potential circular references
-    if (typeof data === "object") {
-      try {
-        return JSON.stringify(data, (key, value) => {
-          // Skip functions and symbols
-          if (typeof value === "function" || typeof value === "symbol") {
-            return "[function]";
-          }
-          // Detect and truncate circular references
-          if (value && typeof value === "object") {
-            if (key === "cause" || key === "parent" || key === "inner") {
-              return "[circular]";
-            }
-          }
-          return value;
-        });
-      } catch (err) {
-        // Final fallback - just return type info
-        return `[serialization failed: ${err.message}]`;
-      }
-    }
-
-    // Primitives - convert directly
     try {
-      return JSON.stringify(data);
-    } catch {
-      return String(data);
+      return JSON.stringify(sanitizeValue(data));
+    } catch (err) {
+      return `[serialization failed: ${truncateText(err?.message || String(err), 120)}]`;
     }
   }
 
-  /**
-   * Format a log entry with optional data payload
-   * @param {string} level - Log level (DEBUG, INFO, WARN, ERROR)
-   * @param {string} msg - Log message
-   * @param {object} [data] - Optional structured data payload
-   * @returns {string} Formatted log line
-   */
   function formatLogEntry(level, msg, data) {
     const { filename, lineNumber } = getCallerInfo();
     const location = filename ? `[${filename}:${lineNumber}]` : "";
-    let line = `${prefix}${location} [${level}] ${msg}`;
+    let line = `${prefix}${location} [${level}] ${truncateText(msg, 400)}`;
     if (data !== null && data !== undefined) {
       const serialized = safeSerialize(data);
       if (serialized) {
         line += ` ${serialized}`;
       }
     }
-    return line + "\n";
+    return `${line}\n`;
   }
 
-  // Logging functions - all output to stderr for systemd journal capture
   function logDebug(msg, data) {
     if (currentLogLevel <= LOG_LEVELS.DEBUG) {
       process.stderr.write(formatLogEntry("DEBUG", msg, data));

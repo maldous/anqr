@@ -17,7 +17,9 @@ import { convertMessages } from "./convert-messages.mjs";
 import { createProviderModel } from "./create-provider-model.mjs";
 import { currentRequestId } from "./current-request-id.mjs";
 import { errorToString } from "./error-to-string.mjs";
+import { estimateToolOverheadTokens } from "./estimate-tool-overhead-tokens.mjs";
 import { invokeWithCodex } from "./invoke-with-codex.mjs";
+import { isInvalidModelAnswerText } from "./is-invalid-model-answer-text.mjs";
 import { isRetryableErrorDeep } from "./is-retryable-error-deep.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { providerSupportsTools } from "./provider-supports-tools.mjs";
@@ -78,16 +80,25 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
   });
 
   const estimatedInputTokens = estimateMessagesTokens(rawMessages);
+  const toolOverheadTokens = useTools ? estimateToolOverheadTokens() : 0;
+  const estimatedRequestTokens = estimatedInputTokens + toolOverheadTokens;
   let effectiveMax = getEffectiveMaxTokens(provider.name);
-  if (shouldReduceContextForTPM(provider.name, estimatedInputTokens)) {
+  if (shouldReduceContextForTPM(provider.name, estimatedRequestTokens)) {
     effectiveMax = Math.max(Math.floor(effectiveMax * 0.5), 1000);
     logInfo(
       `⚡ Proactive TPM reduction for ${provider.name}: effectiveMax halved to ${effectiveMax}`,
     );
   }
+  logDebug(`[invokeWithAI] Request token estimate`, {
+    providerName: provider.name,
+    estimatedInputTokens,
+    toolOverheadTokens,
+    estimatedRequestTokens,
+  });
   const aiMessages = truncateMessagesForProvider(rawMessages, provider.name, {
     useTools,
     maxTokensOverride: effectiveMax,
+    toolOverheadTokens,
   });
   logDebug(`[invokeWithAI] Messages after truncation`, {
     aiMessageCount: aiMessages?.length,
@@ -623,6 +634,14 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       }
     }
 
+    if (isInvalidModelAnswerText(fullText, { allowSentinel: process.env.SYMPHONY_ALLOW_NO_REPLY_SENTINEL === "1" })) {
+      const invalidResponseError = new Error(`Invalid sentinel response from ${provider.name}`);
+      invalidResponseError.code = "INVALID_SENTINEL_RESPONSE";
+      invalidResponseError.providerName = provider.name;
+      invalidResponseError.retryable = true;
+      throw invalidResponseError;
+    }
+
     // Runtime safety net (streaming): detect providers that emit tool calls as raw JSON text.
     // The stream is already delivered, so we can't retry — just mark for future exclusion.
     if (useTools && fullText && RAW_TOOL_JSON_RE.test(fullText)) {
@@ -683,6 +702,14 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       );
       text +=
         "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
+    }
+
+    if (isInvalidModelAnswerText(text, { allowSentinel: process.env.SYMPHONY_ALLOW_NO_REPLY_SENTINEL === "1" })) {
+      const invalidResponseError = new Error(`Invalid sentinel response from ${provider.name}`);
+      invalidResponseError.code = "INVALID_SENTINEL_RESPONSE";
+      invalidResponseError.providerName = provider.name;
+      invalidResponseError.retryable = true;
+      throw invalidResponseError;
     }
 
     // Runtime safety net (non-streaming): detect raw JSON tool output and cascade to next provider

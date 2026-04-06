@@ -38,6 +38,11 @@ export async function probeToolCapabilityForProvider(providerDef) {
     return { name, status: "known-capable", detail: "known-capable" };
   }
 
+  if (supportHint.status === "supported") {
+    toolCapableProviders.add(name);
+    return { name, status: "catalog-declared-capable", detail: supportHint.reason };
+  }
+
   if (supportHint.status === "unsupported") {
     nonToolCapableProviders.add(name);
     return { name, status: "catalog-declared-non-capable", detail: supportHint.reason };
@@ -186,7 +191,7 @@ export async function probeToolCapabilityForProvider(providerDef) {
     const classified = classifyToolProbeErrorOutcome(detail);
     logWarn(`❌ TOOL PROBE ERROR: ${name} - ${classified.detail.slice(0, 300)}`);
     logDebug(
-      `TOOL PROBE ERROR DEBUG: ${name} ${JSON.stringify({ status: classified.status, reason: classified.status, detail: classified.detail, stack: String(error?.stack || "") })}`,
+      `TOOL PROBE ERROR DEBUG: ${name} ${JSON.stringify({ status: classified.status, detail: classified.detail })}`,
     );
 
     const durationMs = Date.now() - startTime;

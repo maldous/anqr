@@ -1,1 +1,1 @@
-export const FALLBACK_DELAY_MS = 1000;
+export const FALLBACK_DELAY_MS = 250;
