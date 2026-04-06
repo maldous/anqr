@@ -18,7 +18,8 @@ import {
 } from "./tool-probe-retry-scheduled.mjs";
 import { logDebug, logError } from "./logger.mjs";
 
-export async function probeAllToolCapability() {
+export async function probeAllToolCapability(options = {}) {
+  const { respectHealthState = true } = options;
   const available = (providerStatusCache.probeResults || [])
     .filter((r) => r.available)
     .map((r) => r.name);
@@ -33,7 +34,9 @@ export async function probeAllToolCapability() {
   // metrics from every provider after startup while still allowing fast startup
   // via cached classification for provider selection.
   const toProbe = shuffleArray(
-    allDefs.filter((p) => availableSet.has(p.name) && shouldRetryProvider(p.name)),
+    allDefs.filter(
+      (p) => availableSet.has(p.name) && (!respectHealthState || shouldRetryProvider(p.name)),
+    ),
   );
 
   if (toProbe.length === 0) {
@@ -109,7 +112,7 @@ export async function probeAllToolCapability() {
       setTimeout(async () => {
         try {
           logDebug(`🔧 Retry tool probe for ${names.length} unclassified providers...`);
-          await probeAllToolCapability();
+          await probeAllToolCapability({ respectHealthState });
           const remaining = names.filter(
             (n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n),
           );

@@ -12,7 +12,7 @@ import { logDebug, logWarn } from "./logger.mjs";
 import { classifyProbeFailureStatus } from "./classify-probe-failure-status.mjs";
 
 export async function probeAllProviders(options = {}) {
-  const { excludeNames = [] } = options;
+  const { excludeNames = [], respectHealthState = true, recordHealthFailures = true } = options;
   const excludeSet = new Set(excludeNames);
   const startTime = Date.now();
   const orderedProviders = shuffleArray(PROVIDERS);
@@ -25,7 +25,7 @@ export async function probeAllProviders(options = {}) {
         available: false,
         durationMs: 0,
       };
-    if (!shouldRetryProvider(provider.name))
+    if (respectHealthState && !shouldRetryProvider(provider.name))
       return {
         name: provider.name,
         model: provider.model,
@@ -59,7 +59,7 @@ export async function probeAllProviders(options = {}) {
         ? await provider.probe(provider, apiKey)
         : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
       if (available) recordProviderHealthSuccess(provider.name);
-      else recordProviderHealthFailure(provider.name, "provider_error");
+      else if (recordHealthFailures) recordProviderHealthFailure(provider.name, "provider_error");
       return {
         name: provider.name,
         model: provider.model,
@@ -69,7 +69,7 @@ export async function probeAllProviders(options = {}) {
       };
     } catch (error) {
       const errorType = classifyProbeFailureStatus(error?.message || error);
-      recordProviderHealthFailure(provider.name, errorType);
+      if (recordHealthFailures) recordProviderHealthFailure(provider.name, errorType);
       return {
         name: provider.name,
         model: provider.model,

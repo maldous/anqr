@@ -7,7 +7,8 @@ import { providerStatusCache } from "./provider-status-cache.mjs";
 import { saveProbeCache } from "./save-probe-cache.mjs";
 import { logDebug, logInfo, logError } from "./logger.mjs";
 
-export async function refreshProviderStatus() {
+export async function refreshProviderStatus(options = {}) {
+  const { respectHealthState = true, recordHealthFailures = true } = options;
   // Check if another executor is already probing (via cache file lock)
   const cached = loadProbeCache();
   if (cached && !cached.probing) {
@@ -27,7 +28,11 @@ export async function refreshProviderStatus() {
   try {
     const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
     providerStatusCache.configured = getConfiguredProviders({ excludeNames });
-    providerStatusCache.probeResults = await probeAllProviders({ excludeNames });
+    providerStatusCache.probeResults = await probeAllProviders({
+      excludeNames,
+      respectHealthState,
+      recordHealthFailures,
+    });
     providerStatusCache.lastProbeAt = new Date().toISOString();
 
     const available = providerStatusCache.probeResults.filter((r) => r.available).length;
@@ -43,7 +48,7 @@ export async function refreshProviderStatus() {
     });
 
     // Phase 2: probe tool-calling capability for all available providers
-    await probeAllToolCapability();
+    await probeAllToolCapability({ respectHealthState });
   } catch (err) {
     logError(`Provider probe error: ${err.message}`);
   } finally {
