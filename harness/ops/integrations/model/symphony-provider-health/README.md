@@ -2,50 +2,41 @@
 
 ## 1. Directory Overview
 
-This directory contains provider health monitoring functionality for the ANQR (Agentic Number Query
-Runner) Symphony orchestration system. It implements a health probing mechanism that periodically
-checks provider availability and responsiveness, enabling the credit-gate to make intelligent
-routing decisions based on real-time provider status. It currently contains 13 files and 0
-subdirectories.
+This directory implements **ANQR Symphony Provider Health** within the ANQR harness. Key immediate entries include `index.mjs`, `record-provider-health-failure.mjs`, `record-provider-health-success.mjs`, `set-provider-health-state.mjs`. The current inventory is 13 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **get-provider-health-state.mjs** - Module that retrieves provider health state. Exports `getProviderHealthState`.
-- **health-state-file.mjs** - Module that supports health state file. Exports `HEALTH_STATE_FILE`.
-- **health-states.mjs** - Defines the health state enumeration including `HEALTHY`, `DEGRADED`, `UNHEALTHY`, `UNKNOWN` states with associated metadata.
-- **index.mjs** - Main module exporting the public API including `getProviderHealth`, `probeProvider`, `startHealthProbing`, `stopHealthProbing`, `HEALTH_STATES`, and configuration constants. Provides the entry point for all health monitoring functionality.
-- **load-health-state.mjs** - Module that loads health state. Exports `loadHealthState`.
-- **logger.mjs** - Module that provides logging helpers for. Exports `logInfo, logWarn`.
-- **project-root.mjs** - Module that supports project root. Exports `PROJECT_ROOT`.
-- **record-provider-health-failure.mjs** - Module that records provider health failure. Exports `recordProviderHealthFailure`.
-- **record-provider-health-success.mjs** - Module that records provider health success. Exports `recordProviderHealthSuccess`.
-- **save-health-state.mjs** - Module that saves health state. Exports `saveHealthState`.
-- **set-provider-health-state.mjs** - Module that sets or updates provider health state. Exports `setProviderHealthState`.
-- **should-retry-provider.mjs** - Module that supports should retry provider. Exports `shouldRetryProvider`.
-- **state-dir.mjs** - Module that supports state dir. Exports `STATE_DIR`.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **get-provider-health-state.mjs** - Exports `getProviderHealthState`, which gets provider health state.
+- **health-state-file.mjs** - Exports `HEALTH_STATE_FILE`, a shared constant used by sibling modules.
+- **health-states.mjs** - Exports `HEALTH_STATES`, a shared constant used by sibling modules.
+- **index.mjs** - Facade module that re-exports public members from `./health-states.mjs`, `./project-root.mjs`, `./state-dir.mjs`, `./health-state-file.mjs`, `./load-health-state.mjs`, `./save-health-state.mjs`, and 5 more siblings.
+- **load-health-state.mjs** - Exports `loadHealthState`, which loads health state.
+- **logger.mjs** - Shared logging helper module exporting `logInfo`, `logWarn`.
+- **project-root.mjs** - Exports `PROJECT_ROOT`, a shared constant used by sibling modules.
+- **record-provider-health-failure.mjs** - Exports `recordProviderHealthFailure`, which implements record provider health failure.
+- **record-provider-health-success.mjs** - Exports `recordProviderHealthSuccess`, which implements record provider health success.
+- **save-health-state.mjs** - Exports `saveHealthState`, which implements save health state.
+- **set-provider-health-state.mjs** - Exports `setProviderHealthState`, which implements set provider health state.
+- **should-retry-provider.mjs** - Exports `shouldRetryProvider`, which implements should retry provider.
+- **state-dir.mjs** - Exports `STATE_DIR`, a shared constant used by sibling modules.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point. The README content below is aligned to the
-current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, timer, scheduling, cooldown, or watchdog behavior, Symphony integration, and git/worktree awareness.
 
 ## 4. Usage Instructions
 
 ```javascript
-import * as moduleApi from "./index.mjs";
+import * as moduleApi from "./ops/integrations/model/symphony-provider-health/index.mjs";
 ```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:fs`, `node:path`
+- **Internal relative modules** - `../../../lib/logger.mjs`, `./get-provider-health-state.mjs`, `./health-state-file.mjs`, `./health-states.mjs`, `./load-health-state.mjs`, `./logger.mjs`, `./project-root.mjs`, `./save-health-state.mjs`, `./set-provider-health-state.mjs`, `./state-dir.mjs`
 
 ## 6. Additional Comments
 
-- This directory exposes a public API through `index.mjs`.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

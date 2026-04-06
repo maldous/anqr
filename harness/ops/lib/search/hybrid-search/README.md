@@ -2,52 +2,43 @@
 
 ## 1. Directory Overview
 
-This directory contains the hybrid search implementation for the ANQR (Agentic Number Query Runner)
-harness. It provides a unified search capability that combines BM25 keyword-based search with
-embedding-based vector search to deliver relevant file search results. The module uses Reciprocal
-Rank Fusion (RRF) to merge results from both search methods, providing superior search quality over
-either method alone. It currently contains 27 files and 0 subdirectories.
+This directory implements **ANQR Hybrid Search** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 27 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **collect-project-files.mjs** - Collects all indexable files from the project. Uses `git ls-files` when available, falls back to directory walk. Respects excluded directories and file size limits.
-- **compute-fingerprint.mjs** - Computes a fingerprint from file list for change detection. Uses sorted file paths, count, and first/last file names.
-- **cosine-similarity.mjs** - Lazy-loaded cosine similarity function for re-ranking. Imported from `../../rag/embeddings.mjs` at runtime.
-- **create-hybrid-search-index.mjs** - Builds the MiniSearch BM25 index over project files. Configures boosting for filenames (3x), paths (2x), and content (1x). Enables prefix search and fuzzy matching (0.2).
-- **embeddings-available.mjs** - Checks if embedding capabilities are available. Returns false if embeddings or Ollama unavailable.
-- **excluded-dirs.mjs** - Defines excluded directories: `node_modules`, `.git`, `coverage`, `dist`, `build`.
-- **extract-snippet.mjs** - Extracts a snippet around the first matching term in content. Uses 120-character radius, adds ellipsis for truncated content.
-- **generate-embedding.mjs** - Lazy-loaded embedding generation function. Imported from `../../rag/embeddings.mjs` at runtime.
-- **get-search-stats.mjs** - Returns current search index statistics: indexed status, document count, build time, embeddings availability, vector store readiness.
-- **hybrid-search.mjs** - Main entry point providing the `hybridSearch()` function. Combines BM25 and embedding search using configurable weights and RRF for result fusion. Returns top-K results with snippets.
-- **index-built-at.mjs** - Records when the index was built (timestamp). Exports `indexBuiltAt` and `setIndexBuiltAt()`.
-- **index-fingerprint.mjs** - Tracks the fingerprint of files used to build the index. Enables efficient index invalidation detection. Exports `indexFingerprint` and `setIndexFingerprint()`.
-- **index.mjs** - Generated facade index exporting all public API members including `hybridSearch`, `searchFiles`, `warmSearchIndex`, `createHybridSearchIndex`, `collectProjectFiles`, `getSearchStats`, and all state/accessor variables.
-- **indexable-extensions.mjs** - Defines indexable file extensions: `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.json`, `.md`.
-- **indexed-doc-count.mjs** - Tracks the number of documents in the index. Exports `indexedDocCount` and `setIndexedDocCount()`.
-- **is-index-ready.mjs** - Lazy-loaded index readiness check. Imported from `../../rag/vector-store.mjs` at runtime.
-- **is-ollama-available.mjs** - Lazy-loaded Ollama availability check.
-- **logger.mjs** - Shared logger for this module using the project's standard logger. Exports `logDebug`, `logInfo`, `logWarn`, `logError`.
-- **max-file-bytes.mjs** - Maximum file size for indexing: 512KB.
-- **mini-search-index.mjs** - Module-level variable storing the MiniSearch index instance. Exports `miniSearchIndex` and `setMiniSearchIndex()`.
-- **reciprocal-rank-fusion.mjs** - Implements RRF algorithm to combine BM25 and embedding results. Uses RRF_K=60 constant. Supports weighted combination via `bm25Weight` and `embeddingWeight` parameters.
-- **rrf-k.mjs** - Reciprocal Rank Fusion K constant set to 60.
-- **runtime.mjs** - Runtime carry-forward that lazy-loads embedding and vector search dependencies from `../../rag/embeddings.mjs` and `../../rag/vector-store.mjs`. Falls back gracefully if modules unavailable.
-- **search-files.mjs** - High-level search API that automatically builds/updates the search index. Returns `{ files, count, query, method }` object indicating whether hybrid, bm25, or basic search was used.
-- **vector-search.mjs** - Lazy-loaded vector search function. Imported from `../../rag/vector-store.mjs` at runtime.
-- **vector-store-ready.mjs** - Wrapper around `isIndexReady()` with error handling.
-- **warm-search-index.mjs** - Index warming utility that checks if the index needs rebuilding based on file fingerprint. Returns `{ indexed, documentCount, rebuilt }`.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **collect-project-files.mjs** - Exports `collectProjectFiles`, which collects project files.
+- **compute-fingerprint.mjs** - Exports `computeFingerprint`, which implements compute fingerprint.
+- **cosine-similarity.mjs** - Exports `cosineSimilarity`, which implements cosine similarity.
+- **create-hybrid-search-index.mjs** - Exports `createHybridSearchIndex`, which creates hybrid search index.
+- **embeddings-available.mjs** - Exports `embeddingsAvailable`, which implements embeddings available.
+- **excluded-dirs.mjs** - Exports `EXCLUDED_DIRS`, a shared `Set` constant used by this module group.
+- **extract-snippet.mjs** - Exports `extractSnippet`, which implements extract snippet.
+- **generate-embedding.mjs** - Exports `generateEmbedding`, which implements generate embedding.
+- **get-search-stats.mjs** - Exports `getSearchStats`, which gets search stats.
+- **hybrid-search.mjs** - Exports `hybridSearch`, which implements hybrid search.
+- **index-built-at.mjs** - Exports `indexBuiltAt`, `setIndexBuiltAt`, providing the reusable API for this directory concern.
+- **index-fingerprint.mjs** - Exports `indexFingerprint`, `setIndexFingerprint`, providing the reusable API for this directory concern.
+- **index.mjs** - Facade module that re-exports public members from `./generate-embedding.mjs`, `./cosine-similarity.mjs`, `./is-ollama-available.mjs`, `./vector-search.mjs`, `./is-index-ready.mjs`, `./rrf-k.mjs`, and 18 more siblings.
+- **indexable-extensions.mjs** - Exports `INDEXABLE_EXTENSIONS`, a shared `Set` constant used by this module group.
+- **indexed-doc-count.mjs** - Exports `indexedDocCount`, `setIndexedDocCount`, providing the reusable API for this directory concern.
+- **is-index-ready.mjs** - Exports `isIndexReady`, which checks whether index ready.
+- **is-ollama-available.mjs** - Exports `isOllamaAvailable`, which checks whether ollama available.
+- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
+- **max-file-bytes.mjs** - Exports `MAX_FILE_BYTES`, a shared constant used by sibling modules.
+- **mini-search-index.mjs** - Exports `miniSearchIndex`, `setMiniSearchIndex`, providing the reusable API for this directory concern.
+- **reciprocal-rank-fusion.mjs** - Exports `reciprocalRankFusion`, which implements reciprocal rank fusion.
+- **rrf-k.mjs** - Exports `RRF_K`, a shared constant used by sibling modules.
+- **runtime.mjs** - Executable runtime entry point for this directory.
+- **search-files.mjs** - Exports `searchFiles`, which implements search files.
+- **vector-search.mjs** - Exports `vectorSearch`, which implements vector search.
+- **vector-store-ready.mjs** - Exports `vectorStoreReady`, which implements vector store ready.
+- **warm-search-index.mjs** - Exports `warmSearchIndex`, which implements warm search index.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `runtime.mjs` provides a direct execution
-path. The README content below is aligned to the current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, subprocess execution, and git/worktree awareness.
 
 ## 4. Usage Instructions
 
@@ -57,10 +48,10 @@ node ops/lib/search/hybrid-search/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
-- **Imported packages** - Representative external dependencies referenced here include `minisearch`.
+- **Node.js built-ins** - `node:child_process`, `node:fs/promises`, `node:path`
+- **External packages/services referenced in immediate code** - `minisearch`
+- **Internal relative modules** - `../../logger.mjs`, `./collect-project-files.mjs`, `./compute-fingerprint.mjs`, `./cosine-similarity.mjs`, `./create-hybrid-search-index.mjs`, `./embeddings-available.mjs`, `./excluded-dirs.mjs`, `./extract-snippet.mjs`, `./generate-embedding.mjs`, `./hybrid-search.mjs`, `./index-built-at.mjs`, `./index-fingerprint.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

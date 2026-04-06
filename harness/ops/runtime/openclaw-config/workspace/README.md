@@ -2,41 +2,32 @@
 
 ## 1. Directory Overview
 
-This directory contains the agent workspace configuration for the OpenCLAW runtime system. It
-defines the identity, personality, and operational guidelines for the AI assistant (named Scarlet)
-that operates within the ANQR (Agentic Number Query Runner) harness. The workspace serves as the
-persistent memory and configuration layer that gives the agent context about who it is, who it
-serves, and how it should behave. It currently contains 7 files and 0 subdirectories.
+This directory implements **ANQR Workspace** within the ANQR harness. Key immediate entries include `AGENTS.md`, `plan.md`, `TOOLS.md`, `SOUL.md`. The current inventory is 7 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **AGENTS.md** - Markdown document associated with this directory.
-- **HEARTBEAT.md** - Markdown document associated with this directory.
-- **IDENTITY.md** - Markdown document associated with this directory.
-- **SOUL.md** - Markdown document associated with this directory.
-- **TOOLS.md** - Markdown document associated with this directory.
-- **USER.md** - Markdown document associated with this directory.
-- **plan.md** - Markdown document associated with this directory.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **AGENTS.md** - Markdown document titled **AGENTS.md - Your Workspace**.
+- **HEARTBEAT.md** - Markdown document titled **HEARTBEAT.md**.
+- **IDENTITY.md** - Markdown document titled **IDENTITY.md - Who Am I?**.
+- **SOUL.md** - Markdown document titled **SOUL.md - Who You Are**.
+- **TOOLS.md** - Markdown document titled **TOOLS.md - Local Notes**.
+- **USER.md** - Markdown document titled **USER.md - About Your Human**.
+- **plan.md** - Markdown document titled **Production Readiness Plan (Draft)**.
 
 ## 3. Overall Directory Function
 
-In practice, the files in this directory are intended to be consumed together. The README content
-below is aligned to the current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, network/API integration, timer, scheduling, cooldown, or watchdog behavior, Discord integration, OpenClaw integration, and git/worktree awareness.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **No dedicated runtime dependency** - This directory mainly stores generated assets or supporting files.
+- No explicit code-level dependency imports were found in the immediate non-README files.
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

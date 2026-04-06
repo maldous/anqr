@@ -2,37 +2,27 @@
 
 ## 1. Directory Overview
 
-This directory contains benchmarking and analysis tools for evaluating concurrent worktree execution
-performance in the ANQR (Agentic Number Query Runner) Symphony orchestration system. The tools are
-designed to validate the ANQ-1104 worktree concurrent execution feature by comparing single-worktree
-baseline metrics against multi-worktree concurrent execution metrics. It currently contains 11 files
-and 0 subdirectories.
+This directory implements **ANQR Worktree Benchmark Analysis** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 11 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **compare-benchmarks.mjs** - Compares baseline and concurrent benchmark runs to validate acceptance criteria. Checks for throughput increase (requires >=75%) and conflict rate (requires <5%). Returns a comparison object with pass/fail status and threshold validation.
-- **dirname.mjs** - ESM-compatible `__dirname` polyfill using `fileURLToPath` and `dirname`.
-- **evidence-dir.mjs** - Defines the evidence directory path (`docs/harness/evidence`) for storing generated benchmark reports.
-- **extract-benchmark-metrics.mjs** - Extracts benchmark metrics from the Symphony state file (`reports/symphony/state.json`) for a given time window. Calculates completed issues, throughput (issues/hour), git conflicts, and conflict rate. Returns detailed metrics including issue details with retry counts.
-- **generate-evidence-report.mjs** - Generates a Markdown evidence report (`worktree-benchmark-{date}.md`) in the evidence directory. The report includes executive summary, throughput comparison, conflict analysis, resource usage, stability metrics, acceptance criteria checklist, test configuration, and recommendations.
-- **index.mjs** - Generated facade index that exports all public API members including path constants, metric extraction functions, benchmark comparison, and the main function.
-- **logger.mjs** - Shared logger module that wraps the common logger from `../../lib/logger.mjs`, exporting `logInfo` and `logError` functions.
-- **main.mjs** - Main orchestration module providing the CLI interface with three commands: `--extract` for extracting metrics from state.json, `--compare` for comparing two benchmark runs, and `--report` for running the full pipeline.
-- **project-root.mjs** - Resolves the project root path by navigating up from the current module location to the harness root.
-- **reports-dir.mjs** - Defines the reports directory path (`reports/symphony`) relative to the project root.
-- **runtime.mjs** - Runtime carry-forward module that imports and executes the main function when the file is run directly as a CLI script.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **compare-benchmarks.mjs** - Exports `compareBenchmarks`, which compares benchmarks.
+- **dirname.mjs** - Exports `__dirname`, which implements dirname.
+- **evidence-dir.mjs** - Exports `EVIDENCE_DIR`, a shared constant used by sibling modules.
+- **extract-benchmark-metrics.mjs** - Exports `extractBenchmarkMetrics`, which implements extract benchmark metrics.
+- **generate-evidence-report.mjs** - Exports `generateEvidenceReport`, which implements generate evidence report.
+- **index.mjs** - Facade module that re-exports public members from `./dirname.mjs`, `./project-root.mjs`, `./reports-dir.mjs`, `./evidence-dir.mjs`, `./extract-benchmark-metrics.mjs`, `./compare-benchmarks.mjs`, and 2 more siblings.
+- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`.
+- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
+- **project-root.mjs** - Exports `PROJECT_ROOT`, a shared constant used by sibling modules.
+- **reports-dir.mjs** - Exports `REPORTS_DIR`, a shared constant used by sibling modules.
+- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
-path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
-current immediate directory contents.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include file-system access, timer, scheduling, cooldown, or watchdog behavior, Symphony integration, and git/worktree awareness.
 
 ## 4. Usage Instructions
 
@@ -42,9 +32,9 @@ node ops/orchestration/analyze-worktree-benchmark/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:fs`, `node:path`, `node:url`
+- **Internal relative modules** - `../../lib/logger.mjs`, `./compare-benchmarks.mjs`, `./dirname.mjs`, `./evidence-dir.mjs`, `./extract-benchmark-metrics.mjs`, `./generate-evidence-report.mjs`, `./index.mjs`, `./logger.mjs`, `./project-root.mjs`, `./reports-dir.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

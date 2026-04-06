@@ -2,34 +2,26 @@
 
 ## 1. Directory Overview
 
-This directory contains the live system prompt used by the ANQR (Agentic Number Query Runner)
-harness runner when executing worktree tasks. It defines the execution environment, workflow rules,
-and behavioral guidelines for AI agents running in concurrent git worktrees. It currently contains 1
-file and 0 subdirectories.
+This directory implements **ANQR Symphony** within the ANQR harness. Key immediate entries include `WORKFLOW.md`. The current inventory is 1 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **WORKFLOW.md** - The live system prompt for the ANQR harness runner. Contains comprehensive instructions for worktree execution, including git operation handling, read order for documentation, launch truth and scope boundaries, execution rules, validation requirements, and the standard working sequence. This file serves as the authoritative behavioral reference for all agents operating within the harness.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **WORKFLOW.md** - Markdown document titled **Symphony Agent Prompt**.
 
 ## 3. Overall Directory Function
 
-In practice, the files in this directory are intended to be consumed together. The README content
-below is aligned to the current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include timer, scheduling, cooldown, or watchdog behavior, Symphony integration, and git/worktree awareness.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **No dedicated runtime dependency** - This directory mainly stores generated assets or supporting files.
+- No explicit code-level dependency imports were found in the immediate non-README files.
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

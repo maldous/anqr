@@ -2,31 +2,22 @@
 
 ## 1. Directory Overview
 
-This directory contains a utility module for the ANQR (Agentic Number Query Runner) harness that
-manages Discord label identification in the Linear workspace. It provides functionality to search
-for an existing Discord label or create one if it doesn't exist, then outputs the label ID for use
-in system configuration. It currently contains 6 files and 0 subdirectories.
+This directory implements **ANQR Linear - Get Discord Label ID** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 6 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **create-discord-label.mjs** - Creates a new label named "source:discord" with the description "Issue created from Discord via OpenClaw Gateway" and Discord brand color "#7289da". Uses the Linear GraphQL mutation `issueLabelCreate`.
-- **get-all-labels.mjs** - Queries the Linear API to fetch all labels for the configured team. Returns an array of label objects containing id, name, description, and color fields.
-- **index.mjs** - Generated facade index that exports the public API: `getAllLabels`, `createDiscordLabel`, and `main` functions from sibling modules.
-- **logger.mjs** - Shared logger module that re-exports `logInfo` and `logError` from the central logger library (`../../../lib/logger.mjs`).
-- **main.mjs** - Main entry point that orchestrates the workflow: searches for an existing Discord label by name or description, displays its ID if found, or creates a new one if missing. Outputs instructions for adding the label ID to systemd user environment.
-- **runtime.mjs** - Generated runtime carry-forward that imports and executes the main function. This is the executable entry point when running the module directly.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **create-discord-label.mjs** - Exports `createDiscordLabel`, which creates discord label.
+- **get-all-labels.mjs** - Exports `getAllLabels`, which gets all labels.
+- **index.mjs** - Facade module that re-exports public members from `./get-all-labels.mjs`, `./create-discord-label.mjs`, `./main.mjs`.
+- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`.
+- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
+- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
-path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
-current immediate directory contents.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include network/API integration, Linear integration, Discord integration, and OpenClaw integration.
 
 ## 4. Usage Instructions
 
@@ -36,9 +27,8 @@ node ops/integrations/linear/get-discord-label-id/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `../../../lib/logger.mjs`, `../linear-client.mjs`, `./create-discord-label.mjs`, `./get-all-labels.mjs`, `./index.mjs`, `./logger.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

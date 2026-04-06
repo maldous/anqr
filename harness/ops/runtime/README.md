@@ -2,39 +2,30 @@
 
 ## 1. Directory Overview
 
-This directory contains runtime-specific harness surfaces for the ANQR (Agentic Number Query Runner)
-harness. It provides the execution infrastructure for Discord/OpenClaw integration, MCP
-documentation services, Symphony agent execution, watchdog monitoring, and OpenClaw configuration.
-The runtime layer bridges the gap between the orchestration logic in `ops/` and the actual execution
-environments. It currently contains 0 files and 5 subdirectories.
+This directory implements **ANQR Runtime** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 0 non-README files and 5 subdirectories.
 
 ## 2. File Summaries
 
-### Files
+### Subdirectories
 
-This directory does not contain any non-README files.
-
-### Child Directories
-
-- **discord/** - This directory contains the Discord runtime integration for the ANQR (Agentic Number Query Runner) harness.
-- **mcp/** - This directory contains the MCP (Model Context Protocol) runtime wrapper for Context7 documentation resolution.
-- **openclaw-config/** - This directory contains the local copy of the OpenClaw gateway configuration for the ANQR (Agentic Number Query Runner) harness.
-- **symphony/** - This directory contains the Symphony runtime, agent system prompt, and runtime-only execution surfaces for the ANQR (Agentic Number Query Runner) harness.
-- **watchdog/** - This directory contains the watchdog automation modules for the ANQR (Agentic Number Query Runner) harness system.
+- **discord/** - Contains **ANQR Discord Runtime**; it acts mainly as a namespace over child directories and has 1 child directories.
+- **mcp/** - Contains **ANQR MCP Runtime**; it acts mainly as a namespace over child directories and has 2 child directories.
+- **openclaw-config/** - Contains **ANQR OpenClaw Configuration**; it holds configuration data and has 6 child directories.
+- **symphony/** - Contains **ANQR Symphony Runtime**; it contains 3 immediate files and has 2 child directories.
+- **watchdog/** - Contains **ANQR Watchdog**; it acts mainly as a namespace over child directories and has 1 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **No dedicated runtime dependency** - This directory mainly stores generated assets or supporting files.
+- No explicit code-level dependency imports were found in the immediate non-README files.
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

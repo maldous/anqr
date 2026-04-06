@@ -2,39 +2,35 @@
 
 ## 1. Directory Overview
 
-This directory contains operational tooling for the ANQR (Agentic Number Query Runner) harness
-system. It provides recovery, reset, and verification utilities to maintain system health and
-recover from various failure states. The tools handle stale issues, retry exhaustion, startup
-recovery, and webhook system verification. It currently contains 4 files and 3 subdirectories.
+This directory implements **ANQR Tools** within the ANQR harness. Key immediate entries include `recover-stale-in-progress.mjs`, `reset-retry-exhausted.mjs`, `verify-webhook-system.mjs`, `startup-recovery.mjs`. The current inventory is 4 non-README files and 3 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **recover-stale-in-progress.mjs** - Auto-generated facade exporting from `./recover-stale-in-progress/index.mjs` and `./recover-stale-in-progress/runtime.mjs`. Recovers issues stuck in "In Progress" state that have gone stale.
-- **reset-retry-exhausted.mjs** - Standalone script that resets retry_exhausted state for blocked issues. Allows recovery of issues that have failed due to retry exhaustion by resetting their retry count and clearing any cooldowns. Supports dry-run mode to preview what would be reset.
-- **startup-recovery.mjs** - Auto-generated facade exporting from `./startup-recovery/index.mjs` and `./startup-recovery/runtime.mjs`. Provides startup recovery capabilities for the harness system.
-- **verify-webhook-system.mjs** - Auto-generated facade exporting from `./verify-webhook-system/index.mjs` and `./verify-webhook-system/runtime.mjs`. Verifies the webhook system is functioning correctly.
+- **recover-stale-in-progress.mjs** - Facade module that re-exports public members from `./recover-stale-in-progress/index.mjs`, `./recover-stale-in-progress/runtime.mjs`.
+- **reset-retry-exhausted.mjs** - Defines `main`, which orchestrates the main workflow for this directory.
+- **startup-recovery.mjs** - Facade module that re-exports public members from `./startup-recovery/index.mjs`, `./startup-recovery/runtime.mjs`.
+- **verify-webhook-system.mjs** - Facade module that re-exports public members from `./verify-webhook-system/index.mjs`, `./verify-webhook-system/runtime.mjs`.
 
-### Child Directories
+### Subdirectories
 
-- **recover-stale-in-progress/** - This directory contains the recover-stale-in-progress automation tool for the ANQR (Agentic Number Query Runner) harness.
-- **startup-recovery/** - This directory contains startup recovery tooling for the ANQR (Agentic Number Query Runner) system.
-- **verify-webhook-system/** - This directory contains tools for verifying the ANQR (Agentic Number Query Runner) webhook system, including systemd service checks, queue health monitoring, and retry state verification.
+- **recover-stale-in-progress/** - Contains **Recover Stale In Progress**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
+- **startup-recovery/** - Contains **ANQR Startup Recovery**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
+- **verify-webhook-system/** - Contains **ANQR Webhook System Verification**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, and Symphony integration.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `../core/symphony-state.mjs`, `../integrations/linear/linear-client.mjs`, `../lib/logger.mjs`, `./recover-stale-in-progress/index.mjs`, `./recover-stale-in-progress/runtime.mjs`, `./startup-recovery/index.mjs`, `./startup-recovery/runtime.mjs`, `./verify-webhook-system/index.mjs`, `./verify-webhook-system/runtime.mjs`
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

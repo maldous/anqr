@@ -1,4 +1,3 @@
-
 import { log, main } from "./index.mjs";
 
 try {

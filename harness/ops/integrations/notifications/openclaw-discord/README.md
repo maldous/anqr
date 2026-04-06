@@ -2,52 +2,43 @@
 
 ## 1. Directory Overview
 
-This directory contains Discord notification integration utilities for the ANQR (Agentic Number
-Query Runner) harness. It provides functionality to send messages, embeds, and streaming updates to
-Discord channels via the OpenClaw Gateway. The module serves as the notifications layer within the
-broader integration system, enabling the harness to communicate operational events and status
-updates to Discord. It currently contains 15 files and 0 subdirectories.
+This directory implements **ANQR OpenClaw Discord Notifications** within the ANQR harness. Key immediate entries include `index.mjs`, `send-via-open-claw.mjs`, `discord-text-channel-id.mjs`, `stream-discord-update.mjs`. The current inventory is 15 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **color-to-emoji.mjs** - Utility that maps color codes to emoji indicators: `0x00ff00` (green) to "green circle", `0xff0000` (red) to "red circle", `0xffa500` (orange) to "orange circle".
-- **discord-stream-buffers.mjs** - Global Map storing per-request streaming buffer state. Each entry contains `buffer` (accumulated text), `timer` (flush timeout), `replyTo`, `threadName`, and `source` options.
-- **discord-text-channel-id.mjs** - Exports the target Discord text channel ID, defaulting to `1486262758256410646`. Configurable via `DISCORD_TEXT_CHANNEL_ID` environment variable.
-- **flush-discord-stream.mjs** - Flushes a request's buffer to Discord, optionally with emoji prefix and timestamp suffix. Handles truncation for Discord's 2000 character limit. Clears buffer after sending.
-- **index.mjs** - Generated facade index that re-exports all public API members: configuration constants, stream buffers, and messaging functions.
-- **logger.mjs** - Shared logger module using the project's standard logger from `../../../lib/logger.mjs`. Exports `logDebug` and `logWarn` functions.
-- **openclaw-gateway-host.mjs** - Exports the OpenClaw Gateway host address, defaulting to `127.0.0.1`. Configurable via `OPENCLAW_GATEWAY_HOST` environment variable.
-- **openclaw-gateway-port.mjs** - Exports the OpenClaw Gateway port, defaulting to `18789`. Configurable via `OPENCLAW_GATEWAY_PORT` environment variable.
-- **openclaw-gateway-token.mjs** - Exports the OpenClaw Gateway authentication token from `OPENCLAW_GATEWAY_TOKEN` environment variable. Required for sending messages.
-- **send-discord-embed.mjs** - Constructs and sends formatted Discord embeds with title, description, fields, and footer. Converts color codes to emojis (green=success, red=error, orange=warning). Handles inline vs block field formatting.
-- **send-discord-message.mjs** - Simple wrapper around `sendViaOpenClaw` for sending plain text messages. Validates non-empty content before sending.
-- **send-via-open-claw.mjs** - Core function that sends content to Discord via the OpenClaw Gateway's `/tools/invoke` endpoint. Handles authentication, message construction, thread/reply options, and HTTP communication with timeout handling. Returns `{ sent: boolean, reason?: string }`.
-- **stream-discord-update.mjs** - Accumulates text into per-request buffers and schedules periodic flushing. Sends immediately when buffer exceeds `STREAM_MAX_LENGTH`. Stores thread/reply options with buffer for use during flush.
-- **stream-interval-ms.mjs** - Exports the streaming flush interval: `1000`ms.
-- **stream-max-length.mjs** - Exports the maximum buffer length before immediate flush: `1900` characters.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **color-to-emoji.mjs** - Exports `colorToEmoji`, which implements color to emoji.
+- **discord-stream-buffers.mjs** - Exports `discordStreamBuffers`, which implements discord stream buffers.
+- **discord-text-channel-id.mjs** - Exports `DISCORD_TEXT_CHANNEL_ID`, a shared constant used by sibling modules.
+- **flush-discord-stream.mjs** - Exports `flushDiscordStream`, which implements flush discord stream.
+- **index.mjs** - Facade module that re-exports public members from `./openclaw-gateway-host.mjs`, `./openclaw-gateway-port.mjs`, `./openclaw-gateway-token.mjs`, `./discord-text-channel-id.mjs`, `./discord-stream-buffers.mjs`, `./stream-interval-ms.mjs`, and 6 more siblings.
+- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logWarn`.
+- **openclaw-gateway-host.mjs** - Exports `OPENCLAW_GATEWAY_HOST`, a shared constant used by sibling modules.
+- **openclaw-gateway-port.mjs** - Exports `OPENCLAW_GATEWAY_PORT`, a shared constant used by sibling modules.
+- **openclaw-gateway-token.mjs** - Exports `OPENCLAW_GATEWAY_TOKEN`, a shared constant used by sibling modules.
+- **send-discord-embed.mjs** - Exports `sendDiscordEmbed`, which implements send discord embed.
+- **send-discord-message.mjs** - Exports `sendDiscordMessage`, which implements send discord message.
+- **send-via-open-claw.mjs** - Exports `sendViaOpenClaw`, which implements send via open claw.
+- **stream-discord-update.mjs** - Exports `streamDiscordUpdate`, which implements stream discord update.
+- **stream-interval-ms.mjs** - Exports `STREAM_INTERVAL_MS`, a shared constant used by sibling modules.
+- **stream-max-length.mjs** - Exports `STREAM_MAX_LENGTH`, a shared constant used by sibling modules.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point. The README content below is aligned to the
-current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, timer, scheduling, cooldown, or watchdog behavior, Discord integration, and OpenClaw integration. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
 ```javascript
-import * as moduleApi from "./index.mjs";
+import * as moduleApi from "./ops/integrations/notifications/openclaw-discord/index.mjs";
 ```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:http`
+- **Internal relative modules** - `../../../lib/logger.mjs`, `./color-to-emoji.mjs`, `./discord-stream-buffers.mjs`, `./discord-text-channel-id.mjs`, `./flush-discord-stream.mjs`, `./logger.mjs`, `./openclaw-gateway-host.mjs`, `./openclaw-gateway-port.mjs`, `./openclaw-gateway-token.mjs`, `./send-via-open-claw.mjs`, `./stream-interval-ms.mjs`, `./stream-max-length.mjs`
 
 ## 6. Additional Comments
 
-- This directory exposes a public API through `index.mjs`.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

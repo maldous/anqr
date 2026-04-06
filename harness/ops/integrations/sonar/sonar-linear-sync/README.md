@@ -2,62 +2,53 @@
 
 ## 1. Directory Overview
 
-This directory contains the SonarQube to Linear synchronization module for the ANQR (Agentic Number
-Query Runner) harness. It provides automated bidirectional sync between SonarQube code
-quality/security findings and Linear issues, enabling tracking and resolution of code quality issues
-through the Linear project management workflow. It currently contains 26 files and 0 subdirectories.
+This directory implements **ANQR Sonar-Linear Sync** within the ANQR harness. Key immediate entries include `index.mjs`, `find-open-linear-issues-by-tag.mjs`, `sync-sonar-hotspots-to-linear.mjs`, `sync-sonar-duplications-to-linear.mjs`. The current inventory is 26 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **apply-promote-and-requeue.mjs** - Applies priority promotion and state requeue to existing Linear issues. Adds comments explaining changes.
-- **build-duplication-linear-description.mjs** - Builds description for duplication issues with rule, severity, and SonarQube link.
-- **build-duplication-linear-title.mjs** - Builds title for duplication issues with `[SonarDup]` prefix.
-- **build-hotspot-linear-description.mjs** - Builds description for security hotspots with security category, vulnerability probability, status, and SonarQube link.
-- **build-hotspot-linear-title.mjs** - Builds title for security hotspots with `[SonarHotspot]` prefix.
-- **build-linear-description.mjs** - Builds Linear issue description with Sonar metadata (rule, severity, type, file, line, effort, message) and SonarQube link.
-- **build-linear-title.mjs** - Builds Linear issue title with `[Sonar]` prefix, truncated message, and file location.
-- **extract-sonar-key.mjs** - Extracts Sonar key from Linear issue description using regex pattern.
-- **fetch-all-sonar-duplication-issues.mjs** - Fetches code smells filtered for duplication-related rules and messages.
-- **fetch-all-sonar-hotspots.mjs** - Fetches all security hotspots in "TO_REVIEW" status with pagination.
-- **fetch-all-sonar-issues.mjs** - Fetches all unresolved Sonar issues with pagination support. Filters out known false positives ("too many parameters", "Cognitive Complexity", "top-level await").
-- **fetch-sonar-measures.mjs** - Fetches project measures (duplication density, coverage).
-- **fetch-timeout-ms.mjs** - Timeout constant (30,000ms) for API calls.
-- **fetch-with-timeout.mjs** - Helper function for fetch with configurable timeout (30s default).
-- **find-open-linear-issues-by-tag.mjs** - Queries Linear for open issues containing a specific title tag (e.g., `[Sonar]`, `[SonarHotspot]`, `[SonarDup]`).
-- **index.mjs** - Generated facade index that exports all public API members including fetch functions, builders, sync functions, and utilities.
-- **logger.mjs** - Shared logger using the project's logger library.
-- **open-state-names.mjs** - List of open Linear state names: Backlog, Todo, In Progress, In Review, Blocked, Human Review.
-- **priority-labels.mjs** - Mapping of priority numbers to labels: 1="Urgent", 2="High", 3="Medium", 4="Low".
-- **resolve-stale-linear-issues.mjs** - Resolves Linear issues when corresponding Sonar findings are no longer present. Adds resolution comment and moves to Done state.
-- **sonar-auth-header.mjs** - Builds Basic auth header for SonarQube API.
-- **sonar-key-pattern.mjs** - Regex pattern `<!-- sonar-key:([a-f0-9-]+) -->` for tracking Sonar-Linear correlation.
-- **strip-project-prefix.mjs** - Strips project key prefix from component paths for cleaner display.
-- **sync-sonar-duplications-to-linear.mjs** - Specialized sync for code duplication issues. Creates `[SonarDup]` tagged issues with duplication-specific details (rule, severity).
-- **sync-sonar-hotspots-to-linear.mjs** - Specialized sync for security hotspots. Creates `[SonarHotspot]` tagged issues with security-specific metadata (category, vulnerability probability, status).
-- **sync-sonar-to-linear.mjs** - Main orchestration module that fetches Sonar issues and creates/updates Linear issues. Handles priority promotion, requeue logic, stale issue resolution, and legacy issue cleanup.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **apply-promote-and-requeue.mjs** - Exports `applyPromoteAndRequeue`, which applies promote and requeue.
+- **build-duplication-linear-description.mjs** - Exports `buildDuplicationLinearDescription`, which builds duplication linear description.
+- **build-duplication-linear-title.mjs** - Exports `buildDuplicationLinearTitle`, which builds duplication linear title.
+- **build-hotspot-linear-description.mjs** - Exports `buildHotspotLinearDescription`, which builds hotspot linear description.
+- **build-hotspot-linear-title.mjs** - Exports `buildHotspotLinearTitle`, which builds hotspot linear title.
+- **build-linear-description.mjs** - Exports `buildLinearDescription`, which builds linear description.
+- **build-linear-title.mjs** - Exports `buildLinearTitle`, which builds linear title.
+- **extract-sonar-key.mjs** - Exports `extractSonarKey`, which implements extract sonar key.
+- **fetch-all-sonar-duplication-issues.mjs** - Exports `fetchAllSonarDuplicationIssues`, which fetches all sonar duplication issues.
+- **fetch-all-sonar-hotspots.mjs** - Exports `fetchAllSonarHotspots`, which fetches all sonar hotspots.
+- **fetch-all-sonar-issues.mjs** - Exports `fetchAllSonarIssues`, which fetches all sonar issues.
+- **fetch-sonar-measures.mjs** - Exports `fetchSonarMeasures`, which fetches sonar measures.
+- **fetch-timeout-ms.mjs** - Exports `FETCH_TIMEOUT_MS`, a shared constant used by sibling modules.
+- **fetch-with-timeout.mjs** - Exports `fetchWithTimeout`, which fetches with timeout.
+- **find-open-linear-issues-by-tag.mjs** - Exports `findOpenLinearIssuesByTag`, which finds open linear issues by tag.
+- **index.mjs** - Facade module that re-exports public members from `./fetch-timeout-ms.mjs`, `./sonar-key-pattern.mjs`, `./open-state-names.mjs`, `./priority-labels.mjs`, `./fetch-with-timeout.mjs`, `./sonar-auth-header.mjs`, and 18 more siblings.
+- **logger.mjs** - Shared logging helper module exporting `logInfo`.
+- **open-state-names.mjs** - Exports `OPEN_STATE_NAMES`, a shared constant used by sibling modules.
+- **priority-labels.mjs** - Exports `PRIORITY_LABELS`, a shared constant used by sibling modules.
+- **resolve-stale-linear-issues.mjs** - Exports `resolveStaleLinearIssues`, which resolves stale linear issues.
+- **sonar-auth-header.mjs** - Exports `sonarAuthHeader`, which implements sonar auth header.
+- **sonar-key-pattern.mjs** - Exports `SONAR_KEY_PATTERN`, a regular-expression constant used for validation.
+- **strip-project-prefix.mjs** - Exports `stripProjectPrefix`, which strips project prefix.
+- **sync-sonar-duplications-to-linear.mjs** - Exports `syncSonarDuplicationsToLinear`, which implements sync sonar duplications to linear.
+- **sync-sonar-hotspots-to-linear.mjs** - Exports `syncSonarHotspotsToLinear`, which implements sync sonar hotspots to linear.
+- **sync-sonar-to-linear.mjs** - Exports `syncSonarToLinear`, which implements sync sonar to linear.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point. The README content below is aligned to the
-current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, timer, scheduling, cooldown, or watchdog behavior, Linear integration, and SonarQube integration.
 
 ## 4. Usage Instructions
 
 ```javascript
-import * as moduleApi from "./index.mjs";
+import * as moduleApi from "./ops/integrations/sonar/sonar-linear-sync/index.mjs";
 ```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `../../../lib/logger.mjs`, `../../linear/linear-client.mjs`, `./apply-promote-and-requeue.mjs`, `./build-duplication-linear-description.mjs`, `./build-duplication-linear-title.mjs`, `./build-hotspot-linear-description.mjs`, `./build-hotspot-linear-title.mjs`, `./build-linear-description.mjs`, `./build-linear-title.mjs`, `./extract-sonar-key.mjs`, `./fetch-timeout-ms.mjs`, `./fetch-with-timeout.mjs`
 
 ## 6. Additional Comments
 
-- This directory exposes a public API through `index.mjs`.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

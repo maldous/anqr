@@ -2,55 +2,45 @@
 
 ## 1. Directory Overview
 
-This directory contains the RAG (Retrieval-Augmented Generation) index builder for source code. It
-discovers tracked files from the git repository, classifies them based on supported file types and
-exclusion rules, and indexes them into a vector store for semantic search capabilities. The module
-is part of the larger RAG system that enables AI agents to search and retrieve relevant code
-context. It currently contains 29 files and 0 subdirectories.
+This directory implements **RAG Build Index** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 29 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **build-candidate-list.mjs** - Async function that builds the complete list of files to index. Discovers tracked files, classifies each, checks file sizes, applies priority sorting, and returns statistics on skipped files.
-- **classify-file.mjs** - Main classification function that determines if a file should be included in the index. Checks mirrored duplicates, excluded paths, i18n noise, supported basenames, extensions, and JSON inclusion rules. Returns `{ include: boolean, reason: string }`.
-- **detect-project-root.mjs** - Core function that detects the project root by executing git commands, falling back to current working directory if not in a git repo.
-- **discover-tracked-files.mjs** - Uses `git ls-files -z` to discover all files tracked by git in the repository.
-- **excluded-path-patterns.mjs** - Defines regex patterns for paths to exclude: `node_modules/`, `coverage/`, `dist/`, `build/`, `reports/`, `__snapshots__/`, `.yarn/`, `.git/`, `public/gallery/*/manifest.json`, `apps/web/src/content/generated/`, `migration/templates/`, `*.generated.*` files.
-- **get-priority.mjs** - Calculates priority for a file based on `PRIORITY_RULES`. Returns matching priority or default 50.
-- **i18-n-excluded-path-patterns.mjs** - Excludes i18n noise files: `apps/web/src/i18n/locales/_.json` and `apps/web/src/i18n/static/` unless `INCLUDE_I18N` is enabled.
-- **include-i18-n.mjs** - Controls whether i18n (internationalization) files are included in the index. Set via `RAG_BUILD_INCLUDE_I18N` environment variable.
-- **index.mjs** - Facade index that re-exports all public API members for external consumption.
-- **is-supported-env-name.mjs** - Validates environment file names. Matches `.env` or `.env.*` patterns (case-insensitive).
-- **is-truthy.mjs** - Checks if a value is truthy for environment variable parsing. Accepts "1", "true", "yes", "on" (case-insensitive).
-- **json-excluded-names.mjs** - Excludes specific JSON files from indexing: `google-services.json`, `Contents.json`, `age_rating.json`, `progress.json`, `linear-history-export.json`, `package-lock.json`.
-- **log-skip-summary.mjs** - Logs a summary of skipped files grouped by reason (excluding "unsupported_extension").
-- **logger.mjs** - Shared logger module that creates a namespaced logger ("rag-build-index") using the project's logger implementation from `../../logger.mjs`.
-- **main.mjs** - Main orchestration function that coordinates the entire indexing process. Checks Ollama availability, optionally clears existing index, builds candidate list, prunes stale entries, indexes files in batches with progress reporting, and outputs final statistics.
-- **max-file-bytes.mjs** - Sets maximum file size threshold for indexing. Files larger than 256KB are skipped, configurable via `RAG_BUILD_MAX_FILE_BYTES`.
-- **mirror-preferences.mjs** - Defines path mirror preferences to avoid duplicates. Currently maps `android/` to `apps/android/` to skip mirrored files.
-- **normalize-path.mjs** - Normalizes file paths to use forward slashes regardless of OS separator.
-- **priority-rules.mjs** - Defines prioritization rules for indexing order. Lower priority values are processed first: harness/ops (0), packages (1), apps/api/mobile/web/src (2), apps/web/api (3), apps/android/ios (4), docs/harness (5), docs (6), root files (7).
-- **progress-every.mjs** - Controls logging frequency during indexing. Default is every 200 files, configurable via `RAG_BUILD_PROGRESS_EVERY`.
-- **project-root.mjs** - Detects and exports the project root directory using git's `rev-parse --show-toplevel` command.
-- **runtime.mjs** - Generated runtime carry-forward that first builds the Linear index, then builds the source-code RAG index by calling `main()`.
-- **save-interval.mjs** - Controls how often the index is flushed to disk during batch processing. Default is every 25 files, configurable via `RAG_BUILD_SAVE_INTERVAL`.
-- **should-include-json.mjs** - Determines if a JSON file should be included based on exclusion rules and i18n settings.
-- **should-skip-mirrored-path.mjs** - Determines if a path should be skipped as a duplicate of a mirrored path based on `MIRROR_PREFERENCES`.
-- **supported-basenames.mjs** - Defines special filenames to include regardless of extension: `Makefile`, `Dockerfile`, `Gemfile`, `Podfile`, `Procfile`, `.gitignore`, `.gitattributes`, `.editorconfig`, `.npmrc`, `.nvmrc`, `.prettierignore`, `.prettierrc`.
-- **supported-extensions.mjs** - Defines supported file extensions for indexing: `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.md`, `.mdx`, `.json`, `.css`, `.html`, `.yml`, `.yaml`, `.sh`, `.py`, `.service`, `.timer`, `.java`, `.kt`, `.swift`, `.gradle`, `.properties`, `.xml`, `.plist`, `.pbxproj`, `.xcconfig`.
-- **to-positive-int.mjs** - Utility to convert values to positive integers with fallback defaults. Used for parsing environment variables like `RAG_BUILD_PROGRESS_EVERY`, `RAG_BUILD_MAX_FILE_BYTES`, and `RAG_BUILD_SAVE_INTERVAL`.
-- **verbose.mjs** - Controls verbose logging output. Enabled via `RAG_BUILD_VERBOSE` environment variable or `--verbose` CLI flag.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **build-candidate-list.mjs** - Exports `buildCandidateList`, which builds candidate list.
+- **classify-file.mjs** - Exports `classifyFile`, which implements classify file.
+- **detect-project-root.mjs** - Exports `detectProjectRoot`, which detects project root.
+- **discover-tracked-files.mjs** - Exports `discoverTrackedFiles`, which implements discover tracked files.
+- **excluded-path-patterns.mjs** - Exports `EXCLUDED_PATH_PATTERNS`, a shared constant used by sibling modules.
+- **get-priority.mjs** - Exports `getPriority`, which gets priority.
+- **i18-n-excluded-path-patterns.mjs** - Exports `I18N_EXCLUDED_PATH_PATTERNS`, a shared constant used by sibling modules.
+- **include-i18-n.mjs** - Exports `INCLUDE_I18N`, a shared constant used by sibling modules.
+- **index.mjs** - Facade module that re-exports public members from `./detect-project-root.mjs`, `./project-root.mjs`, `./save-interval.mjs`, `./progress-every.mjs`, `./max-file-bytes.mjs`, `./include-i18-n.mjs`, and 20 more siblings.
+- **is-supported-env-name.mjs** - Exports `isSupportedEnvName`, which checks whether supported env name.
+- **is-truthy.mjs** - Exports `isTruthy`, which checks whether truthy.
+- **json-excluded-names.mjs** - Exports `JSON_EXCLUDED_NAMES`, a shared `Set` constant used by this module group.
+- **log-skip-summary.mjs** - Exports `logSkipSummary`, which implements log skip summary.
+- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`, `logWarn`.
+- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
+- **max-file-bytes.mjs** - Exports `MAX_FILE_BYTES`, a shared constant used by sibling modules.
+- **mirror-preferences.mjs** - Exports `MIRROR_PREFERENCES`, a shared constant used by sibling modules.
+- **normalize-path.mjs** - Exports `normalizePath`, which normalizes path.
+- **priority-rules.mjs** - Exports `PRIORITY_RULES`, a shared constant used by sibling modules.
+- **progress-every.mjs** - Exports `PROGRESS_EVERY`, a shared constant used by sibling modules.
+- **project-root.mjs** - Exports `PROJECT_ROOT`, a shared constant used by sibling modules.
+- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
+- **save-interval.mjs** - Exports `SAVE_INTERVAL`, a shared constant used by sibling modules.
+- **should-include-json.mjs** - Exports `shouldIncludeJson`, which implements should include json.
+- **should-skip-mirrored-path.mjs** - Exports `shouldSkipMirroredPath`, which implements should skip mirrored path.
+- **supported-basenames.mjs** - Exports `SUPPORTED_BASENAMES`, a shared `Set` constant used by this module group.
+- **supported-extensions.mjs** - Exports `SUPPORTED_EXTENSIONS`, a shared `Set` constant used by this module group.
+- **to-positive-int.mjs** - Exports `toPositiveInt`, which implements to positive int.
+- **verbose.mjs** - Exports `VERBOSE`, a shared constant used by sibling modules.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
-path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
-current immediate directory contents.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include file-system access, network/API integration, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
@@ -60,9 +50,9 @@ node ops/lib/rag/build-index/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:child_process`, `node:fs/promises`, `node:path`
+- **Internal relative modules** - `../../logger.mjs`, `../build-index-linear/build-linear-index.mjs`, `../embeddings.mjs`, `../vector-store.mjs`, `./build-candidate-list.mjs`, `./classify-file.mjs`, `./detect-project-root.mjs`, `./discover-tracked-files.mjs`, `./excluded-path-patterns.mjs`, `./get-priority.mjs`, `./i18-n-excluded-path-patterns.mjs`, `./include-i18-n.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

@@ -2,58 +2,56 @@
 
 ## 1. Directory Overview
 
-This directory contains the worktree pool management system for the ANQR (Agentic Number Query
-Runner) Symphony orchestration system. It provides utilities to create, manage, repair, and clean up
-git worktrees that serve as isolated execution environments for concurrent issue processing. The
-worktree pool enables parallel execution of multiple Symphony agents without interfering with each
-other's file states. It currently contains 21 files and 0 subdirectories.
+This directory implements **ANQR Symphony Worktree Pool** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 21 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **cleanup-worktree-pool.d.ts** - Module that supports cleanup worktree pool.d. Exports `cleanupWorktreePool`.
-- **cleanup-worktree-pool.mjs** - Removes all Symphony-managed worktrees and prunes stale worktree metadata via `git worktree prune`. Logs failures per worktree but continues cleanup.
-- **create-worktree.d.ts** - Module that creates or builds worktree.d. Exports `createWorktree`.
-- **create-worktree.mjs** - Creates a new Symphony worktree with a unique branch based on `origin/main`. Handles corrupted worktrees by detecting unregistered paths and cleaning them up before recreation. Installs dependencies via `npm install` and sets upstream tracking branch.
-- **get-symphony-worktrees.d.ts** - Module that retrieves symphony worktrees.d. Exports `getSymphonyWorktrees`.
-- **get-symphony-worktrees.mjs** - Filters all worktrees to only those managed by Symphony using the `WORKTREE_PREFIX` and `WORKTREE_BRANCH_PREFIX` patterns from worktree-config. Extracts worktree IDs from paths.
-- **index.d.ts** - Module that supports index.d. Exports `createWorktree, removeWorktree, listWorktrees, getSymphonyWorktrees, initWorktreePool, cleanupWorktreePool, repairWorktrees, printWorktreeStatus`.
-- **index.mjs** - Generated facade index exporting all public API members: `createWorktree`, `removeWorktree`, `listWorktrees`, `getSymphonyWorktrees`, `initWorktreePool`, `cleanupWorktreePool`, `reprovisionWorktree`, `repairWorktrees`, `printWorktreeStatus`.
-- **init-worktree-pool.d.ts** - Module that supports init worktree pool.d. Exports `initWorktreePool`.
-- **init-worktree-pool.mjs** - Initializes a pool of worktrees with a specified count. Performs disk space validation before creation (requires ~250MB per worktree). Returns array of created worktrees with IDs and paths.
-- **list-worktrees.d.ts** - Module that lists worktrees.d. Exports `listWorktrees`.
-- **list-worktrees.mjs** - Lists all git worktrees using `git worktree list --porcelain`. Parses output to return structured objects with path, branch, HEAD, and prunable status.
-- **logger.mjs** - Shared logger module using the centralized logger from `../../lib/logger.mjs`. Exports `logInfo`, `logWarn`, `logError`, and `logDebug`.
-- **print-worktree-status.d.ts** - Module that supports print worktree status.d. Exports `printWorktreeStatus`.
-- **print-worktree-status.mjs** - Prints human-readable status showing total worktrees and Symphony worktrees with their IDs, paths, branches, HEAD commits, and prunable status.
-- **remove-worktree.d.ts** - Module that supports remove worktree.d. Exports `removeWorktree`.
-- **remove-worktree.mjs** - Removes a worktree by path and attempts to delete its branch. Uses `git worktree remove --force` to handle both clean and corrupted states.
-- **repair-worktrees.d.ts** - Module that supports repair worktrees.d. Exports `repairWorktrees`.
-- **repair-worktrees.mjs** - Runs `git worktree repair` to fix common worktree issues. Identifies and reports any prunable worktrees that may need manual attention.
-- **reprovision-worktree.mjs** - Reprovisions a single worktree by first removing it, then recreating from fresh `origin/main`. Uses `git worktree prune` between removal and recreation.
-- **runtime.mjs** - CLI entry point with command routing. Supports commands: `init [count]`, `cleanup`, `list`, `status`, `repair`. Default worktree count is 2.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **cleanup-worktree-pool.d.ts** - Exports `cleanupWorktreePool`, which implements cleanup worktree pool.
+- **cleanup-worktree-pool.mjs** - Exports `cleanupWorktreePool`, which implements cleanup worktree pool.
+- **create-worktree.d.ts** - Exports `createWorktree`, which creates worktree.
+- **create-worktree.mjs** - Exports `createWorktree`, which creates worktree.
+- **get-symphony-worktrees.d.ts** - Exports `getSymphonyWorktrees`, which gets symphony worktrees.
+- **get-symphony-worktrees.mjs** - Exports `getSymphonyWorktrees`, which gets symphony worktrees.
+- **index.d.ts** - Facade module that re-exports public members from `./create-worktree.d.ts`, `./remove-worktree.d.ts`, `./list-worktrees.d.ts`, `./get-symphony-worktrees.d.ts`, `./init-worktree-pool.d.ts`, `./cleanup-worktree-pool.d.ts`, and 2 more siblings.
+- **index.mjs** - Facade module that re-exports public members from `./create-worktree.mjs`, `./remove-worktree.mjs`, `./list-worktrees.mjs`, `./get-symphony-worktrees.mjs`, `./init-worktree-pool.mjs`, `./cleanup-worktree-pool.mjs`, and 3 more siblings.
+- **init-worktree-pool.d.ts** - Exports `initWorktreePool`, which implements init worktree pool.
+- **init-worktree-pool.mjs** - Exports `initWorktreePool`, which implements init worktree pool.
+- **list-worktrees.d.ts** - Exports `listWorktrees`, which lists worktrees.
+- **list-worktrees.mjs** - Exports `listWorktrees`, which lists worktrees.
+- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
+- **print-worktree-status.d.ts** - Exports `printWorktreeStatus`, which implements print worktree status.
+- **print-worktree-status.mjs** - Exports `printWorktreeStatus`, which implements print worktree status.
+- **remove-worktree.d.ts** - Exports `removeWorktree`, which implements remove worktree.
+- **remove-worktree.mjs** - Exports `removeWorktree`, which implements remove worktree.
+- **repair-worktrees.d.ts** - Exports `repairWorktrees`, which implements repair worktrees.
+- **repair-worktrees.mjs** - Exports `repairWorktrees`, which implements repair worktrees.
+- **reprovision-worktree.mjs** - Exports `reprovisionWorktree`, which implements reprovision worktree.
+- **runtime.mjs** - Executable runtime entry point for this directory.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `runtime.mjs` provides a direct execution
-path. The README content below is aligned to the current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include subprocess execution, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
 ```bash
 node ops/orchestration/symphony-worktree-pool/runtime.mjs
+npx tsx ops/orchestration/symphony-worktree-pool/cleanup-worktree-pool.d.ts
+npx tsx ops/orchestration/symphony-worktree-pool/create-worktree.d.ts
+npx tsx ops/orchestration/symphony-worktree-pool/get-symphony-worktrees.d.ts
+npx tsx ops/orchestration/symphony-worktree-pool/index.d.ts
+npx tsx ops/orchestration/symphony-worktree-pool/init-worktree-pool.d.ts
+npx tsx ops/orchestration/symphony-worktree-pool/list-worktrees.d.ts
+npx tsx ops/orchestration/symphony-worktree-pool/print-worktree-status.d.ts
 ```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:child_process`, `node:fs`, `node:path`
+- **Internal relative modules** - `../../core/worktree-config.mjs`, `../../lib/logger.mjs`, `./create-worktree.mjs`, `./get-symphony-worktrees.mjs`, `./list-worktrees.mjs`, `./logger.mjs`, `./remove-worktree.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

@@ -1,4 +1,3 @@
-
 import { handleShutdown } from "./index.mjs";
 
 process.on("SIGTERM", () => handleShutdown("SIGTERM"));

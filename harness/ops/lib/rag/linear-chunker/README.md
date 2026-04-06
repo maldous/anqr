@@ -2,46 +2,36 @@
 
 ## 1. Directory Overview
 
-This directory contains the Linear issue chunking module for the RAG (Retrieval-Augmented
-Generation) pipeline. It transforms Linear issues into structured text chunks suitable for embedding
-and semantic search. The chunking process extracts key metadata from issues (priority, state, team,
-project, assignee, labels, etc.) and formats them into a consistent, searchable document structure.
-It currently contains 9 files and 0 subdirectories.
+This directory implements **Linear Issue Chunker** within the ANQR harness. Key immediate entries include `index.mjs`, `chunk-linear-issue.mjs`, `chunk-linear-issues.mjs`, `as-comma-list.mjs`. The current inventory is 9 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **as-comma-list.mjs** - Formats an array of values into a comma-separated string. Filters out falsy values and returns "None" for empty arrays.
-- **chunk-linear-issue.mjs** - Core chunking function that transforms a single Linear issue object into a structured chunk. Extracts identifier, title, priority, state, team, project, assignee, creator, labels, timestamps, and URL. Returns a chunk object with `id`, `filePath`, `content`, `startLine`, `endLine`, `type`, and `metadata`.
-- **chunk-linear-issues.mjs** - Batch processor that iterates through an array of issues and chunks each one using `chunkLinearIssue`. Returns an array of chunks.
-- **compact-whitespace.mjs** - Utility function that normalizes whitespace in text. Converts Windows-style line endings to Unix, collapses multiple consecutive newlines to double newlines, and trims leading/trailing whitespace.
-- **count-lines.mjs** - Simple utility that counts the number of lines in a given text string. Returns 1 for null/undefined inputs.
-- **index.mjs** - Facade index that re-exports all public API members: `MAX_DESCRIPTION_CHARS`, `compactWhitespace`, `truncateDescription`, `chunkLinearIssue`, and `chunkLinearIssues`.
-- **logger.mjs** - Shared logger module for this directory using the project's centralized logger from `../../logger.mjs`. Exports `logDebug` function with the namespace "rag-linear-chunker".
-- **max-description-chars.mjs** - Configuration constant for maximum description length. Defaults to 1800 characters, configurable via `LINEAR_RAG_MAX_DESCRIPTION_CHARS` environment variable.
-- **truncate-description.mjs** - Truncates issue descriptions that exceed `MAX_DESCRIPTION_CHARS`. Appends a truncation notice when cutting text to maintain transparency about data loss.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **as-comma-list.mjs** - Exports `asCommaList`, which implements as comma list.
+- **chunk-linear-issue.mjs** - Exports `chunkLinearIssue`, which implements chunk linear issue.
+- **chunk-linear-issues.mjs** - Exports `chunkLinearIssues`, which implements chunk linear issues.
+- **compact-whitespace.mjs** - Exports `compactWhitespace`, which implements compact whitespace.
+- **count-lines.mjs** - Exports `countLines`, which implements count lines.
+- **index.mjs** - Facade module that re-exports public members from `./max-description-chars.mjs`, `./compact-whitespace.mjs`, `./truncate-description.mjs`, `./chunk-linear-issue.mjs`, `./chunk-linear-issues.mjs`.
+- **logger.mjs** - Shared logging helper module exporting `logDebug`.
+- **max-description-chars.mjs** - Exports `MAX_DESCRIPTION_CHARS`, a shared constant used by sibling modules.
+- **truncate-description.mjs** - Exports `truncateDescription`, which implements truncate description.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point. The README content below is aligned to the
-current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory use Linear integration. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
 ```javascript
-import * as moduleApi from "./index.mjs";
+import * as moduleApi from "./ops/lib/rag/linear-chunker/index.mjs";
 ```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `../../logger.mjs`, `./as-comma-list.mjs`, `./chunk-linear-issue.mjs`, `./compact-whitespace.mjs`, `./count-lines.mjs`, `./logger.mjs`, `./max-description-chars.mjs`, `./truncate-description.mjs`
 
 ## 6. Additional Comments
 
-- This directory exposes a public API through `index.mjs`.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

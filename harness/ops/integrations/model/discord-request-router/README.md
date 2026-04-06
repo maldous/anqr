@@ -2,46 +2,38 @@
 
 ## 1. Directory Overview
 
-This directory contains the Discord request routing system for the ANQR (Agentic Number Query
-Runner) harness. It acts as a load-balancing proxy that routes incoming Discord requests to
-appropriate worktree Symphony bridge instances, ensuring isolated execution contexts for each
-concurrent request. It currently contains 22 files and 0 subdirectories.
+This directory implements **ANQR Discord Request Router** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 22 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **evict-expired-sessions.mjs** - Periodically removes sessions older than the TTL (2 hours by default).
-- **generate-thread-name.mjs** - Generates thread names from the last user message, truncating to 80 characters with a wrench emoji prefix (e.g., ``).
-- **get-least-loaded-worktree.mjs** - Load balancing logic that finds the worktree with the minimum active requests. Uses round-robin among candidates with equal load to distribute requests evenly.
-- **get-session-thread-name.mjs** - Retrieves or generates thread names for sessions. Triggers periodic eviction when cache exceeds 50 entries.
-- **global-active-requests.mjs** - Global counter for active requests across all worktrees.
-- **handle-health.mjs** - Health endpoint handler returning status, max concurrent, active requests, available slots, and worktree statuses.
-- **index.mjs** - Re-exports all public API members for external consumption.
-- **is-overloaded.mjs** - Checks if global active requests have reached the maximum concurrent limit.
-- **is-path-within-root.mjs** - Utility to check if a path is within a given root directory using `path.relative`.
-- **logger.mjs** - Shared logger using the project's logger library from `../../../lib/logger.mjs`.
-- **max-concurrent.mjs** - Maximum concurrent requests (default: `4`, configurable via `MAX_CONCURRENT` environment variable).
-- **port.mjs** - Port configuration (default: `18790`, configurable via `DISCORD_ROUTER_PORT` environment variable).
-- **proxy-to-worktree.mjs** - Core proxy logic that forwards requests to worktree Symphony bridge instances. Rebases the working directory to the target worktree path, extracts Discord message IDs for thread functionality, generates thread names from user messages, and enforces isolation by warning when requests would write to the main repo.
-- **rebase-cwd-to-worktree.mjs** - Rewrites the `cwd` field in request bodies to point to the target worktree instead of the main repo. Handles paths within the project root, worktree parent directories, and preserves valid worktree paths.
-- **round-robin-index.mjs** - Round-robin state for load distribution among equally-loaded worktrees.
-- **runtime.mjs** - Entry point that starts the HTTP server and logs startup information. Handles graceful shutdown via SIGTERM and SIGINT.
-- **send-overload-response.mjs** - Returns HTTP 429 with retry guidance when system is overloaded.
-- **server.mjs** - HTTP server that handles incoming requests. Routes POST requests to `/v1/chat/completions` to the least loaded worktree, returns 404 for other endpoints, and provides health/stats at `/health` and `/stats`.
-- **session-thread-names.mjs** - In-memory Map storing session-to-thread-name mappings.
-- **session-ttl-ms.mjs** - Session time-to-live (default: 2 hours).
-- **worktree-ids.mjs** - Worktree IDs to use (default: `5,6,7,8`, configurable via `DISCORD_WORKTREES` environment variable).
-- **worktree-urls.mjs** - Worktree URL mapping with paths, URLs, and active request counters. Each worktree maps to port `4320 + worktreeId`.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **evict-expired-sessions.mjs** - Exports `evictExpiredSessions`, which implements evict expired sessions.
+- **generate-thread-name.mjs** - Exports `generateThreadName`, which implements generate thread name.
+- **get-least-loaded-worktree.mjs** - Exports `getLeastLoadedWorktree`, which gets least loaded worktree.
+- **get-session-thread-name.mjs** - Exports `getSessionThreadName`, which gets session thread name.
+- **global-active-requests.mjs** - Exports `globalActiveRequests`, `setGlobalActiveRequests`, providing the reusable API for this directory concern.
+- **handle-health.mjs** - Exports `handleHealth`, which implements handle health.
+- **index.mjs** - Facade module that re-exports public members from `./port.mjs`, `./worktree-ids.mjs`, `./max-concurrent.mjs`, `./worktree-urls.mjs`, `./global-active-requests.mjs`, `./session-thread-names.mjs`, and 13 more siblings.
+- **is-overloaded.mjs** - Exports `isOverloaded`, which checks whether overloaded.
+- **is-path-within-root.mjs** - Exports `isPathWithinRoot`, which checks whether path within root.
+- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
+- **max-concurrent.mjs** - Exports `MAX_CONCURRENT`, a shared constant used by sibling modules.
+- **port.mjs** - Exports `PORT`, a shared constant used by sibling modules.
+- **proxy-to-worktree.mjs** - Exports `proxyToWorktree`, which implements proxy to worktree.
+- **rebase-cwd-to-worktree.mjs** - Exports `rebaseCwdToWorktree`, which implements rebase cwd to worktree.
+- **round-robin-index.mjs** - Exports `roundRobinIndex`, `setRoundRobinIndex`, providing the reusable API for this directory concern.
+- **runtime.mjs** - Executable runtime entry point for this directory.
+- **send-overload-response.mjs** - Exports `sendOverloadResponse`, which implements send overload response.
+- **server.mjs** - Exports `server`, which implements server.
+- **session-thread-names.mjs** - Exports `sessionThreadNames`, which implements session thread names.
+- **session-ttl-ms.mjs** - Exports `SESSION_TTL_MS`, a shared constant used by sibling modules.
+- **worktree-ids.mjs** - Exports `WORKTREE_IDS`, a shared constant used by sibling modules.
+- **worktree-urls.mjs** - Exports `WORKTREE_URLS`, a shared constant used by sibling modules.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `runtime.mjs` provides a direct execution
-path. The README content below is aligned to the current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, timer, scheduling, cooldown, or watchdog behavior, Discord integration, OpenClaw integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
@@ -51,9 +43,9 @@ node ops/integrations/model/discord-request-router/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:http`, `node:path`
+- **Internal relative modules** - `../../../core/worktree-config.mjs`, `../../../lib/logger.mjs`, `./evict-expired-sessions.mjs`, `./generate-thread-name.mjs`, `./get-least-loaded-worktree.mjs`, `./get-session-thread-name.mjs`, `./global-active-requests.mjs`, `./handle-health.mjs`, `./index.mjs`, `./is-overloaded.mjs`, `./is-path-within-root.mjs`, `./logger.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

@@ -2,99 +2,90 @@
 
 ## 1. Directory Overview
 
-This directory contains the core state management system for the ANQR (Agentic Number Query Runner)
-Symphony orchestration. It provides persistent state tracking for issues, leases, worktrees, and the
-integration queue. The module uses a centralized JSON state file with file-based locking to ensure
-safe concurrent access from multiple worktree runners. It currently contains 62 files and 0
-subdirectories.
+This directory implements **ANQR Symphony State** within the ANQR harness. Key immediate entries include `index.mjs`, `get-next-repairable-issue-for-worktree.mjs`, `list-repairable-issues-for-worktree.mjs`, `mark-issue-human-only.mjs`. The current inventory is 62 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **acquire-integration-lock.mjs** - Acquires lock for integration processing (TTL-based).
-- **acquire-lease.mjs** - Acquires an exclusive lease on an issue. Returns failure if lease already active.
-- **acquire-state-lock.mjs** - File-based exclusive lock using O_EXCL. Automatically handles stale locks (dead processes or locks older than LOCK_STALE_MS).
-- **add-external-key.mjs** - Adds external keys to an issue for tracking correlations (e.g., Linear issue ID).
-- **calculate-exponential-backoff.mjs** - Computes backoff with exponential growth (base \* 2^retryCount) capped at maxMs, plus ±20% jitter.
-- **can-execute-issue.mjs** - Checks if an issue can be executed (not human-only, not retry-exhausted, no cooldown, no active lease).
-- **can-feed-issue.mjs** - Extends canExecuteIssue to exclude email-sourced issues.
-- **check-latency-baseline.mjs** - Compares current average against baseline. Alerts if >50% increase.
-- **clear-cooldown.mjs** - Removes cooldown, allowing issue to be retried.
-- **clear-quarantine.mjs** - Resets worktree to available state.
-- **default-lease-ms.mjs** - Default lease TTL (20 minutes). Configurable via ANQR_SYMPHONY_LEASE_MS.
-- **dequeue-integration-candidate.mjs** - Removes issue from integration queue.
-- **empty-store.mjs** - Returns the initial empty state structure with version, hostId, issues, worktreeStates, and global objects.
-- **enqueue-integration-candidate.mjs** - Adds issue to integration queue (if not already present).
-- **ensure-dir.mjs** - Creates state directory if it doesn't exist.
-- **find-expired-leases.mjs** - Returns all issues with expired leases (for recovery processing).
-- **get-finalization-state.mjs** - Retrieves finalization state for an issue.
-- **get-fleet-snapshot.mjs** - Returns fleet-wide summary: available, executing, dirty, quarantined, blocked counts.
-- **get-global-value.mjs** - Gets a global value with optional fallback.
-- **get-issue-state.mjs** - Retrieves normalized state for a specific issue by identifier.
-- **get-latency-metrics.mjs** - Calculates aggregate latency stats: count, average, median, p95, min, max.
-- **get-lock-file.mjs** - Returns the lock file path (state.json.lock).
-- **get-next-repairable-issue-for-worktree.mjs** - Finds next repairable issue for a worktree.
-- **get-state-dir.mjs** - Returns state directory path. Uses ANQR_SYMPHONY_STATE_DIR env var or XDG_RUNTIME_DIR/anqr-symphony-state.
-- **get-state-file.mjs** - Returns path to state.json.
-- **get-worktree-state.mjs** - Retrieves state for a specific worktree.
-- **heartbeat-lease.mjs** - Extends lease TTL by updating heartbeat_at and expires_at. Requires matching nonce.
-- **history-limit.mjs** - Maximum transitions to keep (50). Configurable via ANQR_SYMPHONY_HISTORY_LIMIT.
-- **host-id.mjs** - Current host identifier (hostname or ANQR_SYMPHONY_HOST_ID).
-- **index.mjs** - Generated facade that re-exports all public functions and constants.
-- **is-lock-process-alive.mjs** - Checks if a process ID is still alive using signal 0.
-- **lease-is-active.mjs** - Checks if a lease is still valid based on expires_at timestamp.
-- **list-integration-candidates.mjs** - Returns all integration candidates.
-- **list-repairable-issues-for-worktree.mjs** - Lists all repairable issues for a worktree.
-- **list-worktrees-by-state.mjs** - Lists all worktrees in a specific state.
-- **load-state.mjs** - Loads the state.json file from disk, normalizing records and handling schema migrations. Returns an empty store if the file doesn't exist.
-- **lock-max-retries.mjs** - Maximum lock acquire retries (100).
-- **lock-retry-interval-ms.mjs** - Lock retry interval (50ms).
-- **lock-stale-ms.mjs** - Stale lock threshold (60 seconds).
-- **mark-issue-human-only.mjs** - Marks an issue as human-only (excluded from automatic execution).
-- **mark-retry-exhausted.mjs** - Marks issue as permanently blocked after max retries. Clears lease and cooldown.
-- **mutate-state.mjs** - Generic state mutation with automatic locking and persistence.
-- **normalize-record.mjs** - Ensures consistent field types and defaults for issue records, including retry state, cooldown, lease, transitions, and finalization objects.
-- **note-attempt-start.mjs** - Records retry count increment and attempt start time.
-- **now-iso.mjs** - Returns current ISO timestamp.
-- **patch-issue-state.mjs** - Merges patch into issue state with locking.
-- **prune-history.mjs** - Truncates history array to HISTORY_LIMIT.
-- **record-completion.mjs** - Records completed_at timestamp and latency_ms for an issue.
-- **record-quarantine.mjs** - Moves worktree to quarantined state with reason and error details.
-- **record-retry-event.mjs** - Records retry events in notes.retry_events (last 20 events).
-- **record-transition.mjs** - Records state transitions (host, timestamp, fromState, toState).
-- **release-integration-lock.mjs** - Releases integration lock.
-- **release-lease.mjs** - Releases a lease, optionally verifying nonce to prevent accidental release of new leases.
-- **release-state-lock.mjs** - Releases the lock only if the current process owns it.
-- **repairable-finalization-states.mjs** - Set of finalization states that can be automatically repaired.
-- **reset-retry-state.mjs** - Clears retry state (retry_count, blocked_reason, cooldown, lease, failure info).
-- **save-state.mjs** - Atomic state persistence using temp file + rename to prevent corruption from crashes or concurrent access.
-- **set-cooldown.mjs** - Sets cooldown_until timestamp and last_failure_reason. Optional signature for failure fingerprinting.
-- **set-finalization-state.mjs** - Manages issue finalization state (validation, commit, branch push, integration).
-- **set-global-value.mjs** - Sets a global key-value pair in state.
-- **set-worktree-state.mjs** - Updates worktree state with patch (state, issueIdentifier, reason, etc.).
-- **with-state-lock.mjs** - Wrapper that acquires lock, executes callback, and releases lock. Throws on failure after max retries.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **acquire-integration-lock.mjs** - Exports `acquireIntegrationLock`, which acquires integration lock.
+- **acquire-lease.mjs** - Exports `acquireLease`, which acquires lease.
+- **acquire-state-lock.mjs** - Exports `acquireStateLock`, which acquires state lock.
+- **add-external-key.mjs** - Exports `addExternalKey`, which implements add external key.
+- **calculate-exponential-backoff.mjs** - Exports `calculateExponentialBackoff`, which calculates exponential backoff.
+- **can-execute-issue.mjs** - Exports `canExecuteIssue`, which determines whether execute issue.
+- **can-feed-issue.mjs** - Exports `canFeedIssue`, which determines whether feed issue.
+- **check-latency-baseline.mjs** - Exports `checkLatencyBaseline`, which checks latency baseline.
+- **clear-cooldown.mjs** - Exports `clearCooldown`, which clears cooldown.
+- **clear-quarantine.mjs** - Exports `clearQuarantine`, which clears quarantine.
+- **default-lease-ms.mjs** - Exports `DEFAULT_LEASE_MS`, a shared constant used by sibling modules.
+- **dequeue-integration-candidate.mjs** - Exports `dequeueIntegrationCandidate`, which dequeues integration candidate.
+- **empty-store.mjs** - Exports `emptyStore`, which implements empty store.
+- **enqueue-integration-candidate.mjs** - Exports `enqueueIntegrationCandidate`, which enqueues integration candidate.
+- **ensure-dir.mjs** - Exports `ensureDir`, which ensures dir.
+- **find-expired-leases.mjs** - Exports `findExpiredLeases`, which finds expired leases.
+- **get-finalization-state.mjs** - Exports `getFinalizationState`, which gets finalization state.
+- **get-fleet-snapshot.mjs** - Exports `getFleetSnapshot`, which gets fleet snapshot.
+- **get-global-value.mjs** - Exports `getGlobalValue`, which gets global value.
+- **get-issue-state.mjs** - Exports `getIssueState`, which gets issue state.
+- **get-latency-metrics.mjs** - Exports `getLatencyMetrics`, which gets latency metrics.
+- **get-lock-file.mjs** - Exports `getLockFile`, which gets lock file.
+- **get-next-repairable-issue-for-worktree.mjs** - Exports `getNextRepairableIssueForWorktree`, which gets next repairable issue for worktree.
+- **get-state-dir.mjs** - Exports `getStateDir`, which gets state dir.
+- **get-state-file.mjs** - Exports `getStateFile`, which gets state file.
+- **get-worktree-state.mjs** - Exports `getWorktreeState`, which gets worktree state.
+- **heartbeat-lease.mjs** - Exports `heartbeatLease`, which implements heartbeat lease.
+- **history-limit.mjs** - Exports `HISTORY_LIMIT`, a shared constant used by sibling modules.
+- **host-id.mjs** - Exports `HOST_ID`, a shared constant used by sibling modules.
+- **index.mjs** - Facade module that re-exports public members from `./get-state-dir.mjs`, `./get-state-file.mjs`, `./get-lock-file.mjs`, `./default-lease-ms.mjs`, `./history-limit.mjs`, `./host-id.mjs`, and 55 more siblings.
+- **is-lock-process-alive.mjs** - Exports `isLockProcessAlive`, which checks whether lock process alive.
+- **lease-is-active.mjs** - Exports `leaseIsActive`, which implements lease is active.
+- **list-integration-candidates.mjs** - Exports `listIntegrationCandidates`, which lists integration candidates.
+- **list-repairable-issues-for-worktree.mjs** - Exports `listRepairableIssuesForWorktree`, which lists repairable issues for worktree.
+- **list-worktrees-by-state.mjs** - Exports `listWorktreesByState`, which lists worktrees by state.
+- **load-state.mjs** - Exports `loadState`, which loads state.
+- **lock-max-retries.mjs** - Exports `LOCK_MAX_RETRIES`, a shared constant used by sibling modules.
+- **lock-retry-interval-ms.mjs** - Exports `LOCK_RETRY_INTERVAL_MS`, a shared constant used by sibling modules.
+- **lock-stale-ms.mjs** - Exports `LOCK_STALE_MS`, a shared constant used by sibling modules.
+- **mark-issue-human-only.mjs** - Exports `markIssueHumanOnly`, which marks issue human only.
+- **mark-retry-exhausted.mjs** - Exports `markRetryExhausted`, which marks retry exhausted.
+- **mutate-state.mjs** - Exports `mutateState`, which implements mutate state.
+- **normalize-record.mjs** - Exports `normalizeRecord`, which normalizes record.
+- **note-attempt-start.mjs** - Exports `noteAttemptStart`, which implements note attempt start.
+- **now-iso.mjs** - Exports `nowIso`, which implements now iso.
+- **patch-issue-state.mjs** - Exports `patchIssueState`, which implements patch issue state.
+- **prune-history.mjs** - Exports `pruneHistory`, which implements prune history.
+- **record-completion.mjs** - Exports `recordCompletion`, which implements record completion.
+- **record-quarantine.mjs** - Exports `recordQuarantine`, which implements record quarantine.
+- **record-retry-event.mjs** - Exports `recordRetryEvent`, which implements record retry event.
+- **record-transition.mjs** - Exports `recordTransition`, which implements record transition.
+- **release-integration-lock.mjs** - Exports `releaseIntegrationLock`, which releases integration lock.
+- **release-lease.mjs** - Exports `releaseLease`, which releases lease.
+- **release-state-lock.mjs** - Exports `releaseStateLock`, which releases state lock.
+- **repairable-finalization-states.mjs** - Exports `REPAIRABLE_FINALIZATION_STATES`, a shared `Set` constant used by this module group.
+- **reset-retry-state.mjs** - Exports `resetRetryState`, which implements reset retry state.
+- **save-state.mjs** - Exports `saveState`, which implements save state.
+- **set-cooldown.mjs** - Exports `setCooldown`, which implements set cooldown.
+- **set-finalization-state.mjs** - Exports `setFinalizationState`, which implements set finalization state.
+- **set-global-value.mjs** - Exports `setGlobalValue`, which implements set global value.
+- **set-worktree-state.mjs** - Exports `setWorktreeState`, which implements set worktree state.
+- **with-state-lock.mjs** - Exports `withStateLock`, which implements with state lock.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point. The README content below is aligned to the
-current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, timer, scheduling, cooldown, or watchdog behavior, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
 ```javascript
-import * as moduleApi from "./index.mjs";
+import * as moduleApi from "./ops/core/symphony-state/index.mjs";
 ```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:fs`, `node:os`, `node:path`
+- **Internal relative modules** - `./acquire-state-lock.mjs`, `./can-execute-issue.mjs`, `./default-lease-ms.mjs`, `./empty-store.mjs`, `./ensure-dir.mjs`, `./get-global-value.mjs`, `./get-issue-state.mjs`, `./get-lock-file.mjs`, `./get-state-dir.mjs`, `./get-state-file.mjs`, `./history-limit.mjs`, `./host-id.mjs`
 
 ## 6. Additional Comments
 
-- This directory exposes a public API through `index.mjs`.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

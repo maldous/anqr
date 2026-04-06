@@ -2,34 +2,30 @@
 
 ## 1. Directory Overview
 
-This directory contains the Discord runtime integration for the ANQR (Agentic Number Query Runner)
-harness. It manages the OpenClaw Discord gateway process using a singleton pattern that ensures only
-one gateway process runs across multiple worktree runners through file-based locking with a
-follower/owner pattern. It currently contains 1 file and 1 subdirectory.
+This directory implements **ANQR Discord Runtime** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 1 non-README files and 1 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **openclaw-gateway-singleton.mjs** - Auto-generated facade that re-exports from `./openclaw-gateway-singleton/index.mjs` and `./openclaw-gateway-singleton/runtime.mjs`. This decomposition pattern maintains backwards compatibility by providing a single entry point that delegates to the sibling modules. Provides the entry point for the OpenClaw gateway singleton wrapper.
+- **openclaw-gateway-singleton.mjs** - Facade module that re-exports public members from `./openclaw-gateway-singleton/index.mjs`, `./openclaw-gateway-singleton/runtime.mjs`.
 
-### Child Directories
+### Subdirectories
 
-- **openclaw-gateway-singleton/** - This directory implements a singleton pattern for managing the OpenClaw Discord gateway process across multiple worktree runners.
+- **openclaw-gateway-singleton/** - Contains **OpenClaw Gateway Singleton**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation. Verified immediate files in this directory include Discord integration, and OpenClaw integration.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `./openclaw-gateway-singleton/index.mjs`, `./openclaw-gateway-singleton/runtime.mjs`
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

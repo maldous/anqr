@@ -1,4 +1,3 @@
-
 import { fileURLToPath } from "node:url";
 
 import { main } from "./index.mjs";

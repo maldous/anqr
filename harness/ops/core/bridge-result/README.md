@@ -2,41 +2,33 @@
 
 ## 1. Directory Overview
 
-This directory contains utility functions for normalizing and validating Symphony bridge results.
-These utilities ensure consistent structure and handle edge cases like missing values, wrong types,
-and malformed data from bridge responses. It currently contains 6 files and 0 subdirectories.
+This directory implements **Bridge Result Normalization** within the ANQR harness. Key immediate entries include `index.mjs`, `infer-symphony-result-from-completion.mjs`, `normalize-symphony-result.mjs`, `normalize-string-array.mjs`. The current inventory is 6 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **index.mjs** - Generated facade that re-exports all normalization functions for convenient imports.
-- **infer-symphony-result-from-completion.mjs** - Infers a Symphony result from a completion response by examining:
-- **normalize-count.mjs** - Normalizes numeric count values - ensures the value is a finite number >= 0, otherwise returns the fallback value.
-- **normalize-failure-class.mjs** - Simple normalization for failure class strings - validates and trims to ensure non-empty string or returns null.
-- **normalize-string-array.mjs** - Utility that normalizes arrays of strings by:
-- **normalize-symphony-result.mjs** - The main normalization function for Symphony result objects. It validates and normalizes the following properties:
-
-### Child Directories
-
-This directory does not contain child directories.
+- **index.mjs** - Facade module that re-exports public members from `./normalize-string-array.mjs`, `./normalize-count.mjs`, `./normalize-failure-class.mjs`, `./normalize-symphony-result.mjs`, `./infer-symphony-result-from-completion.mjs`.
+- **infer-symphony-result-from-completion.mjs** - Exports `inferSymphonyResultFromCompletion`, which implements infer symphony result from completion.
+- **normalize-count.mjs** - Exports `normalizeCount`, which normalizes count.
+- **normalize-failure-class.mjs** - Exports `normalizeFailureClass`, which normalizes failure class.
+- **normalize-string-array.mjs** - Exports `normalizeStringArray`, which normalizes string array.
+- **normalize-symphony-result.mjs** - Exports `normalizeSymphonyResult`, which normalizes symphony result.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point. The README content below is aligned to the
-current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory use Symphony integration.
 
 ## 4. Usage Instructions
 
 ```javascript
-import * as moduleApi from "./index.mjs";
+import * as moduleApi from "./ops/core/bridge-result/index.mjs";
 ```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `./normalize-count.mjs`, `./normalize-failure-class.mjs`, `./normalize-string-array.mjs`, `./normalize-symphony-result.mjs`
 
 ## 6. Additional Comments
 
-- This directory exposes a public API through `index.mjs`.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

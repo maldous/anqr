@@ -2,37 +2,33 @@
 
 ## 1. Directory Overview
 
-This directory contains the Symphony runtime, agent system prompt, and runtime-only execution
-surfaces for the ANQR (Agentic Number Query Runner) harness. It provides the core execution
-environment for the agentic workflow system, including the main agent entry point and watchdog
-monitoring capabilities. It currently contains 3 files and 2 subdirectories.
+This directory implements **ANQR Symphony Runtime** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 3 non-README files and 2 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **WORKFLOW.md** - Archived workflow note file. This file is preserved only as historical context for the pre-foundation Symphony workflow notes and must not be treated as live doctrine. Current authoritative sources include: - `AGENTS.md` - `README.md` - `docs/README.md` - `docs/program/01-anqr-1.0-definition.md` - `docs/harness/00-index.md` - `harness/ops/symphony/WORKFLOW.md`
-- **symphony-agent.mjs** - Auto-generated facade file that re-exports from `./symphony-agent/index.mjs`. This is the main entry point for the Symphony agent execution. The original file has been decomposed into sibling modules under the matching directory for better organization and maintainability.
-- **watchdog-monitor.mjs** - Auto-generated facade file that re-exports from `./watchdog-monitor/index.mjs` and `./watchdog-monitor/runtime.mjs`. Provides watchdog monitoring capabilities for the Symphony runtime to detect and handle stale or unresponsive agent executions.
+- **WORKFLOW.md** - Markdown document titled **Archived Workflow Note**.
+- **symphony-agent.mjs** - Facade module that re-exports public members from `./symphony-agent/index.mjs`.
+- **watchdog-monitor.mjs** - Facade module that re-exports public members from `./watchdog-monitor/index.mjs`, `./watchdog-monitor/runtime.mjs`.
 
-### Child Directories
+### Subdirectories
 
-- **symphony-agent/** - This directory contains the core Symphony agent implementation for the ANQR (Agentic Number Query Runner) harness.
-- **watchdog-monitor/** - This directory contains the watchdog monitoring system for the ANQR (Agentic Number Query Runner) harness.
+- **symphony-agent/** - Contains **ANQR Symphony Agent**; it contains 31 immediate files and has 0 child directories.
+- **watchdog-monitor/** - Contains **ANQR Watchdog Monitor**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation. Verified immediate files in this directory include timer, scheduling, cooldown, or watchdog behavior, and Symphony integration.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `./symphony-agent/index.mjs`, `./watchdog-monitor/index.mjs`, `./watchdog-monitor/runtime.mjs`
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

@@ -2,36 +2,32 @@
 
 ## 1. Directory Overview
 
-This directory contains search functionality for the ANQR (Agentic Number Query Runner) harness. It
-provides two search implementations: **linear-search** for straightforward linear search operations
-and **hybrid-search** which combines BM25 keyword search with embedding-based semantic search using
-Reciprocal Rank Fusion (RRF). It currently contains 2 files and 2 subdirectories.
+This directory implements **ANQR Search Library** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 2 non-README files and 2 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **hybrid-search.mjs** - Auto-generated facade that re-exports from `./hybrid-search/index.mjs` and exports all from `./hybrid-search/runtime.mjs`. Implements hybrid search combining BM25 keyword search with embedding-based semantic search.
-- **linear-search.mjs** - Auto-generated facade that re-exports from `./linear-search/index.mjs`. Provides linear search capabilities for file content. The original file has been decomposed into sibling modules under the matching directory.
+- **hybrid-search.mjs** - Facade module that re-exports public members from `./hybrid-search/index.mjs`, `./hybrid-search/runtime.mjs`.
+- **linear-search.mjs** - Facade module that re-exports public members from `./linear-search/index.mjs`.
 
-### Child Directories
+### Subdirectories
 
-- **hybrid-search/** - This directory contains the hybrid search implementation for the ANQR (Agentic Number Query Runner) harness.
-- **linear-search/** - This directory contains the linear search module for the ANQR (Agentic Number Query Runner) harness.
+- **hybrid-search/** - Contains **ANQR Hybrid Search**; it contains 27 immediate files and has 0 child directories.
+- **linear-search/** - Contains **ANQR Linear Search**; it contains 17 immediate files and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation. Verified immediate files in this directory use Linear integration.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `./hybrid-search/index.mjs`, `./hybrid-search/runtime.mjs`, `./linear-search/index.mjs`
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

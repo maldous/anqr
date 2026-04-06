@@ -1,4 +1,3 @@
-
 import {
   cleanupWorktreePool,
   initWorktreePool,

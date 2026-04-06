@@ -1,4 +1,3 @@
-
 try {
   ({ generateEmbedding, cosineSimilarity, isOllamaAvailable } =
     await import("../../rag/embeddings.mjs"));

@@ -1,4 +1,3 @@
-
 import { handleSignal, logError, main } from "./index.mjs";
 
 process.on("SIGTERM", handleSignal("SIGTERM"));

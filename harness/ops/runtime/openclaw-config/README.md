@@ -2,45 +2,40 @@
 
 ## 1. Directory Overview
 
-This directory contains the local copy of the OpenClaw gateway configuration for the ANQR (Agentic
-Number Query Runner) harness. OpenClaw is an agentic runtime that provides Discord voice
-integration, tool execution, and multi-model AI connectivity. The configuration has been sanitized
-with secrets replaced by placeholder values for version control safety. It currently contains 6
-files and 6 subdirectories.
+This directory holds configuration data for **ANQR OpenClaw Configuration** within the ANQR harness. Key immediate entries include `openclaw.json`, `exec-approvals.json`, `models.json`, `clawdbot.json`. The current inventory is 6 non-README files and 6 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **.env.example** - Environment variable template:
-- **clawdbot.json** - Bot runtime settings:
-- **config.json** - TTS and gateway HTTP configuration:
-- **exec-approvals.json** - Exec approval socket configuration:
-- **models.json** - Provider and model definitions:
-- **openclaw.json** - Main OpenClaw configuration file containing:
+- **.env.example** - Example configuration file used as a template for local setup.
+- **clawdbot.json** - JSON configuration or data file with top-level keys `meta`, `agents`, `commands`, `messages`, `talk`, `gateway`, `wizard`.
+- **config.json** - JSON configuration or data file with top-level keys `$schema`, `tts`, `gateway`.
+- **exec-approvals.json** - JSON configuration or data file with top-level keys `version`, `socket`, `defaults`, `agents`.
+- **models.json** - JSON configuration or data file with top-level keys `providers`, `agents`.
+- **openclaw.json** - JSON configuration or data file with top-level keys `meta`, `env`, `wizard`, `auth`, `models`, `agents`, `tools`, `messages`.
 
-### Child Directories
+### Subdirectories
 
-- **agents/** - This directory contains agent configuration files for the OpenClaw runtime system.
-- **credentials/** - This directory contains credential configuration files for the Openclaw Discord integration within the ANQR (Agentic Number Query Runner) runtime.
-- **identity/** - This directory contains identity and device authentication configuration files for the ANQR (Agentic Number Query Runner) Openclaw runtime.
-- **settings/** - This directory contains runtime configuration settings for the Openclaw voice agent system.
-- **workspace/** - This directory contains the agent workspace configuration for the OpenCLAW runtime system.
-- **workspace-voice/** - This directory contains the OpenClaw voice agent's workspace configuration files.
+- **agents/** - Contains **OpenClaw Agent Configuration**; it acts mainly as a namespace over child directories and has 2 child directories.
+- **credentials/** - Contains **ANQR Openclaw Config - Credentials**; it holds configuration data and has 0 child directories.
+- **identity/** - Contains **ANQR Openclaw Config - Identity**; it holds configuration data and has 0 child directories.
+- **settings/** - Contains **ANQR Openclaw Config - Settings**; it holds configuration data and has 0 child directories.
+- **workspace/** - Contains **ANQR Workspace**; it contains 7 immediate files and has 0 child directories.
+- **workspace-voice/** - Contains **ANQR Voice Workspace**; it contains 7 immediate files and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+This directory primarily contributes configuration artifacts consumed by adjacent runtime code rather than executable logic of its own. Filenames and top-level keys show that the configuration targets OpenClaw, and model selection behavior.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory is consumed indirectly by adjacent runtime modules. No standalone executable entry point is defined here.
 
 ## 5. Dependencies
 
-- **No dedicated runtime dependency** - This directory mainly stores generated assets or supporting files.
+- Immediate files are configuration artifacts rather than import-bearing source modules.
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- Behavioral meaning for configuration-only files was inferred from keys and structure rather than from executable code in this directory.

@@ -2,47 +2,39 @@
 
 ## 1. Directory Overview
 
-This directory contains shared worktree configuration constants and utilities for the ANQR (Agentic
-Number Query Runner) harness. It provides centralized worktree path and branch resolution, worktree
-ID management for Symphony and Discord runners, and helper functions to identify worktree types. It
-currently contains 11 files and 0 subdirectories.
+This directory implements **Worktree Configuration** within the ANQR harness. Key immediate entries include `index.mjs`, `get-worktree-path.mjs`, `get-worktree-branch.mjs`, `is-symphony-worktree.mjs`. The current inventory is 11 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **dirname.mjs** - Exports `__dirname` using `node:path` and `node:url` utilities for ESM compatibility. Required for proper path resolution in ESM modules.
-- **discord-worktree-ids.mjs** - Exports `DISCORD_WORKTREE_IDS = ["5", "6", "7", "8"]`. Defines the list of worktree IDs assigned to Discord integration.
-- **get-worktree-branch.mjs** - Exports `getWorktreeBranch(id)` function that returns the git branch name for a worktree given its ID. Throws an error if ID is not provided.
-- **get-worktree-path.mjs** - Exports `getWorktreePath(id)` function that resolves the full filesystem path for a worktree given its ID. Throws an error if ID is not provided.
-- **index.mjs** - Generated facade index that re-exports all symbols from the other modules for convenient single-point importing. Includes all constants and utility functions.
-- **is-discord-worktree.mjs** - Exports `isDiscordWorktree(worktreeId)` function that checks if a given worktree ID belongs to the Discord worktree pool. Normalizes IDs by stripping optional "wt" prefix.
-- **is-symphony-worktree.mjs** - Exports `isSymphonyWorktree(worktreeId)` function that checks if a given worktree ID belongs to the Symphony worktree pool. Normalizes IDs by stripping optional "wt" prefix.
-- **project-root.mjs** - Exports `PROJECT_ROOT` resolved to 4 levels up from the current module's directory. Used as the base path for calculating worktree paths.
-- **symphony-worktree-ids.mjs** - Exports `SYMPHONY_WORKTREE_IDS = ["main", "1", "2", "3", "4"]`. Defines the list of worktree IDs assigned to Symphony execution (including main branch).
-- **worktree-branch-prefix.mjs** - Exports `WORKTREE_BRANCH_PREFIX = "symphony/wt"`. Defines the prefix used for git branch names in worktrees.
-- **worktree-prefix.mjs** - Exports `WORKTREE_PREFIX = "anqr-wt"`. Defines the prefix used for worktree directory names.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **dirname.mjs** - Exports `__dirname`, which implements dirname.
+- **discord-worktree-ids.mjs** - Exports `DISCORD_WORKTREE_IDS`, a shared constant used by sibling modules.
+- **get-worktree-branch.mjs** - Exports `getWorktreeBranch`, which gets worktree branch.
+- **get-worktree-path.mjs** - Exports `getWorktreePath`, which gets worktree path.
+- **index.mjs** - Facade module that re-exports public members from `./dirname.mjs`, `./project-root.mjs`, `./worktree-prefix.mjs`, `./worktree-branch-prefix.mjs`, `./get-worktree-path.mjs`, `./get-worktree-branch.mjs`, and 4 more siblings.
+- **is-discord-worktree.mjs** - Exports `isDiscordWorktree`, which checks whether discord worktree.
+- **is-symphony-worktree.mjs** - Exports `isSymphonyWorktree`, which checks whether symphony worktree.
+- **project-root.mjs** - Exports `PROJECT_ROOT`, a shared constant used by sibling modules.
+- **symphony-worktree-ids.mjs** - Exports `SYMPHONY_WORKTREE_IDS`, a shared constant used by sibling modules.
+- **worktree-branch-prefix.mjs** - Exports `WORKTREE_BRANCH_PREFIX`, a shared constant used by sibling modules.
+- **worktree-prefix.mjs** - Exports `WORKTREE_PREFIX`, a shared constant used by sibling modules.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point. The README content below is aligned to the
-current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include Discord integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
 ```javascript
-import * as moduleApi from "./index.mjs";
+import * as moduleApi from "./ops/core/worktree-config/index.mjs";
 ```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:path`, `node:url`
+- **Internal relative modules** - `./dirname.mjs`, `./discord-worktree-ids.mjs`, `./project-root.mjs`, `./symphony-worktree-ids.mjs`, `./worktree-branch-prefix.mjs`, `./worktree-prefix.mjs`
 
 ## 6. Additional Comments
 
-- This directory exposes a public API through `index.mjs`.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

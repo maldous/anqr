@@ -2,35 +2,26 @@
 
 ## 1. Directory Overview
 
-This directory contains the latency reporting module for the ANQR (Agentic Number Query Runner)
-harness. It provides task latency metrics collection, classification, and reporting capabilities
-with optional Discord alerts for performance degradation or baseline exceedance. It currently
-contains 10 files and 0 subdirectories.
+This directory implements **ANQR Latency Report** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 10 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **acceptable-ms.mjs** - Defines the acceptable latency threshold (30 minutes = 1,800,000ms). Tasks completing within this time but exceeding target are classified as "acceptable".
-- **classify-latency.mjs** - Classifies latency performance based on the provided thresholds: "excellent" if <= TARGET_MS, "acceptable" if <= ACCEPTABLE_MS, "degraded" otherwise.
-- **format-duration.mjs** - Formats milliseconds into a human-readable string in the format "Xm Ys" (e.g., "5m 30s"). Returns "N/A" for null/undefined values.
-- **generate-report.mjs** - Main report generation logic. Fetches latency metrics from symphony-state, calculates baseline deviation, classifies performance, and outputs a JSON report. Optionally sends Discord alerts when baseline exceeds 50% or classification is "degraded".
-- **get-latency-color.mjs** - Returns color codes for Discord embeds based on latency classification: green (0x00ff00) for "excellent", orange (0xffa500) for "acceptable", red (0xff0000) for "degraded", and gray (0x808080) for unknown.
-- **index.mjs** - Generated facade index that exports all public API members including TARGET_MS, ACCEPTABLE_MS, formatDuration, classifyLatency, getLatencyColor, generateReport, and main.
-- **logger.mjs** - Shared logger module that imports and re-exports the logger from the lib directory.
-- **main.mjs** - CLI entry point. Parses command-line arguments for the `--alert` flag and calls generateReport. Exits with code 1 if an alert was triggered, 0 otherwise.
-- **runtime.mjs** - Generated runtime carry-forward that imports and executes the main function.
-- **target-ms.mjs** - Defines the target latency threshold (10 minutes = 600,000ms). Tasks completing within this time are classified as "excellent".
-
-### Child Directories
-
-This directory does not contain child directories.
+- **acceptable-ms.mjs** - Exports `ACCEPTABLE_MS`, a shared constant used by sibling modules.
+- **classify-latency.mjs** - Exports `classifyLatency`, which implements classify latency.
+- **format-duration.mjs** - Exports `formatDuration`, which formats duration.
+- **generate-report.mjs** - Exports `generateReport`, which implements generate report.
+- **get-latency-color.mjs** - Exports `getLatencyColor`, which gets latency color.
+- **index.mjs** - Facade module that re-exports public members from `./target-ms.mjs`, `./acceptable-ms.mjs`, `./format-duration.mjs`, `./classify-latency.mjs`, `./get-latency-color.mjs`, `./generate-report.mjs`, and 1 more siblings.
+- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`, `logWarn`.
+- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
+- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
+- **target-ms.mjs** - Exports `TARGET_MS`, a shared constant used by sibling modules.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
-path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
-current immediate directory contents.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include Discord integration, OpenClaw integration, and Symphony integration.
 
 ## 4. Usage Instructions
 
@@ -40,9 +31,8 @@ node ops/orchestration/latency-report/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `../../core/symphony-state.mjs`, `../../integrations/notifications/openclaw-discord.mjs`, `../../lib/logger.mjs`, `./acceptable-ms.mjs`, `./classify-latency.mjs`, `./format-duration.mjs`, `./generate-report.mjs`, `./get-latency-color.mjs`, `./index.mjs`, `./logger.mjs`, `./target-ms.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

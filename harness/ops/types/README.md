@@ -2,34 +2,28 @@
 
 ## 1. Directory Overview
 
-This directory contains TypeScript type declarations and shims for the ANQR (Agentic Number Query
-Runner) harness. It provides type definitions that enable TypeScript to properly understand and
-type-check `.mjs` (ECMAScript Module) files within the project. It currently contains 1 file and 0
-subdirectories.
+This directory implements **ANQR Types** within the ANQR harness. Key immediate entries include `mjs-shim.d.ts`. The current inventory is 1 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **mjs-shim.d.ts** - TypeScript declaration file that provides module shimming for `.mjs` files. It declares a module for all `*.mjs` files and exports a generic `Record<string, any>` type, allowing TypeScript to import and use ES modules without strict type checking on the module contents.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **mjs-shim.d.ts** - Module that implements mjs shim.d.
 
 ## 3. Overall Directory Function
 
-In practice, the files in this directory are intended to be consumed together. The README content
-below is aligned to the current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+```bash
+npx tsx ops/types/mjs-shim.d.ts
+```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- No explicit code-level dependency imports were found in the immediate non-README files.
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

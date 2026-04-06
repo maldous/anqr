@@ -2,35 +2,27 @@
 
 ## 1. Directory Overview
 
-This directory contains agent configuration files for the OpenClaw runtime system. It defines model
-providers, authentication profiles, and settings for different agent types (main and voice). The
-configurations enable the OpenClaw system to connect to various AI model providers through a unified
-interface. It currently contains 0 files and 2 subdirectories.
+This directory implements **OpenClaw Agent Configuration** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 0 non-README files and 2 subdirectories.
 
 ## 2. File Summaries
 
-### Files
+### Subdirectories
 
-This directory does not contain any non-README files.
-
-### Child Directories
-
-- **main/** - This directory contains the configuration files for the main OpenCLAW agent, defining available AI model providers, authentication profiles, and runtime settings.
-- **voice/** - This directory contains the configuration files for the OpenClaw voice agent in the ANQR (Agentic Number Query Runner) harness system.
+- **main/** - Contains **Main Agent Configuration**; it acts mainly as a namespace over child directories and has 1 child directories.
+- **voice/** - Contains **OpenClaw Voice Agent Configuration**; it acts mainly as a namespace over child directories and has 1 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **No dedicated runtime dependency** - This directory mainly stores generated assets or supporting files.
+- No explicit code-level dependency imports were found in the immediate non-README files.
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

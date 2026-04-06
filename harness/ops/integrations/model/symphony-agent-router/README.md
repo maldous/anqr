@@ -2,50 +2,40 @@
 
 ## 1. Directory Overview
 
-This directory contains the Symphony Agent Router, which serves as the central routing layer for the
-ANQR (Agentic Number Query Runner) harness. The router distributes incoming AI requests across
-multiple git worktrees, handles Linear webhook triggers, manages request queueing, and enforces
-concurrent request limits. It acts as a proxy/load balancer that intelligently routes traffic to
-available worktree bridge instances based on load and availability. It currently contains 24 files
-and 0 subdirectories.
+This directory implements **ANQR Symphony Agent Router** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 24 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **global-active-requests.mjs** - Exports mutable globalActiveRequests counter and setGlobalActiveRequests function for tracking total concurrent requests.
-- **handle-linear-queue.mjs** - Exports handleLinearQueue function handling GET/POST/DELETE /v1/linear/queue for queue status management and manual queue operations.
-- **handle-linear-trigger.mjs** - Exports handleLinearTrigger function for POST /v1/linear/trigger endpoint. Routes Linear webhook triggers to available worktrees (wt1-4), queues triggers if all worktrees busy, handles max queue length.
-- **index.mjs** - Generated facade index exporting all public API members from the various modules.
-- **is-path-within-root.mjs** - Exports isPathWithinRoot function to check if a path is within a root directory using path.relative logic.
-- **json.mjs** - Exports json helper function for sending JSON responses with proper status codes and headers.
-- **linear-queue.mjs** - Exports the linearQueue array for storing pending Linear trigger events.
-- **logger.mjs** - Exports logInfo, logWarn, logError, logDebug functions using the shared logger from lib/logger.mjs.
-- **max-concurrent.mjs** - Exports MAX_CONCURRENT constant from SYMPHONY_AGENT_MAX_CONCURRENT env var, defaulting to 8.
-- **max-queue-age-ms.mjs** - Exports MAX_QUEUE_AGE_MS constant set to 5 minutes (300,000ms).
-- **max-queue-length.mjs** - Exports MAX_QUEUE_LENGTH constant set to 50.
-- **overload.mjs** - Exports overload function that sends a 429 "Symphony agent is at concurrent capacity" response.
-- **port.mjs** - Exports the PORT constant, defaulting to 4319 or the value of SYMPHONY_AGENT_PORT or SYMPHONY_BRIDGE_PORT environment variables.
-- **proxy-request.mjs** - Exports proxyRequest function that proxies HTTP requests to the target worktree, rewrites body with worktreeId/worktreePath, manages active request counters, handles timeouts (30 min), and tracks failures.
-- **queue-poll-interval-ms.mjs** - Exports QUEUE_POLL_INTERVAL_MS constant set to 5000ms.
-- **rebase-cwd-to-worktree.mjs** - Exports rebaseCwdToWorktree function that rebases the current working directory to the appropriate location in the target worktree, handling paths within project root or project parent directories.
-- **round-robin-index.mjs** - Exports roundRobinIndex state and setRoundRobinIndex function for load distribution.
-- **runtime.mjs** - Runtime carry-forward that sets up a queue processing interval (QUEUE_POLL_INTERVAL_MS) to drain stale items and process queued Linear triggers. Starts the server and handles SIGTERM/SIGINT graceful shutdown.
-- **select-worktree.mjs** - Exports selectWorktree function that routes requests to worktrees based on: explicit x-worktree-id header or worktreeId/worktree_id in body, then least-loaded worktree (activeRequests then failures), with round-robin for ties.
-- **server.mjs** - Exports the HTTP server instance handling: GET /, /health, /stats for status; GET /v1/models for model listing; POST /v1/chat/completions and /chat/completions for proxying; /v1/linear/trigger and /v1/linear/queue for Linear integration.
-- **spawn-linear-runner.mjs** - Exports spawnLinearRunner function that spawns a symphony-runner process in the target worktree for Linear issue processing.
-- **target-host.mjs** - Exports TARGET_HOST constant, defaulting to "127.0.0.1" or the SYMPHONY_AGENT_TARGET_HOST environment variable.
-- **worktree-ids.mjs** - Exports WORKTREE_IDS array parsed from SYMPHONY_AGENT_WORKTREES environment variable (defaults to "1,2,3,4,5,6,7,8").
-- **worktrees.mjs** - Exports WORKTREES array, mapping WORKTREE_IDS to worktree objects with id, path, port (4320+id), activeRequests, and failures properties.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **global-active-requests.mjs** - Exports `globalActiveRequests`, `setGlobalActiveRequests`, providing the reusable API for this directory concern.
+- **handle-linear-queue.mjs** - Exports `handleLinearQueue`, which implements handle linear queue.
+- **handle-linear-trigger.mjs** - Exports `handleLinearTrigger`, which implements handle linear trigger.
+- **index.mjs** - Facade module that re-exports public members from `./port.mjs`, `./worktree-ids.mjs`, `./max-concurrent.mjs`, `./target-host.mjs`, `./worktrees.mjs`, `./global-active-requests.mjs`, and 15 more siblings.
+- **is-path-within-root.mjs** - Exports `isPathWithinRoot`, which checks whether path within root.
+- **json.mjs** - Exports `json`, which implements json.
+- **linear-queue.mjs** - Exports `linearQueue`, an initially empty array used by sibling modules.
+- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
+- **max-concurrent.mjs** - Exports `MAX_CONCURRENT`, a shared constant used by sibling modules.
+- **max-queue-age-ms.mjs** - Exports `MAX_QUEUE_AGE_MS`, a shared constant used by sibling modules.
+- **max-queue-length.mjs** - Exports `MAX_QUEUE_LENGTH`, a shared constant used by sibling modules.
+- **overload.mjs** - Exports `overload`, which implements overload.
+- **port.mjs** - Exports `PORT`, a shared constant used by sibling modules.
+- **proxy-request.mjs** - Exports `proxyRequest`, which implements proxy request.
+- **queue-poll-interval-ms.mjs** - Exports `QUEUE_POLL_INTERVAL_MS`, a shared constant used by sibling modules.
+- **rebase-cwd-to-worktree.mjs** - Exports `rebaseCwdToWorktree`, which implements rebase cwd to worktree.
+- **round-robin-index.mjs** - Exports `roundRobinIndex`, `setRoundRobinIndex`, providing the reusable API for this directory concern.
+- **runtime.mjs** - Executable runtime entry point for this directory.
+- **select-worktree.mjs** - Exports `selectWorktree`, which implements select worktree.
+- **server.mjs** - Exports `server`, which implements server.
+- **spawn-linear-runner.mjs** - Exports `spawnLinearRunner`, which implements spawn linear runner.
+- **target-host.mjs** - Exports `TARGET_HOST`, a shared constant used by sibling modules.
+- **worktree-ids.mjs** - Exports `WORKTREE_IDS`, a shared constant used by sibling modules.
+- **worktrees.mjs** - Exports `WORKTREES`, a shared constant used by sibling modules.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `runtime.mjs` provides a direct execution
-path. The README content below is aligned to the current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
@@ -55,9 +45,9 @@ node ops/integrations/model/symphony-agent-router/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:child_process`, `node:http`, `node:path`
+- **Internal relative modules** - `../../../core/worktree-config.mjs`, `../../../lib/logger.mjs`, `./global-active-requests.mjs`, `./handle-linear-queue.mjs`, `./handle-linear-trigger.mjs`, `./is-path-within-root.mjs`, `./json.mjs`, `./linear-queue.mjs`, `./logger.mjs`, `./max-concurrent.mjs`, `./max-queue-length.mjs`, `./overload.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

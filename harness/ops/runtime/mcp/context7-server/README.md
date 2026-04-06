@@ -2,76 +2,67 @@
 
 ## 1. Directory Overview
 
-This directory contains the Context7 MCP (Model Context Protocol) server integration for the ANQR
-(Agentic Number Query Runner) harness. It provides a wrapper around the `@upstash/context7-mcp`
-package to enable documentation retrieval capabilities. The module handles server lifecycle
-management, JSON-RPC communication, library ID resolution, and documentation fetching with both
-local MCP and cloud API fallback mechanisms. It currently contains 51 files and 0 subdirectories.
+This directory implements **ANQR Context7 Server** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 51 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **add-part.mjs** - Adds non-empty trimmed strings to parts arrays.
-- **build-docs-arguments.mjs** - Builds arguments for the docs tool based on its supported parameters (context7CompatibleLibraryID, libraryId, topic, query, tokens, max_tokens, page).
-- **build-resolve-arguments.mjs** - Builds arguments for the resolve-library-id tool based on its supported parameter names.
-- **call-local-tool.mjs** - Invokes a tool on the local MCP server via JSON-RPC `tools/call`.
-- **cloud-api-base.mjs** - Cloud API base URLs (current: context7.com, legacy: api.context7.com), configurable via environment variables.
-- **collect-documentation.mjs** - Recursively collects documentation from nested objects, arrays, and various response formats (content, results, infoSnippets, codeSnippets).
-- **extract-documentation.mjs** - Collects documentation parts from tool results and deduplicates identical entries.
-- **extract-from-value.mjs** - Recursively extracts arrays of tools from nested JSON structures.
-- **extract-ids-from-string.mjs** - Uses regex patterns to extract Context7 library IDs from plain text responses.
-- **extract-library-id.mjs** - Inspects resolver results to extract library IDs, scoring candidates by fuzzy matching against preferred text.
-- **extract-tools-list.mjs** - Recursively extracts tool objects from nested JSON-RPC response structures.
-- **fetch-cloud.mjs** - Module that supports fetch cloud. Exports `fetchCloud`.
-- **format-cloud-context.mjs** - Formats cloud API responses into deduplicated Markdown documentation with code blocks and source URLs.
-- **get-documentation-local.mjs** - Retrieves documentation by calling the local MCP server's docs tool with built arguments.
-- **get-library-docs-cloud.mjs** - Fetches documentation from the Context7 cloud API at `/api/v2/context`, with automatic 301 redirect handling and legacy fallback.
-- **get-library-docs-legacy-cloud.mjs** - Legacy cloud API endpoint at `/v1/docs` for backward compatibility.
-- **get-tool-property-names.mjs** - Extracts property names from a tool's input schema for dynamic argument building.
-- **handle-json-rpc-message.mjs** - Routes incoming JSON-RPC messages to their corresponding pending request resolvers or logs server-initiated notifications.
-- **handle-shutdown.mjs** - Processes SIGTERM and SIGINT signals to cleanly shutdown the Context7 MCP server.
-- **handle-stdout-data.mjs** - Buffers stdout data from the MCP server and parses newline-delimited JSON-RPC messages. Handles partial messages and logs parsing failures.
-- **index.mjs** - Generated facade that exports all public API members from the implementation modules.
-- **inspect-value.mjs** - Recursively inspects values to extract library IDs from nested objects and arrays.
-- **is-context7-server-healthy.mjs** - Health check that verifies the server process is running, ready, and has a valid tool registry.
-- **local-tool-arguments.mjs** - Re-exports buildResolveArguments and buildDocsArguments for external use.
-- **logger.mjs** - Shared logger using the project's logger module, tagged with "context7-server".
-- **next-request-id.mjs** - Counter for generating unique JSON-RPC request IDs.
-- **normalize-name.mjs** - Normalizes tool names to lowercase for comparison.
-- **normalize-value.mjs** - Normalizes values to lowercase trimmed strings.
-- **normalized-topic.mjs** - Normalizes the topic query, defaulting to a generic documentation request if empty.
-- **pending-requests.mjs** - Map storing in-flight requests with their resolve/reject callbacks and timeout timers.
-- **pick-tool.mjs** - Selects a tool from the registry by preferred exact name or fallback regex pattern.
-- **push-candidate.mjs** - Adds valid library ID candidates (those starting with "/") to the candidates array.
-- **read-schema.mjs** - Reads the input schema from a tool object, supporting various schema property names (inputSchema, parameters, schema).
-- **refresh-tool-registry.mjs** - Queries the MCP server's `tools/list` method and caches the available tools. Identifies the resolve-library-id and docs tools by name pattern matching.
-- **reject-all-pending.mjs** - Module that supports reject all pending. Exports `rejectAllPending`.
-- **render-code-block.mjs** - Wraps code in triple backticks for Markdown rendering.
-- **render-code-snippet.mjs** - Renders code snippets with titles and code blocks in Markdown format.
-- **request-timeout-ms.mjs** - Request timeout configuration (default 30s), configurable via `CONTEXT7_REQUEST_TIMEOUT_MS`.
-- **resolve-docs-locally.mjs** - High-level function that attempts local MCP resolution first, then falls back to cloud API.
-- **resolve-library-id-cloud.mjs** - Fallback resolver using the Context7 cloud API at `/api/v2/libs/search` when local resolution fails or is unavailable.
-- **resolve-library-id-local.mjs** - Resolves a library ID by calling the local MCP server's resolve-library-id tool with the library title and optional topic.
-- **runtime.mjs** - Generated runtime carry-forward that imports and executes the shutdown handler.
-- **score-candidate.mjs** - Scores library ID candidates by comparing normalized ID and hint against preferred text (exact match: 100, suffix match: 90, contains: 70).
-- **send-request.mjs** - Sends JSON-RPC requests to the MCP server over stdin, manages request timeouts, and maintains a pending requests map for response correlation.
-- **server-process.mjs** - Mutable state holder for the spawned child process reference.
-- **server-ready.mjs** - Boolean flag indicating whether the MCP server has completed initialization and is ready to accept requests.
-- **start-context7-server.mjs** - Spawns the Context7 MCP server as a child process using `npx @upstash/context7-mcp --transport stdio`. Handles server initialization, protocol handshake, and tool registry discovery.
-- **startup-timeout-ms.mjs** - Server startup timeout (default 15s), configurable via `CONTEXT7_STARTUP_TIMEOUT_MS`.
-- **stdout-buffer.mjs** - Accumulates stdout data chunks for line-by-line JSON-RPC parsing.
-- **stop-context7-server.mjs** - Gracefully stops the MCP server with SIGTERM, with a force-kill fallback after 5 seconds. Rejects all pending requests and resets server state.
-- **tool-registry.mjs** - Module that supports tool registry. Exports `setToolRegistry, toolRegistry`.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **add-part.mjs** - Exports `addPart`, which implements add part.
+- **build-docs-arguments.mjs** - Exports `buildDocsArguments`, which builds docs arguments.
+- **build-resolve-arguments.mjs** - Exports `buildResolveArguments`, which builds resolve arguments.
+- **call-local-tool.mjs** - Exports `callLocalTool`, which implements call local tool.
+- **cloud-api-base.mjs** - Exports `CLOUD_API_BASE`, `LEGACY_CLOUD_API_BASE`, providing the reusable API for this directory concern.
+- **collect-documentation.mjs** - Exports `collectDocumentation`, which collects documentation.
+- **extract-documentation.mjs** - Exports `extractDocumentation`, which implements extract documentation.
+- **extract-from-value.mjs** - Exports `extractFromValue`, which implements extract from value.
+- **extract-ids-from-string.mjs** - Exports `extractIdsFromString`, which implements extract ids from string.
+- **extract-library-id.mjs** - Exports `extractLibraryId`, which implements extract library id.
+- **extract-tools-list.mjs** - Exports `extractToolsList`, which implements extract tools list.
+- **fetch-cloud.mjs** - Exports `fetchCloud`, which fetches cloud.
+- **format-cloud-context.mjs** - Exports `formatCloudContext`, which formats cloud context.
+- **get-documentation-local.mjs** - Exports `getDocumentationLocal`, which gets documentation local.
+- **get-library-docs-cloud.mjs** - Exports `getLibraryDocsCloud`, which gets library docs cloud.
+- **get-library-docs-legacy-cloud.mjs** - Exports `getLibraryDocsLegacyCloud`, which gets library docs legacy cloud.
+- **get-tool-property-names.mjs** - Exports `getToolPropertyNames`, which gets tool property names.
+- **handle-json-rpc-message.mjs** - Exports `handleJsonRpcMessage`, which implements handle json rpc message.
+- **handle-shutdown.mjs** - Exports `handleShutdown`, which implements handle shutdown.
+- **handle-stdout-data.mjs** - Exports `handleStdoutData`, which implements handle stdout data.
+- **index.mjs** - Facade module that re-exports public members from `./startup-timeout-ms.mjs`, `./request-timeout-ms.mjs`, `./cloud-api-base.mjs`, `./server-process.mjs`, `./server-ready.mjs`, `./next-request-id.mjs`, and 19 more siblings.
+- **inspect-value.mjs** - Exports `inspectValue`, which implements inspect value.
+- **is-context7-server-healthy.mjs** - Exports `isContext7ServerHealthy`, which checks whether context7 server healthy.
+- **local-tool-arguments.mjs** - Facade module that re-exports public members from `./build-resolve-arguments.mjs`, `./build-docs-arguments.mjs`.
+- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
+- **next-request-id.mjs** - Exports `nextRequestId`, `setNextRequestId`, providing the reusable API for this directory concern.
+- **normalize-name.mjs** - Exports `normalizeName`, which normalizes name.
+- **normalize-value.mjs** - Exports `normalizeValue`, which normalizes value.
+- **normalized-topic.mjs** - Exports `normalizedTopic`, which implements normalized topic.
+- **pending-requests.mjs** - Exports `pendingRequests`, which implements pending requests.
+- **pick-tool.mjs** - Exports `pickTool`, which implements pick tool.
+- **push-candidate.mjs** - Exports `pushCandidate`, which implements push candidate.
+- **read-schema.mjs** - Exports `readSchema`, which reads schema.
+- **refresh-tool-registry.mjs** - Exports `refreshToolRegistry`, which implements refresh tool registry.
+- **reject-all-pending.mjs** - Exports `rejectAllPending`, which implements reject all pending.
+- **render-code-block.mjs** - Exports `renderCodeBlock`, which implements render code block.
+- **render-code-snippet.mjs** - Exports `renderCodeSnippet`, which implements render code snippet.
+- **request-timeout-ms.mjs** - Exports `REQUEST_TIMEOUT_MS`, a shared constant used by sibling modules.
+- **resolve-docs-locally.mjs** - Exports `resolveDocsLocally`, which resolves docs locally.
+- **resolve-library-id-cloud.mjs** - Exports `resolveLibraryIdCloud`, which resolves library id cloud.
+- **resolve-library-id-local.mjs** - Exports `resolveLibraryIdLocal`, which resolves library id local.
+- **runtime.mjs** - Executable runtime entry point for this directory.
+- **score-candidate.mjs** - Exports `scoreCandidate`, which implements score candidate.
+- **send-request.mjs** - Exports `sendRequest`, which implements send request.
+- **server-process.mjs** - Exports `serverProcess`, `setServerProcess`, providing the reusable API for this directory concern.
+- **server-ready.mjs** - Exports `serverReady`, `setServerReady`, providing the reusable API for this directory concern.
+- **start-context7-server.mjs** - Exports `startContext7Server`, which starts context7 server.
+- **startup-timeout-ms.mjs** - Exports `STARTUP_TIMEOUT_MS`, a shared constant used by sibling modules.
+- **stdout-buffer.mjs** - Exports `setStdoutBuffer`, `stdoutBuffer`, providing the reusable API for this directory concern.
+- **stop-context7-server.mjs** - Exports `stopContext7Server`, which implements stop context7 server.
+- **tool-registry.mjs** - Exports `setToolRegistry`, `toolRegistry`, providing the reusable API for this directory concern.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `runtime.mjs` provides a direct execution
-path. The README content below is aligned to the current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, subprocess execution, and timer, scheduling, cooldown, or watchdog behavior. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
@@ -81,9 +72,9 @@ node ops/runtime/mcp/context7-server/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:child_process`
+- **Internal relative modules** - `../../../lib/logger.mjs`, `./add-part.mjs`, `./build-docs-arguments.mjs`, `./build-resolve-arguments.mjs`, `./call-local-tool.mjs`, `./cloud-api-base.mjs`, `./collect-documentation.mjs`, `./extract-documentation.mjs`, `./extract-from-value.mjs`, `./extract-ids-from-string.mjs`, `./extract-library-id.mjs`, `./extract-tools-list.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

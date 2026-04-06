@@ -2,31 +2,21 @@
 
 ## 1. Directory Overview
 
-This directory contains startup recovery tooling for the ANQR (Agentic Number Query Runner) system.
-It handles system startup recovery after downtime, checking and enabling services, timers, queue
-health, and cleaning up stale state. The recovery automation ensures the Linear webhook system
-returns to operational status after a restart or system failure. It currently contains 5 files and 0
-subdirectories.
+This directory implements **ANQR Startup Recovery** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 5 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **index.mjs** - Generated facade index that exports `runCommand` from `./run-command.mjs` and `main` from `./main.mjs`.
-- **logger.mjs** - Shared logger module that creates a logger using the project's standard logger from `../../lib/logger.mjs`. Exports `logInfo`, `logWarn`, and `logError` functions.
-- **main.mjs** - Main recovery logic implementing a 6-step recovery process:
-- **run-command.mjs** - Utility function for running shell commands via `execFileSync`. Returns an object with `success` (boolean), and either `output` (on success) or `error`/`stderr` (on failure).
-- **runtime.mjs** - Generated runtime carry-forward that imports and executes `main()` from `./index.mjs`.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **index.mjs** - Facade module that re-exports public members from `./run-command.mjs`, `./main.mjs`.
+- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`, `logWarn`.
+- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
+- **run-command.mjs** - Exports `runCommand`, which runs command.
+- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
-path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
-current immediate directory contents.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include network/API integration, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Linear integration, and Symphony integration.
 
 ## 4. Usage Instructions
 
@@ -36,9 +26,9 @@ node ops/tools/startup-recovery/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:child_process`
+- **Internal relative modules** - `../../integrations/linear/linear-client.mjs`, `../../lib/logger.mjs`, `../../symphony-queue-control.mjs`, `./index.mjs`, `./logger.mjs`, `./run-command.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

@@ -2,44 +2,34 @@
 
 ## 1. Directory Overview
 
-This directory contains the watchdog monitoring system for the ANQR (Agentic Number Query Runner)
-harness. It provides automated health monitoring for bridge services (Symphony and Codebuff), with
-automatic rollback capabilities if bridges fail to become healthy after a restart. The watchdog
-serves as a safety net to detect and recover from deployment issues that cause bridge service
-failures. It currently contains 18 files and 0 subdirectories.
+This directory implements **ANQR Watchdog Monitor** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 18 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **args.mjs** - Exports command line arguments array from `process.argv.slice(2)`.
-- **bridge-arg.mjs** - Parses command line `--bridge=` argument. Options: `symphony`, `codebuff`, or `both` (default).
-- **check-bridge-health.mjs** - Exports `checkBridgeHealth(port, name)` async function. Makes HTTP request to `/health` endpoint with 5 second timeout. Returns `true` if healthy, `false` otherwise. Logs provider count on success.
-- **codebuff-port.mjs** - Exports `CODEBUFF_PORT = 4318`. The port where the Codebuff bridge health endpoint is available.
-- **exec.mjs** - Safe shell command execution wrapper using `execSync`. Returns output string or `null` on error.
-- **index.mjs** - Generated facade index that re-exports all public API members from the module.
-- **log.mjs** - Logging wrapper that uses `logInfo` from logger.mjs. Exports `log(msg)` function.
-- **logger.mjs** - Creates shared logger using `createLogger` from `../../../lib/logger.mjs`. Exports `logInfo`.
-- **main.mjs** - Main orchestration logic. Exports `main()` async function. Checks bridge health, triggers rollback on failure, restarts bridges, and re-verifies health. Sends Discord notifications for all state transitions (success, recovery, failure).
-- **restart-bridge.mjs** - Exports `restartBridge(name)` function. Restarts Symphony or Codebuff bridge service via `systemctl --user restart`. Service names: `anqr-symphony-bridge` or `anqr-codebuff-bridge`. Logs restart attempt with visual banner.
-- **rollback-git.mjs** - Exports `rollbackGit()` async function. Performs automatic git rollback to previous commit (`HEAD~1`). Sends Discord embed notifications before and after rollback. Updates `MEMORY.md` with rollback details including timestamp, reason, commit hashes, and action taken. Returns `true` on successful verification.
-- **runtime.mjs** - Generated runtime carry-forward that imports and executes `main()` with error handling. Entry point for execution.
-- **symphony-port.mjs** - Exports `SYMPHONY_PORT = 4319`. The port where the Symphony bridge health endpoint is available.
-- **wait-for-bridge.mjs** - Exports `waitForBridge(port, name, timeoutMs)` async function. Polls bridge health every 2 seconds until healthy or timeout exceeded. Logs elapsed time on success or failure.
-- **watchdog-enabled.mjs** - Exports `WATCHDOG_ENABLED` boolean, defaults to `true` (disabled if set to `"false"`). Controls whether the watchdog runs at all.
-- **watchdog-rollback.mjs** - Exports `WATCHDOG_ROLLBACK` boolean, defaults to `true` (disabled if set to `"false"`). Controls whether automatic git rollback is attempted on failure.
-- **watchdog-timeout-ms.mjs** - Exports `WATCHDOG_TIMEOUT_MS` from environment variable, defaults to `60000` (60 seconds). Maximum time to wait for bridge to become healthy.
-- **worktree-id.mjs** - Exports `WORKTREE_ID` from environment variable `ANQR_WORKTREE_ID`, defaults to `"main"`. Identifies the worktree running this watchdog instance.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **args.mjs** - Exports `args`, which implements args.
+- **bridge-arg.mjs** - Exports `bridgeArg`, which implements bridge arg.
+- **check-bridge-health.mjs** - Exports `checkBridgeHealth`, which checks bridge health.
+- **codebuff-port.mjs** - Exports `CODEBUFF_PORT`, a shared constant used by sibling modules.
+- **exec.mjs** - Exports `exec`, which implements exec.
+- **index.mjs** - Facade module that re-exports public members from `./watchdog-enabled.mjs`, `./watchdog-timeout-ms.mjs`, `./watchdog-rollback.mjs`, `./symphony-port.mjs`, `./codebuff-port.mjs`, `./worktree-id.mjs`, and 9 more siblings.
+- **log.mjs** - Exports `log`, which implements log.
+- **logger.mjs** - Shared logging helper module exporting `logInfo`.
+- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
+- **restart-bridge.mjs** - Exports `restartBridge`, which implements restart bridge.
+- **rollback-git.mjs** - Exports `rollbackGit`, which implements rollback git.
+- **runtime.mjs** - Executable runtime entry point for this directory.
+- **symphony-port.mjs** - Exports `SYMPHONY_PORT`, a shared constant used by sibling modules.
+- **wait-for-bridge.mjs** - Exports `waitForBridge`, which implements wait for bridge.
+- **watchdog-enabled.mjs** - Exports `WATCHDOG_ENABLED`, a shared constant used by sibling modules.
+- **watchdog-rollback.mjs** - Exports `WATCHDOG_ROLLBACK`, a shared constant used by sibling modules.
+- **watchdog-timeout-ms.mjs** - Exports `WATCHDOG_TIMEOUT_MS`, a shared constant used by sibling modules.
+- **worktree-id.mjs** - Exports `WORKTREE_ID`, a shared constant used by sibling modules.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
-path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
-current immediate directory contents.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include file-system access, network/API integration, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Discord integration, OpenClaw integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
@@ -49,9 +39,9 @@ node ops/runtime/symphony/watchdog-monitor/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:child_process`, `node:fs`
+- **Internal relative modules** - `../../../integrations/notifications/openclaw-discord.mjs`, `../../../lib/logger.mjs`, `./args.mjs`, `./bridge-arg.mjs`, `./check-bridge-health.mjs`, `./codebuff-port.mjs`, `./exec.mjs`, `./index.mjs`, `./log.mjs`, `./logger.mjs`, `./restart-bridge.mjs`, `./rollback-git.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

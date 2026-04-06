@@ -2,35 +2,30 @@
 
 ## 1. Directory Overview
 
-This directory contains harness report generation automation for the ANQR (Agentic Number Query
-Runner) project. The reporting system provides a pluggable check framework that runs various health,
-quality, and operational checks against the codebase and exports results to JSON for consumption by
-other automation tools like the Linear Guardian governance system. It currently contains 1 file and
-1 subdirectory.
+This directory implements **ANQR Reporting** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 1 non-README files and 1 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **harness-report.mjs** - Auto-generated facade that re-exports from `./harness-report/index.mjs` and `./harness-report/runtime.mjs`. Provides the CLI entry point for running harness reports.
+- **harness-report.mjs** - Facade module that re-exports public members from `./harness-report/index.mjs`, `./harness-report/runtime.mjs`.
 
-### Child Directories
+### Subdirectories
 
-- **harness-report/** - This directory contains the harness-report module for the ANQR (Agentic Number Query Runner) system.
+- **harness-report/** - Contains **ANQR Harness Report**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `./harness-report/index.mjs`, `./harness-report/runtime.mjs`
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

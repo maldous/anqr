@@ -2,64 +2,55 @@
 
 ## 1. Directory Overview
 
-This directory contains the direct Codebuff SDK integration for the ANQR (Agentic Number Query
-Runner) harness. It provides a streamlined interface to the Codebuff AI coding assistant, handling
-API key management, client instantiation, error recovery, and both streaming and non-streaming
-invocations. The module serves as the model integration layer for direct Codebuff usage within the
-broader Symphony orchestration system. It currently contains 27 files and 0 subdirectories.
+This directory implements **ANQR Codebuff Direct** within the ANQR harness. Key immediate entries include `index.mjs`, `invoke-codebuff-direct-stream.mjs`, `extract-text-from-unknown.mjs`, `ensure-no-sdk-error.mjs`. The current inventory is 27 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **build-prompt.mjs** - Exports `buildPrompt` function that converts message array to prompt format by joining role-prefixed content.
-- **codebuff-max-continuations.mjs** - Exports `CODEBUFF_MAX_CONTINUATIONS` constant from environment variable `CODEBUFF_MAX_CONTINUATIONS`, defaulting to 50 continuations.
-- **codebuff-max-steps.mjs** - Exports `CODEBUFF_MAX_STEPS` constant from environment variable `CODEBUFF_MAX_STEPS`, defaulting to 100 steps.
-- **codebuff-model-id.mjs** - Exports `CODEBUFF_MODEL_ID` constant, defaulting to `codebuff/base` from environment variable `CODEBUFF_MODEL_ID`.
-- **codebuff-noisy-tools.mjs** - Exports `CODEBUFF_NOISY_TOOLS` Set containing tool names that should be suppressed from logs to reduce noise.
-- **codebuff-timeout-ms.mjs** - Exports `CODEBUFF_TIMEOUT_MS` constant for timeout duration (default 30 minutes).
-- **ensure-no-sdk-error.mjs** - Exports `ensureNoSdkError` function that throws errors for SDK failures, recoverable errors, "AI_RetryError", and "Too Many Requests".
-- **extract-sdk-message.mjs** - Exports `extractSdkMessage` function that extracts error messages from SDK result output by parsing JSON or matching retry error patterns.
-- **extract-text-from-unknown.mjs** - Exports `extractTextFromUnknown` recursive function that extracts text from unknown value types by checking for string, array, or object and looking in common fields like "text", "content", "reasoning", "result", "message", "output".
-- **extract-text.mjs** - Exports `extractText` function that wraps `extractTextFromUnknown` and joins extracted parts with newlines.
-- **get-api-key.mjs** - Exports `getApiKey` function that retrieves `CODEBUFF_API_KEY` from environment variables.
-- **get-shared-client.mjs** - Exports `getSharedClient` function that creates or returns the cached CodebuffClient, incorporating API key, cost mode, and normalized cwd into the cache key.
-- **index.mjs** - Generated facade index that re-exports all public symbols from the various modules for convenient imports.
-- **invoke-codebuff-direct-stream.mjs** - Exports `invokeCodebuffDirectStream` function that invokes Codebuff with streaming callback, falling back to free mode on recoverable errors.
-- **invoke-codebuff-direct.mjs** - Exports `invokeCodebuffDirect` function that invokes Codebuff in non-streaming mode, falling back to free mode on recoverable errors.
-- **is-payment-required-error.mjs** - Exports `isPaymentRequiredError` function that detects payment required errors by checking for "402", "payment required", "out of credits", "add credits", or "insufficient credits".
-- **is-rate-limit-error.mjs** - Exports `isRateLimitError` function that detects rate limit errors by checking for "429", "rate_limit", "rate limit", "too many requests", "session limit", "weekly limit", "limit resets", or "continue with credits".
-- **is-recoverable-error.mjs** - Exports `isRecoverableError` function that combines `isRateLimitError` and `isPaymentRequiredError` to identify recoverable errors that can be retried.
-- **logger.mjs** - Creates and exports `logDebug`, `logInfo`, and `logWarn` functions from the project's logger module, scoped to this directory.
-- **make-timeout.mjs** - Exports `makeTimeout` function that returns a Promise that rejects after `CODEBUFF_TIMEOUT_MS` milliseconds.
-- **normalize-cwd.mjs** - Exports `normalizeCwd` function that returns the trimmed cwd or falls back to `ANQR_WORKTREE_PATH` env var or `process.cwd()`.
-- **reset-shared-client.mjs** - Exports `resetSharedClient` function to clear the shared client and key (useful for testing or reinitialization).
-- **run-client-quietly.mjs** - Exports `runClientQuietly` function that temporarily suppresses console.error during client execution to reduce noise.
-- **shared-client-key.mjs** - Stores the cache key for the shared client via `sharedClientKey` and `setSharedClientKey` functions.
-- **shared-client.mjs** - Stores the singleton CodebuffClient instance via `sharedClient` and `setSharedClient` functions.
-- **tool-parameter-rules.mjs** - Exports `TOOL_PARAMETER_RULES` string documenting required JSON array formats for array-typed tool parameters. This string is injected as a knowledge file into the Codebuff client to provide runtime guidance on parameter formatting.
-- **try-mode.mjs** - Core execution function `tryMode` that handles the Codebuff client run, event handling, tool tracking, timeout, auto-continuations, and Symphony result inference.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **build-prompt.mjs** - Exports `buildPrompt`, which builds prompt.
+- **codebuff-max-continuations.mjs** - Exports `CODEBUFF_MAX_CONTINUATIONS`, a shared constant used by sibling modules.
+- **codebuff-max-steps.mjs** - Exports `CODEBUFF_MAX_STEPS`, a shared constant used by sibling modules.
+- **codebuff-model-id.mjs** - Exports `CODEBUFF_MODEL_ID`, a shared constant used by sibling modules.
+- **codebuff-noisy-tools.mjs** - Exports `CODEBUFF_NOISY_TOOLS`, a shared `Set` constant used by this module group.
+- **codebuff-timeout-ms.mjs** - Exports `CODEBUFF_TIMEOUT_MS`, a shared constant used by sibling modules.
+- **ensure-no-sdk-error.mjs** - Exports `ensureNoSdkError`, which ensures no sdk error.
+- **extract-sdk-message.mjs** - Exports `extractSdkMessage`, which implements extract sdk message.
+- **extract-text-from-unknown.mjs** - Exports `extractTextFromUnknown`, which implements extract text from unknown.
+- **extract-text.mjs** - Exports `extractText`, which implements extract text.
+- **get-api-key.mjs** - Exports `getApiKey`, which gets api key.
+- **get-shared-client.mjs** - Exports `getSharedClient`, which gets shared client.
+- **index.mjs** - Facade module that re-exports public members from `./codebuff-model-id.mjs`, `./codebuff-max-steps.mjs`, `./codebuff-max-continuations.mjs`, `./codebuff-timeout-ms.mjs`, `./tool-parameter-rules.mjs`, `./codebuff-noisy-tools.mjs`, and 17 more siblings.
+- **invoke-codebuff-direct-stream.mjs** - Exports `invokeCodebuffDirectStream`, which implements invoke codebuff direct stream.
+- **invoke-codebuff-direct.mjs** - Exports `invokeCodebuffDirect`, which implements invoke codebuff direct.
+- **is-payment-required-error.mjs** - Exports `isPaymentRequiredError`, which checks whether payment required error.
+- **is-rate-limit-error.mjs** - Exports `isRateLimitError`, which checks whether rate limit error.
+- **is-recoverable-error.mjs** - Exports `isRecoverableError`, which checks whether recoverable error.
+- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logInfo`, `logWarn`.
+- **make-timeout.mjs** - Exports `makeTimeout`, which implements make timeout.
+- **normalize-cwd.mjs** - Exports `normalizeCwd`, which normalizes cwd.
+- **reset-shared-client.mjs** - Exports `resetSharedClient`, which implements reset shared client.
+- **run-client-quietly.mjs** - Exports `runClientQuietly`, which runs client quietly.
+- **shared-client-key.mjs** - Exports `setSharedClientKey`, `sharedClientKey`, providing the reusable API for this directory concern.
+- **shared-client.mjs** - Exports `setSharedClient`, `sharedClient`, providing the reusable API for this directory concern.
+- **tool-parameter-rules.mjs** - Exports `TOOL_PARAMETER_RULES`, a shared constant used by sibling modules.
+- **try-mode.mjs** - Exports `tryMode`, which implements try mode.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point. The README content below is aligned to the
-current immediate directory contents.
+The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include timer, scheduling, cooldown, or watchdog behavior, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
 ```javascript
-import * as moduleApi from "./index.mjs";
+import * as moduleApi from "./ops/integrations/model/codebuff-direct/index.mjs";
 ```
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **External packages/services referenced in immediate code** - `@codebuff/sdk`
+- **Internal relative modules** - `../../../core/bridge-result.mjs`, `../../../lib/logger.mjs`, `./build-prompt.mjs`, `./codebuff-max-continuations.mjs`, `./codebuff-max-steps.mjs`, `./codebuff-model-id.mjs`, `./codebuff-noisy-tools.mjs`, `./codebuff-timeout-ms.mjs`, `./ensure-no-sdk-error.mjs`, `./extract-sdk-message.mjs`, `./extract-text-from-unknown.mjs`, `./extract-text.mjs`
 
 ## 6. Additional Comments
 
-- This directory exposes a public API through `index.mjs`.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

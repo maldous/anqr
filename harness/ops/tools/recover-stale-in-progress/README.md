@@ -2,31 +2,22 @@
 
 ## 1. Directory Overview
 
-This directory contains the recover-stale-in-progress automation tool for the ANQR (Agentic Number
-Query Runner) harness. The tool identifies and recovers Linear issues that are stuck in "In
-Progress" state but have become stale due to expired leases or timeouts, allowing them to be picked
-up by runners again. It currently contains 6 files and 0 subdirectories.
+This directory implements **Recover Stale In Progress** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 6 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **index.mjs** - Generated facade index that re-exports all public API members: `issueAge`, `minutesAgo`, and `main`.
-- **issue-age.mjs** - Utility function that calculates the age of an issue in milliseconds. Takes an issue object and a field name (typically "updatedAt"), returning the difference between the current time and the specified timestamp.
-- **logger.mjs** - Shared logger module that exports logging functions created from the central logger utility. Provides `logInfo`, `logWarn`, and `logError` functions for structured logging within this tool.
-- **main.mjs** - Main orchestration module that implements the recovery logic. Imports queue control functions from symphony-state, Linear client functions, and local utilities. Supports `--dry-run` and `--force` flags. The main function:
-- **minutes-ago.mjs** - Utility function that converts issue age from milliseconds to minutes. Imports `issueAge` from the sibling module and divides by 60,000 to return the age in whole minutes.
-- **runtime.mjs** - Generated runtime carry-forward file that imports and executes the main function. Provides the CLI entry point for the tool.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **index.mjs** - Facade module that re-exports public members from `./issue-age.mjs`, `./minutes-ago.mjs`, `./main.mjs`.
+- **issue-age.mjs** - Exports `issueAge`, which implements issue age.
+- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`, `logWarn`.
+- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
+- **minutes-ago.mjs** - Exports `minutesAgo`, which implements minutes ago.
+- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
-path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
-current immediate directory contents.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include timer, scheduling, cooldown, or watchdog behavior, and Symphony integration. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
@@ -36,9 +27,8 @@ node ops/tools/recover-stale-in-progress/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `../../integrations/linear/linear-client.mjs`, `../../lib/logger.mjs`, `../../symphony-queue-control.mjs`, `./index.mjs`, `./issue-age.mjs`, `./logger.mjs`, `./minutes-ago.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

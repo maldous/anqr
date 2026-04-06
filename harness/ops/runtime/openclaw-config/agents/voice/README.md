@@ -2,35 +2,26 @@
 
 ## 1. Directory Overview
 
-This directory contains the configuration files for the OpenClaw voice agent in the ANQR (Agentic
-Number Query Runner) harness system. The voice agent is responsible for handling voice-based
-interactions and text processing tasks. This directory holds the model configurations that define
-which AI providers and models the voice agent can use for processing requests. It currently contains
-0 files and 1 subdirectory.
+This directory implements **OpenClaw Voice Agent Configuration** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 0 non-README files and 1 subdirectories.
 
 ## 2. File Summaries
 
-### Files
+### Subdirectories
 
-This directory does not contain any non-README files.
-
-### Child Directories
-
-- **agent/** - This directory contains the AI model configuration file for the OpenClaw voice agent.
+- **agent/** - Contains **Voice Agent Models Configuration**; it holds configuration data and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **No dedicated runtime dependency** - This directory mainly stores generated assets or supporting files.
+- No explicit code-level dependency imports were found in the immediate non-README files.
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

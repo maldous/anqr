@@ -2,39 +2,30 @@
 
 ## 1. Directory Overview
 
-This directory contains boundary-specific integrations for the ANQR (Agentic Number Query Runner)
-harness. It provides connectivity with external services including Linear (issue tracking), model
-providers (AI backend integration), notifications (Discord), email (ingest), and SonarQube (code
-quality). Each integration is organized into dedicated subdirectories with a consistent module
-decomposition pattern. It currently contains 0 files and 5 subdirectories.
+This directory implements **ANQR Integrations** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 0 non-README files and 5 subdirectories.
 
 ## 2. File Summaries
 
-### Files
+### Subdirectories
 
-This directory does not contain any non-README files.
-
-### Child Directories
-
-- **email/** - This directory contains email ingest functionality and email-source integration ownership for the ANQR (Agentic Number Query Runner) harness.
-- **linear/** - This directory contains Linear transport, sync, and issue management utilities for the ANQR (Agentic Number Query Runner) harness.
-- **model/** - This directory contains model and provider routing, proxy services, and local model health management for the ANQR (Agentic Number Query Runner) harness.
-- **notifications/** - This directory contains notification integration modules for the ANQR (Agentic Number Query Runner) harness.
-- **sonar/** - This directory contains SonarQube integration modules for the ANQR (Agentic Number Query Runner) harness.
+- **email/** - Contains **ANQR Email Integrations**; it acts mainly as a namespace over child directories and has 1 child directories.
+- **linear/** - Contains **ANQR Linear Integrations**; it contains 29 immediate files and has 18 child directories.
+- **model/** - Contains **ANQR Model Integrations**; it contains 24 immediate files and has 11 child directories.
+- **notifications/** - Contains **ANQR Notifications**; it acts mainly as a namespace over child directories and has 2 child directories.
+- **sonar/** - Contains **ANQR Sonar Integration**; it acts mainly as a namespace over child directories and has 2 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **No dedicated runtime dependency** - This directory mainly stores generated assets or supporting files.
+- No explicit code-level dependency imports were found in the immediate non-README files.
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

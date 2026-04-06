@@ -2,34 +2,30 @@
 
 ## 1. Directory Overview
 
-Notification modules for the ANQR (Agentic Number Query Runner) harness to send alerts via email and
-Discord. This directory provides the communication layer that enables the harness to notify users
-and systems about task status, completion, errors, and other important events. It currently contains
-1 file and 1 subdirectory.
+This directory implements **ANQR Notifications** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 1 non-README files and 1 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **notify.mjs** - Auto-generated facade module that re-exports from `./notify/index.mjs` and `./notify/runtime.mjs`. Provides the CLI entry point for email notifications via msmtp with rate limiting and deduplication.
+- **notify.mjs** - Facade module that re-exports public members from `./notify/index.mjs`, `./notify/runtime.mjs`.
 
-### Child Directories
+### Subdirectories
 
-- **notify/** - This directory contains the notification automation module for the ANQR (Agentic Number Query Runner) harness.
+- **notify/** - Contains **ANQR Notify**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `./notify/index.mjs`, `./notify/runtime.mjs`
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

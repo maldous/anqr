@@ -2,64 +2,54 @@
 
 ## 1. Directory Overview
 
-This directory implements a singleton pattern for managing the OpenClaw Discord gateway process
-across multiple worktree runners. It ensures that only one gateway process runs at a time by using
-file-based locking with a follower/owner pattern. When one runner acquires the lock and spawns the
-gateway, other runners monitor the lock and wait until it is released before attempting to become
-the owner themselves. It currently contains 38 files and 0 subdirectories.
+This directory implements **OpenClaw Gateway Singleton** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 38 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **child-process.mjs** - Exports `childProcess` reference and `setChildProcess(value)` function
-- **cleanup-stale-lock.mjs** - Exports `cleanupStaleLock()` - removes lock if owner processes are dead
-- **cli.mjs** - Exports `CLI` from `OPENCLAW_CLI` environment variable, defaults to "openclaw"
-- **config-path.mjs** - Exports `CONFIG_PATH` from `OPENCLAW_CONFIG_PATH` or default config
-- **default-config.mjs** - Exports default config path as `{WORKTREE_PATH}/.openclaw/openclaw.json`
-- **ensure-lock-dir.mjs** - Exports `ensureLockDir()` to create lock directory recursively
-- **follower-loop.mjs** - Exports `followerLoop()` - follower loop that waits for lock availability
-- **follower-sleep-ms.mjs** - Exports `FOLLOWER_SLEEP_MS` (default 5000ms)
-- **handle-signal.mjs** - Exports `handleSignal(signal)` - graceful shutdown handler
-- **host.mjs** - Exports `HOST` from `OPENCLAW_GATEWAY_HOST` environment variable, defaults to "127.0.0.1"
-- **index.mjs** - Generated facade index that re-exports all public API members
-- **is-lock-still-ours.mjs** - Exports `isLockStillOurs()` - verifies lock ownership by PID
-- **is-pid-alive.mjs** - Exports `isPidAlive(pid)` to check if process ID is alive
-- **is-port-listening.mjs** - Exports `isPortListening(host, port)` to check TCP port availability
-- **lock-dir.mjs** - Exports `LOCK_DIR` from `OPENCLAW_LOCK_DIR` or `~/.cache/anqr-openclaw`
-- **lock-file.mjs** - Exports `LOCK_FILE` as `{LOCK_DIR}/gateway.lock`
-- **lock-held.mjs** - Exports `lockHeld` boolean and `setLockHeld(value)` function
-- **log-error.mjs** - Exports `logError(msg)` for ERROR level logging
-- **log-info.mjs** - Exports `logInfo(msg)` for INFO level logging
-- **log-warn.mjs** - Exports `logWarn(msg)` for WARN level logging
-- **log.mjs** - Core logging function with timestamp and worktree ID prefix
-- **main.mjs** - Exports `main()` - ensures lock directory exists and runs follower loop
-- **monitor-external-gateway.mjs** - Exports `monitorExternalGateway()` - monitors existing gateway until it exits
-- **port-check-interval-ms.mjs** - Exports `PORT_CHECK_INTERVAL_MS` (default 30000ms)
-- **port.mjs** - Exports `PORT` from `OPENCLAW_GATEWAY_PORT` environment variable, defaults to 18789
-- **read-lock-info.mjs** - Exports `readLockInfo()` - reads JSON metadata from lock file
-- **release-lock.mjs** - Exports `releaseLock()` - releases the lock and deletes lock file
-- **restart-backoff-ms.mjs** - Exports `RESTART_BACKOFF_MS` (default 15000ms)
-- **run-gateway-owner-loop.mjs** - Exports `runGatewayOwnerLoop()` - owner loop that manages gateway process
-- **runtime.mjs** - Generated runtime carry-forward that sets up signal handlers and calls main()
-- **sleep.mjs** - Exports `sleep(ms)` promise-based delay function
-- **spawn-gateway-process.mjs** - Exports `spawnGatewayProcess()` - spawns OpenClaw gateway as child process
-- **stopping.mjs** - Exports `stopping` boolean and `setStopping(value)` function
-- **try-acquire-lock.mjs** - Exports `tryAcquireLock()` - attempts to acquire exclusive lock file
-- **wait-log-interval-ms.mjs** - Exports `WAIT_LOG_INTERVAL_MS` (default 60000ms)
-- **worktree-id.mjs** - Exports `WORKTREE_ID` from `ANQR_WORKTREE_ID` environment variable, defaults to "main"
-- **worktree-path.mjs** - Exports `WORKTREE_PATH` from `ANQR_WORKTREE_PATH` environment variable or current working directory
-- **write-lock-metadata.mjs** - Exports `writeLockMetadata(extra?)` - writes worktree, PID, timestamp to lock file
-
-### Child Directories
-
-This directory does not contain child directories.
+- **child-process.mjs** - Exports `childProcess`, `setChildProcess`, providing the reusable API for this directory concern.
+- **cleanup-stale-lock.mjs** - Exports `cleanupStaleLock`, which implements cleanup stale lock.
+- **cli.mjs** - Exports `CLI`, a shared constant used by sibling modules.
+- **config-path.mjs** - Exports `CONFIG_PATH`, a shared constant used by sibling modules.
+- **default-config.mjs** - Exports `DEFAULT_CONFIG`, a shared constant used by sibling modules.
+- **ensure-lock-dir.mjs** - Exports `ensureLockDir`, which ensures lock dir.
+- **follower-loop.mjs** - Exports `followerLoop`, which implements follower loop.
+- **follower-sleep-ms.mjs** - Exports `FOLLOWER_SLEEP_MS`, a shared constant used by sibling modules.
+- **handle-signal.mjs** - Exports `handleSignal`, which implements handle signal.
+- **host.mjs** - Exports `HOST`, a shared constant used by sibling modules.
+- **index.mjs** - Facade module that re-exports public members from `./worktree-id.mjs`, `./host.mjs`, `./port.mjs`, `./cli.mjs`, `./worktree-path.mjs`, `./default-config.mjs`, and 30 more siblings.
+- **is-lock-still-ours.mjs** - Exports `isLockStillOurs`, which checks whether lock still ours.
+- **is-pid-alive.mjs** - Exports `isPidAlive`, which checks whether pid alive.
+- **is-port-listening.mjs** - Exports `isPortListening`, which checks whether port listening.
+- **lock-dir.mjs** - Exports `LOCK_DIR`, a shared constant used by sibling modules.
+- **lock-file.mjs** - Exports `LOCK_FILE`, a shared constant used by sibling modules.
+- **lock-held.mjs** - Exports `lockHeld`, `setLockHeld`, providing the reusable API for this directory concern.
+- **log-error.mjs** - Exports `logError`, which implements log error.
+- **log-info.mjs** - Exports `logInfo`, which implements log info.
+- **log-warn.mjs** - Exports `logWarn`, which implements log warn.
+- **log.mjs** - Exports `log`, which implements log.
+- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
+- **monitor-external-gateway.mjs** - Exports `monitorExternalGateway`, which implements monitor external gateway.
+- **port-check-interval-ms.mjs** - Exports `PORT_CHECK_INTERVAL_MS`, a shared constant used by sibling modules.
+- **port.mjs** - Exports `PORT`, a shared constant used by sibling modules.
+- **read-lock-info.mjs** - Exports `readLockInfo`, which reads lock info.
+- **release-lock.mjs** - Exports `releaseLock`, which releases lock.
+- **restart-backoff-ms.mjs** - Exports `RESTART_BACKOFF_MS`, a shared constant used by sibling modules.
+- **run-gateway-owner-loop.mjs** - Exports `runGatewayOwnerLoop`, which runs gateway owner loop.
+- **runtime.mjs** - Executable runtime entry point for this directory.
+- **sleep.mjs** - Exports `sleep`, which implements sleep.
+- **spawn-gateway-process.mjs** - Exports `spawnGatewayProcess`, which implements spawn gateway process.
+- **stopping.mjs** - Exports `setStopping`, `stopping`, providing the reusable API for this directory concern.
+- **try-acquire-lock.mjs** - Exports `tryAcquireLock`, which implements try acquire lock.
+- **wait-log-interval-ms.mjs** - Exports `WAIT_LOG_INTERVAL_MS`, a shared constant used by sibling modules.
+- **worktree-id.mjs** - Exports `WORKTREE_ID`, a shared constant used by sibling modules.
+- **worktree-path.mjs** - Exports `WORKTREE_PATH`, a shared constant used by sibling modules.
+- **write-lock-metadata.mjs** - Exports `writeLockMetadata`, which writes lock metadata.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
-path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
-current immediate directory contents.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include file-system access, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Discord integration, OpenClaw integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
 
 ## 4. Usage Instructions
 
@@ -69,9 +59,9 @@ node ops/runtime/discord/openclaw-gateway-singleton/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Node.js built-ins** - `node:child_process`, `node:fs`, `node:net`, `node:os`, `node:path`
+- **Internal relative modules** - `./child-process.mjs`, `./cleanup-stale-lock.mjs`, `./cli.mjs`, `./config-path.mjs`, `./default-config.mjs`, `./ensure-lock-dir.mjs`, `./follower-loop.mjs`, `./follower-sleep-ms.mjs`, `./host.mjs`, `./index.mjs`, `./is-lock-still-ours.mjs`, `./is-pid-alive.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

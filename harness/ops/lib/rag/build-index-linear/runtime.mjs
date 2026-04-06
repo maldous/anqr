@@ -1,4 +1,3 @@
-
 import { buildLinearIndex } from "./index.mjs";
 
 import { logError } from "./logger.mjs";

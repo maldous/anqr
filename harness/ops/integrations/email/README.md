@@ -2,34 +2,30 @@
 
 ## 1. Directory Overview
 
-This directory contains email ingest functionality and email-source integration ownership for the
-ANQR (Agentic Number Query Runner) harness. It provides the capability to ingest emails and
-integrate with the broader email-source ecosystem within the project. It currently contains 1 file
-and 1 subdirectory.
+This directory implements **ANQR Email Integrations** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 1 non-README files and 1 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **email-ingest.mjs** - Auto-generated facade file that re-exports from `./email-ingest/index.mjs` and `./email-ingest/runtime.mjs`. This is the main entry point for the email ingest functionality, providing a decomposed module structure for better organization and maintainability.
+- **email-ingest.mjs** - Facade module that re-exports public members from `./email-ingest/index.mjs`, `./email-ingest/runtime.mjs`.
 
-### Child Directories
+### Subdirectories
 
-- **email-ingest/** - This directory contains the email ingestion module for the ANQR (Agentic Number Query Runner) harness.
+- **email-ingest/** - Contains **ANQR Email Ingest**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
 
 ## 3. Overall Directory Function
 
-In practice, child directories split the area into smaller focused modules. The README content below
-is aligned to the current immediate directory contents.
+Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
 
 ## 4. Usage Instructions
 
-This directory is primarily consumed through its files and child modules rather than a single entry point.
+This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `./email-ingest/index.mjs`, `./email-ingest/runtime.mjs`
 
 ## 6. Additional Comments
 
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- No direct standalone runtime entry point is defined in the immediate directory contents.

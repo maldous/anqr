@@ -2,36 +2,26 @@
 
 ## 1. Directory Overview
 
-This directory contains automatic incident resolution functionality for the ANQR (Agentic Number
-Query Runner) harness. It monitors Linear issues labeled as "incident" and automatically resolves
-them when the affected service has been healthy for a specified duration. This provides self-healing
-capability for the system by detecting when incidents have been mitigated and closing them without
-manual intervention. It currently contains 10 files and 0 subdirectories.
+This directory implements **ANQR Incident Resolution** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 10 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
 ### Files
 
-- **auto-resolve-incident.mjs** - Performs the actual resolution of an incident. Adds a Markdown comment with resolution details (service, health status, timestamp, health check data) and moves the issue to the Done state using Linear API.
-- **can-auto-resolve.mjs** - Determines if an incident can be automatically resolved. Checks two conditions: (1) the service is healthy via health endpoint, and (2) the incident has been open for at least HEALTHY_DURATION_MS (1 hour). Returns canResolve flag with reason if not ready.
-- **check-service-health.mjs** - Checks service health by calling configured health endpoints. Uses a 5-second timeout and returns healthy status with response data if the endpoint returns HTTP 200, or returns unhealthy with reason otherwise.
-- **extract-service-name.mjs** - Extracts the service name from an issue. Searches the title for "symphony" or "codebuff" (case-insensitive), or falls back to extracting from a "Service: \*\*" field in the description. Returns null if no service identified.
-- **health-endpoints.mjs** - Defines the HEALTH_ENDPOINTS mapping. Currently configures the Symphony service health endpoint at http://127.0.0.1:4319/health.
-- **healthy-duration-ms.mjs** - Defines HEALTHY_DURATION_MS as 60 _ 60 _ 1000 (1 hour). This is the minimum duration a service must remain healthy before an incident can be auto-resolved.
-- **index.mjs** - Generated facade index that re-exports all public API members including HEALTH_ENDPOINTS, HEALTHY_DURATION_MS, checkServiceHealth, extractServiceName, canAutoResolve, autoResolveIncident, and main.
-- **logger.mjs** - Shared logger module that wraps the createLogger function from the project's central logger (../../../lib/logger.mjs). Exports logInfo, logWarn, and logDebug functions.
-- **main.mjs** - Main orchestration module. Finds open incidents (Todo, In Progress, In Review states) with the "incident" label, iterates through each to check if they can be auto-resolved, and resolves them if ready. Logs progress and includes a 500ms rate limit between checks.
-- **runtime.mjs** - Generated runtime carry-forward that imports and executes the main function from index.mjs, providing the CLI entry point.
-
-### Child Directories
-
-This directory does not contain child directories.
+- **auto-resolve-incident.mjs** - Exports `autoResolveIncident`, which implements auto resolve incident.
+- **can-auto-resolve.mjs** - Exports `canAutoResolve`, which determines whether auto resolve.
+- **check-service-health.mjs** - Exports `checkServiceHealth`, which checks service health.
+- **extract-service-name.mjs** - Exports `extractServiceName`, which implements extract service name.
+- **health-endpoints.mjs** - Exports `HEALTH_ENDPOINTS`, a shared constant used by sibling modules.
+- **healthy-duration-ms.mjs** - Exports `HEALTHY_DURATION_MS`, a shared constant used by sibling modules.
+- **index.mjs** - Facade module that re-exports public members from `./health-endpoints.mjs`, `./healthy-duration-ms.mjs`, `./check-service-health.mjs`, `./extract-service-name.mjs`, `./can-auto-resolve.mjs`, `./auto-resolve-incident.mjs`, and 1 more siblings.
+- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logInfo`, `logWarn`.
+- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
+- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
 
 ## 3. Overall Directory Function
 
-In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
-path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
-current immediate directory contents.
+The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include network/API integration, timer, scheduling, cooldown, or watchdog behavior, Linear integration, and Symphony integration.
 
 ## 4. Usage Instructions
 
@@ -41,9 +31,8 @@ node ops/integrations/linear/incident-resolution/runtime.mjs
 
 ## 5. Dependencies
 
-- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
+- **Internal relative modules** - `../../../lib/logger.mjs`, `../linear-client.mjs`, `./auto-resolve-incident.mjs`, `./can-auto-resolve.mjs`, `./check-service-health.mjs`, `./extract-service-name.mjs`, `./health-endpoints.mjs`, `./healthy-duration-ms.mjs`, `./index.mjs`, `./logger.mjs`
 
 ## 6. Additional Comments
 
-- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
-- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.
+- This README was regenerated from the verified file inventory and current code contents in this directory.

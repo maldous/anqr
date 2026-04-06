@@ -1,4 +1,3 @@
-
 import { API_KEY, isMain, main } from "./index.mjs";
 
 import { logError } from "./logger.mjs";

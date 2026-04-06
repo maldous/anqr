@@ -1,4 +1,3 @@
-
 import { mode, processQueue, runDaemon, showStatus } from "./index.mjs";
 
 import { logInfo, logError } from "./logger.mjs";
