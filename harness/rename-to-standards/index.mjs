@@ -1,4 +1,3 @@
-// Generated facade index.
 export { require } from "./require.mjs";
 export { ts } from "./ts.mjs";
 export { DEFAULT_DIRS } from "./default-dirs.mjs";

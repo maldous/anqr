@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import {
   DEDUP_WINDOW_MS,

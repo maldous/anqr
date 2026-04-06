@@ -1,4 +1,3 @@
-// Generated facade index.
 export { WATCHDOG_ENABLED } from "./watchdog-enabled.mjs";
 export { WATCHDOG_TIMEOUT_MS } from "./watchdog-timeout-ms.mjs";
 export { WATCHDOG_ROLLBACK } from "./watchdog-rollback.mjs";

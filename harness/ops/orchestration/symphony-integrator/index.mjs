@@ -1,4 +1,3 @@
-// Generated facade index.
 export { INTEGRATOR_ID } from "./integrator-id.mjs";
 export { POLL_INTERVAL_MS } from "./poll-interval-ms.mjs";
 export { LOCK_TTL_MS } from "./lock-ttl-ms.mjs";

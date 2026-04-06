@@ -1,4 +1,3 @@
-// Generated facade index.
 export { CHECK_INTERVAL_MS } from "./check-interval-ms.mjs";
 export { STARTUP_GRACE_PERIOD_MS } from "./startup-grace-period-ms.mjs";
 export { RAPID_RESTART_WINDOW_MS } from "./rapid-restart-window-ms.mjs";

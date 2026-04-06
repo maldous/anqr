@@ -1,4 +1,3 @@
-// Generated facade index.
 export { validateIssueInput } from "./validate-issue-input.mjs";
 export { calculateValidationScore } from "./calculate-validation-score.mjs";
 export { formatValidationResult } from "./format-validation-result.mjs";

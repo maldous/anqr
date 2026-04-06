@@ -1,4 +1,3 @@
-// Compatibility shim — canonical location: ./core/symphony-state.mjs
 export * from "./core/symphony-state.mjs";
 // v2: also exports setFinalizationState, getFinalizationState, enqueueIntegrationCandidate,
 // dequeueIntegrationCandidate, listIntegrationCandidates, acquireIntegrationLock,

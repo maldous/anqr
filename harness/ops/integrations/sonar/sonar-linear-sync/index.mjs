@@ -1,4 +1,3 @@
-// Generated facade index.
 export { FETCH_TIMEOUT_MS } from "./fetch-timeout-ms.mjs";
 export { SONAR_KEY_PATTERN } from "./sonar-key-pattern.mjs";
 export { OPEN_STATE_NAMES } from "./open-state-names.mjs";

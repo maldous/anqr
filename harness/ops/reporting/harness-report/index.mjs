@@ -1,4 +1,3 @@
-// Generated facade index.
 export { __dirname } from "./dirname.mjs";
 export { ROOT } from "./root.mjs";
 export { OLLAMA_BASE } from "./ollama-base.mjs";

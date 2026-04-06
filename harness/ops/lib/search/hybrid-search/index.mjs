@@ -1,4 +1,3 @@
-// Generated facade index.
 export { generateEmbedding } from "./generate-embedding.mjs";
 export { cosineSimilarity } from "./cosine-similarity.mjs";
 export { isOllamaAvailable } from "./is-ollama-available.mjs";

@@ -1,4 +1,3 @@
-// Generated facade index.
 export { SYMPHONY_BRIDGE_URL } from "./symphony-bridge-url.mjs";
 export { SYMPHONY_BRIDGE_API_KEY } from "./symphony-bridge-api-key.mjs";
 export { SYMPHONY_BRIDGE_MODEL } from "./symphony-bridge-model.mjs";

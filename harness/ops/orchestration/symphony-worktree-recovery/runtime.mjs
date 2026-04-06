@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { runDaemon, runRecoveryCycle, showStatus } from "./index.mjs";
 

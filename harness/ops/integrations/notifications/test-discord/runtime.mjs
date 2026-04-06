@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { runTests } from "./index.mjs";
 

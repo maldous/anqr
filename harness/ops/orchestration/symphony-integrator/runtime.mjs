@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { mode, processQueue, runDaemon, showStatus } from "./index.mjs";
 

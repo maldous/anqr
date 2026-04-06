@@ -1,4 +1,3 @@
-// Generated facade index.
 export { HEALTH_ENDPOINTS } from "./health-endpoints.mjs";
 export { HEALTHY_DURATION_MS } from "./healthy-duration-ms.mjs";
 export { checkServiceHealth } from "./check-service-health.mjs";

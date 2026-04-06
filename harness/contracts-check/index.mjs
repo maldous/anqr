@@ -1,4 +1,3 @@
-// Generated facade index.
 export { repoRoot } from "./repo-root.mjs";
 export { contractsRoot } from "./contracts-root.mjs";
 export { forbiddenNamePattern } from "./forbidden-name-pattern.mjs";

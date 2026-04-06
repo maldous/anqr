@@ -1,4 +1,3 @@
-// Generated facade index.
 export { MAIN_REPO_ROOT } from "./main-repo-root.mjs";
 export { ALL_WORKTREE_IDS } from "./all-worktree-ids.mjs";
 export { classifyWorktree } from "./classify-worktree.mjs";

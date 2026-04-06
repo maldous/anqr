@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { main, issueTemplate, customizeIssue, validateIssue } from "./index.mjs";
 

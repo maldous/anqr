@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { setupEpipeHandler } from "../lib/ast-helpers.mjs";
 import process from "node:process";

@@ -1,4 +1,3 @@
-// Generated facade index.
 export { getTimerStatus } from "./get-timer-status.mjs";
 export { getEnabledTimers } from "./get-enabled-timers.mjs";
 export { disableAllTimers } from "./disable-all-timers.mjs";

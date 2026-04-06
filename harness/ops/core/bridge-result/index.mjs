@@ -1,4 +1,3 @@
-// Generated facade index.
 export { normalizeStringArray } from "./normalize-string-array.mjs";
 export { normalizeCount } from "./normalize-count.mjs";
 export { normalizeFailureClass } from "./normalize-failure-class.mjs";

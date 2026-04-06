@@ -1,4 +1,3 @@
-// Generated facade index.
 export { CODEBUFF_MODEL_ID } from "./codebuff-model-id.mjs";
 export { CODEBUFF_MAX_STEPS } from "./codebuff-max-steps.mjs";
 export { CODEBUFF_MAX_CONTINUATIONS } from "./codebuff-max-continuations.mjs";

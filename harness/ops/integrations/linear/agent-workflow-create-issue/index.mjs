@@ -1,4 +1,3 @@
-// Generated facade index.
 export { AVAILABLE_STATES } from "./available-states.mjs";
 export { AVAILABLE_LABELS } from "./available-labels.mjs";
 export { args } from "./args.mjs";

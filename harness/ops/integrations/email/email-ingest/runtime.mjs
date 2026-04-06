@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";

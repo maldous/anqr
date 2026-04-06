@@ -1,4 +1,3 @@
-// Generated facade index.
 export { DEFAULT_OPTIONS } from "./default-options.mjs";
 export { CODE_EXTENSIONS } from "./code-extensions.mjs";
 export { MARKDOWN_EXTENSIONS } from "./markdown-extensions.mjs";

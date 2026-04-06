@@ -1,4 +1,3 @@
-// Generated facade index.
 export { API_KEY } from "./api-key.mjs";
 export { TEAM_ID } from "./team-id.mjs";
 export { query } from "./query.mjs";

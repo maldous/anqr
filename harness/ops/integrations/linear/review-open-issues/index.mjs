@@ -1,4 +1,3 @@
-// Generated facade index.
 export { execAsync } from "./exec-async.mjs";
 export { __dirname } from "./dirname.mjs";
 export { ROOT } from "./root.mjs";

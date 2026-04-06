@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 // Test output decomposed into print-test-results.mjs and print-completion-summary.mjs.
 
 import { getCurrentStatus, runAgentWorkflowTests } from "./index.mjs";

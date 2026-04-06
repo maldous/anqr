@@ -1,4 +1,3 @@
-// Generated facade index.
 export { __dirname } from "./dirname.mjs";
 export { PROJECT_ROOT } from "./project-root.mjs";
 export { STATE_DIR } from "./state-dir.mjs";

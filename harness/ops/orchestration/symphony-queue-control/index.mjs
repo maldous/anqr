@@ -1,4 +1,3 @@
-// Generated facade index.
 export { actions } from "./actions.mjs";
 export { logAction } from "./log-action.mjs";
 export { issueAge } from "./issue-age.mjs";

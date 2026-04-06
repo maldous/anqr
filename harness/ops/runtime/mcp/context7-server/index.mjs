@@ -1,4 +1,3 @@
-// Generated facade index.
 export { STARTUP_TIMEOUT_MS } from "./startup-timeout-ms.mjs";
 export { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
 export { CLOUD_API_BASE, LEGACY_CLOUD_API_BASE } from "./cloud-api-base.mjs";

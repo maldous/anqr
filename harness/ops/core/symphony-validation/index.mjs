@@ -1,4 +1,3 @@
-// Generated facade index.
 export { VALIDATION_MANIFEST } from "./validation-manifest.mjs";
 export { validationManifestHash } from "./validation-manifest-hash.mjs";
 export { trimOutput } from "./trim-output.mjs";

@@ -1,4 +1,3 @@
-// Generated facade index.
 export { createWorktree } from "./create-worktree.d.ts";
 export { removeWorktree } from "./remove-worktree.d.ts";
 export { listWorktrees } from "./list-worktrees.d.ts";

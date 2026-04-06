@@ -1,4 +1,3 @@
-// Generated facade index.
 export { OLLAMA_BASE } from "./ollama-base.mjs";
 export { PINNED_MODEL } from "./pinned-model.mjs";
 export { PROMPT_TIMEOUT_MS } from "./prompt-timeout-ms.mjs";

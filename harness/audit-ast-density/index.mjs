@@ -1,4 +1,3 @@
-// Generated facade index.
 export { DEFAULT_THRESHOLD } from "./default-threshold.mjs";
 export { parseArgs } from "./parse-args.mjs";
 export { describeVariableDeclaration } from "./describe-variable-declaration.mjs";

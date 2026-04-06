@@ -1,4 +1,3 @@
-// Generated facade index.
 export { GITHUB_API } from "./github-api.mjs";
 export { GITHUB_REPO } from "./github-repo.mjs";
 export { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";

@@ -1,4 +1,3 @@
-// Generated facade index.
 export { createWorktree } from "./create-worktree.mjs";
 export { removeWorktree } from "./remove-worktree.mjs";
 export { listWorktrees } from "./list-worktrees.mjs";

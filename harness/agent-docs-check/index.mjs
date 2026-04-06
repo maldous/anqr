@@ -1,4 +1,3 @@
-// Generated facade index.
 export { repoRoot } from "./repo-root.mjs";
 export { errors } from "./errors.mjs";
 export { resolve } from "./resolve.mjs";

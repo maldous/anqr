@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { buildLinearIndex } from "./index.mjs";
 

@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { log, main } from "./index.mjs";
 

@@ -1,4 +1,3 @@
-// Generated facade index.
 export { DEFAULT_GLOBS } from "./default-globs.mjs";
 export { normalizePath } from "./normalize-path.mjs";
 export { isFunctionLikeInitializer } from "./is-function-like-initializer.mjs";

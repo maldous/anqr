@@ -1,4 +1,3 @@
-// Generated facade index.
 export { OLLAMA_BASE } from "./ollama-base.mjs";
 export { EMBEDDING_MODEL } from "./embedding-model.mjs";
 export { EMBEDDING_TIMEOUT_MS } from "./embedding-timeout-ms.mjs";

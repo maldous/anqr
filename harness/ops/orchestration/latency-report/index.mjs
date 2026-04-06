@@ -1,4 +1,3 @@
-// Generated facade index.
 export { TARGET_MS } from "./target-ms.mjs";
 export { ACCEPTABLE_MS } from "./acceptable-ms.mjs";
 export { formatDuration } from "./format-duration.mjs";

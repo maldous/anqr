@@ -1,4 +1,3 @@
-// Generated facade index.
 export { getServiceJournal } from "./get-service-journal.mjs";
 export { getGitContext } from "./get-git-context.mjs";
 export { getSystemInfo } from "./get-system-info.mjs";

@@ -1,4 +1,3 @@
-// Generated facade index.
 export { TOOL_DEFINITION_OVERHEAD_TOKENS } from "./tool-definition-overhead-tokens.mjs";
 export { MIN_MESSAGE_BUDGET_TOKENS } from "./min-message-budget-tokens.mjs";
 export { PROVIDER_MAX_INPUT_TOKENS } from "./provider-max-input-tokens.mjs";

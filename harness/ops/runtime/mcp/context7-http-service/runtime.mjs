@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { startContext7Server } from "../context7-server.mjs";
 

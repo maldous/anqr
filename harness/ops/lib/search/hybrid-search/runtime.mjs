@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 try {
   ({ generateEmbedding, cosineSimilarity, isOllamaAvailable } =

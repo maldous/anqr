@@ -1,4 +1,3 @@
-// Generated facade index.
 export { LINEAR_API } from "./linear-api.mjs";
 export { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
 export { TEAM_ID } from "./team-id.mjs";

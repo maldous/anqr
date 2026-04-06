@@ -1,4 +1,3 @@
-// Generated facade index.
 export { CODEX_SANDBOX_MODE } from "./codex-sandbox-mode.mjs";
 export { CONTEXT7_HTTP_BASE } from "./context7-http-base.mjs";
 export { OPENCLAW_GATEWAY_HOST } from "./openclaw-gateway-host.mjs";

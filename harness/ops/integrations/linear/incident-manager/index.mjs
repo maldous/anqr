@@ -1,4 +1,3 @@
-// Generated facade index.
 export { DEDUP_WINDOW_MS } from "./dedup-window-ms.mjs";
 export { INCIDENT_TYPES } from "./incident-types.mjs";
 export { findExistingIncident } from "./find-existing-incident.mjs";

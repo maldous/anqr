@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { createLinearIssueWorkflow } from "./index.mjs";
 

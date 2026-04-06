@@ -1,4 +1,3 @@
-// Generated facade index.
 export { __dirname } from "./dirname.mjs";
 export { PROJECT_ROOT } from "./project-root.mjs";
 export { CODEX_SANDBOX_MODE } from "./codex-sandbox-mode.mjs";

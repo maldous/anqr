@@ -1,4 +1,3 @@
-// Generated facade index.
 export { results } from "./results.mjs";
 export { logTestResult } from "./log-test-result.mjs";
 export { assertCondition } from "./assert-condition.mjs";

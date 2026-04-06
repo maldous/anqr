@@ -1,4 +1,3 @@
-// Generated facade index.
 export { WORKTREE_ID } from "./worktree-id.mjs";
 export { HOST } from "./host.mjs";
 export { PORT } from "./port.mjs";

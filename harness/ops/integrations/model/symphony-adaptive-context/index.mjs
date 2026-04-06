@@ -1,4 +1,3 @@
-// Generated facade index.
 export { TOKEN_WINDOW_MS } from "./token-window-ms.mjs";
 export { REQUEST_WINDOW_MS } from "./request-window-ms.mjs";
 export { CONTEXT_SHRINK_FACTOR } from "./context-shrink-factor.mjs";

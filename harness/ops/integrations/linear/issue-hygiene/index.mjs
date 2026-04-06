@@ -1,4 +1,3 @@
-// Generated facade index.
 export { DEFAULT_COMMENT_THRESHOLD } from "./default-comment-threshold.mjs";
 export { SYSTEMIC_FAILURE_THRESHOLD } from "./systemic-failure-threshold.mjs";
 export { MAX_DESCRIPTION_LENGTH } from "./max-description-length.mjs";

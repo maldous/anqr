@@ -1,4 +1,3 @@
-// Generated facade index.
 export { OPEN_STATES } from "./open-states.mjs";
 export { DONE_DAYS_LOOKBACK } from "./done-days-lookback.mjs";
 export { OUTPUT_DIR } from "./output-dir.mjs";

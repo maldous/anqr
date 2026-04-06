@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { MAX_CONCURRENT, PORT, WORKTREE_IDS, server } from "./index.mjs";
 

@@ -2,112 +2,47 @@
 
 ## 1. Directory Overview
 
-This directory contains the notification automation module for the ANQR (Agentic Number Query Runner) harness. It provides functionality to send harness report notifications to various channels including stdout and email. The module reads the latest harness report and formats/distributes it to configured notification endpoints.
+This directory contains the notification automation module for the ANQR (Agentic Number Query
+Runner) harness. It provides functionality to send harness report notifications to various channels
+including stdout and email. The module reads the latest harness report and formats/distributes it to
+configured notification endpoints. It currently contains 10 files and 0 subdirectories.
 
 ## 2. File Summaries
 
-### Core Modules
-
-- **main.mjs** - Main orchestration module that reads the harness report from `reports/latest.json`, formats output for different channels, and dispatches notifications via stdout and email. Supports dry-run mode for testing.
-
-- **index.mjs** - Generated facade index that re-exports all public API members including `main`, `parseArgs`, `formatEmailBody`, `formatStdout`, path constants, and utilities.
-
-- **runtime.mjs** - Generated runtime carry-forward that imports and executes the main function via `await main()`.
-
-### Utility Modules
-
-- **parse-args.mjs** - Command-line argument parser. Parses `--dry-run` flag and `--channel=` option (values: `stdout`, `email`, `all`). Defaults to `all` if not specified.
-
-- **format-stdout.mjs** - Formats harness report for stdout output. Displays profile, timestamp, duration, and a list of checks with pass/fail icons and timing information.
-
-- **format-email-body.mjs** - Formats harness report as an email body. Shows profile, timestamp, duration, summary, detailed failure list with error messages, and passed checks.
-
-- **report-path.mjs** - Path constant for the harness report location (`reports/latest.json`). Resolved relative to the project ROOT.
-
-- **logger.mjs** - Shared logger module using the centralized logger from `../../lib/logger.mjs`. Exports `logInfo` and `logError` functions.
-
-- **root.mjs** - Path resolution utility that defines the project ROOT by resolving from the module's directory to the project root (4 levels up).
+### Files
 
 - **dirname.mjs** - Node.js `__dirname` polyfill for ESM compatibility using `fileURLToPath`.
+- **format-email-body.mjs** - Formats harness report as an email body. Shows profile, timestamp, duration, summary, detailed failure list with error messages, and passed checks.
+- **format-stdout.mjs** - Formats harness report for stdout output. Displays profile, timestamp, duration, and a list of checks with pass/fail icons and timing information.
+- **index.mjs** - Generated facade index that re-exports all public API members including `main`, `parseArgs`, `formatEmailBody`, `formatStdout`, path constants, and utilities.
+- **logger.mjs** - Shared logger module using the centralized logger from `../../lib/logger.mjs`. Exports `logInfo` and `logError` functions.
+- **main.mjs** - Main orchestration module that reads the harness report from `reports/latest.json`, formats output for different channels, and dispatches notifications via stdout and email. Supports dry-run mode for testing.
+- **parse-args.mjs** - Command-line argument parser. Parses `--dry-run` flag and `--channel=` option (values: `stdout`, `email`, `all`). Defaults to `all` if not specified.
+- **report-path.mjs** - Path constant for the harness report location (`reports/latest.json`). Resolved relative to the project ROOT.
+- **root.mjs** - Path resolution utility that defines the project ROOT by resolving from the module's directory to the project root (4 levels up).
+- **runtime.mjs** - Generated runtime carry-forward that imports and executes the main function via `await main()`.
+
+### Child Directories
+
+This directory does not contain child directories.
 
 ## 3. Overall Directory Function
 
-This directory serves as the notification layer for the ANQR harness. The workflow: `main.mjs` reads the harness report from `reports/latest.json`, parses command-line arguments for channel selection and dry-run mode, formats the report for each enabled channel, and dispatches notifications.
-
-The module supports two notification channels:
-- **stdout** - Formatted console output with check results and timing
-- **email** - HTML-capable email body with failures and summary
-
-The email channel uses the centralized `sendNotification` function from `../../lib/notify.mjs` which handles the actual email delivery. The module determines severity based on check results (`warn` if any failures, `info` otherwise).
+In practice, `index.mjs` acts as the public entry point, `main.mjs` coordinates the main execution
+path, `runtime.mjs` provides a direct execution path. The README content below is aligned to the
+current immediate directory contents.
 
 ## 4. Usage Instructions
-
-### Running Notify
-
-```bash
-# Run via facade (recommended)
-node ops/notifications/notify/index.mjs
-```
-
-Or directly:
 
 ```bash
 node ops/notifications/notify/runtime.mjs
 ```
 
-### Channel Selection
-
-```bash
-# Send to all channels (stdout + email)
-node ops/notifications/notify/index.mjs
-
-# Send to stdout only
-node ops/notifications/notify/index.mjs --channel=stdout
-
-# Send to email only
-node ops/notifications/notify/index.mjs --channel=email
-```
-
-### Dry Run Mode
-
-To test without sending actual notifications:
-
-```bash
-node ops/notifications/notify/index.mjs --dry-run
-```
-
-### Prerequisites
-
-- A valid harness report at `reports/latest.json` (generated by `harness-report.mjs`)
-- Email notification configuration in the environment (handled by `../../lib/notify.mjs`)
-
-### Output
-
-- **stdout channel**: Formatted console output with pass/fail icons
-- **email channel**: Sends email notification with report details
-
 ## 5. Dependencies
 
-### Internal Dependencies
-
-- **../../lib/notify.mjs** - Centralized notification dispatch (`sendNotification` function)
-- **../../lib/logger.mjs** - Logger factory for `logInfo` and `logError`
-- **../../symphony-config.mjs** - Configuration constants (via imports in other modules)
-
-### Runtime Requirements
-
-- Node.js with ESM support (.mjs files)
-- Valid report file at `reports/latest.json`
-- Email configuration (SMTP or equivalent) for email channel
+- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
 
 ## 6. Additional Comments
 
-- **Channel Flexibility**: The module can send to stdout, email, or both. This allows flexibility in CI/CD pipelines and different notification preferences.
-
-- **Dry-Run Support**: All notification dispatches can be tested via `--dry-run` flag without actually sending notifications.
-
-- **Fail-Safe Design**: If the report file doesn't exist, the module exits with an error and instructs the user to run `harness-report.mjs` first.
-
-- **Severity Detection**: Email notifications are tagged with `warn` severity if any checks failed, otherwise `info` severity.
-
-- **Timing Display**: Both formatters display check duration in appropriate units (milliseconds for < 1s, seconds for >= 1s).
+- This directory follows the common harness pattern where `index.mjs` exposes the public API and `runtime.mjs` provides direct execution.
+- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.

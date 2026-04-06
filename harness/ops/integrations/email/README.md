@@ -2,50 +2,34 @@
 
 ## 1. Directory Overview
 
-This directory contains email ingest functionality and email-source integration ownership for the ANQR (Agentic Number Query Runner) harness. It provides the capability to ingest emails and integrate with the broader email-source ecosystem within the project.
+This directory contains email ingest functionality and email-source integration ownership for the
+ANQR (Agentic Number Query Runner) harness. It provides the capability to ingest emails and
+integrate with the broader email-source ecosystem within the project. It currently contains 1 file
+and 1 subdirectory.
 
 ## 2. File Summaries
 
-### Facade Module
+### Files
 
 - **email-ingest.mjs** - Auto-generated facade file that re-exports from `./email-ingest/index.mjs` and `./email-ingest/runtime.mjs`. This is the main entry point for the email ingest functionality, providing a decomposed module structure for better organization and maintainability.
 
-### README
+### Child Directories
 
-- **README.md** - This file. Provides documentation for the email integrations directory.
+- **email-ingest/** - This directory contains the email ingestion module for the ANQR (Agentic Number Query Runner) harness.
 
 ## 3. Overall Directory Function
 
-This directory serves as the email integration layer for the ANQR harness. It handles the ingestion of emails and provides integration points with the email-source system. The facade pattern is used here, where the main module exports from sibling subdirectories (index.mjs and runtime.mjs) to maintain backwards compatibility while allowing for cleaner code organization.
+In practice, child directories split the area into smaller focused modules. The README content below
+is aligned to the current immediate directory contents.
 
 ## 4. Usage Instructions
 
-This directory is primarily used through imports from other harness modules. The email-ingest.mjs facade is the canonical entry point:
-
-```javascript
-import * as emailIngest from "./ops/integrations/email/email-ingest.mjs";
-```
-
-For direct execution (if applicable):
-
-```bash
-node ops/integrations/email/email-ingest.mjs
-```
+This directory is primarily consumed through its files and child modules rather than a single entry point.
 
 ## 5. Dependencies
 
-### Internal Dependencies
-
-- **./email-ingest/index.mjs** - Main implementation module
-- **./email-ingest/runtime.mjs** - Runtime carry-forward module
-
-### External Dependencies
-
-- Node.js with ESM support (.mjs files)
-- Any email-source integration dependencies (refer to subdirectory modules)
+- **Node.js** - Required for the JavaScript and TypeScript modules in this directory.
 
 ## 6. Additional Comments
 
-- The facade module follows the project's decomposition pattern where original files have been split into sibling modules for better organization
-- Email ingest functionality is part of the broader integrations layer in the ANQR system
-- This directory works in conjunction with other integration modules (linear, notifications, model, sonar) to provide comprehensive external system connectivity
+- This README has been regenerated against the current immediate directory contents so every listed entry exists in the directory.

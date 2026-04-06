@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 // Decomposed into focused startup modules — this file orchestrates the sequence.
 
 import {

@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { handleShutdown } from "./index.mjs";
 

@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { API_KEY, isMain, main } from "./index.mjs";
 

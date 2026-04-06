@@ -1,4 +1,3 @@
-// Generated facade index.
 export { PORT } from "./port.mjs";
 export { WEBHOOK_SECRET } from "./webhook-secret.mjs";
 export { WORKTREE_IDS } from "./worktree-ids.mjs";

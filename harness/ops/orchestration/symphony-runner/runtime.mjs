@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 // Worktree detection extracted to detect-worktree.mjs.
 
 import { existsSync, readFileSync, mkdirSync, statSync } from "node:fs";

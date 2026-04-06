@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { monitorLoop, shutdown } from "./index.mjs";
 

@@ -1,4 +1,3 @@
-// Generated facade index.
 export { ALL_WORKTREE_IDS } from "./all-worktree-ids.mjs";
 export { getGitDirtyFiles } from "./get-git-dirty-files.mjs";
 export { getCurrentBranch } from "./get-current-branch.mjs";

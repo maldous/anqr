@@ -1,4 +1,3 @@
-// Generated runtime carry-forward.
 
 import { isMain, main } from "./index.mjs";
 

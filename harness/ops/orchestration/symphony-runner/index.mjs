@@ -1,4 +1,3 @@
-// Generated facade index.
 export { cwd } from "./cwd.mjs";
 export { gitPath } from "./git-path.mjs";
 export { WORKTREE_ID } from "./worktree-id.mjs";

@@ -1,4 +1,3 @@
-// Generated facade index.
 export { PORT } from "./port.mjs";
 export { WORKTREE_IDS } from "./worktree-ids.mjs";
 export { MAX_CONCURRENT } from "./max-concurrent.mjs";

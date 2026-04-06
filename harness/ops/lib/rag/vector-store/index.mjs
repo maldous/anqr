@@ -1,4 +1,3 @@
-// Generated facade index.
 export { detectProjectRoot } from "./detect-project-root.mjs";
 export { PROJECT_ROOT } from "./project-root.mjs";
 export { INDEX_DIR } from "./index-dir.mjs";
