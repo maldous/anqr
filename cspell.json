@@ -653,7 +653,8 @@
     "zeego",
     "zustand",
     "huggingface",
-    "acap"
+    "acap",
+    "unrecognised"
   ],
   "dictionaries": [
     "typescript",
