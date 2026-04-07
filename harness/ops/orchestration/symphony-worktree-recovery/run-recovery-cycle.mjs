@@ -25,7 +25,7 @@ export async function runRecoveryCycle() {
         continue;
       }
 
-      const result = await executeRepair(wtId, classification);
+      const result = await executeRepair(wtId, classification, snapshot);
 
       if (result.action === "quarantine" || result.nextState === "quarantined") {
         stats.quarantined++;
