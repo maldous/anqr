@@ -5,6 +5,22 @@ import { logError } from "./logger.mjs";
 
 export async function readFileTool({ path: filePath, offset, lines }) {
   try {
+    // Validate path is not a placeholder or clearly invalid
+    if (typeof filePath !== "string" || !filePath.trim()) {
+      return { error: "Invalid path: path must be a non-empty string" };
+    }
+    const trimmedPath = filePath.trim();
+    // Check for common placeholder patterns that indicate LLM issues
+    if ((trimmedPath.startsWith("<") && trimmedPath.endsWith(">")) ||
+        (trimmedPath.startsWith("{") && trimmedPath.endsWith("}"))) {
+      logError(`readFileTool received placeholder as path: ${filePath}`);
+      return { error: `Invalid path: '${filePath}' appears to be an unresolved placeholder. Please provide a valid file path.` };
+    }
+    // Check for paths that are just numbers or very short invalid paths
+    if (/^\d+$/.test(trimmedPath) || (trimmedPath.length < 2 && !trimmedPath.includes("/"))) {
+      return { error: `Invalid path: '${filePath}' is not a valid file path` };
+    }
+
     let content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
     const totalLines = content.split("\n").length;
     const hasOffset = typeof offset === "number";
