@@ -910,9 +910,6 @@ export async function executeIssue(issue, dryRun = false) {
             });
           }
         }
-        logInfo(
-          `[runner] ⚠️ No-change completion: ${issue.identifier} — ${issue.title} (requires review)`,
-        );
         return "done";
       }
 
