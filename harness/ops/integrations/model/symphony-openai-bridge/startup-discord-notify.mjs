@@ -9,7 +9,7 @@ import { logInfo, logError } from "./logger.mjs";
 
 export async function sendStartupDiscordNotification() {
   const startupWorktreeId = process.env.ANQR_WORKTREE_ID;
-  const shouldAnnounceStartup = !startupWorktreeId || startupWorktreeId === "1";
+  const shouldAnnounceStartup = !startupWorktreeId || startupWorktreeId === "wt1";
   try {
     const commitHash = execSync("git rev-parse --short HEAD", {
       encoding: "utf-8",
