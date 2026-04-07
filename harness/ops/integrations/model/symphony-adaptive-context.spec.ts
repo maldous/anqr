@@ -117,8 +117,8 @@ describe("dynamic context limits", () => {
   });
 
   it("shrinks by precise ratio when requestedTokens and reportedLimit provided", () => {
-    const base = PROVIDER_MAX_INPUT_TOKENS.groq; // 6000
-    const initialBuffered = Math.floor(base * CONTEXT_INITIAL_BUFFER); // 4800
+    const base = PROVIDER_MAX_INPUT_TOKENS.groq;
+    const initialBuffered = Math.floor(base * CONTEXT_INITIAL_BUFFER);
     recordContextError("groq", {
       requestedTokens: 13279,
       reportedLimit: 12000,
@@ -766,8 +766,8 @@ describe("resetAdaptiveState", () => {
 
 describe("end-to-end: Groq TPM overflow scenario", () => {
   it("reproduces and resolves the P0 Groq TPM 413 error", () => {
-    const groqBase = PROVIDER_MAX_INPUT_TOKENS.groq; // 6000
-    const initialBuffered = Math.floor(groqBase * CONTEXT_INITIAL_BUFFER); // 4800
+    const groqBase = PROVIDER_MAX_INPUT_TOKENS.groq;
+    const initialBuffered = Math.floor(groqBase * CONTEXT_INITIAL_BUFFER);
 
     // 1. Initial state: effective max equals 80% buffer (not full base)
     expect(getEffectiveMaxTokens("groq")).toBe(initialBuffered);

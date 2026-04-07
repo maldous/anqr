@@ -156,7 +156,7 @@ export const tools = {
           z.object({
             agent_type: z.string().describe("Agent to spawn"),
             prompt: z.string().optional().describe("Prompt to send"),
-            params: z.record(z.any()).optional().describe("Parameters object"),
+            params: z.record(z.unknown()).optional().describe("Parameters object"),
           }),
         ),
       ),
@@ -214,27 +214,30 @@ export const tools = {
   set_messages: tool({
     description: "Set the conversation history",
     inputSchema: z.object({
-      messages: z.preprocess((val) => {
-        if (Array.isArray(val)) return val;
-        if (typeof val === "string") {
-          const trimmed = val.trim();
-          if (!trimmed) return [];
-          try {
-            const parsed = JSON.parse(trimmed);
-            return Array.isArray(parsed) ? parsed : [parsed];
-          } catch {
-            return [];
+      messages: z.preprocess(
+        (val) => {
+          if (Array.isArray(val)) return val;
+          if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return [];
+            try {
+              const parsed = JSON.parse(trimmed);
+              return Array.isArray(parsed) ? parsed : [parsed];
+            } catch {
+              return [];
+            }
           }
-        }
-        if (val && typeof val === "object") return [val];
-        return [];
-      }, z.array(z.any()).describe("Array of messages (accepts string or array)")),
+          if (val && typeof val === "object") return [val];
+          return [];
+        },
+        z.array(z.record(z.unknown())).describe("Array of messages (accepts string or array)"),
+      ),
     }),
     execute: setMessagesTool,
   }),
   set_output: tool({
     description: "Set the agent output",
-    inputSchema: z.any(),
+    inputSchema: z.object({}).passthrough(),
     execute: setOutputTool,
   }),
   skill: tool({

@@ -3,7 +3,7 @@ import { getCallerInfo } from "./get-caller-info.mjs";
 
 const LOGGER_REGISTRY_KEY = Symbol.for("anqr.logger.registry");
 const LOGGER_SIGNAL_SETUP_KEY = Symbol.for("anqr.logger.signal-setup");
-const REDACTED = "[redacted]";
+
 const MAX_LOG_STRING_LENGTH = 240;
 const MAX_LOG_ARRAY_ITEMS = 8;
 const MAX_LOG_OBJECT_KEYS = 20;
@@ -18,24 +18,12 @@ export function createLogger(scriptName = "", options = {}) {
   }
 
   function sanitizeText(value) {
-    return String(value || "")
-      .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
-      .replace(
-        /("?(?:authorization|api[_-]?key|token|password|secret|cookie|set-cookie)"?\s*[:=]\s*)[^,\s}]+/gi,
-        `$1${REDACTED}`,
-      )
-      .replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g, "[email]");
+    return String(value || "");
   }
 
   function truncateText(value, limit = MAX_LOG_STRING_LENGTH) {
     const text = sanitizeText(value);
     return text.length > limit ? `${text.slice(0, limit)}…` : text;
-  }
-
-  function isSensitiveKey(key) {
-    return /authorization|api[_-]?key|token|password|secret|cookie|set-cookie/i.test(
-      String(key || ""),
-    );
   }
 
   function summarizeObjectKeys(value) {
@@ -93,10 +81,7 @@ export function createLogger(scriptName = "", options = {}) {
       if (/headers/i.test(key)) {
         const entries = Object.entries(value).slice(0, MAX_LOG_OBJECT_KEYS);
         return Object.fromEntries(
-          entries.map(([childKey, childValue]) => [
-            childKey,
-            isSensitiveKey(childKey) ? REDACTED : truncateText(childValue, 80),
-          ]),
+          entries.map(([childKey, childValue]) => [childKey, truncateText(childValue, 80)]),
         );
       }
 
@@ -122,9 +107,7 @@ export function createLogger(scriptName = "", options = {}) {
       const entries = Object.entries(value).slice(0, MAX_LOG_OBJECT_KEYS);
       const sanitized = {};
       for (const [childKey, childValue] of entries) {
-        sanitized[childKey] = isSensitiveKey(childKey)
-          ? REDACTED
-          : sanitizeValue(childValue, childKey, depth + 1, seen);
+        sanitized[childKey] = sanitizeValue(childValue, childKey, depth + 1, seen);
       }
       const totalKeys = Object.keys(value).length;
       if (totalKeys > MAX_LOG_OBJECT_KEYS) {

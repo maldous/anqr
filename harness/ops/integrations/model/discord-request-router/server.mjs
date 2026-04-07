@@ -33,7 +33,9 @@ export const server = http.createServer((req, res) => {
     const sessionId =
       req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
 
-    logInfo(`🔑 Session: ${sessionId || "(no session)"} | active: ${globalActiveRequests}/${MAX_CONCURRENT}`);
+    logInfo(
+      `🔑 Session: ${sessionId || "(no session)"} | active: ${globalActiveRequests}/${MAX_CONCURRENT}`,
+    );
 
     // Find least loaded worktree, but keep a sticky worktree per session to preserve
     // executor-local session/provider state across Discord follow-up turns.

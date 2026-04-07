@@ -385,6 +385,72 @@ export const server = http.createServer(async (req, res) => {
         logWarn(`⚠️ Empty model field - using default`);
       }
 
+      // ── OpenClaw directive interception ──────────────────────────────────
+      // Messages from OpenClaw that are internal directives (e.g. pre-compaction
+      // memory flush) must NOT be forwarded to AI models. The content pattern
+      // match is the primary gate; absence of a Discord message ID is secondary.
+      const OPENCLAW_DIRECTIVE_RE =
+        /Pre-compaction memory flush|Store durable memories only in memory\//i;
+      const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+      const lastUserTextRaw =
+        typeof lastUserMsg?.content === "string"
+          ? lastUserMsg.content
+          : Array.isArray(lastUserMsg?.content)
+            ? lastUserMsg.content
+                .filter((p) => p.type === "text")
+                .map((p) => p.text)
+                .join(" ")
+            : "";
+
+      if (OPENCLAW_DIRECTIVE_RE.test(lastUserTextRaw)) {
+        logInfo(
+          `🔇 Intercepted OpenClaw directive (not forwarding to AI): ${lastUserTextRaw.slice(0, 120)}`,
+        );
+        const ackText = "[Symphony] Memory directive acknowledged — handled internally.";
+        const directiveResult = {
+          completed: true,
+          failureClass: null,
+          stepCount: 0,
+          toolCallCount: 0,
+          needsContinuation: false,
+        };
+        if (body.stream === true) {
+          res.writeHead(200, {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+          });
+          const chunk = {
+            id: `chatcmpl-directive-${Date.now()}`,
+            object: "chat.completion.chunk",
+            created: Math.floor(Date.now() / 1000),
+            model: body.model || MODEL_ID,
+            choices: [{ index: 0, delta: { content: ackText }, finish_reason: "stop" }],
+            _symphonyResult: directiveResult,
+          };
+          res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+          res.write("data: [DONE]\n\n");
+          res.end();
+        } else {
+          sendJson(res, 200, {
+            id: `chatcmpl-directive-${Date.now()}`,
+            object: "chat.completion",
+            created: Math.floor(Date.now() / 1000),
+            model: body.model || MODEL_ID,
+            choices: [
+              {
+                index: 0,
+                message: { role: "assistant", content: ackText },
+                finish_reason: "stop",
+              },
+            ],
+            _symphony_provider: "symphony-internal",
+            _symphonyResult: directiveResult,
+          });
+        }
+        return;
+      }
+
       const route = resolveRoute(body.model || MODEL_ID);
       route.useTools = shouldUseToolsForRequest(messages, route);
       const stream = body.stream === true;

@@ -1,12 +1,6 @@
 export function extractErrorString(err) {
   function sanitizeText(value) {
     return String(value || "")
-      .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
-      .replace(
-        /("?(?:authorization|api[_-]?key|token|password|secret|cookie|set-cookie)"?\s*[:=]\s*)[^,\s}]+/gi,
-        "$1[redacted]",
-      )
-      .replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g, "[email]")
       .replace(/\s+/g, " ")
       .trim();
   }

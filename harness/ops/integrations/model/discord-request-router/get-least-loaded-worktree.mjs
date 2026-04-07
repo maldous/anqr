@@ -13,11 +13,15 @@ export function getLeastLoadedWorktree(sessionId = null) {
     const existing = sessionThreadNames.get(sessionId);
     const sticky = WORKTREE_URLS.find((wt) => wt.id === existing?.worktreeId);
     if (sticky) {
-      logInfo(`📌 Sticky hit: session=${sessionId} -> wt${sticky.id} (active: ${sticky.activeRequests})`);
+      logInfo(
+        `📌 Sticky hit: session=${sessionId} -> wt${sticky.id} (active: ${sticky.activeRequests})`,
+      );
       sessionThreadNames.set(sessionId, { ...existing, createdAt: Date.now() });
       return sticky;
     }
-    logDebug(`📌 Sticky miss: session=${sessionId} had wt${existing?.worktreeId} but not found, falling through to round-robin`);
+    logDebug(
+      `📌 Sticky miss: session=${sessionId} had wt${existing?.worktreeId} but not found, falling through to round-robin`,
+    );
   }
 
   const minLoad = Math.min(...WORKTREE_URLS.map((wt) => wt.activeRequests));
