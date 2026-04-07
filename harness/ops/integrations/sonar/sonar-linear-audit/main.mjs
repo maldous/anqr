@@ -4,15 +4,14 @@ import {
   fetchAllSonarDuplicationIssues,
   fetchSonarMeasures,
 } from "../../../lib/sonar-linear-sync.mjs";
-import { findOpenIssuesByTitle, updateIssue, STATES } from "../../linear/linear-client.mjs";
+import { findOpenIssuesByTitle, updateIssue, STATES, createIssue, LABELS } from "../../linear/linear-client.mjs";
 import { sendNotification } from "../../../lib/notify.mjs";
 
 import { PROJECT_KEY } from "./project-key.mjs";
 import { SONAR_HOST } from "./sonar-host.mjs";
 import { SONAR_TOKEN } from "./sonar-token.mjs";
-import { findOrCreateConsolidatedIssue } from "./find-or-create-consolidated-issue.mjs";
+import { CONSOLIDATED_ISSUE_TITLE } from "./consolidated-issue-title.mjs";
 import { resolveStaleLinearIssues } from "./resolve-stale-linear-issues.mjs";
-import { updateConsolidatedIssue } from "./update-consolidated-issue.mjs";
 import { logInfo, logError } from "./logger.mjs";
 
 export async function main() {
@@ -57,57 +56,119 @@ export async function main() {
     );
   }
 
-  // Find existing consolidated issues
-  const existingConsolidated = await findOpenIssuesByTitle("Nightly Sonar:");
-  const consolidatedIssue = await findOrCreateConsolidatedIssue(existingConsolidated);
+  // Group issues by rule type for automatic issue creation
+  const byRule = {};
+  for (const issue of issues) {
+    const rule = issue.rule;
+    if (!byRule[rule]) byRule[rule] = [];
+    byRule[rule].push(issue);
+  }
+  const ruleGroups = Object.entries(byRule).sort((a, b) => b[1].length - a[1].length);
 
+  // Find existing grouped issues (by checking for "Sonar:" prefix)
+  const existingGrouped = await findOpenIssuesByTitle("Sonar:");
+  const existingByTitle = new Map(existingGrouped.map(i => [i.title, i]));
+
+  // Find or create the consolidated summary issue
+  const existingSummary = await findOpenIssuesByTitle(CONSOLIDATED_ISSUE_TITLE);
+  const summaryIssue = existingSummary.length > 0 ? existingSummary[0] : null;
+
+  // Create/update grouped issues for each rule
+  const groupedIssueIds = [];
+  for (const [rule, ruleIssues] of ruleGroups) {
+    const count = ruleIssues.length;
+    const title = `Sonar: ${rule} (${count})`;
+    const files = [...new Set(ruleIssues.map(i => i.component.split(":")[1]))].slice(0, 15);
+    const uniqueFiles = [...new Set(ruleIssues.map(i => i.component))].size;
+    const moreFiles = files.length < uniqueFiles ? `\n+${uniqueFiles - files.length} more files` : "";
+
+    const description = [
+      `**Rule:** ${rule}`,
+      `**Count:** ${count}`,
+      "",
+      `**Affected files (${uniqueFiles}):`,
+      ...files.map(f => `- ${f}`),
+      moreFiles,
+      "",
+      `> ${ruleIssues[0].message}`,
+      "",
+      `SonarQube: ${SONAR_HOST}/rules?rule_keys=${rule}`,
+    ].join("\n");
+
+    let groupIssue;
+    if (existingByTitle.has(title)) {
+      groupIssue = existingByTitle.get(title);
+      await updateIssue(groupIssue.id, { description, priority: Math.max(2, 4 - Math.floor(Math.log2(count))) });
+    } else {
+      groupIssue = await createIssue({
+        title,
+        description,
+        priority: Math.max(2, 4 - Math.floor(Math.log2(count))),
+        labelIds: [LABELS.harness, LABELS.hygiene],
+        stateId: STATES.todo,
+      });
+    }
+    groupedIssueIds.push(groupIssue.id);
+  }
+
+  // Update or create consolidated summary issue
   const totalFindings = issues.length + hotspotCount + dupIssues.length;
-
   if (totalFindings > 0) {
-    // Update the consolidated issue with all findings
-    await updateConsolidatedIssue(consolidatedIssue.id, {
-      issues,
-      hotspots,
-      duplications: dupIssues,
-    });
+    const summaryDesc = [
+      `**Nightly Sonar Audit Summary**`,
+      "",
+      `| Rule | Count |`,
+      `|------|-------|`,
+      ...ruleGroups.slice(0, 20).map(([rule, arr]) => `| ${rule} | ${arr.length} |`),
+      ruleGroups.length > 20 ? `\n_...and ${ruleGroups.length - 20} more rules_` : "",
+      "",
+      `**Total:** ${issues.length} issues, ${hotspotCount} hotspots, ${dupIssues.length} duplications`,
+      `**Rules:** ${ruleGroups.length} unique rules`,
+      `**Dashboard:** ${SONAR_HOST}/dashboard?id=${PROJECT_KEY}`,
+    ].join("\n");
 
-    // Ensure it's in Todo state
-    if (consolidatedIssue.state.name !== "Todo") {
-      await updateIssue(consolidatedIssue.id, { stateId: STATES.todo });
+    if (summaryIssue) {
+      await updateIssue(summaryIssue.id, { description: summaryDesc, priority: 1 });
+    } else {
+      await createIssue({
+        title: CONSOLIDATED_ISSUE_TITLE,
+        description: summaryDesc,
+        priority: 1,
+        labelIds: [LABELS.harness],
+        stateId: STATES.todo,
+      });
     }
 
     sendNotification({
-      subject: `Nightly sonar: ${issues.length} issues, ${hotspotCount} hotspots, ${dupIssues.length} duplications`,
+      subject: `Nightly sonar: ${issues.length} issues (${ruleGroups.length} rules), ${hotspotCount} hotspots`,
       body: [
-        `Consolidated issue: ${consolidatedIssue.identifier}`,
+        `**Grouped into ${ruleGroups.length} Linear issues**`,
         "",
-        `**Findings:**`,
-        `- Issues: ${issues.length}`,
-        `- Security Hotspots: ${hotspotCount}`,
-        `- Duplications: ${dupIssues.length}`,
+        `Top rules:`,
+        ...ruleGroups.slice(0, 5).map(([rule, arr]) => `- ${rule}: ${arr.length}`),
+        "",
         totalResolved > 0 ? `**Resolved stale:** ${totalResolved}` : "",
         "",
-        `Total open: ${totalFindings}`,
         `Dashboard: ${SONAR_HOST}/dashboard?id=${PROJECT_KEY}`,
-        "",
-        `The consolidated issue includes grouping guidance for batch resolution.`,
-      ]
-        .filter(Boolean)
-        .join("\n"),
+      ].filter(Boolean).join("\n"),
       severity: "critical",
     });
   } else {
-    // All findings resolved - close the consolidated issue
-    await updateIssue(consolidatedIssue.id, { stateId: STATES.done });
+    // All findings resolved
+    if (summaryIssue) {
+      await updateIssue(summaryIssue.id, { stateId: STATES.done });
+    }
+    // Also close all grouped issues
+    for (const id of groupedIssueIds) {
+      await updateIssue(id, { stateId: STATES.done });
+    }
 
     sendNotification({
       subject: "Nightly sonar: all findings resolved",
       body: [
-        `All SonarQube findings cleared. Consolidated issue ${consolidatedIssue.identifier} resolved.`,
+        `All ${ruleGroups.length} grouped issues resolved.`,
         totalResolved > 0 ? `Also resolved ${totalResolved} stale individual issues.` : "",
-      ]
-        .filter(Boolean)
-        .join("\n"),
+      ].filter(Boolean).join("\n"),
       severity: "info",
     });
   }
