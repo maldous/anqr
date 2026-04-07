@@ -1,6 +1,7 @@
 import {
   setWorktreeState,
   getWorktreeState,
+  getIssueState,
   recordQuarantine,
   releaseLease,
   setFinalizationState,
@@ -19,9 +20,30 @@ import {
   DISCORD_WORKTREE_IDS,
 } from "../../core/worktree-config.mjs";
 import { execFileSync } from "node:child_process";
+import { sendDiscordEmbed } from "../../integrations/notifications/openclaw-discord.mjs";
+import { voiceAnnounce } from "../../integrations/model/symphony-openai-bridge/voice-announce.mjs";
 import { logInfo, logWarn } from "./logger.mjs";
 
-export async function executeRepair(worktreeId, classification) {
+function extractFileNames(dirtyFiles) {
+  return dirtyFiles
+    .map((line) => line.replace(/^.{1,3}/, "").trim().split("/").pop())
+    .filter(Boolean);
+}
+
+function formatFileSummary(dirtyFiles) {
+  const names = extractFileNames(dirtyFiles);
+  if (names.length === 0) return "files updated";
+  if (names.length <= 3) return names.join(", ");
+  return `${names.slice(0, 2).join(", ")} (+${names.length - 2} more)`;
+}
+
+function buildCommitMessage(worktreeId, issueId, dirtyFiles) {
+  const summary = formatFileSummary(dirtyFiles);
+  if (issueId) return `fix(${issueId}): auto-commit ${worktreeId} — ${summary}`;
+  return `chore: auto-commit ${worktreeId} — ${summary}`;
+}
+
+export async function executeRepair(worktreeId, classification, snapshot = {}) {
   const { repairAction, inferredOwner } = classification;
 
   switch (repairAction) {
@@ -40,7 +62,7 @@ export async function executeRepair(worktreeId, classification) {
         return { ok: true, action: "reclaim_lease", nextState: "dirty_owned" };
       }
       // Low confidence — quarantine
-      return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" });
+      return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" }, snapshot);
     }
 
     case "continue_repair": {
@@ -88,7 +110,7 @@ export async function executeRepair(worktreeId, classification) {
           const fin = getFinalizationState(inferredOwner);
           const attempts = (fin?.attempts || 0) + 1;
           if (attempts >= RECOVERY_MAX_REPAIR_ATTEMPTS) {
-            return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" });
+            return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" }, snapshot);
           }
           setFinalizationState(inferredOwner, { attempts });
         }
@@ -108,15 +130,18 @@ export async function executeRepair(worktreeId, classification) {
         : getWorktreePath(worktreeId.replace(/^wt/, ""));
 
       try {
+        const dirtyFiles = snapshot.gitDirtyFiles || [];
+        const issueId = snapshot.issueIdentifier || inferredOwner;
+        const issueRecord = issueId ? getIssueState(issueId) : null;
+        const provider = issueRecord?.notes?.lastProvider || null;
+
         execFileSync("git", ["add", "-A"], {
           cwd: acapPath,
           stdio: "pipe",
           timeout: 15_000,
         });
 
-        const commitMsg = inferredOwner
-          ? `fix(harness): auto-commit ${inferredOwner} via fleet recovery daemon`
-          : `fix(harness): auto-commit dirty changes via fleet recovery daemon`;
+        const commitMsg = buildCommitMessage(worktreeId, issueId, dirtyFiles);
         execFileSync("git", ["commit", "-m", commitMsg, "--no-verify"], {
           cwd: acapPath,
           stdio: "pipe",
@@ -131,6 +156,9 @@ export async function executeRepair(worktreeId, classification) {
         }).trim();
 
         logInfo(`[recovery] Auto-committed in ${worktreeId} (${headSha.slice(0, 8)})`);
+
+        const fileCount = dirtyFiles.length || 1;
+        const fileSummary = formatFileSummary(dirtyFiles);
 
         if (isMainRepo) {
           execFileSync("git", ["push", "origin", "main"], {
@@ -158,11 +186,30 @@ export async function executeRepair(worktreeId, classification) {
                 stdio: "pipe",
                 timeout: 15_000,
               });
+              const wtBranch = getWorktreeBranch(id);
+              execFileSync("git", ["push", "-u", "origin", `HEAD:${wtBranch}`], {
+                cwd: wtPath,
+                stdio: "pipe",
+                timeout: 30_000,
+                env: { ...process.env, ANQR_AUTOMATION_PUSH: "1" },
+              });
               logInfo(`[recovery] Synced wt${id} with main`);
             } catch (syncErr) {
               logWarn(`[recovery] Failed to sync wt${id}: ${syncErr.message}`);
             }
           }
+
+          sendDiscordEmbed({
+            title: "Auto-commit | main",
+            description: `${fileCount} file${fileCount !== 1 ? "s" : ""} · ${fileSummary}`,
+            color: 0x5865f2,
+            fields: [
+              { name: "Commit", value: `\`${headSha.slice(0, 8)}\` → main`, inline: true },
+              ...(issueId ? [{ name: "Issue", value: issueId, inline: true }] : []),
+              ...(provider ? [{ name: "Provider", value: provider, inline: true }] : []),
+            ],
+          }).catch(() => {});
+          voiceAnnounce(`Auto-committed ${fileCount} files on main.`);
         } else {
           const branch = getWorktreeBranch(worktreeId.replace(/^wt/, ""));
           execFileSync("git", ["push", "-u", "origin", `HEAD:${branch}`], {
@@ -187,13 +234,29 @@ export async function executeRepair(worktreeId, classification) {
           } else {
             logWarn(`[recovery] No owner inferred for ${worktreeId} — pushed to ${branch} but not enqueued for integration`);
           }
+
+          const descParts = [issueId, provider, `${fileCount} files`].filter(Boolean);
+          sendDiscordEmbed({
+            title: `Auto-commit | ${worktreeId}`,
+            description: descParts.join(" · "),
+            color: 0x5865f2,
+            fields: [
+              { name: "Files", value: fileSummary, inline: false },
+              { name: "Commit", value: `\`${headSha.slice(0, 8)}\` → ${branch}`, inline: true },
+            ],
+          }).catch(() => {});
+          voiceAnnounce(
+            issueId
+              ? `Auto-committed ${issueId} in ${worktreeId}, ${fileCount} files.`
+              : `Auto-committed ${fileCount} files in ${worktreeId}.`,
+          );
         }
 
         setWorktreeState(worktreeId, { state: "available", issueIdentifier: null });
         return { ok: true, action: "auto_commit_and_push", nextState: "available" };
       } catch (err) {
         logWarn(`[recovery] Auto-commit/push failed for ${worktreeId}: ${err.message}`);
-        return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" });
+        return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" }, snapshot);
       }
     }
 
