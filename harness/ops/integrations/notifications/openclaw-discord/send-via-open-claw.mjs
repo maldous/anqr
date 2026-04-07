@@ -14,11 +14,15 @@ export async function sendViaOpenClaw(content, options = {}) {
 
   // Build message args
   const messageArgs = {
-    action: "send",
+    action: options.messageId ? "edit" : "send",
     message: content,
     channel: "discord",
     to: DISCORD_TEXT_CHANNEL_ID,
   };
+
+  if (options.messageId) {
+    messageArgs.messageId = options.messageId;
+  }
 
   // Add thread/reply options (source-agnostic)
   if (options.threadName) {
