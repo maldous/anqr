@@ -134,6 +134,7 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
         const issueId = snapshot.issueIdentifier || inferredOwner;
         const issueRecord = issueId ? getIssueState(issueId) : null;
         const provider = issueRecord?.notes?.lastProvider || null;
+        const discordMessageId = issueRecord?.notes?.discordMessageId || null;
 
         execFileSync("git", ["add", "-A"], {
           cwd: acapPath,
@@ -208,7 +209,7 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
               { name: "Files", value: `${fileCount} — ${fileSummary}`, inline: false },
               { name: "Commit", value: `\`${headSha.slice(0, 8)}\` → main`, inline: true },
             ],
-            threadName: "Auto-commits",
+            ...(discordMessageId ? { replyTo: discordMessageId } : { threadName: "Auto-commits" }),
           }).catch(() => {});
           voiceAnnounce(`Auto-committed ${fileCount} files on main.`);
         } else {
@@ -245,7 +246,7 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
               { name: "Files", value: fileSummary, inline: false },
               { name: "Commit", value: `\`${headSha.slice(0, 8)}\` → ${branch}`, inline: true },
             ],
-            threadName: "Auto-commits",
+            ...(discordMessageId ? { replyTo: discordMessageId } : { threadName: "Auto-commits" }),
           }).catch(() => {});
           voiceAnnounce(
             issueId

@@ -1537,7 +1537,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
     const worktreeValue = `${WORKTREE_ID} (${activeRunners}/${maxRunners} active)`;
     const queueValue = `${queueSnap.readyDepth} issues ready`;
 
-    sendDiscordEmbed({
+    const discordResult = await sendDiscordEmbed({
       title: `${issue.identifier} | ${WORKTREE_ID}`,
       description: issue.title,
       color: finalStateId === STATES.done ? 0x00ff00 : 0xffa500,
@@ -1552,7 +1552,15 @@ ${String(r.detail).slice(0, 1000)}\n`,
         { name: "Validation", value: validation.passed ? "✅ Passed" : "❌ Failed", inline: true },
         { name: "Commit", value: commitHash || "N/A", inline: true },
       ],
-    }).catch((err) => logWarn(`Discord notification failed: ${err.message}`));
+    }).catch((err) => {
+      logWarn(`Discord notification failed: ${err.message}`);
+      return { sent: false };
+    });
+    if (discordResult?.messageId) {
+      patchIssueState(issue.identifier, {
+        notes: { ...currentState.notes, lastProvider: metricsProviderName, discordMessageId: discordResult.messageId },
+      });
+    }
 
     return "done";
   } finally {

@@ -57,7 +57,12 @@ export async function sendViaOpenClaw(content, options = {}) {
       res.on("end", () => {
         if (res.statusCode === 200) {
           logDebug(`OpenClaw Discord message sent: "${content.slice(0, 50)}..."`);
-          resolve({ sent: true });
+          let messageId = null;
+          try {
+            const parsed = JSON.parse(data);
+            messageId = parsed.messageId || parsed.id || parsed.result?.messageId || null;
+          } catch {}
+          resolve({ sent: true, messageId });
         } else {
           logWarn(`OpenClaw Discord failed: ${res.statusCode} ${data.slice(0, 100)}`);
           resolve({ sent: false, reason: `HTTP ${res.statusCode}` });
