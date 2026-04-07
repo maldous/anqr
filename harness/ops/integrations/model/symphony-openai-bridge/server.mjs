@@ -741,25 +741,21 @@ export const server = http.createServer(async (req, res) => {
           isDiscordOrigin || isVoiceRequest || isSymphonyRunner
             ? null
             : (text) => {
-                    if (text && text.length > 0) {
-                      // Filter out internal activity markers to avoid duplicate messages in Discord
-                      const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
-                      // Filter out standalone light bulb emoji from Discord notifications
-                      const trimmed = text.trim();
-                      const isLightbulb = trimmed === "💡" || text === "\n💡 " || text === "💡 ";
-                      if (!isActivityMarker.test(trimmed) && !isLightbulb) {
-                        streamDiscordUpdate(text, {
-                          emoji: "",
-                          requestId,
-                          threadName: discordOptions.threadName || issueContext?.identifier || "ANQR",
-                          replyTo: discordOptions.replyTo,
-                          source: discordOptions.source,
-                        }).catch(() => {
-                          /* ignore */
-                        });
-                      }
-                    }
-                  };
+                if (text && text.length > 0) {
+                  const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
+                  const trimmed = text.trim();
+                  const isLightbulb = trimmed === "💡" || text === "\n💡 " || text === "💡 ";
+                  if (!isActivityMarker.test(trimmed) && !isLightbulb) {
+                    streamDiscordUpdate(text, {
+                      emoji: "",
+                      requestId,
+                      threadName: discordOptions.threadName || issueContext?.identifier || "ANQR",
+                      replyTo: discordOptions.replyTo,
+                      source: discordOptions.source,
+                    }).catch(() => {});
+                  }
+                }
+              };
 
         if (isSelectedCodebuff) {
           try {
