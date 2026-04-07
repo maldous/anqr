@@ -50,7 +50,7 @@ async function main() {
         `SonarQube: http://localhost:9000/rules?rule_keys=${rule}`,
       ].join("\n"),
       priority: 2,
-      labelIds: [LABELS.harness, LABELS.techDebt],
+      labelIds: [LABELS.harness, LABELS.hygiene],
       stateId: STATES.todo,
     });
 
