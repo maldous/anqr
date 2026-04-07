@@ -1,9 +1,5 @@
 import { getCachedOpenrouterModels } from "./get-cached-openrouter-models.mjs";
 
-const MAX_OPENROUTER_MODELS = Number.parseInt(
-  process.env.SYMPHONY_MAX_OPENROUTER_MODELS || "24",
-  10,
-);
 const EXCLUDED_MODEL_PATTERNS = [
   /whisper/i,
   /audio/i,
@@ -47,7 +43,6 @@ export function buildOpenrouterProvidersFromCatalog() {
       (entry) => !EXCLUDED_MODEL_PATTERNS.some((pattern) => pattern.test(String(entry.model))),
     )
     .sort(sortModels)
-    .slice(0, Number.isFinite(MAX_OPENROUTER_MODELS) ? MAX_OPENROUTER_MODELS : 24)
     .map((entry) => ({
       name: entry.providerName,
       model: entry.model,

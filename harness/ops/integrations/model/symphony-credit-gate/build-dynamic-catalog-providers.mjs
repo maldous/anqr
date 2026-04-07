@@ -3,10 +3,6 @@ import { getCachedProbeEntry } from "./get-cached-probe-entry.mjs";
 import { sanitizeModelSegment } from "./sanitize-model-segment.mjs";
 import { shouldSkipProviderFromCache } from "./should-skip-provider-from-cache.mjs";
 
-const MAX_DYNAMIC_MODELS_PER_PROVIDER = Number.parseInt(
-  process.env.SYMPHONY_MAX_DYNAMIC_MODELS_PER_PROVIDER || "8",
-  10,
-);
 const EXCLUDED_MODEL_PATTERNS = [
   /whisper/i,
   /transcrib/i,
@@ -61,33 +57,11 @@ export function buildDynamicCatalogProviders(staticProviders) {
     return acceptsText && outputsText;
   }
 
-  function supportsStructuredTools(row) {
-    const supportedParameters = Array.isArray(row?.supportedParameters)
-      ? row.supportedParameters
-      : Array.isArray(row?.raw?.supported_parameters)
-        ? row.raw.supported_parameters
-        : Array.isArray(row?.supported_parameters)
-          ? row.supported_parameters
-          : [];
-    const explicitCapability =
-      row?.raw?.capabilities?.tool_calling === true ||
-      row?.raw?.capabilities?.tool_use === true ||
-      row?.raw?.tool_calling === true ||
-      row?.raw?.tool_use === true;
-    return (
-      row?.toolSupport === "supported" ||
-      explicitCapability ||
-      supportedParameters.includes("tools") ||
-      supportedParameters.includes("tool_choice")
-    );
-  }
-
   function isEligibleCatalogRow(row) {
     const model = String(row?.model || row?.id || "").trim();
     if (!model) return false;
     if (EXCLUDED_MODEL_PATTERNS.some((pattern) => pattern.test(model))) return false;
     if (!supportsTextIO(row?.raw || row)) return false;
-    if (!supportsStructuredTools(row)) return false;
     if (row?.toolSupport === "unsupported") return false;
     return true;
   }
@@ -117,11 +91,7 @@ export function buildDynamicCatalogProviders(staticProviders) {
 
     const eligibleRows = rows
       .filter(isEligibleCatalogRow)
-      .sort(sortCatalogRows)
-      .slice(
-        0,
-        Number.isFinite(MAX_DYNAMIC_MODELS_PER_PROVIDER) ? MAX_DYNAMIC_MODELS_PER_PROVIDER : 8,
-      );
+      .sort(sortCatalogRows);
 
     for (const row of eligibleRows) {
       const model = row?.model || row?.id;
