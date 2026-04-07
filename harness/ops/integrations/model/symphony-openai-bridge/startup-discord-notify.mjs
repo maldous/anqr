@@ -45,7 +45,7 @@ export async function sendStartupDiscordNotification() {
         description: `PID ${process.pid}`,
         color: 0x00ff00, // Green
         fields,
-        threadName: "System Status",
+        threadName: "ANQR",
       });
       if (discordResult.sent) {
         logInfo(`✅ Discord restart notification sent successfully`);

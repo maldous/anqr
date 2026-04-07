@@ -102,7 +102,7 @@ export async function generateReport({ sendAlert = false } = {}) {
       description,
       color: getLatencyColor(classification),
       fields,
-      threadName: "Latency",
+      threadName: "ANQR",
     }).catch((err) => {
       logError(`[latency-report] Discord notification failed: ${err.message}`);
     });
