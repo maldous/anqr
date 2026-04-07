@@ -49,6 +49,7 @@ import { resolveRoute } from "./resolve-route.mjs";
 import { safeLogDebug } from "./safe-log-debug.mjs";
 import { sanitizeForDiscordPreview } from "./sanitize-for-discord-preview.mjs";
 import { sendJson } from "./send-json.mjs";
+import { shouldUseToolsForRequest } from "./should-use-tools-for-request.mjs";
 import { setCurrentRequestId } from "./set-current-request-id.mjs";
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
 import { tools } from "./tools.mjs";
@@ -385,6 +386,7 @@ export const server = http.createServer(async (req, res) => {
       }
 
       const route = resolveRoute(body.model || MODEL_ID);
+      route.useTools = shouldUseToolsForRequest(messages, route);
       const stream = body.stream === true;
 
       // Log message summary for debugging
@@ -409,7 +411,7 @@ export const server = http.createServer(async (req, res) => {
       }
 
       logInfo(
-        `Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}`,
+        `Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}, useTools=${route.useTools}`,
       );
       logMemory("request-start");
 
@@ -814,6 +816,7 @@ export const server = http.createServer(async (req, res) => {
             excludeAfterCodebuff,
             sessionId,
             requestCwd,
+            isSelectedCodebuff ? null : selectedProvider,
           );
 
           clearInterval(heartbeat);

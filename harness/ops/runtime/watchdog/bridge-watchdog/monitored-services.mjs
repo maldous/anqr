@@ -1,7 +1,7 @@
 export const MONITORED_SERVICES = [
   {
-    name: "anqr-symphony-bridge.service",
-    shortName: "symphony-agent",
+    name: "anqr-symphony-router.service",
+    shortName: "symphony-router",
     port: 4319,
     criticalFiles: [
       "harness/ops/integrations/model/symphony-agent-router.mjs",

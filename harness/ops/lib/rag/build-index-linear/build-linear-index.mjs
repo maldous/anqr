@@ -28,10 +28,26 @@ export async function buildLinearIndex() {
   }
   logInfo("✅ Ollama is available");
 
+  async function loadIssuesWithStartupGrace() {
+    const deadline = Date.now() + 15_000;
+    let lastError = null;
+
+    while (Date.now() < deadline) {
+      try {
+        const raw = await readFile(EXPORT_PATH, "utf-8");
+        return JSON.parse(raw);
+      } catch (err) {
+        lastError = err;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+
+    throw lastError || new Error(`Linear export unavailable at ${EXPORT_PATH}`);
+  }
+
   let issues;
   try {
-    const raw = await readFile(EXPORT_PATH, "utf-8");
-    issues = JSON.parse(raw);
+    issues = await loadIssuesWithStartupGrace();
     logInfo(`📊 Loaded ${issues.length} issues from export`);
   } catch (err) {
     logError(`Failed to read export file: ${err?.message || err}`);

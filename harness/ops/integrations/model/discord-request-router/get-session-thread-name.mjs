@@ -7,12 +7,15 @@ export function getSessionThreadName(sessionId, messages) {
   if (sessionThreadNames.size > 50) evictExpiredSessions();
 
   if (sessionId && sessionThreadNames.has(sessionId)) {
-    return sessionThreadNames.get(sessionId).threadName;
+    const existing = sessionThreadNames.get(sessionId);
+    sessionThreadNames.set(sessionId, { ...existing, createdAt: Date.now() });
+    if (existing?.threadName) return existing.threadName;
   }
 
   const threadName = generateThreadName(messages);
   if (threadName && sessionId) {
-    sessionThreadNames.set(sessionId, { threadName, createdAt: Date.now() });
+    const existing = sessionThreadNames.get(sessionId) || {};
+    sessionThreadNames.set(sessionId, { ...existing, threadName, createdAt: Date.now() });
   }
   return threadName;
 }

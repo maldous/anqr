@@ -116,7 +116,7 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
             cwd: cwd || getCurrentRequestCwd(),
             costMode: provider.costMode === "free" ? "free" : undefined,
           })
-        : await invokeWithAI(provider, messages, { stream: false, cwd });
+        : await invokeWithAI(provider, messages, { stream: false, cwd, useTools: route.useTools });
 
       const durationMs = Date.now() - startedAt;
       const textPreview = result.text?.slice(0, 100) || "";

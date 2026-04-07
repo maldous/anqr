@@ -30,8 +30,12 @@ export const server = http.createServer((req, res) => {
       return sendOverloadResponse(res);
     }
 
-    // Find least loaded worktree
-    const worktree = getLeastLoadedWorktree();
+    const sessionId =
+      req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
+
+    // Find least loaded worktree, but keep a sticky worktree per session to preserve
+    // executor-local session/provider state across Discord follow-up turns.
+    const worktree = getLeastLoadedWorktree(sessionId);
 
     if (!worktree) {
       logError("❌ No worktrees available");

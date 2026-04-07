@@ -52,6 +52,7 @@ export async function invokeWithFallbackStream(
   initialExcluded = [],
   sessionId = null,
   cwd = null,
+  initialProvider = null,
 ) {
   const triedProviders = [...initialExcluded];
   let lastError = null;
@@ -60,7 +61,10 @@ export async function invokeWithFallbackStream(
   while (true) {
     attemptNumber++;
 
-    const provider = await selectProvider(buildSelectionOptions(route, triedProviders, sessionId));
+    const provider =
+      attemptNumber === 1 && initialProvider && !triedProviders.includes(initialProvider.name)
+        ? initialProvider
+        : await selectProvider(buildSelectionOptions(route, triedProviders, sessionId));
 
     if (!provider) {
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
@@ -103,7 +107,12 @@ export async function invokeWithFallbackStream(
               }
             },
           })
-        : await invokeWithAI(provider, messages, { stream: true, onChunk, cwd });
+        : await invokeWithAI(provider, messages, {
+            stream: true,
+            onChunk,
+            cwd,
+            useTools: route.useTools,
+          });
 
       const textPreview = result.text?.slice(0, 100) || "";
       logInfo(

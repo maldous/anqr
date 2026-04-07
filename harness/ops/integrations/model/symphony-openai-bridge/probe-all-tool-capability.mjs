@@ -69,7 +69,7 @@ export async function probeAllToolCapability(options = {}) {
     return false;
   }
 
-  const { respectHealthState = true } = options;
+  const { respectHealthState = true, scheduleRetry = false } = options;
   const available = (providerStatusCache.probeResults || [])
     .filter((result) => result.available)
     .map((result) => result.name);
@@ -174,7 +174,7 @@ export async function probeAllToolCapability(options = {}) {
     )
     .map((provider) => provider.name);
 
-  if (stillUnclassified.length > 0 && !toolProbeRetryScheduled) {
+  if (scheduleRetry && stillUnclassified.length > 0 && !toolProbeRetryScheduled) {
     setToolProbeRetryScheduled(true);
     const names = stillUnclassified.slice(0, TOOL_PROBE_MAX_UNKNOWN_PROVIDERS_PER_CYCLE);
     logDebug(

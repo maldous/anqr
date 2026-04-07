@@ -56,7 +56,12 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
     throw new Error(`Provider ${provider.name} not supported with AI SDK`);
   }
 
-  const useTools = providerSupportsTools(provider.name);
+  const useTools =
+    options.useTools === false
+      ? false
+      : options.useTools === true
+        ? providerSupportsTools(provider.name)
+        : providerSupportsTools(provider.name);
   logInfo(
     `Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? "" : " [no-tools]"}`,
   );

@@ -9,21 +9,29 @@ import {
 
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { safeLogDebug } from "./safe-log-debug.mjs";
+import { toolCapableProviders } from "./tool-capable-providers.mjs";
 
 export function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
   const throttled = getThrottledProviders();
   const excludeSet = new Set([...excludedNames, ...nonToolCapableProviders, ...throttled]);
 
-  // Check if evaluation cycle wants to force-sample a specific provider
+  // Prefer already confirmed tool-capable providers when the current request is
+  // expected to use tools, but do not hard-exclude other candidates.
   const stats = getProviderStats();
   const allProviderNames =
     route.allowedNames || Object.keys(stats).filter((n) => !excludeSet.has(n));
-  const evaluationSample = getEvaluationSampleProvider(allProviderNames, stats);
+  const preferredNames =
+    route.useTools === true
+      ? allProviderNames.filter((name) => toolCapableProviders.has(name) && !excludeSet.has(name))
+      : [];
+  const evaluationPool = preferredNames.length > 0 ? preferredNames : allProviderNames;
+  const evaluationSample = getEvaluationSampleProvider(evaluationPool, stats);
 
   if (evaluationSample) {
     safeLogDebug(`🔍 Evaluation cycle: forcing sample of "${evaluationSample}"`);
     return {
       allowedNames: [evaluationSample],
+      preferredNames: preferredNames.length > 0 ? preferredNames : null,
       allowSafetyNetOverride: true,
       excludeNames: [...excludeSet],
     };
@@ -51,6 +59,7 @@ export function buildSelectionOptions(route, excludedNames = [], sessionId = nul
         safeLogDebug(`📌 Session sticky: ${providerName} (paid mode, ${turnCount} turns)`);
         return {
           allowedNames: [providerName],
+          preferredNames: preferredNames.length > 0 ? preferredNames : null,
           allowSafetyNetOverride: true,
           excludeNames: [...excludeSet],
         };
@@ -59,6 +68,7 @@ export function buildSelectionOptions(route, excludedNames = [], sessionId = nul
         safeLogDebug(`📌 Session sticky: ${providerName} (${turnCount}/${turnLimit} turns)`);
         return {
           allowedNames: [providerName],
+          preferredNames: preferredNames.length > 0 ? preferredNames : null,
           allowSafetyNetOverride: true,
           excludeNames: [...excludeSet],
         };
@@ -72,6 +82,7 @@ export function buildSelectionOptions(route, excludedNames = [], sessionId = nul
 
   return {
     allowedNames: route.allowedNames,
+    preferredNames: preferredNames.length > 0 ? preferredNames : null,
     allowSafetyNetOverride: true,
     excludeNames: [...excludeSet],
   };

@@ -22,6 +22,10 @@ export async function selectProvider(options = {}) {
     Array.isArray(options.excludeNames) && options.excludeNames.length > 0
       ? new Set(options.excludeNames)
       : null;
+  const preferredNames =
+    Array.isArray(options.preferredNames) && options.preferredNames.length > 0
+      ? new Set(options.preferredNames)
+      : null;
 
   logDebug(`[selectProvider] Entry`, {
     allowedCount: allowedNames?.size || 0,
@@ -29,16 +33,24 @@ export async function selectProvider(options = {}) {
     allowSafetyNetOverride,
     allowedNames: allowedNames ? Array.from(allowedNames) : null,
     excludedNames: excludedNames ? Array.from(excludedNames) : null,
+    preferredNames: preferredNames ? Array.from(preferredNames) : null,
   });
 
   const orderedNames = buildProviderSelectionCandidateNames({ excludeNames: excludedNames });
+  const preferredOrderedNames = preferredNames
+    ? orderedNames.filter((name) => preferredNames.has(name))
+    : [];
+  const fallbackOrderedNames = preferredNames
+    ? orderedNames.filter((name) => !preferredNames.has(name))
+    : orderedNames;
 
   logDebug(`[selectProvider] Candidate order`, {
     candidateCount: orderedNames.length,
+    preferredCount: preferredOrderedNames.length,
     topCandidates: orderedNames.slice(0, 10),
   });
 
-  for (const providerName of orderedNames) {
+  for (const providerName of [...preferredOrderedNames, ...fallbackOrderedNames]) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
     if (
       !provider ||
