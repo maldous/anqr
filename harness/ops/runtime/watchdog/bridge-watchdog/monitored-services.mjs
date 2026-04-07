@@ -10,5 +10,6 @@ export const MONITORED_SERVICES = [
       "harness/ops/integrations/model/codebuff-direct.mjs",
     ],
     healthEndpoint: "http://127.0.0.1:4319/health",
+    skipProviderCheck: true, // Router is a proxy; providers are checked on executors
   },
 ];

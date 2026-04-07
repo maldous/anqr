@@ -21,6 +21,12 @@ export async function checkHealthEndpoint(service) {
     if (response.ok) {
       try {
         const data = await response.json();
+        
+        // Skip provider check if service is flagged as skipProviderCheck
+        if (service.skipProviderCheck) {
+          return { healthy: true, reason: "responded OK (provider check skipped)" };
+        }
+        
         const available = data.providersAvailable || 0;
         const configured = data.providersConfigured || 0;
         if (available === 0) {
