@@ -612,7 +612,7 @@ export const server = http.createServer(async (req, res) => {
             description: embedDescription,
             color: 0xffa500, // Orange
             fields: fields.length > 0 ? fields : undefined,
-            threadName: issueContext?.identifier || "Bridge",
+            threadName: issueContext?.identifier || "ANQR",
           },
           discordOptions,
         ).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
@@ -808,7 +808,7 @@ export const server = http.createServer(async (req, res) => {
                   description: issueContext?.title || messagePreview,
                   color: 0x00ff00, // Green
                   fields: completionFields,
-                  threadName: issueContext?.identifier || "Bridge",
+                  threadName: issueContext?.identifier || "ANQR",
                 },
                 discordOptions,
               ).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
@@ -935,7 +935,7 @@ export const server = http.createServer(async (req, res) => {
                 description: issueContext?.title || messagePreview,
                 color: 0x00ff00, // Green
                 fields: streamCompletionFields,
-                threadName: issueContext?.identifier || "Bridge",
+                threadName: issueContext?.identifier || "ANQR",
               },
               discordOptions,
             ).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
@@ -1059,7 +1059,7 @@ export const server = http.createServer(async (req, res) => {
               description: issueContext?.title || messagePreview,
               color: 0x00ff00, // Green
               fields: nonStreamCompletionFields,
-              threadName: issueContext?.identifier || "Bridge",
+              threadName: issueContext?.identifier || "ANQR",
             },
             discordOptions,
           ).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
