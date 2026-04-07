@@ -2,8 +2,16 @@ import { runDaemon, runRecoveryCycle, showStatus } from "./index.mjs";
 
 import { logInfo, logError } from "./logger.mjs";
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if this module is being executed as the main script
+// The parent script (symphony-worktree-recovery.mjs) re-exports this runtime module
+const isMainScript = process.argv[1]?.endsWith('symphony-worktree-recovery.mjs') ||
+                     import.meta.url === `file://${process.argv[1]}`;
+
+if (isMainScript) {
+  // Ensure we have stderr output
+  process.stderr.write('[recovery-runtime] Runtime module loaded\n');
   const mode = process.argv[2];
+  process.stderr.write(`[recovery-runtime] Mode: ${mode}\n`);
   if (mode === "once") {
     runRecoveryCycle()
       .then((stats) => {
