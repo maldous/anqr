@@ -53,7 +53,7 @@ export async function trackWatchdogTrigger(serviceName, reason) {
             { name: "Recent Triggers", value: triggerSummary, inline: false },
           ],
           footer: "⚠️ Manual investigation required - possible configuration or code issues",
-          threadName: "Watchdog",
+          threadName: "ANQR",
         });
       } catch (err) {
         logError(`[watchdog] ⚠️ Failed to send trigger rate alert: ${err.message}`);
