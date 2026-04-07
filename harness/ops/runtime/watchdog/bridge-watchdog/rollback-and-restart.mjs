@@ -57,6 +57,7 @@ export async function rollbackAndRestart(serviceName, shortName, reason) {
         { name: "Rolling Back To", value: `\`${previousCommit}\``, inline: true },
       ],
       footer: "⚠️ Review the failed commit before attempting fixes",
+      threadName: "Watchdog",
     });
   } catch (err) {
     logError(`[watchdog] ⚠️ Failed to send rollback alert: ${err.message}`);
@@ -127,6 +128,7 @@ export async function rollbackAndRestart(serviceName, shortName, reason) {
           { name: "Status", value: "Service restarted", inline: true },
         ],
         footer: "Watchdog will continue monitoring",
+        threadName: "Watchdog",
       });
     } catch (err) {
       logError(`[watchdog] ⚠️ Failed to send rollback success notification: ${err.message}`);
@@ -149,6 +151,7 @@ export async function rollbackAndRestart(serviceName, shortName, reason) {
           { name: "Error", value: err.message.slice(0, 200), inline: false },
         ],
         footer: "⚠️ Manual recovery needed immediately",
+        threadName: "Watchdog",
       });
     } catch (error_) {
       logError(`[watchdog] ⚠️ Failed to send rollback failure notification: ${error_.message}`);

@@ -47,6 +47,7 @@ export async function rollbackGit() {
       { name: "Rolling Back To", value: previousCommit.slice(0, 7), inline: true },
       { name: "Timeout", value: `${WATCHDOG_TIMEOUT_MS}ms`, inline: true },
     ],
+    threadName: "Watchdog",
   }).catch((err) => log(`⚠️ Failed to send Discord notification: ${err.message}`));
 
   // Hard reset to previous commit
@@ -73,6 +74,7 @@ export async function rollbackGit() {
         { name: "Reverted Commit", value: currentCommit.slice(0, 7), inline: true },
         { name: "Current Commit", value: newHead.slice(0, 7), inline: true },
       ],
+      threadName: "Watchdog",
     }).catch((err) => log(`⚠️ Failed to send Discord notification: ${err.message}`));
 
     // Update MEMORY.md with very obvious rollback notice

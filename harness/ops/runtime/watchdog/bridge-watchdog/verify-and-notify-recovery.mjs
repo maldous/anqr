@@ -18,6 +18,7 @@ export async function verifyAndNotifyRecovery(serviceName, shortName) {
           { name: "Service", value: serviceName, inline: true },
           { name: "Status", value: "Active", inline: true },
         ],
+        threadName: "Watchdog",
       });
     } catch (err) {
       logError(`[watchdog] ⚠️ Failed to send recovery notification: ${err.message}`);

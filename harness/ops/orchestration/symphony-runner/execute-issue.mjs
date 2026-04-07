@@ -477,6 +477,7 @@ export async function executeIssue(issue, dryRun = false) {
           { name: "Reason", value: "Lease lost during execution", inline: true },
           { name: "Worktree", value: WORKTREE_ID, inline: true },
         ],
+        threadName: issue.identifier,
       }).catch(() => {});
       recordLinearCompletion(agentResult?.providerName || provider.name, {
         completed: false,
@@ -761,6 +762,7 @@ export async function executeIssue(issue, dryRun = false) {
               { name: "Reason", value: "Lease lost during continuation", inline: true },
               { name: "Worktree", value: WORKTREE_ID, inline: true },
             ],
+            threadName: issue.identifier,
           }).catch(() => {});
           recordLinearCompletion(metricsProviderName, {
             completed: false,
@@ -1127,6 +1129,7 @@ export async function executeIssue(issue, dryRun = false) {
           { name: "Reason", value: `Lease lost during validation: ${hbReason}`, inline: true },
           { name: "Worktree", value: WORKTREE_ID, inline: true },
         ],
+        threadName: issue.identifier,
       }).catch(() => {});
       recordLinearCompletion(metricsProviderName, {
         completed: false,
@@ -1211,6 +1214,7 @@ export async function executeIssue(issue, dryRun = false) {
           { name: "Reason", value: "Lease lost during validation fixes", inline: true },
           { name: "Worktree", value: WORKTREE_ID, inline: true },
         ],
+        threadName: issue.identifier,
       }).catch(() => {});
       recordLinearCompletion(metricsProviderName, {
         completed: false,
@@ -1552,6 +1556,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
         { name: "Validation", value: validation.passed ? "✅ Passed" : "❌ Failed", inline: true },
         { name: "Commit", value: commitHash || "N/A", inline: true },
       ],
+      threadName: issue.identifier,
     }).catch((err) => {
       logWarn(`Discord notification failed: ${err.message}`);
       return { sent: false };
