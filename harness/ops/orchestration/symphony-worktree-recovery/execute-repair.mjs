@@ -191,12 +191,18 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
               } catch (ffErr) {
                 // Fall back to --no-ff merge if fast-forward is not possible
                 logWarn(`[recovery] Fast-forward failed for wt${id}, trying --no-ff: ${ffErr.message}`);
-                execFileSync("git", ["merge", "origin/main", "--no-ff", "-m", "Merge main into wt"], {
-                  cwd: wtPath,
-                  stdio: "pipe",
-                  timeout: 15_000,
-                  env: { ...process.env, ANQR_AUTOMATION_COMMIT: "1" },
-                });
+                try {
+                  execFileSync("git", ["merge", "origin/main", "--no-ff", "-m", "Merge main into wt"], {
+                    cwd: wtPath,
+                    stdio: "pipe",
+                    timeout: 15_000,
+                    env: { ...process.env, ANQR_AUTOMATION_COMMIT: "1" },
+                  });
+                } catch (mergeErr) {
+                  logWarn(`[recovery] Both ff and non-ff merge failed for wt${id}: ${mergeErr.message} - skipping sync`);
+                  // Continue to push even if merge failed - don't block other worktrees
+                  continue;
+                }
               }
               const wtBranch = getWorktreeBranch(id);
               execFileSync("git", ["push", "-u", "origin", `HEAD:${wtBranch}`], {

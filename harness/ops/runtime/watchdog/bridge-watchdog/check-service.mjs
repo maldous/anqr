@@ -5,7 +5,6 @@ import { checkFileIntegrity } from "./check-file-integrity.mjs";
 import { checkHealthEndpoint } from "./check-health-endpoint.mjs";
 import { detectCatastrophicErrors } from "./detect-catastrophic-errors.mjs";
 import { detectRapidRestarts } from "./detect-rapid-restarts.mjs";
-import { getServiceActiveTime } from "./get-service-active-time.mjs";
 import { getServiceJournal } from "./get-service-journal.mjs";
 import { getServicePID } from "./get-service-pid.mjs";
 import { getServiceStatus } from "./get-service-status.mjs";
@@ -20,16 +19,15 @@ export async function checkService(service) {
   const { name: serviceName, shortName } = service;
   const status = getServiceStatus(serviceName);
   const pid = getServicePID(serviceName);
-  const activeTime = getServiceActiveTime(serviceName);
 
-  // Track when service was last restarted
-  const lastRestart = restartTimestamps.get(serviceName);
+  // Track when service was last restarted - use PID for accurate restart detection
+  const lastPid = restartTimestamps.get(serviceName);
   const now = Date.now();
 
-  // Detect new restart and track for rapid restart detection
-  if (activeTime && (!lastRestart || activeTime.getTime() > lastRestart)) {
-    logInfo(`[watchdog] 🔍 ${shortName}: New restart detected (PID ${pid || "unknown"})`);
-    restartTimestamps.set(serviceName, activeTime.getTime());
+  // Detect new restart by comparing PID - only log when PID actually changes
+  if (pid && pid !== lastPid) {
+    logInfo(`[watchdog] 🔍 ${shortName}: New restart detected (PID ${pid})`);
+    restartTimestamps.set(serviceName, pid);
 
     // Track for rapid restart detection
     detectRapidRestarts(serviceName);
