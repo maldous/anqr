@@ -23,6 +23,12 @@ export async function checkHealthEndpoint(service) {
         const data = await response.json();
         const available = data.providersAvailable || 0;
         const configured = data.providersConfigured || 0;
+        if (available === 0) {
+          return {
+            healthy: false,
+            reason: `no providers available (${available}/${configured} configured)`,
+          };
+        }
         return {
           healthy: true,
           reason: `healthy (${available}/${configured} providers)`,

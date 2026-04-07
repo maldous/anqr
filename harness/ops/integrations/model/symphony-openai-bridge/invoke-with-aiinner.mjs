@@ -24,7 +24,7 @@ import { isRetryableErrorDeep } from "./is-retryable-error-deep.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { providerSupportsTools } from "./provider-supports-tools.mjs";
 import { sleep } from "./sleep.mjs";
-import { toolsProxy } from "./tools-proxy.mjs";
+import { selectToolsForProvider } from "./select-tools-for-provider.mjs";
 import { trackFileChange } from "./track-file-change.mjs";
 import { unwrapAIError } from "./unwrap-aierror.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
@@ -56,7 +56,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
     throw new Error(`Provider ${provider.name} not supported with AI SDK`);
   }
 
-  const useTools =
+  let useTools =
     options.useTools === false
       ? false
       : options.useTools === true
@@ -85,20 +85,49 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
   });
 
   const estimatedInputTokens = estimateMessagesTokens(rawMessages);
-  const toolOverheadTokens = useTools ? estimateToolOverheadTokens() : 0;
-  const estimatedRequestTokens = estimatedInputTokens + toolOverheadTokens;
   let effectiveMax = getEffectiveMaxTokens(provider.name);
-  if (shouldReduceContextForTPM(provider.name, estimatedRequestTokens)) {
+
+  // Check TPM reduction BEFORE tool selection so the tool tier matches the final budget.
+  // Use worst-case (full tool set) overhead for the TPM estimate.
+  const worstCaseToolOverhead = useTools ? estimateToolOverheadTokens() : 0;
+  const worstCaseRequestTokens = estimatedInputTokens + worstCaseToolOverhead;
+  if (shouldReduceContextForTPM(provider.name, worstCaseRequestTokens)) {
     effectiveMax = Math.max(Math.floor(effectiveMax * 0.5), 1000);
     logInfo(
       `⚡ Proactive TPM reduction for ${provider.name}: effectiveMax halved to ${effectiveMax}`,
     );
   }
+
+  // Select tools dynamically based on provider's FINAL context budget
+  let activeTools = null;
+  let activeToolCount = 0;
+  let toolTier = "none";
+  if (useTools) {
+    const selected = selectToolsForProvider(effectiveMax);
+    activeTools = selected.tools;
+    activeToolCount = selected.toolCount;
+    toolTier = selected.tier;
+    if (toolTier === "minimal") {
+      logInfo(
+        `🔧 Minimal tools for ${provider.name}: context budget (${effectiveMax}) only fits minimal tier (${activeToolCount} tools)`,
+      );
+    } else {
+      logInfo(
+        `🔧 Tool tier for ${provider.name}: ${toolTier} (${activeToolCount} tools, budget: ${effectiveMax})`,
+      );
+    }
+  }
+
+  const toolOverheadTokens = useTools
+    ? estimateToolOverheadTokens({ toolCount: activeToolCount })
+    : 0;
   logDebug(`[invokeWithAI] Request token estimate`, {
     providerName: provider.name,
     estimatedInputTokens,
     toolOverheadTokens,
-    estimatedRequestTokens,
+    estimatedRequestTokens: estimatedInputTokens + toolOverheadTokens,
+    toolTier,
+    activeToolCount,
   });
   const aiMessages = truncateMessagesForProvider(rawMessages, provider.name, {
     useTools,
@@ -148,7 +177,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       model,
       messages: aiMessages,
       ...(useTools
-        ? { tools: toolsProxy, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
+        ? { tools: activeTools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
         : {}),
       onStepFinish: (step) => {
         executionMetrics.stepCount++;
@@ -724,7 +753,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       model,
       messages: aiMessages,
       ...(useTools
-        ? { tools: toolsProxy, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
+        ? { tools: activeTools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
         : {}),
     });
 

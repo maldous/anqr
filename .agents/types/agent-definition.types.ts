@@ -319,32 +319,101 @@ export type ToolCall<T extends ToolName = ToolName> = {
 /**
  * File operation tools
  */
-export type FileEditingTools = "read_files" | "write_file" | "str_replace";
+export type FileEditingTools =
+  | "read_files"
+  | "read_file"
+  | "read"
+  | "write_file"
+  | "write"
+  | "str_replace"
+  | "apply_patch"
+  | "propose_str_replace"
+  | "propose_write_file";
 
 /**
  * Code analysis tools
  */
-export type CodeAnalysisTools = "code_search" | "find_files" | "read_files";
+export type CodeAnalysisTools =
+  | "code_search"
+  | "find_files"
+  | "file_search"
+  | "read_files"
+  | "read_subtree"
+  | "glob"
+  | "list_directory";
 
 /**
  * Terminal and system tools
  */
-export type TerminalTools = "run_terminal_command" | "code_search";
+export type TerminalTools =
+  | "run_terminal_command"
+  | "exec"
+  | "shell"
+  | "local_shell"
+  | "code_interpreter";
 
 /**
  * Web and browser tools
  */
-export type WebTools = "web_search" | "read_docs";
+export type WebTools = "web_search" | "read_docs" | "browser_search" | "visit_website";
 
 /**
  * Agent management tools
  */
-export type AgentTools = "spawn_agents";
+export type AgentTools = "spawn_agents" | "lookup_agent_info";
 
 /**
  * Output and control tools
  */
-export type OutputTools = "set_output";
+export type OutputTools =
+  | "set_output"
+  | "set_messages"
+  | "add_message"
+  | "message"
+  | "suggest_followups"
+  | "end_turn"
+  | "task_completed";
+
+/**
+ * Memory and knowledge tools
+ */
+export type MemoryTools = "memory_search" | "memory_get";
+
+/**
+ * Planning, tracking, and reasoning tools
+ */
+export type PlanningTools =
+  | "write_todos"
+  | "create_plan"
+  | "add_subgoal"
+  | "update_subgoal"
+  | "think_deeply"
+  | "thinker";
+
+/**
+ * Voice and audio tools
+ */
+export type VoiceTools = "voice_speak" | "tts";
+
+/**
+ * Linear issue search tools
+ */
+export type LinearTools = "search_linear_issues";
+
+/**
+ * Skill management tools
+ */
+export type SkillTools = "skill";
+
+/**
+ * File change and hook tools
+ */
+export type HookTools = "run_file_change_hooks";
+
+/**
+ * MCP and tool discovery tools
+ */
+export type DiscoveryTools = "mcp_list_tools";
 
 // ============================================================================
 // Available Models (see: https://openrouter.ai/models)
@@ -421,7 +490,7 @@ export type ModelName =
   | "minimax/minimax-m2.5"
   | (string & {});
 
-import type { ToolName, GetToolParams } from "./tools";
-import type { Message, ToolResultOutput, JsonObjectSchema, MCPConfig, Logger } from "./util-types";
+import type { ToolName, GetToolParams } from "./tools.types";
+import type { Message, ToolResultOutput, JsonObjectSchema, MCPConfig, Logger } from "./util-types.types";
 
 export type { ToolName, GetToolParams };

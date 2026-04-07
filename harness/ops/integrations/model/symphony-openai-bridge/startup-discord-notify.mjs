@@ -54,7 +54,7 @@ export async function sendStartupDiscordNotification() {
 
       voiceAnnounce("Symphony bridge is online.");
     } else {
-      logInfo(`Skipping startup notification (wt${startupWorktreeId} — wt1 announces for all)`);
+      logInfo(`Skipping startup notification (${startupWorktreeId} — wt1 announces for all)`);
     }
   } catch (err) {
     logError(`❌ Failed to send Discord restart notification: ${err.message}`);
