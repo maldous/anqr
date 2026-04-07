@@ -445,7 +445,8 @@ export const server = http.createServer(async (req, res) => {
         });
       }
       const safeRequestLabel =
-        issueContext?.identifier || (contentStr ? `request (${contentStr.length} chars)` : "(system task)");
+        issueContext?.identifier ||
+        (contentStr ? `request (${contentStr.length} chars)` : "(system task)");
 
       activeRequests.set(requestId, {
         startTime,

@@ -20,61 +20,67 @@ import {
 } from "./tool-probe-retry-scheduled.mjs";
 import { logDebug, logError } from "./logger.mjs";
 
-const TOOL_PROBE_MAX_UNKNOWN_PROVIDERS_PER_CYCLE = 24;
-
-function rankIndexByName() {
-  const ranked = getRankedProviders({ includeAvailable: true });
-  return new Map(ranked.map((entry, index) => [entry.name, index]));
-}
-
-function sortDefinitionsByRank(definitions) {
-  const rankedIndex = rankIndexByName();
-  return [...definitions].sort(
-    (a, b) =>
-      (rankedIndex.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
-        (rankedIndex.get(b.name) ?? Number.MAX_SAFE_INTEGER) ||
-      a.name.localeCompare(b.name),
-  );
-}
-
-function preclassifyProvider(providerDef) {
-  const name = providerDef.name;
-  const supportHint = providerToolSupportHint(providerDef);
-
-  if (providerDef.tier === "local-safety-net") {
-    toolCapableProviders.add(name);
-    return true;
-  }
-  if (providerDef.requiresSdk || providerDef.driver === "codex-sdk") {
-    toolCapableProviders.add(name);
-    return true;
-  }
-  if (KNOWN_TOOL_CAPABLE.has(name)) {
-    toolCapableProviders.add(name);
-    return true;
-  }
-  if (supportHint.status === "supported") {
-    toolCapableProviders.add(name);
-    return true;
-  }
-  if (supportHint.status === "unsupported") {
-    nonToolCapableProviders.add(name);
-    return true;
-  }
-  return false;
-}
+const TOOL_PROBE_MAX_UNKNOWN_PROVIDERS_PER_CYCLE = 12;
+const TOOL_PROBE_MAX_PER_PROVIDER_FAMILY = 2;
 
 export async function probeAllToolCapability(options = {}) {
+  function rankIndexByName() {
+    const ranked = getRankedProviders({ includeAvailable: true });
+    return new Map(ranked.map((entry, index) => [entry.name, index]));
+  }
+
+  function sortDefinitionsByRank(definitions) {
+    const rankedIndex = rankIndexByName();
+    return [...definitions].sort(
+      (a, b) =>
+        (rankedIndex.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
+          (rankedIndex.get(b.name) ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name),
+    );
+  }
+
+  function providerFamilyKey(providerDef) {
+    return providerDef.baseProviderName || providerDef.name;
+  }
+
+  function preclassifyProvider(providerDef) {
+    const name = providerDef.name;
+    const supportHint = providerToolSupportHint(providerDef);
+
+    if (providerDef.tier === "local-safety-net") {
+      toolCapableProviders.add(name);
+      return true;
+    }
+    if (providerDef.requiresSdk || providerDef.driver === "codex-sdk") {
+      toolCapableProviders.add(name);
+      return true;
+    }
+    if (KNOWN_TOOL_CAPABLE.has(name)) {
+      toolCapableProviders.add(name);
+      return true;
+    }
+    if (supportHint.status === "supported") {
+      toolCapableProviders.add(name);
+      return true;
+    }
+    if (supportHint.status === "unsupported") {
+      nonToolCapableProviders.add(name);
+      return true;
+    }
+    return false;
+  }
+
   const { respectHealthState = true } = options;
   const available = (providerStatusCache.probeResults || [])
-    .filter((r) => r.available)
-    .map((r) => r.name);
+    .filter((result) => result.available)
+    .map((result) => result.name);
   const availableSet = new Set(available);
 
   const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
   const allDefs = sortDefinitionsByRank(getProviderDefinitions({ excludeNames }));
   const eligibleDefs = allDefs.filter(
-    (provider) => availableSet.has(provider.name) && (!respectHealthState || shouldRetryProvider(provider.name)),
+    (provider) =>
+      availableSet.has(provider.name) &&
+      (!respectHealthState || shouldRetryProvider(provider.name)),
   );
 
   if (eligibleDefs.length === 0) {
@@ -83,11 +89,22 @@ export async function probeAllToolCapability(options = {}) {
   }
 
   const toProbe = [];
+  const familyCounts = new Map();
   for (const providerDef of eligibleDefs) {
-    if (toolCapableProviders.has(providerDef.name) || nonToolCapableProviders.has(providerDef.name)) {
+    if (
+      toolCapableProviders.has(providerDef.name) ||
+      nonToolCapableProviders.has(providerDef.name)
+    ) {
       continue;
     }
     if (preclassifyProvider(providerDef)) continue;
+
+    const familyKey = providerFamilyKey(providerDef);
+    const seenInFamily = familyCounts.get(familyKey) || 0;
+    if (seenInFamily >= TOOL_PROBE_MAX_PER_PROVIDER_FAMILY) {
+      continue;
+    }
+    familyCounts.set(familyKey, seenInFamily + 1);
     toProbe.push(providerDef);
   }
 
@@ -107,7 +124,9 @@ export async function probeAllToolCapability(options = {}) {
     gateways.get(gateway).push(provider);
   }
 
-  const gatewayNames = [...gateways.entries()].map(([gateway, providers]) => `${gateway}(${providers.length})`);
+  const gatewayNames = [...gateways.entries()].map(
+    ([gateway, providers]) => `${gateway}(${providers.length})`,
+  );
   logDebug(
     `🔧 Tool capability probe: ${limitedProbeList.length}/${toProbe.length} unknown providers across ${gateways.size} gateways: ${gatewayNames.join(", ")}`,
   );
@@ -116,7 +135,9 @@ export async function probeAllToolCapability(options = {}) {
   for (const [gateway, providers] of gateways) {
     if (providers.length <= GATEWAY_BATCH_SIZE) {
       gatewayPromises.push(
-        Promise.allSettled(shuffleArray(providers).map((provider) => probeToolCapabilityForProvider(provider))).then((settled) =>
+        Promise.allSettled(
+          shuffleArray(providers).map((provider) => probeToolCapabilityForProvider(provider)),
+        ).then((settled) =>
           settled.filter((result) => result.status === "fulfilled").map((result) => result.value),
         ),
       );

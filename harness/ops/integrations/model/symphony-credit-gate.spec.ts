@@ -468,17 +468,26 @@ describe("Symphony Credit Gate - Provider Selection", () => {
       // close to B (probe-only). The key assertion is A > both B and C.
     });
 
-    it("should include probe-only providers in getRankedProviders output", () => {
+    it("should rank current configured providers and exclude historical probe-only names", () => {
+      const configuredProvider = getProviderDefinitions()[0]?.name;
+
+      expect(configuredProvider).toBeTruthy();
+
+      recordProbeResult(configuredProvider, { success: true, durationMs: 200 });
+      recordProbeResult(configuredProvider, { success: true, durationMs: 300 });
+      recordProbeResult(configuredProvider, { success: true, durationMs: 250 });
       recordProbeResult("ranked-probe", { success: true, durationMs: 200 });
       recordProbeResult("ranked-probe", { success: true, durationMs: 300 });
       recordProbeResult("ranked-probe", { success: true, durationMs: 250 });
 
       const ranked = getRankedProviders();
-      const found = ranked.find((r: any) => r.name === "ranked-probe");
+      const configured = ranked.find((r: any) => r.name === configuredProvider);
+      const historical = ranked.find((r: any) => r.name === "ranked-probe");
 
-      expect(found).toBeDefined();
-      expect(typeof found!.score).toBe("number");
-      expect(found!.rank).toBeGreaterThan(0);
+      expect(configured).toBeDefined();
+      expect(typeof configured!.score).toBe("number");
+      expect(configured!.rank).toBeGreaterThan(0);
+      expect(historical).toBeUndefined();
     });
 
     it("should track Linear completion metrics in scoring pipeline", () => {

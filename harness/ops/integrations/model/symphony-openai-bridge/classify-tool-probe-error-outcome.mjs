@@ -9,11 +9,14 @@ export function classifyToolProbeErrorOutcome(errorText) {
   ) {
     return { status: "non-capable-rejected", detail: text };
   }
+  if (/does not support chat completions|chat completions are not supported/.test(normalized)) {
+    return { status: "unavailable-model", detail: text };
+  }
   if (/invalid json response/.test(normalized)) {
     return { status: "invalid-json-response", detail: text };
   }
   if (
-    /payment required|positive credit balance|required|credit limit exceeded|add credits|insufficient credits|quota/.test(
+    /payment required|positive credit balance required|positive credit balance is required|credit limit exceeded|add credits|insufficient credits|quota/.test(
       normalized,
     )
   ) {
@@ -26,7 +29,11 @@ export function classifyToolProbeErrorOutcome(errorText) {
   ) {
     return { status: "rate-limited", detail: text };
   }
-  if (/unavailable model|model not found|no endpoints found/.test(normalized)) {
+  if (
+    /unavailable model|model not found|no endpoints found|gone|unprocessable entity/.test(
+      normalized,
+    )
+  ) {
     return { status: "unavailable-model", detail: text };
   }
   if (

@@ -1,26 +1,30 @@
-function sanitizeText(value) {
-  return String(value || "")
-    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
-    .replace(/("?(?:authorization|api[_-]?key|token|password|secret|cookie|set-cookie)"?\s*[:=]\s*)[^,\s}]+/gi, '$1[redacted]')
-    .replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g, "[email]")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+export function extractErrorString(err) {
+  function sanitizeText(value) {
+    return String(value || "")
+      .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
+      .replace(
+        /("?(?:authorization|api[_-]?key|token|password|secret|cookie|set-cookie)"?\s*[:=]\s*)[^,\s}]+/gi,
+        "$1[redacted]",
+      )
+      .replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g, "[email]")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
 
-function summarizeResponseBody(body) {
-  if (!body) return "";
-  if (typeof body === "string") {
+  function summarizeResponseBody(body) {
+    if (!body) return "";
+    if (typeof body === "string") {
+      return sanitizeText(body).slice(0, 160);
+    }
+    if (typeof body === "object") {
+      const message =
+        body.message || body.error?.message || body.error || body.detail || body.reason;
+      if (message) return sanitizeText(message).slice(0, 160);
+      return `[responsebody:${Object.keys(body).slice(0, 8).join(",")}]`;
+    }
     return sanitizeText(body).slice(0, 160);
   }
-  if (typeof body === "object") {
-    const message = body.message || body.error?.message || body.error || body.detail || body.reason;
-    if (message) return sanitizeText(message).slice(0, 160);
-    return `[responsebody:${Object.keys(body).slice(0, 8).join(",")}]`;
-  }
-  return sanitizeText(body).slice(0, 160);
-}
 
-export function extractErrorString(err) {
   const parts = [];
   if (typeof err === "string") {
     parts.push(err);

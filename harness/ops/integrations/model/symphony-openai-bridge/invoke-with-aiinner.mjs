@@ -450,12 +450,22 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
         const errorMsg = errorToString(rootError);
         streamErrorDetail = streamErrorDetail || errorMsg;
         // Log server-side only - internal provider errors are handled by auto-fallback
+        const streamErrType = classifyError(rootError);
+        const streamIsRetryable =
+          streamError?.retryable === true ||
+          isRetryableErrorDeep(streamError) ||
+          [
+            ERROR_TYPES.CONTEXT_TOO_LARGE,
+            ERROR_TYPES.RATE_LIMITED,
+            ERROR_TYPES.TIMEOUT,
+            ERROR_TYPES.SERVER_ERROR,
+          ].includes(streamErrType);
         logWarn(
           `🔧 Internal provider error (auto-fallback will retry): ${errorMsg.slice(0, 150)}`,
           {
             providerName: provider.name,
             errorType: streamError?.constructor?.name,
-            isRetryable: isRetryableErrorDeep(streamError),
+            isRetryable: streamIsRetryable,
           },
         );
         logDebug(`[invokeWithAI] Stream error ${errorCount}`, {
@@ -463,10 +473,29 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
           errorType: streamError?.constructor?.name,
           hasResponseBody: !!rootError?.responseBody,
           statusCode: rootError?.statusCode,
+          classifiedErrorType: streamErrType,
+          isRetryable: streamIsRetryable,
         });
-        // Classify stream error for adaptive context — store fatal errors
-        // (context-too-large, rate-limited) so we can throw after stream completes
-        const streamErrType = classifyError(rootError);
+        if (
+          !fatalStreamError &&
+          [
+            ERROR_TYPES.CONTEXT_TOO_LARGE,
+            ERROR_TYPES.RATE_LIMITED,
+            ERROR_TYPES.TIMEOUT,
+            ERROR_TYPES.SERVER_ERROR,
+          ].includes(streamErrType)
+        ) {
+          rootError.retryable = true;
+          fatalStreamError = rootError;
+          logInfo(
+            `🚨 Fatal stream error (${streamErrType}): will throw after stream completes to trigger adaptive context + fallback`,
+            {
+              providerName: provider.name,
+              errorType: streamErrType,
+              statusCode: rootError?.statusCode,
+            },
+          );
+        }
         if (
           !fatalStreamError &&
           (streamErrType === ERROR_TYPES.CONTEXT_TOO_LARGE ||
@@ -634,7 +663,11 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       }
     }
 
-    if (isInvalidModelAnswerText(fullText, { allowSentinel: process.env.SYMPHONY_ALLOW_NO_REPLY_SENTINEL === "1" })) {
+    if (
+      isInvalidModelAnswerText(fullText, {
+        allowSentinel: process.env.SYMPHONY_ALLOW_NO_REPLY_SENTINEL === "1",
+      })
+    ) {
       const invalidResponseError = new Error(`Invalid sentinel response from ${provider.name}`);
       invalidResponseError.code = "INVALID_SENTINEL_RESPONSE";
       invalidResponseError.providerName = provider.name;
@@ -704,7 +737,11 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
         "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
     }
 
-    if (isInvalidModelAnswerText(text, { allowSentinel: process.env.SYMPHONY_ALLOW_NO_REPLY_SENTINEL === "1" })) {
+    if (
+      isInvalidModelAnswerText(text, {
+        allowSentinel: process.env.SYMPHONY_ALLOW_NO_REPLY_SENTINEL === "1",
+      })
+    ) {
       const invalidResponseError = new Error(`Invalid sentinel response from ${provider.name}`);
       invalidResponseError.code = "INVALID_SENTINEL_RESPONSE";
       invalidResponseError.providerName = provider.name;

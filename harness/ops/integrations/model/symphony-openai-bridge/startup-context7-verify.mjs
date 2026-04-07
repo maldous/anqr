@@ -12,7 +12,9 @@ export function verifyContext7Health() {
         return;
       }
       if (status >= 200 && status < 300) {
-        logInfo(`ℹ️ Context7 HTTP service reachable but still warming (${data.status || "starting"})`);
+        logInfo(
+          `ℹ️ Context7 HTTP service reachable but still warming (${data.status || "starting"})`,
+        );
         return;
       }
       logWarn(`⚠️ Context7 HTTP service returned ${status} — local docs may fall back to cloud`);

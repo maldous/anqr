@@ -1,7 +1,12 @@
 import { loadProviderCatalogCache } from "../symphony-openai-bridge/load-provider-catalog-cache.mjs";
+import { getCachedProbeEntry } from "./get-cached-probe-entry.mjs";
 import { sanitizeModelSegment } from "./sanitize-model-segment.mjs";
+import { shouldSkipProviderFromCache } from "./should-skip-provider-from-cache.mjs";
 
-const MAX_DYNAMIC_MODELS_PER_PROVIDER = 24;
+const MAX_DYNAMIC_MODELS_PER_PROVIDER = Number.parseInt(
+  process.env.SYMPHONY_MAX_DYNAMIC_MODELS_PER_PROVIDER || "8",
+  10,
+);
 const EXCLUDED_MODEL_PATTERNS = [
   /whisper/i,
   /transcrib/i,
@@ -17,50 +22,107 @@ const EXCLUDED_MODEL_PATTERNS = [
   /ocr/i,
   /vision/i,
   /image/i,
-  /\bvl\b/i,
+  /translate/i,
+  /translation/i,
+  /orpheus/i,
+  /reward/i,
+  /judge/i,
+  /evaluator/i,
+  /prover/i,
+  /reasoning-parser/i,
+  /(?:^|[-_/])vl(?:$|[-_/])/i,
 ];
 
-function supportsTextIO(raw) {
-  const inputModalities = Array.isArray(raw?.architecture?.input_modalities)
-    ? raw.architecture.input_modalities
-    : Array.isArray(raw?.input_modalities)
-      ? raw.input_modalities
-      : [];
-  const outputModalities = Array.isArray(raw?.architecture?.output_modalities)
-    ? raw.architecture.output_modalities
-    : Array.isArray(raw?.output_modalities)
-      ? raw.output_modalities
-      : [];
-  const acceptsText = inputModalities.length === 0 || inputModalities.includes("text");
-  const outputsText = outputModalities.length === 0 || outputModalities.includes("text");
-  return acceptsText && outputsText;
-}
-
-function isEligibleCatalogRow(row) {
-  const model = String(row?.model || row?.id || "").trim();
-  if (!model) return false;
-  if (EXCLUDED_MODEL_PATTERNS.some((pattern) => pattern.test(model))) return false;
-  if (!supportsTextIO(row?.raw || row)) return false;
-  if (row?.toolSupport === "unsupported") return false;
-  return true;
-}
-
-function sortCatalogRows(a, b) {
-  const aSupport = a?.toolSupport === "supported" ? 1 : 0;
-  const bSupport = b?.toolSupport === "supported" ? 1 : 0;
-  const aContext = Number(a?.contextLength || 0);
-  const bContext = Number(b?.contextLength || 0);
-  return bSupport - aSupport || bContext - aContext || String(a?.model || "").localeCompare(String(b?.model || ""));
-}
-
 export function buildDynamicCatalogProviders(staticProviders) {
+  function hasConfiguredCredentials(provider) {
+    if (provider?.driver === "codex-sdk") {
+      return Boolean(process.env.OPENAI_API_KEY);
+    }
+    if (!provider?.envVar) {
+      return typeof provider?.loadToken === "function" || true;
+    }
+    const value = process.env[provider.envVar];
+    return Boolean((value && value !== "REPLACE" && value.length > 1) || provider?.loadToken);
+  }
+
+  function supportsTextIO(raw) {
+    const inputModalities = Array.isArray(raw?.architecture?.input_modalities)
+      ? raw.architecture.input_modalities
+      : Array.isArray(raw?.input_modalities)
+        ? raw.input_modalities
+        : [];
+    const outputModalities = Array.isArray(raw?.architecture?.output_modalities)
+      ? raw.architecture.output_modalities
+      : Array.isArray(raw?.output_modalities)
+        ? raw.output_modalities
+        : [];
+    const acceptsText = inputModalities.length === 0 || inputModalities.includes("text");
+    const outputsText = outputModalities.length === 0 || outputModalities.includes("text");
+    return acceptsText && outputsText;
+  }
+
+  function supportsStructuredTools(row) {
+    const supportedParameters = Array.isArray(row?.supportedParameters)
+      ? row.supportedParameters
+      : Array.isArray(row?.raw?.supported_parameters)
+        ? row.raw.supported_parameters
+        : Array.isArray(row?.supported_parameters)
+          ? row.supported_parameters
+          : [];
+    const explicitCapability =
+      row?.raw?.capabilities?.tool_calling === true ||
+      row?.raw?.capabilities?.tool_use === true ||
+      row?.raw?.tool_calling === true ||
+      row?.raw?.tool_use === true;
+    return (
+      row?.toolSupport === "supported" ||
+      explicitCapability ||
+      supportedParameters.includes("tools") ||
+      supportedParameters.includes("tool_choice")
+    );
+  }
+
+  function isEligibleCatalogRow(row) {
+    const model = String(row?.model || row?.id || "").trim();
+    if (!model) return false;
+    if (EXCLUDED_MODEL_PATTERNS.some((pattern) => pattern.test(model))) return false;
+    if (!supportsTextIO(row?.raw || row)) return false;
+    if (!supportsStructuredTools(row)) return false;
+    if (row?.toolSupport === "unsupported") return false;
+    return true;
+  }
+
+  function sortCatalogRows(a, b) {
+    const aSupport = a?.toolSupport === "supported" ? 1 : 0;
+    const bSupport = b?.toolSupport === "supported" ? 1 : 0;
+    const aContext = Number(a?.contextLength || 0);
+    const bContext = Number(b?.contextLength || 0);
+    return (
+      bSupport - aSupport ||
+      bContext - aContext ||
+      String(a?.model || "").localeCompare(String(b?.model || ""))
+    );
+  }
+
   const cache = loadProviderCatalogCache();
   const dynamicProviders = [];
   for (const provider of staticProviders) {
     const key = provider?.catalogCacheKey;
     const rows = Array.isArray(cache?.[key]?.models) ? cache[key].models : [];
     if (!key || rows.length === 0) continue;
-    const eligibleRows = rows.filter(isEligibleCatalogRow).sort(sortCatalogRows).slice(0, MAX_DYNAMIC_MODELS_PER_PROVIDER);
+    if (!hasConfiguredCredentials(provider)) continue;
+
+    const baseProbeEntry = getCachedProbeEntry(provider.name);
+    if (shouldSkipProviderFromCache(baseProbeEntry)) continue;
+
+    const eligibleRows = rows
+      .filter(isEligibleCatalogRow)
+      .sort(sortCatalogRows)
+      .slice(
+        0,
+        Number.isFinite(MAX_DYNAMIC_MODELS_PER_PROVIDER) ? MAX_DYNAMIC_MODELS_PER_PROVIDER : 8,
+      );
+
     for (const row of eligibleRows) {
       const model = row?.model || row?.id;
       if (!model) continue;

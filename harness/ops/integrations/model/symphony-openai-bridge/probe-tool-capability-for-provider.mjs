@@ -20,6 +20,16 @@ import { providerToolSupportHint } from "./provider-tool-support-hint.mjs";
 import { probeMistralToolCapabilityViaHttp } from "./probe-mistral-tool-capability-via-http.mjs";
 
 export async function probeToolCapabilityForProvider(providerDef) {
+  function shouldWarnForStatus(status) {
+    return !new Set([
+      "non-capable-rejected",
+      "failed-function-call",
+      "quota-exhausted",
+      "auth-invalid",
+      "unavailable-model",
+      "bad-request",
+    ]).has(status);
+  }
   const name = providerDef.name;
   const supportHint = providerToolSupportHint(providerDef);
 
@@ -189,19 +199,27 @@ export async function probeToolCapabilityForProvider(providerDef) {
   } catch (error) {
     const detail = `${String(error?.message || error)} | provider=${name} | model=${providerDef.model} | baseUrl=${providerDef.baseUrl || ""}`;
     const classified = classifyToolProbeErrorOutcome(detail);
-    logWarn(`❌ TOOL PROBE ERROR: ${name} - ${classified.detail.slice(0, 300)}`);
-    logDebug(
-      `TOOL PROBE ERROR DEBUG: ${name} ${JSON.stringify({ status: classified.status, detail: classified.detail })}`,
-    );
-
     const durationMs = Date.now() - startTime;
     const failureType = classified.status.replace(/-/g, "_");
+
     if (
       classified.status === "non-capable-rejected" ||
-      classified.status === "failed-function-call"
+      classified.status === "failed-function-call" ||
+      classified.status === "unavailable-model" ||
+      classified.status === "quota-exhausted" ||
+      classified.status === "bad-request"
     ) {
       nonToolCapableProviders.add(name);
     }
+
+    if (shouldWarnForStatus(classified.status)) {
+      logWarn(`❌ TOOL PROBE ERROR: ${name} - ${classified.detail.slice(0, 300)}`);
+    } else {
+      logDebug(
+        `TOOL PROBE SKIP: ${name} ${JSON.stringify({ status: classified.status, detail: classified.detail.slice(0, 300) })}`,
+      );
+    }
+
     recordProbeResult(name, { success: false, durationMs });
     recordProviderFailure(name, failureType);
     return { name, status: classified.status, detail: classified.detail };

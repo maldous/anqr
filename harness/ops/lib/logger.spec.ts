@@ -166,7 +166,7 @@ describe("logger.mjs", () => {
       expect(call).toContain('"action":"create"');
     });
 
-    it("should handle serialization errors gracefully", () => {
+    it("should serialize circular objects safely", () => {
       const { logInfo } = createLogger();
 
       const circular: any = {};
@@ -176,7 +176,7 @@ describe("logger.mjs", () => {
 
       const call = stderrSpy.mock.calls[0][0] as string;
       expect(call).toContain("circular object");
-      expect(call).toContain("serialization failed");
+      expect(call).toContain("[circular]");
     });
 
     it("should include filename and line number in output", () => {

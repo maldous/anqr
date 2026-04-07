@@ -11,51 +11,56 @@ import { logDebug, logWarn } from "./logger.mjs";
 
 const PROVIDER_PROBE_BATCH_SIZE = 8;
 
-async function probeSingleProvider(provider, excludeSet, respectHealthState, recordHealthFailures) {
-  if (excludeSet.has(provider.name)) {
-    return {
-      name: provider.name,
-      model: provider.model,
-      status: "excluded",
-      available: false,
-      durationMs: 0,
-    };
-  }
-
-  if (respectHealthState && !shouldRetryProvider(provider.name)) {
-    return {
-      name: provider.name,
-      model: provider.model,
-      status: "cooling_down",
-      available: false,
-      durationMs: 0,
-    };
-  }
-
-  try {
-    const result = await probeProviderDetailed(provider);
-    if (result.available) recordProviderHealthSuccess(provider.name);
-    else if (recordHealthFailures) recordProviderHealthFailure(provider.name, result.status);
-    return {
-      name: provider.name,
-      model: provider.model,
-      status: result.available ? "available" : result.status,
-      available: result.available,
-      durationMs: result.durationMs || 0,
-    };
-  } catch {
-    if (recordHealthFailures) recordProviderHealthFailure(provider.name, "probe_error");
-    return {
-      name: provider.name,
-      model: provider.model,
-      status: "probe_error",
-      available: false,
-      durationMs: 0,
-    };
-  }
-}
-
 export async function probeAllProviders(options = {}) {
+  async function probeSingleProvider(
+    provider,
+    excludeSet,
+    respectHealthState,
+    recordHealthFailures,
+  ) {
+    if (excludeSet.has(provider.name)) {
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: "excluded",
+        available: false,
+        durationMs: 0,
+      };
+    }
+
+    if (respectHealthState && !shouldRetryProvider(provider.name)) {
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: "cooling_down",
+        available: false,
+        durationMs: 0,
+      };
+    }
+
+    try {
+      const result = await probeProviderDetailed(provider);
+      if (result.available) recordProviderHealthSuccess(provider.name);
+      else if (recordHealthFailures) recordProviderHealthFailure(provider.name, result.status);
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: result.available ? "available" : result.status,
+        available: result.available,
+        durationMs: result.durationMs || 0,
+      };
+    } catch {
+      if (recordHealthFailures) recordProviderHealthFailure(provider.name, "probe_error");
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: "probe_error",
+        available: false,
+        durationMs: 0,
+      };
+    }
+  }
+
   const { excludeNames = [], respectHealthState = true, recordHealthFailures = true } = options;
   const excludeSet = new Set(excludeNames);
   const startTime = Date.now();
@@ -73,7 +78,13 @@ export async function probeAllProviders(options = {}) {
       probeResults.push(
         result.status === "fulfilled"
           ? result.value
-          : { name: "unknown", model: "unknown", status: "error", available: false, durationMs: 0 },
+          : {
+              name: "unknown",
+              model: "unknown",
+              status: "error",
+              available: false,
+              durationMs: 0,
+            },
       );
     }
   }
@@ -83,7 +94,9 @@ export async function probeAllProviders(options = {}) {
   const unavailable = probeResults.filter(
     (result) => !result.available && result.status !== "excluded",
   );
-  logDebug(`Probed ${probeResults.length} providers in ${elapsed}ms (batch size ${PROVIDER_PROBE_BATCH_SIZE})`);
+  logDebug(
+    `Probed ${probeResults.length} providers in ${elapsed}ms (batch size ${PROVIDER_PROBE_BATCH_SIZE})`,
+  );
   logDebug(
     `  ✅ Available (${available.length}): ${available.map((result) => result.name).join(", ")}`,
   );

@@ -11,96 +11,79 @@ import { loadStats } from "./load-stats.mjs";
 import { shouldSkipProviderFromCache } from "./should-skip-provider-from-cache.mjs";
 
 export function getRankedProviders(options = {}) {
+  function sortRankedEntries(a, b) {
+    const scoreA = typeof a.score === "number" ? a.score : Number.NEGATIVE_INFINITY;
+    const scoreB = typeof b.score === "number" ? b.score : Number.NEGATIVE_INFINITY;
+    return (
+      scoreB - scoreA ||
+      Number(b.toolConfirmed) - Number(a.toolConfirmed) ||
+      (b.selections || 0) - (a.selections || 0) ||
+      a.name.localeCompare(b.name)
+    );
+  }
+
+  function sortPendingEntries(a, b) {
+    return (
+      Number(b.toolConfirmed) - Number(a.toolConfirmed) ||
+      (b.selections || 0) - (a.selections || 0) ||
+      a.name.localeCompare(b.name)
+    );
+  }
+
   let excludeNames = null;
   if (options.excludeNames instanceof Set) excludeNames = options.excludeNames;
   else if (Array.isArray(options.excludeNames)) excludeNames = new Set(options.excludeNames);
-  const excludeSet = excludeNames;
+
   const includeAvailable = options.includeAvailable !== false;
   const stats = loadStats();
   const probeResults = loadProbeResults();
   const ranked = [];
-  const safetyNets = [];
   const pending = [];
+  const safetyNets = [];
   const pendingSafetyNets = [];
-  const seenProviders = new Set();
-  const providersWithData = new Set(Object.keys(stats.selections || {}));
-  for (const name of Object.keys(stats.probeSelections || {})) providersWithData.add(name);
-  for (const name of Object.keys(probeResults || {})) providersWithData.add(name);
 
-  for (const name of providersWithData) {
-    if (excludeSet && excludeSet.has(name)) continue;
-    const provider = PROVIDERS.find((candidate) => candidate.name === name);
-    const probeEntry = probeResults[name] || null;
+  for (const provider of PROVIDERS) {
+    if (excludeNames && excludeNames.has(provider.name)) continue;
+
+    const probeEntry = probeResults[provider.name] || getCachedProbeEntry(provider.name) || null;
     if (probeEntry?.permanentSkip || shouldSkipProviderFromCache(probeEntry)) continue;
-    seenProviders.add(name);
-    const tier = provider ? getEffectiveProviderTier(provider, probeEntry) : "free-cloud";
-    const selections = stats.selections?.[name] || 0;
-    const baseScore = stats.score?.[name];
-    const health = getProviderHealthState(name);
+
+    if (!includeAvailable && !probeEntry) {
+      continue;
+    }
+
+    const health = getProviderHealthState(provider.name);
+    const baseScore = stats.score?.[provider.name];
+    const selections = stats.selections?.[provider.name] || 0;
+    const tier = getEffectiveProviderTier(provider, probeEntry);
     const effectiveScore =
       baseScore === null || baseScore === undefined
         ? null
-        : getEffectiveProviderScore(name, baseScore, stats, health, probeEntry);
+        : getEffectiveProviderScore(provider.name, baseScore, stats, health, probeEntry);
+
     const entry = {
-      name,
+      name: provider.name,
       score: effectiveScore ?? "pending",
       tier,
       selections,
       toolConfirmed: isProviderToolConfirmed(probeEntry),
     };
-    if (effectiveScore !== null && effectiveScore !== undefined) {
+
+    if (typeof effectiveScore === "number") {
       if (tier === TIER_LOCAL_SAFETY_NET) safetyNets.push(entry);
       else ranked.push(entry);
-    } else if (tier === TIER_LOCAL_SAFETY_NET) {
-      pendingSafetyNets.push(entry);
-    } else {
-      pending.push(entry);
+      continue;
     }
+
+    if (tier === TIER_LOCAL_SAFETY_NET) pendingSafetyNets.push(entry);
+    else pending.push(entry);
   }
 
-  if (includeAvailable) {
-    for (const provider of PROVIDERS) {
-      if (excludeSet && excludeSet.has(provider.name)) continue;
-      if (seenProviders.has(provider.name)) continue;
-      const probeEntry = getCachedProbeEntry(provider.name);
-      if (probeEntry?.permanentSkip || shouldSkipProviderFromCache(probeEntry)) continue;
-      const tier = getEffectiveProviderTier(provider, probeEntry);
-      const entry = {
-        name: provider.name,
-        score: "pending",
-        tier,
-        selections: 0,
-        toolConfirmed: isProviderToolConfirmed(probeEntry),
-      };
-      if (tier === TIER_LOCAL_SAFETY_NET) pendingSafetyNets.push(entry);
-      else pending.push(entry);
-    }
-  }
+  ranked.sort(sortRankedEntries);
+  safetyNets.sort(sortRankedEntries);
+  pending.sort(sortPendingEntries);
+  pendingSafetyNets.sort(sortPendingEntries);
 
-  ranked.sort(
-    (a, b) =>
-      b.score - a.score ||
-      Number(b.toolConfirmed) - Number(a.toolConfirmed) ||
-      a.name.localeCompare(b.name),
-  );
-  safetyNets.sort(
-    (a, b) =>
-      b.score - a.score ||
-      Number(b.toolConfirmed) - Number(a.toolConfirmed) ||
-      a.name.localeCompare(b.name),
-  );
-  pending.sort(
-    (a, b) =>
-      Number(b.toolConfirmed) - Number(a.toolConfirmed) ||
-      (b.selections || 0) - (a.selections || 0) ||
-      a.name.localeCompare(b.name),
-  );
-  pendingSafetyNets.sort(
-    (a, b) =>
-      Number(b.toolConfirmed) - Number(a.toolConfirmed) ||
-      (b.selections || 0) - (a.selections || 0) ||
-      a.name.localeCompare(b.name),
-  );
   return [...ranked, ...pending, ...safetyNets, ...pendingSafetyNets].map((item, index) => ({
     ...item,
     rank: index + 1,

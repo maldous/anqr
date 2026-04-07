@@ -17,12 +17,14 @@ import { runStartupSelfTests } from "./startup-self-test.mjs";
 import { sendStartupDiscordNotification } from "./startup-discord-notify.mjs";
 import { initializeProbes } from "./startup-probe-init.mjs";
 import { verifyContext7Health } from "./startup-context7-verify.mjs";
+import { installConsoleOutputGuard } from "./install-console-output-guard.mjs";
 
 if (VALID_TOKENS.size > 1) {
   logDebug(`Auth: accepting ${VALID_TOKENS.size} tokens`);
 }
 
 setupProcessHandlers();
+installConsoleOutputGuard();
 
 server.timeout = 0;
 

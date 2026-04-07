@@ -7,9 +7,35 @@ const INVALID_SENTINELS = new Set([
 ]);
 
 export function isInvalidModelAnswerText(text, options = {}) {
+  function normalizeLine(value) {
+    return String(value || "")
+      .trim()
+      .replace(/^```[\w-]*\s*/i, "")
+      .replace(/```$/i, "")
+      .replace(/\s+/g, " ")
+      .toUpperCase();
+  }
+
   if (options.allowSentinel === true) return false;
   const normalized = String(text || "").trim();
   if (!normalized) return true;
-  const collapsed = normalized.replace(/\s+/g, " ").toUpperCase();
-  return INVALID_SENTINELS.has(collapsed);
+
+  const collapsed = normalizeLine(normalized);
+  if (INVALID_SENTINELS.has(collapsed)) return true;
+
+  const firstNonEmptyLine = normalizeLine(
+    normalized
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find(Boolean) || "",
+  );
+  if (INVALID_SENTINELS.has(firstNonEmptyLine)) return true;
+
+  for (const sentinel of INVALID_SENTINELS) {
+    if (collapsed.startsWith(`${sentinel} `) || collapsed.startsWith(`${sentinel}:`)) {
+      return true;
+    }
+  }
+
+  return false;
 }

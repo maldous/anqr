@@ -6,6 +6,7 @@ const mockRecordProviderHealthSuccess = vi.fn();
 const mockProbeProviderDetailed = vi.fn();
 const mockShuffleArray = vi.fn((items) => items);
 const mockGetProviderDefinitions = vi.fn();
+const mockGetRankedProviders = vi.fn();
 const mockProbeToolCapabilityForProvider = vi.fn();
 
 vi.mock("./symphony-provider-health.mjs", () => ({
@@ -34,6 +35,7 @@ vi.mock("./symphony-credit-gate/shuffle-array.mjs", () => ({
 
 vi.mock("./symphony-credit-gate.mjs", () => ({
   getProviderDefinitions: mockGetProviderDefinitions,
+  getRankedProviders: mockGetRankedProviders,
 }));
 
 vi.mock("./symphony-openai-bridge/probe-tool-capability-for-provider.mjs", () => ({
@@ -103,6 +105,7 @@ describe("startup probe bootstrap mode", () => {
         model: "alpha-model",
       },
     ]);
+    mockGetRankedProviders.mockReturnValue([{ name: "alpha" }]);
     mockProbeToolCapabilityForProvider.mockResolvedValue({
       name: "alpha",
       status: "tool-capable",

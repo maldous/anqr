@@ -10,6 +10,15 @@ import { tools } from "./tools.mjs";
 import { logInfo } from "./logger.mjs";
 
 export async function logStartupBanner({ summary, enabled }) {
+  function normalizeContext7Status(status) {
+    const normalized = String(status || "unreachable").toLowerCase();
+    if (normalized === "ok" || normalized === "healthy" || normalized === "ready") return "ok";
+    if (normalized === "degraded" || normalized === "warming" || normalized === "starting") {
+      return "warming";
+    }
+    return normalized;
+  }
+
   const ragStats = getHybridSearchStats();
   const linearStats = getLinearIndexStats();
   let context7StartupStatus = "unreachable";
@@ -19,7 +28,7 @@ export async function logStartupBanner({ summary, enabled }) {
     });
     if (res.ok) {
       const data = await res.json();
-      context7StartupStatus = data.status || "ok";
+      context7StartupStatus = normalizeContext7Status(data.status || "ok");
     }
   } catch {
     // best effort only; detailed startup probe below already handles fallback messaging

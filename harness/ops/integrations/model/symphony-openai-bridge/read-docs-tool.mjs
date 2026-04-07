@@ -1,47 +1,55 @@
 import { CONTEXT7_HTTP_BASE } from "./context7-http-base.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
-async function tryLocalContext7({ libraryTitle, topic, maxTokens }) {
-  const response = await fetch(`${CONTEXT7_HTTP_BASE}/v1/resolve-docs`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ libraryTitle, topic, max_tokens: maxTokens }),
-    signal: AbortSignal.timeout(35000),
-  });
+export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
+  async function tryLocalContext7({
+    libraryTitle: localLibraryTitle,
+    topic: localTopic,
+    maxTokens,
+  }) {
+    const response = await fetch(`${CONTEXT7_HTTP_BASE}/v1/resolve-docs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        libraryTitle: localLibraryTitle,
+        topic: localTopic,
+        max_tokens: maxTokens,
+      }),
+      signal: AbortSignal.timeout(35000),
+    });
 
-  if (!response.ok) {
-    const retryable = response.status >= 500 || response.status === 429;
+    if (!response.ok) {
+      const retryable = response.status >= 500 || response.status === 429;
+      return {
+        ok: false,
+        retryable,
+        status: response.status,
+        reason: `Context7 HTTP service returned ${response.status}`,
+      };
+    }
+
+    const result = await response.json();
+    if (result.documentation) {
+      return {
+        ok: true,
+        result: {
+          content: result.documentation,
+          library: localLibraryTitle,
+          topic: localTopic,
+          source: result.source || "local-http",
+          tokens: Math.ceil(result.documentation.length / 4),
+        },
+      };
+    }
+
     return {
       ok: false,
-      retryable,
-      status: response.status,
-      reason: `Context7 HTTP service returned ${response.status}`,
+      retryable: false,
+      status: 200,
+      reason: result.error || "Context7 HTTP service returned no documentation",
     };
   }
 
-  const result = await response.json();
-  if (result.documentation) {
-    return {
-      ok: true,
-      result: {
-        content: result.documentation,
-        library: libraryTitle,
-        topic,
-        source: result.source || "local-http",
-        tokens: Math.ceil(result.documentation.length / 4),
-      },
-    };
-  }
-
-  return {
-    ok: false,
-    retryable: false,
-    status: 200,
-    reason: result.error || "Context7 HTTP service returned no documentation",
-  };
-}
-
-export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
   try {
     logInfo(`📚 Reading docs: ${libraryTitle} - ${topic}`);
 
@@ -53,12 +61,19 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
         topic,
         maxTokens: effectiveMaxTokens,
       });
-      if (local.ok) {
+      if (local.ok && local.result) {
         logInfo(`📚 Docs resolved via ${local.result.source} for "${libraryTitle}"`);
         return local.result;
       }
+      if (local.ok) {
+        logWarn(
+          `Context7 HTTP service reported success without documentation for "${libraryTitle}"`,
+        );
+      }
       if (!local.retryable) {
-        logInfo(`ℹ️ Local Context7 returned no local result for "${libraryTitle}" (${local.reason})`);
+        logInfo(
+          `ℹ️ Local Context7 returned no local result for "${libraryTitle}" (${local.reason})`,
+        );
       } else {
         logWarn(`Context7 HTTP service retryable failure: ${local.reason}`);
       }
