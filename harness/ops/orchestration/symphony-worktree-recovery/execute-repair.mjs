@@ -192,7 +192,7 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
                 // Fall back to --no-ff merge if fast-forward is not possible
                 logWarn(`[recovery] Fast-forward failed for wt${id}, trying --no-ff: ${ffErr.message}`);
                 try {
-                  execFileSync("git", ["merge", "origin/main", "--no-ff", "-m", "Merge main into wt"], {
+                  execFileSync("git", ["merge", "origin/main", "--no-ff", "-m", "Merge main into wt" + id], {
                     cwd: wtPath,
                     stdio: "pipe",
                     timeout: 15_000,
