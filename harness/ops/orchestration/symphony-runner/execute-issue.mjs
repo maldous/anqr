@@ -1557,8 +1557,9 @@ ${String(r.detail).slice(0, 1000)}\n`,
       return { sent: false };
     });
     if (discordResult?.messageId) {
+      const freshNotes = getIssueState(issue.identifier).notes || {};
       patchIssueState(issue.identifier, {
-        notes: { ...currentState.notes, lastProvider: metricsProviderName, discordMessageId: discordResult.messageId },
+        notes: { ...freshNotes, discordMessageId: discordResult.messageId },
       });
     }
 
