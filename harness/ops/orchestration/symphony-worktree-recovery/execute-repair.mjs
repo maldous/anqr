@@ -208,6 +208,7 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
               { name: "Files", value: `${fileCount} — ${fileSummary}`, inline: false },
               { name: "Commit", value: `\`${headSha.slice(0, 8)}\` → main`, inline: true },
             ],
+            threadName: "Auto-commits",
           }).catch(() => {});
           voiceAnnounce(`Auto-committed ${fileCount} files on main.`);
         } else {
@@ -244,6 +245,7 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
               { name: "Files", value: fileSummary, inline: false },
               { name: "Commit", value: `\`${headSha.slice(0, 8)}\` → ${branch}`, inline: true },
             ],
+            threadName: "Auto-commits",
           }).catch(() => {});
           voiceAnnounce(
             issueId
