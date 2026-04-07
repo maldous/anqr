@@ -184,6 +184,8 @@ export async function executeRepair(worktreeId, classification) {
             });
             enqueueIntegrationCandidate(inferredOwner);
             logInfo(`[recovery] Enqueued ${inferredOwner} for integration from ${worktreeId}`);
+          } else {
+            logWarn(`[recovery] No owner inferred for ${worktreeId} — pushed to ${branch} but not enqueued for integration`);
           }
         }
 
