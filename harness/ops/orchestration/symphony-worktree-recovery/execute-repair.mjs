@@ -26,7 +26,7 @@ import { logInfo, logWarn } from "./logger.mjs";
 
 function extractFileNames(dirtyFiles) {
   return dirtyFiles
-    .map((line) => line.replace(/^.{1,3}/, "").trim().split("/").pop())
+    .map((line) => line.replace(/^\S+\s+/, "").trim().split("/").pop())
     .filter(Boolean);
 }
 
@@ -199,14 +199,14 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
             }
           }
 
+          const mainDescParts = [issueId, provider].filter(Boolean);
           sendDiscordEmbed({
             title: "Auto-commit | main",
-            description: `${fileCount} file${fileCount !== 1 ? "s" : ""} · ${fileSummary}`,
+            description: mainDescParts.length > 0 ? mainDescParts.join(" · ") : undefined,
             color: 0x5865f2,
             fields: [
+              { name: "Files", value: `${fileCount} — ${fileSummary}`, inline: false },
               { name: "Commit", value: `\`${headSha.slice(0, 8)}\` → main`, inline: true },
-              ...(issueId ? [{ name: "Issue", value: issueId, inline: true }] : []),
-              ...(provider ? [{ name: "Provider", value: provider, inline: true }] : []),
             ],
           }).catch(() => {});
           voiceAnnounce(`Auto-committed ${fileCount} files on main.`);
