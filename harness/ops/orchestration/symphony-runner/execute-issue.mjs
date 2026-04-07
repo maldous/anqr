@@ -497,6 +497,7 @@ export async function executeIssue(issue, dryRun = false) {
     // local-busy). If it's just an unrecognised "other" failure, promote to
     // partial completion so the downstream changedFiles / continuation logic
     // handles it instead of applying exponential backoff meant for real errors.
+    let completionPromoted = false;
     if (!agentResult.completed && agentResult.toolCalls > 0) {
       const preFailureKind = classifyProviderFailure(
         `${agentResult.summary} ${agentResult.error || ""}`,
@@ -506,6 +507,7 @@ export async function executeIssue(issue, dryRun = false) {
           `[runner] Agent returned completed=false but made ${agentResult.toolCalls} tool calls — treating as partial completion`,
         );
         agentResult.completed = true;
+        completionPromoted = true;
       }
     }
 
@@ -839,20 +841,53 @@ export async function executeIssue(issue, dryRun = false) {
 
       // No-file-change completion hardening: require explicit evidence before accepting
       if (agentResult.completed === true && !isExternallyCompleted) {
-        if (agentResult.toolCalls > 0) {
-          // Agent did real work (tool calls) but produced no file changes — needs human review
-          await updateIssue(issue.id, { stateId: STATES.inReview });
+        if (agentResult.toolCalls > 0 && !completionPromoted) {
+          // Agent natively completed (task_complete / subgoals finished) via tool calls
+          // with no file changes — tool calls ARE the work product (e.g. creating
+          // Linear issues, checking things, updating status). Mark as Done.
+          await updateIssue(issue.id, { stateId: STATES.done });
           await addComment(
             issue.id,
-            `ℹ️ **Agent completed with no file changes** — moved to In Review for human verification.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`,
+            `✅ **Agent completed via tool calls** — no file changes needed.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`,
           );
           recordTransition(issue.identifier, {
             actor: "runner",
-            reason: "agent_completed_no_changes_review",
+            reason: "agent_completed_via_tools",
+            from: "In Progress",
+            to: "Done",
+            runId: RUN_ID,
+          });
+          clearCooldown(issue.identifier);
+          if (provider?.name) {
+            recordLinearCompletion(metricsProviderName, {
+              completed: true,
+              priority: issue.priority,
+              estimate: issue.estimate,
+            });
+            recordProviderSuccess(metricsProviderName);
+          }
+        } else if (agentResult.toolCalls > 0 && completionPromoted) {
+          // Agent did real work (tool calls) but didn't explicitly complete —
+          // promoted from partial progress. Move to In Review for human verification.
+          await updateIssue(issue.id, { stateId: STATES.inReview });
+          await addComment(
+            issue.id,
+            `ℹ️ **Agent made progress with no file changes** — moved to In Review for human verification.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "agent_partial_no_changes_review",
             from: "In Progress",
             to: "In Review",
             runId: RUN_ID,
           });
+          if (provider?.name) {
+            recordLinearCompletion(metricsProviderName, {
+              completed: false,
+              priority: issue.priority,
+              estimate: issue.estimate,
+            });
+          }
         } else {
           // Agent reported completion with zero tool calls and zero file changes — false positive
           await updateIssue(issue.id, { stateId: STATES.todo });
@@ -867,13 +902,13 @@ export async function executeIssue(issue, dryRun = false) {
             to: "Todo",
             runId: RUN_ID,
           });
-        }
-        if (provider?.name) {
-          recordLinearCompletion(metricsProviderName, {
-            completed: false,
-            priority: issue.priority,
-            estimate: issue.estimate,
-          });
+          if (provider?.name) {
+            recordLinearCompletion(metricsProviderName, {
+              completed: false,
+              priority: issue.priority,
+              estimate: issue.estimate,
+            });
+          }
         }
         logInfo(
           `[runner] ⚠️ No-change completion: ${issue.identifier} — ${issue.title} (requires review)`,
