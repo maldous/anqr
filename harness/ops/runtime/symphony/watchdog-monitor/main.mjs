@@ -90,6 +90,7 @@ export async function main() {
           { name: "Symphony Bridge", value: "✅ Healthy", inline: true },
           { name: "Codebuff Bridge", value: "✅ Healthy", inline: true },
         ],
+        threadName: "Watchdog",
       }).catch((err) => log(`⚠️ Failed to send Discord notification: ${err.message}`));
 
       process.exit(0);
@@ -125,6 +126,7 @@ export async function main() {
             inline: true,
           },
         ],
+        threadName: "Watchdog",
       }).catch((err) => log(`⚠️ Failed to send Discord notification: ${err.message}`));
 
       process.exit(1);
