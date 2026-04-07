@@ -1,4 +1,4 @@
-import { getWorktreePath } from "../worktree-config.mjs";
+import { getWorktreePath, PROJECT_ROOT } from "../worktree-config.mjs";
 import { existsSync } from "node:fs";
 import {
   getWorktreeState,
@@ -12,9 +12,10 @@ import { getGitDirtyFiles } from "./get-git-dirty-files.mjs";
 import { getHeadSha } from "./get-head-sha.mjs";
 
 export function getWorktreeHealthSnapshot(worktreeId) {
-  const normalizedId = String(worktreeId).replace(/^wt/, "");
-  const wtId = `wt${normalizedId}`;
-  const path = getWorktreePath(normalizedId);
+  const isMainRepo = String(worktreeId) === "main";
+  const normalizedId = isMainRepo ? "main" : String(worktreeId).replace(/^wt/, "");
+  const wtId = isMainRepo ? "main" : `wt${normalizedId}`;
+  const path = isMainRepo ? PROJECT_ROOT : getWorktreePath(normalizedId);
   const exists = existsSync(path);
 
   const snapshot = {

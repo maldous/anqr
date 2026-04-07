@@ -9,7 +9,7 @@ export async function runRecoveryCycle() {
   const stats = { scanned: 0, repaired: 0, quarantined: 0, skipped: 0, errors: [] };
 
   for (const id of ALL_WORKTREE_IDS) {
-    const wtId = `wt${id}`;
+    const wtId = id === "main" ? "main" : `wt${id}`;
     stats.scanned++;
 
     try {

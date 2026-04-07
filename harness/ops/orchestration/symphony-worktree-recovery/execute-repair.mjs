@@ -11,7 +11,13 @@ import {
   RECOVERY_MAX_REPAIR_ATTEMPTS,
   RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD,
 } from "../../symphony-config.mjs";
-import { getWorktreePath, getWorktreeBranch } from "../../core/worktree-config.mjs";
+import {
+  getWorktreePath,
+  getWorktreeBranch,
+  PROJECT_ROOT,
+  SYMPHONY_WORKTREE_IDS,
+  DISCORD_WORKTREE_IDS,
+} from "../../core/worktree-config.mjs";
 import { execFileSync } from "node:child_process";
 import { logInfo, logWarn } from "./logger.mjs";
 
@@ -92,6 +98,100 @@ export async function executeRepair(worktreeId, classification) {
           nextState: "branch_push_failed",
           error: err.message,
         };
+      }
+    }
+
+    case "auto_commit_and_push": {
+      const isMainRepo = worktreeId === "main";
+      const acapPath = isMainRepo
+        ? PROJECT_ROOT
+        : getWorktreePath(worktreeId.replace(/^wt/, ""));
+
+      try {
+        execFileSync("git", ["add", "-A"], {
+          cwd: acapPath,
+          stdio: "pipe",
+          timeout: 15_000,
+        });
+
+        const commitMsg = inferredOwner
+          ? `fix(harness): auto-commit ${inferredOwner} via fleet recovery daemon`
+          : `fix(harness): auto-commit dirty changes via fleet recovery daemon`;
+        execFileSync("git", ["commit", "-m", commitMsg, "--no-verify"], {
+          cwd: acapPath,
+          stdio: "pipe",
+          timeout: 30_000,
+          env: { ...process.env, ANQR_AUTOMATION_COMMIT: "1" },
+        });
+
+        const headSha = execFileSync("git", ["rev-parse", "HEAD"], {
+          cwd: acapPath,
+          encoding: "utf-8",
+          timeout: 5_000,
+        }).trim();
+
+        logInfo(`[recovery] Auto-committed in ${worktreeId} (${headSha.slice(0, 8)})`);
+
+        if (isMainRepo) {
+          execFileSync("git", ["push", "origin", "main"], {
+            cwd: acapPath,
+            stdio: "pipe",
+            timeout: 30_000,
+            env: { ...process.env, ANQR_AUTOMATION_PUSH: "1" },
+          });
+          logInfo(`[recovery] Pushed main to origin`);
+
+          const worktreeIds = [
+            ...SYMPHONY_WORKTREE_IDS.filter((id) => id !== "main"),
+            ...DISCORD_WORKTREE_IDS,
+          ];
+          for (const id of worktreeIds) {
+            try {
+              const wtPath = getWorktreePath(id);
+              execFileSync("git", ["fetch", "origin", "main"], {
+                cwd: wtPath,
+                stdio: "pipe",
+                timeout: 15_000,
+              });
+              execFileSync("git", ["merge", "origin/main", "--ff-only"], {
+                cwd: wtPath,
+                stdio: "pipe",
+                timeout: 15_000,
+              });
+              logInfo(`[recovery] Synced wt${id} with main`);
+            } catch (syncErr) {
+              logWarn(`[recovery] Failed to sync wt${id}: ${syncErr.message}`);
+            }
+          }
+        } else {
+          const branch = getWorktreeBranch(worktreeId.replace(/^wt/, ""));
+          execFileSync("git", ["push", "-u", "origin", `HEAD:${branch}`], {
+            cwd: acapPath,
+            stdio: "pipe",
+            timeout: 30_000,
+            env: { ...process.env, ANQR_AUTOMATION_PUSH: "1" },
+          });
+          logInfo(`[recovery] Pushed ${worktreeId} to ${branch}`);
+
+          if (inferredOwner) {
+            setFinalizationState(inferredOwner, {
+              state: "integration_pending",
+              branch,
+              headSha,
+              worktreeId,
+              attempts: 0,
+              lastError: null,
+            });
+            enqueueIntegrationCandidate(inferredOwner);
+            logInfo(`[recovery] Enqueued ${inferredOwner} for integration from ${worktreeId}`);
+          }
+        }
+
+        setWorktreeState(worktreeId, { state: "available", issueIdentifier: null });
+        return { ok: true, action: "auto_commit_and_push", nextState: "available" };
+      } catch (err) {
+        logWarn(`[recovery] Auto-commit/push failed for ${worktreeId}: ${err.message}`);
+        return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" });
       }
     }
 

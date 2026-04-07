@@ -109,6 +109,13 @@ export function classifyWorktree(snapshot) {
 
   // 5. Dirty files + no finalization + no lease → orphaned
   if (hasDirtyFiles && !isRepairable && !snapshot.leaseState) {
+    // Guard: never auto-commit conflict markers
+    if (hasConflictMarkers(snapshot.path, snapshot.gitDirtyFiles)) {
+      result.classification = "conflicted";
+      result.repairAction = "quarantine";
+      return result;
+    }
+
     const inferred = inferOwnerFromBranch(snapshot);
     if (inferred) {
       result.classification = "dirty_owned";
@@ -117,11 +124,11 @@ export function classifyWorktree(snapshot) {
       result.repairAction =
         result.confidence >= RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD
           ? "continue_repair"
-          : "quarantine";
+          : "auto_commit_and_push";
     } else {
       result.classification = "dirty_orphaned";
       result.confidence = 0.3;
-      result.repairAction = "quarantine";
+      result.repairAction = "auto_commit_and_push";
     }
     return result;
   }

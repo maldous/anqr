@@ -5,7 +5,7 @@ import { sendJson } from "./send-json.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
 const execFileAsync = promisify(execFile);
-const RUNNER_ENTRY = "harness/ops/orchestration/symphony-runner/main.mjs";
+const RUNNER_ENTRY = "harness/ops/orchestration/symphony-runner/runtime.mjs";
 const RUNNER_TIMEOUT_MS = 30 * 60 * 1000;
 
 export async function executeLinearIssueRequest(req, res) {
