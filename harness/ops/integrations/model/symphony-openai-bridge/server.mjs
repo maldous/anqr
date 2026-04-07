@@ -11,7 +11,7 @@ import {
 } from "../symphony-credit-gate.mjs";
 import { saveHealthState } from "../symphony-provider-health.mjs";
 import { getAdaptiveStats } from "../symphony-adaptive-context.mjs";
-import { streamDiscordUpdate, sendDiscordEmbed } from "../../notifications/openclaw-discord.mjs";
+import { streamDiscordUpdate, sendDiscordEmbed, finalizeDiscordStream } from "../../notifications/openclaw-discord.mjs";
 import { updateSessionProvider, setSessionMessages } from "../symphony-session-state.mjs";
 
 import { ADVERTISED_MODELS } from "./advertised-models.mjs";
@@ -733,20 +733,14 @@ export const server = http.createServer(async (req, res) => {
           selectedProvider?.name === "codebuff" ||
           selectedProvider?.name?.startsWith("codebuff-");
 
-        if (isSelectedCodebuff) {
-          try {
-            logInfo(
-              `🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
-            );
-
-            // Stream output to Discord as it's received (immediate, no buffering)
-            // Skip for Discord-originated requests — the Discord command handler
-            // already streams text from the SSE response to avoid double delivery.
-            const isDiscordOrigin = sessionId?.startsWith("discord:");
-            const streamToDiscord =
-              isDiscordOrigin || isVoiceRequest || isSymphonyRunner
-                ? null
-                : (text) => {
+        // Stream output to Discord as it's received (immediate, no buffering)
+        // Skip for Discord-originated requests — the Discord command handler
+        // already streams text from the SSE response to avoid double delivery.
+        const isDiscordOrigin = sessionId?.startsWith("discord:");
+        const streamToDiscord =
+          isDiscordOrigin || isVoiceRequest || isSymphonyRunner
+            ? null
+            : (text) => {
                     if (text && text.length > 0) {
                       // Filter out internal activity markers to avoid duplicate messages in Discord
                       const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
@@ -754,12 +748,24 @@ export const server = http.createServer(async (req, res) => {
                       const trimmed = text.trim();
                       const isLightbulb = trimmed === "💡" || text === "\n💡 " || text === "💡 ";
                       if (!isActivityMarker.test(trimmed) && !isLightbulb) {
-                        streamDiscordUpdate(text, { emoji: "", requestId }).catch(() => {
+                        streamDiscordUpdate(text, {
+                          emoji: "",
+                          requestId,
+                          threadName: discordOptions.threadName || issueContext?.identifier || "ANQR",
+                          replyTo: discordOptions.replyTo,
+                          source: discordOptions.source,
+                        }).catch(() => {
                           /* ignore */
                         });
                       }
                     }
                   };
+
+        if (isSelectedCodebuff) {
+          try {
+            logInfo(
+              `🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
+            );
 
             const result = await invokeCodebuffDirectStreamToSSE(
               messages,
@@ -784,6 +790,8 @@ export const server = http.createServer(async (req, res) => {
             logInfo(
               `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName}, ${result.text.length} chars)`,
             );
+
+            await finalizeDiscordStream({ requestId });
 
             // Send compact completion notification (non-blocking)
             const completionFields = [
@@ -849,6 +857,8 @@ export const server = http.createServer(async (req, res) => {
             const errMsg = String(error_.message || error_).slice(0, 200);
             logWarn(`⚠️ Codebuff transparent relay failed: ${errMsg}`);
 
+            await finalizeDiscordStream({ requestId });
+
             // Record failure and fall through to standard cascade
             if (isRetryableErrorDeep(error_)) {
               recordProviderFailure(selectedProvider.name);
@@ -879,6 +889,7 @@ export const server = http.createServer(async (req, res) => {
                   choices: [{ index: 0, delta: { content: chunk.text }, finish_reason: null }],
                 };
                 res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
+                if (streamToDiscord) streamToDiscord(chunk.text);
               }
             },
             excludeAfterCodebuff,
@@ -911,6 +922,8 @@ export const server = http.createServer(async (req, res) => {
           logInfo(
             `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName})`,
           );
+
+          await finalizeDiscordStream({ requestId });
 
           // Send compact completion notification (non-blocking)
           const streamCompletionFields = [
@@ -957,6 +970,8 @@ export const server = http.createServer(async (req, res) => {
           });
           maybeGC();
         } catch (streamError) {
+          await finalizeDiscordStream({ requestId });
+
           // Clean up request tracking
           activeRequests.delete(requestId);
           setCurrentRequestId(null);
