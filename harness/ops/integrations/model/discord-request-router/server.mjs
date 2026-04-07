@@ -7,7 +7,7 @@ import { handleHealth } from "./handle-health.mjs";
 import { isOverloaded } from "./is-overloaded.mjs";
 import { proxyToWorktree } from "./proxy-to-worktree.mjs";
 import { sendOverloadResponse } from "./send-overload-response.mjs";
-import { logWarn, logError, logDebug } from "./logger.mjs";
+import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
 
 export const server = http.createServer((req, res) => {
   logDebug(`${req.method} ${req.url}`);
@@ -32,6 +32,8 @@ export const server = http.createServer((req, res) => {
 
     const sessionId =
       req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
+
+    logInfo(`🔑 Session: ${sessionId || "(no session)"} | active: ${globalActiveRequests}/${MAX_CONCURRENT}`);
 
     // Find least loaded worktree, but keep a sticky worktree per session to preserve
     // executor-local session/provider state across Discord follow-up turns.

@@ -2,6 +2,7 @@ import { evictExpiredSessions } from "./evict-expired-sessions.mjs";
 import { sessionThreadNames } from "./session-thread-names.mjs";
 import { WORKTREE_URLS } from "./worktree-urls.mjs";
 import { roundRobinIndex, setRoundRobinIndex } from "./round-robin-index.mjs";
+import { logInfo, logDebug } from "./logger.mjs";
 
 export function getLeastLoadedWorktree(sessionId = null) {
   if (WORKTREE_URLS.length === 0) return null;
@@ -12,9 +13,11 @@ export function getLeastLoadedWorktree(sessionId = null) {
     const existing = sessionThreadNames.get(sessionId);
     const sticky = WORKTREE_URLS.find((wt) => wt.id === existing?.worktreeId);
     if (sticky) {
+      logInfo(`📌 Sticky hit: session=${sessionId} -> wt${sticky.id} (active: ${sticky.activeRequests})`);
       sessionThreadNames.set(sessionId, { ...existing, createdAt: Date.now() });
       return sticky;
     }
+    logDebug(`📌 Sticky miss: session=${sessionId} had wt${existing?.worktreeId} but not found, falling through to round-robin`);
   }
 
   const minLoad = Math.min(...WORKTREE_URLS.map((wt) => wt.activeRequests));
@@ -22,6 +25,10 @@ export function getLeastLoadedWorktree(sessionId = null) {
 
   const selected = candidates[roundRobinIndex % candidates.length];
   setRoundRobinIndex((roundRobinIndex + 1) % WORKTREE_URLS.length);
+
+  logInfo(
+    `🔀 Round-robin: session=${sessionId || "(none)"} -> wt${selected?.id} (load: ${minLoad}, candidates: ${candidates.map((wt) => `wt${wt.id}`).join(",")})`,
+  );
 
   if (sessionId && selected) {
     const existing = sessionThreadNames.get(sessionId) || {};

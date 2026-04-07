@@ -574,7 +574,6 @@
   },
   "plugins": {
     "allow": [
-      "lossless-claw",
       "discord",
       "talk-voice",
       "voice-call",
@@ -584,17 +583,6 @@
       "openai"
     ],
     "entries": {
-      "lossless-claw": {
-        "enabled": true,
-        "config": {
-          "freshTailCount": 32,
-          "contextThreshold": 0.75,
-          "incrementalMaxDepth": -1,
-          "ignoreSessionPatterns": ["agent:*:cron:**"],
-          "summaryProvider": "symphony",
-          "summaryModel": "main"
-        }
-      },
       "discord": {
         "enabled": true,
         "config": {}
@@ -623,21 +611,7 @@
         "config": {}
       }
     },
-    "installs": {
-      "lossless-claw": {
-        "source": "npm",
-        "spec": "@martian-engineering/lossless-claw",
-        "installPath": "/home/user/.openclaw/extensions/lossless-claw",
-        "version": "0.5.3",
-        "resolvedName": "@martian-engineering/lossless-claw",
-        "resolvedVersion": "0.5.3",
-        "resolvedSpec": "@martian-engineering/lossless-claw@0.5.3",
-        "integrity": "sha512-9mDRVt9N8t2LWPapIGlWMHl0c0gYw3gLJ7n+rR8eLC4IZav482OHy054J8GNB0LS8ztqkidf8z4PN6Yi6PwExw==",
-        "shasum": "bc7b4065a2ba2a7b143347dae7e09051519ea08c",
-        "resolvedAt": "2026-04-02T03:07:12.723Z",
-        "installedAt": "2026-04-02T03:07:26.901Z"
-      }
-    }
+    "installs": {}
   },
   "discovery": {
     "mdns": {

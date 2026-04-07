@@ -44,13 +44,26 @@ export async function selectProvider(options = {}) {
     ? orderedNames.filter((name) => !preferredNames.has(name))
     : orderedNames;
 
-  logDebug(`[selectProvider] Candidate order`, {
+  // Score-boost merge: interleave preferred and fallback 1:1 so preferred float
+  // higher but don't completely block free-cloud providers from being tried.
+  const mergedOrder = [];
+  let pIdx = 0;
+  let fIdx = 0;
+  while (pIdx < preferredOrderedNames.length || fIdx < fallbackOrderedNames.length) {
+    if (pIdx < preferredOrderedNames.length) mergedOrder.push(preferredOrderedNames[pIdx++]);
+    if (fIdx < fallbackOrderedNames.length) mergedOrder.push(fallbackOrderedNames[fIdx++]);
+  }
+
+  logInfo(`[selectProvider] Candidate order (score-boost merge)`, {
     candidateCount: orderedNames.length,
     preferredCount: preferredOrderedNames.length,
-    topCandidates: orderedNames.slice(0, 10),
+    fallbackCount: fallbackOrderedNames.length,
+    preferred: preferredOrderedNames.slice(0, 8),
+    fallback: fallbackOrderedNames.slice(0, 8),
+    mergedTop: mergedOrder.slice(0, 12),
   });
 
-  for (const providerName of [...preferredOrderedNames, ...fallbackOrderedNames]) {
+  for (const providerName of mergedOrder) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
     if (
       !provider ||
