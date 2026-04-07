@@ -726,6 +726,7 @@ export async function executeIssue(issue, dryRun = false) {
             maxMs: contRemainingMs,
           });
           agentResult = continueResult;
+          completionPromoted = false;
           changedFiles = gitDiffNames();
         } catch (err) {
           logError(`[runner] Continuation failed: ${err.message}`);
@@ -866,6 +867,7 @@ export async function executeIssue(issue, dryRun = false) {
             });
             recordProviderSuccess(metricsProviderName);
           }
+          logInfo(`[runner] ✅ Completed via tools: ${issue.identifier} — ${issue.title}`);
         } else if (agentResult.toolCalls > 0 && completionPromoted) {
           // Agent did real work (tool calls) but didn't explicitly complete —
           // promoted from partial progress. Move to In Review for human verification.
@@ -888,6 +890,7 @@ export async function executeIssue(issue, dryRun = false) {
               estimate: issue.estimate,
             });
           }
+          logInfo(`[runner] ⚠️ Partial progress (no file changes): ${issue.identifier} — ${issue.title}`);
         } else {
           // Agent reported completion with zero tool calls and zero file changes — false positive
           await updateIssue(issue.id, { stateId: STATES.todo });
@@ -909,6 +912,7 @@ export async function executeIssue(issue, dryRun = false) {
               estimate: issue.estimate,
             });
           }
+          logInfo(`[runner] ⚠️ False positive (no changes, no tools): ${issue.identifier} — ${issue.title}`);
         }
         return "done";
       }
