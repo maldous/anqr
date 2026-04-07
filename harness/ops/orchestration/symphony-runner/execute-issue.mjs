@@ -492,6 +492,23 @@ export async function executeIssue(issue, dryRun = false) {
       notes: { ...currentState.notes, lastProvider: metricsProviderName },
     });
 
+    // If agent did real work (tool calls) but bridge returned completed=false,
+    // check whether the failure is a known infrastructure error (quota, rate-limit,
+    // local-busy). If it's just an unrecognised "other" failure, promote to
+    // partial completion so the downstream changedFiles / continuation logic
+    // handles it instead of applying exponential backoff meant for real errors.
+    if (!agentResult.completed && agentResult.toolCalls > 0) {
+      const preFailureKind = classifyProviderFailure(
+        `${agentResult.summary} ${agentResult.error || ""}`,
+      );
+      if (preFailureKind === "other") {
+        logInfo(
+          `[runner] Agent returned completed=false but made ${agentResult.toolCalls} tool calls — treating as partial completion`,
+        );
+        agentResult.completed = true;
+      }
+    }
+
     if (!agentResult.completed) {
       const failureKind = classifyProviderFailure(
         `${agentResult.summary} ${agentResult.error || ""}`,
