@@ -287,6 +287,7 @@ export const server = http.createServer(async (req, res) => {
           : linearThreadName
             ? "linear"
             : null;
+      const isDiscordOriginRequest = discordSource === "discord";
       const discordOptions = {};
       if (discordMessageId) discordOptions.replyTo = discordMessageId;
       if (discordThreadName) discordOptions.threadName = discordThreadName;
@@ -596,7 +597,7 @@ export const server = http.createServer(async (req, res) => {
 
       // Skip Discord text notifications and voice announcements for voice requests —
       // OpenClaw auto-TTS speaks the response, so extra notifications cause feedback.
-      if (!isVoiceRequest && !isSymphonyRunner) {
+      if (!isVoiceRequest && (!isSymphonyRunner || isDiscordOriginRequest)) {
         // Build title with worktree ID
         const worktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
         const embedTitle = issueContext?.identifier
@@ -739,7 +740,7 @@ export const server = http.createServer(async (req, res) => {
         // OpenClaw only shows typing + final message, so ANQR must handle
         // real-time streaming to give users progressive visibility.
         const streamToDiscord =
-          isVoiceRequest || isSymphonyRunner
+          isVoiceRequest || (isSymphonyRunner && !isDiscordOriginRequest)
             ? null
             : (text) => {
                 if (text && text.length > 0) {
@@ -806,7 +807,7 @@ export const server = http.createServer(async (req, res) => {
             const completionTitle = issueContext?.identifier
               ? `✅ ${issueContext.identifier}${completionWorktreeLabel}`
               : `✅ Done${completionWorktreeLabel}`;
-            if (!isVoiceRequest && !isSymphonyRunner) {
+            if (!isVoiceRequest && (!isSymphonyRunner || isDiscordOriginRequest)) {
               sendDiscordEmbed(
                 {
                   title: completionTitle,
@@ -938,7 +939,7 @@ export const server = http.createServer(async (req, res) => {
           const streamCompletionTitle = issueContext?.identifier
             ? `✅ ${issueContext.identifier}${streamCompletionWorktreeLabel}`
             : `✅ Done${streamCompletionWorktreeLabel}`;
-          if (!isVoiceRequest && !isSymphonyRunner) {
+          if (!isVoiceRequest && (!isSymphonyRunner || isDiscordOriginRequest)) {
             sendDiscordEmbed(
               {
                 title: streamCompletionTitle,
@@ -1064,7 +1065,7 @@ export const server = http.createServer(async (req, res) => {
         const nonStreamCompletionTitle = issueContext?.identifier
           ? `✅ ${issueContext.identifier}${nonStreamCompletionWorktreeLabel}`
           : `✅ Done${nonStreamCompletionWorktreeLabel}`;
-        if (!isVoiceRequest && !isSymphonyRunner) {
+        if (!isVoiceRequest && (!isSymphonyRunner || isDiscordOriginRequest)) {
           sendDiscordEmbed(
             {
               title: nonStreamCompletionTitle,

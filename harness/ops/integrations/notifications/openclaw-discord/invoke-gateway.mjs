@@ -36,10 +36,19 @@ export async function invokeGateway(toolName, args) {
           try {
             parsed = JSON.parse(data);
           } catch {}
+          // Unwrap OpenClaw content wrapper:
+          // Gateway returns {result: {content: [{type:"text", text:"{\"ok\":true,\"result\":{\"messageId\":\"...\"}}"}]}}
+          let innerResult = parsed?.result ?? parsed ?? null;
+          if (innerResult?.content?.[0]?.text) {
+            try {
+              const unwrapped = JSON.parse(innerResult.content[0].text);
+              innerResult = unwrapped?.result ?? unwrapped;
+            } catch {}
+          }
           logDebug(
-            `Gateway ${toolName}/${args.action || ""}: OK — ${data.slice(0, 120)}`,
+            `Gateway ${toolName}/${args.action || ""}: OK — ${JSON.stringify(innerResult).slice(0, 120)}`,
           );
-          resolve({ ok: true, result: parsed?.result ?? parsed ?? null, raw: data });
+          resolve({ ok: true, result: innerResult, raw: data });
         } else {
           logWarn(
             `Gateway ${toolName}/${args.action || ""}: HTTP ${res.statusCode} — ${data.slice(0, 150)}`,
