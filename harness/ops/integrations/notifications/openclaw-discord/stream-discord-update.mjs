@@ -37,7 +37,9 @@ export async function streamDiscordUpdate(
   // Schedule periodic flush if not already scheduled
   if (!state.timer) {
     state.timer = setTimeout(() => {
-      flushDiscordStream({ emoji, timestamp, requestId }).catch(() => {});
+      flushDiscordStream({ emoji, timestamp, requestId }).catch((err) => {
+        process.stderr.write(`[openclaw-discord] [WARN] Periodic flush failed: ${err.message}\n`);
+      });
     }, STREAM_INTERVAL_MS);
   }
 

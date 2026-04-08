@@ -14,14 +14,18 @@ export async function finalizeDiscordStream({ emoji = "", requestId = "default" 
 
   // Final edit if there's unsent content
   if (state.dirty && state.fullText.length > 0) {
-    await flushDiscordStream({ emoji, requestId }).catch(() => {});
+    await flushDiscordStream({ emoji, requestId }).catch((err) => {
+      logDebug(`Final flush failed: ${err.message}`);
+    });
   }
 
   // Delete the streaming preview message so only OpenClaw's authoritative
   // final response remains. This avoids duplicate full-text messages.
   if (state.messageId) {
     logDebug(`Deleting streaming preview message ${state.messageId}`);
-    await deleteViaOpenClaw(state.messageId).catch(() => {});
+    await deleteViaOpenClaw(state.messageId).catch((err) => {
+      logDebug(`Delete streaming preview failed: ${err.message}`);
+    });
   }
 
   discordStreamBuffers.delete(requestId);

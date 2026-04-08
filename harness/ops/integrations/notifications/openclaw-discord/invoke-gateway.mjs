@@ -7,6 +7,7 @@ import { logDebug, logWarn } from "./logger.mjs";
 
 export async function invokeGateway(toolName, args) {
   if (!OPENCLAW_GATEWAY_TOKEN) {
+    logWarn(`Gateway ${toolName}: OPENCLAW_GATEWAY_TOKEN not set — skipping`);
     return { ok: false, reason: "OPENCLAW_GATEWAY_TOKEN not set" };
   }
 

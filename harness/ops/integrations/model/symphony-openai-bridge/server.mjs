@@ -753,7 +753,7 @@ export const server = http.createServer(async (req, res) => {
                       threadName: discordOptions.threadName || issueContext?.identifier || "ANQR",
                       replyTo: discordOptions.replyTo,
                       source: discordOptions.source,
-                    }).catch(() => {});
+                    }).catch((err) => logWarn(`Discord stream update failed: ${err.message}`));
                   }
                 }
               };

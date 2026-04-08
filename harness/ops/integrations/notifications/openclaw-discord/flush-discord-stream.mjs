@@ -61,7 +61,9 @@ export async function flushDiscordStream({
             state.threadChannelId = thread.threadChannelId;
           }
         })
-        .catch(() => {});
+        .catch((err) => {
+          process.stderr.write(`[openclaw-discord] [WARN] Thread creation failed: ${err.message}\n`);
+        });
     }
   }
 
