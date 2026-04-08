@@ -51,13 +51,17 @@ export async function flushDiscordStream({
   if (result.messageId) {
     state.messageId = result.messageId;
 
-    // Create a Discord thread on the first message so all streaming
-    // updates and notifications are grouped together.
+    // Fire-and-forget thread creation — don't block the streaming preview.
+    // The thread cache is updated asynchronously so subsequent embeds
+    // route to the thread once it's ready.
     if (state.threadName) {
-      const thread = await createDiscordThread(result.messageId, state.threadName);
-      if (thread.threadChannelId) {
-        state.threadChannelId = thread.threadChannelId;
-      }
+      createDiscordThread(result.messageId, state.threadName)
+        .then((thread) => {
+          if (thread.threadChannelId) {
+            state.threadChannelId = thread.threadChannelId;
+          }
+        })
+        .catch(() => {});
     }
   }
 
