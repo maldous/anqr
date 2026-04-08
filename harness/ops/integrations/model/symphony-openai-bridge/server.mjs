@@ -734,11 +734,12 @@ export const server = http.createServer(async (req, res) => {
           selectedProvider?.name?.startsWith("codebuff-");
 
         // Stream output to Discord as it's received (immediate, no buffering)
-        // Skip for Discord-originated requests — the Discord command handler
-        // already streams text from the SSE response to avoid double delivery.
-        const isDiscordOrigin = sessionId?.startsWith("discord:");
+        // Voice requests and symphony runner requests skip Discord streaming
+        // to avoid feedback loops. Discord-originated requests DO stream —
+        // OpenClaw only shows typing + final message, so ANQR must handle
+        // real-time streaming to give users progressive visibility.
         const streamToDiscord =
-          isDiscordOrigin || isVoiceRequest || isSymphonyRunner
+          isVoiceRequest || isSymphonyRunner
             ? null
             : (text) => {
                 if (text && text.length > 0) {

@@ -1,7 +1,8 @@
 import { STREAM_INTERVAL_MS } from "./stream-interval-ms.mjs";
-import { STREAM_MAX_LENGTH } from "./stream-max-length.mjs";
 import { discordStreamBuffers } from "./discord-stream-buffers.mjs";
 import { flushDiscordStream } from "./flush-discord-stream.mjs";
+
+const STREAM_FIRST_FLUSH_CHARS = 80;
 
 export async function streamDiscordUpdate(
   text,
@@ -12,6 +13,7 @@ export async function streamDiscordUpdate(
       fullText: "",
       dirty: false,
       messageId: null,
+      threadChannelId: null,
       timer: null,
       replyTo: replyTo || null,
       threadName: threadName || null,
@@ -28,7 +30,7 @@ export async function streamDiscordUpdate(
   if (source) state.source = source;
 
   // Eager first flush — get the initial message up quickly so Discord shows content
-  if (!state.messageId && state.fullText.length >= STREAM_MAX_LENGTH) {
+  if (!state.messageId && state.fullText.length >= STREAM_FIRST_FLUSH_CHARS) {
     return await flushDiscordStream({ emoji, timestamp, requestId });
   }
 
