@@ -54,8 +54,8 @@ export async function flushDiscordStream({
 
     // Fire-and-forget thread creation — don't block the streaming preview.
     // The thread cache is updated asynchronously so subsequent embeds
-    // route to the thread once it's ready.
-    if (state.threadName) {
+    // route to the thread once it's ready. Only create once per stream.
+    if (state.threadName && !state.threadChannelId) {
       createDiscordThread(result.messageId, state.threadName)
         .then((thread) => {
           if (thread.threadChannelId) {

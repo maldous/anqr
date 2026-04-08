@@ -15,6 +15,7 @@ export async function streamDiscordUpdate(
       dirty: false,
       messageId: null,
       threadChannelId: null,
+      _eagerFlushing: false,
       timer: null,
       replyTo: replyTo || null,
       threadName: threadName || null,
@@ -36,7 +37,11 @@ export async function streamDiscordUpdate(
   // round-trip completes and sets state.messageId).
   if (!state.messageId && !state._eagerFlushing && state.fullText.length >= STREAM_FIRST_FLUSH_CHARS) {
     state._eagerFlushing = true;
-    return await flushDiscordStream({ emoji, timestamp, requestId });
+    try {
+      return await flushDiscordStream({ emoji, timestamp, requestId });
+    } finally {
+      state._eagerFlushing = false;
+    }
   }
 
   // Schedule periodic flush if not already scheduled
