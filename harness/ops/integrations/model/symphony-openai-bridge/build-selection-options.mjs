@@ -38,18 +38,17 @@ export function buildSelectionOptions(route, excludedNames = [], sessionId = nul
   const evaluationSample = getEvaluationSampleProvider(evaluationPool, stats);
 
   if (evaluationSample) {
-    if (isProviderHealthy(evaluationSample)) {
-      safeLogDebug(`🔍 Evaluation cycle: forcing sample of "${evaluationSample}"`);
-      return {
-        allowedNames: [evaluationSample],
-        preferredNames: preferredNames.length > 0 ? preferredNames : null,
-        allowSafetyNetOverride: true,
-        excludeNames: [...excludeSet],
-      };
-    }
-    safeLogDebug(
-      `⚠️ Evaluation cycle: skipping unhealthy sample "${evaluationSample}" — using full provider pool`,
-    );
+    safeLogDebug(`🔍 Evaluation cycle: boosting sample "${evaluationSample}" via preferredNames`);
+    const boostedPreferred = [
+      evaluationSample,
+      ...preferredNames.filter((n) => n !== evaluationSample),
+    ];
+    return {
+      allowedNames: route.allowedNames,
+      preferredNames: boostedPreferred,
+      allowSafetyNetOverride: true,
+      excludeNames: [...excludeSet],
+    };
   }
 
   // Check session state for sticky provider
