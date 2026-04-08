@@ -1,6 +1,7 @@
 import { createDiscordThread } from "./create-discord-thread.mjs";
 import { discordStreamBuffers } from "./discord-stream-buffers.mjs";
 import { sendViaOpenClaw } from "./send-via-open-claw.mjs";
+import { logWarn } from "./logger.mjs";
 
 export async function flushDiscordStream({
   emoji = "",
@@ -62,7 +63,7 @@ export async function flushDiscordStream({
           }
         })
         .catch((err) => {
-          process.stderr.write(`[openclaw-discord] [WARN] Thread creation failed: ${err.message}\n`);
+          logWarn(`Thread creation failed: ${err.message}`);
         });
     }
   }

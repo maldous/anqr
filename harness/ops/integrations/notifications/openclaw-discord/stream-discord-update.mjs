@@ -1,6 +1,7 @@
 import { STREAM_INTERVAL_MS } from "./stream-interval-ms.mjs";
 import { discordStreamBuffers } from "./discord-stream-buffers.mjs";
 import { flushDiscordStream } from "./flush-discord-stream.mjs";
+import { logWarn } from "./logger.mjs";
 
 const STREAM_FIRST_FLUSH_CHARS = 80;
 
@@ -38,7 +39,7 @@ export async function streamDiscordUpdate(
   if (!state.timer) {
     state.timer = setTimeout(() => {
       flushDiscordStream({ emoji, timestamp, requestId }).catch((err) => {
-        process.stderr.write(`[openclaw-discord] [WARN] Periodic flush failed: ${err.message}\n`);
+        logWarn(`Periodic flush failed: ${err.message}`);
       });
     }, STREAM_INTERVAL_MS);
   }
