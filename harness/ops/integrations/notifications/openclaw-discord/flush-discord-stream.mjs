@@ -1,3 +1,4 @@
+import { createDiscordThread } from "./create-discord-thread.mjs";
 import { discordStreamBuffers } from "./discord-stream-buffers.mjs";
 import { sendViaOpenClaw } from "./send-via-open-claw.mjs";
 
@@ -46,8 +47,19 @@ export async function flushDiscordStream({
     threadName: state.threadName,
     source: state.source,
   });
+
   if (result.messageId) {
     state.messageId = result.messageId;
+
+    // Create a Discord thread on the first message so all streaming
+    // updates and notifications are grouped together.
+    if (state.threadName) {
+      const thread = await createDiscordThread(result.messageId, state.threadName);
+      if (thread.threadChannelId) {
+        state.threadChannelId = thread.threadChannelId;
+      }
+    }
   }
+
   return result;
 }
