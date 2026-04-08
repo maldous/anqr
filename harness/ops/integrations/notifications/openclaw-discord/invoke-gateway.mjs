@@ -45,6 +45,16 @@ export async function invokeGateway(toolName, args) {
               innerResult = unwrapped?.result ?? unwrapped;
             } catch {}
           }
+          // Check for logical failure inside 200 OK (gateway can return
+          // success HTTP status with an error payload in the body).
+          if (innerResult?.ok === false || innerResult?.error) {
+            const errorMsg = innerResult?.error?.message || "logical failure in 200 response";
+            logWarn(
+              `Gateway ${toolName}/${args.action || ""}: logical failure — ${errorMsg}`,
+            );
+            resolve({ ok: false, reason: errorMsg, result: innerResult, raw: data });
+            return;
+          }
           logDebug(
             `Gateway ${toolName}/${args.action || ""}: OK — ${JSON.stringify(innerResult).slice(0, 120)}`,
           );

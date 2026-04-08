@@ -680,6 +680,7 @@ export const server = http.createServer(async (req, res) => {
         } catch (e) {
           logError(`Timeout cleanup error: ${e.message}`);
         }
+        finalizeDiscordStream({ requestId }).catch(() => {});
       }, REQUEST_TIMEOUT_MS);
 
       // ── Voice request detection ──────────────────────────────────────────────
@@ -1133,6 +1134,7 @@ export const server = http.createServer(async (req, res) => {
     if (typeof requestId !== "undefined") {
       activeRequests.delete(requestId);
       setCurrentRequestId(null);
+      finalizeDiscordStream({ requestId }).catch(() => {});
     }
 
     // Prevent ERR_HTTP_HEADERS_SENT crash - don't try to send JSON response
