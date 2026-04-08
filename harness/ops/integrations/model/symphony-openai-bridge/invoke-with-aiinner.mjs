@@ -370,7 +370,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       // Process stream parts based on type
       if (part.type === "reasoning-start") {
         // Emit thinking indicator when reasoning starts
-        if (onChunk) {
+        if (!rawJsonGuardFailed && onChunk) {
           onChunk({ type: "text", text: "\n💭 " });
         }
       } else if (part.type === "reasoning-delta") {
@@ -397,13 +397,13 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
             }
           }
           // Forward to client for streaming
-          if (onChunk) {
+          if (!rawJsonGuardFailed && onChunk) {
             onChunk({ type: "text", text: reasoningDelta });
           }
         }
       } else if (part.type === "reasoning-end") {
         // Only emit newline if we actually got reasoning content
-        if (emittedReasoningContent && onChunk) {
+        if (emittedReasoningContent && !rawJsonGuardFailed && onChunk) {
           onChunk({ type: "text", text: "\n" });
         }
       } else if (part.type === "text-delta") {

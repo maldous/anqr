@@ -22,7 +22,13 @@ export async function memoryGetTool({ file, path: pathAlias, from: fromLine, lin
 
     // For unrecognized paths, try reading as a relative project path
     if (!fileName) {
-      const resolvedPath = resolveRequestPath(path.join(getCurrentRequestCwd(), rawName));
+      const cwd = getCurrentRequestCwd();
+      const joined = path.resolve(cwd, rawName);
+      // Path traversal guard — check BEFORE remapping (resolveRequestPath remaps worktree paths)
+      if (!joined.startsWith(cwd)) {
+        return { error: `Path traversal denied: ${rawName}` };
+      }
+      const resolvedPath = resolveRequestPath(joined);
       if (!fs.existsSync(resolvedPath)) {
         return { error: `File not found: ${rawName}. Known files: ${validFiles.join(", ")}` };
       }
