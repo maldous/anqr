@@ -18,6 +18,7 @@ export async function streamDiscordUpdate(
       _eagerFlushing: false,
       _flushPromise: null,
       _threadPromise: null,
+      createdAt: Date.now(),
       timer: null,
       replyTo: replyTo || null,
       threadName: threadName || null,

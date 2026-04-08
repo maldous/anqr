@@ -28,8 +28,6 @@ export async function flushDiscordStream({
       return { sent: false, reason: "no new content" };
     }
 
-    state.dirty = false;
-
     const prefix = emoji ? `${emoji} ` : "";
     const suffix = timestamp ? ` (${new Date().toLocaleTimeString()})` : "";
     const maxLength = 2000 - prefix.length - suffix.length;
@@ -42,20 +40,26 @@ export async function flushDiscordStream({
     const message = prefix + content + suffix;
 
     if (state.messageId) {
-      return sendViaOpenClaw(message, {
+      // Await the edit so the lock serializes the full HTTP round-trip,
+      // preventing out-of-order edits and stale-overwrite races.
+      const editResult = await sendViaOpenClaw(message, {
         messageId: state.messageId,
         replyTo: state.replyTo,
-        threadName: state.threadName,
         source: state.source,
       });
+      if (editResult.sent) state.dirty = false;
+      return editResult;
     }
 
-    // First flush — send new message and capture ID for future edits
+    // First flush — send new message to parent channel and capture ID.
+    // Don't pass threadName — streaming previews always go to the parent
+    // channel so edits and deletes target the correct location.
     const result = await sendViaOpenClaw(message, {
       replyTo: state.replyTo,
-      threadName: state.threadName,
       source: state.source,
     });
+
+    if (result.sent) state.dirty = false;
 
     if (result.messageId) {
       state.messageId = result.messageId;

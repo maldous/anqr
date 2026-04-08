@@ -12,12 +12,11 @@ export async function finalizeDiscordStream({ emoji = "", requestId = "default" 
     state.timer = null;
   }
 
-  // Final edit if there's unsent content
-  if (state.dirty && state.fullText.length > 0) {
-    await flushDiscordStream({ emoji, requestId }).catch((err) => {
-      logDebug(`Final flush failed: ${err.message}`);
-    });
-  }
+  // Flush remaining content AND drain the lock to wait for any in-flight
+  // edit HTTP calls. Without this, a late edit can race with the delete below.
+  await flushDiscordStream({ emoji, requestId }).catch((err) => {
+    logDebug(`Final flush failed: ${err.message}`);
+  });
 
   // Wait for any in-flight thread creation before deleting the message
   // it was attached to — otherwise the gateway returns "Unknown Message".
