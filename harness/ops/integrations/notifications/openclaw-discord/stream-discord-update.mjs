@@ -16,6 +16,8 @@ export async function streamDiscordUpdate(
       messageId: null,
       threadChannelId: null,
       _eagerFlushing: false,
+      _flushPromise: null,
+      _threadPromise: null,
       timer: null,
       replyTo: replyTo || null,
       threadName: threadName || null,

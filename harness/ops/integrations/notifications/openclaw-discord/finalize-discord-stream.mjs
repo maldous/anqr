@@ -19,6 +19,12 @@ export async function finalizeDiscordStream({ emoji = "", requestId = "default" 
     });
   }
 
+  // Wait for any in-flight thread creation before deleting the message
+  // it was attached to — otherwise the gateway returns "Unknown Message".
+  if (state._threadPromise) {
+    await state._threadPromise;
+  }
+
   // Delete the streaming preview message so only OpenClaw's authoritative
   // final response remains. This avoids duplicate full-text messages.
   if (state.messageId) {
