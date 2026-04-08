@@ -14,7 +14,7 @@ export async function createDiscordThread(messageId, threadName) {
     action: "thread-create",
     channel: "discord",
     to: DISCORD_TEXT_CHANNEL_ID,
-    name: threadName,
+    threadName,
     messageId,
   });
 
@@ -24,6 +24,7 @@ export async function createDiscordThread(messageId, threadName) {
   }
 
   const threadChannelId =
+    result.result?.thread?.id ||
     result.result?.channelId ||
     result.result?.threadId ||
     result.result?.id ||
