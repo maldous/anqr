@@ -30,8 +30,12 @@ export async function streamDiscordUpdate(
   if (threadName) state.threadName = threadName;
   if (source) state.source = source;
 
-  // Eager first flush — get the initial message up quickly so Discord shows content
-  if (!state.messageId && state.fullText.length >= STREAM_FIRST_FLUSH_CHARS) {
+  // Eager first flush — get the initial message up quickly so Discord shows content.
+  // The _eagerFlushing lock prevents concurrent first-flushes when onChunk fires
+  // synchronously for buffered providers (hundreds of chunks before the first HTTP
+  // round-trip completes and sets state.messageId).
+  if (!state.messageId && !state._eagerFlushing && state.fullText.length >= STREAM_FIRST_FLUSH_CHARS) {
+    state._eagerFlushing = true;
     return await flushDiscordStream({ emoji, timestamp, requestId });
   }
 
