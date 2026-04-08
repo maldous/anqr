@@ -446,6 +446,18 @@ export const tools = {
         .string()
         .optional()
         .describe("File to read: MEMORY.md (default), knowledge.md, or CLAUDE.md"),
+      path: z
+        .string()
+        .optional()
+        .describe("Alias for file — accepts file name or relative path"),
+      from: z.preprocess(
+        (val) => coerceOptionalNumberInput(val, undefined),
+        z.number().int().nonnegative().optional().describe("Line offset to start reading from"),
+      ),
+      lines: z.preprocess(
+        (val) => coerceOptionalNumberInput(val, undefined),
+        z.number().int().positive().optional().describe("Number of lines to read"),
+      ),
     }),
     execute: memoryGetTool,
   }),
