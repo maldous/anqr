@@ -277,6 +277,13 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
     // Track empty reasoning-delta events to suppress log spam
     let emptyReasoningDeltaCount = 0;
 
+    // Raw JSON guard — buffer early text-delta content to detect providers
+    // that emit tool calls as raw JSON text before forwarding to Discord
+    let rawJsonGuardBuffer = "";
+    let rawJsonGuardDone = !useTools; // Skip guard when tools aren't in use
+    let rawJsonGuardFailed = false;
+    const RAW_JSON_GUARD_THRESHOLD = 150;
+
     for await (const part of result.fullStream) {
       partCount++;
 
@@ -421,7 +428,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
           if (!inThinkBlock) {
             inThinkBlock = true;
             // Emit newline when thinking starts (no emoji for Discord)
-            if (onChunk) onChunk({ type: "text", text: "\n" });
+            if (!rawJsonGuardFailed && onChunk) onChunk({ type: "text", text: "\n" });
             logInfo(`💭 [${provider.name}] <think> block start detected in text-delta`, {
               providerName: provider.name,
               deltaPreview: delta.slice(0, 100),
@@ -429,17 +436,32 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
           }
         }
 
-        // Forward non-empty text deltas to client immediately
-        // This handles both thinking blocks and normal text-delta content
-        if (onChunk && delta && delta.length > 0) {
-          onChunk({ type: "text", text: delta });
+        // Forward non-empty text deltas — guarded against raw JSON tool output.
+        // Buffer early chars to detect raw JSON before any content reaches Discord.
+        if (delta && delta.length > 0) {
+          if (!rawJsonGuardDone) {
+            rawJsonGuardBuffer += delta;
+            if (rawJsonGuardBuffer.length >= RAW_JSON_GUARD_THRESHOLD) {
+              if (RAW_TOOL_JSON_RE.test(rawJsonGuardBuffer)) {
+                rawJsonGuardFailed = true;
+                rawJsonGuardDone = true;
+                nonToolCapableProviders.add(provider.name);
+                logWarn(`⚠️ ${provider.name} streaming raw JSON tool calls — suppressing output`);
+              } else {
+                rawJsonGuardDone = true;
+                if (onChunk) onChunk({ type: "text", text: rawJsonGuardBuffer });
+              }
+            }
+          } else if (!rawJsonGuardFailed && onChunk) {
+            onChunk({ type: "text", text: delta });
+          }
         }
 
         if (delta.includes("</think>")) {
           if (inThinkBlock) {
             inThinkBlock = false;
             // Emit newline when thinking ends
-            if (onChunk) onChunk({ type: "text", text: "\n" });
+            if (!rawJsonGuardFailed && onChunk) onChunk({ type: "text", text: "\n" });
             logInfo(`💭 [${provider.name}] <think> block end detected in text-delta`, {
               providerName: provider.name,
             });
@@ -566,6 +588,16 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       emptyReasoningDeltaCount,
     });
 
+    // Flush remaining raw JSON guard buffer (stream ended before threshold)
+    if (!rawJsonGuardDone && rawJsonGuardBuffer.length > 0) {
+      if (RAW_TOOL_JSON_RE.test(rawJsonGuardBuffer)) {
+        rawJsonGuardFailed = true;
+      } else if (onChunk) {
+        onChunk({ type: "text", text: rawJsonGuardBuffer });
+      }
+      rawJsonGuardDone = true;
+    }
+
     // Summary of suppressed empty reasoning-delta events
     if (emptyReasoningDeltaCount > 0) {
       logDebug(`[${provider.name}] Suppressed empty reasoning-delta events`, {
@@ -600,6 +632,16 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
             );
           }
           fullText = fallbackText;
+          // Early rejection: detect raw JSON tool calls before forwarding to Discord
+          if (useTools && RAW_TOOL_JSON_RE.test(fallbackText)) {
+            nonToolCapableProviders.add(provider.name);
+            const rawJsonErr = new Error(
+              `${provider.name} emitted tool call as raw JSON text — rejecting response`,
+            );
+            rawJsonErr.code = "RAW_TOOL_JSON_TEXT";
+            rawJsonErr.retryable = true;
+            throw rawJsonErr;
+          }
           // Forward the fallback text in smaller chunks to simulate streaming
           if (onChunk) {
             const CHUNK_SIZE = 50; // Forward in 50-char chunks for better real-time appearance
@@ -709,13 +751,17 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       throw invalidResponseError;
     }
 
-    // Runtime safety net (streaming): detect providers that emit tool calls as raw JSON text.
-    // The stream is already delivered, so we can't retry — just mark for future exclusion.
-    if (useTools && fullText && RAW_TOOL_JSON_RE.test(fullText)) {
-      logWarn(
-        `⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable for future requests`,
-      );
+    // Runtime safety net (streaming): reject raw JSON tool output and trigger provider fallback.
+    // The guard buffer suppresses forwarding for short responses; for longer ones where some
+    // text-delta content was already streamed, the fallback handler cleans up the Discord preview.
+    if (useTools && (rawJsonGuardFailed || (fullText && RAW_TOOL_JSON_RE.test(fullText)))) {
       nonToolCapableProviders.add(provider.name);
+      const rawJsonErr = new Error(
+        `${provider.name} emitted tool calls as raw JSON text — rejecting response`,
+      );
+      rawJsonErr.code = "RAW_TOOL_JSON_TEXT";
+      rawJsonErr.retryable = true;
+      throw rawJsonErr;
     }
 
     logDebug(`Streaming completed (${fullText.length} chars)`);
