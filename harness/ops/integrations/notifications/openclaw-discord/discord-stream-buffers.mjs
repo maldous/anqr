@@ -1,3 +1,5 @@
+import { deleteViaOpenClaw } from "./send-via-open-claw.mjs";
+
 export const discordStreamBuffers = new Map();
 
 // Orphan cleanup — reap buffer entries older than 5 minutes.
@@ -11,6 +13,7 @@ setInterval(() => {
   for (const [key, state] of discordStreamBuffers) {
     if (state.createdAt && now - state.createdAt > ORPHAN_TTL_MS) {
       if (state.timer) clearTimeout(state.timer);
+      if (state.messageId) deleteViaOpenClaw(state.messageId).catch(() => {});
       discordStreamBuffers.delete(key);
     }
   }
