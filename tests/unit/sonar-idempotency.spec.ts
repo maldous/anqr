@@ -11,9 +11,11 @@ describe("sonar-group-issues idempotency", () => {
     expect(source).toContain("findOpenIssuesByTitle");
   });
 
-  it("checks for existing issues before creating new ones", () => {
-    const findIndex = source.indexOf("findOpenIssuesByTitle");
-    const createIndex = source.indexOf("createIssue");
+  it("checks for existing issues before creating new ones in the loop body", () => {
+    const importEnd = source.indexOf("async function main");
+    const body = source.slice(importEnd);
+    const findIndex = body.indexOf("findOpenIssuesByTitle");
+    const createIndex = body.indexOf("createIssue");
 
     expect(findIndex).toBeGreaterThan(-1);
     expect(createIndex).toBeGreaterThan(-1);

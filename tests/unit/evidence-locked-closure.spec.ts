@@ -26,23 +26,20 @@ describe("evidence-locked closure", () => {
     }
   });
 
-  it("evidence includes required fields: commit sha, worktree, changed files", () => {
-    expect(source).toContain("commitSha");
+  it("evidence includes required fields: worktree, changed files, integration sha", () => {
     expect(source).toContain("worktreeId");
     expect(source).toContain("changedFiles");
+    expect(source).toContain("integratedMainSha");
   });
 
   it("does not close issue if cherry-pick fails", () => {
     expect(source).toContain("cherry-pick");
-    const cherryPickBlock = source.slice(
-      source.indexOf("cherry-pick"),
-      source.indexOf("cherry-pick") + 500,
-    );
-    expect(
-      cherryPickBlock.includes("return") ||
-      cherryPickBlock.includes("continue") ||
-      cherryPickBlock.includes("throw"),
-    ).toBe(true);
+    expect(source).toContain("cherry-pick", "--abort");
+    const abortIndex = source.indexOf('"--abort"');
+    const doneIndex = source.indexOf("STATES.done");
+    expect(abortIndex).toBeGreaterThan(-1);
+    expect(doneIndex).toBeGreaterThan(-1);
+    expect(abortIndex).toBeLessThan(doneIndex);
   });
 
   it("records integration result via task-evidence", () => {

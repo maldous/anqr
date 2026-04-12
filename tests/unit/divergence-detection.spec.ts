@@ -1,19 +1,21 @@
-import { describe, it, expect, vi } from "vitest";
-import { execFileSync } from "node:child_process";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("node:child_process", () => ({
-  execFileSync: vi.fn(),
-}));
+const mockedExecFileSync = vi.fn();
 
-const mockedExecFileSync = vi.mocked(execFileSync);
+vi.mock("node:child_process", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:child_process")>();
+  return {
+    ...actual,
+    execFileSync: mockedExecFileSync,
+  };
+});
 
 describe("detectDivergence", () => {
-  // Import after mocking
   let detectDivergence: (snapshot: { exists: boolean; path?: string }) => boolean;
 
   beforeEach(async () => {
     vi.resetModules();
-    vi.clearAllMocks();
+    mockedExecFileSync.mockReset();
     const mod = await import(
       "../../harness/ops/orchestration/symphony-worktree-recovery/detect-divergence.mjs"
     );
