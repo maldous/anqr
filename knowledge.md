@@ -121,6 +121,15 @@ done
 
 Note: `~/.openclaw/` also contains runtime state (`.env`, `lcm.db`, `tasks/`, `cron/`, backups) that is NOT in the repo.
 
+### After Updating Env or Config
+
+All three env files must have `chmod 600` (owner-only) since they contain secrets. After updating env files or openclaw config, restart affected services:
+
+```bash
+chmod 600 ~/.config/systemd/user/anqr-ops.env ~/.config/symphony/anqr.env ~/.openclaw/.env
+systemctl --user restart anqr-symphony-executor@{1..8}.service anqr-discord-router.service anqr-linear-webhook.service
+```
+
 ## Current Architecture
 
 - **8 Worktree Executors** on ports 4321-4328 (wt1-wt4 for Linear, wt5-wt8 for Discord)
