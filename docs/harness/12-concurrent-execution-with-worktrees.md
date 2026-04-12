@@ -23,7 +23,7 @@ The worktree system is designed to achieve:
 | **Discord isolation**    | Changes from Discord requests must NEVER appear in the main repository during execution               |
 | **Discord dual-mode**    | Discord can (a) create Linear issues for queue execution, AND (b) execute on-demand interactive goals |
 | **Linear ingestion**     | Linear issues in "Todo" state are picked up by Symphony runners (wt1-wt4) from queue                  |
-| **Sync flow**            | Worktree changes: commit → push to `origin/main` → other worktrees sync on next cycle                 |
+| **Sync flow**            | Worktree changes: commit → push to `origin/symphony/wtN` → integrator promotes to main serially                 |
 | **Main = control plane** | The main repository (`/home/user/src/anqr`) runs services/docs/config only — no execution work        |
 | **Single OpenClaw**      | ONE OpenClaw Gateway (`openclaw-gateway.service`) provides the Discord relay; it uses Symphony for AI |
 
