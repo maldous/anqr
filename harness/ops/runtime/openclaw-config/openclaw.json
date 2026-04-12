@@ -520,7 +520,7 @@
     },
     "enabled": true,
     "token": "anqr-symphony-hook-test",
-    "allowRequestSessionKey": true
+    "allowRequestSessionKey": false
   },
   "channels": {
     "discord": {
@@ -613,10 +613,6 @@
         "voice_speak",
         "read_file",
         "read_files",
-        "write_file",
-        "str_replace",
-        "run_terminal_command",
-        "shell",
         "code_search",
         "list_directory",
         "read_subtree",
@@ -630,9 +626,6 @@
         "ask_user",
         "set_messages",
         "set_output",
-        "propose_str_replace",
-        "propose_write_file",
-        "run_file_change_hooks",
         "add_subgoal",
         "update_subgoal",
         "lookup_agent_info",

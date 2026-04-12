@@ -971,10 +971,14 @@ Phase 1 exit criteria:
 - [x] add OpenClaw models.json configuration
 - [x] implement dynamic tool-capability probing for 38 providers
 - [x] implement 4-tier provider system with safety-net score ceiling
-- [x] implement 90+ E2E tests for OpenClaw/Symphony integration
+- [x] implement E2E tests for OpenClaw/Symphony integration (vitest + playwright suites)
 - [x] define coverage-scope.json with 7-phase protected scope
+- [ ] harden queue/dedupe state under contention (durable-kv lock exhaustion)
+- [ ] complete startup env validation for all critical services
+- [ ] finish evidence integration for watchdog and recovery
+- [ ] prove full Discord and Linear lifecycle end-to-end
 
-**Phase 3 completed:** All harness runtime surfaces classified and documented. Symphony agent router (port 4319) with worktree-local execution bridges (ports 4321-4328) fully implemented. Codebuff SDK runs directly inside each worktree bridge (ADR-0003). Provider routing cascade with 42 providers across 4 tiers (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`). Dynamic tool-capability probing ensures only structured-tool-capable providers are selected. Comprehensive E2E testing (90+ tests) validates OpenClaw integration, provider cascade, and TUI workflows. Coverage strategy documented in 7 phases with Phase 1 (Contracts & Domain Primitives) active. All documentation surfaces current.
+**Phase 3 completed:** Harness runtime surfaces classified and documented. Symphony agent router (port 4319) with worktree-local execution bridges (ports 4321-4328) implemented. Codebuff SDK runs directly inside each worktree bridge (ADR-0003). Provider routing cascade with 42+ providers across 4 tiers (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`). Dynamic tool-capability probing ensures only structured-tool-capable providers are selected. E2E testing validates OpenClaw integration, provider cascade, and TUI workflows. Coverage strategy documented in 7 phases with Phase 1 (Contracts & Domain Primitives) active. **Hardening ongoing:** queue contention safety, startup validation, documentation truthfulness, and full lifecycle evidence remain in progress.
 
 Required inventory classified:
 
@@ -1326,7 +1330,7 @@ This is the correct immediate order from here.
 4. rebuild launch-grade verification around the current claim (Phase 7)
 5. resolve the mobile claim truthfully before any 1.0 launch claim expansion (Phase 6)
 
-**Current focus:** Phase 4 ongoing maintenance. The harness is fully operational with 42-provider cascade across 4 tiers, including Symphony agent router (port 4319) routing to worktree-local execution bridges with AI SDK tool execution, Codebuff SDK integration, and dynamic tool-capability probing. All documentation updated to reflect Phase 3 completion and current testing strategy (90+ E2E tests, coverage-scope.json with 7 phases). Ready to begin Phase 5 API/MCP perimeter work when prioritized.
+**Current focus:** Phase 4 ongoing maintenance with active hardening. The harness is operational with 42+ provider cascade across 4 tiers, including Symphony agent router (port 4319) routing to worktree-local execution bridges with AI SDK tool execution, Codebuff SDK integration, and dynamic tool-capability probing. Executors push to `origin/symphony/wtN` branches; the integrator serially promotes to main. Documentation updated to reflect Phase 3 completion and current testing strategy (coverage-scope.json with 7 phases). **Active hardening:** queue contention safety, startup env validation, evidence completeness, and documentation truthfulness.
 
 ---
 

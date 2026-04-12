@@ -78,10 +78,9 @@ function withStoreLock(name, fn) {
       backoffMs = Math.min(backoffMs * 1.5, 200);
     }
   }
-  process.stderr.write(
-    `[durable-kv] WARNING: lock acquisition failed for "${name}" after ${LOCK_MAX_ATTEMPTS} attempts — proceeding unlocked\n`,
+  throw new Error(
+    `[durable-kv] Lock acquisition failed for "${name}" after ${LOCK_MAX_ATTEMPTS} attempts — refusing unlocked mutation`,
   );
-  return fn();
 }
 
 export function createDurableSet(name, ttlMs = 0) {

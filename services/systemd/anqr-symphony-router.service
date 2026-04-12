@@ -5,7 +5,7 @@
 #
 # Architecture:
 #   Discord → OpenClaw → Discord Router → Symphony Router → Executors wt5-wt8
-#   Linear  → Linear Runner  → Symphony Router → Executors wt1-wt4
+#   Linear  → Linear Webhook → Symphony Router → Executors wt1-wt4
 
 [Unit]
 Description=ANQR Symphony router (control plane / orchestration)

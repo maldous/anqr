@@ -1,8 +1,8 @@
 # anqr-watchdog.service — Watchdog for Symphony router and executors
 #
-# Monitors the Symphony router (control plane) and worktree-local executors,
-# automatically rolling back to previous git commit if a service fails to
-# start within 60 seconds after a restart.
+# Monitors the Symphony router (control plane) and worktree-local executors.
+# On failure detection: quarantines the unhealthy service, restarts it, and
+# creates a Linear incident. No destructive git rollback — safe restart only.
 #
 # Install as user service:
 #   cp services/systemd/anqr-watchdog.service ~/.config/systemd/user/
