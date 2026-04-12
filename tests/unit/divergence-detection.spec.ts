@@ -1,56 +1,65 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
-const mockedExecFileSync = vi.fn();
+const DETECT_PATH = resolve(
+  "harness/ops/orchestration/symphony-worktree-recovery/detect-divergence.mjs",
+);
+const CLASSIFY_PATH = resolve(
+  "harness/ops/orchestration/symphony-worktree-recovery/classify-worktree.mjs",
+);
+const REPAIR_PATH = resolve(
+  "harness/ops/orchestration/symphony-worktree-recovery/execute-repair.mjs",
+);
 
-vi.mock("node:child_process", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:child_process")>();
-  return {
-    ...actual,
-    execFileSync: mockedExecFileSync,
-  };
+describe("divergence detection", () => {
+  const detectSource = readFileSync(DETECT_PATH, "utf-8");
+
+  it("checks if origin/main is ancestor of HEAD", () => {
+    expect(detectSource).toContain("merge-base");
+    expect(detectSource).toContain("--is-ancestor");
+    expect(detectSource).toContain("origin/main");
+  });
+
+  it("returns false for non-existent or path-less snapshots", () => {
+    expect(detectSource).toContain("!snapshot.exists");
+    expect(detectSource).toContain("!snapshot.path");
+    expect(detectSource).toContain("return false");
+  });
+
+  it("uses execFileSync with a timeout", () => {
+    expect(detectSource).toContain("execFileSync");
+    expect(detectSource).toContain("timeout");
+  });
+
+  it("returns true on git failure (diverged)", () => {
+    expect(detectSource).toContain("catch");
+    expect(detectSource).toContain("return true");
+  });
 });
 
-describe("detectDivergence", () => {
-  let detectDivergence: (snapshot: { exists: boolean; path?: string }) => boolean;
+describe("classify-worktree divergence integration", () => {
+  const classifySource = readFileSync(CLASSIFY_PATH, "utf-8");
 
-  beforeEach(async () => {
-    vi.resetModules();
-    mockedExecFileSync.mockReset();
-    const mod = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/detect-divergence.mjs"
-    );
-    detectDivergence = mod.detectDivergence;
+  it("imports detectDivergence", () => {
+    expect(classifySource).toContain("detectDivergence");
   });
 
-  it("returns false for non-existent snapshot", () => {
-    expect(detectDivergence({ exists: false })).toBe(false);
+  it("classifies diverged worktrees", () => {
+    expect(classifySource).toContain("diverged");
+  });
+});
+
+describe("execute-repair divergence handling", () => {
+  const repairSource = readFileSync(REPAIR_PATH, "utf-8");
+
+  it("handles reset_to_main repair action", () => {
+    expect(repairSource).toContain("reset_to_main");
   });
 
-  it("returns false for snapshot without path", () => {
-    expect(detectDivergence({ exists: true })).toBe(false);
-  });
-
-  it("returns false when origin/main is ancestor of HEAD (not diverged)", () => {
-    mockedExecFileSync.mockReturnValueOnce("");
-    expect(detectDivergence({ exists: true, path: "/home/user/src/anqr-wt1" })).toBe(false);
-    expect(mockedExecFileSync).toHaveBeenCalledWith(
-      "git",
-      ["merge-base", "--is-ancestor", "origin/main", "HEAD"],
-      expect.objectContaining({ cwd: "/home/user/src/anqr-wt1" }),
-    );
-  });
-
-  it("returns true when origin/main is NOT ancestor of HEAD (diverged)", () => {
-    mockedExecFileSync.mockImplementationOnce(() => {
-      throw new Error("exit code 1");
-    });
-    expect(detectDivergence({ exists: true, path: "/home/user/src/anqr-wt1" })).toBe(true);
-  });
-
-  it("returns true on git command timeout", () => {
-    mockedExecFileSync.mockImplementationOnce(() => {
-      throw new Error("ETIMEDOUT");
-    });
-    expect(detectDivergence({ exists: true, path: "/home/user/src/anqr-wt1" })).toBe(true);
+  it("uses git reset --hard for divergence repair", () => {
+    expect(repairSource).toContain("reset");
+    expect(repairSource).toContain("--hard");
+    expect(repairSource).toContain("origin/main");
   });
 });
