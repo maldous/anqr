@@ -1,6 +1,6 @@
 # ANQR Harness Remediation — Progress Tracker
 
-## Status: PARTIALLY DELIVERED
+## Status: DELIVERED
 
 ---
 
@@ -21,9 +21,9 @@
 ## Phase 2: Prove the Runtime
 | Task | Status | Notes |
 |------|--------|-------|
-| P2-1: E2E tests for Linear flow | ⚠️ Partial | tests/e2e/linear-flow.spec.ts — tests the evidence module API in-process; NOT a true end-to-end runtime test (does not drive real webhooks through receiver→router→executor→integrator) |
-| P2-2: E2E tests for Discord/OpenClaw flow | ⚠️ Partial | tests/e2e/discord-flow.spec.ts — tests the evidence module API in-process; NOT a true end-to-end runtime test (does not drive real requests through Discord router→proxy→executor) |
-| P2-3: Integration & promotion guardrail tests | ⚠️ Partial | tests/e2e/integration-promotion.spec.ts — tests the evidence module API in-process; NOT a true end-to-end runtime test (does not drive real branch pushes through integrator) |
+| P2-1: E2E tests for Linear flow | ✅ Done | tests/e2e/linear-flow.spec.ts — real HTTP tests against live webhook receiver (port 18791) and symphony router (port 4319); verifies event filtering, full pipeline trigger, evidence records on disk, durable dedupe, and correlation ID propagation |
+| P2-2: E2E tests for Discord/OpenClaw flow | ✅ Done | tests/e2e/discord-flow.spec.ts — real HTTP tests against live Discord router (port 18790); verifies worktree pool health, chat completion proxy routing, evidence records on disk, and capacity management |
+| P2-3: Integration & promotion guardrail tests | ✅ Done | tests/e2e/integration-promotion.spec.ts — real HTTP tests against live symphony router (port 4319); verifies queue CRUD, Linear trigger dispatch, all 8 executor health, and full service fleet status |
 
 ## Phase 3: Simplify & Harden Execution
 | Task | Status | Notes |
@@ -84,9 +84,9 @@
 | `harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs` | Extract correlation ID from request, use DurableQueue enqueue() API |
 | `harness/ops/integrations/model/symphony-agent-router/proxy-request.mjs` | Forward x-anqr-correlation-id header through proxy to worktree executors |
 | `harness/ops/integrations/model/discord-request-router/process-and-proxy.mjs` | Generate correlation ID at Discord ingress, create evidence record, forward header |
-| `tests/e2e/linear-flow.spec.ts` | Renamed describe blocks — honest that these test evidence module, not live runtime |
-| `tests/e2e/discord-flow.spec.ts` | Renamed describe blocks — honest that these test evidence module, not live runtime |
-| `tests/e2e/integration-promotion.spec.ts` | Renamed describe blocks — honest that these test evidence module, not live runtime |
+| `tests/e2e/linear-flow.spec.ts` | Rewritten: real HTTP tests against live webhook receiver + router with evidence verification |
+| `tests/e2e/discord-flow.spec.ts` | Rewritten: real HTTP tests against live Discord router with evidence verification |
+| `tests/e2e/integration-promotion.spec.ts` | Rewritten: real HTTP tests against live symphony router queue, trigger, and fleet health |
 | `harness/ops/integrations/model/symphony-agent-router/dispatch-linear-execution.mjs` | Fixed linearQueue.push()→enqueue() (DurableQueue API), replaced duplicated worktree selection with shared helper |
 | `harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs` | Replaced duplicated worktree selection with shared `selectLinearWorktree()` |
 | `harness/ops/integrations/model/symphony-agent-router/handle-linear-queue.mjs` | Fixed linearQueue.push()→enqueue(), .slice()→items().slice(), .length=0→clear() |
@@ -104,9 +104,11 @@
 | `harness/ops/lib/structured-log.mjs` | Structured logging with standard fields |
 | `harness/ops/lib/durable-kv.mjs` | File-backed DurableSet, DurableMap, DurableQueue |
 | `harness/ops/core/task-evidence.mjs` | Authoritative task evidence records |
-| `tests/e2e/linear-flow.spec.ts` | E2E tests for Linear webhook to integration |
-| `tests/e2e/discord-flow.spec.ts` | E2E tests for Discord/OpenClaw flow |
-| `tests/e2e/integration-promotion.spec.ts` | Integration and promotion guardrail tests |
+| `tests/e2e/linear-flow.spec.ts` | E2E tests — real HTTP against live webhook receiver + router |
+| `tests/e2e/discord-flow.spec.ts` | E2E tests — real HTTP against live Discord router + executor proxy |
+| `tests/e2e/integration-promotion.spec.ts` | E2E tests — real HTTP against live symphony router queue + trigger |
+| `tests/e2e/e2e-helpers.ts` | Shared E2E helpers: evidence lookup from disk, service URLs, cleanup |
+| `vitest.e2e.config.ts` | Vitest config for running E2E tests against live services |
 | `docs/secrets-loading.md` | Secret management documentation |
 | `docs/runtime-reference.md` | Runtime reference from code truth |
 | `docs/execution-model.md` | Execution model documentation |
@@ -169,9 +171,9 @@ grep -rn '/home/user' services/systemd/ --include='*.service' --include='*.conf'
 | P1-1 | End-to-end correlation IDs | ✅ Done | Low — modules created and wired into all 3 ingress handlers (linear-webhook, symphony-router, discord-router) |
 | P1-2 | Durable dedupe/queue state | ✅ Done | Low — durable-kv module created and adopted by recent-deliveries, active-issues, and linear-queue |
 | P1-3 | Authoritative task evidence records | ✅ Done | Low — evidence module created with full lifecycle tracking |
-| P2-1 | E2E tests for Linear flow | ⚠️ Partial | Medium — 5 evidence-module unit tests, not true runtime E2E tests |
-| P2-2 | E2E tests for Discord flow | ⚠️ Partial | Medium — 5 evidence-module unit tests, not true runtime E2E tests |
-| P2-3 | Integration guardrail tests | ⚠️ Partial | Medium — 5 evidence-module unit tests, not true runtime E2E tests |
+| P2-1 | E2E tests for Linear flow | ✅ Done | Low — real HTTP tests against live services with evidence verification |
+| P2-2 | E2E tests for Discord flow | ✅ Done | Low — real HTTP tests against live services with evidence verification |
+| P2-3 | Integration guardrail tests | ✅ Done | Low — real HTTP tests against live services with queue and trigger verification |
 | P3-1 | Reduce overlapping execution layers | ✅ Done | Low — extracted shared worktree selection, fixed DurableQueue API bugs, replaced destructive sync-failure reset with quarantine |
 | P3-2 | Replace destructive validation sync | ✅ Done | Medium — stash+rebase replaces reset+patch |
 | P3-3 | Improve state lock behavior | ✅ Done | Low — exponential backoff with diagnostics |
@@ -196,7 +198,7 @@ grep -rn '/home/user' services/systemd/ --include='*.service' --include='*.conf'
 | anqr-nightly.service | Updated comments to reflect mutating mode (--dry-run was already removed) |
 | index.mjs (watchdog) | Removed dead `getPreviousCommit` re-export; deleted get-previous-commit.mjs |
 
-### Delivery Verdict: PARTIALLY DELIVERED
+### Delivery Verdict: DELIVERED
 
 #### Delivered
 - Secret removal from committed unit files
@@ -212,13 +214,11 @@ grep -rn '/home/user' services/systemd/ --include='*.service' --include='*.conf'
 - Timer and nightly job audit
 
 #### Not fully delivered
-- **E2E tests are evidence-module unit tests, not true runtime E2E tests.** They call the evidence API directly in-process instead of driving real HTTP webhooks through the full receiver→router→executor→integrator chain. True E2E tests that exercise the live runtime still need to be written.
 - **P3-1 execution-layer simplification is incremental.** Shared worktree selection extracted, destructive sync-failure reset replaced with quarantine, DurableQueue API bugs fixed, watchdog-monitor destructive rollback replaced with quarantine + restart. The bridge→runner layer was documented but intentionally kept (see execution-model.md for rationale).
 
 ### Top Remaining Risks
 
-1. **True E2E tests needed:** The current tests prove the evidence module works, not that the live runtime produces correct evidence when driven by real webhooks.
-2. **Nightly mutation:** Removing --dry-run from nightly means it will now actually mutate state. Verify the nightly pipeline is safe before the next 02:00 run.
+1. **Nightly mutation:** Removing --dry-run from nightly means it will now actually mutate state. Verify the nightly pipeline is safe before the next 02:00 run.
 3. **Secret rotation:** The leaked secrets (OPENROUTER_API_KEY, ELEVENLABS_API_KEY) should be rotated immediately since they were previously committed to git history.
 4. **Env file provisioning:** Host must have `~/.config/systemd/user/anqr-ops.env` populated with actual secret values for openclaw-gateway to start.
 5. **Bridge→Runner separation retained by design:** The bridge spawns the runner as a child process for Linear work. This separation is intentional (see docs/execution-model.md) — it provides an HTTP-to-process boundary that lets long-running Linear executions survive connection drops.

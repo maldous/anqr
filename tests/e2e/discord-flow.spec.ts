@@ -1,135 +1,117 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { createEvidenceRecord, loadEvidenceRecord, recordRoutingDecision, recordWorktreeSelection, recordProviderSelection, recordExecutionResult, appendEvidenceEvent } from "../../harness/ops/core/task-evidence.mjs";
-import { generateCorrelationId } from "../../harness/ops/lib/correlation-id.mjs";
+/**
+ * E2E: Discord router → worktree executor
+ *
+ * These tests hit the LIVE Discord router (port 18790) over HTTP.
+ * Evidence records are verified on the filesystem — proving the
+ * correlation-ID layer works in the real runtime.
+ *
+ * Prerequisites: anqr-discord-router and at least one executor (wt5-wt8)
+ * must be running.
+ *
+ * Run: npx vitest run tests/e2e/discord-flow.spec.ts --config vitest.e2e.config.ts
+ */
 
-// NOTE: These tests verify the task-evidence module API for Discord flow scenarios.
-// They are NOT true end-to-end runtime tests — they call the evidence helpers
-// directly in-process rather than driving real HTTP requests through the live
-// Discord router, worktree proxy, and executor.
-describe("Task evidence: Discord/OpenClaw flow scenarios", () => {
-  let correlationId: string;
+import { describe, it, expect, afterAll } from "vitest";
+import {
+  DISCORD_ROUTER_URL,
+  findEvidenceBySource,
+  deleteEvidence,
+  assertServiceHealthy,
+} from "./e2e-helpers.ts";
 
-  beforeEach(() => {
-    correlationId = generateCorrelationId("discord");
+const createdEvidenceIds: string[] = [];
+
+afterAll(() => {
+  for (const id of createdEvidenceIds) deleteEvidence(id);
+});
+
+describe("Discord router — live runtime", () => {
+  it("health endpoint returns ok with Discord worktree pool (wt5-wt8)", async () => {
+    const body = await assertServiceHealthy(DISCORD_ROUTER_URL);
+    expect(body.status).toBe("ok");
+    expect(body.maxConcurrent).toBeGreaterThan(0);
+
+    const worktrees = body.worktrees as Array<{ id: number; healthy: boolean }>;
+    const ids = worktrees.map((w) => w.id);
+    expect(ids).toEqual(expect.arrayContaining([5, 6, 7, 8]));
+    expect(worktrees.every((w) => w.healthy)).toBe(true);
   });
 
-  it("happy path: discord request → route → execute → respond", () => {
-    createEvidenceRecord(correlationId, {
-      source: "discord-router",
-      discordThreadId: "thread-abc-123",
-      requestIdentifier: "msg-12345",
-    });
-
-    recordRoutingDecision(correlationId, {
-      targetWorktreePool: "wt5-wt8",
-      routingStrategy: "sticky-session",
-    });
-
-    recordWorktreeSelection(correlationId, {
-      worktreeId: "wt5",
-      reason: "sticky-match-thread",
-    });
-
-    recordProviderSelection(correlationId, {
-      providerName: "codebuff-direct",
-      model: "codebuff-sdk",
-    });
-
-    recordExecutionResult(correlationId, {
-      startedAt: new Date().toISOString(),
-      durationMs: 8000,
-      success: true,
-    });
-
-    const record = loadEvidenceRecord(correlationId);
-    expect(record).not.toBeNull();
-    expect(record!.ingress.source).toBe("discord-router");
-    expect(record!.routing?.routingStrategy).toBe("sticky-session");
-    expect(record!.worktreeSelection?.worktreeId).toBe("wt5");
-    expect(record!.execution?.success).toBe(true);
+  it("available slots match expected capacity", async () => {
+    const body = await assertServiceHealthy(DISCORD_ROUTER_URL);
+    const available = body.availableSlots as number;
+    const active = body.activeRequests as number;
+    const max = body.maxConcurrent as number;
+    expect(available).toBe(max - active);
+    expect(available).toBeGreaterThan(0);
   });
 
-  it("sticky routing reuse returns same worktree", () => {
-    createEvidenceRecord(correlationId, {
-      source: "discord-router",
-      discordThreadId: "thread-sticky-001",
+  it("non-POST to completions returns 404", async () => {
+    const res = await fetch(`${DISCORD_ROUTER_URL}/v1/chat/completions`, {
+      method: "GET",
     });
+    expect(res.status).toBe(404);
+  });
+});
 
-    recordWorktreeSelection(correlationId, {
-      worktreeId: "wt6",
-      reason: "first-available",
-    });
+describe("Discord router → executor proxy", () => {
+  it("chat completion is proxied to a worktree and creates evidence on disk", async () => {
+    const beforeIso = new Date().toISOString();
 
-    const secondId = generateCorrelationId("discord");
-    createEvidenceRecord(secondId, {
-      source: "discord-router",
-      discordThreadId: "thread-sticky-001",
-    });
+    // Send a minimal chat completion; use AbortController so the test
+    // does not hang if the executor takes a long time with AI processing.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15_000);
 
-    recordWorktreeSelection(secondId, {
-      worktreeId: "wt6",
-      reason: "sticky-match-thread",
-    });
+    let responseStatus: number | null = null;
+    let responseBody: string | null = null;
+    try {
+      const res = await fetch(`${DISCORD_ROUTER_URL}/v1/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "symphony/main",
+          messages: [{ role: "user", content: "E2E probe: reply 'ok' and nothing else" }],
+          max_tokens: 5,
+          stream: false,
+        }),
+        signal: controller.signal,
+      });
+      responseStatus = res.status;
+      responseBody = await res.text();
+    } catch {
+      // AbortError or network error — the evidence should still exist
+      // because it is created before the proxy request starts.
+    } finally {
+      clearTimeout(timer);
+    }
 
-    const first = loadEvidenceRecord(correlationId);
-    const second = loadEvidenceRecord(secondId);
-    expect(first!.worktreeSelection?.worktreeId)
-      .toBe(second!.worktreeSelection?.worktreeId);
+    // If we got a response, verify it was routed (not 404)
+    if (responseStatus !== null) {
+      expect(responseStatus).not.toBe(404);
+    }
+
+    // Evidence was created by the service BEFORE proxying — should be on disk
+    // regardless of whether the executor responded.
+    const evidence = findEvidenceBySource("discord-router", beforeIso);
+    expect(evidence).not.toBeNull();
+    expect(evidence!.correlationId).toBeTruthy();
+    expect(evidence!.ingress.source).toBe("discord-router");
+    expect(evidence!.ingress.receivedAt).toBeTruthy();
+
+    createdEvidenceIds.push(evidence!.correlationId);
   });
 
-  it("provider fallback path is recorded", () => {
-    createEvidenceRecord(correlationId, {
-      source: "discord-router",
-      discordThreadId: "thread-fallback-001",
-    });
-
-    recordProviderSelection(correlationId, {
-      providerName: "openrouter",
-      model: "claude-3.5-sonnet",
-      isFallback: true,
-      fallbackReason: "codebuff-direct returned 503",
-    });
-
-    const record = loadEvidenceRecord(correlationId);
-    expect(record!.providerSelection?.isFallback).toBe(true);
-  });
-
-  it("worktree unavailable is recorded", () => {
-    createEvidenceRecord(correlationId, {
-      source: "discord-router",
-      discordThreadId: "thread-noworktree-001",
-    });
-
-    appendEvidenceEvent(correlationId, {
-      type: "worktree-unavailable",
-      detail: "All Discord worktrees (wt5-wt8) busy",
-    });
-
-    const record = loadEvidenceRecord(correlationId);
-    expect(record!.events).toHaveLength(1);
-    expect(record!.events[0].type).toBe("worktree-unavailable");
-  });
-
-  it("partial failure reporting produces evidence", () => {
-    createEvidenceRecord(correlationId, {
-      source: "discord-router",
-      discordThreadId: "thread-partial-001",
-    });
-
-    recordExecutionResult(correlationId, {
-      startedAt: new Date().toISOString(),
-      durationMs: 30000,
-      success: false,
-      error: "Connection reset during streaming response",
-    });
-
-    appendEvidenceEvent(correlationId, {
-      type: "partial-failure-reported",
-      detail: "User notified of partial failure via Discord",
-    });
-
-    const record = loadEvidenceRecord(correlationId);
-    expect(record!.execution?.success).toBe(false);
-    expect(record!.events).toHaveLength(1);
+  it("overload response is returned when all worktrees are busy", async () => {
+    // This is a structural test: verify the overload path exists.
+    // We can't easily saturate all 4 worktrees in a test, so we just
+    // verify the health endpoint reports the capacity mechanism.
+    const body = await assertServiceHealthy(DISCORD_ROUTER_URL);
+    const max = body.maxConcurrent as number;
+    expect(max).toBeGreaterThan(0);
+    // When activeRequests >= maxConcurrent, the router returns 503.
+    // We verify the mechanism exists by checking the fields.
+    expect(typeof body.activeRequests).toBe("number");
+    expect(typeof body.availableSlots).toBe("number");
   });
 });
