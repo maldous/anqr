@@ -11,6 +11,8 @@ Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bi
 Environment=HOME=%h
 Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 Environment=NODE_ENV=production
+EnvironmentFile=-%h/.config/symphony/anqr.env
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=anqr-health

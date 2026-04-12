@@ -16,6 +16,8 @@ Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 Environment=NODE_ENV=production
 Environment=ANQR_AUTOMATION_COMMIT=1
 Environment=ANQR_AUTOMATION_PUSH=1
+EnvironmentFile=-%h/.config/symphony/anqr.env
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=anqr-recovery
