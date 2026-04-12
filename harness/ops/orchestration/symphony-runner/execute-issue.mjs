@@ -53,6 +53,7 @@ import { runAgent, continueAgent } from "../../symphony-agent.mjs";
 import { runValidation, formatValidationFeedback } from "../../symphony-validation.mjs";
 import { getQueueSnapshot } from "../../symphony-queue-control.mjs";
 import { sendDiscordEmbed } from "../../integrations/notifications/openclaw-discord.mjs";
+import { voiceAnnounce } from "../../integrations/model/symphony-openai-bridge/voice-announce.mjs";
 import {
   recordExecutionResult,
   recordValidationResult,
@@ -332,6 +333,7 @@ export async function executeIssue(issue, dryRun = false) {
       `🤖 **Symphony agent starting** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})\n\nRun: ${RUN_ID}\nLease: ${leaseNonce}`,
     );
     startingCommentId = startComment.id;
+    voiceAnnounce(`Starting work on ${issue.identifier}: ${issue.title}.`);
     if (dryRun) return "done";
 
     // NOTE: Discord notification removed from here to eliminate duplicate messages.
@@ -1564,6 +1566,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
 
     // Log completion with issue context
     logInfo(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title}`);
+    voiceAnnounce(`Finished ${issue.identifier}: ${issue.title}.`);
 
     if (!RUNNER_AUTO_PUSH) {
       await addComment(
