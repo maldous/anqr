@@ -1,4 +1,5 @@
 export const SYMPHONY_BASE_URL = "http://127.0.0.1:4319";
+export const SYMPHONY_EXECUTOR_URL = "http://127.0.0.1:4321";
 export const SYMPHONY_API_KEY = "local-symphony";
 
 export const openclawConfig = {

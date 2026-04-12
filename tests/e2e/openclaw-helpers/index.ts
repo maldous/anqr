@@ -1,5 +1,5 @@
 export type { ModelsListOutput, ModelsStatusOutput, TuiPexpectResult } from "./helpers.types";
-export { openclawConfig, SYMPHONY_BASE_URL, SYMPHONY_API_KEY } from "./config";
+export { openclawConfig, SYMPHONY_BASE_URL, SYMPHONY_EXECUTOR_URL, SYMPHONY_API_KEY } from "./config";
 export { symphonyTestScenarios } from "./scenarios";
 export { isBridgeReachable } from "./bridge-check";
 export { sendCompletion } from "./send-completion";

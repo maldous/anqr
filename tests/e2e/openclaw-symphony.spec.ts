@@ -17,6 +17,7 @@ import {
   type ModelsStatusOutput,
   openclawConfig,
   SYMPHONY_BASE_URL,
+  SYMPHONY_EXECUTOR_URL,
   SYMPHONY_API_KEY,
   symphonyTestScenarios,
   isBridgeReachable,
