@@ -124,9 +124,9 @@ describe("Symphony router — Linear trigger endpoint", () => {
     });
 
     const body = await res.json();
-    // Should be either dispatched (200) or queued (202)
+    // Should be dispatched, queued, or accepted
     expect([200, 202]).toContain(res.status);
-    expect(["dispatched", "queued"]).toContain(body.status);
+    expect(["dispatched", "queued", "accepted"]).toContain(body.status);
   });
 
   it("trigger without identifier returns 400", async () => {

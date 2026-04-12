@@ -64,7 +64,6 @@ describe("Discord router → executor proxy", () => {
     const timer = setTimeout(() => controller.abort(), 15_000);
 
     let responseStatus: number | null = null;
-    let responseBody: string | null = null;
     try {
       const res = await fetch(`${DISCORD_ROUTER_URL}/v1/chat/completions`, {
         method: "POST",
@@ -78,10 +77,13 @@ describe("Discord router → executor proxy", () => {
         signal: controller.signal,
       });
       responseStatus = res.status;
-      responseBody = await res.text();
-    } catch {
-      // AbortError or network error — the evidence should still exist
-      // because it is created before the proxy request starts.
+      await res.text();
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        // Expected — executor took too long, evidence still on disk
+      } else {
+        throw err;
+      }
     } finally {
       clearTimeout(timer);
     }
