@@ -219,6 +219,6 @@ grep -rn '/home/user' services/systemd/ --include='*.service' --include='*.conf'
 ### Top Remaining Risks
 
 1. **Nightly mutation:** Removing --dry-run from nightly means it will now actually mutate state. Verify the nightly pipeline is safe before the next 02:00 run.
-3. **Secret rotation:** The leaked secrets (OPENROUTER_API_KEY, ELEVENLABS_API_KEY) should be rotated immediately since they were previously committed to git history.
-4. **Env file provisioning:** Host must have `~/.config/systemd/user/anqr-ops.env` populated with actual secret values for openclaw-gateway to start.
-5. **Bridge→Runner separation retained by design:** The bridge spawns the runner as a child process for Linear work. This separation is intentional (see docs/execution-model.md) — it provides an HTTP-to-process boundary that lets long-running Linear executions survive connection drops.
+2. **Secret rotation:** The leaked secrets (OPENROUTER_API_KEY, ELEVENLABS_API_KEY) should be rotated immediately since they were previously committed to git history.
+3. **Env file provisioning:** Host must have `~/.config/systemd/user/anqr-ops.env` populated with actual secret values for openclaw-gateway to start.
+4. **Bridge→Runner separation retained by design:** The bridge spawns the runner as a child process for Linear work. This separation is intentional (see docs/execution-model.md) — it provides an HTTP-to-process boundary that lets long-running Linear executions survive connection drops.
