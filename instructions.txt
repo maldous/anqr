@@ -1,0 +1,571 @@
+You are a principal platform engineer, SRE, and staff-level software architect.
+
+Your task is to fully implement the remediation plan for the ANQR harness based on the engineering verdict below.
+
+Goal:
+Make the harness operationally reliable, auditable, and simple enough that the team can stop spending most of its time on harness maintenance.
+
+Operating rules:
+1. Work from code and service files as truth.
+2. Do not preserve broken legacy behavior for compatibility unless it is explicitly still required by the active runtime.
+3. Prefer simplification over feature expansion.
+4. Do not add more orchestration layers.
+5. Every change must improve one or more of:
+   - correctness
+   - safety
+   - observability
+   - durability
+   - testability
+   - operational simplicity
+6. Preserve the current main capabilities unless the task explicitly says to remove or replace them:
+   - Discord/OpenClaw ingress
+   - Linear ingress
+   - worktree-based execution
+   - provider routing
+   - integration back to the repo
+7. Treat docs, Structurizr, and README claims as untrusted until verified against code.
+8. Update documentation only after code and service truth are established.
+9. Do not stop at analysis. Implement the fixes.
+10. Return full file changes.
+
+Required output:
+- Full file implementations
+- Updated systemd units
+- Updated tests
+- Updated runtime docs
+- Updated Structurizr workspace files if runtime truth changes
+- A final implementation report that maps each completed item to files changed and validation evidence
+
+Implementation order:
+Follow the phases below in order.
+
+======================================================================
+PHASE 0. IMMEDIATE CONTAINMENT
+======================================================================
+
+Task P0-1. Remove secrets from committed unit files
+Objective:
+Eliminate inline secrets from systemd units and move them to env-file based loading.
+
+Primary files:
+- services/systemd/openclaw-gateway.service
+- any other service unit containing Environment= secrets
+- any supporting startup scripts that assume inline secrets
+
+Required changes:
+- Replace inline secret values with EnvironmentFile= or equivalent secure loading
+- Standardize secret variable names
+- Add clear failure behavior if env files are missing
+- Do not leave fallback hardcoded secrets in repo files
+
+Acceptance criteria:
+- No committed service file contains live secrets
+- Services fail clearly if required secrets are absent
+- Secret loading is documented in runtime docs
+
+Validation:
+- grep for known secret-bearing Environment= lines in services/
+- dry-run service inspection shows env-file based loading only
+
+Task P0-2. Disable unsafe watchdog rollback behavior
+Objective:
+Stop automated git hard-reset rollback from watchdog logic.
+
+Primary files:
+- harness/ops/runtime/watchdog/bridge-watchdog/rollback-and-restart.mjs
+- harness/ops/runtime/watchdog/bridge-watchdog/*
+- services/systemd/anqr-watchdog.service
+
+Required changes:
+- Remove or disable automatic git rollback
+- Restrict watchdog behavior to restart, quarantine, report, and alert
+- Record explicit evidence when watchdog intervenes
+
+Acceptance criteria:
+- Watchdog never performs git reset --hard automatically
+- Watchdog interventions are logged with structured evidence
+
+Validation:
+- Simulated failing health check causes safe restart/report behavior only
+
+Task P0-3. Make readiness checks truthful
+Objective:
+Ensure readiness checks fail when required runtime services are missing or inactive.
+
+Primary files:
+- harness/ops/harness-doctor/check-systemd-services.mjs
+- any readiness wrappers or CLI entrypoints
+
+Required changes:
+- Split developer convenience checks from runtime readiness checks
+- Required services must produce a failing result when not active
+- Output must identify exactly which services are missing or inactive
+
+Acceptance criteria:
+- Production readiness cannot return green when critical services are down
+- Output is explicit and machine-readable where possible
+
+Validation:
+- Stop a required unit and confirm readiness fails
+
+======================================================================
+PHASE 1. TRACEABILITY AND DURABLE CONTROL PLANE
+======================================================================
+
+Task P1-1. Introduce end-to-end correlation IDs
+Objective:
+Provide a single correlation ID from ingress through execution, provider routing, integration, and reporting.
+
+Primary files:
+- harness/ops/integrations/model/discord-request-router/*
+- harness/ops/integrations/model/linear-webhook-receiver/*
+- harness/ops/integrations/model/symphony-agent-router/*
+- harness/ops/integrations/model/symphony-openai-bridge/*
+- harness/ops/orchestration/symphony-runner/*
+- harness/ops/orchestration/symphony-integrator/*
+- harness/ops/integrations/notifications/openclaw-discord/*
+- harness/ops/lib/logger/*
+
+Required changes:
+- Generate correlation ID at ingress
+- Propagate it through HTTP headers, internal request objects, subprocess invocation, state transitions, logs, and evidence records
+- Standardize log fields:
+  - correlationId
+  - service
+  - worktreeId
+  - issueIdentifier or requestIdentifier
+  - providerName
+  - route
+  - attempt
+  - stateTransition
+
+Acceptance criteria:
+- A single Discord request can be reconstructed end to end by correlation ID
+- A single Linear issue execution can be reconstructed end to end by correlation ID
+
+Validation:
+- Add integration tests and sample evidence output for both flows
+
+Task P1-2. Replace in-memory dedupe and queue control with durable state
+Objective:
+Move critical control-plane state out of process memory.
+
+Primary files:
+- harness/ops/integrations/model/linear-webhook-receiver/active-issues.mjs
+- harness/ops/integrations/model/linear-webhook-receiver/recent-deliveries.mjs
+- harness/ops/integrations/model/symphony-agent-router/linear-queue.mjs
+- harness/ops/integrations/model/discord-request-router/session-thread-names.mjs
+- harness/ops/core/symphony-state/*
+- any queue-control modules under harness/ops/orchestration/symphony-queue-control/*
+
+Required changes:
+- Replace Set, Map, and array based transient control state with durable shared state or a clearly defined local datastore
+- Persist:
+  - recent webhook deliveries
+  - active issue leases
+  - queued issue records
+  - session-to-worktree sticky routing
+  - dispatch attempts
+- Ensure restart-safe behavior
+
+Acceptance criteria:
+- Service restart does not lose dedupe correctness
+- Service restart does not lose queue correctness
+- Sticky routing survives router restart where required
+
+Validation:
+- Restart router/webhook services during synthetic traffic and verify no duplicate or dropped work
+
+Task P1-3. Create authoritative task evidence records
+Objective:
+Make one durable evidence record per task or request.
+
+Primary files:
+- harness/ops/core/symphony-state/*
+- harness/ops/orchestration/symphony-runner/*
+- harness/ops/orchestration/symphony-integrator/*
+- harness/ops/harness-report.mjs
+- related reporting modules
+
+Required changes:
+- Persist one authoritative record per task/request
+- Include:
+  - ingress metadata
+  - routing decision
+  - worktree selection
+  - provider selection and fallback events
+  - execution start/end
+  - validation result
+  - push result
+  - integration result
+  - watchdog or recovery interference
+- Make reports consume this source of truth
+
+Acceptance criteria:
+- One task can be audited without stitching together multiple unrelated logs by hand
+
+Validation:
+- Produce sample evidence output for one Discord task and one Linear task
+
+======================================================================
+PHASE 2. PROVE THE RUNTIME
+======================================================================
+
+Task P2-1. Add end-to-end tests for Linear flow
+Objective:
+Prove the real flow from webhook to router to executor to runner to integration evidence.
+
+Primary surfaces:
+- linear-webhook-receiver
+- symphony-agent-router
+- symphony-openai-bridge
+- symphony-runner
+- symphony-integrator
+- symphony-state
+
+Required tests:
+- happy path
+- duplicate webhook delivery
+- router restart during queued work
+- executor failure with surfaced evidence
+- provider allback path
+- integration success
+- integration conflict or blocked promotion
+
+Acceptance criteria:
+- Tests exercise actual runtime modules, not only helpers
+- Failures produce durable evidence
+
+Validation:
+- CI test suite covering these flows
+
+Task P2-2. Add end-to-end tests for Discord/OpenClaw flow
+Objective:
+Prove request routing, sticky routing, worktree choice, provider invocation, and evidence emission.
+
+Primary surfaces:
+- discord-request-router
+- openclaw-discord notification/invocation modules
+- symphony-openai-bridge
+- provider selection logic
+- symphony-state
+
+Required tests:
+- happy path
+- sticky routing reuse
+- router restart behavior
+- provider fallback
+- worktree unavailable
+- request cancellation or partial failure reporting
+
+Acceptance criteria:
+- Request path is reconstructable
+- Failure path is surfaced and durable
+
+Validation:
+- CI test suite covering these flows
+
+Task P2-3. Add integration and promotion guardrail tests
+Objective:
+Prove that integration back to the repo is safe and observable.
+
+Primary files:
+- harness/ops/orchestration/symphony-integrator/*
+- harness/ops/orchestration/symphony-runner/git-push-worktree-branch.mjs
+- related git and finalization modules
+
+Required tests:
+- clean integration
+- non-fast-forward or conflict case
+- invalid candidate rejection
+- finalization state correctness
+- evidence correctness
+- mainline protection behavior if introduced
+
+Acceptance criteria:
+- Integration behavior is explicit, tested, and safe under common failure modes
+
+Validation:
+- CI test suite with simulated repo states
+
+======================================================================
+PHASE 3. SIMPLIFY AND HARDEN THE EXECUTION MODEL
+======================================================================
+
+Task P3-1. Reduce overlapping execution layers
+Objective:
+Clarify whether the executor service is the executor or only a transport shell, then simplify accordingly.
+
+Primary files:
+- harness/ops/integrations/model/symphony-openai-bridge/*
+- harness/ops/orchestration/symphony-runner/*
+- services/systemd/anqr-symphony-executor@.service
+- any queue or dispatch helpers bound to executor behavior
+
+Required changes:
+- Audit the real responsibility split
+- Collapse redundant layers where safe
+- Remove dead or facade code that obscures the actual runtime
+- Ensure one clear execution authority per task
+
+Acceptance criteria:
+- A reader can trace one task through one dispatch layer, one execution layer, and one integration layer
+- No unnecessary executor indirection remains
+
+Validation:
+- Updated architecture summary and passing tests
+
+Task P3-2. Replace destructive validation sync with safer mechanics
+Objective:
+Eliminate fragile reset/clean/patch-based worktree sync if possible.
+
+Primary files:
+- harness/ops/orchestration/symphony-runner/sync-worktree-before-validation.mjs
+- related git preparation and validation modules
+
+Required changes:
+- Replace destructive patch-reapply flow with a safer alternative
+- Preserve deterministic validation against latest mainline
+- Keep recovery behavior explicit
+
+Acceptance criteria:
+- Validation sync is deterministic and easier to reason about
+- Fewer destructive git operations during normal runtime
+
+Validation:
+- Tests covering upstream mainline movement during execution
+
+Task P3-3. Improve state lock behavior
+Objective:
+Replace crude busy-wait locking with safer contention handling.
+
+Primary files:
+- harness/ops/core/symphony-state/acquire-state-lock.mjs
+- related state access modules
+
+Required changes:
+- Add backoff or blocking-friendly logic
+- Ensure lock release behavior is safe on failure
+- Improve lock diagnostics
+
+Acceptance criteria:
+- Lock contention is observable and does not spin aggressively
+
+Validation:
+- Contention tests under concurrent access
+
+======================================================================
+PHASE 4. HARDEN SYSTEMD AND OPERATIONS
+======================================================================
+
+Task P4-1. Normalize all systemd unit paths and conventions
+Objective:
+Make all units portable and consistent.
+
+Primary files:
+- all files under services/systemd/
+
+Required changes:
+- Replace hardcoded /home/user paths with %h or standardized environment expansion
+- Standardize WorkingDirectory, ExecStart, EnvironmentFile, Restart, RestartSec, and logging conventions
+- Ensure unit dependencies match the actual runtime model
+
+Acceptance criteria:
+- Unit files are portable across user accounts on equivalent hosts
+- No host-specific paths remain unless strictly required and documented
+
+Validation:
+- Static scan of units
+- Test deployment to a clean equivalent user environment
+
+Task P4-2. Expand watchdog scope and make interventions explicit
+Objective:
+Watch the actual critical runtime, not only one router.
+
+Primary files:
+- harness/ops/runtime/watchdog/bridge-watchdog/monitored-services.mjs
+- health endpoints across router, executor, webhook, integrator, and related services
+- services/systemd/anqr-watchdog.service
+
+Required changes:
+- Monitor at least:
+  - anqr-symphony-router.service
+  - anqr-discord-router.service
+  - anqr-linear-webhook.service
+  - anqr-symphony-integrator.service
+  - executor fleet health or equivalent aggregate health
+- Emit durable intervention records
+- Keep action scope safe
+
+Acceptance criteria:
+- Watchdog covers the actual control plane
+- Interventions are observable and non-destructive
+
+Validation:
+- Simulated failures across multiple services
+
+Task P4-3. Reassess timers and scheduled jobs
+Objective:
+Make scheduled automation truthful and operationally explicit.
+
+Primary files:
+- services/systemd/anqr-nightly.service
+- services/systemd/anqr-nightly.timer
+- services/systemd/anqr-email-ingest.service
+- services/systemd/anqr-email-ingest.timer
+- services/systemd/anqr-rag-rebuild.service
+- services/systemd/anqr-rag-rebuild.timer
+- services/systemd/anqr-worktree-health.service
+- services/systemd/anqr-worktree-health.timer
+
+Required changes:
+- Decide which jobs are real operations and which are diagnostics
+- Remove misleading dry-run-only claims
+- Separate reporting-only jobs from mutating jobs
+- Ensure every timer has clear evidence output
+
+Acceptance criteria:
+- Operators can tell which timers mutate state and which do not
+- Nightly behavior is truthful
+
+Validation:
+- Timer docs and service behavior match exactly
+
+======================================================================
+PHASE 5. DOCS AND STRUCTURIZR TRUTH REWRITE
+======================================================================
+
+Task P5-1. Rewrite runtime docs from code truth
+Objective:
+Make runtime docs match the delivered system exactly.
+
+Primary files:
+- README.md
+- AGENTS.md
+- docs/harness/**
+- any root runtime/control docs
+
+Required changes:
+- Remove or clearly mark legacy runner-timer doctrine
+- Document the real active services
+- Document the real ingress, execution, integration, and recovery flows
+- Document durable state, correlation IDs, and evidence model
+- Distinguish:
+  - verified from code/service files
+  - inferred from multiple signals
+  - historical or legacy
+
+Acceptance criteria:
+- An operator can run and debug the current system from docs without being misled
+
+Validation:
+- Cross-check every documented runtime unit and entrypoint against services/systemd and actual code entrypoints
+
+Task P5-2. Rewrite Structurizr workspace as evidence-based architecture
+Objective:
+Make the model reflect the real runtime and truth classes.
+
+Primary files:
+- harness/workspace.dsl
+- harness/workspace.json
+
+Required changes:
+- Re-model the actual control plane and execution plane
+- Re-tag elements by evidence class
+- Remove or mark unproven claims
+- Reflect any simplification done in earlier phases
+
+Acceptance criteria:
+- Structurizr matches the implemented runtime
+- It helps audit rather than obscures gaps
+
+Validation:
+- structurizr validate passes
+- manual cross-check against service units and runtime files
+
+======================================================================
+PHASE 6. FINAL SAFETY AND SCOPE DECISION
+======================================================================
+
+Task P6-1. Reassess direct push to main
+Objective:
+Decide whether direct integration to main remains acceptable.
+
+Primary files:
+- harness/ops/orchestration/symphony-integrator/*
+- related git promotion modules
+- runtime docs
+
+Required changes:
+- If keeping direct push, add explicit safeguards and evidence
+- Otherwise route to a protected integration branch or queue
+- Document the chosen strategy
+
+Acceptance criteria:
+- Promotion path is explicit, tested, and operator-approved
+
+Validation:
+- Tested promotion behavior with failure scenarios
+
+Task P6-2. Decommission nonessential runtime complexity
+Objective:
+Remove harness machinery that is not needed for the stable target model.
+
+Primary surfaces:
+- any retired entrypoints
+- stale services
+- dead adapters
+- obsolete docs
+- facade inflation that obscures runtime truth
+
+Required changes:
+- Remove dead runtime paths
+- Remove misleading code and documentation
+- Keep only the minimum stable set
+
+Acceptance criteria:
+- The runtime topology is smaller and clearer than before
+- No stale doctrine remains
+
+Validation:
+- Final architecture inventory produced from code and services only
+
+======================================================================
+MANDATORY FINAL REPORT
+======================================================================
+
+When complete, return:
+
+1. Completed action list with status:
+   - done
+   - partial
+   - blocked
+   - not done
+
+2. For each completed task:
+   - files changed
+   - summary of implementation
+   - validation performed
+   - remaining risks
+
+3. Updated delivery verdict:
+   - functionally delivered
+   - partially delivered
+   - not yet functionally delivered
+
+4. Updated top risks list
+
+5. Explicit note of any items not fully implemented
+
+Success definition:
+The harness is only considered successfully remediated when:
+- secrets are removed from committed unit files
+- watchdog rollback is safe
+- readiness checks are truthful
+- queue and dedupe state are durable
+- correlation IDs are end-to-end
+- authoritative evidence records exist
+- Linear and Discord critical flows have end-to-end tests
+- systemd units are normalized
+- docs and Structurizr match code truth
+- the runtime is simpler and easier to operate than before
