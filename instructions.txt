@@ -1,0 +1,647 @@
+Implementation report and remediation brief
+
+1. Executive summary
+
+This pass should harden the harness around six production blockers:
+
+1. make control-plane state truly restart-safe and concurrency-safe
+2. make Discord/OpenClaw session and thread continuity actually work
+3. carry correlation and evidence end to end, not just at ingress
+4. make Linear webhook verification fail closed in production
+5. make provider routing follow actual ranking and constraints, without hidden Codex or Codebuff preference
+6. clean the user-facing Discord path so it stops exposing internal metadata and provider fallback noise
+
+What matters most:
+- fix real runtime correctness first
+- remove deployment and startup ambiguity
+- tighten provider routing semantics
+- finish the partial remediation surfaces so they are actually used
+- leave the touched areas statically clean
+
+2. Feedback-to-fix mapping
+
+A. Durable state and restart safety
+
+Finding
+- feedback-1 and feedback-2 both identify restart-unsound state.
+- confirmed in code:
+  - harness/ops/integrations/model/linear-webhook-receiver/runtime.mjs still clears recentDeliveries and activeIssues on startup
+  - harness/ops/lib/durable-kv.mjs is file-backed but not safe for concurrent multi-process read-modify-write
+
+What is actually wrong
+- “durable” state is being wiped on startup in the webhook receiver
+- the new durable-kv layer is not lock-safe, so queue and dedupe correctness are not guaranteed under concurrent writers
+
+Root cause
+- remediation introduced file-backed persistence without integrating it with the existing locked state plane in harness/ops/core/symphony-state/*
+- webhook runtime still contains legacy “clear stale state on startup” behavior
+
+Required changes
+1. remove startup clearing from:
+   - harness/ops/integrations/model/linear-webhook-receiver/runtime.mjs
+2. move durable control state behind a locked state backend
+   - either replace harness/ops/lib/durable-kv.mjs with a lock-aware implementation
+   - or reimplement recent-deliveries, active-issues, session routing, and linear queue using harness/ops/core/symphony-state/*
+3. add expiry-aware records instead of blanket clear
+   - dedupe entries should expire by timestamp
+   - active issue leases should expire by lease age or explicit completion
+4. add atomic update helpers for:
+   - durable set add-if-absent
+   - durable queue enqueue/dequeue
+   - durable map compare-and-set where needed
+
+Primary files
+- harness/ops/integrations/model/linear-webhook-receiver/runtime.mjs
+- harness/ops/integrations/model/linear-webhook-receiver/recent-deliveries.mjs
+- harness/ops/integrations/model/linear-webhook-receiver/active-issues.mjs
+- harness/ops/integrations/model/symphony-agent-router/linear-queue.mjs
+- harness/ops/lib/durable-kv.mjs
+- harness/ops/core/symphony-state/*
+
+Expected behavior after fix
+- restart does not wipe dedupe or active issue state
+- concurrent webhook or router activity does not corrupt queue or dedupe files
+- state expires naturally, not by service restart
+
+Verification
+- restart linear webhook during active webhook delivery and confirm no duplicate execution
+- run concurrent enqueue/dequeue tests and verify queue integrity
+- run stress test with repeated webhook deliveries and confirm dedupe survives restarts
+
+B. Discord/OpenClaw session and thread continuity
+
+Finding
+- feedback-1 and feedback-2 both identify broken session continuity and thread handling
+- confirmed in code:
+  - discord-request-router/server.mjs accepts x-openclaw-session and x-openclaw-session-key
+  - discord-request-router/process-and-proxy.mjs only reads x-openclaw-session
+  - symphony-openai-bridge/server.mjs only reads x-openclaw-session
+  - session-thread-names.mjs and discord-thread-cache.mjs are in-memory only
+
+What is actually wrong
+- the session identity contract is inconsistent across ingress, router, and executor
+- thread mapping is in-memory only and is lost on restart
+- user-visible thread names are derived from bad metadata
+
+Root cause
+- remediation added partial session support but did not standardize the session header contract end to end
+- sticky session-to-worktree and session-to-thread mappings were not moved into durable state
+
+Required changes
+1. standardize one session identity contract everywhere
+   - support both x-openclaw-session and x-openclaw-session-key at the edge if needed
+   - normalize them immediately into one canonical internal key
+   - pass only the canonical form downstream
+2. persist sticky session routing and thread mapping durably
+   - replace:
+     - harness/ops/integrations/model/discord-request-router/session-thread-names.mjs
+     - harness/ops/integrations/notifications/openclaw-discord/discord-thread-cache.mjs
+   - with durable, lock-safe state
+3. ensure worktree selection uses the same durable session key
+4. ensure executor bridge uses the same canonical session key for provider/session stickiness
+5. clean thread naming
+   - never derive thread names from “Sender (untrusted metadata)” or raw transcript wrappers
+   - generate short stable thread titles from the first meaningful user message only
+
+Primary files
+- harness/ops/integrations/model/discord-request-router/server.mjs
+- harness/ops/integrations/model/discord-request-router/process-and-proxy.mjs
+- harness/ops/integrations/model/discord-request-router/get-least-loaded-worktree.mjs
+- harness/ops/integrations/model/discord-request-router/session-thread-names.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/server.mjs
+- harness/ops/integrations/notifications/openclaw-discord/discord-thread-cache.mjs
+- harness/ops/integrations/notifications/openclaw-discord/create-discord-thread.mjs
+
+Expected behavior after fix
+- follow-up Discord turns stay on the same worktree
+- the same Discord thread is reused across requests and restarts
+- thread names are clean and user-facing
+
+Verification
+- two-turn Discord conversation uses the same worktree and thread
+- router restart does not lose thread continuity
+- logs show canonical session ID, not session=(none), for ongoing conversations
+
+C. End-to-end correlation and evidence lifecycle
+
+Finding
+- feedback-1 identifies partial correlation wiring and unused lifecycle evidence
+- confirmed in code:
+  - correlation is created at ingress
+  - task-evidence.mjs has full lifecycle helpers
+  - many lifecycle helpers remain unused
+  - symphony-agent-router/dispatch-linear-execution.mjs drops correlation
+
+What is actually wrong
+- the platform has ingress evidence, not authoritative lifecycle evidence
+- correlation IDs do not survive all hops
+- provider choice, worktree selection, execution, validation, push, integration, and watchdog events are not joined
+
+Root cause
+- remediation stopped at ingress creation
+- downstream modules were not updated to consume task-evidence helpers
+
+Required changes
+1. thread correlationId through every hop:
+   - linear-webhook-receiver -> symphony-router -> executor bridge -> runner -> integrator -> watchdog/recovery evidence
+2. use task-evidence.mjs lifecycle functions in runtime
+   - recordRoutingDecision
+   - recordWorktreeSelection
+   - recordProviderSelection
+   - recordExecutionResult
+   - recordValidationResult
+   - recordPushResult
+   - recordIntegrationResult
+   - recordWatchdogEvent
+3. adopt createStructuredLogger in touched runtime paths with consistent fields
+4. make evidence updates best-effort but always attempted
+5. ensure integrator and watchdog can associate their actions with the originating correlationId
+
+Primary files
+- harness/ops/core/task-evidence.mjs
+- harness/ops/lib/correlation-id.mjs
+- harness/ops/lib/structured-log.mjs
+- harness/ops/integrations/model/linear-webhook-receiver/handle-webhook.mjs
+- harness/ops/integrations/model/linear-webhook-receiver/trigger-issue-execution.mjs
+- harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs
+- harness/ops/integrations/model/symphony-agent-router/dispatch-linear-execution.mjs
+- harness/ops/integrations/model/symphony-agent-router/proxy-request.mjs
+- harness/ops/integrations/model/discord-request-router/process-and-proxy.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/server.mjs
+- harness/ops/orchestration/symphony-runner/execute-issue.mjs
+- harness/ops/orchestration/symphony-integrator/integrate-candidate.mjs
+- harness/ops/runtime/watchdog/bridge-watchdog/*
+- harness/ops/runtime/symphony/watchdog-monitor/*
+
+Expected behavior after fix
+- one Discord request and one Linear issue can be reconstructed from ingress to final state using only the correlationId
+- lifecycle evidence is authoritative, not ingress-only
+
+Verification
+- inspect one evidence JSON for a Discord request and one for a Linear issue
+- confirm all lifecycle fields are populated
+- confirm logs across all major services include the same correlationId
+
+D. Linear webhook security
+
+Finding
+- feedback-1 identifies permissive signature verification
+- confirmed in code:
+  - verify-signature.mjs returns true when signature missing
+  - verify-signature.mjs returns true when WEBHOOK_SECRET missing
+  - webhook-secret.mjs falls back to LINEAR_API_KEY
+
+What is actually wrong
+- production webhook verification is effectively optional
+
+Root cause
+- test-mode shortcuts were left active in the main verification path
+
+Required changes
+1. fail closed in production mode
+   - if LINEAR_WEBHOOK_SECRET missing, service should reject webhook requests
+   - if signature missing or malformed, reject request
+2. remove LINEAR_API_KEY fallback as webhook secret
+3. keep an explicit development/test bypass only behind a separate flag such as:
+   - ANQR_ALLOW_INSECURE_WEBHOOKS=true
+   - default false
+4. log verification failures without dumping request bodies
+
+Primary files
+- harness/ops/integrations/model/linear-webhook-receiver/verify-signature.mjs
+- harness/ops/integrations/model/linear-webhook-receiver/webhook-secret.mjs
+- harness/ops/integrations/model/linear-webhook-receiver/handle-webhook.mjs
+- services/systemd/anqr-linear-webhook.service
+
+Expected behavior after fix
+- production webhook ingress rejects unsigned or mis-signed requests
+- configuration mistakes fail clearly
+
+Verification
+- send unsigned webhook in production mode and confirm 4xx
+- send valid signed webhook and confirm acceptance
+- service startup should warn or fail if secret is missing
+
+E. Provider selection, ranking, and hidden preference removal
+
+Finding
+- feedback requires ranked provider selection with no hidden Codex-first or Codebuff-second behavior
+- current code already has separate codebuff-paid and codebuff-free providers
+- user clarification: Codebuff uses one API key, but the SDK supports paid and free mode and both should be ranked separately
+
+Confirmed in code
+- build-static-providers.mjs already defines:
+  - codebuff-paid
+  - codebuff-free
+- both use CODEBUFF_API_KEY but different costMode/sessionMode
+- select-provider.mjs currently score-boost merges preferred and fallback candidates
+- build-selection-options.mjs injects preferredNames heavily
+
+What is actually wrong
+- ranking can still be distorted by preferred-name score boosting
+- paid providers can float above actual ranking in ways that are not explicit enough
+- Codebuff paid/free separation exists, but needs strict runtime independence in ranking, probing, and fallback
+
+Root cause
+- provider ranking and provider preference are mixed together
+
+Required changes
+1. make ranked order the default truth
+   - selectProvider should iterate ranked candidates in ranked order
+   - do not interleave preferredNames 1:1 unless route explicitly requests a pinned/preferred subset
+2. use preferredNames only for:
+   - explicit route constraints
+   - sticky session reuse of a still-healthy provider
+   - evaluation sampling if deliberately enabled
+3. keep codebuff-paid and codebuff-free as separate providers with the same credential
+4. ensure all metrics, health, probe results, cooldowns, and selection counts are tracked independently for:
+   - codebuff-paid
+   - codebuff-free
+5. ensure invokeWithFallback and invokeWithFallbackStream never collapse codebuff modes into one implicit provider
+6. ensure getSharedClient caching remains mode-aware and cwd-aware
+7. ensure probe and selection logs clearly distinguish codebuff-paid from codebuff-free
+8. ensure Codex is just another ranked paid provider, not an implicit first choice
+
+Primary files
+- harness/ops/integrations/model/symphony-credit-gate/build-static-providers.mjs
+- harness/ops/integrations/model/symphony-credit-gate/get-ranked-providers.mjs
+- harness/ops/integrations/model/symphony-credit-gate/select-provider.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/build-selection-options.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/invoke-with-fallback.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/invoke-with-fallback-stream.mjs
+- harness/ops/integrations/model/codebuff-direct/get-shared-client.mjs
+- harness/ops/integrations/model/symphony-session-state/*
+
+Expected behavior after fix
+- the selected provider is the highest-ranked eligible provider
+- Codebuff paid and Codebuff free are independent ranked candidates
+- Codex is not implicitly first unless ranking selects it
+- Codebuff is not implicitly second unless ranking selects it
+
+Verification
+- add deterministic ranking tests
+- simulate healthy codex, codebuff-paid, codebuff-free, and one free-cloud provider with differing scores
+- confirm selectProvider returns the top-ranked eligible candidate
+- confirm codebuff-paid and codebuff-free are logged and scored independently
+
+F. Startup probing, capability classification, and catalog hygiene
+
+Finding
+- feedback calls out noisy startup probing, predictable invalid capability checks, and repeated rediscovery of known incompatibilities
+- current code already tracks toolCapableProviders and nonToolCapableProviders, but startup remains noisy and expensive
+
+What is actually wrong
+- startup probing is broader than it needs to be
+- known incompatible providers/models are still rediscovered through repeated probe attempts
+- local services can be marked degraded during normal startup sequencing
+
+Root cause
+- provider capability and readiness classification are not cleanly split into:
+  - configured
+  - reachable
+  - tool-capable
+  - temporarily unavailable
+  - permanently incompatible
+
+Required changes
+1. pre-filter known incompatible or non-tool-capable provider classes earlier
+2. add permanent or long-lived negative classification for:
+   - providers that are structurally non-tool-capable
+   - providers/models known to emit invalid raw tool JSON in this harness mode
+3. separate startup warmup from failure accounting
+   - local services like Context7 should not count as degraded during their expected boot window
+4. reduce probe volume by:
+   - not probing providers lacking required env vars
+   - not probing permanently blocked model classes
+   - caching capability class more strongly
+5. keep provider health transitions accurate
+   - startup not-ready is not the same as runtime degraded
+
+Primary files
+- harness/ops/integrations/model/symphony-credit-gate/*
+- harness/ops/integrations/model/symphony-provider-health.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/non-tool-capable-providers.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/tool-capable-providers.mjs
+- harness/ops/runtime/mcp/context7-http-service/*
+- harness/ops/harness-doctor/check-credit-gate.mjs
+
+Expected behavior after fix
+- startup is quieter and more accurate
+- known-bad providers do not repeatedly fail in the same obvious way
+- Context7 and other local services are not marked degraded during normal warmup
+
+Verification
+- compare startup logs before and after
+- count probe attempts and provider failure spam
+- confirm local services become ready without false degradation
+
+G. Context/tool budgeting and request assembly
+
+Finding
+- feedback requires accurate budgeting so short user prompts do not overflow due to internal tool/context payload
+- current bridge logic likely underestimates real request cost when tool payload and metadata are included
+
+What is actually wrong
+- token budgeting is based too heavily on message text alone
+- tool definitions and large internal context wrappers are not budgeted tightly enough
+- short prompts can still exceed provider limits
+
+Root cause
+- budgeting and truncation are not aligned with actual request shape
+
+Required changes
+1. calculate request budget from full assembled payload, not only messages
+   - include system prompt
+   - include tool schema payload
+   - include metadata wrappers
+2. add a hard tool-budget reserve before provider selection
+3. prune tools aggressively when route.useTools is false or not needed
+4. bound injected metadata and thread/session context
+5. ensure context truncation is applied before provider invocation and recorded in logs/evidence
+
+Primary files
+- harness/ops/integrations/model/symphony-bridge-truncation.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/should-use-tools-for-request.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/tools.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/parse-body.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/invoke-with-ai.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/invoke-with-aiinner.mjs
+
+Expected behavior after fix
+- short user prompts do not fail because of hidden internal payload bloat
+- tools are included only when needed
+- request budgeting reflects reality
+
+Verification
+- add tests for tiny user messages with large tool payload
+- log estimated tokens for message text, system prompt, and tools separately
+- confirm no overflow on previously failing short requests
+
+H. Output validation and sentinel handling
+
+Finding
+- feedback requires that non-answers like NO_REPLY are not silently accepted unless policy explicitly allows it
+
+What is actually wrong
+- result validation may still treat sentinel or structurally empty responses as success in some paths
+
+Required changes
+1. centralize output validation in one helper
+2. reject:
+   - empty content
+   - sentinel non-answers such as NO_REPLY
+   - raw tool JSON text masquerading as user output
+3. allow explicit sentinel-only success only behind a named policy gate
+4. make provider failure classification consistent with output validation results
+
+Primary files
+- harness/ops/integrations/model/symphony-openai-bridge/invoke-with-aiinner.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/invoke-with-fallback.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/invoke-with-fallback-stream.mjs
+- any existing output validator helpers in this area
+
+Expected behavior after fix
+- invalid non-answers are treated as provider failure, not success
+- fallback behavior is based on real output validity
+
+Verification
+- add tests for NO_REPLY, empty output, and raw tool JSON text
+
+I. User-facing Discord sanitization, privacy, and bounded logging
+
+Finding
+- feedback identifies metadata leakage and noisy provider errors in the Discord path
+- confirmed in code and runtime samples
+
+What is actually wrong
+- user-facing updates still show internal metadata wrappers
+- provider failure text is too exposed
+- logging may still include too much request or response detail in touched areas
+
+Required changes
+1. strengthen sanitize-for-discord-preview.mjs to remove all internal wrappers including:
+   - Sender (untrusted metadata):
+   - Untrusted context...
+   - Conversation info...
+   - Voice transcript from speaker...
+2. ensure thread naming and progress text use sanitized content only
+3. hide non-terminal provider fallback noise from end users
+   - keep it in logs, not in Discord progress content
+4. bound logs
+   - no raw cookies
+   - no full headers
+   - no full tool arrays
+   - no raw provider responses
+   - no unnecessary user body dumps
+
+Primary files
+- harness/ops/integrations/model/symphony-openai-bridge/sanitize-for-discord-preview.mjs
+- harness/ops/integrations/model/symphony-openai-bridge/server.mjs
+- harness/ops/integrations/notifications/openclaw-discord/*
+- touched logger calls in routers and bridge
+
+Expected behavior after fix
+- Discord users see only clean progress and final output
+- operators still get useful bounded diagnostics
+
+Verification
+- replay the “Who are you” case
+- confirm no untrusted metadata wrapper is shown
+- confirm fallback from one provider to another is not exposed unless terminal
+J. Readiness checks, watchdog targeting, and startup contracts
+
+Finding
+- feedback identifies inaccurate readiness, narrow watchdog targeting, and optional env files on critical services
+- confirmed in code:
+  - multiple critical services use EnvironmentFile=-...
+  - watchdog monitored-services misses some important surfaces
+
+What is actually wrong
+- critical services can start partially configured
+- watchdog does not target all production-critical units
+- local startup sequencing is not interpreted accurately
+
+Required changes
+1. make startup validation explicit for critical services
+   - if required secret/config missing, exit non-zero with clear log
+2. either make required EnvironmentFile mandatory, or keep optional file but fail explicitly in code
+3. expand watchdog coverage appropriately
+   - include the real user-facing and provider-gateway surfaces that matter
+4. interpret normal startup sequencing correctly
+   - do not mark local services degraded during expected warmup
+5. fix stale comments and misleading unit descriptions in touched services
+
+Primary files
+- services/systemd/anqr-discord-router.service
+- services/systemd/anqr-linear-webhook.service
+- services/systemd/anqr-symphony-router.service
+- services/systemd/anqr-symphony-executor@.service
+- services/systemd/anqr-watchdog.service
+- harness/ops/runtime/watchdog/bridge-watchdog/monitored-services.mjs
+- harness/ops/harness-doctor/check-systemd-services.mjs
+- startup validation helpers in affected services
+
+Expected behavior after fix
+- services fail clearly when required config is absent
+- watchdog watches the right units
+- readiness reflects real service health
+
+Verification
+- start services without required env and confirm hard failure
+- simulate gateway and router failure and confirm watchdog targets them
+- verify no false degraded state during expected startup
+
+K. Listener lifecycle and repeated registration
+
+Finding
+- feedback mentions possible repeated listener registration and lifecycle duplication
+- current source shows many normal process.on handlers, but no strong code proof yet of repeated dynamic listener leaks in the core touched runtime
+
+Disposition
+- do not invent a fix where there is no confirmed bug
+- explicitly inspect touched runtime surfaces for repeated listener registration
+- if no concrete duplication is found, record this feedback item as not confirmed by the current source
+- only clean obvious duplicate registration in touched areas if found during implementation
+
+L. Static hygiene and incomplete refactors
+
+Finding
+- feedback and your static outputs show unfinished refactor artifacts
+- confirmed by:
+  - unused exports in task-evidence.mjs
+  - unused exports in correlation-id.mjs and durable-kv.mjs
+  - unused import path in sync-worktree-before-validation.mjs
+  - unused variable evidence in quarantine-and-restart.mjs
+  - probable stale compatibility helpers in touched areas
+
+Required changes
+1. after wiring the evidence/runtime paths, re-run knip and lint
+2. remove any lifecycle helper that remains truly unused after proper integration
+3. remove stale compatibility helpers in touched areas
+4. remove orphaned helper exports and dead code paths
+5. make touched-area hygiene pass before stopping
+
+Primary files
+- harness/ops/core/task-evidence.mjs
+- harness/ops/lib/correlation-id.mjs
+- harness/ops/lib/durable-kv.mjs
+- harness/ops/orchestration/symphony-runner/sync-worktree-before-validation.mjs
+- harness/ops/runtime/watchdog/bridge-watchdog/quarantine-and-restart.mjs
+- touched routing/provider helpers
+
+Expected behavior after fix
+- no unused exports in the touched remediation surfaces
+- no half-finished helper layer remains
+
+Verification
+- npm run knip
+- npm run lint:harness or equivalent
+- typecheck for harness surfaces
+
+3. Key implementation decisions
+
+Decision 1
+Treat Codebuff as two separate providers sharing one API key:
+- codebuff-paid
+- codebuff-free
+Do not create a fake second credential model.
+Do keep separate ranking, probing, health, cooldown, metrics, and session stickiness for each mode.
+
+Decision 2
+Do not preserve the current score-boost merge in select-provider unless a route explicitly asks for preference.
+Ranked order should be the default truth.
+
+Decision 3
+Do not keep durable-kv as an unlocked JSON store for critical control-plane semantics.
+Either move it under the existing symphony-state locking model or add equivalent locking.
+
+Decision 4
+Make one canonical session key end to end.
+Do not keep parallel x-openclaw-session versus x-openclaw-session-key semantics beyond the first ingress normalization point.
+
+Decision 5
+Task evidence must become the authoritative lifecycle record, or the unused lifecycle API should be removed.
+Do not leave it half-integrated.
+
+Decision 6
+Do not surface non-terminal provider fallback failures in the user-facing Discord path.
+Keep them in operator logs.
+
+Decision 7
+Fail closed for webhook security and critical startup configuration in production.
+Do not let test shortcuts leak into production runtime.
+
+4. Validation summary
+
+Run these after implementation:
+
+Static
+- npm run typecheck:harness
+- npm run lint:harness
+- npm run knip
+- npm run depcruise:harness
+
+Targeted unit/integration
+- provider ranking tests:
+  - ranked candidate wins without hidden Codex/Codebuff boost
+  - codebuff-paid and codebuff-free remain independent
+- webhook verification tests:
+  - unsigned webhook rejected in production
+  - signed webhook accepted
+- durable state tests:
+  - concurrent enqueue/dequeue
+  - dedupe survives restart
+- session continuity tests:
+  - same session routes to same worktree and same thread
+- output validation tests:
+  - NO_REPLY rejected
+  - empty output rejected
+  - raw tool JSON rejected
+- sanitization tests:
+  - no “Sender (untrusted metadata)” leaks to user-facing preview
+
+Runtime/E2E
+- one Discord conversation with two turns:
+  - same canonical session ID
+  - same thread
+  - same worktree
+  - clean progress messages
+- one Linear webhook execution:
+  - signed ingress
+  - durable dedupe
+  - correlationId present in webhook, router, executor, runner, integrator
+  - full evidence JSON populated
+- provider routing:
+  - ranking decides first attempt
+  - retry and fallback behave according to retryability and health
+  - codebuff-paid and codebuff-free each selectable independently
+- startup/readiness:
+  - missing required env produces explicit startup failure
+  - Context7 normal warmup not marked as degraded
+  - watchdog covers the intended critical units
+
+Add scripts if missing
+- package.json should expose first-class scripts for the runtime E2E suite if those tests are expected to be part of normal validation
+
+5. Remaining risks
+
+Only keep these if still unresolved after the implementation pass:
+- direct push to origin/main by the integrator, if you do not change promotion strategy in this pass
+- live deployment drift outside the committed source tree, especially OpenClaw unit/config deployment
+- external provider instability that cannot be fully normalized in-process
+
+Everything else above should be fixed directly in this implementation pass, not deferred.
+
+Final instruction
+
+Do not return another review.
+Implement the changes in code.
+Use feedback-1.txt and feedback-2.txt as authoritative defect inputs.
+Where a feedback item is already correct in code, say so briefly and move on.
+Where a feedback item is wrong, reject it only with explicit code evidence.
+Otherwise fix it fully.
+Return full-file changes and a short completion report showing:
+- files changed
+- feedback item addressed
+- validation run
+- residual risks
