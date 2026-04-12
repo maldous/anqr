@@ -117,7 +117,7 @@ The label "source:discord" must exist in your Linear workspace.
 - `harness/ops/orchestration/symphony-queue-control.mjs` (mark source when feeding)
 - `harness/ops/integrations/model/linear-webhook-receiver.mjs` (mark source on webhook)
 - `services/systemd/anqr-linear-webhook.service` (documented env var)
-- `services/systemd/anqr-queue-feeder.service` (documented env var)
+- `services/systemd/anqr-linear-reconciler.service` (reconciler daemon)
 - `services/systemd/anqr-symphony-executor@.service` (documented env var)
 - `tests/unit/discord-source.spec.ts` (14 unit tests)
 - `tests/integration/discord-worktree-routing.spec.ts` (integration tests)

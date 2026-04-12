@@ -288,7 +288,11 @@ The `NODE_OPTIONS=""` override is critical: without it, sonar-scanner's internal
 
 ### Linear Runner (continuous, every 2 min)
 
-The Linear runner is delivered exclusively via the worktree template units (`anqr-linear-runner@.service` / `.timer`). Instantiate one timer per worktree (`anqr-linear-runner@1.timer`, `@2`, `@3`, `@4`).
+Linear processing is driven by two complementary services:
+- `anqr-linear-webhook.service` — receives webhook events from Linear (edge-triggered)
+- `anqr-linear-reconciler.service` — periodic backlog reconciliation every 90s (level-triggered)
+
+Both dispatch work through the Symphony Router (`anqr-symphony-router.service`) to executors (`anqr-symphony-executor@{1..4}.service`).
 
 Each active timer kicks off the execution agent loop:
 
@@ -316,7 +320,7 @@ npm run symphony:status        # show runner state
 
 ### Continuous Queue Feeder (every 15 min — safety net)
 
-The queue feeder (`anqr-queue-feeder.timer`) runs `queue:all` every 15 minutes as a **safety net** for queue maintenance:
+The Linear reconciler (`anqr-linear-reconciler.service`) runs every 90 seconds as the **level-triggered safety net** for queue maintenance:
 
 - **Primary feeding** is handled by the Symphony runner itself — it calls `feedQueue()` after each issue completion, ensuring zero idle time between issues
 - **This timer** handles maintenance duties and backup feeding:
@@ -372,10 +376,8 @@ Steps 4–5 are the SonarQube integration gate. If sonar-linear-audit exits with
 # Copy unit files
 cp services/systemd/anqr-nightly.service ~/.config/systemd/user/
 cp services/systemd/anqr-nightly.timer ~/.config/systemd/user/
-cp services/systemd/anqr-queue-feeder.service ~/.config/systemd/user/
-cp services/systemd/anqr-queue-feeder.timer ~/.config/systemd/user/
-cp services/systemd/anqr-linear-runner@.service ~/.config/systemd/user/
-cp services/systemd/anqr-linear-runner@.timer ~/.config/systemd/user/
+# Install all services via Makefile:
+make install-services
 cp services/systemd/anqr-email-ingest.service ~/.config/systemd/user/
 cp services/systemd/anqr-email-ingest.timer ~/.config/systemd/user/
 cp services/systemd/anqr-ops.env ~/.config/systemd/user/
@@ -386,15 +388,15 @@ nano ~/.config/systemd/user/anqr-ops.env
 # Enable and start
 systemctl --user daemon-reload
 systemctl --user enable --now anqr-nightly.timer
-systemctl --user enable --now anqr-queue-feeder.timer
-systemctl --user enable --now anqr-linear-runner@{1..4}.timer
+systemctl --user enable --now anqr-linear-reconciler.service
+systemctl --user enable --now anqr-symphony-executor@{1..4}.service
 systemctl --user enable --now anqr-email-ingest.timer
 
 # Verify
 systemctl --user list-timers
 journalctl --user -u anqr-nightly.service --since today
-journalctl --user -u anqr-queue-feeder.service --since today
-journalctl --user -u 'anqr-linear-runner@*.service' --since today
+journalctl --user -u anqr-linear-reconciler.service --since today
+journalctl --user -u 'anqr-symphony-executor@*.service' --since today
 ```
 
 ### Environment Handling
@@ -458,14 +460,14 @@ The guardian is deterministic, not AI-driven:
 | `harness/ops/notify.mjs`                               | Notification dispatch                                  | ANQ-367 (Phase 6) |
 | `services/systemd/anqr-nightly.service`                | systemd user service unit                              | ANQ-367 (Phase 6) |
 | `services/systemd/anqr-nightly.timer`                  | systemd nightly timer (02:00)                          | ANQ-367 (Phase 6) |
-| `services/systemd/anqr-queue-feeder.service`           | systemd queue maintenance + backup feed                | ANQ-373, ANQ-376  |
-| `services/systemd/anqr-queue-feeder.timer`             | systemd queue maintenance timer (15min)                | ANQ-373, ANQ-376  |
+| `services/systemd/anqr-linear-reconciler.service`      | Level-triggered Linear backlog reconciliation          | —                 |
+| `services/systemd/anqr-linear-webhook.service`         | Linear webhook receiver (event-driven ingress)         | —                 |
 | `harness/ops/symphony-runner.mjs`                      | Execution orchestrator (self-feeding)                  | ANQ-374, ANQ-376  |
 | `harness/ops/symphony-agent.mjs`                       | Tool-calling AI agent                                  | ANQ-374           |
 | `harness/ops/symphony-credit-gate.mjs`                 | Provider cascade (credit gate)                         | ANQ-374           |
 | `harness/ops/symphony/WORKFLOW.md`                     | Agent system prompt (versioned)                        | ANQ-374           |
-| `services/systemd/anqr-linear-runner@.service`         | systemd Linear runner service (worktree template)      | ANQ-374           |
-| `services/systemd/anqr-linear-runner@.timer`           | systemd Linear runner timer (2min)                     | ANQ-374           |
+| `services/systemd/anqr-symphony-executor@.service`     | Symphony executor per worktree (wt1-wt8)               | —                 |
+| `services/systemd/anqr-symphony-integrator.service`    | Serial integration of worktree branches to main        | —                 |
 | `harness/ops/lib/notify.mjs`                           | Email notification helper (msmtp + rate limiting)      | ANQ-377           |
 | `harness/ops/email-ingest.mjs`                         | Email ingest (mbsync + notmuch → Linear issues)        | ANQ-377           |
 | `services/systemd/anqr-email-ingest.service`           | systemd email ingest service                           | ANQ-377           |

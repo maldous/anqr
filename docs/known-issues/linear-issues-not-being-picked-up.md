@@ -1,5 +1,9 @@
 # Linear Issues Not Being Picked Up
 
+> **Status: RESOLVED** — The `anqr-linear-reconciler` service now provides level-triggered
+> backlog reconciliation every 90 seconds, ensuring pre-existing Todo issues are always
+> picked up even without webhook events. See `make linear-status` for operator visibility.
+
 **Status:** RESOLVED  
 **Date:** 2026-03-30  
 **Impact:** CRITICAL — Symphony runner idle, no work being processed
