@@ -1,0 +1,578 @@
+## 1. Executive Verdict
+
+The harness is **partially delivered**. This refreshed source tree is materially better than the last pass. Several previously critical issues are now genuinely fixed in code, including fail-closed Linear webhook verification, removal of webhook startup clearing, more complete correlation and task-evidence wiring, durable session/thread maps, ranked provider selection without the old hidden preference pattern, and broader watchdog coverage. The overall approach remains **sound but overcomplicated**. The methodology is **viable**, but the platform is still not production-ready because there are still hard blockers in security, startup contracts, operational truth, OpenClaw configuration, documentation drift, and a few remaining concurrency and observability gaps. The team should **stabilize and simplify**, not expand.
+
+## 2. Delivery Scorecard
+
+| Area                             | Status                                  | Confidence | Why                                                                                                                                                                       | Key evidence                                                                                                                                                                                                                                     |
+| -------------------------------- | --------------------------------------- | ---------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Orchestration                    | Partially delivered                     |       High | Real router, executor, integrator, recovery, and watchdog surfaces exist and are more coherent than before, but the control plane is still complex and not fully hardened | `harness/ops/integrations/model/symphony-agent-router/server.mjs`, `harness/ops/integrations/model/symphony-openai-bridge/server.mjs`, `harness/ops/orchestration/symphony-integrator/integrate-candidate.mjs`                                   |
+| Router                           | Delivered but operationally fragile     |       High | Discord and Symphony routers are active runtime surfaces with improved routing and evidence, but startup contracts and user-path behavior still need hardening            | `services/systemd/anqr-discord-router.service`, `services/systemd/anqr-symphony-router.service`, `harness/ops/integrations/model/discord-request-router/server.mjs`, `.../process-and-proxy.mjs`                                                 |
+| Executor fleet                   | Delivered but operationally fragile     |       High | Executor services are real and isolated by worktree, but bridge-to-runner layering still increases operational complexity                                                 | `services/systemd/anqr-symphony-executor@.service`, `harness/ops/integrations/model/symphony-openai-bridge/server.mjs`, `harness/ops/integrations/model/symphony-openai-bridge/execute-linear-issue-request.mjs`                                 |
+| Worktree management              | Delivered but operationally fragile     |       High | Sync/recovery/quarantine behavior is safer than before, but the worktree lifecycle is still spread across multiple subsystems                                             | `harness/ops/orchestration/symphony-runner/sync-worktree-before-validation.mjs`, `harness/ops/runtime/symphony/watchdog-monitor/quarantine-worktree.mjs`, `harness/ops/orchestration/symphony-worktree-recovery.mjs`                             |
+| Provider routing                 | Delivered                               |       High | Ranked provider selection is now materially improved, and Codebuff paid/free are distinct runtime providers                                                               | `harness/ops/integrations/model/symphony-credit-gate/select-provider.mjs`, `.../get-ranked-providers.mjs`, `.../build-static-providers.mjs`, `harness/ops/integrations/model/codebuff-direct/get-shared-client.mjs`                              |
+| Discord integration              | Partially delivered                     |       High | Session header handling and durable session/thread maps are improved, but the user path still depends on OpenClaw behavior and thread continuity is not fully proven      | `harness/ops/integrations/model/discord-request-router/server.mjs`, `.../process-and-proxy.mjs`, `.../session-thread-names.mjs`, `harness/ops/integrations/notifications/openclaw-discord/discord-thread-cache.mjs`                              |
+| OpenClaw integration             | Delivered but unsafe                    |       High | Unit drift is improved, but the committed OpenClaw config still contains permissive session/tool settings                                              | `services/systemd/openclaw-gateway.service`, `harness/ops/runtime/openclaw-config/openclaw.json`, `harness-openclaw-debug/config/openclaw.json`                                                                                                  |
+| Linear integration               | Delivered but operationally fragile     |       High | Webhook security and dedupe are much better, but queueing and dispatch safety still depend on a custom file-backed control plane                                          | `services/systemd/anqr-linear-webhook.service`, `harness/ops/integrations/model/linear-webhook-receiver/verify-signature.mjs`, `.../runtime.mjs`, `.../handle-webhook.mjs`, `.../recent-deliveries.mjs`, `.../active-issues.mjs`                 |
+| Queue control                    | Improved, still unsafe under contention |       High | Queue state now has locking, but the custom durable store can still fall back to unlocked writes after lock exhaustion                                                    | `harness/ops/lib/durable-kv.mjs`, `harness/ops/integrations/model/symphony-agent-router/linear-queue.mjs`, `.../handle-linear-queue.mjs`                                                                                                         |
+| Recovery and watchdogs           | Improved                                |       High | Destructive rollback was removed and executors are now monitored, but watchdog scope still misses OpenClaw and comments are stale                                         | `harness/ops/runtime/watchdog/bridge-watchdog/monitored-services.mjs`, `.../quarantine-and-restart.mjs`, `services/systemd/anqr-watchdog.service`                                                                                                |
+| Nightly and scheduled automation | Delivered but needs caution             |     Medium | Timers and services exist and are classified, but nightly remains a mutating operational surface that needs disciplined change control                                    | `services/systemd/anqr-nightly.service`, `docs/timers-and-scheduled-jobs.md`                                                                                                                                                                     |
+| Email ingestion                  | Delivered but narrow                    |     Medium | Real timer and service path exists, but it is not a major proof surface for platform maturity                                                                             | `services/systemd/anqr-email-ingest.service`, `harness/ops/email-ingest.mjs`                                                                                                                                                                     |
+| Reporting and evidence           | Partially delivered                     |       High | Evidence lifecycle is far more wired than before, but still not fully authoritative across every runtime surface                                                          | `harness/ops/core/task-evidence.mjs`, `harness/ops/orchestration/symphony-runner/execute-issue.mjs`, `harness/ops/orchestration/symphony-integrator/integrate-candidate.mjs`, `harness/ops/integrations/model/symphony-openai-bridge/server.mjs` |
+| Diagnostics and health checks    | Improved                                |       High | Readiness checks are more truthful and Context7 warmup handling is better                                                                                                 | `harness/ops/harness-doctor/check-systemd-services.mjs`, `harness/ops/integrations/model/symphony-openai-bridge/startup-context7-verify.mjs`                                                                                                     |
+| Documentation consistency        | Not delivered                           |       High | New runtime docs exist, but major root and harness docs still materially contradict the active runtime                                                                    | `docs/runtime-reference.md`, `docs/execution-model.md`, `README.md`, `AGENTS.md`, `docs/harness/12-concurrent-execution-with-worktrees.md`                                                                                                       |
+
+## 3. Real Architecture Summary
+
+The actual implemented architecture is a **multi-service control plane plus worktree execution plane**.
+
+The **control plane** is:
+
+* `anqr-linear-webhook.service` on `18791`
+* `anqr-discord-router.service` on `18790`
+* `anqr-symphony-router.service` on `4319`
+* `anqr-symphony-integrator.service`
+* `anqr-symphony-worktree-recovery.service`
+* `anqr-watchdog.service`
+* `openclaw-gateway.service` on `18789`
+* support surfaces like `anqr-context7-mcp.service`, `litellm-proxy.service`, and `model-injector-proxy.service`
+
+The **execution plane** is:
+
+* `anqr-symphony-executor@1..8.service`
+* worktree-local execution via `harness/ops/integrations/model/symphony-openai-bridge.mjs`
+* `wt1-wt4` reserved for Linear
+* `wt5-wt8` reserved for Discord
+
+The **real critical coupling points** are:
+
+* `harness/ops/lib/durable-kv.mjs`
+* `harness/ops/core/task-evidence.mjs`
+* `harness/ops/core/symphony-state/*`
+* `harness/ops/integrations/model/symphony-agent-router/*`
+* `harness/ops/integrations/model/symphony-openai-bridge/server.mjs`
+* `harness/ops/orchestration/symphony-runner/execute-issue.mjs`
+* `harness/ops/orchestration/symphony-integrator/integrate-candidate.mjs`
+* `harness/ops/runtime/openclaw-config/openclaw.json`
+
+This is still **not a clean hexagonal runtime**. It is a deliberate orchestration system with some adapter isolation, but the runtime still couples routing, provider selection, worktree mutation, notifications, and integration behavior more tightly than the doctrine claims.
+
+## 4. End-to-End Flow Assessment
+
+### Discord/OpenClaw to router to executor
+
+**Intended flow**
+OpenClaw should forward Discord requests into the Discord router, the router should preserve session and thread context, route to `wt5-wt8`, and keep follow-up turns on the same worktree and same thread.
+
+**Actual implemented flow**
+`openclaw-gateway.service` fronts the Discord path. `harness/ops/integrations/model/discord-request-router/server.mjs` accepts both `x-openclaw-session` and `x-openclaw-session-key`, chooses a worktree via `getLeastLoadedWorktree(sessionId)`, and `process-and-proxy.mjs` forwards the request to the executor bridge. Session-to-thread and thread cache state are now durable maps instead of in-memory maps. The executor bridge also accepts both session headers.
+
+**Verified files/services**
+`services/systemd/openclaw-gateway.service`
+`services/systemd/anqr-discord-router.service`
+`harness/ops/integrations/model/discord-request-router/server.mjs`
+`harness/ops/integrations/model/discord-request-router/process-and-proxy.mjs`
+`harness/ops/integrations/model/discord-request-router/session-thread-names.mjs`
+`harness/ops/integrations/notifications/openclaw-discord/discord-thread-cache.mjs`
+`harness/ops/integrations/model/symphony-openai-bridge/server.mjs`
+
+**Failure points**
+
+* session continuity is improved in code but still not proven operationally against the current OpenClaw deployment behavior
+* OpenClaw config still allows request-supplied session keys
+* user-path cleanliness still depends on OpenClaw plus Discord path behavior, not just harness-side sanitization
+
+**Verdict**
+**Partially delivered.**
+
+### Linear webhook/export/guardian flow
+
+**Intended flow**
+Linear webhook events should be verified, deduped durably, turned into routed work, and executed on `wt1-wt4` with auditable traceability.
+
+**Actual implemented flow**
+`linear-webhook-receiver/handle-webhook.mjs` verifies signature, dedupes by `linear-delivery`, creates ingress evidence, tries Discord-source marking, and calls `triggerIssueExecution(processedEvent, correlationId)`. The router extracts the correlation ID and dispatches or queues to a worktree executor.
+
+**Verified files/services**
+`services/systemd/anqr-linear-webhook.service`
+`harness/ops/integrations/model/linear-webhook-receiver/verify-signature.mjs`
+`.../webhook-secret.mjs`
+`.../runtime.mjs`
+`.../handle-webhook.mjs`
+`.../recent-deliveries.mjs`
+`.../active-issues.mjs`
+`harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs`
+`.../dispatch-linear-execution.mjs`
+
+**Failure points**
+
+* control-plane persistence is still custom and only partially hardened
+* queue correctness under lock exhaustion is still not trustworthy
+* direct integration to main is still the final promotion model
+
+**Verdict**
+**Delivered but operationally fragile.**
+
+### Worktree provisioning and execution flow
+
+**Intended flow**
+Executors should run in isolated worktrees, sync safely, validate against mainline, and recover without destructive rollback.
+
+**Actual implemented flow**
+Executors run in `%h/src/anqr-wt%i`. Sync in `sync-worktree-before-validation.mjs` now uses stash and rebase. Watchdog and recovery can quarantine worktrees instead of hard-resetting them. Linear execution still uses bridge-to-runner subprocess handoff.
+
+**Verified files/services**
+`services/systemd/anqr-symphony-executor@.service`
+`services/systemd/anqr-symphony-worktree-recovery.service`
+`harness/ops/orchestration/symphony-runner/sync-worktree-before-validation.mjs`
+`harness/ops/orchestration/symphony-runner/execute-issue.mjs`
+`harness/ops/runtime/symphony/watchdog-monitor/quarantine-worktree.mjs`
+
+**Failure points**
+
+* bridge-to-runner layering remains complex
+* worktree lifecycle is still spread across runner, recovery, watchdog-monitor, and state modules
+
+**Verdict**
+**Delivered but operationally fragile.**
+
+### Provider routing and fallback flow
+
+**Intended flow**
+Provider selection should follow ranking, respect health and constraints, and treat Codebuff paid/free as independent runtime providers.
+
+**Actual implemented flow**
+`select-provider.mjs` now iterates ranked candidates from `buildProviderSelectionCandidateNames()` and `getRankedProviders()`. `build-static-providers.mjs` defines `codebuff-paid` and `codebuff-free` as separate providers using the same API key with distinct `costMode` and `sessionMode`. `getSharedClient()` includes `costMode` in the cache key.
+
+**Verified files/services**
+`harness/ops/integrations/model/symphony-credit-gate/select-provider.mjs`
+`.../get-ranked-providers.mjs`
+`.../build-static-providers.mjs`
+`harness/ops/integrations/model/symphony-openai-bridge/build-selection-options.mjs`
+`harness/ops/integrations/model/codebuff-direct/get-shared-client.mjs`
+
+**Failure points**
+
+* startup probing and capability classification are still noisy
+* provider fallback and result validation are improved but still operationally delicate in live user paths
+* some provider instability remains a runtime reality, not just a code issue
+
+**Verdict**
+**Delivered.**
+
+### Queue control and recovery flow
+
+**Intended flow**
+Queue state should survive restarts, be safe under concurrent activity, and support safe recovery.
+
+**Actual implemented flow**
+The queue and dedupe sets are file-backed with per-store lock files. Recovery and watchdog no longer do destructive rollback. Executor services are now included in watchdog monitoring.
+
+**Verified files/services**
+`harness/ops/lib/durable-kv.mjs`
+`harness/ops/integrations/model/symphony-agent-router/linear-queue.mjs`
+`.../handle-linear-queue.mjs`
+`harness/ops/runtime/watchdog/bridge-watchdog/monitored-services.mjs`
+`.../quarantine-and-restart.mjs`
+
+**Failure points**
+
+* `durable-kv.mjs` falls back to unlocked operation after lock exhaustion
+* locking is still a synchronous file-lock loop rather than a robust shared-state backend
+
+**Verdict**
+**Improved, but still unsafe under contention.**
+
+### Reporting and evidence flow
+
+**Intended flow**
+Every task should have one durable audit record from ingress through routing, provider choice, execution, validation, push, integration, and recovery.
+
+**Actual implemented flow**
+`task-evidence.mjs` is now used in more of the runtime. Routing, worktree selection, provider selection, execution result, validation result, push result, and integration result are wired in several major paths. This is a real improvement over the previous pass.
+
+**Verified files/services**
+`harness/ops/core/task-evidence.mjs`
+`harness/ops/integrations/model/discord-request-router/process-and-proxy.mjs`
+`harness/ops/integrations/model/symphony-openai-bridge/server.mjs`
+`harness/ops/orchestration/symphony-runner/execute-issue.mjs`
+`harness/ops/orchestration/symphony-integrator/integrate-candidate.mjs`
+
+**Failure points**
+
+* watchdog and recovery are still not fully joined into the same evidence model
+* no single evidence path yet proves one full Discord lifecycle end to end in a production-like run
+
+**Verdict**
+**Partially delivered, but much improved.**
+
+## 5. Major Findings
+
+### Critical
+
+**2. OpenClaw hook/session model remains too permissive for a production control boundary**
+Severity: Critical
+Why it matters: Arbitrary request-supplied session identity is still allowed, which undermines routing trust and session integrity.
+Exact evidence: `harness/ops/runtime/openclaw-config/openclaw.json` sets `hooks.allowRequestSessionKey` to `true`. The debug bundle shows the same in `harness-openclaw-debug/config/openclaw.json`.
+Problem type: Proven
+Recommended fix: Disable arbitrary request session-key override, or strictly restrict it with explicit prefixes and a default session-key strategy.
+
+**3. Queue and dedupe state remain unsafe under lock exhaustion**
+Severity: Critical
+Why it matters: The platform now has locking, but it can still drop back to unlocked state mutation under contention. That is not safe for control-plane correctness.
+Exact evidence: `harness/ops/lib/durable-kv.mjs` acquires per-store lock files, but after `LOCK_MAX_ATTEMPTS` it logs a warning and proceeds unlocked with `return fn();`.
+Problem type: Proven
+Recommended fix: Never proceed unlocked for queue/dedupe mutation. Move this state into the locked `harness/ops/core/symphony-state/*` plane or make lock acquisition failure a hard failure.
+
+### High
+
+**4. Root and harness doctrine still materially misdescribe the runtime**
+Severity: High
+Why it matters: Operators still have two truths: the code and the docs.
+Exact evidence:
+
+* `README.md` still claims “90+ E2E tests” and “fully operational” language
+* `AGENTS.md` still describes pre-request sync and post-completion push directly to `origin/main` by each worktree
+* `docs/harness/12-concurrent-execution-with-worktrees.md` still contains stale runner-era and direct-push guidance
+* `services/systemd/anqr-symphony-router.service` still says `Linear → Linear Runner → Symphony Router`
+* `services/systemd/anqr-watchdog.service` still says it rolls back to a previous git commit
+  Problem type: Proven
+  Recommended fix: Rewrite root docs and stale harness docs from active code and service truth only. Fix misleading service comments immediately.
+
+**5. Critical services still tolerate missing env files silently**
+Severity: High
+Why it matters: Startup success can still mean “running partially configured”.
+Exact evidence: `services/systemd/anqr-linear-webhook.service`, `anqr-discord-router.service`, `anqr-symphony-router.service`, `anqr-symphony-executor@.service`, `anqr-watchdog.service`, and many related units use `EnvironmentFile=-...`, making env files optional.
+Problem type: Proven
+Recommended fix: Make required env files mandatory for critical services or add explicit in-process startup validation that exits non-zero when required config is missing.
+
+**6. OpenClaw still appears to have a runtime port/control-surface ambiguity with the harness**
+Severity: High
+Why it matters: The debug bundle still shows OpenClaw browser control listening on `127.0.0.1:18791`, while the harness Linear webhook is also configured for `18791`.
+Exact evidence:
+
+* `services/systemd/anqr-linear-webhook.service` sets `LINEAR_WEBHOOK_PORT=18791`
+* `harness-openclaw-debug/journal/openclaw-gateway.service.journal.txt` repeatedly logs browser control on `http://127.0.0.1:18791/`
+  Problem type: Proven in runtime bundle, root cause partly inferred
+  Recommended fix: Make OpenClaw browser control port explicit and non-overlapping, then verify with live listeners.
+
+**7. Direct push to `origin/main` remains the integration model**
+Severity: High
+Why it matters: A single automation error can still land directly on main.
+Exact evidence: `harness/ops/orchestration/symphony-integrator/integrate-candidate.mjs` runs `git("push", "origin", "HEAD:main")`.
+Problem type: Proven
+Recommended fix: Move to a protected integration branch or merge queue unless there is a strong, explicitly accepted reason not to.
+
+### Medium
+
+**8. Reporting and evidence are improved, but not yet complete enough for a clean production audit trail**
+Severity: Medium
+Why it matters: The evidence model is now real, but still not comprehensive across watchdog/recovery and every user path.
+Exact evidence: `task-evidence.mjs` now has runtime consumers in `discord-request-router/process-and-proxy.mjs`, `symphony-openai-bridge/server.mjs`, `symphony-runner/execute-issue.mjs`, and `symphony-integrator/integrate-candidate.mjs`, but watchdog/recovery are not joined into the same lifecycle record.
+Problem type: Proven
+Recommended fix: Finish evidence integration for watchdog and worktree recovery, and add a one-command task reconstruction tool.
+
+**9. The live E2E suite is useful, but still not a full end-to-end proof of production behavior**
+Severity: Medium
+Why it matters: Current E2E tests prove live ingress and some routing, but not a full mutation-to-integration lifecycle.
+Exact evidence: `tests/e2e/linear-flow.spec.ts`, `tests/e2e/discord-flow.spec.ts`, and `tests/e2e/integration-promotion.spec.ts` are real live-service tests, but they do not prove one full task from ingress through validation, push, and final integration to main. The spec headers also reference `vitest.e2e.config.ts`, which is not present.
+Problem type: Proven
+Recommended fix: Add a hermetic full-path 2E suite and expose it in `package.json`.
+
+**10. OpenClaw source config still exposes an overly broad tool surface**
+Severity: Medium
+Why it matters: The control surface is broader than necessary for a production conversational gateway.
+Exact evidence: `harness/ops/runtime/openclaw-config/openclaw.json` allows `shell`, `run_terminal_command`, `write_file`, `str_replace`, `run_file_change_hooks`, and broad tool/plugin combinations at the gateway layer.
+Problem type: Proven
+Recommended fix: Minimize gateway-exposed tools and reserve high-risk mutation tools for the harness execution plane only.
+
+### Low
+
+**11. The previous deployment-drift issue for the OpenClaw unit appears resolved**
+Severity: Low
+Why it matters: This is an improvement worth recording.
+Exact evidence: `services/systemd/openclaw-gateway.service` now matches `harness-openclaw-debug/systemd/openclaw-gateway.service.unit.txt` in the debug bundle.
+Problem type: Proven resolved
+Recommended fix: None for the unit itself. Keep the source/runtime reconciliation discipline.
+
+## 6. Architecture Assessment
+
+**Hexagonal integrity**
+Improved, but still partial. The platform has clearer adapter boundaries than before, but runtime coordination still crosses too many layers.
+
+**Contract enforcement**
+Better than the previous pass. The code now reflects several critical contract corrections, especially for webhook verification, durable session maps, and ranked provider selection. The docs still weaken trust.
+
+**Adapter boundaries**
+OpenClaw, Discord, provider routing, and worktree execution are still too entangled, especially through `harness/ops/integrations/model/symphony-openai-bridge/server.mjs`.
+
+**Orchestration design**
+Still capable but over-layered. Router, bridge, runner, integrator, recovery, watchdog, and a custom file-backed state plane create more complexity than a production baseline should carry.
+
+**Service decomposition**
+Reasonable. Ingress, execution, integration, and support services are separated in sensible ways. The remaining problems are overlap, startup permissiveness, and drift.
+
+**Worktree strategy**
+Still good. `wt1-wt4` and `wt5-wt8` remain a sensible split. The worktree model is one of the stronger design choices in the platform.
+
+**Systemd strategy**
+Acceptable, but not yet production-hard. The units are better than before, but many still allow partial startup, and comments remain stale.
+
+**AI orchestration methodology**
+Viable. Ranked provider selection is better and Codebuff paid/free handling is now structurally cleaner. The runtime still needs simplification and harder operational boundaries.
+
+**Operational simplicity versus accidental complexity**
+Still too much accidental complexity. The platform is improving, but it is still doing too much through bespoke orchestration instead of boring, explicit contracts.
+
+## 7. Logging and Observability Assessment
+
+**What is good**
+
+* correlation IDs are now real and used more widely
+* ingress evidence is real for Discord and Linear
+* routing, provider, execution, validation, push, and integration evidence are partially wired
+* Context7 startup logging now distinguishes warming from failure
+* watchdog coverage now includes executors
+
+**What is missing**
+
+* full watchdog/recovery evidence integration
+* one authoritative per-task audit story that spans OpenClaw, router, executor, runner, and integrator
+* explicit startup validation logs for missing required config
+* clear separation of user-facing versus operator-facing provider fallback messages across the whole path
+
+**What is dangerously missing**
+
+* confidence that queue state remains correct under sustained concurrency
+* a fully proven task reconstruction path from Discord user turn to integration result
+
+**Whether incident reconstruction is realistically possible**
+Better than before, but still only partial. For many tasks, an operator could reconstruct ingress, routing, and some execution steps. Full clean reconstruction across OpenClaw plus harness still is not guaranteed.
+
+**Required logging improvements**
+
+1. Add startup validation logging to every critical service that depends on secrets or routing config.
+2. Emit watchdog and recovery events into the same evidence model.
+3. Log explicit canonical session identity and thread identity once per Discord request.
+4. Distinguish user-path sanitization from operator-path debug logging more cleanly.
+5. Add queue mutation logs that include lock outcomes, not just queue length.
+
+**Required evidence/reporting improvements**
+
+1. Finish wiring watchdog and recovery into `harness/ops/core/task-evidence.mjs`.
+2. Add one operator tool that reconstructs a task by correlation ID.
+3. Record OpenClaw session and thread linkage durably.
+4. Prove one full Discord and one full Linear lifecycle in a production-like E2E path.
+
+## 8. Documentation Truthfulness Assessment
+
+**Where docs match code**
+
+* `docs/runtime-reference.md` is closer to runtime truth than before
+* `docs/execution-model.md` is better aligned with the control-plane/execution-plane split
+* `docs/secrets-loading.md` reflects the intended direction for systemd secret handling
+
+**Where docs overstate reality**
+
+* `README.md` still claims the harness is fully operational and overstates testing breadth
+* `harness/workspace.dsl` still presents the runtime more confidently than the implementation deserves
+
+**Where docs are stale, contradictory, or unproven**
+
+* `README.md`
+* `AGENTS.md`
+* `docs/harness/12-concurrent-execution-with-worktrees.md`
+* `docs/harness/discord-worktree-routing.md`
+* `services/systemd/anqr-symphony-router.service` comments
+* `services/systemd/anqr-watchdog.service` comments
+
+**Structurizr and architecture docs as claims**
+Treat `harness/workspace.dsl` and `harness/workspace.json` as architecture claims and audit aids, not proof. They are better aligned than before, but still ahead of the runtime in some assertions.
+
+## 9. Testing and Quality-Gate Assessment
+
+The current test surface is **materially stronger** than the previous pass, but it still does **not** prove full production readiness.
+
+What now meaningfully supports confidence:
+
+* live-service E2E tests in `tests/e2e/linear-flow.spec.ts`
+* live-service E2E tests in `tests/e2e/discord-flow.spec.ts`
+* live-service orchestration and health tests in `tests/e2e/integration-promotion.spec.ts`
+* substantial existing tests in `harness-tests.zip`
+* clearer harness-specific lint and typecheck script surfaces in `package.json`
+
+What still falls short:
+
+* no proof of one full Discord lifecycle from ingress to final durable evidence and stable thread continuity
+* no proof of one full Linear lifecycle from webhook ingress through validation, push, integrator success, and final Linear state
+* no proof that the new file-backed queue/dedupe path stays correct under concurrency stress
+* missing `vitest.e2e.config.ts` despite test comments referencing it
+* no first-class `package.json` script for the live E2E suite
+
+The honest conclusion is: **the tests now justify improved confidence, not a production-ready confidence claim**.
+
+## 10. Top Risks
+
+2. OpenClaw request-supplied session key behavior remains too permissive
+3. `harness/ops/lib/durable-kv.mjs` can still fall back to unlocked mutation after lock exhaustion
+4. OpenClaw browser control and Linear webhook port ambiguity around `18791`
+5. Critical systemd services still allow startup without required env files
+6. Root docs and some service comments still materially contradict runtime truth
+7. Direct push to `origin/main` remains the integration model
+8. OpenClaw gateway tool exposure remains broader than a production ingress should allow
+9. Full lifecycle evidence is improved but still not complete across watchdog/recovery
+10. The bridge-to-runner execution model still carries accidental complexity
+
+## 11. Remediation Plan
+
+### Phase 0: immediate containment
+
+**Action 2**
+Objective: harden OpenClaw session and hook policy
+Why it matters: current request-session behavior is too permissive
+Affected files/services: `harness/ops/runtime/openclaw-config/openclaw.json`
+Expected outcome: no arbitrary request-supplied session key without strict scoping
+Validation step: OpenClaw security audit and runtime request tests
+
+**Action 3**
+Objective: make critical services fail clearly on missing required config
+Why it matters: optional env loading hides broken startup state
+Affected files/services: critical systemd units and their startup validation paths
+Expected outcome: startup fails non-zero if required secrets/config are missing
+Validation step: start each critical service without required env and verify explicit failure
+
+### Phase 1: prove the runtime
+
+**Action 4**
+Objective: remove unlocked fallback from `durable-kv.mjs` for queue/dedupe paths
+Why it matters: control-plane state cannot silently proceed unlocked
+Affected files/services: `harness/ops/lib/durable-kv.mjs`, consumers in Linear and Discord routing
+Expected outcome: either hard-fail on lock exhaustion or move to the locked symphony state plane
+Validation step: contention test with concurrent writers
+
+**Action 5**
+Objective: prove Discord session/thread continuity in a live E2E path
+Why it matters: code has improved, but behavior is not yet proven
+Affected files/services: Discord router, OpenClaw gateway, executor bridge, thread cache
+Expected outcome: same session stays on same worktree and same thread across turns and restarts
+Validation step: two-turn live E2E with explicit session continuity checks
+
+**Action 6**
+Objective: prove one full Linear lifecycle
+Why it matters: the platform still lacks end-to-end proof through integration
+Affected files/services: webhook receiver, router, executor, runner, integrator
+Expected outcome: one signed webhook flows through execution, validation, push, and integration with complete evidence
+Validation step: dedicated hermetic E2E scenario
+
+### Phase 2: simplify and harden
+
+**Action 7**
+Objective: shrink OpenClaw gateway tool exposure
+Why it matters: ingress should not expose broad shell-style capabilities by default
+Affected files/services: `harness/ops/runtime/openclaw-config/openclaw.json`
+Expected outcome: only the minimum safe ingress tools remain exposed
+Validation step: OpenClaw security audit and tool inventory diff
+
+**Action 8**
+Objective: resolve the `18791` control-surface ambiguity
+Why it matters: OpenClaw browser control and Linear webhook cannot remain ambiguous on the same host
+Affected files/services: OpenClaw runtime config, deployment configs, Linear webhook unit
+Expected outcome: explicit non-overlapping ports, verified by live listeners
+Validation step: `ss -ltnp` and service health checks
+
+**Action 9**
+Objective: continue reducing bridge-to-runner complexity
+Why it matters: operational reasoning is still too expensive
+Affected files/services: `symphony-openai-bridge/*`, `symphony-runner/*`, execution docs
+Expected outcome: clearer execution ownership per task
+Validation step: one architectural trace with no ambiguous execution owner
+
+### Phase 3: restore confidence and reduce maintenance burden
+
+**Action 10**
+Objective: purge stal stale service comments
+Why it matters: operators still cannot trust the docs
+Affected files/services: `README.md`, `AGENTS.md`, `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/discord-worktree-routing.md`, affected service files
+Expected outcome: docs and comments match the runtime that actually exists
+Validation step: architecture audit against active units and entrypoints
+
+**Action 11**
+Objective: revisit direct push to main
+Why it matters: current promotion path remains high risk
+Affected files/services: `harness/ops/orchestration/symphony-integrator/*`, `docs/integration-strategy.md`
+Expected outcome: either a safer promotion strategy or stronger explicit safeguards
+Validation step: tested conflict and blocked-promotion scenarios
+
+## 12. Go / No-Go Recommendation
+
+**Is the harness ready to be treated as operational?**
+**No-Go** for a production-ready autonomous platform.
+
+**Should the team continue investing in it in its current form?**
+No. Continue only as a hardening and simplification effort, not as a feature-growth effort.
+
+**Should the architecture be simplified?**
+Yes. Keep the worktree split, ingress services, ranked provider routing, and integrator. Reduce bespoke state handling, tighten OpenClaw, and make startup and evidence contracts stricter.
+
+**Minimum set of fixes required before the team can safely return focus to the main project**
+
+2. harden OpenClaw session and tool exposure
+3. make queue/dedupe state safe under contention without unlocked fallback
+4. make critical startup config fail closed
+5. resolve the OpenClaw/Linear webhook port ambiguity
+6. purge stale doctrine and service comments
+7. prove one full Discord and one full Linear lifecycle end to end
+
+## 13. Appendix: Evidence Index
+
+* `services/systemd/anqr-linear-webhook.service`
+* `services/systemd/anqr-discord-router.service`
+* `services/systemd/anqr-symphony-router.service`
+* `services/systemd/anqr-symphony-executor@.service`
+* `services/systemd/anqr-watchdog.service`
+* `services/systemd/openclaw-gateway.service`
+* `harness/ops/integrations/model/linear-webhook-receiver/verify-signature.mjs`
+* `harness/ops/integrations/model/linear-webhook-receiver/webhook-secret.mjs`
+* `harness/ops/integrations/model/linear-webhook-receiver/runtime.mjs`
+* `harness/ops/integrations/model/linear-webhook-receiver/handle-webhook.mjs`
+* `harness/ops/integrations/model/linear-webhook-receiver/recent-deliveries.mjs`
+* `harness/ops/integrations/model/linear-webhook-receiver/active-issues.mjs`
+* `harness/ops/integrations/model/discord-request-router/server.mjs`
+* `harness/ops/integrations/model/discord-request-router/process-and-proxy.mjs`
+* `harness/ops/integrations/model/discord-request-router/session-thread-names.mjs`
+* `harness/ops/integrations/notifications/openclaw-discord/discord-thread-cache.mjs`
+* `harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs`
+* `harness/ops/integrations/model/symphony-agent-router/dispatch-linear-execution.mjs`
+* `harness/ops/integrations/model/symphony-agent-router/linear-queue.mjs`
+* `harness/ops/integrations/model/symphony-openai-bridge/server.mjs`
+* `harness/ops/integrations/model/symphony-openai-bridge/sanitize-for-discord-preview.mjs`
+* `harness/ops/integrations/model/symphony-openai-bridge/build-selection-options.mjs`
+* `harness/ops/integrations/model/symphony-credit-gate/select-provider.mjs`
+* `harness/ops/integrations/model/symphony-credit-gate/get-ranked-providers.mjs`
+* `harness/ops/integrations/model/symphony-credit-gate/build-static-providers.mjs`
+* `harness/ops/integrations/model/codebuff-direct/get-shared-client.mjs`
+* `harness/ops/lib/durable-kv.mjs`
+* `harness/ops/core/task-evidence.mjs`
+* `harness/ops/orchestration/symphony-runner/execute-issue.mjs`
+* `harness/ops/orchestration/symphony-integrator/integrate-candidate.mjs`
+* `harness/ops/runtime/watchdog/bridge-watchdog/monitored-services.mjs`
+* `harness/ops/runtime/watchdog/bridge-watchdog/quarantine-and-restart.mjs`
+* `harness/ops/runtime/openclaw-config/openclaw.json`
+* `tests/e2e/linear-flow.spec.ts`
+* `tests/e2e/discord-flow.spec.ts`
+* `tests/e2e/integration-promotion.spec.ts`
+* `docs/runtime-reference.md`
+* `docs/execution-model.md`
+* `README.md`
+* `AGENTS.md`
+* `docs/harness/12-concurrent-execution-with-worktrees.md`
+* `harness/workspace.dsl`
+* `harness/workspace.json`
+* `harness-openclaw-debug/config/openclaw.json`
+* `harness-openclaw-debug/systemd/openclaw-gateway.service.unit.txt`
+* `harness-openclaw-debug/journal/openclaw-gateway.service.journal.txt`
+* `harness-openclaw-debug/cli/doctor.txt`
+* `harness-openclaw-debug/cli/gateway-status.txt`
+
+This pass shows real progress. It also shows the platform is still in the hardening phase, not the finished-platform phase.
+
