@@ -1,4 +1,6 @@
 import { PROJECT_ROOT } from "../../../core/worktree-config.mjs";
+import { correlationIdFromRequest } from "../../../lib/correlation-id.mjs";
+import { createEvidenceRecord } from "../../../core/task-evidence.mjs";
 import http from "node:http";
 
 import { MAX_CONCURRENT } from "./max-concurrent.mjs";
@@ -11,8 +13,15 @@ export function processAndProxy(worktree, req, res, rawBody) {
   worktree.activeRequests++;
   setGlobalActiveRequests(globalActiveRequests + 1);
 
+  const correlationId = correlationIdFromRequest(req);
+
+  createEvidenceRecord(correlationId, {
+    source: "discord-router",
+    receivedAt: new Date().toISOString(),
+  });
+
   logInfo(
-    `📨 ROUTING: Discord request -> wt${worktree.id} | cwd: ${worktree.path} | active: ${worktree.activeRequests}/${globalActiveRequests}/${MAX_CONCURRENT}`,
+    `📨 ROUTING: Discord request -> wt${worktree.id} | cwd: ${worktree.path} | active: ${worktree.activeRequests}/${globalActiveRequests}/${MAX_CONCURRENT} [${correlationId}]`,
   );
 
   let proxyBody = rawBody;
@@ -70,6 +79,7 @@ export function processAndProxy(worktree, req, res, rawBody) {
         "Content-Length": Buffer.byteLength(proxyBody),
         "x-worktree-id": `wt${worktree.id}`,
         "x-worktree-path": worktree.path,
+        "x-anqr-correlation-id": correlationId,
         ...(discordMessageId ? { "x-discord-message-id": discordMessageId } : {}),
         ...(discordThreadName
           ? { "x-discord-thread-name": encodeURIComponent(discordThreadName) }

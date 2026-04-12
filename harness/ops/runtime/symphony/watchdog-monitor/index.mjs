@@ -10,6 +10,6 @@ export { log } from "./log.mjs";
 export { exec } from "./exec.mjs";
 export { checkBridgeHealth } from "./check-bridge-health.mjs";
 export { waitForBridge } from "./wait-for-bridge.mjs";
-export { rollbackGit } from "./rollback-git.mjs";
+export { quarantineWorktree } from "./quarantine-worktree.mjs";
 export { restartBridge } from "./restart-bridge.mjs";
 export { main } from "./main.mjs";

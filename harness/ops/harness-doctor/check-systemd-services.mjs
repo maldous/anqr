@@ -1,6 +1,15 @@
 import { execFileSync } from "node:child_process";
 
+const CRITICAL_SERVICES = [
+  "anqr-symphony-router",
+  "anqr-symphony-integrator",
+  "anqr-discord-router",
+  "anqr-linear-webhook",
+];
+
 export function checkSystemdServices() {
+  const isProduction = process.env.ANQR_RUNTIME_MODE === "production";
+
   const executorUnits =
     process.env.ANQR_HARNESS_DOCTOR_EXECUTORS ||
     process.env.ANQR_HARNESS_DOCTOR_RUNNERS ||
@@ -13,8 +22,10 @@ export function checkSystemdServices() {
     "anqr-symphony-router",
     "anqr-symphony-integrator",
     "anqr-symphony-worktree-recovery",
-    "anqr-worktree-health",
+    "anqr-discord-router",
+    "anqr-linear-webhook",
     "anqr-watchdog",
+    "anqr-worktree-health",
   ];
 
   const results = [];
@@ -31,17 +42,39 @@ export function checkSystemdServices() {
     }
   }
 
-  // Systemd services are production runtime - in dev they may be inactive
-  // Always pass this check, but report status (warn vs info)
   const activeCount = results.filter((r) => r.status === "active").length;
+  const criticalDown = results.filter(
+    (r) => CRITICAL_SERVICES.includes(r.name) && r.status !== "active",
+  );
+
+  if (isProduction && criticalDown.length > 0) {
+    const missing = criticalDown.map((r) => `${r.name} (${r.status})`).join(", ");
+    return {
+      pass: false,
+      detail: `CRITICAL: ${criticalDown.length} required service(s) not active: ${missing}`,
+      services: results,
+      criticalDown,
+    };
+  }
+
+  if (activeCount === 0 && !isProduction) {
+    return {
+      pass: true,
+      detail: `Services not running (dev environment — ${results.length} checked, 0 active)`,
+      services: results,
+      criticalDown: [],
+    };
+  }
+
   const detail =
-    activeCount > 0
-      ? `All services active (${activeCount}/${results.length})`
-      : `Services not running (dev environment - expected)`;
+    criticalDown.length > 0
+      ? `${activeCount}/${results.length} active — WARNING: ${criticalDown.length} critical service(s) down`
+      : `All ${activeCount}/${results.length} services active`;
 
   return {
-    pass: true, // Always pass - systemd services are production, not dev requirement
+    pass: criticalDown.length === 0,
     detail,
     services: results,
+    criticalDown,
   };
 }

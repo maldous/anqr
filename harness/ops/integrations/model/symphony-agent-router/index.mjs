@@ -8,6 +8,7 @@ export { roundRobinIndex } from "./round-robin-index.mjs";
 export { isPathWithinRoot } from "./is-path-within-root.mjs";
 export { rebaseCwdToWorktree } from "./rebase-cwd-to-worktree.mjs";
 export { selectWorktree } from "./select-worktree.mjs";
+export { selectLinearWorktree } from "./select-linear-worktree.mjs";
 export { json } from "./json.mjs";
 export { overload } from "./overload.mjs";
 export { proxyRequest } from "./proxy-request.mjs";

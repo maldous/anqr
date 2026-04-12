@@ -1,4 +1,4 @@
-workspace "ANQR Harness Architecture Audit Workspace v2" "Runtime-corrected Structurizr workspace for the ANQR harness. This v2 model realigns the audit around the active systemd services and the externally invoked entrypoints, with direct Codebuff SDK integration as the only modeled Codebuff path." {
+workspace "ANQR Harness Architecture v3" "Evidence-based Structurizr workspace for the ANQR harness. This v3 model reflects the remediated runtime: secrets removed from units, watchdog safe mode (no git rollback), truthful readiness checks, correlation IDs, durable state, and authoritative task evidence records." {
 
     !identifiers hierarchical
 
@@ -16,7 +16,7 @@ workspace "ANQR Harness Architecture Audit Workspace v2" "Runtime-corrected Stru
         anqr = softwareSystem "ANQR Harness" "Repository-local automation, orchestration, integrations, diagnostics, RAG indexing, and recovery tooling for ANQR." {
             tags "Verified"
             !docs ../docs/harness
-            !adrs structurizr-adrs
+            !adrs ../docs/adrs
 
             repo_tooling = container "Repository Tooling" "Externally invoked repository-local CLIs for AST audits, contract checks, API generation, diagnostics, metrics, and exports." "Node.js, Python, Bash CLIs" {
                 tags "Service", "Verified", "CrossCutting"

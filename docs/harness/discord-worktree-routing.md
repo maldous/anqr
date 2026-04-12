@@ -40,7 +40,7 @@ Git Worktrees (wt5-wt8)
 - Codebuff SDK operations (integrated, not separate service)
 - Tool execution (file ops, git, etc.)
 
-This eliminates the separate Codebuff bridge service and caching defects. See `docs/adr/ADR-0003-all-in-one-symphony-bridge.md`.
+This eliminates the separate Codebuff bridge service and caching defects. See `docs/adrs/0003-all-in-one-symphony-bridge.md`.
 
 ## Components
 

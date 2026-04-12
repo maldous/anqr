@@ -7,9 +7,19 @@ import { ensureDir } from "./ensure-dir.mjs";
 import { getLockFile } from "./get-lock-file.mjs";
 import { isLockProcessAlive } from "./is-lock-process-alive.mjs";
 
+function sleepSync(ms) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    /* intentional sync wait — kept short by backoff cap */
+  }
+}
+
 export function acquireStateLock() {
   ensureDir();
   const lockFile = getLockFile();
+  let backoffMs = LOCK_RETRY_INTERVAL_MS;
+  const maxBackoffMs = 500;
+
   for (let attempt = 0; attempt < LOCK_MAX_RETRIES; attempt++) {
     try {
       const fd = fs.openSync(
@@ -17,38 +27,46 @@ export function acquireStateLock() {
         fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL,
         0o644,
       );
-      fs.writeSync(fd, String(process.pid));
+      fs.writeSync(fd, `${process.pid}\n${new Date().toISOString()}`);
       fs.closeSync(fd);
       return true;
     } catch (err) {
       if (err.code !== "EEXIST") throw err;
+
       try {
-        const lockPid = Number(fs.readFileSync(lockFile, "utf-8").trim());
+        const lockContent = fs.readFileSync(lockFile, "utf-8").trim();
+        const lockPid = Number(lockContent.split("\n")[0]);
+
         if (lockPid && !isLockProcessAlive(lockPid)) {
-          try {
-            fs.unlinkSync(lockFile);
-          } catch {
-            /* race ok */
-          }
+          try { fs.unlinkSync(lockFile); } catch { /* race ok */ }
           continue;
         }
+
         const lockAge = Date.now() - fs.statSync(lockFile).mtimeMs;
         if (lockAge > LOCK_STALE_MS) {
-          try {
-            fs.unlinkSync(lockFile);
-          } catch {
-            /* race ok */
-          }
+          process.stderr.write(
+            `[state-lock] Stale lock detected (age=${Math.round(lockAge / 1000)}s, pid=${lockPid}, holder-alive=${isLockProcessAlive(lockPid)}) — breaking\n`,
+          );
+          try { fs.unlinkSync(lockFile); } catch { /* race ok */ }
           continue;
+        }
+
+        if (attempt > 0 && attempt % 20 === 0) {
+          process.stderr.write(
+            `[state-lock] Contention: attempt=${attempt}/${LOCK_MAX_RETRIES}, holder-pid=${lockPid}, age=${Math.round(lockAge / 1000)}s, backoff=${backoffMs}ms\n`,
+          );
         }
       } catch {
         continue;
       }
-      const end = Date.now() + LOCK_RETRY_INTERVAL_MS + Math.random() * LOCK_RETRY_INTERVAL_MS;
-      while (Date.now() < end) {
-        /* brief busy-wait */
-      }
+
+      sleepSync(backoffMs + Math.random() * backoffMs * 0.5);
+      backoffMs = Math.min(backoffMs * 1.5, maxBackoffMs);
     }
   }
+
+  process.stderr.write(
+    `[state-lock] FAILED to acquire lock after ${LOCK_MAX_RETRIES} attempts (pid=${process.pid})\n`,
+  );
   return false;
 }

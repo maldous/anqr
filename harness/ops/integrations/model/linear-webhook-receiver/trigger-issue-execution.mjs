@@ -1,7 +1,7 @@
 import { activeIssues } from "./active-issues.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
-export async function triggerIssueExecution(processedEvent) {
+export async function triggerIssueExecution(processedEvent, correlationId) {
   // Check if this issue is already being processed
   if (activeIssues.has(processedEvent.identifier)) {
     logInfo(
@@ -31,6 +31,7 @@ export async function triggerIssueExecution(processedEvent) {
         "x-linear-identifier": processedEvent.identifier,
         "x-linear-action": processedEvent.action,
         "x-linear-thread-name": threadName,
+        "x-anqr-correlation-id": correlationId,
       },
       body: JSON.stringify({
         identifier: processedEvent.identifier,
@@ -38,6 +39,7 @@ export async function triggerIssueExecution(processedEvent) {
         action: processedEvent.action,
         source: "linear-webhook",
         threadName: threadName,
+        correlationId,
         timestamp: new Date().toISOString(),
       }),
     });

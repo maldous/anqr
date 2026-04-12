@@ -9,7 +9,7 @@ import { bridgeArg } from "./bridge-arg.mjs";
 import { checkBridgeHealth } from "./check-bridge-health.mjs";
 import { log } from "./log.mjs";
 import { restartBridge } from "./restart-bridge.mjs";
-import { rollbackGit } from "./rollback-git.mjs";
+import { quarantineWorktree } from "./quarantine-worktree.mjs";
 import { waitForBridge } from "./wait-for-bridge.mjs";
 
 export async function main() {
@@ -42,15 +42,7 @@ export async function main() {
     log(`   Symphony: ${results.symphony ? "✅" : "❌"}`);
     log(`   Codebuff: ${results.codebuff ? "✅" : "❌"}`);
 
-    // Attempt rollback
-    const rolledBack = await rollbackGit();
-
-    if (!rolledBack) {
-      log(`❌ Rollback failed - manual intervention required`);
-      process.exit(1);
-    }
-
-    // Restart failed bridges after rollback
+    // Restart failed bridges first (most failures are transient, not commit-related)
     if (!results.symphony && checkSymphony) {
       restartBridge("Symphony");
     }
@@ -58,17 +50,16 @@ export async function main() {
       restartBridge("Codebuff");
     }
 
-    // Wait 10 seconds for bridges to start after rollback
-    log(`⏳ Waiting 10s for bridges to restart after rollback...`);
+    log(`⏳ Waiting 10s for bridges to restart...`);
     await new Promise((resolve) => setTimeout(resolve, 10000));
 
-    // Re-check health
-    const afterRollback = {
+    // Re-check health after restart
+    const afterRestart = {
       symphony: checkSymphony ? await checkBridgeHealth(SYMPHONY_PORT, "Symphony") : true,
       codebuff: checkCodebuff ? await checkBridgeHealth(CODEBUFF_PORT, "Codebuff") : true,
     };
 
-    if (afterRollback.symphony && afterRollback.codebuff) {
+    if (afterRestart.symphony && afterRestart.codebuff) {
       log(``);
       log(`╔═══════════════════════════════════════════════════════════════════════╗`);
       log(`║                                                                       ║`);
@@ -76,15 +67,14 @@ export async function main() {
       log(`║                                                                       ║`);
       log(`╚═══════════════════════════════════════════════════════════════════════╝`);
       log(``);
-      log(`   All bridges are now healthy after rollback`);
+      log(`   All bridges are now healthy after restart`);
       log(`   System is operational`);
       log(``);
 
-      // Send final success notification to Discord
       await sendDiscordEmbed({
         title: `🎉 WATCHDOG RECOVERY COMPLETE | ${WORKTREE_ID}`,
-        description: `All bridges are healthy after automatic rollback.\n\nSystem is operational.`,
-        color: 0x00ff00, // Green
+        description: `All bridges are healthy after automatic restart.\n\nSystem is operational.`,
+        color: 0x00ff00,
         fields: [
           { name: "Worktree", value: WORKTREE_ID, inline: true },
           { name: "Symphony Bridge", value: "✅ Healthy", inline: true },
@@ -95,34 +85,40 @@ export async function main() {
 
       process.exit(0);
     } else {
+      // Restart alone didn't fix it — quarantine worktree for recovery service
+      const quarantined = await quarantineWorktree();
+
+      if (!quarantined) {
+        log(`❌ Quarantine disabled — manual intervention required`);
+      }
+
       log(``);
       log(`╔═══════════════════════════════════════════════════════════════════════╗`);
       log(`║                                                                       ║`);
-      log(`║   ❌ ❌ ❌  WATCHDOG RECOVERY FAILED  ❌ ❌ ❌                        ║`);
+      log(`║   🚧 🚧 🚧  WORKTREE QUARANTINED  🚧 🚧 🚧                          ║`);
       log(`║                                                                       ║`);
       log(`╚═══════════════════════════════════════════════════════════════════════╝`);
       log(``);
-      log(`   Rollback did not fix the issue`);
-      log(`   MANUAL INTERVENTION REQUIRED`);
-      log(`   Symphony: ${afterRollback.symphony ? "✅ Healthy" : "❌ Failed"}`);
-      log(`   Codebuff: ${afterRollback.codebuff ? "✅ Healthy" : "❌ Failed"}`);
+      log(`   Restart did not fix the issue`);
+      log(`   Worktree quarantined for recovery service`);
+      log(`   Symphony: ${afterRestart.symphony ? "✅ Healthy" : "❌ Failed"}`);
+      log(`   Codebuff: ${afterRestart.codebuff ? "✅ Healthy" : "❌ Failed"}`);
       log(``);
 
-      // Send critical failure notification to Discord
       await sendDiscordEmbed({
-        title: `🚨 WATCHDOG RECOVERY FAILED | ${WORKTREE_ID}`,
-        description: `Automatic rollback did not fix the issue.\n\n**ACTION NEEDED**: Manual investigation required!`,
-        color: 0xff0000, // Red
+        title: `🚧 WORKTREE QUARANTINED | ${WORKTREE_ID}`,
+        description: `Bridge restart did not fix the issue.\n\nWorktree quarantined — recovery service will handle repair.`,
+        color: 0xff9900,
         fields: [
           { name: "Worktree", value: WORKTREE_ID, inline: true },
           {
             name: "Symphony Bridge",
-            value: afterRollback.symphony ? "✅ Healthy" : "❌ Failed",
+            value: afterRestart.symphony ? "✅ Healthy" : "❌ Failed",
             inline: true,
           },
           {
             name: "Codebuff Bridge",
-            value: afterRollback.codebuff ? "✅ Healthy" : "❌ Failed",
+            value: afterRestart.codebuff ? "✅ Healthy" : "❌ Failed",
             inline: true,
           },
         ],

@@ -1,21 +1,19 @@
+import { extractCorrelationId } from "../../../lib/correlation-id.mjs";
+
 import { MAX_QUEUE_LENGTH } from "./max-queue-length.mjs";
-import { WORKTREES } from "./worktrees.mjs";
 import { dispatchLinearExecution } from "./dispatch-linear-execution.mjs";
 import { json } from "./json.mjs";
 import { linearQueue } from "./linear-queue.mjs";
+import { selectLinearWorktree } from "./select-linear-worktree.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
 export function handleLinearTrigger(req, res) {
-  // Only route to Linear worktrees (wt1-4)
-  const linearWorktrees = WORKTREES.filter((w) => w.id >= 1 && w.id <= 4);
-  if (linearWorktrees.length === 0) {
+  const target = selectLinearWorktree();
+  if (!target) {
     logError("No Linear worktrees available for trigger");
     json(res, 503, { error: { message: "No worktrees available" } });
     return;
   }
-
-  // Select least-loaded Linear worktree
-  const target = linearWorktrees.sort((a, b) => a.activeRequests - b.activeRequests)[0];
 
   // Read the request body to get identifier
   const chunks = [];
@@ -37,6 +35,11 @@ export function handleLinearTrigger(req, res) {
       return;
     }
 
+    const correlationId = extractCorrelationId(req.headers) || parsedBody.correlationId || null;
+    if (correlationId) {
+      logInfo(`Linear trigger for ${identifier} [${correlationId}]`);
+    }
+
     // If all worktrees are busy, queue the trigger
     if (target.activeRequests >= 1) {
       if (linearQueue.length >= MAX_QUEUE_LENGTH) {
@@ -49,7 +52,7 @@ export function handleLinearTrigger(req, res) {
       logInfo(
         `All Linear worktrees busy, queuing ${identifier} (queue length: ${linearQueue.length + 1})`,
       );
-      linearQueue.push({ identifier, queuedAt: new Date().toISOString() });
+      linearQueue.enqueue({ identifier, correlationId, queuedAt: new Date().toISOString() });
       json(res, 202, { status: "queued", queueLength: linearQueue.length });
       return;
     }

@@ -2,14 +2,13 @@ import http from "node:http";
 
 import { MAX_QUEUE_LENGTH } from "./max-queue-length.mjs";
 import { TARGET_HOST } from "./target-host.mjs";
-import { WORKTREES } from "./worktrees.mjs";
 import { globalActiveRequests, setGlobalActiveRequests } from "./global-active-requests.mjs";
 import { linearQueue } from "./linear-queue.mjs";
+import { selectLinearWorktree } from "./select-linear-worktree.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
 export function dispatchLinearExecution(identifier) {
-  const linearWorktrees = WORKTREES.filter((w) => w.id >= 1 && w.id <= 4);
-  const target = linearWorktrees.sort((a, b) => a.activeRequests - b.activeRequests)[0];
+  const target = selectLinearWorktree();
 
   if (!target || target.activeRequests >= 1) {
     if (linearQueue.length >= MAX_QUEUE_LENGTH) {
@@ -17,7 +16,7 @@ export function dispatchLinearExecution(identifier) {
       return;
     }
     logWarn(`No available worktree for ${identifier}, re-queuing`);
-    linearQueue.push({ identifier, queuedAt: new Date().toISOString() });
+    linearQueue.enqueue({ identifier, queuedAt: new Date().toISOString() });
     return;
   }
 

@@ -153,44 +153,32 @@ export async function executeIssue(issue, dryRun = false) {
         `[runner] ⏭️  Releasing lock and exiting immediately to avoid wasting lease acquisition cycle.`,
       );
 
-      // Threshold reached - attempt hard reset
+      // Threshold reached — quarantine worktree for recovery service instead of destructive reset
       if (syncFailCount >= SYNC_FAILURE_THRESHOLD) {
         logWarn(
           `[runner] ⚠️ Sync failure threshold reached (${syncFailCount}/${SYNC_FAILURE_THRESHOLD})`,
         );
-        logWarn(`[runner] Attempting hard reset to origin/main to recover...`);
+        logWarn(`[runner] Quarantining worktree ${WORKTREE_ID} for recovery service...`);
 
+        setWorktreeState(WORKTREE_ID, {
+          state: "quarantined",
+          reason: "sync_failure_threshold",
+          syncFailCount,
+          lastError: err.message,
+          quarantinedAt: new Date().toISOString(),
+        });
+
+        // Reset counter so recovery service gets a clean slate
+        setSyncFailCount(0);
         try {
-          execFileSync("git", ["reset", "--hard", "origin/main"], { cwd: ROOT, stdio: "pipe" });
-          execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
-          logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} reset to origin/main successfully`);
+          if (existsSync(SYNC_FAIL_COUNT_FILE)) {
+            unlinkSync(SYNC_FAIL_COUNT_FILE);
+          }
+        } catch {}
 
-          // Reset counter after successful recovery
-          setSyncFailCount(0);
-          try {
-            if (existsSync(SYNC_FAIL_COUNT_FILE)) {
-              unlinkSync(SYNC_FAIL_COUNT_FILE);
-            }
-          } catch {}
-
-          logInfo(`[runner] ✅ Recovery complete. Next cycle will use clean worktree.`);
-          logInfo(`[runner] Releasing lock and exiting cleanly.`);
-
-          // ROLLBACK: Release lock and exit after successful reset
-          // Next cycle will start fresh with clean worktree
-          releaseLock();
-          return "skip";
-        } catch (resetErr) {
-          logError(`[runner] ❌ Hard reset failed: ${resetErr.message}`);
-          logError(`[runner] ⛔ Manual intervention required for worktree ${WORKTREE_ID}`);
-          logError(
-            `[runner] Recovery command: cd ${ROOT} && git reset --hard origin/main && git clean -fd`,
-          );
-
-          // ROLLBACK: Release lock immediately and exit - manual intervention required
-          releaseLock();
-          return "skip";
-        }
+        logInfo(`[runner] Worktree ${WORKTREE_ID} quarantined — recovery service will repair it.`);
+        releaseLock();
+        return "skip";
       }
 
       // ROLLBACK: Release lock immediately on sync failure - no lease was acquired yet
@@ -1027,10 +1015,10 @@ export async function executeIssue(issue, dryRun = false) {
     // Rebase uncommitted work onto latest main before validation without creating merge commits.
     // This keeps each worktree isolated while ensuring validation runs against current shared git state.
     if (WORKTREE_ID !== "main") {
-      const syncResult = syncWorktreeBeforeValidation(changedFiles);
-      if (syncResult.ok) {
+      const syncResult = syncWorktreeBeforeValidation(ROOT);
+      if (syncResult.synced) {
         logInfo(`[runner] Pre-validation sync: replayed local changes onto latest origin/main`);
-      } else if (syncResult.conflictDetected) {
+      } else if (syncResult.method === "rebase-failed") {
         const conflictSignature = "merge_conflict_before_validation";
         if (priorFailureSignature === conflictSignature) {
           markRetryExhausted(issue.identifier, {
@@ -1076,7 +1064,7 @@ export async function executeIssue(issue, dryRun = false) {
         });
         return "done";
       } else {
-        logWarn(`[runner] Pre-validation sync failed (non-fatal): ${syncResult.error.message}`);
+        logWarn(`[runner] Pre-validation sync failed (non-fatal): ${syncResult.error || "unknown"}`);
         // Continue with validation using the restored working tree state.
       }
     }

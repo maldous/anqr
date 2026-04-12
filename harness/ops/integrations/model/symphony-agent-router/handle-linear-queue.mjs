@@ -10,7 +10,7 @@ export function handleLinearQueue(req, res) {
     req.on("end", () => {
       try {
         const event = JSON.parse(Buffer.concat(chunks).toString());
-        linearQueue.push({
+        linearQueue.enqueue({
           ...event,
           queuedAt: new Date().toISOString(),
         });
@@ -27,7 +27,7 @@ export function handleLinearQueue(req, res) {
   if (req.method === "GET") {
     return json(res, 200, {
       queueLength: linearQueue.length,
-      events: linearQueue.slice(-10).map((e) => ({
+      events: linearQueue.items().slice(-10).map((e) => ({
         identifier: e.event?.identifier,
         action: e.event?.action,
         queuedAt: e.queuedAt,
@@ -38,7 +38,7 @@ export function handleLinearQueue(req, res) {
   // DELETE /v1/linear/queue - clear queue
   if (req.method === "DELETE") {
     const cleared = linearQueue.length;
-    linearQueue.length = 0;
+    linearQueue.clear();
     return json(res, 200, { status: "cleared", clearedCount: cleared });
   }
 

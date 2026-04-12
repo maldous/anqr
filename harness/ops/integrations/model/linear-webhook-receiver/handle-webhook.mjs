@@ -1,4 +1,6 @@
 import { detectAndMarkDiscordSource } from "../../../core/discord-source.mjs";
+import { correlationIdFromRequest } from "../../../lib/correlation-id.mjs";
+import { createEvidenceRecord } from "../../../core/task-evidence.mjs";
 
 import { isDuplicate } from "./is-duplicate.mjs";
 import { shouldProcessEvent } from "./should-process-event.mjs";
@@ -38,9 +40,12 @@ export function handleWebhook(req, res) {
         return;
       }
 
+      // Generate correlation ID for end-to-end traceability
+      const correlationId = correlationIdFromRequest(req);
+
       // Parse event
       const event = JSON.parse(rawBody);
-      logDebug(`Received webhook: ${event.type} ${event.action}`);
+      logDebug(`Received webhook: ${event.type} ${event.action} [${correlationId}]`);
 
       // Process event
       const processedEvent = shouldProcessEvent(event);
@@ -51,6 +56,14 @@ export function handleWebhook(req, res) {
         res.end(JSON.stringify({ status: "ignored" }));
         return;
       }
+
+      // Create authoritative evidence record at ingress
+      createEvidenceRecord(correlationId, {
+        source: "linear-webhook",
+        issueIdentifier: processedEvent.identifier,
+        webhookDeliveryId: deliveryId || null,
+        receivedAt: new Date().toISOString(),
+      });
 
       // Try to determine if this issue was created from Discord
       // This info is used by pickIssue() to route to the correct worktree type
@@ -67,11 +80,11 @@ export function handleWebhook(req, res) {
       }
 
       // Trigger execution on least-loaded wt1-4 executor
-      const success = await triggerIssueExecution(processedEvent);
+      const success = await triggerIssueExecution(processedEvent, correlationId);
 
       if (success) {
         logInfo(
-          `Processed ${processedEvent.action}: ${processedEvent.identifier} (${processedEvent.state})`,
+          `Processed ${processedEvent.action}: ${processedEvent.identifier} (${processedEvent.state}) [${correlationId}]`,
         );
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ status: "processed", event: processedEvent }));

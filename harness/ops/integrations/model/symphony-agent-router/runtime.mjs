@@ -18,18 +18,23 @@ setInterval(() => {
 
   // Drop stale items older than MAX_QUEUE_AGE_MS
   const now = Date.now();
-  const initialLength = linearQueue.length;
-  for (let i = linearQueue.length - 1; i >= 0; i--) {
-    const age = now - new Date(linearQueue[i].queuedAt).getTime();
+  const allItems = linearQueue.items();
+  const initialLength = allItems.length;
+  const fresh = [];
+  for (const item of allItems) {
+    const age = now - new Date(item.queuedAt).getTime();
     if (age > MAX_QUEUE_AGE_MS) {
       logWarn(
-        `Dropping stale queued trigger: ${linearQueue[i].identifier} (age: ${Math.round(age / 1000)}s)`,
+        `Dropping stale queued trigger: ${item.identifier} (age: ${Math.round(age / 1000)}s)`,
       );
-      linearQueue.splice(i, 1);
+    } else {
+      fresh.push(item);
     }
   }
-  if (linearQueue.length < initialLength) {
-    logInfo(`Queue TTL: dropped ${initialLength - linearQueue.length} stale items`);
+  if (fresh.length < initialLength) {
+    logInfo(`Queue TTL: dropped ${initialLength - fresh.length} stale items`);
+    linearQueue.clear();
+    for (const item of fresh) linearQueue.enqueue(item);
   }
 
   const linearWorktrees = WORKTREES.filter((w) => w.id >= 1 && w.id <= 4);
@@ -41,7 +46,10 @@ setInterval(() => {
   }
 
   // Process up to available slots
-  const toProcess = linearQueue.splice(0, available.length);
+  const toProcess = [];
+  for (let i = 0; i < available.length && linearQueue.length > 0; i++) {
+    toProcess.push(linearQueue.dequeue());
+  }
   for (const item of toProcess) {
     logInfo(`Processing queued trigger: ${item.identifier}`);
     dispatchLinearExecution(item.identifier);

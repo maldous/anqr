@@ -45,12 +45,12 @@ setInterval(() => {
 
 process.on("SIGTERM", () => {
   logInfo("Received SIGTERM, shutting down...");
-  activeIssues.clear(); // Clear active issues on shutdown
+  // activeIssues NOT cleared — durable state persists across restarts
+  // to prevent duplicate triggers during quick service restarts
   server.close(() => process.exit(0));
 });
 
 process.on("SIGINT", () => {
   logInfo("Received SIGINT, shutting down...");
-  activeIssues.clear(); // Clear active issues on shutdown
   server.close(() => process.exit(0));
 });

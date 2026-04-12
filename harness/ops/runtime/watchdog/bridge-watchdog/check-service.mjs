@@ -11,7 +11,7 @@ import { getServiceStatus } from "./get-service-status.mjs";
 import { isTransientError } from "./is-transient-error.mjs";
 import { rapidRestartHistory } from "./rapid-restart-history.mjs";
 import { restartTimestamps } from "./restart-timestamps.mjs";
-import { rollbackAndRestart } from "./rollback-and-restart.mjs";
+import { quarantineAndRestart } from "./quarantine-and-restart.mjs";
 import { verifyAndNotifyRecovery } from "./verify-and-notify-recovery.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
@@ -43,7 +43,7 @@ export async function checkService(service) {
 
     if (catastrophicError) {
       logError(`[watchdog] 🚨 ${shortName}: Detected catastrophic error: ${catastrophicError}`);
-      await rollbackAndRestart(serviceName, shortName, `catastrophic error: ${catastrophicError}`);
+      await quarantineAndRestart(serviceName, shortName, `catastrophic error: ${catastrophicError}`);
       await verifyAndNotifyRecovery(serviceName, shortName);
       return;
     }
@@ -55,7 +55,7 @@ export async function checkService(service) {
       for (const issue of fileIssues) {
         logError(`[watchdog]    - ${issue}`);
       }
-      await rollbackAndRestart(serviceName, shortName, `file corruption: ${fileIssues[0]}`);
+      await quarantineAndRestart(serviceName, shortName, `file corruption: ${fileIssues[0]}`);
       await verifyAndNotifyRecovery(serviceName, shortName);
       return;
     }
@@ -70,7 +70,7 @@ export async function checkService(service) {
       const health = await checkHealthEndpoint(service);
       if (!health.healthy) {
         logError(`[watchdog] ❌ ${shortName}: Failed + unhealthy endpoint: ${health.reason}`);
-        await rollbackAndRestart(
+        await quarantineAndRestart(
           serviceName,
           shortName,
           `service failed + unhealthy: ${health.reason}`,
@@ -95,7 +95,7 @@ export async function checkService(service) {
 
     const fileIssues = await checkFileIntegrity(service);
     if (fileIssues.length > 0) {
-      await rollbackAndRestart(
+      await quarantineAndRestart(
         serviceName,
         shortName,
         `rapid restarts + file corruption: ${fileIssues[0]}`,
@@ -108,7 +108,7 @@ export async function checkService(service) {
     const journalLog = getServiceJournal(serviceName, 30);
     const catastrophicError = detectCatastrophicErrors(journalLog);
     if (catastrophicError) {
-      await rollbackAndRestart(
+      await quarantineAndRestart(
         serviceName,
         shortName,
         `rapid restarts + error: ${catastrophicError}`,
@@ -150,13 +150,13 @@ export async function checkService(service) {
       // Check for file corruption before rollback
       const fileIssues = await checkFileIntegrity(service);
       if (fileIssues.length > 0) {
-        await rollbackAndRestart(
+        await quarantineAndRestart(
           serviceName,
           shortName,
           `stuck activating + file corruption: ${fileIssues[0]}`,
         );
       } else {
-        await rollbackAndRestart(
+        await quarantineAndRestart(
           serviceName,
           shortName,
           `stuck in activating for ${stuckSeconds}s`,

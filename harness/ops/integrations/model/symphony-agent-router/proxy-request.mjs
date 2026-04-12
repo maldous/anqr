@@ -23,6 +23,9 @@ export function proxyRequest(target, req, res, parsedBody = {}) {
     `📨 Router -> wt${target.id} (${target.activeRequests}/${globalActiveRequests}/${MAX_CONCURRENT})`,
   );
 
+  // Preserve correlation ID through the proxy for end-to-end traceability
+  const correlationId = req.headers["x-anqr-correlation-id"] || null;
+
   const proxyReq = http.request(
     {
       hostname: TARGET_HOST,
@@ -35,6 +38,7 @@ export function proxyRequest(target, req, res, parsedBody = {}) {
         "content-length": Buffer.byteLength(proxyBody),
         "x-worktree-id": `wt${target.id}`,
         "x-worktree-path": target.path,
+        ...(correlationId ? { "x-anqr-correlation-id": correlationId } : {}),
       },
     },
     (proxyRes) => {

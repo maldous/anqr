@@ -5,8 +5,8 @@ Wants=anqr-symphony-integrator.service
 
 [Service]
 Type=simple
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node harness/ops/orchestration/symphony-worktree-recovery.mjs daemon
-WorkingDirectory=/home/user/src/anqr
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/orchestration/symphony-worktree-recovery.mjs daemon
+WorkingDirectory=%h/src/anqr
 Restart=on-failure
 RestartSec=30
 # Explicit PATH — nvm Node is not on default systemd PATH

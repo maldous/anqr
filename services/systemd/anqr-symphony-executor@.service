@@ -41,7 +41,8 @@ Environment=ANQR_WORKTREE_PATH=%h/src/anqr-wt%i
 
 # Bridge configuration — port is 4320 + worktree number
 Environment=SYMPHONY_BRIDGE_PORT=432%i
-Environment=SYMPHONY_BRIDGE_API_KEY=local-symphony
+# Bridge API key loaded from env file
+# Fallback: set SYMPHONY_BRIDGE_API_KEY in anqr.env or anqr-ops.env
 Environment=CODEX_SANDBOX_MODE=danger-full-access
 Environment=ANQR_RETRIEVAL_WARMUP=false
 

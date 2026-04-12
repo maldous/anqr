@@ -32,7 +32,9 @@ Environment=OLLAMA_API_BASE=http://localhost:11434
 # Secrets and overrides (LINEAR_API_KEY, etc.)
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/nightly-ops-pass.mjs --dry-run --skip-tests --skip-sonar
+# Runs in mutating mode with tests and sonar skipped.
+# Add --dry-run to disable mutations for testing.
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/nightly-ops-pass.mjs --skip-tests --skip-sonar
 
 # Logging to journal
 StandardOutput=journal

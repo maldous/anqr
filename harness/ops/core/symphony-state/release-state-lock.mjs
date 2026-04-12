@@ -5,7 +5,7 @@ import { getLockFile } from "./get-lock-file.mjs";
 export function releaseStateLock() {
   try {
     const lockFile = getLockFile();
-    const lockPid = Number(fs.readFileSync(lockFile, "utf-8").trim());
+    const lockPid = Number(fs.readFileSync(lockFile, "utf-8").trim().split("\n")[0]);
     if (lockPid === process.pid) fs.unlinkSync(lockFile);
   } catch {
     /* best effort */

@@ -496,7 +496,7 @@ export const RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7;
 | `harness/ops/orchestration/symphony-worktree-pool.mjs` | 5         |
 | `tests/unit/finalization-state.spec.ts`                | 0, 2      |
 | `tests/integration/symphony-integrator.spec.ts`        | 4         |
-| `docs/adr/001-autonomous-worktree-platform.md`         | This file |
+| `docs/adrs/0010-autonomous-worktree-platform.md`       | This file |
 
 ---
 
