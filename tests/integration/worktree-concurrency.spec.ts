@@ -45,12 +45,16 @@ describe("Worktree Concurrency Tests", () => {
   describe("Worktree Creation and Isolation", () => {
     it("should create a worktree with unique path and branch", () => {
       const id = testWorktreeIds[0];
-      const path = createWorktree(id);
-      createdWorktrees.push(id);
+      const path = createWorktree(tempId);
 
       expect(existsSync(path)).toBe(true);
-      expect(path).toBe(getWorktreePath(id));
 
+      // Remove it
+      removeWorktree(tempId);
+
+      expect(existsSync(path)).toBe(false);
+
+      // Verify it's removed from git's worktree list
       const worktrees = listWorktrees();
       const created = worktrees.find((wt) => wt.path === path);
       expect(created).toBeDefined();
@@ -58,8 +62,8 @@ describe("Worktree Concurrency Tests", () => {
     });
 
     it("should create multiple independent worktrees", () => {
-      const id = testWorktreeIds[1];
-      const path = createWorktree(id);
+      const id = testWorktreeIds[0];
+      const path = createWorktree(tempId);
       createdWorktrees.push(id);
 
       expect(existsSync(path)).toBe(true);
@@ -76,12 +80,15 @@ describe("Worktree Concurrency Tests", () => {
       const wt1Path = getWorktreePath(testWorktreeIds[0]);
       const wt2Path = getWorktreePath(testWorktreeIds[1]);
 
-      expect(wt1Path).not.toBe(wt2Path);
-      expect(existsSync(wt1Path)).toBe(true);
-      expect(existsSync(wt2Path)).toBe(true);
+      expect(() => {
+        execFileSync("git", ["checkout", wt1Branch], {
+          cwd: wt2Path,
+          stdio: "pipe",
+        });
+      }).toThrow();
     });
 
-    it("should share git object store", () => {
+    it("should allow independent HEAD positions", () => {
       const wt1Path = getWorktreePath(testWorktreeIds[0]);
       const wt2Path = getWorktreePath(testWorktreeIds[1]);
 
@@ -105,8 +112,8 @@ describe("Worktree Concurrency Tests", () => {
       const wt1Path = getWorktreePath(testWorktreeIds[0]);
       const wt2Path = getWorktreePath(testWorktreeIds[1]);
 
-      // Create unique test files in each worktree
-      const testFile1 = resolve(wt1Path, "worktree-test-901.txt");
+      // Stage a file in worktree 1
+      const testFile1 = resolve(wt1Path, "staged-test-901.txt");
       const testFile2 = resolve(wt2Path, "worktree-test-902.txt");
 
       writeFileSync(testFile1, `Test file from worktree ${testWorktreeIds[0]}\n`);
@@ -316,3 +323,7 @@ describe("Worktree Concurrency Tests", () => {
     });
   });
 });
+
+    const content1 = fs.readFileSync(TEST_FILE, "utf-8");
+
+    const content2 = fs.readFileSync(TEST_FILE, "utf-8");
