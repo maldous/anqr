@@ -5,6 +5,9 @@ import { resolve } from "node:path";
 const DETECT_PATH = resolve(
   "harness/ops/orchestration/symphony-worktree-recovery/detect-divergence.mjs",
 );
+const RECOVERY_CYCLE_PATH = resolve(
+  "harness/ops/orchestration/symphony-worktree-recovery/run-recovery-cycle.mjs",
+);
 const CLASSIFY_PATH = resolve(
   "harness/ops/orchestration/symphony-worktree-recovery/classify-worktree.mjs",
 );
@@ -38,15 +41,21 @@ describe("divergence detection", () => {
   });
 });
 
-describe("classify-worktree divergence integration", () => {
+describe("recovery cycle divergence integration", () => {
+  const cycleSource = readFileSync(RECOVERY_CYCLE_PATH, "utf-8");
   const classifySource = readFileSync(CLASSIFY_PATH, "utf-8");
 
-  it("imports detectDivergence", () => {
-    expect(classifySource).toContain("detectDivergence");
+  it("recovery cycle imports detectDivergence", () => {
+    expect(cycleSource).toContain("detectDivergence");
   });
 
-  it("classifies diverged worktrees", () => {
-    expect(classifySource).toContain("diverged");
+  it("recovery cycle sets snapshot.diverged before classification", () => {
+    expect(cycleSource).toContain("snapshot.diverged = detectDivergence");
+  });
+
+  it("classify-worktree uses snapshot.diverged for classification", () => {
+    expect(classifySource).toContain("snapshot.diverged");
+    expect(classifySource).toContain('"diverged"');
   });
 });
 
