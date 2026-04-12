@@ -75,6 +75,52 @@ For a single direct shell action, prefer `run_terminal_command`.
 
 Use `basher` only when there is an actual reason to delegate agent work. Do not spawn `basher` just to run one obvious shell command.
 
+## Environment Files and Installation
+
+### Env Files (Secrets)
+
+The project has three env file locations that must stay in sync. They are **empty templates in git** but **populated with real secrets on the host**:
+
+| System Location | Loaded By |
+|---|---|
+| `~/.config/systemd/user/anqr-ops.env` | All systemd services via `EnvironmentFile=` |
+| `~/.config/symphony/anqr.env` | Executor and router services via `EnvironmentFile=` |
+| `~/.openclaw/.env` | OpenClaw Gateway (reads from its own config dir) |
+
+The repo template is `services/systemd/anqr-ops.env` — committed with empty values as a key inventory. Real secrets are never committed.
+
+Key tokens that must be present in all three:
+- `OPENCLAW_GATEWAY_TOKEN` — authenticates harness services with the OpenClaw Gateway (value from `~/.openclaw/openclaw.json` → `gateway.auth.token`)
+- `LINEAR_WEBHOOK_SECRET` — HMAC signature verification for Linear webhooks
+- All provider API keys (`GROQ_TOKEN`, `GEMINI_TOKEN`, `MISTRAL_TOKEN`, etc.)
+
+### Systemd Service Files
+
+`services/systemd/*.service` and `*.timer` are the source of truth. They must be **symlinked** (not copied) into `~/.config/systemd/user/`:
+
+```bash
+cd /home/user/src/anqr
+for f in services/systemd/*.service services/systemd/*.timer; do
+  ln -sf "$(realpath "$f")" ~/.config/systemd/user/"$(basename "$f")"
+done
+systemctl --user daemon-reload
+```
+
+After any change to a `.service` or `.timer` file in the repo, run `systemctl --user daemon-reload` — the symlinks ensure the live config always matches the repo.
+
+### OpenClaw Config
+
+`harness/ops/runtime/openclaw-config/` is the source of truth for OpenClaw Gateway configuration. Key files must be synced to `~/.openclaw/`:
+
+```bash
+cd harness/ops/runtime/openclaw-config
+for f in openclaw.json config.json models.json clawdbot.json exec-approvals.json; do
+  cp "$f" ~/.openclaw/"$f"
+done
+```
+
+Note: `~/.openclaw/` also contains runtime state (`.env`, `lcm.db`, `tasks/`, `cron/`, backups) that is NOT in the repo.
+
 ## Current Architecture
 
 - **8 Worktree Executors** on ports 4321-4328 (wt1-wt4 for Linear, wt5-wt8 for Discord)
