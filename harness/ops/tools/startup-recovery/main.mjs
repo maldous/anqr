@@ -20,7 +20,10 @@ export async function main() {
   const servicesToEnable = [
     "anqr-linear-webhook.service",
     "anqr-symphony-router.service",
-    "anqr-queue-feeder.timer",
+    "anqr-linear-reconciler.service",
+    "anqr-symphony-integrator.service",
+    "anqr-symphony-worktree-recovery.service",
+    "anqr-watchdog.service",
   ];
 
   for (const service of servicesToEnable) {
@@ -43,14 +46,15 @@ export async function main() {
   }
 
   // Step 2: Check and enable timers
-  logInfo("\n🕒 Step 2: Checking and enabling timers...");
+  logInfo("\n🕒 Step 2: Checking and enabling executors and timers...");
 
   const timersToEnable = [
-    "anqr-linear-runner@1.timer",
-    "anqr-linear-runner@2.timer",
-    "anqr-linear-runner@3.timer",
-    "anqr-linear-runner@4.timer",
-    "anqr-queue-feeder.timer",
+    "anqr-symphony-executor@1.service",
+    "anqr-symphony-executor@2.service",
+    "anqr-symphony-executor@3.service",
+    "anqr-symphony-executor@4.service",
+    "anqr-worktree-health.timer",
+    "anqr-nightly.timer",
   ];
 
   for (const timer of timersToEnable) {

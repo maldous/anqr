@@ -2,6 +2,7 @@ import { getWorktreeHealthSnapshot, writeFleetHealthFile } from "../../core/work
 
 import { ALL_WORKTREE_IDS } from "./all-worktree-ids.mjs";
 import { classifyWorktree } from "./classify-worktree.mjs";
+import { detectDivergence } from "./detect-divergence.mjs";
 import { executeRepair } from "./execute-repair.mjs";
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
 
@@ -14,6 +15,7 @@ export async function runRecoveryCycle() {
 
     try {
       const snapshot = getWorktreeHealthSnapshot(id);
+      snapshot.diverged = detectDivergence(snapshot);
       const classification = classifyWorktree(snapshot);
 
       logDebug(

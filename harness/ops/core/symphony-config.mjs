@@ -72,6 +72,12 @@ export const RUNNER_ISSUE_COOLDOWN_MS = 10 * 60 * 1000; // 10 min — skip recen
 export const RUNNER_VALIDATION_REPAIR_MAX = 3; // Phase 2: max same-worktree validation repair cycles before quarantine
 
 // ---------------------------------------------------------------------------
+// Linear reconciler configuration
+// ---------------------------------------------------------------------------
+export const RECONCILER_POLL_INTERVAL_MS = 90_000; // 90 sec — periodic backlog reconciliation
+export const RECONCILER_DISPATCH_COOLDOWN_MS = 5_000; // 5 sec — delay between dispatches to avoid thundering herd
+
+// ---------------------------------------------------------------------------
 // Recovery daemon configuration (Phase 3)
 // ---------------------------------------------------------------------------
 export const RECOVERY_POLL_INTERVAL_MS = 60_000; // 1 min scan interval

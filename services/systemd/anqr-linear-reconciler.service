@@ -1,0 +1,50 @@
+# anqr-linear-reconciler.service — Linear backlog reconciliation daemon
+#
+# Level-triggered reconciler that ensures Linear Todo issues are always
+# picked up, even without webhook events. Runs every 90 seconds.
+#
+# Key behaviors:
+#   - Discovers pre-existing Todo issues after restart
+#   - Dispatches up to healthy-worktree capacity (wt1-wt4)
+#   - Recovers stale In Progress issues with no active lease
+#   - Re-enqueues orphaned integration_pending items
+#   - Feeds queue from Backlog when depth is low
+#
+# Install as user service:
+#   make install-services
+#   systemctl --user enable --now anqr-linear-reconciler.service
+
+[Unit]
+Description=ANQR Linear backlog reconciler (level-triggered dispatch)
+After=network-online.target anqr-symphony-router.service
+Wants=network-online.target
+Requires=anqr-symphony-router.service
+
+[Service]
+Type=simple
+WorkingDirectory=%h/src/anqr
+
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
+
+# Secrets (LINEAR_API_KEY, etc.)
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+EnvironmentFile=-%h/.config/symphony/anqr.env
+EnvironmentFile=-%h/.openclaw/.env
+
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/linear-reconciler.mjs --daemon
+
+Restart=on-failure
+RestartSec=15
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-linear-reconciler
+
+MemoryMax=512M
+MemorySwapMax=0
+CPUQuota=20%
+
+[Install]
+WantedBy=default.target

@@ -1,6 +1,7 @@
 export { MAIN_REPO_ROOT } from "./main-repo-root.mjs";
 export { ALL_WORKTREE_IDS } from "./all-worktree-ids.mjs";
 export { classifyWorktree } from "./classify-worktree.mjs";
+export { detectDivergence } from "./detect-divergence.mjs";
 export { inferOwnerFromBranch } from "./infer-owner-from-branch.mjs";
 export { hasConflictMarkers } from "./has-conflict-markers.mjs";
 export { executeRepair } from "./execute-repair.mjs";

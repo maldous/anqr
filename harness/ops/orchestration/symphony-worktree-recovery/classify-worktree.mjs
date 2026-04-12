@@ -49,6 +49,17 @@ export function classifyWorktree(snapshot) {
     return result;
   }
 
+  // 1b. Diverged from origin/main — needs reset or quarantine
+  if (snapshot.diverged) {
+    result.classification = "diverged";
+    if (hasDirtyFiles || isRepairable) {
+      result.repairAction = "quarantine";
+    } else {
+      result.repairAction = "reset_to_main";
+    }
+    return result;
+  }
+
   // 2. No dirty files + no active finalization → clean
   if (!hasDirtyFiles && !isRepairable) {
     result.classification = "clean";

@@ -5,7 +5,7 @@ export function getTimerStatus() {
   try {
     const output = execFileSync(
       "systemctl",
-      ["--user", "list-timers", "anqr-linear-runner@*.timer", "--all"],
+      ["--user", "list-timers", "anqr-*", "--all"],
       {
         encoding: "utf-8",
       },

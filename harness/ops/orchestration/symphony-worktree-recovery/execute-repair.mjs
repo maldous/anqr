@@ -313,6 +313,45 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
       return { ok: true, action: "quarantine", nextState: "quarantined" };
     }
 
+    case "reset_to_main": {
+      const resetPath = worktreeId === "main" ? PROJECT_ROOT : getWorktreePath(worktreeId.replace(/^wt/, ""));
+      try {
+        execFileSync("git", ["fetch", "origin", "main"], {
+          cwd: resetPath,
+          stdio: "pipe",
+          timeout: 15_000,
+        });
+        execFileSync("git", ["reset", "--hard", "origin/main"], {
+          cwd: resetPath,
+          stdio: "pipe",
+          timeout: 15_000,
+        });
+        execFileSync("git", ["clean", "-fd"], {
+          cwd: resetPath,
+          stdio: "pipe",
+          timeout: 15_000,
+        });
+        setWorktreeState(worktreeId, { state: "available", issueIdentifier: null });
+        logInfo(`[recovery] Reset ${worktreeId} to origin/main (divergence resolved)`);
+
+        sendDiscordEmbed({
+          title: `🔧 Divergence Resolved | ${worktreeId}`,
+          description: "Reset to origin/main after branch divergence",
+          color: 0x00ff00,
+          threadName: "ANQR",
+        }).catch(() => {});
+
+        return { ok: true, action: "reset_to_main", nextState: "available" };
+      } catch (err) {
+        logWarn(`[recovery] Reset to main failed for ${worktreeId}: ${err.message}`);
+        return executeRepair(
+          worktreeId,
+          { ...classification, repairAction: "quarantine" },
+          snapshot,
+        );
+      }
+    }
+
     case "reprovision": {
       // Defer to fleet health service — just mark for reprovisioning
       recordQuarantine(worktreeId, {
