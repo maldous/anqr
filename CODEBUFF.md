@@ -179,7 +179,7 @@ The Symphony bridge `spawn_agents` tool is **acknowledgment-only** — it delega
 ### Queue behavior
 
 - The runner self-feeds the queue after issue completion
-- `anqr-queue-feeder.timer` is a safety-net maintenance loop, not the primary feeder
+- `anqr-linear-reconciler.service` handles queue feeding, backlog pickup, and capacity enforcement
 - Queue feed/drain decisions use `readyDepth` (Todo-only depth), not aggregate queue depth including `In Progress`
 
 ### Worktree operations

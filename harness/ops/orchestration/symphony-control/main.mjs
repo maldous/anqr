@@ -23,10 +23,10 @@ export async function main() {
   } else {
     logError("Usage: symphony-control.mjs --stop|--start|--restart|--status");
     logInfo("");
-    logInfo("  --stop     Disable all runner timers (stop picking new tasks)");
-    logInfo("  --start    Enable all runner timers (start picking new tasks)");
-    logInfo("  --restart  Restart all runner timers");
-    logInfo("  --status   Show current timer status");
+    logInfo("  --stop     Disable Linear services (stop picking new tasks)");
+    logInfo("  --start    Enable Linear services (start picking new tasks)");
+    logInfo("  --restart  Restart Linear services");
+    logInfo("  --status   Show current service status");
     process.exit(2);
   }
 }

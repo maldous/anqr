@@ -3,19 +3,19 @@ import { getTimerStatus } from "./get-timer-status.mjs";
 import { logInfo } from "./logger.mjs";
 
 export function showStatus() {
-  logInfo("📊 Linear Runner System Status\n");
+  logInfo("📊 Linear Processing System Status\n");
 
   const timerStatus = getTimerStatus();
   if (timerStatus) {
     console.log(timerStatus);
   }
 
-  const enabledTimers = getEnabledTimers();
-  logInfo(`\n🔧 Enabled timers: ${enabledTimers.length}`);
-  if (enabledTimers.length > 0) {
-    logInfo("  Status: ✅ RUNNING - new tasks will be picked up");
-    for (const timer of enabledTimers) {
-      logInfo(`  - ${timer}`);
+  const enabledServices = getEnabledTimers();
+  logInfo(`\n🔧 Enabled services: ${enabledServices.length}`);
+  if (enabledServices.length > 0) {
+    logInfo("  Status: ✅ RUNNING - reconciler and executors active");
+    for (const service of enabledServices) {
+      logInfo(`  - ${service}`);
     }
   } else {
     logInfo("  Status: 🛑 STOPPED - no new tasks will be picked up");

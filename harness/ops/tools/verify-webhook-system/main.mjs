@@ -14,8 +14,11 @@ export async function main() {
   const servicesToCheck = [
     "anqr-linear-webhook.service",
     "anqr-symphony-router.service",
-    "anqr-queue-feeder.service",
-    "anqr-queue-feeder.timer",
+    "anqr-linear-reconciler.service",
+    "anqr-symphony-executor@1.service",
+    "anqr-symphony-executor@2.service",
+    "anqr-symphony-executor@3.service",
+    "anqr-symphony-executor@4.service",
   ];
 
   const activeServices = [];
@@ -48,13 +51,10 @@ export async function main() {
     }
   }
 
-  // Check timers
+  // Check nightly timer
   const timersToCheck = [
-    "anqr-linear-runner@1.timer",
-    "anqr-linear-runner@2.timer",
-    "anqr-linear-runner@3.timer",
-    "anqr-linear-runner@4.timer",
-    "anqr-queue-feeder.timer",
+    "anqr-nightly.timer",
+    "anqr-worktree-health.timer",
   ];
 
   const activeTimers = [];

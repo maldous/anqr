@@ -1,27 +1,31 @@
 import { execFileSync } from "node:child_process";
 import { logInfo, logError } from "./logger.mjs";
 
+const LINEAR_SERVICES = [
+  "anqr-linear-reconciler.service",
+  "anqr-symphony-executor@1.service",
+  "anqr-symphony-executor@2.service",
+  "anqr-symphony-executor@3.service",
+  "anqr-symphony-executor@4.service",
+];
+
 export function enableAllTimers() {
-  logInfo("▶️  Enabling Linear runner timers (wt1-wt4 only)...");
+  logInfo("▶️  Enabling Linear services (reconciler + wt1-wt4 executors)...");
   try {
-    // Enable only Linear runners (wt1-wt4).
-    // Discord worktrees (wt5-wt8) use executor services, NOT runner timers.
-    // See: Clean architecture — wt1-wt4 for Linear, wt5-wt8 for Discord.
-    const runners = ["1", "2", "3", "4"];
-    for (const id of runners) {
-      execFileSync("systemctl", ["--user", "enable", `anqr-linear-runner@${id}.timer`], {
+    for (const unit of LINEAR_SERVICES) {
+      execFileSync("systemctl", ["--user", "enable", unit], {
         stdio: "pipe",
       });
-      execFileSync("systemctl", ["--user", "start", `anqr-linear-runner@${id}.timer`], {
+      execFileSync("systemctl", ["--user", "start", unit], {
         stdio: "pipe",
       });
     }
 
-    logInfo("✅ Linear runner timers enabled and started (wt1-wt4)");
-    logInfo("🚀 Runners will begin picking up tasks on next timer cycle");
+    logInfo("✅ Linear services enabled and started");
+    logInfo("🚀 Reconciler will begin picking up tasks on next cycle (90s)");
     return true;
   } catch (err) {
-    logError(`Failed to enable timers: ${err.message}`);
+    logError(`Failed to enable services: ${err.message}`);
     return false;
   }
 }

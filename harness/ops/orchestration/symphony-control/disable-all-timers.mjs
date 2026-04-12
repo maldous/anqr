@@ -1,26 +1,31 @@
 import { execFileSync } from "node:child_process";
 import { logInfo, logError } from "./logger.mjs";
 
+const LINEAR_SERVICES = [
+  "anqr-linear-reconciler.service",
+  "anqr-symphony-executor@1.service",
+  "anqr-symphony-executor@2.service",
+  "anqr-symphony-executor@3.service",
+  "anqr-symphony-executor@4.service",
+];
+
 export function disableAllTimers() {
-  logInfo("🛑 Disabling all Linear runner timers...");
+  logInfo("🛑 Disabling all Linear services...");
   try {
-    // Intentionally uses glob to stop ALL runner timers, including any stale
-    // wrong-ID instances (e.g. runner@5-8). enableAllTimers() is narrower
-    // and only starts the correct subset (wt1-wt4).
-    execFileSync("systemctl", ["--user", "stop", "anqr-linear-runner@*.timer"], {
-      stdio: "pipe",
-    });
+    for (const unit of LINEAR_SERVICES) {
+      try {
+        execFileSync("systemctl", ["--user", "stop", unit], { stdio: "pipe" });
+        execFileSync("systemctl", ["--user", "disable", unit], { stdio: "pipe" });
+      } catch {
+        /* unit may not exist — continue with others */
+      }
+    }
 
-    // Disable timers to prevent restart
-    execFileSync("systemctl", ["--user", "disable", "anqr-linear-runner@*.timer"], {
-      stdio: "pipe",
-    });
-
-    logInfo("✅ All Linear runner timers disabled");
-    logInfo("⏸️  No new tasks will be picked up until timers are re-enabled");
+    logInfo("✅ All Linear services disabled");
+    logInfo("⏸️  No new tasks will be picked up until services are re-enabled");
     return true;
   } catch (err) {
-    logError(`Failed to disable timers: ${err.message}`);
+    logError(`Failed to disable services: ${err.message}`);
     return false;
   }
 }

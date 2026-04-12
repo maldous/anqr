@@ -996,7 +996,7 @@ harness/ops/lib/notify.mjs                                  — ✅ canonical (n
 harness/ops/integrations/model/codebuff-direct.mjs          — ✅ canonical (Codebuff SDK, runs inside worktree bridges)
 harness/ops/integrations/model/symphony-agent-router.mjs    — ✅ canonical (control-plane router)
 services/systemd/anqr-symphony-runner.service/.timer        — ⚠️ retired (no-op compatibility shim)
-services/systemd/anqr-queue-feeder.service/.timer           — ✅ canonical (scheduled)
+services/systemd/anqr-linear-reconciler.service              — ✅ canonical (level-triggered backlog reconciler)
 services/systemd/anqr-nightly.service/.timer                — ✅ canonical (scheduled)
 services/systemd/anqr-email-ingest.service/.timer           — ✅ canonical (scheduled)
 services/systemd/anqr-ops.env                               — ✅ canonical (environment)

@@ -27,7 +27,7 @@ export async function main() {
     logInfo("");
     logInfo("Then reload systemd and restart services:");
     logInfo("  systemctl --user daemon-reload");
-    logInfo("  systemctl --user restart anqr-linear-webhook anqr-queue-feeder");
+    logInfo("  systemctl --user restart anqr-linear-webhook anqr-linear-reconciler");
   } catch (err) {
     logError(`❌ Error: ${err.message}`);
     process.exit(1);
