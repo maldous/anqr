@@ -1,0 +1,106 @@
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+██░▄▄▄░██░▄▄░██░▄▄▄██░▀██░██░▄▄▀██░████░▄▄▀██░███░██
+██░███░██░▀▀░██░▄▄▄██░█░█░██░█████░████░▀▀░██░█░█░██
+██░▀▀▀░██░█████░▀▀▀██░██▄░██░▀▀▄██░▀▀░█░██░██▄▀▄▀▄██
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                  🦞 OPENCLAW 🦞                    
+ 
+┌  OpenClaw doctor
+│
+◇  Doctor changes ─────────────────────────────────────────────────────╮
+│                                                                      │
+│  Normalized talk.provider/providers shape (trimmed provider ids and  │
+│  merged missing compatibility fields).                               │
+│                                                                      │
+├──────────────────────────────────────────────────────────────────────╯
+│
+◇  Doctor ──────────────────────────────────────────────╮
+│                                                       │
+│  Run "openclaw doctor --fix" to apply these changes.  │
+│                                                       │
+├───────────────────────────────────────────────────────╯
+│
+◇  State integrity ─────────────────────────────────────────────────────╮
+│                                                                       │
+│  - State directory permissions are too open (~/.openclaw). Recommend  │
+│    chmod 700.                                                         │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────╯
+│
+◇  Other gateway-like services detected ───────────────────────────╮
+│                                                                  │
+│  - anqr-discord-router.service (user, unit:                      │
+│    /home/user/.config/systemd/user/anqr-discord-router.service)  │
+│                                                                  │
+├──────────────────────────────────────────────────────────────────╯
+│
+◇  Cleanup hints ─────────────────────────────────────────────╮
+│                                                             │
+│  - systemctl --user disable --now openclaw-gateway.service  │
+│  - rm ~/.config/systemd/user/openclaw-gateway.service       │
+│                                                             │
+├─────────────────────────────────────────────────────────────╯
+│
+◇  Gateway recommendation ───────────────────────────────────────────────╮
+│                                                                        │
+│  Recommendation: run a single gateway per machine for most setups.     │
+│  One gateway supports multiple agents.                                 │
+│  If you need multiple gateways (e.g., a rescue bot on the same host),  │
+│  isolate ports + config/state (see docs:                               │
+│  /gateway#multiple-gateways-same-host).                                │
+│                                                                        │
+├────────────────────────────────────────────────────────────────────────╯
+│
+◇  Gateway service config ────────────────────────────────────────────────╮
+│                                                                         │
+│  - Gateway service PATH missing required dirs:                          │
+│    /home/user/.nvm/current/bin, /home/user/.npm-global/bin,             │
+│    /home/user/.volta/bin, /home/user/.asdf/shims, /home/user/.bun/bin,  │
+│    /home/user/.fnm/current/bin                                          │
+│  - Gateway service PATH includes version managers or package managers;  │
+│    recommend a minimal PATH.                                            │
+│    (/home/user/.nvm/versions/node/v25.8.0/bin)                          │
+│  - Gateway service entrypoint does not match the current install.       │
+│    (/usr/local/bin/openclaw -> /home/user/src/openclaw/dist/index.js)   │
+│                                                                         │
+├─────────────────────────────────────────────────────────────────────────╯
+│
+◇  Security ─────────────────────────────────╮
+│                                            │
+│  - No channel security warnings detected.  │
+│  - Run: openclaw security audit --deep     │
+│                                            │
+├────────────────────────────────────────────╯
+[36m[skills][39m [33mSkipping skill path that resolves outside its configured root.[39m
+[36m[skills][39m [33mSkipping skill path that resolves outside its configured root.[39m
+│
+◇  Skills status ────────────╮
+│                            │
+│  Eligible: 38              │
+│  Missing requirements: 17  │
+│  Blocked by allowlist: 0   │
+│                            │
+├────────────────────────────╯
+[lcm] Plugin loaded (enabled=true, db=/home/user/.openclaw/lcm.db, threshold=0.75)
+[lcm] Compaction summarization model: symphony-bridge/symphony/main (default)
+│
+◇  Plugins ──────╮
+│                │
+│  Loaded: 45    │
+│  Disabled: 41  │
+│  Errors: 0     │
+│                │
+├────────────────╯
+Discord: ok (@ANQR) (622ms)
+Agents: main (default), voice
+Heartbeat interval: 30m (main)
+Session store (main): /home/user/.openclaw/agents/main/sessions/sessions.json (51 entries)
+- agent:main:discord:channel:1486262758256410646 (27m ago)
+- agent:main:discord:channel:1492792378707411088 (33m ago)
+- agent:main:discord:channel:1492791264339300473 (37m ago)
+- agent:main:discord:channel:1486262758256410647 (39m ago)
+- agent:main:discord:channel:1492788220994519071 (49m ago)
+Run "openclaw doctor --fix" to apply changes.
+│
+└  Doctor complete.
+
