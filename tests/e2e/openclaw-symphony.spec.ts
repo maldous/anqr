@@ -69,7 +69,7 @@ test.describe("OpenClaw Model Configuration", () => {
 
   test("fallback list should include Codebuff as last resort", () => {
     const lastFallback = openclawConfig.fallbackModels[openclawConfig.fallbackModels.length - 1];
-    expect(lastFallback).toBe("ollama/qwen2.5-coder:3b-instruct");
+    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
   });
 });
 
@@ -127,9 +127,9 @@ test.describe("Symphony Fallback Continuity", () => {
     ).toBe(0);
   });
 
-  test("ollama model should be the absolute last fallback", () => {
+  test("codebuff-bridge should be the absolute last fallback", () => {
     const lastFallback = openclawConfig.fallbackModels[openclawConfig.fallbackModels.length - 1];
-    expect(lastFallback).toBe("ollama/qwen2.5-coder:3b-instruct");
+    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
   });
 });
 
@@ -333,7 +333,6 @@ const MINIMUM_OPENROUTER_PROVIDERS = 20;
 const LOCAL_PROVIDERS = [
   { name: "ollama-qwen2.5-coder-3b", model: "qwen2.5-coder:3b-instruct" },
   { name: "ollama-qwen2.5-coder-0.5b", model: "qwen2.5-coder:0.5b" },
-  { name: "ollama-qwen3-coder-next", model: "qwen3-coder-next" },
 ];
 
 // Providers in the credit-gate but blocklisted by the bridge — they appear in
@@ -1543,7 +1542,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     expect(keys).toContain("symphony-bridge/symphony/text");
     expect(keys).toContain("ollama/qwen2.5-coder:0.5b");
     expect(keys).toContain("ollama/qwen2.5-coder:3b-instruct");
-    // codebuff-bridge/codebuff/base removed — standalone Codebuff bridge retired per ADR-0003
+    expect(keys).toContain("codebuff-bridge/codebuff/base");
   });
 
   test("default model is symphony-bridge/symphony/main", () => {
@@ -1648,7 +1647,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     ).toHaveLength(0);
   });
 
-  test("ollama model is last in the live fallback chain", () => {
+  test("codebuff-bridge is last in the live fallback chain", () => {
     let data: ModelsStatusOutput;
     try {
       data = runCliJson<ModelsStatusOutput>("models status --json");
@@ -1658,7 +1657,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     }
 
     const lastFallback = data.fallbacks[data.fallbacks.length - 1];
-    expect(lastFallback).toBe("ollama/qwen2.5-coder:3b-instruct");
+    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
   });
 });
 

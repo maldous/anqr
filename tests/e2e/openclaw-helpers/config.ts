@@ -7,6 +7,7 @@ export const openclawConfig = {
   fallbackModels: [
     "symphony-bridge/symphony/codex",
     "symphony-bridge/symphony/codebuff",
+    "symphony-bridge/symphony/codebuff-bridge",
     "symphony-bridge/symphony/groq",
     "symphony-bridge/symphony/mistral",
     "symphony-bridge/symphony/gemini",
@@ -18,5 +19,7 @@ export const openclawConfig = {
     "symphony-bridge/symphony/text",
     "ollama/qwen2.5-coder:0.5b",
     "ollama/qwen2.5-coder:3b-instruct",
+    "ollama/qwen3-coder-next:latest",
+    "codebuff-bridge/codebuff/base",
   ],
 };
