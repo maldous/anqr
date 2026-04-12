@@ -434,10 +434,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
   test.setTimeout(30_000);
 
   test("all expected providers are configured in the bridge", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     expect(res.status).toBe(200);
@@ -486,10 +486,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
   });
 
   test("all expected routes are exposed by the bridge", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const res = await fetch(`${SYMPHONY_BASE_URL}/v1/models`, {
+    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/v1/models`, {
       signal: AbortSignal.timeout(5_000),
     });
     expect(res.status).toBe(200);
@@ -519,10 +519,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
   });
 
   test("all direct providers report available", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     const data = await res.json();
@@ -546,10 +546,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
   });
 
   test("blocklisted providers are not configured in the bridge", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     const data = await res.json();
@@ -564,10 +564,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
   });
 
   test("openrouter providers report available", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     const data = await res.json();
@@ -596,10 +596,10 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
   test.setTimeout(30_000);
 
   test("toolProbe health fields are present and valid", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     expect(res.status).toBe(200);
@@ -639,10 +639,10 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
   });
 
   test("excluded providers are NOT in health rankedProviders", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     expect(res.status).toBe(200);
@@ -664,16 +664,16 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
   });
 
   test("excluded providers are NOT in /v1/stats rankedProviders", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const healthRes = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+    const healthRes = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     const healthData = await healthRes.json();
     const excluded: string[] = healthData.toolProbe?.excluded ?? [];
 
-    const statsRes = await fetch(`${SYMPHONY_BASE_URL}/v1/stats`, {
+    const statsRes = await fetch(`${SYMPHONY_EXECUTOR_URL}/v1/stats`, {
       headers: { Authorization: `Bearer ${SYMPHONY_API_KEY}` },
       signal: AbortSignal.timeout(5_000),
     });
@@ -696,10 +696,10 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
   });
 
   test("pinned routes for excluded providers return clear error", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const healthRes = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+    const healthRes = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     const healthData = await healthRes.json();
@@ -913,10 +913,10 @@ test.describe("OpenRouter Model Coverage (requires running bridge)", () => {
   test.setTimeout(300_000);
 
   test("openrouter models are in the configured provider list", async () => {
-    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
+    const reachable = await isBridgeReachable(SYMPHONY_EXECUTOR_URL);
+    test.skip(!reachable, "Symphony executor not reachable - requires running executor on port 4321");
 
-    const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     const data = await res.json();
