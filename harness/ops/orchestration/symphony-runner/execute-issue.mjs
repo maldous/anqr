@@ -53,6 +53,11 @@ import { runAgent, continueAgent } from "../../symphony-agent.mjs";
 import { runValidation, formatValidationFeedback } from "../../symphony-validation.mjs";
 import { getQueueSnapshot } from "../../symphony-queue-control.mjs";
 import { sendDiscordEmbed } from "../../integrations/notifications/openclaw-discord.mjs";
+import {
+  recordExecutionResult,
+  recordValidationResult,
+  recordPushResult,
+} from "../../core/task-evidence.mjs";
 
 import { LEASE_TTL_MS } from "./lease-ttl-ms.mjs";
 import { ROOT } from "./root.mjs";
@@ -77,6 +82,8 @@ import { syncWorktreeBeforeValidation } from "./sync-worktree-before-validation.
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
 
 export async function executeIssue(issue, dryRun = false) {
+  const correlationId = process.env.ANQR_CORRELATION_ID || null;
+
   // Phase 2: Detect repair candidate to skip sync and provide repair context
   const currentFinalization = getFinalizationState(issue.identifier);
   const isRepairCandidate =
@@ -1087,6 +1094,20 @@ export async function executeIssue(issue, dryRun = false) {
       return hb;
     };
 
+    if (correlationId) {
+      try {
+        recordExecutionResult(correlationId, {
+          startedAt: new Date(issueStartMs).toISOString(),
+          completedAt: new Date().toISOString(),
+          durationMs: Date.now() - issueStartMs,
+          success: agentResult.completed,
+          filesChanged: changedFiles,
+        });
+      } catch {
+        /* best-effort evidence */
+      }
+    }
+
     let validation = await runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
     let validationFixAttempts = 0;
     let previousSignature = validation.signature;
@@ -1216,6 +1237,20 @@ export async function executeIssue(issue, dryRun = false) {
         estimate: issue.estimate,
       });
       return "done";
+    }
+
+    if (correlationId) {
+      try {
+        recordValidationResult(correlationId, {
+          passed: validation.passed,
+          typecheckPassed: validation.results?.find((r) => r.check === "typecheck")?.pass ?? null,
+          testsPassed: validation.results?.find((r) => r.check === "vitest")?.pass ?? null,
+          lintPassed: validation.results?.find((r) => r.check === "oxlint" || r.check === "lint")?.pass ?? null,
+          errors: validation.results?.filter((r) => !r.pass).map((r) => r.check) || [],
+        });
+      } catch {
+        /* best-effort evidence */
+      }
     }
 
     if (!validation.passed) {
@@ -1422,6 +1457,18 @@ ${String(r.detail).slice(0, 1000)}\n`,
     let branchPush = { ok: false };
     if (RUNNER_AUTO_PUSH) {
       branchPush = await gitPushWorktreeBranch();
+      if (correlationId) {
+        try {
+          recordPushResult(correlationId, {
+            branch: branchPush.branch || null,
+            sha: branchPush.head || null,
+            success: branchPush.ok,
+            error: branchPush.error || null,
+          });
+        } catch {
+          /* best-effort evidence */
+        }
+      }
       if (branchPush.ok) {
         await setFinalizationState(issue.identifier, {
           state: "integration_pending",
@@ -1432,6 +1479,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
           attempts: 0,
           stickyOwner: WORKTREE_ID,
           lastError: null,
+          correlationId,
           updatedAt: new Date().toISOString(),
         });
         await enqueueIntegrationCandidate(issue.identifier);
@@ -1443,6 +1491,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
           branch: branchPush.branch,
           headSha: branchPush.head,
           lastError: branchPush.error || "push failed",
+          correlationId,
           attempts: 1,
           updatedAt: new Date().toISOString(),
         });

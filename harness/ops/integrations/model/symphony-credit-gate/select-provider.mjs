@@ -22,48 +22,22 @@ export async function selectProvider(options = {}) {
     Array.isArray(options.excludeNames) && options.excludeNames.length > 0
       ? new Set(options.excludeNames)
       : null;
-  const preferredNames =
-    Array.isArray(options.preferredNames) && options.preferredNames.length > 0
-      ? new Set(options.preferredNames)
-      : null;
-
   logDebug(`[selectProvider] Entry`, {
     allowedCount: allowedNames?.size || 0,
     excludedCount: excludedNames?.size || 0,
     allowSafetyNetOverride,
     allowedNames: allowedNames ? Array.from(allowedNames) : null,
     excludedNames: excludedNames ? Array.from(excludedNames) : null,
-    preferredNames: preferredNames ? Array.from(preferredNames) : null,
   });
 
   const orderedNames = buildProviderSelectionCandidateNames({ excludeNames: excludedNames });
-  const preferredOrderedNames = preferredNames
-    ? orderedNames.filter((name) => preferredNames.has(name))
-    : [];
-  const fallbackOrderedNames = preferredNames
-    ? orderedNames.filter((name) => !preferredNames.has(name))
-    : orderedNames;
 
-  // Score-boost merge: interleave preferred and fallback 1:1 so preferred float
-  // higher but don't completely block free-cloud providers from being tried.
-  const mergedOrder = [];
-  let pIdx = 0;
-  let fIdx = 0;
-  while (pIdx < preferredOrderedNames.length || fIdx < fallbackOrderedNames.length) {
-    if (pIdx < preferredOrderedNames.length) mergedOrder.push(preferredOrderedNames[pIdx++]);
-    if (fIdx < fallbackOrderedNames.length) mergedOrder.push(fallbackOrderedNames[fIdx++]);
-  }
-
-  logInfo(`[selectProvider] Candidate order (score-boost merge)`, {
+  logInfo(`[selectProvider] Candidate order (ranked)`, {
     candidateCount: orderedNames.length,
-    preferredCount: preferredOrderedNames.length,
-    fallbackCount: fallbackOrderedNames.length,
-    preferred: preferredOrderedNames.slice(0, 8),
-    fallback: fallbackOrderedNames.slice(0, 8),
-    mergedTop: mergedOrder.slice(0, 12),
+    top: orderedNames.slice(0, 12),
   });
 
-  for (const providerName of mergedOrder) {
+  for (const providerName of orderedNames) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
     if (
       !provider ||

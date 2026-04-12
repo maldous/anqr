@@ -29,7 +29,6 @@ Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 
 # Webhook configuration
 Environment=LINEAR_WEBHOOK_PORT=18791
-# Use same secret as API key for signature verification
 Environment=LINEAR_WORKTREES=1,2,3,4
 
 # Secrets

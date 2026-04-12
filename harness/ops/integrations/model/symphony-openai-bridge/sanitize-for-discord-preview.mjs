@@ -20,6 +20,11 @@ export function sanitizeForDiscordPreview(text) {
   // Strip "## Issue: ..." / "## System:" headers (internal routing)
   s = s.replace(/^##\s*(Issue|System|Task):[^\n]*/gm, "");
 
+  // Strip provider fallback noise (internal routing that should never reach users)
+  s = s.replace(/^⚠️\s+\S+\s+failed\s+\([^)]*\),\s*trying next provider[^\n]*/gm, "");
+  s = s.replace(/^🎯\s+PROVIDER SELECTED[^\n]*/gm, "");
+  s = s.replace(/^🔄\s+FALLBACK ATTEMPT[^\n]*/gm, "");
+
   // Collapse whitespace
   s = s.replace(/\n{2,}/g, "\n").trim();
 

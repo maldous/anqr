@@ -40,6 +40,7 @@ import { recordSuccessfulMetrics } from "./record-successful-metrics.mjs";
 import { requestCount, setRequestCount } from "./request-count.mjs";
 import { sleep } from "./sleep.mjs";
 import { unwrapAIError } from "./unwrap-aierror.mjs";
+import { isInvalidModelAnswerText } from "./is-invalid-model-answer-text.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
 export async function invokeWithFallback(messages, route, sessionId = null, cwd = null) {
@@ -117,6 +118,19 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
             costMode: provider.costMode === "free" ? "free" : undefined,
           })
         : await invokeWithAI(provider, messages, { stream: false, cwd, useTools: route.useTools });
+
+      if (
+        isCodebuffProvider &&
+        isInvalidModelAnswerText(result.text, {
+          allowSentinel: process.env.SYMPHONY_ALLOW_NO_REPLY_SENTINEL === "1",
+        })
+      ) {
+        const invalidErr = new Error(`Invalid sentinel response from ${provider.name}`);
+        invalidErr.code = "INVALID_SENTINEL_RESPONSE";
+        invalidErr.providerName = provider.name;
+        invalidErr.retryable = true;
+        throw invalidErr;
+      }
 
       const durationMs = Date.now() - startedAt;
       const textPreview = result.text?.slice(0, 100) || "";

@@ -3,18 +3,25 @@ import crypto from "node:crypto";
 import { WEBHOOK_SECRET } from "./webhook-secret.mjs";
 import { logWarn, logError } from "./logger.mjs";
 
+const ALLOW_INSECURE = process.env.ANQR_ALLOW_INSECURE_WEBHOOKS === "true";
+
 export function verifySignature(rawBody, signature) {
-  // For testing purposes, allow empty signature or basic sha256= prefix
-  if (!signature || signature === "sha256=") {
-    logWarn(
-      "No proper signature provided - skipping verification for testing (not recommended for production)",
-    );
-    return true;
+  if (!WEBHOOK_SECRET) {
+    if (ALLOW_INSECURE) {
+      logWarn("No LINEAR_WEBHOOK_SECRET configured — bypassing verification (ANQR_ALLOW_INSECURE_WEBHOOKS=true)");
+      return true;
+    }
+    logError("LINEAR_WEBHOOK_SECRET not configured — rejecting webhook (set ANQR_ALLOW_INSECURE_WEBHOOKS=true for dev)");
+    return false;
   }
 
-  if (!WEBHOOK_SECRET) {
-    logWarn("No secret configured - skipping verification (not recommended for production)");
-    return true;
+  if (!signature || signature === "sha256=") {
+    if (ALLOW_INSECURE) {
+      logWarn("No signature provided — bypassing verification (ANQR_ALLOW_INSECURE_WEBHOOKS=true)");
+      return true;
+    }
+    logWarn("No signature provided — rejecting webhook");
+    return false;
   }
 
   try {
@@ -23,7 +30,6 @@ export function verifySignature(rawBody, signature) {
     const sigBuffer = Buffer.from(signature, "utf8");
     const expectedBuffer = Buffer.from(expected, "utf8");
 
-    // timingSafeEqual throws if lengths differ
     if (sigBuffer.length !== expectedBuffer.length) {
       logWarn(`Signature length mismatch: ${sigBuffer.length} vs ${expectedBuffer.length}`);
       return false;

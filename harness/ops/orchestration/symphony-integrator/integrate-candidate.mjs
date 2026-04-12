@@ -5,6 +5,7 @@ import {
   getIssueState,
 } from "../../symphony-state.mjs";
 import { updateIssue, addComment, STATES } from "../../linear-client.mjs";
+import { recordIntegrationResult } from "../../core/task-evidence.mjs";
 
 import { findIssueByIdentifier } from "./find-issue-by-identifier.mjs";
 import { git } from "./git.mjs";
@@ -20,7 +21,7 @@ export async function integrateCandidate(issueIdentifier) {
     return { ok: false, reason: "invalid_state" };
   }
 
-  const { branch, headSha } = finalization;
+  const { branch, headSha, correlationId } = finalization;
   if (!branch || !headSha) {
     logWarn(`[integrator] ${issueIdentifier}: missing branch or headSha`);
     return { ok: false, reason: "missing_metadata" };
@@ -86,6 +87,17 @@ export async function integrateCandidate(issueIdentifier) {
         );
       }
 
+      if (correlationId) {
+        try {
+          recordIntegrationResult(correlationId, {
+            success: false,
+            error: stderr.slice(0, 200),
+          });
+        } catch {
+          /* best-effort evidence */
+        }
+      }
+
       dequeueIntegrationCandidate(issueIdentifier);
       return { ok: false, reason: "conflict" };
     }
@@ -98,6 +110,18 @@ export async function integrateCandidate(issueIdentifier) {
     logInfo(
       `[integrator] ✅ ${issueIdentifier} integrated to main at ${pushedMainSha.slice(0, 8)} (${integrationMs}ms)`,
     );
+
+    if (correlationId) {
+      try {
+        recordIntegrationResult(correlationId, {
+          success: true,
+          mainSha: pushedMainSha,
+          method: "cherry-pick",
+        });
+      } catch {
+        /* best-effort evidence */
+      }
+    }
 
     // Update finalization state
     await setFinalizationState(issueIdentifier, {

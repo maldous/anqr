@@ -1,6 +1,6 @@
 import { PROJECT_ROOT } from "../../../core/worktree-config.mjs";
 import { correlationIdFromRequest } from "../../../lib/correlation-id.mjs";
-import { createEvidenceRecord } from "../../../core/task-evidence.mjs";
+import { createEvidenceRecord, recordWorktreeSelection } from "../../../core/task-evidence.mjs";
 import http from "node:http";
 
 import { MAX_CONCURRENT } from "./max-concurrent.mjs";
@@ -18,6 +18,11 @@ export function processAndProxy(worktree, req, res, rawBody) {
   createEvidenceRecord(correlationId, {
     source: "discord-router",
     receivedAt: new Date().toISOString(),
+  });
+
+  recordWorktreeSelection(correlationId, {
+    worktreeId: `wt${worktree.id}`,
+    reason: "least-loaded-discord",
   });
 
   logInfo(
@@ -45,7 +50,7 @@ export function processAndProxy(worktree, req, res, rawBody) {
       logInfo(`📝 Discord message ID: ${discordMessageId}`);
     }
 
-    const sessionId = req.headers["x-openclaw-session"] || null;
+    const sessionId = req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
     discordThreadName = getSessionThreadName(sessionId, parsedBody.messages);
     if (discordThreadName) {
       logInfo(`🧵 Discord thread: "${discordThreadName}"`);

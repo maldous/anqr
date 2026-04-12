@@ -29,88 +29,159 @@ function saveStore(name, store) {
   fs.renameSync(tmpFile, filePath);
 }
 
-export function createDurableSet(name, ttlMs = 0) {
-  function load() {
-    const store = loadStore(name);
-    if (ttlMs > 0) {
-      const now = Date.now();
-      let pruned = false;
-      for (const [key, entry] of Object.entries(store.entries)) {
-        if (now - entry.addedAt > ttlMs) {
-          delete store.entries[key];
-          pruned = true;
+const LOCK_MAX_ATTEMPTS = 60;
+const LOCK_BASE_WAIT_MS = 5;
+const LOCK_STALE_MS = 5000;
+
+function withStoreLock(name, fn) {
+  const lockPath = `${getStorePath(name)}.lock`;
+  let backoffMs = LOCK_BASE_WAIT_MS;
+
+  for (let attempt = 0; attempt < LOCK_MAX_ATTEMPTS; attempt++) {
+    try {
+      const fd = fs.openSync(
+        lockPath,
+        fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL,
+        0o644,
+      );
+      fs.writeSync(fd, `${process.pid}\n${Date.now()}`);
+      fs.closeSync(fd);
+      try {
+        return fn();
+      } finally {
+        try {
+          fs.unlinkSync(lockPath);
+        } catch {
+          /* race ok */
         }
       }
-      if (pruned) saveStore(name, store);
+    } catch (err) {
+      if (err.code !== "EEXIST") throw err;
+      try {
+        const stat = fs.statSync(lockPath);
+        if (Date.now() - stat.mtimeMs > LOCK_STALE_MS) {
+          try {
+            fs.unlinkSync(lockPath);
+          } catch {
+            /* race ok */
+          }
+          continue;
+        }
+      } catch {
+        continue;
+      }
+      const waitMs = backoffMs + Math.random() * backoffMs * 0.5;
+      const end = Date.now() + waitMs;
+      while (Date.now() < end) {
+        /* intentional sync wait — kept short by backoff cap */
+      }
+      backoffMs = Math.min(backoffMs * 1.5, 200);
     }
-    return store;
+  }
+  process.stderr.write(
+    `[durable-kv] WARNING: lock acquisition failed for "${name}" after ${LOCK_MAX_ATTEMPTS} attempts — proceeding unlocked\n`,
+  );
+  return fn();
+}
+
+export function createDurableSet(name, ttlMs = 0) {
+  function isExpired(entry) {
+    return ttlMs > 0 && Date.now() - entry.addedAt > ttlMs;
+  }
+
+  function pruneExpired(store) {
+    if (ttlMs <= 0) return false;
+    const now = Date.now();
+    let pruned = false;
+    for (const [key, entry] of Object.entries(store.entries)) {
+      if (now - entry.addedAt > ttlMs) {
+        delete store.entries[key];
+        pruned = true;
+      }
+    }
+    return pruned;
   }
 
   return {
     has(key) {
-      const store = load();
-      return key in store.entries;
+      const store = loadStore(name);
+      const entry = store.entries[key];
+      if (!entry) return false;
+      return !isExpired(entry);
     },
     add(key) {
-      const store = load();
-      store.entries[key] = { addedAt: Date.now() };
-      saveStore(name, store);
+      withStoreLock(name, () => {
+        const store = loadStore(name);
+        pruneExpired(store);
+        store.entries[key] = { addedAt: Date.now() };
+        saveStore(name, store);
+      });
     },
     delete(key) {
-      const store = load();
-      delete store.entries[key];
-      saveStore(name, store);
+      withStoreLock(name, () => {
+        const store = loadStore(name);
+        delete store.entries[key];
+        saveStore(name, store);
+      });
     },
     keys() {
-      return Object.keys(load().entries);
+      const store = loadStore(name);
+      if (ttlMs <= 0) return Object.keys(store.entries);
+      return Object.entries(store.entries)
+        .filter(([, entry]) => !isExpired(entry))
+        .map(([key]) => key);
     },
     get size() {
-      return Object.keys(load().entries).length;
+      return this.keys().length;
     },
     clear() {
-      saveStore(name, { entries: {} });
+      withStoreLock(name, () => {
+        saveStore(name, { entries: {} });
+      });
     },
   };
 }
 
 export function createDurableMap(name) {
-  function load() {
-    return loadStore(name);
-  }
-
   return {
     get(key) {
-      const store = load();
+      const store = loadStore(name);
       const entry = store.entries[key];
       return entry ? entry.value : undefined;
     },
     set(key, value) {
-      const store = load();
-      store.entries[key] = { value, updatedAt: Date.now() };
-      saveStore(name, store);
+      withStoreLock(name, () => {
+        const store = loadStore(name);
+        store.entries[key] = { value, updatedAt: Date.now() };
+        saveStore(name, store);
+      });
     },
     has(key) {
-      return key in load().entries;
+      return key in loadStore(name).entries;
     },
     delete(key) {
-      const store = load();
-      delete store.entries[key];
-      saveStore(name, store);
+      withStoreLock(name, () => {
+        const store = loadStore(name);
+        delete store.entries[key];
+        saveStore(name, store);
+      });
     },
     keys() {
-      return Object.keys(load().entries);
+      return Object.keys(loadStore(name).entries);
     },
     values() {
-      return Object.values(load().entries).map((e) => e.value);
+      return Object.values(loadStore(name).entries).map((e) => e.value);
     },
     entries() {
-      return Object.entries(load().entries).map(([k, e]) => [k, e.value]);
+      return Object.entries(loadStore(name).entries).map(([k, e]) => [k, e.value]);
     },
     get size() {
-      return Object.keys(load().entries).length;
+      return Object.keys(loadStore(name).entries).length;
     },
     clear() {
-      saveStore(name, { entries: {} });
+      withStoreLock(name, () => {
+        saveStore(name, { entries: {} });
+      });
     },
   };
 }
@@ -124,15 +195,19 @@ export function createDurableQueue(name) {
 
   return {
     enqueue(item) {
-      const store = load();
-      store.queue.push({ item, enqueuedAt: Date.now() });
-      saveStore(name, store);
+      withStoreLock(name, () => {
+        const store = load();
+        store.queue.push({ item, enqueuedAt: Date.now() });
+        saveStore(name, store);
+      });
     },
     dequeue() {
-      const store = load();
-      const entry = store.queue.shift();
-      saveStore(name, store);
-      return entry ? entry.item : undefined;
+      return withStoreLock(name, () => {
+        const store = load();
+        const entry = store.queue.shift();
+        saveStore(name, store);
+        return entry ? entry.item : undefined;
+      });
     },
     peek() {
       const store = load();
@@ -145,7 +220,9 @@ export function createDurableQueue(name) {
       return load().queue.length;
     },
     clear() {
-      saveStore(name, { queue: [] });
+      withStoreLock(name, () => {
+        saveStore(name, { queue: [] });
+      });
     },
   };
 }

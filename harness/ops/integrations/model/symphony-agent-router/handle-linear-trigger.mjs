@@ -59,7 +59,7 @@ export function handleLinearTrigger(req, res) {
 
     // Dispatch directly to the selected worktree executor HTTP surface
     json(res, 202, { status: "accepted" });
-    dispatchLinearExecution(identifier);
+    dispatchLinearExecution(identifier, correlationId);
   });
 
   req.on("error", (err) => {

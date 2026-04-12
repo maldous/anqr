@@ -36,4 +36,15 @@ export const MONITORED_SERVICES = [
     healthEndpoint: null,
     skipProviderCheck: true,
   },
+  ...Array.from({ length: 8 }, (_, i) => {
+    const n = i + 1;
+    return {
+      name: `anqr-symphony-executor@${n}.service`,
+      shortName: `executor-wt${n}`,
+      port: 4320 + n,
+      criticalFiles: ["harness/ops/integrations/model/symphony-openai-bridge.mjs"],
+      healthEndpoint: `http://127.0.0.1:${4320 + n}/health`,
+      skipProviderCheck: false,
+    };
+  }),
 ];

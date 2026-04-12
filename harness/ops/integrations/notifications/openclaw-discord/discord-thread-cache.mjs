@@ -1,6 +1,7 @@
-const threadCache = new Map();
+import { createDurableMap } from "../../../lib/durable-kv.mjs";
+
+const threadCache = createDurableMap("discord-thread-cache");
 const CACHE_TTL_MS = 30 * 60 * 1000;
-const CACHE_MAX = 100;
 
 export function getThreadChannelId(threadName) {
   if (!threadName) return null;
@@ -16,8 +17,4 @@ export function getThreadChannelId(threadName) {
 export function setThreadChannelId(threadName, channelId) {
   if (!threadName || !channelId) return;
   threadCache.set(threadName, { channelId, createdAt: Date.now() });
-  while (threadCache.size > CACHE_MAX) {
-    const oldest = threadCache.keys().next().value;
-    threadCache.delete(oldest);
-  }
 }

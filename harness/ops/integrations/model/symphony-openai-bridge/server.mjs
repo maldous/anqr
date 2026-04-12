@@ -51,6 +51,7 @@ import { refreshProviderStatus } from "./refresh-provider-status.mjs";
 import { requestIdCounter, setRequestIdCounter } from "./request-id-counter.mjs";
 import { resolveRoute } from "./resolve-route.mjs";
 import { safeLogDebug } from "./safe-log-debug.mjs";
+import { recordProviderSelection } from "../../../core/task-evidence.mjs";
 import { sanitizeForDiscordPreview } from "./sanitize-for-discord-preview.mjs";
 import { sendJson } from "./send-json.mjs";
 import { shouldUseToolsForRequest } from "./should-use-tools-for-request.mjs";
@@ -272,8 +273,9 @@ export const server = http.createServer(async (req, res) => {
       }
 
       const messages = Array.isArray(body.messages) ? body.messages : undefined;
-      const sessionId = req.headers["x-openclaw-session"] || null;
+      const sessionId = req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
       const worktreeId = req.headers["x-worktree-id"] || null;
+      const correlationId = req.headers["x-anqr-correlation-id"] || null;
       const isSymphonyRunner = req.headers["x-symphony-origin"] === "runner";
       const requestCwd = normalizeRequestCwd(body.cwd);
 
@@ -730,9 +732,20 @@ export const server = http.createServer(async (req, res) => {
         // First, let credit-gate select the best provider (with session awareness)
         const selectedProvider = await selectProvider(buildSelectionOptions(route, [], sessionId));
 
-        logInfo(
-          `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
-        );
+      logInfo(
+        `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
+      );
+
+      if (correlationId && selectedProvider) {
+        try {
+          recordProviderSelection(correlationId, {
+            providerName: selectedProvider.name,
+            model: selectedProvider.model,
+          });
+        } catch {
+          /* best-effort evidence */
+        }
+      }
 
         const isSelectedCodebuff =
           selectedProvider?.driver === "codebuff-sdk" ||

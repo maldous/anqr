@@ -2,7 +2,6 @@ export { PORT } from "./port.mjs";
 export { WEBHOOK_SECRET } from "./webhook-secret.mjs";
 export { WORKTREE_IDS } from "./worktree-ids.mjs";
 export { recentDeliveries } from "./recent-deliveries.mjs";
-export { DEDUP_WINDOW_MS } from "./dedup-window-ms.mjs";
 export { activeIssues } from "./active-issues.mjs";
 export { verifySignature } from "./verify-signature.mjs";
 export { isDuplicate } from "./is-duplicate.mjs";

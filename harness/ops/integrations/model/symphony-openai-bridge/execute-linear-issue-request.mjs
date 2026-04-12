@@ -31,6 +31,7 @@ export async function executeLinearIssueRequest(req, res) {
   }
 
   const identifier = String(body?.identifier || req.headers["x-linear-identifier"] || "").trim();
+  const correlationId = req.headers["x-anqr-correlation-id"] || null;
   if (!identifier) {
     return sendJson(res, 400, {
       error: { message: "Missing Linear issue identifier", type: "invalid_request_error" },
@@ -50,7 +51,7 @@ export async function executeLinearIssueRequest(req, res) {
       [RUNNER_ENTRY, "--issue", identifier],
       {
         cwd: process.cwd(),
-        env: process.env,
+        env: { ...process.env, ...(correlationId ? { ANQR_CORRELATION_ID: correlationId } : {}) },
         timeout: RUNNER_TIMEOUT_MS,
         maxBuffer: 10 * 1024 * 1024,
       },

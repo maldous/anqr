@@ -56,15 +56,6 @@ export function updateEvidenceRecord(correlationId, patch) {
   return updated;
 }
 
-export function appendEvidenceEvent(correlationId, event) {
-  const record = loadEvidenceRecord(correlationId);
-  if (!record) return null;
-  record.events.push({ ...event, at: new Date().toISOString() });
-  record.updatedAt = new Date().toISOString();
-  saveEvidence(correlationId, record);
-  return record;
-}
-
 export function recordRoutingDecision(correlationId, routing) {
   return updateEvidenceRecord(correlationId, {
     routing: {
@@ -146,36 +137,6 @@ export function recordIntegrationResult(correlationId, integration) {
       error: integration.error || null,
     },
   });
-}
-
-export function recordWatchdogEvent(correlationId, watchdogEvent) {
-  const record = loadEvidenceRecord(correlationId);
-  if (!record) return null;
-  record.watchdog.push({ ...watchdogEvent, at: new Date().toISOString() });
-  record.updatedAt = new Date().toISOString();
-  saveEvidence(correlationId, record);
-  return record;
-}
-
-export function listEvidenceRecords(limit = 100) {
-  const dir = getEvidenceDir();
-  try {
-    return fs
-      .readdirSync(dir)
-      .filter((f) => f.endsWith(".json"))
-      .sort()
-      .slice(-limit)
-      .map((f) => {
-        try {
-          return JSON.parse(fs.readFileSync(path.join(dir, f), "utf-8"));
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
 }
 
 function saveEvidence(correlationId, record) {

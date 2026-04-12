@@ -33,6 +33,7 @@ import { STATS_LOG_INTERVAL } from "./stats-log-interval.mjs";
 import { buildSelectionOptions } from "./build-selection-options.mjs";
 import { errorToString } from "./error-to-string.mjs";
 import { invokeWithAI } from "./invoke-with-ai.mjs";
+import { isInvalidModelAnswerText } from "./is-invalid-model-answer-text.mjs";
 import { isRetryableErrorDeep } from "./is-retryable-error-deep.mjs";
 import { lastProbeTimeCheck } from "./last-probe-time-check.mjs";
 import { logBridgeStats } from "./log-bridge-stats.mjs";
@@ -113,6 +114,19 @@ export async function invokeWithFallbackStream(
             cwd,
             useTools: route.useTools,
           });
+
+      if (
+        isCodebuffProvider &&
+        isInvalidModelAnswerText(result.text, {
+          allowSentinel: process.env.SYMPHONY_ALLOW_NO_REPLY_SENTINEL === "1",
+        })
+      ) {
+        const invalidErr = new Error(`Invalid sentinel response from ${provider.name} (stream)`);
+        invalidErr.code = "INVALID_SENTINEL_RESPONSE";
+        invalidErr.providerName = provider.name;
+        invalidErr.retryable = true;
+        throw invalidErr;
+      }
 
       const textPreview = result.text?.slice(0, 100) || "";
       logInfo(
@@ -203,17 +217,6 @@ export async function invokeWithFallbackStream(
         logInfo(
           `🔓 Cleared sticky session after ${provider.name} streaming failure (${errorType})`,
         );
-      }
-
-      if (onChunk) {
-        const errorDetail =
-          errorType === ERROR_TYPES.UNKNOWN || errorType === "unknown"
-            ? errStr.slice(0, 100)
-            : errorType;
-        const errorNotice = `
-⚠️ ${provider.name} failed (${errorDetail}), trying next provider...
-`;
-        onChunk({ type: "text", text: errorNotice });
       }
 
       continue;

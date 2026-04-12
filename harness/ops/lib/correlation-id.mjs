@@ -13,15 +13,7 @@ export function extractCorrelationId(headers) {
   return headers[HEADER_NAME] || headers["x-request-id"] || null;
 }
 
-export function injectCorrelationId(headers, correlationId) {
-  if (!headers || !correlationId) return headers;
-  const result = { ...headers };
-  result[HEADER_NAME] = correlationId;
-  return result;
-}
-
 export function correlationIdFromRequest(req) {
   return extractCorrelationId(req?.headers) || generateCorrelationId();
 }
 
-export { HEADER_NAME as CORRELATION_ID_HEADER };
