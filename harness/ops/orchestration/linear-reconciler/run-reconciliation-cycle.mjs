@@ -1,5 +1,5 @@
 import { getQueueSnapshot, feedQueue, detectStuckWork } from "../../symphony-queue-control.mjs";
-import { listIssuesByState } from "../../linear-client.mjs";
+import { listIssuesByState, updateIssue, addComment, STATES } from "../../linear-client.mjs";
 import {
   canExecuteIssue,
   leaseIsActive,
@@ -8,6 +8,8 @@ import {
   getFinalizationState,
   enqueueIntegrationCandidate,
   setGlobalValue,
+  releaseLease,
+  loadState,
 } from "../../symphony-state.mjs";
 import {
   QUEUE_STATES,
@@ -20,6 +22,54 @@ import { getHealthyLinearCapacity } from "./get-healthy-linear-capacity.mjs";
 import { computeReconciliationActions } from "./compute-reconciliation-actions.mjs";
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
 
+async function dispatchIssue(action) {
+  try {
+    const response = await fetch("http://127.0.0.1:4319/v1/linear/trigger", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer local-symphony",
+      },
+      body: JSON.stringify({
+        identifier: action.issueIdentifier,
+        title: action.title,
+        action: "reconciler",
+        source: "linear-reconciler",
+        timestamp: new Date().toISOString(),
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (response.ok || response.status === 202) {
+      logInfo(`Dispatched ${action.issueIdentifier}: ${action.title}`);
+      return true;
+    }
+
+    const text = await response.text();
+    logWarn(`Dispatch failed for ${action.issueIdentifier}: ${response.status} ${text}`);
+    return false;
+  } catch (err) {
+    logError(`Dispatch error for ${action.issueIdentifier}: ${err.message}`);
+    return false;
+  }
+}
+
+async function recoverInProgressIssue(action) {
+  try {
+    releaseLease(action.issueIdentifier);
+    await updateIssue(action.issueId, { stateId: STATES.todo });
+    await addComment(
+      action.issueId,
+      `⏰ **Recovered by reconciler** — issue was In Progress with no valid active lease. Returned to Todo for re-dispatch.`,
+    );
+    logWarn(`Recovered stale In Progress issue ${action.issueIdentifier}`);
+    return true;
+  } catch (err) {
+    logError(`Recover In Progress failed for ${action.issueIdentifier}: ${err.message}`);
+    return false;
+  }
+}
+
 export async function runReconciliationCycle() {
   const cycleStart = Date.now();
 
@@ -30,7 +80,7 @@ export async function runReconciliationCycle() {
 
   for (const wt of capacity.worktrees) {
     if (!wt.healthy) {
-      logWarn(`  ${wt.wtId}: ${wt.state} (unhealthy)`);
+      logWarn(`  ${wt.wtId}: ${wt.state} (unhealthy${wt.reason ? `, ${wt.reason}` : ""})`);
     }
   }
 
@@ -48,14 +98,16 @@ export async function runReconciliationCycle() {
   }
 
   const freshSnap = await getQueueSnapshot();
-
   const todoIssues = await listIssuesByState(QUEUE_STATES.readyStates);
+  const inProgressIssues = await listIssuesByState(QUEUE_STATES.activeStates);
   const eligibleTodo = todoIssues
     .filter((issue) => canExecuteIssue(issue))
     .filter((issue) => !isDiscordSourced(issue));
 
   const activeLeases = new Set();
+  const activeIssueIdentifiers = new Set();
   for (const issue of freshSnap.inProgress.all) {
+    activeIssueIdentifiers.add(issue.identifier);
     const state = getIssueState(issue.identifier);
     if (leaseIsActive(state)) {
       activeLeases.add(issue.identifier);
@@ -64,8 +116,10 @@ export async function runReconciliationCycle() {
 
   const candidates = listIntegrationCandidates();
   const finalizationStates = {};
-  for (const id of candidates) {
-    finalizationStates[id] = getFinalizationState(id);
+  const store = loadState();
+  for (const id of new Set([...candidates, ...Object.keys(store.issues)])) {
+    const fin = getFinalizationState(id);
+    if (fin) finalizationStates[id] = fin;
   }
 
   const { actions, summary } = computeReconciliationActions({
@@ -75,54 +129,38 @@ export async function runReconciliationCycle() {
     activeLeases,
     integrationCandidates: candidates,
     finalizationStates,
+    inProgressIssues,
+    activeIssueIdentifiers,
   });
 
   logInfo(
-    `Reconciliation: eligible=${summary.eligibleCount} budget=${summary.dispatchBudget} dispatching=${summary.dispatchCount}`,
+    `Reconciliation: todo=${todoIssues.length} eligible=${summary.eligibleCount} active=${freshSnap.activeDepth} budget=${summary.dispatchBudget} dispatching=${summary.dispatchCount} stale=${summary.staleRecoveryCount} integration_queue=${summary.staleIntegrationCount}`,
   );
 
   let dispatched = 0;
   let reEnqueued = 0;
+  let recovered = 0;
 
   for (const action of actions) {
     if (action.type === "dispatch") {
-      try {
-        const response = await fetch("http://127.0.0.1:4319/v1/linear/trigger", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer local-symphony",
-          },
-          body: JSON.stringify({
-            identifier: action.issueIdentifier,
-            title: action.title,
-            action: "reconciler",
-            source: "linear-reconciler",
-            timestamp: new Date().toISOString(),
-          }),
-          signal: AbortSignal.timeout(10_000),
-        });
-
-        if (response.ok || response.status === 202) {
-          dispatched++;
-          logInfo(`Dispatched ${action.issueIdentifier}: ${action.title}`);
-        } else {
-          const text = await response.text();
-          logWarn(`Dispatch failed for ${action.issueIdentifier}: ${response.status} ${text}`);
-        }
-      } catch (err) {
-        logError(`Dispatch error for ${action.issueIdentifier}: ${err.message}`);
-      }
-
+      if (await dispatchIssue(action)) dispatched++;
       if (RECONCILER_DISPATCH_COOLDOWN_MS > 0) {
         await new Promise((r) => setTimeout(r, RECONCILER_DISPATCH_COOLDOWN_MS));
       }
-    } else if (action.type === "re_enqueue_integration") {
+      continue;
+    }
+
+    if (action.type === "recover_in_progress") {
+      if (await recoverInProgressIssue(action)) recovered++;
+      continue;
+    }
+
+    if (action.type === "re_enqueue_integration") {
       try {
         enqueueIntegrationCandidate(action.issueIdentifier);
         reEnqueued++;
         logInfo(
-          `Re-enqueued ${action.issueIdentifier} for integration (stale ${Math.round(action.ageMs / 60000)}min)`,
+          `Re-enqueued ${action.issueIdentifier} for integration (${action.reason}, ${Math.round(action.ageMs / 60000)}min)`,
         );
       } catch (err) {
         logError(`Re-enqueue error for ${action.issueIdentifier}: ${err.message}`);
@@ -136,6 +174,7 @@ export async function runReconciliationCycle() {
     setGlobalValue("lastReconcilerRun", {
       timestamp: new Date().toISOString(),
       dispatched,
+      recovered,
       reEnqueued,
       summary,
       durationMs: cycleMs,
@@ -144,7 +183,7 @@ export async function runReconciliationCycle() {
     /* best-effort state persistence */
   }
 
-  logInfo(`Cycle complete: dispatched=${dispatched} re-enqueued=${reEnqueued} (${cycleMs}ms)`);
+  logInfo(`Cycle complete: dispatched=${dispatched} recovered=${recovered} re-enqueued=${reEnqueued} (${cycleMs}ms)`);
 
-  return { dispatched, reEnqueued, summary, durationMs: cycleMs };
+  return { dispatched, recovered, reEnqueued, summary, durationMs: cycleMs };
 }

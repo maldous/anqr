@@ -35,3 +35,10 @@
 Every 5m  anqr-email-ingest     (mutating: mail → Linear issues)
 Every 5m  anqr-worktree-health  (diagnostic: health snapshot)
 ```
+
+
+## Long-running maintenance services
+
+| Service | Cadence | Behavior |
+| --- | --- | --- |
+| `anqr-linear-reconciler.service` | Internal 90s poll loop | Level-triggered backlog reconciliation, startup recovery, stale In Progress recovery, and integration queue repair. |

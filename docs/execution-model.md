@@ -123,6 +123,14 @@ Linear trigger queue.
 | Destructive `git reset --hard origin/main` on sync failure threshold                     | Quarantine worktree + delegate to recovery service | Non-destructive; recovery service handles repair     |
 | Destructive `git reset --hard` in watchdog rollback                                      | Quarantine + safe restart                          | No data loss; evidence preserved                     |
 
+## Linear reliability guarantees
+
+- `anqr-linear-reconciler.service` is the level-triggered safety net. Webhook delivery is an accelerator, not the only scheduler.
+- Startup and periodic reconciliation rediscover pre-existing Todo issues, stale In Progress issues, and missing integration queue entries.
+- Linear capacity is `wt1` to `wt4` only, and it drops when a worktree is diverged, quarantined, integration blocked, or unavailable.
+- Diverged worktrees are quarantined for deterministic repair. They are not treated as healthy steady state.
+- Only the integrator closes Linear issues. Closure requires branch push success, integration to `main`, and published evidence.
+
 ### Why the Bridge→Runner Layer Exists
 
 The `symphony-openai-bridge` (executor) spawns the `symphony-runner` as a

@@ -5,39 +5,145 @@ import {
   getIssueState,
 } from "../../symphony-state.mjs";
 import { updateIssue, addComment, STATES } from "../../linear-client.mjs";
-import { recordIntegrationResult } from "../../core/task-evidence.mjs";
+import { recordIntegrationResult, loadEvidenceRecord } from "../../core/task-evidence.mjs";
 
 import { findIssueByIdentifier } from "./find-issue-by-identifier.mjs";
 import { git } from "./git.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
+function buildEvidenceComment({
+  issueIdentifier,
+  finalization,
+  pushedMainSha,
+  changedFiles,
+  diffStat,
+  evidence,
+}) {
+  const validation = evidence?.validation || null;
+  const push = evidence?.push || null;
+  const docsUpdated = changedFiles.some((f) => /(^docs\/)|README\.md$/.test(f));
+  const verificationResults = [
+    ["typecheck", validation?.typecheckPassed],
+    ["tests", validation?.testsPassed],
+    ["lint", validation?.lintPassed],
+  ];
+
+  return [
+    `✅ **Integrated to main** — evidence record`,
+    "",
+    `| Field | Value |`,
+    `|-------|-------|`,
+    `| Issue | ${issueIdentifier} |`,
+    `| Worktree | ${finalization.worktreeId || evidence?.worktreeSelection?.worktreeId || "unknown"} |`,
+    `| Actor | symphony-integrator |`,
+    `| Source commit | \`${(finalization.headSha || "unknown").slice(0, 8)}\` |`,
+    `| Integration commit | \`${pushedMainSha.slice(0, 8)}\` |`,
+    `| Branch | \`${finalization.branch || "unknown"}\` |`,
+    `| Files changed | ${changedFiles.length} |`,
+    `| Docs updated | ${docsUpdated ? "yes" : "no"} |`,
+    `| Push status | ${push?.success === true ? "passed" : push?.success === false ? "failed" : "unknown"} |`,
+    `| Integration method | cherry-pick |`,
+    `| Timestamp | ${new Date().toISOString()} |`,
+    "",
+    `### Verification commands run`,
+    `- npm run typecheck`,
+    `- npm run test`,
+    `- npm run lint`,
+    "",
+    `### Verification results`,
+    ...verificationResults.map(
+      ([name, value]) =>
+        `- ${name}: ${value === true ? "passed" : value === false ? "failed" : "skipped or not recorded"}`,
+    ),
+    validation?.errors?.length
+      ? `- errors: ${validation.errors.join(", ")}`
+      : `- errors: none recorded`,
+    "",
+    `### Changed files`,
+    ...changedFiles.slice(0, 20).map((f) => `- \`${f}\``),
+    ...(changedFiles.length > 20 ? [`- ... and ${changedFiles.length - 20} more`] : []),
+    "",
+    `### Diff summary`,
+    "```",
+    diffStat || "(no diff stat)",
+    "```",
+  ].join("\n");
+}
+
+async function publishEvidenceAndClose({
+  issueIdentifier,
+  finalization,
+  pushedMainSha,
+  changedFiles,
+  diffStat,
+}) {
+  const detail = await findIssueByIdentifier(issueIdentifier);
+  if (!detail) {
+    await setFinalizationState(issueIdentifier, {
+      state: "evidence_pending_closeout",
+      integratedMainSha: pushedMainSha,
+      changedFiles,
+      diffStat,
+      lastError: "Linear issue detail unavailable during closeout",
+      updatedAt: new Date().toISOString(),
+    });
+    return { ok: false, reason: "missing_linear_detail" };
+  }
+
+  const evidence = finalization.correlationId ? loadEvidenceRecord(finalization.correlationId) : null;
+  const evidenceComment = buildEvidenceComment({
+    issueIdentifier,
+    finalization,
+    pushedMainSha,
+    changedFiles,
+    diffStat,
+    evidence,
+  });
+
+  await addComment(detail.id, evidenceComment);
+  await updateIssue(detail.id, { stateId: STATES.done });
+  return { ok: true };
+}
+
 export async function integrateCandidate(issueIdentifier) {
   const finalization = getFinalizationState(issueIdentifier);
-  if (!finalization || finalization.state !== "integration_pending") {
-    logWarn(
-      `[integrator] ${issueIdentifier}: unexpected finalization state: ${finalization?.state}`,
-    );
+  if (!finalization || !["integration_pending", "evidence_pending_closeout"].includes(finalization.state)) {
+    logWarn(`[integrator] ${issueIdentifier}: unexpected finalization state: ${finalization?.state}`);
     dequeueIntegrationCandidate(issueIdentifier);
     return { ok: false, reason: "invalid_state" };
   }
 
   const { branch, headSha, correlationId } = finalization;
+
+  if (finalization.state === "evidence_pending_closeout") {
+    if (!finalization.integratedMainSha) {
+      dequeueIntegrationCandidate(issueIdentifier);
+      return { ok: false, reason: "missing_integrated_main_sha" };
+    }
+    const closeout = await publishEvidenceAndClose({
+      issueIdentifier,
+      finalization,
+      pushedMainSha: finalization.integratedMainSha,
+      changedFiles: finalization.changedFiles || [],
+      diffStat: finalization.diffStat || "(cached)",
+    });
+    if (!closeout.ok) return closeout;
+    dequeueIntegrationCandidate(issueIdentifier);
+    return { ok: true, mainSha: finalization.integratedMainSha, closeoutOnly: true };
+  }
+
   if (!branch || !headSha) {
     logWarn(`[integrator] ${issueIdentifier}: missing branch or headSha`);
     return { ok: false, reason: "missing_metadata" };
   }
 
-  logInfo(
-    `[integrator] Integrating ${issueIdentifier}: branch=${branch} head=${headSha.slice(0, 8)}`,
-  );
+  logInfo(`[integrator] Integrating ${issueIdentifier}: branch=${branch} head=${headSha.slice(0, 8)}`);
   const integrationStartMs = Date.now();
 
   try {
-    // Fetch latest refs — fetch branch explicitly to handle force-pushed branches after conflict repair
     git("fetch", "origin", "main");
     git("fetch", "origin", branch);
 
-    // Create clean integration workspace
     try {
       git("branch", "-D", "symphony/integration");
     } catch {
@@ -45,29 +151,23 @@ export async function integrateCandidate(issueIdentifier) {
     }
     git("checkout", "-B", "symphony/integration", "origin/main");
 
-    // Cherry-pick the candidate commit
     try {
       git("cherry-pick", headSha);
     } catch (cpErr) {
-      // Cherry-pick failed — likely a conflict
       const stderr = cpErr.stderr?.toString() || cpErr.message || "";
       logWarn(`[integrator] Cherry-pick failed for ${issueIdentifier}: ${stderr.slice(0, 200)}`);
 
-      // Abort the cherry-pick
       try {
         git("cherry-pick", "--abort");
       } catch {
         /* already clean */
       }
-
-      // Return to main
       try {
         git("checkout", "main");
       } catch {
         /* best effort */
       }
 
-      // Mark as integration_failed_repairable
       const attempts = (finalization.attempts || 0) + 1;
       await setFinalizationState(issueIdentifier, {
         state: "integration_failed_repairable",
@@ -76,7 +176,6 @@ export async function integrateCandidate(issueIdentifier) {
         updatedAt: new Date().toISOString(),
       });
 
-      // Update Linear
       const issueState = getIssueState(issueIdentifier);
       const detail = issueState ? await findIssueByIdentifier(issueIdentifier) : null;
       if (detail) {
@@ -102,14 +201,11 @@ export async function integrateCandidate(issueIdentifier) {
       return { ok: false, reason: "conflict" };
     }
 
-    // Push to main
     git("push", "origin", "HEAD:main");
     const pushedMainSha = git("rev-parse", "HEAD");
 
     const integrationMs = Date.now() - integrationStartMs;
-    logInfo(
-      `[integrator] ✅ ${issueIdentifier} integrated to main at ${pushedMainSha.slice(0, 8)} (${integrationMs}ms)`,
-    );
+    logInfo(`[integrator] ✅ ${issueIdentifier} integrated to main at ${pushedMainSha.slice(0, 8)} (${integrationMs}ms)`);
 
     if (correlationId) {
       try {
@@ -123,7 +219,6 @@ export async function integrateCandidate(issueIdentifier) {
       }
     }
 
-    // Get changed files from the cherry-pick for evidence
     let changedFiles = [];
     let diffStat = "";
     try {
@@ -135,60 +230,47 @@ export async function integrateCandidate(issueIdentifier) {
       /* best-effort evidence collection */
     }
 
-    // Update finalization state
     await setFinalizationState(issueIdentifier, {
-      state: "integrated_main",
+      state: "evidence_pending_closeout",
       integratedMainSha: pushedMainSha,
       changedFiles,
+      diffStat,
       updatedAt: new Date().toISOString(),
       lastError: null,
     });
 
-    // Evidence-locked closure: post evidence BEFORE marking Done
-    const detail = await findIssueByIdentifier(issueIdentifier);
-    if (detail) {
-      const evidenceComment = [
-        `✅ **Integrated to main** — evidence record`,
-        "",
-        `| Field | Value |`,
-        `|-------|-------|`,
-        `| Issue | ${issueIdentifier} |`,
-        `| Worktree | ${finalization.worktreeId || "unknown"} |`,
-        `| Source commit | \`${headSha.slice(0, 8)}\` |`,
-        `| Integration commit | \`${pushedMainSha.slice(0, 8)}\` |`,
-        `| Branch | \`${branch}\` |`,
-        `| Files changed | ${changedFiles.length} |`,
-        `| Integration method | cherry-pick |`,
-        `| Timestamp | ${new Date().toISOString()} |`,
-        "",
-        "### Changed files",
-        ...changedFiles.slice(0, 20).map((f) => `- \`${f}\``),
-        ...(changedFiles.length > 20 ? [`- ... and ${changedFiles.length - 20} more`] : []),
-        "",
-        "### Diff summary",
-        "```",
-        diffStat || "(no diff stat)",
-        "```",
-      ].join("\n");
-
-      // Post evidence FIRST — only close if evidence is published
-      await addComment(detail.id, evidenceComment);
-      await updateIssue(detail.id, { stateId: STATES.done });
+    const closeout = await publishEvidenceAndClose({
+      issueIdentifier,
+      finalization: { ...finalization, integratedMainSha: pushedMainSha },
+      pushedMainSha,
+      changedFiles,
+      diffStat,
+    });
+    if (!closeout.ok) {
+      logWarn(`[integrator] Evidence publish deferred for ${issueIdentifier}: ${closeout.reason}`);
+      return closeout;
     }
+
+    await setFinalizationState(issueIdentifier, {
+      state: "integrated_main",
+      integratedMainSha: pushedMainSha,
+      changedFiles,
+      diffStat,
+      updatedAt: new Date().toISOString(),
+      lastError: null,
+    });
 
     dequeueIntegrationCandidate(issueIdentifier);
     return { ok: true, mainSha: pushedMainSha };
   } catch (err) {
     logError(`[integrator] Unexpected error for ${issueIdentifier}: ${err.message}`);
 
-    // Return to main branch
     try {
       git("checkout", "main");
     } catch {
       /* best effort */
     }
 
-    // Mark as repairable on infra failure
     const attempts = (finalization.attempts || 0) + 1;
     await setFinalizationState(issueIdentifier, {
       state: "integration_failed_repairable",

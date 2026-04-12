@@ -9,6 +9,8 @@ const RUNTIME_FILES = [
   "harness/ops/tools/verify-webhook-system/main.mjs",
   "harness/ops/tools/startup-recovery/main.mjs",
   "harness/ops/orchestration/symphony-control/get-timer-status.mjs",
+  "docs/execution-model.md",
+  "docs/timers-and-scheduled-jobs.md",
 ];
 
 const STALE_PATTERNS = ["anqr-linear-runner@", "anqr-queue-feeder"];

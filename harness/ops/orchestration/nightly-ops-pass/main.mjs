@@ -7,6 +7,7 @@ import { skipSonar } from "./skip-sonar.mjs";
 import { skipTests } from "./skip-tests.mjs";
 import { steps } from "./steps.mjs";
 import { logInfo } from "./logger.mjs";
+import { setGlobalValue } from "../../symphony-state.mjs";
 
 export async function main() {
   logInfo(`[nightly]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
@@ -111,6 +112,18 @@ export async function main() {
     const result = runStep(step);
     if (result.exitCode !== 0 && step.severity === "blocking") {
       hardFailure = true;
+    }
+  }
+
+  if (process.env.SONAR_TOKEN && !skipSonar) {
+    try {
+      setGlobalValue("lastNightlySonarRun", {
+        timestamp: new Date().toISOString(),
+        skipSonar,
+        dryRun,
+      });
+    } catch {
+      /* best-effort */
     }
   }
 
