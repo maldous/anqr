@@ -1,0 +1,66 @@
+# anqr-symphony-codex.service — Symphony bridge for Codex CLI
+#
+# Dedicated bridge instance for use with OpenAI Codex CLI.
+# Runs in the MAIN repo (not a worktree) so Codex tool execution
+# operates on the correct directory.
+#
+# Port: 4330 (outside the wt1-wt8 range 4321-4328)
+#
+# Usage with Codex CLI:
+#   codex -c model='"symphony/main"' -c model_provider='"symphony"'
+#
+# Install:
+#   ln -sf ~/src/anqr/services/systemd/anqr-symphony-codex.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-symphony-codex.service
+
+[Unit]
+Description=ANQR Symphony bridge for Codex CLI (main repo)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# CRITICAL: Run in the main repo, not a worktree.
+# Codex expects tool execution to happen in the user's working directory.
+WorkingDirectory=%h/src/anqr
+
+# Explicit PATH — nvm Node is not on default systemd PATH
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
+
+# Bridge identification
+Environment=ANQR_WORKTREE_ID=codex
+Environment=ANQR_WORKTREE_PATH=%h/src/anqr
+
+# Bridge configuration — dedicated port for Codex
+Environment=SYMPHONY_BRIDGE_PORT=4330
+Environment=CODEX_SANDBOX_MODE=danger-full-access
+Environment=ANQR_RETRIEVAL_WARMUP=false
+
+# Provider tokens (loaded from anqr.env)
+EnvironmentFile=-%h/.config/symphony/anqr.env
+
+# Systemd env overrides (LINEAR_API_KEY, etc.)
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc %h/src/anqr/harness/ops/integrations/model/symphony-openai-bridge.mjs
+
+# Logging to journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-symphony-codex
+
+# Restart on failure
+Restart=on-failure
+RestartSec=5
+
+# Safety limits
+TimeoutStartSec=30
+MemoryHigh=3G
+MemoryMax=3584M
+
+[Install]
+WantedBy=default.target

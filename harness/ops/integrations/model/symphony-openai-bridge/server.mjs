@@ -61,6 +61,7 @@ import { tools } from "./tools.mjs";
 import { unauthorized } from "./unauthorized.mjs";
 import { verifyWorktreeFreshnessNonBlocking } from "./verify-worktree-freshness-non-blocking.mjs";
 import { voiceAnnounce } from "./voice-announce.mjs";
+import { handleResponsesApi } from "./handle-responses-api.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
 export const server = http.createServer(async (req, res) => {
@@ -69,7 +70,7 @@ export const server = http.createServer(async (req, res) => {
 
   try {
     const skipAuth =
-      req.url === "/health" || req.url === "/v1/models" || req.url === "/v1/providers";
+      req.url === "/health" || req.url === "/v1/models" || req.url === "/v1/providers" || req.url === "/v1/responses";
     if (!skipAuth && !checkAuth(req)) {
       logWarn(`Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
@@ -255,6 +256,11 @@ export const server = http.createServer(async (req, res) => {
 
     if (req.method === "POST" && req.url === "/v1/linear/execute") {
       return executeLinearIssueRequest(req, res);
+    }
+
+    // POST /v1/responses — OpenAI Responses API (used by Codex CLI)
+    if (req.method === "POST" && req.url === "/v1/responses") {
+      return handleResponsesApi(req, res);
     }
 
     // POST /v1/chat/completions
@@ -459,7 +465,8 @@ export const server = http.createServer(async (req, res) => {
       }
 
       const route = resolveRoute(body.model || MODEL_ID);
-      route.useTools = shouldUseToolsForRequest(messages, route);
+      const isCodexRequest = worktreeId === "codex";
+      route.useTools = isCodexRequest || shouldUseToolsForRequest(messages, route);
       const stream = body.stream === true;
 
       // Log message summary for debugging
