@@ -333,8 +333,8 @@ export async function executeIssue(issue, dryRun = false) {
       `🤖 **Symphony agent starting** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})\n\nRun: ${RUN_ID}\nLease: ${leaseNonce}`,
     );
     startingCommentId = startComment.id;
-    voiceAnnounce(`Starting work on ${issue.identifier}: ${issue.title}.`);
     if (dryRun) return "done";
+    voiceAnnounce(`Starting work on ${issue.identifier}: ${issue.title}.`);
 
     // NOTE: Discord notification removed from here to eliminate duplicate messages.
     // Only the final completion notification (below) is sent to Discord.
@@ -867,6 +867,7 @@ export async function executeIssue(issue, dryRun = false) {
             recordProviderSuccess(metricsProviderName);
           }
           logInfo(`[runner] ✅ Completed via tools: ${issue.identifier} — ${issue.title}`);
+          voiceAnnounce(`Finished ${issue.identifier}: ${issue.title}.`);
         } else if (agentResult.toolCalls > 0 && completionPromoted) {
           // Agent did real work (tool calls) but didn't explicitly complete —
           // promoted from partial progress. Move to In Review for human verification.
@@ -946,6 +947,7 @@ export async function executeIssue(issue, dryRun = false) {
         // Clear any cooldown so it doesn't get re-queued
         clearCooldown(issue.identifier);
         logInfo(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title} (externally)`);
+        voiceAnnounce(`Finished ${issue.identifier}: ${issue.title}.`);
         return "done";
       }
 
