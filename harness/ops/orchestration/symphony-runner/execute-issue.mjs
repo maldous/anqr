@@ -880,7 +880,9 @@ export async function executeIssue(issue, dryRun = false) {
               estimate: issue.estimate,
             });
           }
-          logInfo(`[runner] ⚠️ Partial progress (no file changes): ${issue.identifier} — ${issue.title}`);
+          logInfo(
+            `[runner] ⚠️ Partial progress (no file changes): ${issue.identifier} — ${issue.title}`,
+          );
         } else {
           // Agent reported completion with zero tool calls and zero file changes — false positive
           await updateIssue(issue.id, { stateId: STATES.todo });
@@ -902,7 +904,9 @@ export async function executeIssue(issue, dryRun = false) {
               estimate: issue.estimate,
             });
           }
-          logInfo(`[runner] ⚠️ False positive (no changes, no tools): ${issue.identifier} — ${issue.title}`);
+          logInfo(
+            `[runner] ⚠️ False positive (no changes, no tools): ${issue.identifier} — ${issue.title}`,
+          );
         }
         return "done";
       }
@@ -1064,7 +1068,9 @@ export async function executeIssue(issue, dryRun = false) {
         });
         return "done";
       } else {
-        logWarn(`[runner] Pre-validation sync failed (non-fatal): ${syncResult.error || "unknown"}`);
+        logWarn(
+          `[runner] Pre-validation sync failed (non-fatal): ${syncResult.error || "unknown"}`,
+        );
         // Continue with validation using the restored working tree state.
       }
     }

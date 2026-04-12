@@ -16,9 +16,7 @@ export const MONITORED_SERVICES = [
     name: "anqr-discord-router.service",
     shortName: "discord-router",
     port: 18790,
-    criticalFiles: [
-      "harness/ops/integrations/model/discord-request-router.mjs",
-    ],
+    criticalFiles: ["harness/ops/integrations/model/discord-request-router.mjs"],
     healthEndpoint: "http://127.0.0.1:18790/health",
     skipProviderCheck: true,
   },
@@ -26,9 +24,7 @@ export const MONITORED_SERVICES = [
     name: "anqr-linear-webhook.service",
     shortName: "linear-webhook",
     port: 18791,
-    criticalFiles: [
-      "harness/ops/integrations/model/linear-webhook-receiver.mjs",
-    ],
+    criticalFiles: ["harness/ops/integrations/model/linear-webhook-receiver.mjs"],
     healthEndpoint: "http://127.0.0.1:18791/health",
     skipProviderCheck: true,
   },
@@ -36,9 +32,7 @@ export const MONITORED_SERVICES = [
     name: "anqr-symphony-integrator.service",
     shortName: "symphony-integrator",
     port: null,
-    criticalFiles: [
-      "harness/ops/orchestration/symphony-integrator.mjs",
-    ],
+    criticalFiles: ["harness/ops/orchestration/symphony-integrator.mjs"],
     healthEndpoint: null,
     skipProviderCheck: true,
   },

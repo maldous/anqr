@@ -29,8 +29,9 @@ async function main() {
     const title = `Sonar: ${rule} (${count})`;
 
     // Extract file paths for description
-    const files = [...new Set(ruleIssues.map(i => i.component.split(":")[1]))].slice(0, 15);
-    const moreFiles = files.length < [...new Set(ruleIssues.map(i => i.component))].size ? " ..." : "";
+    const files = [...new Set(ruleIssues.map((i) => i.component.split(":")[1]))].slice(0, 15);
+    const moreFiles =
+      files.length < [...new Set(ruleIssues.map((i) => i.component))].size ? " ..." : "";
 
     // Create issue
     const issue = await createIssue({
@@ -42,7 +43,7 @@ async function main() {
         `**Sample message:** ${sample.message}`,
         "",
         `**Affected files (${files.length}):`,
-        ...files.map(f => `- ${f}`),
+        ...files.map((f) => `- ${f}`),
         moreFiles,
         "",
         `> ${sample.message}`,
@@ -60,7 +61,7 @@ async function main() {
   console.log(`[sonar-group] Done - created ${rules.length} issues`);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error("[sonar-group] Error:", err.message);
   process.exit(1);
 });

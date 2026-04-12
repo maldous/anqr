@@ -4,7 +4,13 @@ import {
   fetchAllSonarDuplicationIssues,
   fetchSonarMeasures,
 } from "../../../lib/sonar-linear-sync.mjs";
-import { findOpenIssuesByTitle, updateIssue, STATES, createIssue, LABELS } from "../../linear/linear-client.mjs";
+import {
+  findOpenIssuesByTitle,
+  updateIssue,
+  STATES,
+  createIssue,
+  LABELS,
+} from "../../linear/linear-client.mjs";
 import { sendNotification } from "../../../lib/notify.mjs";
 
 import { PROJECT_KEY } from "./project-key.mjs";
@@ -67,7 +73,7 @@ export async function main() {
 
   // Find existing grouped issues (by checking for "Sonar:" prefix)
   const existingGrouped = await findOpenIssuesByTitle("Sonar:");
-  const existingByTitle = new Map(existingGrouped.map(i => [i.title, i]));
+  const existingByTitle = new Map(existingGrouped.map((i) => [i.title, i]));
 
   // Find or create the consolidated summary issue
   const existingSummary = await findOpenIssuesByTitle(CONSOLIDATED_ISSUE_TITLE);
@@ -78,16 +84,17 @@ export async function main() {
   for (const [rule, ruleIssues] of ruleGroups) {
     const count = ruleIssues.length;
     const title = `Sonar: ${rule} (${count})`;
-    const files = [...new Set(ruleIssues.map(i => i.component.split(":")[1]))].slice(0, 15);
-    const uniqueFiles = [...new Set(ruleIssues.map(i => i.component))].size;
-    const moreFiles = files.length < uniqueFiles ? `\n+${uniqueFiles - files.length} more files` : "";
+    const files = [...new Set(ruleIssues.map((i) => i.component.split(":")[1]))].slice(0, 15);
+    const uniqueFiles = [...new Set(ruleIssues.map((i) => i.component))].size;
+    const moreFiles =
+      files.length < uniqueFiles ? `\n+${uniqueFiles - files.length} more files` : "";
 
     const description = [
       `**Rule:** ${rule}`,
       `**Count:** ${count}`,
       "",
       `**Affected files (${uniqueFiles}):`,
-      ...files.map(f => `- ${f}`),
+      ...files.map((f) => `- ${f}`),
       moreFiles,
       "",
       `> ${ruleIssues[0].message}`,
@@ -98,7 +105,10 @@ export async function main() {
     let groupIssue;
     if (existingByTitle.has(title)) {
       groupIssue = existingByTitle.get(title);
-      await updateIssue(groupIssue.id, { description, priority: Math.max(2, 4 - Math.floor(Math.log2(count))) });
+      await updateIssue(groupIssue.id, {
+        description,
+        priority: Math.max(2, 4 - Math.floor(Math.log2(count))),
+      });
     } else {
       groupIssue = await createIssue({
         title,
@@ -150,7 +160,9 @@ export async function main() {
         totalResolved > 0 ? `**Resolved stale:** ${totalResolved}` : "",
         "",
         `Dashboard: ${SONAR_HOST}/dashboard?id=${PROJECT_KEY}`,
-      ].filter(Boolean).join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n"),
       severity: "critical",
     });
   } else {
@@ -168,7 +180,9 @@ export async function main() {
       body: [
         `All ${ruleGroups.length} grouped issues resolved.`,
         totalResolved > 0 ? `Also resolved ${totalResolved} stale individual issues.` : "",
-      ].filter(Boolean).join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n"),
       severity: "info",
     });
   }

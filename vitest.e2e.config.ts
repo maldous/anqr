@@ -9,7 +9,11 @@ export default defineConfig({
   test: {
     globals: false,
     environment: "node",
-    include: ["tests/e2e/linear-flow.spec.ts", "tests/e2e/discord-flow.spec.ts", "tests/e2e/integration-promotion.spec.ts"],
+    include: [
+      "tests/e2e/linear-flow.spec.ts",
+      "tests/e2e/discord-flow.spec.ts",
+      "tests/e2e/integration-promotion.spec.ts",
+    ],
     exclude: ["node_modules", "dist"],
     fileParallelism: false,
     maxWorkers: 1,

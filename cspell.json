@@ -658,19 +658,11 @@
     "adrs",
     "oneshots"
   ],
-  "dictionaries": [
-    "typescript",
-    "node",
-    "html",
-    "css",
-    "bash"
-  ],
+  "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
     {
       "filename": "**/*.md",
-      "dictionaries": [
-        "en_US"
-      ]
+      "dictionaries": ["en_US"]
     }
   ]
 }

@@ -2,8 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 function getEvidenceDir() {
-  const base = process.env.ANQR_EVIDENCE_DIR
-    || path.join(process.env.XDG_RUNTIME_DIR || "/tmp", "anqr-task-evidence");
+  const base =
+    process.env.ANQR_EVIDENCE_DIR ||
+    path.join(process.env.XDG_RUNTIME_DIR || "/tmp", "anqr-task-evidence");
   fs.mkdirSync(base, { recursive: true });
   return base;
 }
@@ -159,7 +160,8 @@ export function recordWatchdogEvent(correlationId, watchdogEvent) {
 export function listEvidenceRecords(limit = 100) {
   const dir = getEvidenceDir();
   try {
-    return fs.readdirSync(dir)
+    return fs
+      .readdirSync(dir)
       .filter((f) => f.endsWith(".json"))
       .sort()
       .slice(-limit)

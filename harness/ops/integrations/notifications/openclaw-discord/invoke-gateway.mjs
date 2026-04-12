@@ -49,9 +49,7 @@ export async function invokeGateway(toolName, args) {
           // success HTTP status with an error payload in the body).
           if (innerResult?.ok === false || innerResult?.error) {
             const errorMsg = innerResult?.error?.message || "logical failure in 200 response";
-            logWarn(
-              `Gateway ${toolName}/${args.action || ""}: logical failure — ${errorMsg}`,
-            );
+            logWarn(`Gateway ${toolName}/${args.action || ""}: logical failure — ${errorMsg}`);
             resolve({ ok: false, reason: errorMsg, result: innerResult, raw: data });
             return;
           }

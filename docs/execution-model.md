@@ -6,9 +6,9 @@
 
 One request enters the system through exactly one ingress point:
 
-| Ingress | Service | Port | Dispatches To |
-|---------|---------|------|---------------|
-| Linear webhook | `anqr-linear-webhook.service` | 18791 | Symphony Router |
+| Ingress          | Service                       | Port  | Dispatches To   |
+| ---------------- | ----------------------------- | ----- | --------------- |
+| Linear webhook   | `anqr-linear-webhook.service` | 18791 | Symphony Router |
 | Discord/OpenClaw | `anqr-discord-router.service` | 18790 | Symphony Router |
 
 The **Symphony Router** (`anqr-symphony-router.service`, port 4319) is the
@@ -34,11 +34,13 @@ Each **worktree executor** (`anqr-symphony-executor@N.service`, ports 4321-4328)
 is the execution authority for its worktree.
 
 The executor runs `symphony-openai-bridge.mjs` which:
+
 1. Receives task dispatch from the Symphony Router
 2. For Linear work: spawns `symphony-runner` as a child process (`--issue IDENTIFIER`)
 3. For Discord work: handles chat completions directly via the bridge
 
 The **Symphony Runner** (`symphony-runner/`) handles the full Linear issue lifecycle:
+
 1. Syncs worktree with main (ff-only merge)
 2. Acquires a lease for the issue
 3. Calls `runAgent()` which runs the AI tool loop
@@ -47,6 +49,7 @@ The **Symphony Runner** (`symphony-runner/`) handles the full Linear issue lifec
 6. Enqueues the result for integration
 
 Worktree mapping:
+
 - `wt1-wt4` (ports 4321-4324): Linear work (via runner subprocess)
 - `wt5-wt8` (ports 4325-4328): Discord work (direct bridge handling)
 
@@ -54,6 +57,7 @@ Worktree mapping:
 
 The **Symphony Integrator** (`anqr-symphony-integrator.service`) is the
 single integration authority. It:
+
 1. Reads the integration queue from shared state
 2. Serially promotes queued branches to `origin/main` via cherry-pick
 3. Records evidence of each integration attempt
@@ -62,12 +66,12 @@ single integration authority. It:
 
 ### Support Services
 
-| Service | Role |
-|---------|------|
-| `anqr-watchdog.service` | Monitors service health, restarts (no rollback) |
-| `anqr-symphony-worktree-recovery.service` | Repairs quarantined/broken worktree state |
-| `anqr-worktree-health.service/.timer` | Periodic health snapshots |
-| `anqr-context7-mcp.service` | Documentation resolution |
+| Service                                   | Role                                            |
+| ----------------------------------------- | ----------------------------------------------- |
+| `anqr-watchdog.service`                   | Monitors service health, restarts (no rollback) |
+| `anqr-symphony-worktree-recovery.service` | Repairs quarantined/broken worktree state       |
+| `anqr-worktree-health.service/.timer`     | Periodic health snapshots                       |
+| `anqr-context7-mcp.service`               | Documentation resolution                        |
 
 ### Control Flow Diagram
 
@@ -112,12 +116,12 @@ Linear trigger queue.
 
 ### Simplifications Applied (P3-1)
 
-| Before | After | Rationale |
-|--------|-------|-----------|
-| Worktree selection duplicated in `handle-linear-trigger` and `dispatch-linear-execution` | Shared `select-linear-worktree.mjs` | Single source of truth for Linear worktree selection |
-| In-memory `Set`/`Array` for dedupe, active issues, queue | File-backed `DurableSet`/`DurableQueue` | Crash-safe, survives service restarts |
-| Destructive `git reset --hard origin/main` on sync failure threshold | Quarantine worktree + delegate to recovery service | Non-destructive; recovery service handles repair |
-| Destructive `git reset --hard` in watchdog rollback | Quarantine + safe restart | No data loss; evidence preserved |
+| Before                                                                                   | After                                              | Rationale                                            |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------- |
+| Worktree selection duplicated in `handle-linear-trigger` and `dispatch-linear-execution` | Shared `select-linear-worktree.mjs`                | Single source of truth for Linear worktree selection |
+| In-memory `Set`/`Array` for dedupe, active issues, queue                                 | File-backed `DurableSet`/`DurableQueue`            | Crash-safe, survives service restarts                |
+| Destructive `git reset --hard origin/main` on sync failure threshold                     | Quarantine worktree + delegate to recovery service | Non-destructive; recovery service handles repair     |
+| Destructive `git reset --hard` in watchdog rollback                                      | Quarantine + safe restart                          | No data loss; evidence preserved                     |
 
 ### Why the Bridge→Runner Layer Exists
 

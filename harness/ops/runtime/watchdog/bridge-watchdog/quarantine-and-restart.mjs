@@ -13,13 +13,12 @@ import { updateMemory } from "./update-memory.mjs";
 import { logInfo, logError } from "./logger.mjs";
 
 function writeEvidenceRecord(serviceName, shortName, reason, commit) {
-  const evidenceDir = path.join(
-    process.env.XDG_RUNTIME_DIR || "/tmp",
-    "anqr-watchdog-evidence",
-  );
+  const evidenceDir = path.join(process.env.XDG_RUNTIME_DIR || "/tmp", "anqr-watchdog-evidence");
   try {
     fs.mkdirSync(evidenceDir, { recursive: true });
-  } catch { /* ok */ }
+  } catch {
+    /* ok */
+  }
   const record = {
     timestamp: new Date().toISOString(),
     service: serviceName,
@@ -32,10 +31,7 @@ function writeEvidenceRecord(serviceName, shortName, reason, commit) {
   };
   const filename = `${Date.now()}-${shortName}.json`;
   try {
-    fs.writeFileSync(
-      path.join(evidenceDir, filename),
-      JSON.stringify(record, null, 2) + "\n",
-    );
+    fs.writeFileSync(path.join(evidenceDir, filename), JSON.stringify(record, null, 2) + "\n");
   } catch (err) {
     logError(`[watchdog] Failed to write evidence record: ${err.message}`);
   }

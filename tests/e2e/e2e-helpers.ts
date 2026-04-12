@@ -11,10 +11,7 @@ export const LINEAR_WEBHOOK_URL = "http://127.0.0.1:18791";
 export const DISCORD_ROUTER_URL = "http://127.0.0.1:18790";
 export const SYMPHONY_ROUTER_URL = "http://127.0.0.1:4319";
 
-export const EVIDENCE_DIR = path.join(
-  process.env.XDG_RUNTIME_DIR || "/tmp",
-  "anqr-task-evidence",
-);
+export const EVIDENCE_DIR = path.join(process.env.XDG_RUNTIME_DIR || "/tmp", "anqr-task-evidence");
 
 export interface EvidenceRecord {
   correlationId: string;
@@ -75,10 +72,7 @@ export function findEvidenceByIssue(identifier: string): EvidenceRecord | null {
   return null;
 }
 
-export function findEvidenceBySource(
-  source: string,
-  afterIso: string,
-): EvidenceRecord | null {
+export function findEvidenceBySource(source: string, afterIso: string): EvidenceRecord | null {
   const candidates: EvidenceRecord[] = [];
   for (const file of listEvidenceFiles()) {
     const record = loadEvidence(file);
@@ -99,9 +93,7 @@ export function deleteEvidence(correlationId: string): void {
   }
 }
 
-export async function assertServiceHealthy(
-  url: string,
-): Promise<Record<string, unknown>> {
+export async function assertServiceHealthy(url: string): Promise<Record<string, unknown>> {
   const res = await fetch(`${url}/health`);
   if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
   return res.json() as Promise<Record<string, unknown>>;

@@ -89,9 +89,7 @@ export function buildDynamicCatalogProviders(staticProviders) {
     const baseProbeEntry = getCachedProbeEntry(provider.name);
     if (shouldSkipProviderFromCache(baseProbeEntry)) continue;
 
-    const eligibleRows = rows
-      .filter(isEligibleCatalogRow)
-      .sort(sortCatalogRows);
+    const eligibleRows = rows.filter(isEligibleCatalogRow).sort(sortCatalogRows);
 
     for (const row of eligibleRows) {
       const model = row?.model || row?.id;

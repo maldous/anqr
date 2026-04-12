@@ -26,7 +26,13 @@ import { logInfo, logWarn } from "./logger.mjs";
 
 function extractFileNames(dirtyFiles) {
   return dirtyFiles
-    .map((line) => line.replace(/^\S+\s+/, "").trim().split("/").pop())
+    .map((line) =>
+      line
+        .replace(/^\S+\s+/, "")
+        .trim()
+        .split("/")
+        .pop(),
+    )
     .filter(Boolean);
 }
 
@@ -110,7 +116,11 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
           const fin = getFinalizationState(inferredOwner);
           const attempts = (fin?.attempts || 0) + 1;
           if (attempts >= RECOVERY_MAX_REPAIR_ATTEMPTS) {
-            return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" }, snapshot);
+            return executeRepair(
+              worktreeId,
+              { ...classification, repairAction: "quarantine" },
+              snapshot,
+            );
           }
           setFinalizationState(inferredOwner, { attempts });
         }
@@ -125,9 +135,7 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
 
     case "auto_commit_and_push": {
       const isMainRepo = worktreeId === "main";
-      const acapPath = isMainRepo
-        ? PROJECT_ROOT
-        : getWorktreePath(worktreeId.replace(/^wt/, ""));
+      const acapPath = isMainRepo ? PROJECT_ROOT : getWorktreePath(worktreeId.replace(/^wt/, ""));
 
       try {
         const dirtyFiles = snapshot.gitDirtyFiles || [];
@@ -190,16 +198,24 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
                 });
               } catch (ffErr) {
                 // Fall back to --no-ff merge if fast-forward is not possible
-                logWarn(`[recovery] Fast-forward failed for wt${id}, trying --no-ff: ${ffErr.message}`);
+                logWarn(
+                  `[recovery] Fast-forward failed for wt${id}, trying --no-ff: ${ffErr.message}`,
+                );
                 try {
-                  execFileSync("git", ["merge", "origin/main", "--no-ff", "-m", "Merge main into wt" + id], {
-                    cwd: wtPath,
-                    stdio: "pipe",
-                    timeout: 15_000,
-                    env: { ...process.env, ANQR_AUTOMATION_COMMIT: "1" },
-                  });
+                  execFileSync(
+                    "git",
+                    ["merge", "origin/main", "--no-ff", "-m", "Merge main into wt" + id],
+                    {
+                      cwd: wtPath,
+                      stdio: "pipe",
+                      timeout: 15_000,
+                      env: { ...process.env, ANQR_AUTOMATION_COMMIT: "1" },
+                    },
+                  );
                 } catch (mergeErr) {
-                  logWarn(`[recovery] Both ff and non-ff merge failed for wt${id}: ${mergeErr.message} - skipping sync`);
+                  logWarn(
+                    `[recovery] Both ff and non-ff merge failed for wt${id}: ${mergeErr.message} - skipping sync`,
+                  );
                   // Continue to push even if merge failed - don't block other worktrees
                   continue;
                 }
@@ -251,7 +267,9 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
             enqueueIntegrationCandidate(inferredOwner);
             logInfo(`[recovery] Enqueued ${inferredOwner} for integration from ${worktreeId}`);
           } else {
-            logWarn(`[recovery] No owner inferred for ${worktreeId} — pushed to ${branch} but not enqueued for integration`);
+            logWarn(
+              `[recovery] No owner inferred for ${worktreeId} — pushed to ${branch} but not enqueued for integration`,
+            );
           }
 
           const descParts = [issueId, provider, `${fileCount} files`].filter(Boolean);
@@ -276,7 +294,11 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
         return { ok: true, action: "auto_commit_and_push", nextState: "available" };
       } catch (err) {
         logWarn(`[recovery] Auto-commit/push failed for ${worktreeId}: ${err.message}`);
-        return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" }, snapshot);
+        return executeRepair(
+          worktreeId,
+          { ...classification, repairAction: "quarantine" },
+          snapshot,
+        );
       }
     }
 

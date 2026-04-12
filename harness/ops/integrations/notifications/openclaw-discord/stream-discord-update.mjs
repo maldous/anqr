@@ -38,7 +38,11 @@ export async function streamDiscordUpdate(
   // The _eagerFlushing lock prevents concurrent first-flushes when onChunk fires
   // synchronously for buffered providers (hundreds of chunks before the first HTTP
   // round-trip completes and sets state.messageId).
-  if (!state.messageId && !state._eagerFlushing && state.fullText.length >= STREAM_FIRST_FLUSH_CHARS) {
+  if (
+    !state.messageId &&
+    !state._eagerFlushing &&
+    state.fullText.length >= STREAM_FIRST_FLUSH_CHARS
+  ) {
     state._eagerFlushing = true;
     try {
       return await flushDiscordStream({ emoji, timestamp, requestId });

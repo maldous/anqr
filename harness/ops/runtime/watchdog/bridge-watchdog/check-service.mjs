@@ -43,7 +43,11 @@ export async function checkService(service) {
 
     if (catastrophicError) {
       logError(`[watchdog] 🚨 ${shortName}: Detected catastrophic error: ${catastrophicError}`);
-      await quarantineAndRestart(serviceName, shortName, `catastrophic error: ${catastrophicError}`);
+      await quarantineAndRestart(
+        serviceName,
+        shortName,
+        `catastrophic error: ${catastrophicError}`,
+      );
       await verifyAndNotifyRecovery(serviceName, shortName);
       return;
     }

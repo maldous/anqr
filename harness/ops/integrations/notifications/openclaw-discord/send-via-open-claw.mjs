@@ -41,10 +41,7 @@ export async function sendViaOpenClaw(content, options = {}) {
     return { sent: false, reason: result.reason };
   }
 
-  const messageId =
-    result.result?.messageId ||
-    result.result?.id ||
-    null;
+  const messageId = result.result?.messageId || result.result?.id || null;
 
   logDebug(
     `Discord ${messageArgs.action}: messageId=${messageId || "(none)"} to=${targetChannel} len=${content.length}`,
@@ -63,7 +60,5 @@ export async function deleteViaOpenClaw(messageId) {
     messageId,
   });
 
-  return result.ok
-    ? { deleted: true }
-    : { deleted: false, reason: result.reason };
+  return result.ok ? { deleted: true } : { deleted: false, reason: result.reason };
 }

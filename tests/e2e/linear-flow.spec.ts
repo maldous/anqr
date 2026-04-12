@@ -147,7 +147,11 @@ describe("Linear webhook → router → executor pipeline", () => {
       body: JSON.stringify({
         type: "Issue",
         action: "update",
-        data: { identifier: `E2E-DUP2-${Date.now()}`, title: "Dup second", state: { name: "Todo" } },
+        data: {
+          identifier: `E2E-DUP2-${Date.now()}`,
+          title: "Dup second",
+          state: { name: "Todo" },
+        },
         previousValues: { state: { name: "Backlog" } },
       }),
     });

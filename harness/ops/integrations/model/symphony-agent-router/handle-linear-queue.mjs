@@ -27,11 +27,14 @@ export function handleLinearQueue(req, res) {
   if (req.method === "GET") {
     return json(res, 200, {
       queueLength: linearQueue.length,
-      events: linearQueue.items().slice(-10).map((e) => ({
-        identifier: e.event?.identifier,
-        action: e.event?.action,
-        queuedAt: e.queuedAt,
-      })),
+      events: linearQueue
+        .items()
+        .slice(-10)
+        .map((e) => ({
+          identifier: e.event?.identifier,
+          action: e.event?.action,
+          queuedAt: e.queuedAt,
+        })),
     });
   }
 

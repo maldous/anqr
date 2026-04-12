@@ -5,11 +5,7 @@
     "operator": {
       "token": "zOSEKIaA-f3LDFA2Rj6wE_v_cemkUJxLmXwojYWRbXM",
       "role": "operator",
-      "scopes": [
-        "operator.admin",
-        "operator.read",
-        "operator.write"
-      ],
+      "scopes": ["operator.admin", "operator.read", "operator.write"],
       "updatedAtMs": 1775572645991
     }
   }

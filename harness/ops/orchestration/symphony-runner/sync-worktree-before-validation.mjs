@@ -41,10 +41,16 @@ export function syncWorktreeBeforeValidation(worktreePath) {
       logWarn(`${label} Rebase failed — aborting and keeping current state`);
       try {
         git("rebase --abort", worktreePath);
-      } catch { /* may not be mid-rebase */ }
+      } catch {
+        /* may not be mid-rebase */
+      }
 
       if (hasUncommitted) {
-        try { git("stash pop", worktreePath); } catch { /* ok */ }
+        try {
+          git("stash pop", worktreePath);
+        } catch {
+          /* ok */
+        }
       }
 
       return {

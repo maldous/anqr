@@ -15,7 +15,9 @@ export async function flushDiscordStream({
   // state.messageId is always set before the next flush runs.
   const prev = state._flushPromise || Promise.resolve();
   let resolveLock;
-  state._flushPromise = new Promise((r) => { resolveLock = r; });
+  state._flushPromise = new Promise((r) => {
+    resolveLock = r;
+  });
   await prev;
 
   try {

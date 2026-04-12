@@ -38,7 +38,11 @@ export function acquireStateLock() {
         const lockPid = Number(lockContent.split("\n")[0]);
 
         if (lockPid && !isLockProcessAlive(lockPid)) {
-          try { fs.unlinkSync(lockFile); } catch { /* race ok */ }
+          try {
+            fs.unlinkSync(lockFile);
+          } catch {
+            /* race ok */
+          }
           continue;
         }
 
@@ -47,7 +51,11 @@ export function acquireStateLock() {
           process.stderr.write(
             `[state-lock] Stale lock detected (age=${Math.round(lockAge / 1000)}s, pid=${lockPid}, holder-alive=${isLockProcessAlive(lockPid)}) — breaking\n`,
           );
-          try { fs.unlinkSync(lockFile); } catch { /* race ok */ }
+          try {
+            fs.unlinkSync(lockFile);
+          } catch {
+            /* race ok */
+          }
           continue;
         }
 

@@ -12,18 +12,18 @@ tokens, and credentials needed by the harness runtime.
 
 Required variables for core operation:
 
-| Variable | Used By | Required |
-|----------|---------|----------|
-| `LINEAR_API_KEY` | linear-webhook, linear-export, nightly | Yes |
-| `LINEAR_WEBHOOK_SECRET` | linear-webhook signature verification | Yes |
-| `DISCORD_BOT_TOKEN` | discord-router | Yes |
-| `OPENROUTER_API_KEY` | openclaw-gateway, provider routing | Yes |
-| `ELEVENLABS_API_KEY` | openclaw-gateway voice | Yes |
-| `OPENAI_API_KEY` | provider routing fallback | Yes |
-| `CODEBUFF_API_KEY` | codebuff-direct SDK | Yes |
-| `SENTRY_AUTH_TOKEN` | error reporting | No |
-| `OLLAMA_API_KEY` | local model access | No |
-| `SYMPHONY_BRIDGE_API_KEY` | executor bridge auth | Yes |
+| Variable                  | Used By                                | Required |
+| ------------------------- | -------------------------------------- | -------- |
+| `LINEAR_API_KEY`          | linear-webhook, linear-export, nightly | Yes      |
+| `LINEAR_WEBHOOK_SECRET`   | linear-webhook signature verification  | Yes      |
+| `DISCORD_BOT_TOKEN`       | discord-router                         | Yes      |
+| `OPENROUTER_API_KEY`      | openclaw-gateway, provider routing     | Yes      |
+| `ELEVENLABS_API_KEY`      | openclaw-gateway voice                 | Yes      |
+| `OPENAI_API_KEY`          | provider routing fallback              | Yes      |
+| `CODEBUFF_API_KEY`        | codebuff-direct SDK                    | Yes      |
+| `SENTRY_AUTH_TOKEN`       | error reporting                        | No       |
+| `OLLAMA_API_KEY`          | local model access                     | No       |
+| `SYMPHONY_BRIDGE_API_KEY` | executor bridge auth                   | Yes      |
 
 ### `~/.config/symphony/anqr.env`
 

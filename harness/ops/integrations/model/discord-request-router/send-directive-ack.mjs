@@ -1,7 +1,8 @@
 import { logInfo } from "./logger.mjs";
 
 export function sendDirectiveAck(res, rawBody) {
-  const ackText = "[Symphony] Memory directive acknowledged \u2014 handled internally at router level.";
+  const ackText =
+    "[Symphony] Memory directive acknowledged \u2014 handled internally at router level.";
 
   let isStream = false;
   try {

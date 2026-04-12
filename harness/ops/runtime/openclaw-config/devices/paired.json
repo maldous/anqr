@@ -6,24 +6,14 @@
     "clientId": "clawdbot-control-ui",
     "clientMode": "webchat",
     "role": "operator",
-    "roles": [
-      "operator"
-    ],
-    "scopes": [
-      "operator.admin",
-      "operator.approvals",
-      "operator.pairing"
-    ],
+    "roles": ["operator"],
+    "scopes": ["operator.admin", "operator.approvals", "operator.pairing"],
     "remoteIp": "127.0.0.1",
     "tokens": {
       "operator": {
         "token": "e2ef6acf344540b3baaef8536bf12e95",
         "role": "operator",
-        "scopes": [
-          "operator.admin",
-          "operator.approvals",
-          "operator.pairing"
-        ],
+        "scopes": ["operator.admin", "operator.approvals", "operator.pairing"],
         "createdAtMs": 1769590687441,
         "lastUsedAtMs": 1769590819445,
         "revokedAtMs": 1774174564060
@@ -39,9 +29,7 @@
     "clientId": "gateway-client",
     "clientMode": "backend",
     "role": "operator",
-    "roles": [
-      "operator"
-    ],
+    "roles": ["operator"],
     "scopes": [
       "operator.admin",
       "operator.approvals",
@@ -53,9 +41,7 @@
       "operator": {
         "token": "zOSEKIaA-f3LDFA2Rj6wE_v_cemkUJxLmXwojYWRbXM",
         "role": "operator",
-        "scopes": [
-          "operator.admin"
-        ],
+        "scopes": ["operator.admin"],
         "createdAtMs": 1769590825044,
         "rotatedAtMs": 1774176513952,
         "lastUsedAtMs": 1770445386285
@@ -71,9 +57,7 @@
     "clientId": "openclaw-control-ui",
     "clientMode": "webchat",
     "role": "operator",
-    "roles": [
-      "operator"
-    ],
+    "roles": ["operator"],
     "scopes": [
       "operator.admin",
       "operator.approvals",
@@ -81,20 +65,12 @@
       "operator.read",
       "operator.write"
     ],
-    "approvedScopes": [
-      "operator.admin",
-      "operator.approvals",
-      "operator.pairing"
-    ],
+    "approvedScopes": ["operator.admin", "operator.approvals", "operator.pairing"],
     "tokens": {
       "operator": {
         "token": "QEcu2dCWyZbVMfA_Gsn2XEvLF4NMS4z8KhNZ90vjKHc",
         "role": "operator",
-        "scopes": [
-          "operator.admin",
-          "operator.approvals",
-          "operator.pairing"
-        ],
+        "scopes": ["operator.admin", "operator.approvals", "operator.pairing"],
         "createdAtMs": 1774169029800
       }
     },
@@ -108,9 +84,7 @@
     "clientId": "openclaw-control-ui",
     "clientMode": "webchat",
     "role": "operator",
-    "roles": [
-      "operator"
-    ],
+    "roles": ["operator"],
     "scopes": [
       "operator.admin",
       "operator.read",

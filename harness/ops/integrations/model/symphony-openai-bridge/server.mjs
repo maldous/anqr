@@ -11,7 +11,11 @@ import {
 } from "../symphony-credit-gate.mjs";
 import { saveHealthState } from "../symphony-provider-health.mjs";
 import { getAdaptiveStats } from "../symphony-adaptive-context.mjs";
-import { streamDiscordUpdate, sendDiscordEmbed, finalizeDiscordStream } from "../../notifications/openclaw-discord.mjs";
+import {
+  streamDiscordUpdate,
+  sendDiscordEmbed,
+  finalizeDiscordStream,
+} from "../../notifications/openclaw-discord.mjs";
 import { updateSessionProvider, setSessionMessages } from "../symphony-session-state.mjs";
 
 import { ADVERTISED_MODELS } from "./advertised-models.mjs";

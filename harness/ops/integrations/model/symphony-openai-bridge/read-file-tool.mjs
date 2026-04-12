@@ -11,10 +11,14 @@ export async function readFileTool({ path: filePath, offset, lines }) {
     }
     const trimmedPath = filePath.trim();
     // Check for common placeholder patterns that indicate LLM issues
-    if ((trimmedPath.startsWith("<") && trimmedPath.endsWith(">")) ||
-        (trimmedPath.startsWith("{") && trimmedPath.endsWith("}"))) {
+    if (
+      (trimmedPath.startsWith("<") && trimmedPath.endsWith(">")) ||
+      (trimmedPath.startsWith("{") && trimmedPath.endsWith("}"))
+    ) {
       logError(`readFileTool received placeholder as path: ${filePath}`);
-      return { error: `Invalid path: '${filePath}' appears to be an unresolved placeholder. Please provide a valid file path.` };
+      return {
+        error: `Invalid path: '${filePath}' appears to be an unresolved placeholder. Please provide a valid file path.`,
+      };
     }
     // Check for paths that are just numbers or very short invalid paths
     if (/^\d+$/.test(trimmedPath) || (trimmedPath.length < 2 && !trimmedPath.includes("/"))) {
