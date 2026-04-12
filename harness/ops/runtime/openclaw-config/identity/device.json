@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "deviceId": "CHANGEME",
-  "publicKeyPem": "CHANGEME",
-  "privateKeyPem": "CHANGEME",
+  "deviceId": "f62cbd310544400d9ef67f4ca76ad1f8dfe8355fe5104751c10a0619dd0a04b4",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAxFHWUIoTs7uedkY7cJaJYEN9KJBTeeT23ArpgfxBlWA=\n-----END PUBLIC KEY-----\n",
+  "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEINjCRRF/ZniCaFDlHKn4qWq64cVS3ieOwvF6/XMt/Xan\n-----END PRIVATE KEY-----\n",
   "createdAtMs": 1769590741770
 }

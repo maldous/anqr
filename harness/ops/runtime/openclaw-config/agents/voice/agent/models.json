@@ -8,7 +8,9 @@
           "id": "meta-llama/llama-3.3-70b-instruct:free",
           "name": "Llama 3.3 70B Instruct (free)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -23,7 +25,9 @@
           "id": "qwen/qwen3-next-80b-a3b-instruct:free",
           "name": "Qwen3-Next-80B Instruct (free)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -38,7 +42,9 @@
           "id": "openrouter/auto",
           "name": "OpenRouter Auto (free)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -68,7 +74,9 @@
           "contextWindow": 32768,
           "maxTokens": 8192,
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -83,7 +91,9 @@
           "contextWindow": 32768,
           "maxTokens": 8192,
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -98,7 +108,9 @@
           "contextWindow": 32768,
           "maxTokens": 8192,
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -118,7 +130,9 @@
           "id": "symphony/main",
           "name": "Symphony Bridge (local)",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -133,7 +147,9 @@
           "id": "symphony/text",
           "name": "Symphony Text",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -148,7 +164,9 @@
           "id": "symphony/codex",
           "name": "Symphony Codex",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -163,7 +181,9 @@
           "id": "symphony/codebuff",
           "name": "Symphony Codebuff SDK",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -178,7 +198,9 @@
           "id": "symphony/groq",
           "name": "Symphony Groq",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -193,7 +215,9 @@
           "id": "symphony/mistral",
           "name": "Symphony Mistral",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -208,7 +232,9 @@
           "id": "symphony/gemini",
           "name": "Symphony Gemini",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -223,7 +249,9 @@
           "id": "symphony/gemini-lite",
           "name": "Symphony Gemini Lite",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -238,7 +266,9 @@
           "id": "symphony/openrouter",
           "name": "Symphony OpenRouter",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -250,22 +280,12 @@
           "api": "openai-completions"
         },
         {
-          "id": "symphony/huggingface",
-          "name": "Symphony Hugging Face"
-        },
-        {
-          "id": "symphony/fireworks",
-          "name": "Symphony Fireworks"
-        },
-        {
-          "id": "symphony/together",
-          "name": "Symphony Together"
-        },
-        {
           "id": "symphony/sambanova",
           "name": "Symphony SambaNova",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -280,7 +300,9 @@
           "id": "symphony/cerebras",
           "name": "Symphony Cerebras",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,
@@ -295,7 +317,9 @@
           "id": "symphony/ollama-local",
           "name": "Symphony Ollama Local",
           "reasoning": false,
-          "input": ["text"],
+          "input": [
+            "text"
+          ],
           "cost": {
             "input": 0,
             "output": 0,

@@ -1,12 +1,16 @@
 {
   "version": 1,
-  "deviceId": "CHANGEME",
+  "deviceId": "f62cbd310544400d9ef67f4ca76ad1f8dfe8355fe5104751c10a0619dd0a04b4",
   "tokens": {
     "operator": {
-      "token": "CHANGEME",
+      "token": "zOSEKIaA-f3LDFA2Rj6wE_v_cemkUJxLmXwojYWRbXM",
       "role": "operator",
-      "scopes": ["operator.admin", "operator.read", "operator.write"],
-      "updatedAtMs": 1775210122165
+      "scopes": [
+        "operator.admin",
+        "operator.read",
+        "operator.write"
+      ],
+      "updatedAtMs": 1775572645991
     }
   }
 }

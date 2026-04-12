@@ -20,7 +20,7 @@
     "ackReactionScope": "group-mentions"
   },
   "talk": {
-    "apiKey": "CHANGEME"
+    "apiKey": "sk_2c1e1cf6bf1e35c841ca0b49dc29499559ec72ff49a5f618"
   },
   "gateway": {
     "mode": "local",
@@ -28,7 +28,7 @@
     "bind": "lan",
     "auth": {
       "mode": "token",
-      "token": "CHANGEME"
+      "token": "70cd54dfadf93c41150792b06900c4ba14cfda522b07dec0"
     },
     "tailscale": {
       "mode": "off",
