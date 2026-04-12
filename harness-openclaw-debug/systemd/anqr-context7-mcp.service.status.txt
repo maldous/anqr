@@ -1,0 +1,23 @@
+● anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service
+     Loaded: loaded (/home/user/.config/systemd/user/anqr-context7-mcp.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-04-12 18:15:14 AEST; 2min 24s ago
+   Main PID: 3842343 (node-MainThread)
+      Tasks: 26 (limit: 76455)
+     Memory: 142.5M (high: 512.0M max: 1.0G available: 369.4M peak: 158.0M)
+        CPU: 3.759s
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/anqr-context7-mcp.service
+             ├─3842343 /home/user/.nvm/versions/node/v25.8.0/bin/node harness/ops/runtime/mcp/context7-http-service.mjs
+             ├─3842412 "npm exec @upstash/context7-mcp --transport stdio"
+             ├─3842723 sh -c "\"context7-mcp\" --transport stdio"
+             └─3842724 node /home/user/.npm/_npx/eea2bd7412d4593b/node_modules/.bin/context7-mcp --transport stdio
+
+Apr 12 18:15:14 foo anqr-context7-mcp[3842343]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 12 18:15:14 foo anqr-context7-mcp[3842343]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 12 18:15:14 foo anqr-context7-mcp[3842343]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 12 18:15:14 foo anqr-context7-mcp[3842343]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 12 18:15:14 foo anqr-context7-mcp[3842343]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 12 18:15:16 foo anqr-context7-mcp[3842343]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 12 18:15:16 foo anqr-context7-mcp[3842343]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 12 18:15:16 foo anqr-context7-mcp[3842343]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 12 18:15:16 foo anqr-context7-mcp[3842343]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 12 18:15:16 foo anqr-context7-mcp[3842343]: [context7-http][runtime.mjs:32] [INFO] ========================================

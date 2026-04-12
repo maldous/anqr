@@ -1,0 +1,57 @@
+# /home/user/.config/systemd/user/anqr-discord-router.service
+# anqr-discord-router.service — Discord request load balancer
+#
+# Routes Discord requests to OpenClaw Gateway worktrees (wt5-wt8).
+# Tracks concurrent requests and returns overload message when >4 concurrent.
+#
+# Install:
+#   cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-discord-router.service
+#
+# Check status:
+#   systemctl --user status anqr-discord-router.service
+#   curl http://127.0.0.1:18790/health
+
+[Unit]
+Description=ANQR Discord request router (load balancer)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/src/anqr
+
+# Explicit PATH — nvm Node is not on default systemd PATH
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
+
+# Router configuration
+Environment=DISCORD_ROUTER_PORT=18790
+Environment=DISCORD_WORKTREES=5,6,7,8
+Environment=MAX_CONCURRENT=4
+
+# Secrets and overrides
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+EnvironmentFile=-%h/.config/symphony/anqr.env
+
+# Start the Discord request router
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/integrations/model/discord-request-router.mjs
+
+# Logging to journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-discord-router
+
+# Restart on failure
+Restart=on-failure
+RestartSec=5
+
+# Safety limits
+TimeoutStartSec=60
+MemoryHigh=1G
+MemoryMax=2G
+
+[Install]
+WantedBy=default.target

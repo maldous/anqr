@@ -1,0 +1,21 @@
+● anqr-rag-rebuild.service - ANQR RAG vector index rebuild
+     Loaded: loaded (/home/user/.config/systemd/user/anqr-rag-rebuild.service; linked; preset: enabled)
+     Active: activating (start) since Sun 2026-04-12 18:15:14 AEST; 2min 24s ago
+TriggeredBy: ● anqr-rag-rebuild.timer
+   Main PID: 3842269 (node-MainThread)
+      Tasks: 11 (limit: 76455)
+     Memory: 659.7M (max: 8.0G available: 7.3G peak: 1.5G)
+        CPU: 4.197s
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/anqr-rag-rebuild.service
+             └─3842269 /home/user/.nvm/versions/node/v25.8.0/bin/node harness/ops/lib/rag/build-index.mjs
+
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-build-index][main.mjs:92] [INFO] 📈 Progress: 4000/6552 files processed, 4 indexed, 0 failures
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-build-index][main.mjs:92] [INFO] 📈 Progress: 4200/6552 files processed, 4 indexed, 0 failures
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-build-index][main.mjs:92] [INFO] 📈 Progress: 4400/6552 files processed, 4 indexed, 0 failures
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-build-index][main.mjs:92] [INFO] 📈 Progress: 4600/6552 files processed, 4 indexed, 0 failures
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-build-index][main.mjs:92] [INFO] 📈 Progress: 4800/6552 files processed, 4 indexed, 0 failures
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-build-index][main.mjs:92] [INFO] 📈 Progress: 5000/6552 files processed, 4 indexed, 0 failures
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-build-index][main.mjs:92] [INFO] 📈 Progress: 5200/6552 files processed, 4 indexed, 0 failures
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-build-index][main.mjs:92] [INFO] 📈 Progress: 5400/6552 files processed, 4 indexed, 0 failures
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-build-index][main.mjs:92] [INFO] 📈 Progress: 5600/6552 files processed, 4 indexed, 0 failures
+Apr 12 18:16:49 foo anqr-rag-rebuild[3842269]: [rag-embeddings][generate-embeddings.mjs:21] [INFO] Generating embeddings for 233 texts (concurrency: 2)

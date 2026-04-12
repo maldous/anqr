@@ -1,0 +1,94 @@
+[lcm] Plugin loaded (enabled=true, db=/home/user/.openclaw/lcm.db, threshold=0.75)
+[lcm] Compaction summarization model: symphony-bridge/symphony/main (default)
+OpenClaw status
+
+Overview
+┌──────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Item                 │ Value                                                                                         │
+├──────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Dashboard            │ http://127.0.0.1:18789/                                                                       │
+│ OS                   │ linux 6.8.0-106-generic (x64) · node 25.8.0                                                   │
+│ Tailscale            │ off                                                                                           │
+│ Channel              │ dev (main)                                                                                    │
+│ Git                  │ main · @ 271b5b50                                                                             │
+│ Update               │ available · git main · ↔ origin/main · dirty · diverged (ahead 1, behind 6154) · npm update  │
+│                      │ 2026.4.11 · deps ok                                                                           │
+│ Gateway              │ local · ws://127.0.0.1:18789 (local loopback) · reachable 13ms · auth token · foo (192.168.1. │
+│                      │ 26) app 2026.4.2 linux 6.8.0-106-generic                                                      │
+│ Gateway service      │ systemd installed · enabled · running (pid 3842463, state active)                             │
+│ Node service         │ systemd not installed                                                                         │
+│ Agents               │ 2 · 1 bootstrap file present · sessions 57 · default main active 27m ago                      │
+│ Memory               │ 4 files · 21 chunks · sources memory · plugin memory-core · vector ready · fts ready · cache  │
+│                      │ on (20)                                                                                       │
+│ Plugin compatibility │ none                                                                                          │
+│ Probes               │ enabled                                                                                       │
+│ Events               │ none                                                                                          │
+│ Tasks                │ none                                                                                          │
+│ Heartbeat            │ 30m (main), disabled (voice)                                                                  │
+│ Last heartbeat       │ none                                                                                          │
+│ Sessions             │ 57 active · default symphony/main (33k ctx) · 2 stores                                        │
+└──────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Security audit
+Summary: 2 critical · 8 warn · 3 info
+  CRITICAL Small models require sandboxing and web tools disabled
+    Small models (<=300B params) detected: - ollama/qwen2.5-coder:0.5b (0.5B) @ agents.defaults.model.fallbacks (unsafe; sandbox=off; web=[web_search, web_fetch]) …
+    Fix: If you must use small models, enable sandboxing for all sessions (agents.defaults.sandbox.mode="all") and disable web_search/web_fetch/browser (tools.deny=["group:web","browser"]).
+  CRITICAL Credentials dir is writable by others
+    /home/user/.openclaw/credentials mode=775; another user could drop/modify credential files.
+    Fix: chmod 700 /home/user/.openclaw/credentials
+  WARN Reverse proxy headers are not trusted
+    gateway.bind is loopback and gateway.trustedProxies is empty. If you expose the Control UI through a reverse proxy, configure trusted proxies so local-client c…
+    Fix: Set gateway.trustedProxies to your proxy IPs or keep the Control UI local-only.
+  WARN Hooks token looks short
+    hooks.token is 23 chars; prefer a long random token.
+  WARN hooks.defaultSessionKey is not configured
+    Hook agent runs without explicit sessionKey use generated per-request keys. Set hooks.defaultSessionKey to keep hook ingress scoped to a known session.
+    Fix: Set hooks.defaultSessionKey (for example, "hook:ingress").
+  WARN Hook agent routing allows any configured agent
+    hooks.allowedAgentIds is unset or includes '*', so authenticated hook callers may route to any configured agent id.
+    Fix: Set hooks.allowedAgentIds to an explicit allowlist (for example, ["hooks", "main"]) or [] to deny explicit agent routing.
+… +4 more
+Full report: openclaw security audit
+Deep probe: openclaw security audit --deep
+
+Channels
+┌──────────┬─────────┬────────┬────────────────────────────────────────────────────────────────────────────────────────┐
+│ Channel  │ Enabled │ State  │ Detail                                                                                 │
+├──────────┼─────────┼────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ Discord  │ ON      │ OK     │ token config (MTQ4…OAHw · len 72) · accounts 1/1                                       │
+└──────────┴─────────┴────────┴────────────────────────────────────────────────────────────────────────────────────────┘
+
+Sessions
+┌─────────────────────────────────────────────────────────────────┬───────┬─────────┬───────────────┬──────────────────┐
+│ Key                                                             │ Kind  │ Age     │ Model         │ Tokens           │
+├─────────────────────────────────────────────────────────────────┼───────┼─────────┼───────────────┼──────────────────┤
+│ agent:main:discord:channel:1486…                                │ group │ 27m ago │ symphony/groq │ unknown/33k (?%) │
+│ agent:main:discord:channel:1492…                                │ group │ 33m ago │ symphony/main │ unknown/33k (?%) │
+│ agent:main:discord:channel:1492…                                │ group │ 38m ago │ symphony/main │ unknown/33k (?%) │
+│ agent:main:discord:channel:1486…                                │ group │ 40m ago │ symphony/main │ unknown/33k (?%) │
+│ agent:main:discord:channel:1492…                                │ group │ 50m ago │ symphony/main │ unknown/33k (?%) │
+│ agent:main:discord:channel:1492…                                │ group │ 3h ago  │ symphony/main │ unknown/33k (?%) │
+│ agent:main:discord:channel:1492…                                │ group │ 3h ago  │ symphony/main │ unknown/33k (?%) │
+│ agent:main:discord:channel:1492…                                │ group │ 4h ago  │ symphony/main │ unknown/33k (?%) │
+│ agent:main:discord:channel:1491…                                │ group │ 4d ago  │ symphony/main │ unknown/33k (?%) │
+│ agent:main:discord:channel:1491…                                │ group │ 4d ago  │ symphony/main │ unknown/33k (?%) │
+└─────────────────────────────────────────────────────────────────┴───────┴─────────┴───────────────┴──────────────────┘
+
+Health
+┌──────────┬───────────┬───────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Item     │ Status    │ Detail                                                                                        │
+├──────────┼───────────┼───────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Gateway  │ reachable │ 1323ms                                                                                        │
+│ Discord  │ OK        │ ok (@ANQR:default:634ms, @ANQR:1486262758256410647:689ms)                                     │
+└──────────┴───────────┴───────────────────────────────────────────────────────────────────────────────────────────────┘
+
+FAQ: https://docs.openclaw.ai/faq
+Troubleshooting: https://docs.openclaw.ai/troubleshooting
+
+Update available (git behind 6154 · npm 2026.4.11). Run: openclaw update
+
+Next steps:
+  Need to share?      openclaw status --all
+  Need to debug live? openclaw logs --follow
+  Need to test channels? openclaw status --deep

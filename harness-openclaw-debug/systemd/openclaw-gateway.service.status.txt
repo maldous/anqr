@@ -1,0 +1,21 @@
+● openclaw-gateway.service - OpenClaw Gateway (v2026.4.1)
+     Loaded: loaded (/home/user/.config/systemd/user/openclaw-gateway.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-04-12 18:15:14 AEST; 2min 25s ago
+   Main PID: 3842463 (openclaw)
+      Tasks: 82 (limit: 76455)
+     Memory: 447.7M (peak: 743.8M)
+        CPU: 22.830s
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/openclaw-gateway.service
+             ├─3842463 openclaw
+             └─3842495 openclaw-gateway
+
+Apr 12 18:15:33 foo openclaw[3842495]: 2026-04-12T18:15:33.477+10:00 [discord] client initialized as 1486261316820664462 (ANQR); awaiting gateway readiness
+Apr 12 18:15:34 foo openclaw[3842495]: 2026-04-12T18:15:34.830+10:00 [discord] voice: enabled DAVE receive passthrough guild=1486262757543121021 channel=1486262758256410647 expiry=30s reason=post-join warmup
+Apr 12 18:16:59 foo openclaw[3842495]: 2026-04-12T18:16:59.577+10:00 [ws] ⇄ res ✓ channels.status 3482ms conn=38ab359f…5fdd id=5282fbe1…35a4
+Apr 12 18:17:00 foo openclaw[3842495]: 2026-04-12T18:17:00.886+10:00 [memory] embeddings rate limited; retrying in 565ms
+Apr 12 18:17:01 foo openclaw[3842495]: 2026-04-12T18:17:01.528+10:00 [memory] embeddings rate limited; retrying in 1014ms
+Apr 12 18:17:02 foo openclaw[3842495]: 2026-04-12T18:17:02.958+10:00 [memory] embeddings rate limited; retrying in 2379ms
+Apr 12 18:17:05 foo openclaw[3842495]: 2026-04-12T18:17:05.417+10:00 [ws] ⇄ res ✓ doctor.memory.status 5828ms conn=d843a6b5…634f id=8b35a9aa…5651
+Apr 12 18:17:08 foo openclaw[3842495]: 2026-04-12T18:17:08.692+10:00 [ws] ⇄ res ✓ config.get 128ms conn=4c6de5c1…fa6f id=509c32b2…be11
+Apr 12 18:17:30 foo openclaw[3842495]: 2026-04-12T18:17:30.094+10:00 [ws] ⇄ res ✓ health 1323ms conn=c4c0a1b6…2f9e id=b4e785ae…07d2
+Apr 12 18:17:36 foo openclaw[3842495]: 2026-04-12T18:17:36.578+10:00 [ws] ⇄ res ✓ health 1259ms conn=d6e8c6bf…bea9 id=c99d12d8…7816

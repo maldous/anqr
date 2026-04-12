@@ -1,0 +1,20 @@
+● anqr-watchdog.service - ANQR Symphony Router and Executor Watchdog
+     Loaded: loaded (/home/user/.config/systemd/user/anqr-watchdog.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-04-12 18:15:14 AEST; 2min 25s ago
+   Main PID: 3842433 (node-MainThread)
+      Tasks: 7 (limit: 76455)
+     Memory: 30.7M (high: 512.0M max: 1.0G available: 481.2M peak: 41.2M)
+        CPU: 771ms
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/anqr-watchdog.service
+             └─3842433 /home/user/.nvm/versions/node/v25.8.0/bin/node harness/ops/runtime/watchdog/bridge-watchdog.mjs
+
+Apr 12 18:16:14 foo anqr-watchdog[3842433]: [monitor-loop.mjs:24] [INFO] [watchdog] 🔍 Checking services...
+Apr 12 18:16:14 foo anqr-watchdog[3842433]: [check-service.mjs:29] [INFO] [watchdog] 🔍 executor-wt1: New restart detected (PID 3842612)
+Apr 12 18:16:15 foo anqr-watchdog[3842433]: [check-service.mjs:29] [INFO] [watchdog] 🔍 executor-wt2: New restart detected (PID 3842618)
+Apr 12 18:16:15 foo anqr-watchdog[3842433]: [check-service.mjs:29] [INFO] [watchdog] 🔍 executor-wt3: New restart detected (PID 3842574)
+Apr 12 18:16:15 foo anqr-watchdog[3842433]: [check-service.mjs:29] [INFO] [watchdog] 🔍 executor-wt4: New restart detected (PID 3842566)
+Apr 12 18:16:16 foo anqr-watchdog[3842433]: [check-service.mjs:29] [INFO] [watchdog] 🔍 executor-wt5: New restart detected (PID 3842555)
+Apr 12 18:16:16 foo anqr-watchdog[3842433]: [check-service.mjs:29] [INFO] [watchdog] 🔍 executor-wt6: New restart detected (PID 3842580)
+Apr 12 18:16:17 foo anqr-watchdog[3842433]: [check-service.mjs:29] [INFO] [watchdog] 🔍 executor-wt7: New restart detected (PID 3842586)
+Apr 12 18:16:17 foo anqr-watchdog[3842433]: [check-service.mjs:29] [INFO] [watchdog] 🔍 executor-wt8: New restart detected (PID 3842610)
+Apr 12 18:17:17 foo anqr-watchdog[3842433]: [monitor-loop.mjs:24] [INFO] [watchdog] 🔍 Checking services...

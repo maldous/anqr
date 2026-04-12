@@ -1,0 +1,8 @@
+24K	harness-openclaw-debug/meta
+28K	harness-openclaw-debug/state
+36K	harness-openclaw-debug/config
+48K	harness-openclaw-debug/cli
+100K	harness-openclaw-debug/net
+332K	harness-openclaw-debug/systemd
+596K	harness-openclaw-debug/logs
+13M	harness-openclaw-debug/journal

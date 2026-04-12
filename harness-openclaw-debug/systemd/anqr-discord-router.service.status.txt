@@ -1,0 +1,19 @@
+● anqr-discord-router.service - ANQR Discord request router (load balancer)
+     Loaded: loaded (/home/user/.config/systemd/user/anqr-discord-router.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-04-12 18:15:14 AEST; 2min 24s ago
+   Main PID: 3842344 (node-MainThread)
+      Tasks: 7 (limit: 76455)
+     Memory: 16.5M (high: 1.0G max: 2.0G available: 1007.4M peak: 17.1M)
+        CPU: 74ms
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/anqr-discord-router.service
+             └─3842344 /home/user/.nvm/versions/node/v25.8.0/bin/node /home/user/src/anqr/harness/ops/integrations/model/discord-request-router.mjs
+
+Apr 12 18:15:14 foo systemd[3918]: Started anqr-discord-router.service - ANQR Discord request router (load balancer).
+Apr 12 18:15:14 foo anqr-discord-router[3842344]: [runtime.mjs:6] [INFO] ========================================
+Apr 12 18:15:14 foo anqr-discord-router[3842344]: [runtime.mjs:7] [INFO] Discord Request Router Starting
+Apr 12 18:15:14 foo anqr-discord-router[3842344]: [runtime.mjs:8] [INFO] ========================================
+Apr 12 18:15:14 foo anqr-discord-router[3842344]: [runtime.mjs:9] [INFO] Listening: http://127.0.0.1:18790
+Apr 12 18:15:14 foo anqr-discord-router[3842344]: [runtime.mjs:10] [INFO] Worktrees: wt5, wt6, wt7, wt8
+Apr 12 18:15:14 foo anqr-discord-router[3842344]: [runtime.mjs:11] [INFO] Max Concurrent: 4
+Apr 12 18:15:14 foo anqr-discord-router[3842344]: [runtime.mjs:12] [INFO] ========================================
+Apr 12 18:15:14 foo anqr-discord-router[3842344]: [runtime.mjs:15] [INFO] ✅ Router ready to accept Discord requests

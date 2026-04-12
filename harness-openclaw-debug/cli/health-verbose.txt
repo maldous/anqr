@@ -1,0 +1,20 @@
+Gateway connection:
+  Gateway target: ws://127.0.0.1:18789
+  Source: local loopback
+  Config: /home/user/.openclaw/openclaw.json
+  Bind: loopback
+Discord: ok (@ANQR:default:661ms, @ANQR:1486262758256410647:598ms)
+Agents: main (default), voice
+Heartbeat interval: 30m (main), disabled (voice)
+Session store (main): /home/user/.openclaw/agents/main/sessions/sessions.json (51 entries)
+- agent:main:discord:channel:1486262758256410646 (28m ago)
+- agent:main:discord:channel:1492792378707411088 (33m ago)
+- agent:main:discord:channel:1492791264339300473 (38m ago)
+- agent:main:discord:channel:1486262758256410647 (40m ago)
+- agent:main:discord:channel:1492788220994519071 (50m ago)
+Session store (voice): /home/user/.openclaw/agents/voice/sessions/sessions.json (6 entries)
+- agent:voice:hook:90531f16-70dd-4878-8db4-d6a2a474438c (14317m ago)
+- agent:voice:hook:337e074e-cd91-4ebf-bd53-93ac8ab62cfa (14318m ago)
+- agent:voice:openai:7fca25ff-37c4-442b-8a34-7cfc972eb034 (14324m ago)
+- agent:voice:openai:59cf6e87-1e50-45c5-b914-ae15cf33bb38 (14324m ago)
+- agent:voice:openai:f8781576-d592-43a4-8175-85baea376450 (14326m ago)
