@@ -1,31 +1,53 @@
-# Harness Index
+# ANQR Harness Architecture Index
 
-This section is the canonical harness doctrine for ANQR 1.0 foundation work.
+## Status
 
-## Read order
+The harness is **not production safe in its current orchestration form**.
 
-1. [01-operating-model.md](/home/user/src/anqr/docs/harness/01-operating-model.md)
-2. [02-runtime-and-services.md](/home/user/src/anqr/docs/harness/02-runtime-and-services.md)
-3. [03-workspace-governance.md](/home/user/src/anqr/docs/harness/03-workspace-governance.md)
-4. [04-provider-routing.md](/home/user/src/anqr/docs/harness/04-provider-routing.md)
-5. [05-quality-gates.md](/home/user/src/anqr/docs/harness/05-quality-gates.md)
-6. [05-runtime-contract.md](/home/user/src/anqr/docs/harness/05-runtime-contract.md)
-7. [06-evidence-and-reporting.md](/home/user/src/anqr/docs/harness/06-evidence-and-reporting.md)
-8. [07-secrets-redaction-and-operator-access.md](/home/user/src/anqr/docs/harness/07-secrets-redaction-and-operator-access.md)
-9. [08-runbooks.md](/home/user/src/anqr/docs/harness/08-runbooks.md)
-10. [09-archive-policy.md](/home/user/src/anqr/docs/harness/09-archive-policy.md)
-11. [10-audit-reference.md](/home/user/src/anqr/docs/harness/10-audit-reference.md)
-12. [11-adaptive-context.md](/home/user/src/anqr/docs/harness/11-adaptive-context.md)
-13. [12-concurrent-execution-with-worktrees.md](/home/user/src/anqr/docs/harness/12-concurrent-execution-with-worktrees.md)
-14. [workspace/README.md](/home/user/src/anqr/docs/harness/workspace/README.md)
+The runtime is partially implemented and actively used, but it still has structural faults:
 
-## Scope
+- duplicated dispatch authority
+- late lease acquisition
+- long-lived mutable worktrees acting as execution sandboxes and durable task owners at the same time
+- recovery logic that mutates git state
+- repo integration that is serialized too late
+- audit trails that are useful for inference but still weak for proof
 
-This section governs:
+This documentation set is written to replace mixed doctrine and partial remediation notes with one clear reference set.
+
+## Read this set in order
+
+1. [01-scope-status-and-truth-model.md](01-scope-status-and-truth-model.md)
+2. [02-current-runtime-and-service-topology.md](02-current-runtime-and-service-topology.md)
+3. [03-current-control-plane-and-flows.md](03-current-control-plane-and-flows.md)
+4. [04-known-failures-and-evidence.md](04-known-failures-and-evidence.md)
+5. [05-production-target-architecture.md](05-production-target-architecture.md)
+6. [06-state-machines.md](06-state-machines.md)
+7. [07-worktree-and-git-governance.md](07-worktree-and-git-governance.md)
+8. [08-quality-gates-and-post-ai-processing.md](08-quality-gates-and-post-ai-processing.md)
+9. [09-observability-and-audit.md](09-observability-and-audit.md)
+10. [10-operations-runbooks.md](10-operations-runbooks.md)
+11. [11-validation-and-rollout-plan.md](11-validation-and-rollout-plan.md)
+12. [workspace/README.md](workspace/README.md)
+
+## What this set governs
+
+This set governs:
 
 - `harness/ops/*`
 - `services/systemd/*`
-- the fresh Linear workspace model
-- evidence and gate policy for agent-driven delivery
+- `workspace.dsl`
+- the worktree pool used by the executor fleet
+- the control-plane contract for Discord and Linear sourced work
+- post-AI validation, evidence, and merge admission
 
-It does not redefine the product architecture itself. For that, use [README.md](/home/user/src/anqr/README.md) and [docs/program/01-anqr-1.0-definition.md](/home/user/src/anqr/docs/program/01-anqr-1.0-definition.md).
+This set does not redefine the ANQR product architecture outside the harness.
+
+## Key decisions captured here
+
+- one repository may execute many jobs concurrently
+- one repository must integrate one candidate at a time
+- scheduler authority must be singular per repository
+- leases are execution guards, not ingress dedupe
+- worktrees are sandboxes, not the durable source of task truth
+- recovery must repair state before it repairs git, and it must not mutate active execution baselines

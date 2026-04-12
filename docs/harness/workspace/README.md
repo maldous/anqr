@@ -1,20 +1,43 @@
-# Workspace Bootstrap Artifacts
-
-This directory contains the concrete bootstrap artifacts for the fresh ANQR Linear workspace.
+# Structurizr Workspace Notes
 
 ## Purpose
 
-These files translate the governance rules in [../03-workspace-governance.md](/home/user/src/anqr/docs/harness/03-workspace-governance.md) into reusable bootstrap inputs.
+The `workspace.dsl` file and the `docs/harness` plus `docs/adrs` folders work together.
 
-## Files
+The workspace must reflect:
 
-- [linear-workspace.manifest.json](/home/user/src/anqr/docs/harness/workspace/linear-workspace.manifest.json)
-  - machine-readable project, label, state, and sizing definition
-- [bootstrap-checklist.md](/home/user/src/anqr/docs/harness/workspace/bootstrap-checklist.md)
-  - exact operator sequence for standing up the workspace
-- [issue-template.md](/home/user/src/anqr/docs/harness/workspace/issue-template.md)
-  - canonical issue body structure aligned to the evidence contract
+- the current runtime topology
+- the known architectural faults
+- the target production design
 
-## Rule
+## Source priority
 
-If workspace governance changes, update the manifest and checklist in the same change. Do not leave the machine-readable artifacts behind the doctrine.
+When updating the workspace:
+
+1. update docs that describe current truth and target requirements
+2. update `workspace.dsl` to match those docs
+3. validate relationships, names, and ports against committed runtime code and systemd units
+
+## Current modeling rule
+
+Model current runtime containers and external systems directly.
+
+Do not model desired future services as if they already exist.
+
+Instead, describe target behavior in the documentation and ADRs.
+
+## Suggested local validation flow
+
+Example local workflow:
+
+```bash
+docker run --rm -it -p 8080:8080 -v "$PWD":/usr/local/structurizr structurizr/structurizr local
+```
+
+Then point Structurizr at the repository root and verify:
+
+- documentation loads from `docs/harness`
+- ADRs load from `docs/adrs`
+- system context and container views render cleanly
+- labels and relationships reflect the current runtime
+```
