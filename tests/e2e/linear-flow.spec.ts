@@ -18,6 +18,7 @@ import {
   findEvidenceByIssue,
   deleteEvidence,
   assertServiceHealthy,
+  sendSignedWebhook,
 } from "./e2e-helpers.ts";
 
 const createdEvidenceIds: string[] = [];
@@ -34,40 +35,37 @@ describe("Linear webhook receiver — live runtime", () => {
   });
 
   it("non-Issue event is filtered at ingress (no side effects)", async () => {
-    const res = await fetch(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "Comment", action: "create", data: {} }),
-    });
+    const res = await sendSignedWebhook(
+      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
+      { type: "Comment", action: "create", data: {} },
+    );
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.status).toBe("ignored");
   });
 
   it("removed Issue is filtered at ingress", async () => {
-    const res = await fetch(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const res = await sendSignedWebhook(
+      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
+      {
         type: "Issue",
         action: "remove",
         data: { identifier: "E2E-REM-001", state: { name: "Todo" }, title: "Removed" },
-      }),
-    });
+      },
+    );
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe("ignored");
   });
 
   it("Backlog-state Issue is filtered at ingress", async () => {
-    const res = await fetch(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const res = await sendSignedWebhook(
+      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
+      {
         type: "Issue",
         action: "create",
         data: { identifier: "E2E-BL-001", state: { name: "Backlog" }, title: "Backlog" },
-      }),
-    });
+      },
+    );
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe("ignored");
   });
@@ -78,13 +76,9 @@ describe("Linear webhook → router → executor pipeline", () => {
     const testId = `E2E-LIN-${Date.now()}`;
     const deliveryId = `e2e-delivery-${Date.now()}`;
 
-    const res = await fetch(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "linear-delivery": deliveryId,
-      },
-      body: JSON.stringify({
+    const res = await sendSignedWebhook(
+      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
+      {
         type: "Issue",
         action: "update",
         data: {
@@ -94,8 +88,9 @@ describe("Linear webhook → router → executor pipeline", () => {
           url: `https://linear.app/e2e/${testId}`,
         },
         previousValues: { state: { name: "Backlog" } },
-      }),
-    });
+      },
+      { "linear-delivery": deliveryId },
+    );
 
     const body = await res.json();
     expect(res.status).toBe(200);
@@ -119,32 +114,25 @@ describe("Linear webhook → router → executor pipeline", () => {
     const firstId = `E2E-DUP1-${Date.now()}`;
 
     // First delivery — should be processed
-    const first = await fetch(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "linear-delivery": deliveryId,
-      },
-      body: JSON.stringify({
+    const first = await sendSignedWebhook(
+      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
+      {
         type: "Issue",
         action: "update",
         data: { identifier: firstId, title: "Dup first", state: { name: "Todo" } },
         previousValues: { state: { name: "Backlog" } },
-      }),
-    });
+      },
+      { "linear-delivery": deliveryId },
+    );
     expect((await first.json()).status).toBe("processed");
 
     const evidence = findEvidenceByIssue(firstId);
     if (evidence) createdEvidenceIds.push(evidence.correlationId);
 
     // Second delivery with SAME ID — must be rejected as duplicate
-    const second = await fetch(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "linear-delivery": deliveryId,
-      },
-      body: JSON.stringify({
+    const second = await sendSignedWebhook(
+      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
+      {
         type: "Issue",
         action: "update",
         data: {
@@ -153,8 +141,9 @@ describe("Linear webhook → router → executor pipeline", () => {
           state: { name: "Todo" },
         },
         previousValues: { state: { name: "Backlog" } },
-      }),
-    });
+      },
+      { "linear-delivery": deliveryId },
+    );
     expect(second.status).toBe(200);
     expect((await second.json()).status).toBe("duplicate");
   });
@@ -168,19 +157,16 @@ describe("Linear webhook → router → executor pipeline", () => {
     expect(routerHealth.role).toBe("symphony-agent-router");
 
     const testId = `E2E-RT-${Date.now()}`;
-    const res = await fetch(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "linear-delivery": `e2e-rt-${Date.now()}`,
-      },
-      body: JSON.stringify({
+    const res = await sendSignedWebhook(
+      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
+      {
         type: "Issue",
         action: "update",
         data: { identifier: testId, title: "Router test", state: { name: "Todo" } },
         previousValues: { state: { name: "Backlog" } },
-      }),
-    });
+      },
+      { "linear-delivery": `e2e-rt-${Date.now()}` },
+    );
 
     // "processed" means the router accepted the trigger — full hop proved
     const body = await res.json();

@@ -28,7 +28,7 @@ QUALITY_MOBILE_TARGETS := \
   symphony-run symphony-run-dry-run symphony-status symphony-bridge symphony-router \
   email-ingest email-ingest-dry-run notify-test nightly nightly-dry-run \
   quality quality-fast quality-release quality-harness quality-mobile quality-full \
-  install hooks bootstrap clean zip \
+  install install-services hooks bootstrap clean zip \
   typecheck-all lint-all depcruise-all contracts-check verify-migration
 
 help: ## Show grouped Makefile targets
@@ -251,6 +251,29 @@ quality-full: fix quality-release quality-harness ## Run current-platform qualit
 
 install: ## Install dependencies
 	npm install --legacy-peer-deps
+
+install-services: ## Symlink systemd services and sync openclaw config to system locations
+	@echo "Symlinking systemd service and timer files..."
+	@mkdir -p ~/.config/systemd/user
+	@for f in services/systemd/*.service services/systemd/*.timer; do \
+		[ -f "$$f" ] || continue; \
+		ln -sf "$$(realpath $$f)" ~/.config/systemd/user/"$$(basename $$f)"; \
+	done
+	@echo "Syncing openclaw config..."
+	@mkdir -p ~/.openclaw
+	@for f in harness/ops/runtime/openclaw-config/*.json; do \
+		[ -f "$$f" ] || continue; \
+		cp "$$f" ~/.openclaw/"$$(basename $$f)"; \
+	done
+	@echo "Setting env file permissions..."
+	@chmod 600 ~/.config/systemd/user/anqr-ops.env ~/.config/symphony/anqr.env ~/.openclaw/.env 2>/dev/null || true
+	@echo "Reloading systemd daemon..."
+	@systemctl --user daemon-reload
+	@echo ""
+	@echo "Install complete."
+	@echo "  Symlinked: services/systemd/*.service *.timer → ~/.config/systemd/user/"
+	@echo "  Synced:    harness/ops/runtime/openclaw-config/*.json → ~/.openclaw/"
+	@echo "  Restart services with: systemctl --user restart anqr-symphony-executor@{1..8}.service"
 
 hooks: ## Install git hooks
 	npm run prepare

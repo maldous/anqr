@@ -4,6 +4,7 @@
  * These helpers read evidence records from the same directory the services
  * write to (both run as the same user, so XDG_RUNTIME_DIR matches).
  */
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -97,4 +98,45 @@ export async function assertServiceHealthy(url: string): Promise<Record<string, 
   const res = await fetch(`${url}/health`);
   if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
   return res.json() as Promise<Record<string, unknown>>;
+}
+
+function resolveLinearWebhookSecret(): string {
+  if (process.env.LINEAR_WEBHOOK_SECRET) return process.env.LINEAR_WEBHOOK_SECRET;
+  const envPaths = [
+    path.join(process.env.HOME || "/home/user", ".config/symphony/anqr.env"),
+    path.join(process.env.HOME || "/home/user", ".config/systemd/user/anqr-ops.env"),
+  ];
+  for (const envPath of envPaths) {
+    try {
+      const content = fs.readFileSync(envPath, "utf-8");
+      const match = content.match(/^LINEAR_WEBHOOK_SECRET=(.+)$/m);
+      if (match) return match[1].trim();
+    } catch { /* env file not available */ }
+  }
+  return "";
+}
+
+export const LINEAR_WEBHOOK_SECRET = resolveLinearWebhookSecret();
+
+export function computeWebhookSignature(rawBody: string): string {
+  if (!LINEAR_WEBHOOK_SECRET) return "";
+  return crypto.createHmac("sha256", LINEAR_WEBHOOK_SECRET).update(rawBody).digest("hex");
+}
+
+export async function sendSignedWebhook(
+  url: string,
+  payload: unknown,
+  extraHeaders: Record<string, string> = {},
+): Promise<Response> {
+  const body = JSON.stringify(payload);
+  const signature = computeWebhookSignature(body);
+  return fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(signature ? { "linear-signature": signature } : {}),
+      ...extraHeaders,
+    },
+    body,
+  });
 }
