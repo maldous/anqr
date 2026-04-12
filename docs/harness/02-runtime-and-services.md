@@ -57,8 +57,8 @@ Restructured copies under subdirectories may exist. The root entrypoints remain 
 
 Scheduled automation:
 
-- `anqr-linear-runner@.service` / `.timer` — Linear issue poller and scheduler (wt1-wt4)
-- `anqr-queue-feeder.service` / `.timer`
+- `anqr-linear-webhook.service` — Linear webhook receiver (event-driven ingress)
+- `anqr-linear-reconciler.service` — Level-triggered Linear backlog reconciliation
 - `anqr-nightly.service` / `.timer` — 02:00 daily
 - `anqr-rag-rebuild.service` / `.timer` — 03:00 daily, full-repo RAG vector index rebuild via Ollama embeddings
 - `anqr-email-ingest.service` / `.timer`
@@ -120,6 +120,6 @@ Additional port truth must be documented in follow-up runbooks instead of inferr
 
 - Queue maintenance is split deliberately:
   - runner instances self-feed after issue completion
-  - `anqr-queue-feeder.timer` remains a 15-minute safety-net for drain/enforce/backup feed
+  - `anqr-linear-reconciler.service` runs every 90 seconds as the level-triggered safety net
 - Queue feed and drain decisions use `readyDepth` (Todo-only depth), not aggregate queue depth including `In Progress`
 - The orchestration runner now requires worktree context; the main repository is control-plane and service-host territory, not the canonical execution working tree

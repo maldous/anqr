@@ -53,9 +53,9 @@ Maintained user services:
 
 - `anqr-symphony-router.service` — Global orchestration (control plane)
 - `anqr-symphony-executor@*.service` — Worktree executors (execution plane)
-- `anqr-linear-runner@*.service` / `@*.timer` — Linear issue polling (wt1-wt4)
+- `anqr-linear-webhook.service` — Linear webhook receiver (event-driven ingress)
 - `anqr-discord-router.service` — Discord request load balancer
-- `anqr-queue-feeder`
+- `anqr-linear-reconciler.service` — Level-triggered Linear backlog reconciliation
 - `anqr-nightly`
 - `anqr-email-ingest` as optional operator integration
 

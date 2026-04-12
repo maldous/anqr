@@ -34,7 +34,9 @@ EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
 # Runs in mutating mode with tests and sonar skipped.
 # Add --dry-run to disable mutations for testing.
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/nightly-ops-pass.mjs --skip-tests --skip-sonar
+# Sonar enabled — gated on SONAR_TOKEN in anqr-ops.env.
+# Tests still skipped (unit coverage is validated separately).
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/nightly-ops-pass.mjs --skip-tests
 
 # Logging to journal
 StandardOutput=journal

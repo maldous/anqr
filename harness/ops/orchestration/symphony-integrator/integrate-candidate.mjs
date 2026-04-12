@@ -123,19 +123,59 @@ export async function integrateCandidate(issueIdentifier) {
       }
     }
 
+    // Get changed files from the cherry-pick for evidence
+    let changedFiles = [];
+    let diffStat = "";
+    try {
+      changedFiles = git("diff", "--name-only", `${pushedMainSha}^`, pushedMainSha)
+        .split("\n")
+        .filter(Boolean);
+      diffStat = git("diff", "--stat", `${pushedMainSha}^`, pushedMainSha);
+    } catch {
+      /* best-effort evidence collection */
+    }
+
     // Update finalization state
     await setFinalizationState(issueIdentifier, {
       state: "integrated_main",
       integratedMainSha: pushedMainSha,
+      changedFiles,
       updatedAt: new Date().toISOString(),
       lastError: null,
     });
 
-    // Update Linear to Done
+    // Evidence-locked closure: post evidence BEFORE marking Done
     const detail = await findIssueByIdentifier(issueIdentifier);
     if (detail) {
+      const evidenceComment = [
+        `✅ **Integrated to main** — evidence record`,
+        "",
+        `| Field | Value |`,
+        `|-------|-------|`,
+        `| Issue | ${issueIdentifier} |`,
+        `| Worktree | ${finalization.worktreeId || "unknown"} |`,
+        `| Source commit | \`${headSha.slice(0, 8)}\` |`,
+        `| Integration commit | \`${pushedMainSha.slice(0, 8)}\` |`,
+        `| Branch | \`${branch}\` |`,
+        `| Files changed | ${changedFiles.length} |`,
+        `| Integration method | cherry-pick |`,
+        `| Timestamp | ${new Date().toISOString()} |`,
+        "",
+        "### Changed files",
+        ...changedFiles.slice(0, 20).map((f) => `- \`${f}\``),
+        ...(changedFiles.length > 20
+          ? [`- ... and ${changedFiles.length - 20} more`]
+          : []),
+        "",
+        "### Diff summary",
+        "```",
+        diffStat || "(no diff stat)",
+        "```",
+      ].join("\n");
+
+      // Post evidence FIRST — only close if evidence is published
+      await addComment(detail.id, evidenceComment);
       await updateIssue(detail.id, { stateId: STATES.done });
-      await addComment(detail.id, `✅ Integrated to origin/main at ${pushedMainSha.slice(0, 8)}.`);
     }
 
     dequeueIntegrationCandidate(issueIdentifier);

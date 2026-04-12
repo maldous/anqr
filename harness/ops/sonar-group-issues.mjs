@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import { readFileSync } from "fs";
-import { createIssue, STATES, LABELS } from "./integrations/linear/linear-client.mjs";
+import {
+  createIssue,
+  findOpenIssuesByTitle,
+  STATES,
+  LABELS,
+} from "./integrations/linear/linear-client.mjs";
 
 const SONAR_REPORT = "sonar-report.json";
 
@@ -33,7 +38,15 @@ async function main() {
     const moreFiles =
       files.length < [...new Set(ruleIssues.map((i) => i.component))].size ? " ..." : "";
 
-    // Create issue
+    // Idempotency: skip if an open issue with this title already exists
+    const existing = await findOpenIssuesByTitle(title);
+    if (existing.length > 0) {
+      console.log(
+        `[sonar-group] Skipping existing: ${title} (${existing[0].identifier})`,
+      );
+      continue;
+    }
+
     const issue = await createIssue({
       title,
       description: [

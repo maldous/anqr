@@ -8,8 +8,8 @@ QUALITY_RELEASE_TARGETS := \
 	quality-fast test-basic test-advanced sonar-export
 
 QUALITY_HARNESS_TARGETS := \
-	harness-quick harness-full harness-doctor guardian-dry-run queue-check queue-all-dry-run \
-	symphony-status nightly-dry-run
+	harness-quick harness-full harness-doctor guardian-dry-run queue-check queue-all-dry-run \  symphony-status nightly-dry-run \
+	linear-status linear-reconciler linear-reconciler-once
 
 QUALITY_MOBILE_TARGETS := \
 	test-appium-android test-appium-ios
@@ -178,6 +178,15 @@ symphony-run-dry-run: ## Dry-run the symphony runner on all worktrees
 		ANQR_WORKTREE_ID=$$wt npm run symphony:run:dry-run 2>&1 | sed "s/^/$$wt: /" & \
 	done; \
 	wait
+
+linear-status: ## Show Linear processing status (queue, worktrees, capacity)
+	npm run linear:status
+
+linear-reconciler: ## Run the Linear reconciler daemon
+	npm run linear:reconciler
+
+linear-reconciler-once: ## Run a single Linear reconciliation cycle
+	npm run linear:reconciler:once
 
 symphony-status: ## Show symphony status
 	@echo "=== Symphony Worktrees Status ===" && \

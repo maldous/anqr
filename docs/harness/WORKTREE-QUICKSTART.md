@@ -11,8 +11,8 @@ node harness/ops/orchestration/symphony-worktree-pool.mjs init 8
 # Copy service files
 cp services/systemd/anqr-symphony-router.service ~/.config/systemd/user/
 cp services/systemd/anqr-symphony-executor@.service ~/.config/systemd/user/
-cp services/systemd/anqr-linear-runner@.service ~/.config/systemd/user/
-cp services/systemd/anqr-linear-runner@.timer ~/.config/systemd/user/
+# Install all services via Makefile:
+make install-services
 cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
 cp services/systemd/anqr-context7-mcp.service ~/.config/systemd/user/
 cp services/systemd/anqr-watchdog.service ~/.config/systemd/user/
@@ -21,7 +21,8 @@ systemctl --user daemon-reload
 # Enable and start
 systemctl --user enable --now anqr-symphony-router.service
 systemctl --user enable --now anqr-symphony-executor@{1,2,3,4,5,6,7,8}.service
-systemctl --user enable --now anqr-linear-runner@{1,2,3,4}.timer
+systemctl --user enable --now anqr-linear-reconciler.service
+systemctl --user enable --now anqr-symphony-executor@{1,2,3,4}.service
 systemctl --user enable --now anqr-discord-router.service
 systemctl --user enable --now anqr-context7-mcp.service
 systemctl --user enable --now anqr-watchdog.service
@@ -31,7 +32,8 @@ systemctl --user enable --now anqr-watchdog.service
 
 ```text
 Discord → OpenClaw → anqr-discord-router → anqr-symphony-router → anqr-symphony-executor@5-8
-Linear  → anqr-linear-runner    → anqr-symphony-router → anqr-symphony-executor@1-4
+Linear  → anqr-linear-webhook → anqr-symphony-router → anqr-symphony-executor@1-4
+                                  ↑ anqr-linear-reconciler (level-triggered backlog pickup)
 ```
 
 ## Worktree mapping

@@ -29,8 +29,8 @@ The ANQR harness is an AI-assisted engineering automation system that:
 
 | Service                    | Timer        | Purpose                                  | Script                             |
 | -------------------------- | ------------ | ---------------------------------------- | ---------------------------------- |
-| `anqr-linear-runner@*`     | Every 2 min  | Execute Linear issues via AI (one per @) | `symphony-runner.mjs`              |
-| `anqr-queue-feeder`        | Every 15 min | Queue maintenance + backup feed          | `symphony-queue-control.mjs --all` |
+| `anqr-linear-reconciler`   | Continuous   | Level-triggered Linear backlog reconciliation | `linear-reconciler.mjs --daemon` |
+| `anqr-linear-webhook`      | Continuous   | Receives Linear webhooks, triggers execution | `linear-webhook-receiver.mjs` |
 | `anqr-nightly`             | Daily 02:00  | Full nightly pipeline                    | `nightly-ops-pass.mjs`             |
 | `anqr-email-ingest`        | Every 5 min  | Email → Linear issues                    | `email-ingest.mjs`                 |
 | `anqr-symphony-router`     | Always-on    | Global orchestration (control plane)     | `symphony-agent-router.mjs`        |
@@ -42,8 +42,8 @@ The ANQR harness is an AI-assisted engineering automation system that:
 # Copy service files
 cp services/systemd/anqr-symphony-router.service ~/.config/systemd/user/
 cp services/systemd/anqr-symphony-executor@.service ~/.config/systemd/user/
-cp services/systemd/anqr-linear-runner@.service ~/.config/systemd/user/
-cp services/systemd/anqr-linear-runner@.timer ~/.config/systemd/user/
+# Install all services:
+make install-services
 cp services/systemd/anqr-discord-router.service ~/.config/systemd/user/
 cp services/systemd/anqr-ops.env ~/.config/systemd/user/
 
@@ -53,7 +53,7 @@ systemctl --user daemon-reload
 # Enable services
 systemctl --user enable --now anqr-symphony-router.service
 systemctl --user enable --now anqr-symphony-executor@{1..8}.service
-systemctl --user enable --now anqr-linear-runner@{1..4}.timer
+systemctl --user enable --now anqr-linear-reconciler.service
 ```
 
 ---
