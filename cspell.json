@@ -654,7 +654,9 @@
     "zustand",
     "huggingface",
     "acap",
-    "unrecognised"
+    "unrecognised",
+    "adrs",
+    "oneshots"
   ],
   "dictionaries": [
     "typescript",
