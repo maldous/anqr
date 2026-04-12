@@ -34,7 +34,7 @@ describe("evidence-locked closure", () => {
 
   it("does not close issue if cherry-pick fails", () => {
     expect(source).toContain("cherry-pick");
-    expect(source).toContain("cherry-pick", "--abort");
+    expect(source).toContain('"--abort"');
     const abortIndex = source.indexOf('"--abort"');
     const doneIndex = source.indexOf("STATES.done");
     expect(abortIndex).toBeGreaterThan(-1);
