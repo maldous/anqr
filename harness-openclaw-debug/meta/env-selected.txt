@@ -1,4 +1,0 @@
-HOME=/home/user
-PATH=/home/user/.tfenv/bin:/opt/pmd/bin:/home/user/.local/share/swiftly/bin:/home/user/.local/share/sonarqube-cli/bin:/home/user/Android/Sdk/platform-tools:/home/user/Android/Sdk/emulator:/home/user/Android/Sdk/cmdline-tools/latest/bin:/home/user/.local/bin:/home/user/go/bin:/home/user/.lmstudio/bin:/home/user/.local/share/pnpm:/home/user/.sdkman/candidates/detekt/current/bin:/home/user/.nvm/versions/node/v25.8.0/bin:/opt/pmd/bin:/home/user/.local/share/swiftly/bin:/home/user/.local/share/sonarqube-cli/bin:/home/user/Android/Sdk/platform-tools:/home/user/Android/Sdk/emulator:/home/user/Android/Sdk/cmdline-tools/latest/bin:/home/user/.local/bin:/home/user/go/bin:/home/user/.lmstudio/bin:/home/user/.local/share/swiftly/bin:/home/user/.cargo/bin:/home/user/.local/bin:/home/user/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/user/.lmstudio/bin
-SHELL=/bin/bash
-USER=user

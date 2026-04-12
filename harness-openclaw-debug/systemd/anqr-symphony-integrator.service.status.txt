@@ -1,9 +1,0 @@
-● anqr-symphony-integrator.service - ANQR Symphony integrator
-     Loaded: loaded (/home/user/.config/systemd/user/anqr-symphony-integrator.service; enabled; preset: enabled)
-     Active: active (running) since Sun 2026-04-12 17:19:58 AEST; 30min ago
-   Main PID: 3784684 (node-MainThread)
-      Tasks: 7 (limit: 76455)
-     Memory: 14.4M (peak: 14.9M)
-        CPU: 104ms
-     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/anqr-symphony-integrator.service
-             └─3784684 /home/user/.nvm/versions/node/v25.8.0/bin/node /home/user/src/anqr/harness/ops/orchestration/symphony-integrator.mjs daemon
