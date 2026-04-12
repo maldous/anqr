@@ -546,9 +546,10 @@ When running in a worktree (Symphony runner with concurrency enabled):
 - **Main repo restriction:** `harness/ops/orchestration/symphony-runner.mjs` refuses to execute from the main repository without worktree context; use a worktree or set `ANQR_WORKTREE_ID`/`ANQR_WORKTREE_PATH` explicitly
 - **Sync workflow (automatic):** The Symphony bridge automatically syncs and pushes git changes for each request:
   - **Before each request:** `syncWorktreeFromMain()` fetches `origin/main` and merges (ff-only first, regular merge fallback, abort on conflict)
-  - **After each completion:** `pushWorktreeToMain()` stages, commits, and pushes to `origin/main` (up to 3 retries with rebase)
+  - **After each completion:** `pushWorktreeToMain()` stages, commits, and pushes to `origin/symphony/wtN` (up to 3 retries with rebase). The `symphony-integrator` service then serially promotes queued branches to `origin/main`.
   - Both are non-fatal — failures log warnings but don't block request processing
-  - **CRITICAL:** Work committed in other worktrees but not yet pushed to origin won't be visible until their next push
+  - **CRITICAL:** Executors push to `origin/symphony/wtN` branches, never directly to `origin/main`. The integrator promotes to main serially.
+- **CRITICAL:** Work committed in other worktrees but not yet integrated won't be visible until the integrator promotes it
 - **Lock files:** Each worktree has its own PID lock file (e.g., `/run/user/${UID}/symphony-runner/lock-wt1`)
 - **Validation commands:** All validation commands (typecheck, lint, tests) run in the worktree's isolated environment
 - **Dependencies:** Each worktree has its own `node_modules` directory (installed during worktree creation)
@@ -587,8 +588,8 @@ Agents running in Symphony bridge should be aware that:
 **Test suites:**
 
 - Unit tests — `npm run test:unit`
-- E2E tests — 90+ tests for OpenClaw/Symphony integration
-- Playwright — `npm run test:basic` (critical flows), `npm run test:advanced` (gallery/export)
+- E2E tests — `npm run test:e2e` (live-service vitest: linear-flow, discord-flow, integration-promotion)
+- Playwright — `npm run test:basic` (critical flows), `npm run test:advanced` (gallery/export), `npm run test:openclaw` (provider inventory)
 
 **Test location:** `tests/` with intentional architecture ownership
 
@@ -597,9 +598,9 @@ Agents running in Symphony bridge should be aware that:
 The harness uses a cascading provider model with failure cooldown:
 
 1. **codex** (gpt-5.4) — primary, uses OpenAI credits
-2. **groq**, **mistral**, **gemini** — free tier providers
-3. **codebuff** (direct SDK) — runs inside each worktree-local Symphony bridge, paid → free fallback
-4. **ollama-local** — local fallback
+2. **codebuff-paid**, **codebuff-free** — Codebuff SDK with distinct cost modes
+3. **groq**, **mistral**, **gemini**, **huggingface**, **fireworks**, **together** — free/low-cost cloud providers
+4. **ollama-local** — local safety-net fallback
 
 Codebuff uses a single API key with automatic mode selection:
 

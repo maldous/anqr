@@ -37,6 +37,7 @@
     "test:professional": "playwright test --project=professional",
     "test:permutations": "playwright test --project=permutations",
     "test:openclaw": "playwright test --project=openclaw",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
     "test:appium": "wdio run wdio.conf.ts",

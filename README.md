@@ -685,6 +685,7 @@ Documented harness ports (per `docs/harness/02-runtime-and-services.md`):
 - `4321`-`4328` — Worktree-local Symphony execution bridges (wt1-wt8)
 - `18789` — OpenClaw gateway (local AI agent)
 - `18790` — Discord router (load-balances Discord requests to worktree bridges)
+- `18791` — Linear webhook receiver (event-driven ingress from Linear)
 
 Product runtime ports:
 

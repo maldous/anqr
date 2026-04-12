@@ -139,6 +139,48 @@ export function recordIntegrationResult(correlationId, integration) {
   });
 }
 
+export function recordWatchdogEvent(correlationId, event) {
+  const record = loadEvidenceRecord(correlationId);
+  if (!record) return null;
+  const watchdogEntry = {
+    recordedAt: new Date().toISOString(),
+    service: event.service || null,
+    action: event.action || null,
+    reason: event.reason || null,
+    worktreeId: event.worktreeId || null,
+    success: event.success ?? null,
+  };
+  const updated = {
+    ...record,
+    watchdog: [...(record.watchdog || []), watchdogEntry],
+    updatedAt: new Date().toISOString(),
+  };
+  saveEvidence(correlationId, updated);
+  return updated;
+}
+
+export function recordRecoveryEvent(correlationId, event) {
+  const record = loadEvidenceRecord(correlationId);
+  if (!record) return null;
+  const recoveryEntry = {
+    recordedAt: new Date().toISOString(),
+    worktreeId: event.worktreeId || null,
+    action: event.action || null,
+    reason: event.reason || null,
+    success: event.success ?? null,
+    error: event.error || null,
+  };
+  const events = record.events || [];
+  events.push({ type: "recovery", ...recoveryEntry });
+  const updated = {
+    ...record,
+    events,
+    updatedAt: new Date().toISOString(),
+  };
+  saveEvidence(correlationId, updated);
+  return updated;
+}
+
 function saveEvidence(correlationId, record) {
   const filePath = getEvidencePath(correlationId);
   const tmpFile = `${filePath}.tmp.${process.pid}`;
