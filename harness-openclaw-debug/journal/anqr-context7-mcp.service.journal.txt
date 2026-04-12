@@ -1,0 +1,657 @@
+Apr 06 10:20:02 foo anqr-context7-mcp[2102800]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 06 10:20:02 foo anqr-context7-mcp[2102800]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 10:20:02 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 06 10:20:02 foo anqr-context7-mcp[2102800]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 06 10:20:02 foo anqr-context7-mcp[2102800]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 10:20:02 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 10:20:02 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.545s CPU time.
+Apr 06 22:18:28 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 22:18:28 foo anqr-context7-mcp[2393149]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 06 22:18:28 foo anqr-context7-mcp[2393149]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 06 22:18:28 foo anqr-context7-mcp[2393149]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 06 22:18:28 foo anqr-context7-mcp[2393149]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 06 22:18:28 foo anqr-context7-mcp[2393149]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 06 22:18:28 foo anqr-context7-mcp[2393149]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 06 22:18:29 foo anqr-context7-mcp[2393149]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.6","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 06 22:18:29 foo anqr-context7-mcp[2393149]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 06 22:18:29 foo anqr-context7-mcp[2393149]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 06 22:18:29 foo anqr-context7-mcp[2393149]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 06 22:18:29 foo anqr-context7-mcp[2393149]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 06 22:19:14 foo anqr-context7-mcp[2393149]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 06 22:19:14 foo anqr-context7-mcp[2393149]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 22:19:14 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 06 22:19:14 foo anqr-context7-mcp[2393149]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 06 22:19:14 foo anqr-context7-mcp[2393149]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 22:19:14 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 22:19:14 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.011s CPU time.
+Apr 06 22:20:34 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 22:20:34 foo anqr-context7-mcp[2394195]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 06 22:20:34 foo anqr-context7-mcp[2394195]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 06 22:20:34 foo anqr-context7-mcp[2394195]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 06 22:20:34 foo anqr-context7-mcp[2394195]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 06 22:20:34 foo anqr-context7-mcp[2394195]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 06 22:20:34 foo anqr-context7-mcp[2394195]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 06 22:20:35 foo anqr-context7-mcp[2394195]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.6","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 06 22:20:35 foo anqr-context7-mcp[2394195]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 06 22:20:35 foo anqr-context7-mcp[2394195]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 06 22:20:35 foo anqr-context7-mcp[2394195]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 06 22:20:35 foo anqr-context7-mcp[2394195]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 06 22:32:38 foo anqr-context7-mcp[2394195]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 06 22:32:38 foo anqr-context7-mcp[2394195]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 22:32:38 foo anqr-context7-mcp[2394195]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 06 22:32:38 foo anqr-context7-mcp[2394195]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 22:32:38 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 06 22:32:38 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 22:32:38 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.011s CPU time.
+Apr 06 22:40:15 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 22:40:15 foo anqr-context7-mcp[2399999]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 06 22:40:15 foo anqr-context7-mcp[2399999]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 06 22:40:15 foo anqr-context7-mcp[2399999]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 06 22:40:15 foo anqr-context7-mcp[2399999]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 06 22:40:15 foo anqr-context7-mcp[2399999]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 06 22:40:15 foo anqr-context7-mcp[2399999]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 06 22:40:16 foo anqr-context7-mcp[2399999]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.6","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 06 22:40:16 foo anqr-context7-mcp[2399999]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 06 22:40:16 foo anqr-context7-mcp[2399999]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 06 22:40:16 foo anqr-context7-mcp[2399999]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 06 22:40:16 foo anqr-context7-mcp[2399999]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 06 22:48:07 foo anqr-context7-mcp[2399999]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 06 22:48:07 foo anqr-context7-mcp[2399999]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 22:48:07 foo anqr-context7-mcp[2399999]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 06 22:48:07 foo anqr-context7-mcp[2399999]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 22:48:07 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 06 22:48:07 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 22:48:07 foo systemd[3918]: anqr-context7-mcp.service: Consumed 1.969s CPU time.
+Apr 06 22:48:59 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 22:48:59 foo anqr-context7-mcp[2401819]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 06 22:48:59 foo anqr-context7-mcp[2401819]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 06 22:48:59 foo anqr-context7-mcp[2401819]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 06 22:48:59 foo anqr-context7-mcp[2401819]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 06 22:48:59 foo anqr-context7-mcp[2401819]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 06 22:48:59 foo anqr-context7-mcp[2401819]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 06 22:49:00 foo anqr-context7-mcp[2401819]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.6","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 06 22:49:00 foo anqr-context7-mcp[2401819]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 06 22:49:00 foo anqr-context7-mcp[2401819]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 06 22:49:00 foo anqr-context7-mcp[2401819]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 06 22:49:00 foo anqr-context7-mcp[2401819]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 06 23:06:19 foo anqr-context7-mcp[2401819]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 06 23:06:19 foo anqr-context7-mcp[2401819]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 23:06:19 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 06 23:06:19 foo anqr-context7-mcp[2401819]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 06 23:06:19 foo anqr-context7-mcp[2401819]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 23:06:19 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 23:06:19 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.057s CPU time.
+Apr 06 23:06:19 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 23:06:19 foo anqr-context7-mcp[2406016]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 06 23:06:19 foo anqr-context7-mcp[2406016]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 06 23:06:19 foo anqr-context7-mcp[2406016]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 06 23:06:19 foo anqr-context7-mcp[2406016]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 06 23:06:19 foo anqr-context7-mcp[2406016]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 06 23:06:19 foo anqr-context7-mcp[2406016]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 06 23:06:21 foo anqr-context7-mcp[2406016]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.6","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 06 23:06:21 foo anqr-context7-mcp[2406016]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 06 23:06:21 foo anqr-context7-mcp[2406016]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 06 23:06:21 foo anqr-context7-mcp[2406016]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 06 23:06:21 foo anqr-context7-mcp[2406016]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 06 23:12:30 foo anqr-context7-mcp[2406016]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 06 23:12:30 foo anqr-context7-mcp[2406016]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 23:12:30 foo anqr-context7-mcp[2406016]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 06 23:12:30 foo anqr-context7-mcp[2406016]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 23:12:30 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 06 23:12:30 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 23:12:30 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.399s CPU time.
+Apr 06 23:12:30 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 23:12:30 foo anqr-context7-mcp[2414526]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 06 23:12:30 foo anqr-context7-mcp[2414526]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 06 23:12:30 foo anqr-context7-mcp[2414526]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 06 23:12:30 foo anqr-context7-mcp[2414526]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 06 23:12:30 foo anqr-context7-mcp[2414526]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 06 23:12:30 foo anqr-context7-mcp[2414526]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 06 23:12:32 foo anqr-context7-mcp[2414526]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.6","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 06 23:12:32 foo anqr-context7-mcp[2414526]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 06 23:12:32 foo anqr-context7-mcp[2414526]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 06 23:12:32 foo anqr-context7-mcp[2414526]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 06 23:12:32 foo anqr-context7-mcp[2414526]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 06 23:43:03 foo anqr-context7-mcp[2414526]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 06 23:43:03 foo anqr-context7-mcp[2414526]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 23:43:03 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 06 23:43:03 foo anqr-context7-mcp[2414526]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 06 23:43:03 foo anqr-context7-mcp[2414526]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 06 23:43:03 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 23:43:03 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.699s CPU time.
+Apr 06 23:43:03 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 06 23:43:04 foo anqr-context7-mcp[2444737]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 06 23:43:04 foo anqr-context7-mcp[2444737]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 06 23:43:04 foo anqr-context7-mcp[2444737]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 06 23:43:04 foo anqr-context7-mcp[2444737]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 06 23:43:04 foo anqr-context7-mcp[2444737]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 06 23:43:04 foo anqr-context7-mcp[2444737]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 06 23:43:06 foo anqr-context7-mcp[2444737]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.6","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 06 23:43:06 foo anqr-context7-mcp[2444737]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 06 23:43:06 foo anqr-context7-mcp[2444737]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 06 23:43:06 foo anqr-context7-mcp[2444737]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 06 23:43:06 foo anqr-context7-mcp[2444737]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 00:16:06 foo anqr-context7-mcp[2444737]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":3999}
+Apr 07 00:19:03 foo anqr-context7-mcp[2444737]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/facebook/react","chars":3820}
+Apr 07 00:23:38 foo anqr-context7-mcp[2444737]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/facebook/react","chars":3754}
+Apr 07 00:28:27 foo anqr-context7-mcp[2444737]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/facebook/react","chars":3077}
+Apr 07 00:33:57 foo anqr-context7-mcp[2444737]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":3945}
+Apr 07 00:36:04 foo anqr-context7-mcp[2444737]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/facebook/react","chars":3585}
+Apr 07 00:41:17 foo anqr-context7-mcp[2444737]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 00:41:17 foo anqr-context7-mcp[2444737]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 00:41:17 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 00:41:17 foo anqr-context7-mcp[2444737]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 00:41:17 foo anqr-context7-mcp[2444737]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 00:41:17 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 00:41:17 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.307s CPU time.
+Apr 07 00:41:17 foo anqr-context7-mcp[2629972]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 00:41:17 foo anqr-context7-mcp[2629972]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 00:41:17 foo anqr-context7-mcp[2629972]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 00:41:17 foo anqr-context7-mcp[2629972]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 00:41:17 foo anqr-context7-mcp[2629972]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 00:41:17 foo anqr-context7-mcp[2629972]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 00:41:17 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 00:41:19 foo anqr-context7-mcp[2629972]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.6","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 07 00:41:19 foo anqr-context7-mcp[2629972]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 00:41:19 foo anqr-context7-mcp[2629972]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 00:41:19 foo anqr-context7-mcp[2629972]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 00:41:19 foo anqr-context7-mcp[2629972]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 01:01:24 foo anqr-context7-mcp[2629972]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/facebook/react","chars":3515}
+Apr 07 01:03:35 foo anqr-context7-mcp[2629972]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/facebook/react","chars":3585}
+Apr 07 01:08:46 foo anqr-context7-mcp[2629972]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 01:08:46 foo anqr-context7-mcp[2629972]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 01:08:46 foo anqr-context7-mcp[2629972]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 01:08:46 foo anqr-context7-mcp[2629972]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 01:08:46 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 01:08:46 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 01:08:46 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.904s CPU time.
+Apr 07 01:08:46 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 01:08:47 foo anqr-context7-mcp[2680415]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 01:08:47 foo anqr-context7-mcp[2680415]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 01:08:47 foo anqr-context7-mcp[2680415]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 01:08:47 foo anqr-context7-mcp[2680415]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 01:08:47 foo anqr-context7-mcp[2680415]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 01:08:47 foo anqr-context7-mcp[2680415]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 01:08:48 foo anqr-context7-mcp[2680415]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.6","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 07 01:08:48 foo anqr-context7-mcp[2680415]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 01:08:48 foo anqr-context7-mcp[2680415]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 01:08:48 foo anqr-context7-mcp[2680415]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 01:08:48 foo anqr-context7-mcp[2680415]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 08:22:54 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 08:22:54 foo anqr-context7-mcp[2680415]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 08:22:54 foo anqr-context7-mcp[2680415]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 08:22:54 foo anqr-context7-mcp[2680415]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 08:22:54 foo anqr-context7-mcp[2680415]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 08:22:54 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 08:22:54 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.934s CPU time.
+Apr 07 08:24:06 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 08:24:06 foo anqr-context7-mcp[2823620]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 08:24:06 foo anqr-context7-mcp[2823620]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 08:24:06 foo anqr-context7-mcp[2823620]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 08:24:06 foo anqr-context7-mcp[2823620]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 08:24:06 foo anqr-context7-mcp[2823620]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 08:24:06 foo anqr-context7-mcp[2823620]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 08:24:08 foo anqr-context7-mcp[2823620]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 07 08:24:08 foo anqr-context7-mcp[2823620]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 08:24:08 foo anqr-context7-mcp[2823620]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 08:24:08 foo anqr-context7-mcp[2823620]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 08:24:08 foo anqr-context7-mcp[2823620]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 08:28:39 foo anqr-context7-mcp[2823620]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 08:28:39 foo anqr-context7-mcp[2823620]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 08:28:39 foo anqr-context7-mcp[2823620]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 08:28:39 foo anqr-context7-mcp[2823620]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 08:28:39 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 08:28:39 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 08:28:39 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.434s CPU time.
+Apr 07 08:28:39 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 08:28:39 foo anqr-context7-mcp[2825551]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 08:28:39 foo anqr-context7-mcp[2825551]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 08:28:39 foo anqr-context7-mcp[2825551]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 08:28:39 foo anqr-context7-mcp[2825551]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 08:28:39 foo anqr-context7-mcp[2825551]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 08:28:39 foo anqr-context7-mcp[2825551]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 08:31:28 foo anqr-context7-mcp[2825551]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 08:31:28 foo anqr-context7-mcp[2825551]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 08:31:28 foo anqr-context7-mcp[2825551]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 08:31:28 foo anqr-context7-mcp[2825551]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 08:31:28 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 08:31:28 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 08:31:28 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.212s CPU time.
+Apr 07 08:34:38 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 08:34:38 foo anqr-context7-mcp[2828969]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 08:34:38 foo anqr-context7-mcp[2828969]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 08:34:38 foo anqr-context7-mcp[2828969]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 08:34:38 foo anqr-context7-mcp[2828969]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 08:34:38 foo anqr-context7-mcp[2828969]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 08:34:38 foo anqr-context7-mcp[2828969]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 08:34:39 foo anqr-context7-mcp[2828969]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"https://context7.com/context7-icon-green.png","mimeType":"image/png"}]},"capabilities":{"tools":{"listChanged":true}}}
+Apr 07 08:34:39 foo anqr-context7-mcp[2828969]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 08:34:39 foo anqr-context7-mcp[2828969]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 08:34:39 foo anqr-context7-mcp[2828969]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 08:34:39 foo anqr-context7-mcp[2828969]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 09:34:34 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 09:34:34 foo anqr-context7-mcp[2828969]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 09:34:34 foo anqr-context7-mcp[2828969]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 09:34:34 foo anqr-context7-mcp[2828969]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 09:34:34 foo anqr-context7-mcp[2828969]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 09:34:34 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 09:34:34 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.531s CPU time.
+Apr 07 09:34:34 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 09:34:34 foo anqr-context7-mcp[2988289]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 09:34:34 foo anqr-context7-mcp[2988289]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 09:34:34 foo anqr-context7-mcp[2988289]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 09:34:34 foo anqr-context7-mcp[2988289]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 09:34:34 foo anqr-context7-mcp[2988289]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 09:34:34 foo anqr-context7-mcp[2988289]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 09:34:39 foo anqr-context7-mcp[2988289]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 09:34:39 foo anqr-context7-mcp[2988289]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 09:34:39 foo anqr-context7-mcp[2988289]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 09:34:39 foo anqr-context7-mcp[2988289]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 09:34:39 foo anqr-context7-mcp[2988289]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 09:52:06 foo anqr-context7-mcp[2988289]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 09:52:06 foo anqr-context7-mcp[2988289]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 09:52:06 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 09:52:06 foo anqr-context7-mcp[2988289]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 09:52:06 foo anqr-context7-mcp[2988289]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 09:52:06 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 09:52:06 foo systemd[3918]: anqr-context7-mcp.service: Consumed 5.818s CPU time.
+Apr 07 10:54:19 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 10:54:19 foo anqr-context7-mcp[3293215]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 10:54:19 foo anqr-context7-mcp[3293215]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 10:54:19 foo anqr-context7-mcp[3293215]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 10:54:19 foo anqr-context7-mcp[3293215]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 10:54:19 foo anqr-context7-mcp[3293215]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 10:54:19 foo anqr-context7-mcp[3293215]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 10:54:21 foo anqr-context7-mcp[3293215]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 10:54:21 foo anqr-context7-mcp[3293215]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 10:54:21 foo anqr-context7-mcp[3293215]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 10:54:21 foo anqr-context7-mcp[3293215]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 10:54:21 foo anqr-context7-mcp[3293215]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 11:42:22 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 11:42:22 foo anqr-context7-mcp[3293215]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 11:42:22 foo anqr-context7-mcp[3293215]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 11:42:22 foo anqr-context7-mcp[3293215]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 11:42:22 foo anqr-context7-mcp[3293215]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 11:42:22 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 11:42:22 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.127s CPU time.
+Apr 07 13:21:58 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 13:21:59 foo anqr-context7-mcp[3997636]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 13:21:59 foo anqr-context7-mcp[3997636]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 13:21:59 foo anqr-context7-mcp[3997636]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 13:21:59 foo anqr-context7-mcp[3997636]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 13:21:59 foo anqr-context7-mcp[3997636]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 13:21:59 foo anqr-context7-mcp[3997636]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 13:22:01 foo anqr-context7-mcp[3997636]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 13:22:01 foo anqr-context7-mcp[3997636]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 13:22:01 foo anqr-context7-mcp[3997636]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 13:22:01 foo anqr-context7-mcp[3997636]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 13:22:01 foo anqr-context7-mcp[3997636]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 13:22:17 foo anqr-context7-mcp[3997636]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 13:22:17 foo anqr-context7-mcp[3997636]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 13:22:17 foo anqr-context7-mcp[3997636]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 13:22:17 foo anqr-context7-mcp[3997636]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 13:22:17 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 13:22:17 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 13:22:17 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.610s CPU time.
+Apr 07 13:27:06 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 13:27:06 foo anqr-context7-mcp[4044213]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 13:27:06 foo anqr-context7-mcp[4044213]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 13:27:06 foo anqr-context7-mcp[4044213]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 13:27:06 foo anqr-context7-mcp[4044213]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 13:27:06 foo anqr-context7-mcp[4044213]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 13:27:06 foo anqr-context7-mcp[4044213]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 13:27:08 foo anqr-context7-mcp[4044213]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 13:27:08 foo anqr-context7-mcp[4044213]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 13:27:08 foo anqr-context7-mcp[4044213]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 13:27:08 foo anqr-context7-mcp[4044213]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 13:27:08 foo anqr-context7-mcp[4044213]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 15:00:25 foo anqr-context7-mcp[4044213]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 15:00:25 foo anqr-context7-mcp[4044213]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 15:00:25 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 15:00:25 foo anqr-context7-mcp[4044213]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 15:00:25 foo anqr-context7-mcp[4044213]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 15:00:25 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 15:00:25 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.180s CPU time.
+Apr 07 15:19:02 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 15:19:02 foo anqr-context7-mcp[4083255]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 15:19:02 foo anqr-context7-mcp[4083255]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 15:19:02 foo anqr-context7-mcp[4083255]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 15:19:02 foo anqr-context7-mcp[4083255]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 15:19:02 foo anqr-context7-mcp[4083255]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 15:19:02 foo anqr-context7-mcp[4083255]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 15:19:04 foo anqr-context7-mcp[4083255]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 15:19:04 foo anqr-context7-mcp[4083255]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 15:19:04 foo anqr-context7-mcp[4083255]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 15:19:04 foo anqr-context7-mcp[4083255]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 15:19:04 foo anqr-context7-mcp[4083255]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 16:11:39 foo anqr-context7-mcp[4083255]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 16:11:39 foo anqr-context7-mcp[4083255]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 16:11:39 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 16:11:39 foo anqr-context7-mcp[4083255]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 16:11:39 foo anqr-context7-mcp[4083255]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 16:11:39 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 16:11:39 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.132s CPU time.
+Apr 07 16:11:39 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 16:11:39 foo anqr-context7-mcp[4144165]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 16:11:39 foo anqr-context7-mcp[4144165]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 16:11:39 foo anqr-context7-mcp[4144165]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 16:11:39 foo anqr-context7-mcp[4144165]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 16:11:39 foo anqr-context7-mcp[4144165]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 16:11:39 foo anqr-context7-mcp[4144165]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 16:11:41 foo anqr-context7-mcp[4144165]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 16:11:41 foo anqr-context7-mcp[4144165]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 16:11:41 foo anqr-context7-mcp[4144165]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 16:11:41 foo anqr-context7-mcp[4144165]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 16:11:41 foo anqr-context7-mcp[4144165]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 16:21:36 foo anqr-context7-mcp[4144165]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 16:21:36 foo anqr-context7-mcp[4144165]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 16:21:36 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 16:21:36 foo anqr-context7-mcp[4144165]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 16:21:36 foo anqr-context7-mcp[4144165]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 16:21:36 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 16:21:36 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.084s CPU time.
+Apr 07 17:36:48 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 17:36:48 foo anqr-context7-mcp[4184805]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 17:36:48 foo anqr-context7-mcp[4184805]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 17:36:48 foo anqr-context7-mcp[4184805]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 17:36:48 foo anqr-context7-mcp[4184805]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 17:36:48 foo anqr-context7-mcp[4184805]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 17:36:48 foo anqr-context7-mcp[4184805]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 17:36:50 foo anqr-context7-mcp[4184805]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 17:36:50 foo anqr-context7-mcp[4184805]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 17:36:50 foo anqr-context7-mcp[4184805]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 17:36:50 foo anqr-context7-mcp[4184805]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 17:36:50 foo anqr-context7-mcp[4184805]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 17:37:59 foo anqr-context7-mcp[4184805]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 17:37:59 foo anqr-context7-mcp[4184805]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 17:37:59 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 17:37:59 foo anqr-context7-mcp[4184805]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 17:37:59 foo anqr-context7-mcp[4184805]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 17:37:59 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 17:37:59 foo systemd[3918]: anqr-context7-mcp.service: Consumed 1.925s CPU time.
+Apr 07 17:38:50 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 17:38:50 foo anqr-context7-mcp[4187620]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 17:38:50 foo anqr-context7-mcp[4187620]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 17:38:50 foo anqr-context7-mcp[4187620]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 17:38:50 foo anqr-context7-mcp[4187620]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 17:38:50 foo anqr-context7-mcp[4187620]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 17:38:50 foo anqr-context7-mcp[4187620]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 17:38:52 foo anqr-context7-mcp[4187620]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 17:38:52 foo anqr-context7-mcp[4187620]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 17:38:52 foo anqr-context7-mcp[4187620]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 17:38:52 foo anqr-context7-mcp[4187620]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 17:38:52 foo anqr-context7-mcp[4187620]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 18:56:03 foo anqr-context7-mcp[4187620]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":3945}
+Apr 07 19:00:16 foo anqr-context7-mcp[4187620]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 19:00:16 foo anqr-context7-mcp[4187620]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 19:00:16 foo anqr-context7-mcp[4187620]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 19:00:16 foo anqr-context7-mcp[4187620]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 19:00:16 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 19:00:16 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 19:00:16 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.251s CPU time.
+Apr 07 19:01:44 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 19:01:44 foo anqr-context7-mcp[61977]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 19:01:44 foo anqr-context7-mcp[61977]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 19:01:44 foo anqr-context7-mcp[61977]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 19:01:44 foo anqr-context7-mcp[61977]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 19:01:44 foo anqr-context7-mcp[61977]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 19:01:44 foo anqr-context7-mcp[61977]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 19:01:46 foo anqr-context7-mcp[61977]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 19:01:46 foo anqr-context7-mcp[61977]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 19:01:46 foo anqr-context7-mcp[61977]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 19:01:46 foo anqr-context7-mcp[61977]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 19:01:46 foo anqr-context7-mcp[61977]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 19:12:57 foo anqr-context7-mcp[61977]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":3941}
+Apr 07 21:19:00 foo anqr-context7-mcp[61977]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 21:19:00 foo anqr-context7-mcp[61977]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 21:19:00 foo anqr-context7-mcp[61977]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 21:19:00 foo anqr-context7-mcp[61977]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 21:19:00 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 21:19:00 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 21:19:00 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.304s CPU time.
+Apr 07 21:19:00 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 21:19:00 foo anqr-context7-mcp[174785]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 21:19:00 foo anqr-context7-mcp[174785]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 21:19:00 foo anqr-context7-mcp[174785]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 21:19:00 foo anqr-context7-mcp[174785]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 21:19:00 foo anqr-context7-mcp[174785]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 21:19:00 foo anqr-context7-mcp[174785]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 21:19:02 foo anqr-context7-mcp[174785]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 21:19:02 foo anqr-context7-mcp[174785]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 21:19:02 foo anqr-context7-mcp[174785]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 21:19:02 foo anqr-context7-mcp[174785]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 21:19:02 foo anqr-context7-mcp[174785]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 21:55:03 foo anqr-context7-mcp[174785]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 21:55:03 foo anqr-context7-mcp[174785]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 21:55:03 foo anqr-context7-mcp[174785]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 21:55:03 foo anqr-context7-mcp[174785]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 21:55:03 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 21:55:04 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 21:55:04 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.342s CPU time.
+Apr 07 21:55:04 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 21:55:04 foo anqr-context7-mcp[192028]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 21:55:04 foo anqr-context7-mcp[192028]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 21:55:04 foo anqr-context7-mcp[192028]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 21:55:04 foo anqr-context7-mcp[192028]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 21:55:04 foo anqr-context7-mcp[192028]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 21:55:04 foo anqr-context7-mcp[192028]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 21:55:05 foo anqr-context7-mcp[192028]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 21:55:05 foo anqr-context7-mcp[192028]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 21:55:05 foo anqr-context7-mcp[192028]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 21:55:05 foo anqr-context7-mcp[192028]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 21:55:05 foo anqr-context7-mcp[192028]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 22:36:50 foo anqr-context7-mcp[192028]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 22:36:50 foo anqr-context7-mcp[192028]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 22:36:50 foo anqr-context7-mcp[192028]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 22:36:50 foo anqr-context7-mcp[192028]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 22:36:50 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 22:36:50 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 22:36:50 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.462s CPU time.
+Apr 07 22:36:50 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 22:36:50 foo anqr-context7-mcp[213497]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 22:36:50 foo anqr-context7-mcp[213497]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 22:36:50 foo anqr-context7-mcp[213497]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 22:36:50 foo anqr-context7-mcp[213497]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 22:36:50 foo anqr-context7-mcp[213497]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 22:36:50 foo anqr-context7-mcp[213497]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 23:16:20 foo anqr-context7-mcp[213497]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 07 23:16:20 foo anqr-context7-mcp[213497]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 23:16:20 foo anqr-context7-mcp[213497]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 07 23:16:20 foo anqr-context7-mcp[213497]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 07 23:16:20 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 07 23:16:20 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 23:16:20 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.628s CPU time.
+Apr 07 23:16:20 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 07 23:16:20 foo anqr-context7-mcp[238651]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 07 23:16:20 foo anqr-context7-mcp[238651]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 07 23:16:20 foo anqr-context7-mcp[238651]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 07 23:16:20 foo anqr-context7-mcp[238651]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 07 23:16:20 foo anqr-context7-mcp[238651]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 07 23:16:20 foo anqr-context7-mcp[238651]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 07 23:16:21 foo anqr-context7-mcp[238651]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 07 23:16:21 foo anqr-context7-mcp[238651]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 07 23:16:21 foo anqr-context7-mcp[238651]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 07 23:16:21 foo anqr-context7-mcp[238651]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 07 23:16:21 foo anqr-context7-mcp[238651]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 07 23:33:31 foo anqr-context7-mcp[238651]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":3945}
+Apr 07 23:58:29 foo anqr-context7-mcp[238651]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":3941}
+Apr 08 00:01:13 foo anqr-context7-mcp[238651]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":3945}
+Apr 08 00:38:01 foo anqr-context7-mcp[238651]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":2782}
+Apr 08 00:52:10 foo anqr-context7-mcp[238651]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/facebook/react","chars":3415}
+Apr 08 00:54:03 foo anqr-context7-mcp[238651]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":3999}
+Apr 08 00:55:47 foo anqr-context7-mcp[238651]: [context7-server][resolve-docs-locally.mjs:38] [INFO] Resolved docs locally for "React" {"topic":"hooks","libraryId":"/reactjs/react.dev","chars":3999}
+Apr 08 10:17:15 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 08 10:17:15 foo anqr-context7-mcp[238651]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 08 10:17:15 foo anqr-context7-mcp[238651]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 10:17:15 foo anqr-context7-mcp[238651]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 08 10:17:15 foo anqr-context7-mcp[238651]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 10:17:15 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 10:17:15 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.844s CPU time.
+Apr 08 10:17:15 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 10:17:15 foo anqr-context7-mcp[648179]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 08 10:17:15 foo anqr-context7-mcp[648179]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 08 10:17:15 foo anqr-context7-mcp[648179]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 08 10:17:15 foo anqr-context7-mcp[648179]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 08 10:17:15 foo anqr-context7-mcp[648179]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 08 10:17:15 foo anqr-context7-mcp[648179]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 08 11:02:28 foo anqr-context7-mcp[648179]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 08 11:02:28 foo anqr-context7-mcp[648179]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 11:02:28 foo anqr-context7-mcp[648179]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 08 11:02:28 foo anqr-context7-mcp[648179]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 11:02:28 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 08 11:02:28 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 11:02:28 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.531s CPU time.
+Apr 08 11:02:28 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 11:02:29 foo anqr-context7-mcp[669635]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 08 11:02:29 foo anqr-context7-mcp[669635]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 08 11:02:29 foo anqr-context7-mcp[669635]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 08 11:02:29 foo anqr-context7-mcp[669635]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 08 11:02:29 foo anqr-context7-mcp[669635]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 08 11:02:29 foo anqr-context7-mcp[669635]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 08 11:16:42 foo anqr-context7-mcp[669635]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 08 11:16:42 foo anqr-context7-mcp[669635]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 11:16:42 foo anqr-context7-mcp[669635]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 08 11:16:42 foo anqr-context7-mcp[669635]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 11:16:42 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 08 11:16:42 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 11:16:42 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.584s CPU time.
+Apr 08 11:16:42 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 11:16:42 foo anqr-context7-mcp[679316]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 08 11:16:42 foo anqr-context7-mcp[679316]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 08 11:16:42 foo anqr-context7-mcp[679316]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 08 11:16:42 foo anqr-context7-mcp[679316]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 08 11:16:42 foo anqr-context7-mcp[679316]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 08 11:16:42 foo anqr-context7-mcp[679316]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 08 11:23:55 foo anqr-context7-mcp[679316]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 08 11:23:55 foo anqr-context7-mcp[679316]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 11:23:55 foo anqr-context7-mcp[679316]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 08 11:23:55 foo anqr-context7-mcp[679316]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 11:23:55 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 08 11:23:55 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 11:23:55 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.107s CPU time.
+Apr 08 11:23:55 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 11:23:55 foo anqr-context7-mcp[684575]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 08 11:23:55 foo anqr-context7-mcp[684575]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 08 11:23:55 foo anqr-context7-mcp[684575]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 08 11:23:55 foo anqr-context7-mcp[684575]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 08 11:23:55 foo anqr-context7-mcp[684575]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 08 11:23:55 foo anqr-context7-mcp[684575]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 08 11:23:57 foo anqr-context7-mcp[684575]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 08 11:23:57 foo anqr-context7-mcp[684575]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 08 11:23:57 foo anqr-context7-mcp[684575]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 08 11:23:57 foo anqr-context7-mcp[684575]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 08 11:23:57 foo anqr-context7-mcp[684575]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 08 11:33:01 foo anqr-context7-mcp[684575]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 08 11:33:01 foo anqr-context7-mcp[684575]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 11:33:01 foo anqr-context7-mcp[684575]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 08 11:33:01 foo anqr-context7-mcp[684575]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 11:33:01 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 08 11:33:01 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 11:33:01 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.376s CPU time.
+Apr 08 11:33:01 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 11:33:01 foo anqr-context7-mcp[691445]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 08 11:33:01 foo anqr-context7-mcp[691445]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 08 11:33:01 foo anqr-context7-mcp[691445]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 08 11:33:01 foo anqr-context7-mcp[691445]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 08 11:33:01 foo anqr-context7-mcp[691445]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 08 11:33:01 foo anqr-context7-mcp[691445]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 08 11:33:03 foo anqr-context7-mcp[691445]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 08 11:33:03 foo anqr-context7-mcp[691445]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 08 11:33:03 foo anqr-context7-mcp[691445]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 08 11:33:03 foo anqr-context7-mcp[691445]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 08 11:33:03 foo anqr-context7-mcp[691445]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 08 12:01:32 foo anqr-context7-mcp[691445]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 08 12:01:32 foo anqr-context7-mcp[691445]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 12:01:32 foo anqr-context7-mcp[691445]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 08 12:01:32 foo anqr-context7-mcp[691445]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 12:01:32 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 08 12:01:32 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 12:01:32 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.747s CPU time.
+Apr 08 12:01:32 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 12:01:32 foo anqr-context7-mcp[705998]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 08 12:01:32 foo anqr-context7-mcp[705998]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 08 12:01:32 foo anqr-context7-mcp[705998]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 08 12:01:32 foo anqr-context7-mcp[705998]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 08 12:01:32 foo anqr-context7-mcp[705998]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 08 12:01:32 foo anqr-context7-mcp[705998]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 08 12:01:34 foo anqr-context7-mcp[705998]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 08 12:01:34 foo anqr-context7-mcp[705998]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 08 12:01:34 foo anqr-context7-mcp[705998]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 08 12:01:34 foo anqr-context7-mcp[705998]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 08 12:01:34 foo anqr-context7-mcp[705998]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 08 14:14:52 foo anqr-context7-mcp[705998]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 08 14:14:52 foo anqr-context7-mcp[705998]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 14:14:52 foo anqr-context7-mcp[705998]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 08 14:14:52 foo anqr-context7-mcp[705998]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 08 14:14:52 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 08 14:14:52 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 14:14:52 foo systemd[3918]: anqr-context7-mcp.service: Consumed 3.310s CPU time.
+Apr 08 14:14:52 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 08 14:14:52 foo anqr-context7-mcp[765342]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 08 14:14:52 foo anqr-context7-mcp[765342]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 08 14:14:52 foo anqr-context7-mcp[765342]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 08 14:14:52 foo anqr-context7-mcp[765342]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 08 14:14:52 foo anqr-context7-mcp[765342]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 08 14:14:52 foo anqr-context7-mcp[765342]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 08 14:14:55 foo anqr-context7-mcp[765342]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 08 14:14:55 foo anqr-context7-mcp[765342]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 08 14:14:55 foo anqr-context7-mcp[765342]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 08 14:14:55 foo anqr-context7-mcp[765342]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 08 14:14:55 foo anqr-context7-mcp[765342]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 09 10:55:32 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 09 10:55:32 foo anqr-context7-mcp[765342]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 09 10:55:32 foo anqr-context7-mcp[765342]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 09 10:55:32 foo anqr-context7-mcp[765342]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 09 10:55:32 foo anqr-context7-mcp[765342]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 09 10:55:32 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 09 10:55:32 foo systemd[3918]: anqr-context7-mcp.service: Consumed 4.869s CPU time.
+Apr 12 14:37:09 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 12 14:37:09 foo anqr-context7-mcp[3713111]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 12 14:37:09 foo anqr-context7-mcp[3713111]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 12 14:37:09 foo anqr-context7-mcp[3713111]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 12 14:37:09 foo anqr-context7-mcp[3713111]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 12 14:37:09 foo anqr-context7-mcp[3713111]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 12 14:37:09 foo anqr-context7-mcp[3713111]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 12 14:37:10 foo anqr-context7-mcp[3713111]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 12 14:37:10 foo anqr-context7-mcp[3713111]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 12 14:37:10 foo anqr-context7-mcp[3713111]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 12 14:37:10 foo anqr-context7-mcp[3713111]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 12 14:37:10 foo anqr-context7-mcp[3713111]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 12 14:59:03 foo anqr-context7-mcp[3713111]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 12 14:59:03 foo anqr-context7-mcp[3713111]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 12 14:59:03 foo anqr-context7-mcp[3713111]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 12 14:59:03 foo anqr-context7-mcp[3713111]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 12 14:59:03 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 12 14:59:03 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 12 14:59:03 foo systemd[3918]: anqr-context7-mcp.service: Consumed 2.339s CPU time.
+Apr 12 16:44:01 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 12 16:44:01 foo anqr-context7-mcp[3753049]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 12 16:44:01 foo anqr-context7-mcp[3753049]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 12 16:44:01 foo anqr-context7-mcp[3753049]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 12 16:44:01 foo anqr-context7-mcp[3753049]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 12 16:44:01 foo anqr-context7-mcp[3753049]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 12 16:44:01 foo anqr-context7-mcp[3753049]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 12 16:44:02 foo anqr-context7-mcp[3753049]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 12 16:44:02 foo anqr-context7-mcp[3753049]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 12 16:44:02 foo anqr-context7-mcp[3753049]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 12 16:44:02 foo anqr-context7-mcp[3753049]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 12 16:44:02 foo anqr-context7-mcp[3753049]: [context7-http][runtime.mjs:32] [INFO] ========================================
+Apr 12 16:44:15 foo anqr-context7-mcp[3753049]: [context7-server][handle-shutdown.mjs:5] [INFO] Received SIGTERM — shutting down Context7 MCP server
+Apr 12 16:44:15 foo anqr-context7-mcp[3753049]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 12 16:44:15 foo anqr-context7-mcp[3753049]: [context7-http][shutdown.mjs:7] [INFO] Received SIGTERM, shutting down...
+Apr 12 16:44:15 foo anqr-context7-mcp[3753049]: [context7-server][stop-context7-server.mjs:14] [INFO] Stopping Context7 MCP server...
+Apr 12 16:44:15 foo systemd[3918]: Stopping anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service...
+Apr 12 16:44:15 foo systemd[3918]: Stopped anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 12 16:44:15 foo systemd[3918]: anqr-context7-mcp.service: Consumed 1.932s CPU time, 158.0M memory peak, 0B memory swap peak.
+Apr 12 16:44:15 foo systemd[3918]: Started anqr-context7-mcp.service - ANQR Context7 MCP Documentation Service.
+Apr 12 16:44:15 foo anqr-context7-mcp[3754113]: [context7-http][runtime.mjs:16] [INFO] ========================================
+Apr 12 16:44:15 foo anqr-context7-mcp[3754113]: [context7-http][runtime.mjs:17] [INFO] Context7 HTTP Service Starting
+Apr 12 16:44:15 foo anqr-context7-mcp[3754113]: [context7-http][runtime.mjs:18] [INFO] ========================================
+Apr 12 16:44:15 foo anqr-context7-mcp[3754113]: [context7-http][runtime.mjs:19] [INFO] Listening: http://127.0.0.1:4320
+Apr 12 16:44:15 foo anqr-context7-mcp[3754113]: [context7-http][runtime.mjs:20] [INFO] Endpoints: POST /v1/resolve-docs, GET /health
+Apr 12 16:44:15 foo anqr-context7-mcp[3754113]: [context7-server][start-context7-server.mjs:21] [INFO] Starting Context7 MCP server...
+Apr 12 16:44:17 foo anqr-context7-mcp[3754113]: [context7-server][start-context7-server.mjs:83] [INFO] Context7 MCP server initialized {"serverInfo":{"name":"Context7","version":"2.1.7","websiteUrl":"https://context7.com","description":"Context7 provides up-to-date documentation and code examples for libraries and frameworks.","icons":[{"src":"[depth-limited]","mimeType":"[depth-limited]"}]},"capabilities":{"tools":{"count":1,"sample":["listChanged"]}}}
+Apr 12 16:44:17 foo anqr-context7-mcp[3754113]: [context7-http][runtime.mjs:25] [INFO] ✅ Context7 MCP server started successfully
+Apr 12 16:44:17 foo anqr-context7-mcp[3754113]: [context7-http][runtime.mjs:30] [INFO] ========================================
+Apr 12 16:44:17 foo anqr-context7-mcp[3754113]: [context7-http][runtime.mjs:31] [INFO] Ready to accept requests
+Apr 12 16:44:17 foo anqr-context7-mcp[3754113]: [context7-http][runtime.mjs:32] [INFO] ========================================

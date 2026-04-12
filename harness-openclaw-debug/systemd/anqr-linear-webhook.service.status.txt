@@ -1,0 +1,20 @@
+● anqr-linear-webhook.service - ANQR Linear webhook receiver (event-driven ingress)
+     Loaded: loaded (/home/user/.config/systemd/user/anqr-linear-webhook.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-04-12 17:26:18 AEST; 23min ago
+   Main PID: 3789274 (node-MainThread)
+      Tasks: 11 (limit: 76455)
+     Memory: 38.7M (high: 512.0M max: 1.0G available: 473.2M peak: 42.3M)
+        CPU: 794ms
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/anqr-linear-webhook.service
+             └─3789274 /home/user/.nvm/versions/node/v25.8.0/bin/node /home/user/src/anqr/harness/ops/integrations/model/linear-webhook-receiver.mjs
+
+Apr 12 17:50:07 foo anqr-linear-webhook[3789274]: [handle-webhook.mjs:86] [INFO] Processed create: ANQ-1647 (Todo) [req-1a4f9cd071e34293-mnvgre75]
+Apr 12 17:50:07 foo anqr-linear-webhook[3789274]: [trigger-issue-execution.mjs:22] [INFO] 📝 Linear thread name: ANQ-1648: Sonar: javascript:S1126 (1)
+Apr 12 17:50:07 foo anqr-linear-webhook[3789274]: [trigger-issue-execution.mjs:53] [INFO] Triggered execution for ANQ-1648 (create)
+Apr 12 17:50:07 foo anqr-linear-webhook[3789274]: [handle-webhook.mjs:86] [INFO] Processed create: ANQ-1648 (Todo) [req-66fb2f5b770b48dd-mnvgrecj]
+Apr 12 17:50:08 foo anqr-linear-webhook[3789274]: [trigger-issue-execution.mjs:22] [INFO] 📝 Linear thread name: ANQ-1649: Sonar: javascript:S7772 (1)
+Apr 12 17:50:08 foo anqr-linear-webhook[3789274]: [trigger-issue-execution.mjs:53] [INFO] Triggered execution for ANQ-1649 (create)
+Apr 12 17:50:08 foo anqr-linear-webhook[3789274]: [handle-webhook.mjs:86] [INFO] Processed create: ANQ-1649 (Todo) [req-48b4e280eeb345dc-mnvgreri]
+Apr 12 17:50:08 foo anqr-linear-webhook[3789274]: [trigger-issue-execution.mjs:22] [INFO] 📝 Linear thread name: ANQ-1650: Sonar: typescript:S2699 (1)
+Apr 12 17:50:08 foo anqr-linear-webhook[3789274]: [trigger-issue-execution.mjs:53] [INFO] Triggered execution for ANQ-1650 (create)
+Apr 12 17:50:08 foo anqr-linear-webhook[3789274]: [handle-webhook.mjs:86] [INFO] Processed create: ANQ-1650 (Todo) [req-314952deb8044b91-mnvgreva]

@@ -1,0 +1,21 @@
+● openclaw-gateway.service - OpenClaw Gateway (v2026.4.1)
+     Loaded: loaded (/home/user/.config/systemd/user/openclaw-gateway.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-04-12 16:44:19 AEST; 1h 5min ago
+   Main PID: 3754475 (openclaw)
+      Tasks: 82 (limit: 76455)
+     Memory: 3.3G (peak: 7.9G)
+        CPU: 3min 6.850s
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/openclaw-gateway.service
+             ├─3754475 openclaw
+             └─3754488 openclaw-gateway
+
+Apr 12 17:49:32 foo openclaw[3754488]: 2026-04-12T17:49:32.764+10:00 [memory] embeddings rate limited; retrying in 1019ms
+Apr 12 17:49:33 foo openclaw[3754488]: 2026-04-12T17:49:33.791+10:00 [discord] voice: speakText (137 chars): guild=1486262757543121021 channel=1486262758256410647
+Apr 12 17:49:33 foo openclaw[3754488]: 2026-04-12T17:49:33.883+10:00 [memory] embeddings rate limited; retrying in 2325ms
+Apr 12 17:49:36 foo openclaw[3754488]: 2026-04-12T17:49:36.285+10:00 [ws] ⇄ res ✓ doctor.memory.status 7563ms conn=89c96114…6a9d id=c98ec5dd…69cb
+Apr 12 17:49:38 foo openclaw[3754488]: 2026-04-12T17:49:38.233+10:00 [ws] ⇄ res ✓ config.get 144ms conn=d71f0a53…57a7 id=0939fbf2…5dc6
+Apr 12 17:49:57 foo openclaw[3754488]: 2026-04-12T17:49:57.556+10:00 [model-fallback/decision] model fallback decision: decision=candidate_succeeded requested=symphony-bridge/symphony/main candidate=symphony-bridge/symphony/groq reason=unknown next=none
+Apr 12 17:49:58 foo openclaw[3754488]: 2026-04-12T17:49:58.875+10:00 [discord] voice: speakText (129 chars): guild=1486262757543121021 channel=1486262758256410647
+Apr 12 17:50:00 foo openclaw[3754488]: 2026-04-12T17:50:00.264+10:00 [ws] ⇄ res ✓ health 1369ms conn=3f74a5e7…e5cf id=f5695894…ffa5
+Apr 12 17:50:02 foo openclaw[3754488]: 2026-04-12T17:50:02.378+10:00 [discord] voice: speakText (32 chars): guild=1486262757543121021 channel=1486262758256410647
+Apr 12 17:50:07 foo openclaw[3754488]: 2026-04-12T17:50:07.400+10:00 [ws] ⇄ res ✓ health 1446ms conn=0b388ea6…932c id=0157aa80…caa5

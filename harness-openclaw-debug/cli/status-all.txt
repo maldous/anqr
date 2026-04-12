@@ -1,0 +1,75 @@
+[36m[skills][39m [33mSkipping skill path that resolves outside its configured root.[39m
+[36m[skills][39m [33mSkipping skill path that resolves outside its configured root.[39m
+[lcm] Plugin loaded (enabled=true, db=/home/user/.openclaw/lcm.db, threshold=0.75)
+[lcm] Compaction summarization model: symphony-bridge/symphony/main (default)
+OpenClaw status --all
+
+Overview
+┌─────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Item            │ Value                                                                                              │
+├─────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Version         │ 2026.4.2                                                                                           │
+│ OS              │ linux 6.8.0-106-generic (x64)                                                                      │
+│ Node            │ 25.8.0                                                                                             │
+│ Config          │ ~/.openclaw/openclaw.json                                                                          │
+│ Dashboard       │ http://127.0.0.1:18789/                                                                            │
+│ Tailscale       │ off                                                                                                │
+│ Channel         │ dev (main)                                                                                         │
+│ Git             │ main · @ 271b5b50                                                                                  │
+│ Update          │ git main · ↔ origin/main · dirty · diverged (ahead 1, behind 6146) · npm update 2026.4.11 · deps  │
+│                 │ ok                                                                                                 │
+│ Gateway         │ local · ws://127.0.0.1:18789 (local loopback) · reachable 12ms · auth token                        │
+│ Security        │ Run: openclaw security audit --deep                                                                │
+│ Gateway self    │ foo (192.168.1.26) app 2026.4.2 linux 6.8.0-106-generic                                            │
+│ Gateway service │ systemd installed · enabled · running (pid 3754475)                                                │
+│ Node service    │ systemd not installed                                                                              │
+│ Agents          │ 2 total · 1 bootstrapping · 1 active · 57 sessions                                                 │
+│ Secrets         │ none                                                                                               │
+└─────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Channels
+┌──────────┬─────────┬────────┬────────────────────────────────────────────────────────────────────────────────────────┐
+│ Channel  │ Enabled │ State  │ Detail                                                                                 │
+├──────────┼─────────┼────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ Discord  │ ON      │ OK     │ token config (sha256:976c9042 · len 72) · accounts 1/1                                 │
+└──────────┴─────────┴────────┴────────────────────────────────────────────────────────────────────────────────────────┘
+
+Discord accounts
+┌──────────┬──────────┬────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Account  │ Status   │ Notes                                                                                          │
+├──────────┼──────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ default  │ OK       │ token:config                                                                                   │
+└──────────┴──────────┴────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Agents
+┌────────────┬────────────────┬──────────┬──────────┬──────────────────────────────────────────────────────────────────┐
+│ Agent      │ Bootstrap file │ Sessions │ Active   │ Store                                                            │
+├────────────┼────────────────┼──────────┼──────────┼──────────────────────────────────────────────────────────────────┤
+│ main       │ ABSENT         │       51 │ just now │ ~/.openclaw/agents/main/sessions/sessions.json                   │
+│ voice      │ PRESENT        │        6 │ 10d ago  │ ~/.openclaw/agents/voice/sessions/sessions.json                  │
+└────────────┴────────────────┴──────────┴──────────┴──────────────────────────────────────────────────────────────────┘
+
+Diagnosis (read-only)
+
+Gateway connection details:
+  Gateway target: ws://127.0.0.1:18789
+  Source: local loopback
+  Config: /home/user/.openclaw/openclaw.json
+  Bind: loopback
+
+✓ Config: /home/user/.openclaw/openclaw.json
+✓ Secret diagnostics (0)
+✓ Restart sentinel: none
+! Port 18789
+  Port 18789 is already in use.
+  - pid 3754488 user: openclaw-gateway (127.0.0.1:18789)
+  - Gateway already running locally. Stop it (openclaw gateway stop) or use a different port.
+! Tailscale: off · unknown
+  error: Error: spawn tailscale ENOENT
+✓ Skills: 22 eligible · 0 missing · /home/user/.openclaw/workspace
+✓ Plugin compatibility (none)
+✓ Channel issues (none)
+
+Pasteable debug report. Auth tokens redacted.
+Troubleshooting: https://docs.openclaw.ai/troubleshooting
+

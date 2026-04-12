@@ -90,3 +90,26 @@
 │  Blocked by allowlist: 0   │
 │                            │
 ├────────────────────────────╯
+[lcm] Plugin loaded (enabled=true, db=/home/user/.openclaw/lcm.db, threshold=0.75)
+[lcm] Compaction summarization model: symphony-bridge/symphony/main (default)
+│
+◇  Plugins ──────╮
+│                │
+│  Loaded: 45    │
+│  Disabled: 41  │
+│  Errors: 0     │
+│                │
+├────────────────╯
+Discord: ok (@ANQR) (710ms)
+Agents: main (default), voice
+Heartbeat interval: 30m (main)
+Session store (main): /home/user/.openclaw/agents/main/sessions/sessions.json (51 entries)
+- agent:main:discord:channel:1486262758256410646 (1m ago)
+- agent:main:discord:channel:1492792378707411088 (5m ago)
+- agent:main:discord:channel:1492791264339300473 (10m ago)
+- agent:main:discord:channel:1486262758256410647 (12m ago)
+- agent:main:discord:channel:1492788220994519071 (22m ago)
+Run "openclaw doctor --fix" to apply changes.
+│
+└  Doctor complete.
+

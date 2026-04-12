@@ -1,0 +1,17 @@
+○ anqr-nightly.service - ANQR Symphony nightly operations pass
+     Loaded: loaded (/home/user/.config/systemd/user/anqr-nightly.service; linked; preset: enabled)
+     Active: inactive (dead) since Sun 2026-04-12 16:45:12 AEST; 1h 4min ago
+TriggeredBy: ● anqr-nightly.timer
+   Main PID: 3754129 (code=exited, status=0/SUCCESS)
+        CPU: 29.194s
+
+Apr 12 16:45:12 foo anqr-nightly[3754129]: [print-summary.mjs:9] [INFO]   ✅ worktree-repair: exit=0 (0.0s) [advisory]
+Apr 12 16:45:12 foo anqr-nightly[3754129]: [print-summary.mjs:9] [INFO]   ⚠️ harness-report: exit=1 (32.3s) [advisory]
+Apr 12 16:45:12 foo anqr-nightly[3754129]: [print-summary.mjs:9] [INFO]   ⚠️ ast-density: exit=1 (3.6s) [advisory]
+Apr 12 16:45:12 foo anqr-nightly[3754129]: [print-summary.mjs:9] [INFO]   ✅ issue-hygiene: exit=0 (13.8s) [independent]
+Apr 12 16:45:12 foo anqr-nightly[3754129]: [print-summary.mjs:9] [INFO]   ✅ queue-control: exit=0 (0.0s) [independent]
+Apr 12 16:45:12 foo anqr-nightly[3754129]: [print-summary.mjs:9] [INFO]   ✅ guardian: exit=0 (2.6s) [independent]
+Apr 12 16:45:12 foo anqr-nightly[3754129]: [print-summary.mjs:9] [INFO]   ✅ notify: exit=0 (4.9s) [independent]
+Apr 12 16:45:12 foo anqr-nightly[3754129]: [print-summary.mjs:9] [INFO]   ✅ latency-report: exit=0 (0.1s) [advisory]
+Apr 12 16:45:12 foo systemd[3918]: Finished anqr-nightly.service - ANQR Symphony nightly operations pass.
+Apr 12 16:45:12 foo systemd[3918]: anqr-nightly.service: Consumed 29.194s CPU time.

@@ -1,0 +1,20 @@
+● anqr-symphony-executor@6.service - ANQR Symphony executor for worktree wt6
+     Loaded: loaded (/home/user/.config/systemd/user/anqr-symphony-executor@.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-04-12 17:26:18 AEST; 23min ago
+   Main PID: 3789403 (node-MainThread)
+      Tasks: 11 (limit: 76455)
+     Memory: 891.5M (high: 3.0G max: 3.5G available: 2.1G peak: 1.2G)
+        CPU: 42.013s
+     CGroup: /user.slice/user-1000.slice/user@1000.service/app.slice/app-anqr\x2dsymphony\x2dexecutor.slice/anqr-symphony-executor@6.service
+             └─3789403 /home/user/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc /home/user/src/anqr/harness/ops/integrations/model/symphony-openai-bridge.mjs
+
+Apr 12 17:43:42 foo anqr-symphony-executor-wt6[3789403]: [voice-speak-tool.mjs:36] [INFO] 🔊 voice_speak: "Starting work on Sender (untrusted metadata): Run the sonar scan tool to create meta issue task, and"
+Apr 12 17:43:42 foo anqr-symphony-executor-wt6[3789403]: [select-provider.mjs:35] [INFO] [selectProvider] Candidate order (ranked) {"candidateCount":652,"top":["together-arize-ai-qwen-2-1-5b-instruct","fireworks-accounts-fireworks-models-glm-5","sambanova-deepseek-v3-0324","github-models-deepseek-deepseek-r1-0528","sambanova-deepseek-v3-2","fireworks-accounts-fireworks-models-glm-5p1","huggingface-katanemo-arch-router-1-5b","cerebras-llama3-1-8b","[+4 more]"]}
+Apr 12 17:43:42 foo anqr-symphony-executor-wt6[3789403]: [try-provider.mjs:51] [INFO] codebuff-paid: using SDK ✅ {"providerName":"codebuff-paid","model":"codebuff/base"}
+Apr 12 17:43:42 foo anqr-symphony-executor-wt6[3789403]: [select-provider.mjs:55] [INFO] [selectProvider] Selected ranked provider {"providerName":"codebuff-paid","tier":"paid"}
+Apr 12 17:43:42 foo anqr-symphony-executor-wt6[3789403]: [server.mjs:735] [INFO] 🔍 Credit-gate selected: codebuff-paid (route=symphony/codebuff)
+Apr 12 17:43:42 foo anqr-symphony-executor-wt6[3789403]: [server.mjs:782] [INFO] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)
+Apr 12 17:43:43 foo anqr-symphony-executor-wt6[3789403]: [voice-speak-tool.mjs:83] [INFO] 🔊 voice_speak result: {"ok":true,"result":{"content":[{"type":"text","text":"Speaking in voice channel: \"Starting work on Sender (untrusted metadata): Run the sonar scan tool to create meta issue task, and...\""}],"detail
+Apr 12 17:45:44 foo anqr-symphony-executor-wt6[3789403]: [try-mode.mjs:71] [INFO] [codebuff-direct] auto-continue 1/50 (paid)
+Apr 12 17:46:19 foo anqr-symphony-executor-wt6[3789403]: [setup-process-handlers.mjs:21] [INFO] [gc] Periodic GC: heap=139MB rss=716MB
+Apr 12 17:46:19 foo anqr-symphony-executor-wt6[3789403]: [setup-process-handlers.mjs:26] [INFO] [gc] After GC: heap=93MB rss=704MB (freed 46MB)

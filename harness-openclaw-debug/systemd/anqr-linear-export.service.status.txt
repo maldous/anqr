@@ -1,0 +1,17 @@
+○ anqr-linear-export.service - ANQR Linear issue export
+     Loaded: loaded (/home/user/.config/systemd/user/anqr-linear-export.service; linked; preset: enabled)
+     Active: inactive (dead) since Sun 2026-04-12 16:44:16 AEST; 1h 5min ago
+TriggeredBy: ● anqr-linear-export.timer
+   Main PID: 3754018 (code=exited, status=0/SUCCESS)
+        CPU: 226ms
+
+Apr 12 16:44:15 foo anqr-linear-export[3754018]: [main.mjs:21] [INFO] [export-issues] Fetching Done issues updated in last 90 days...
+Apr 12 16:44:16 foo anqr-linear-export[3754018]: [main.mjs:23] [INFO] [export-issues] Found 0 recent Done issues
+Apr 12 16:44:16 foo anqr-linear-export[3754018]: [main.mjs:30] [INFO] [export-issues] Total issues after filtering: 34
+Apr 12 16:44:16 foo anqr-linear-export[3754018]: [main.mjs:38] [INFO] [export-issues] ✅ Export complete: reports/linear-export/issues-latest.json
+Apr 12 16:44:16 foo anqr-linear-export[3754018]: [main.mjs:39] [INFO] [export-issues] Exported 34 issues
+Apr 12 16:44:16 foo anqr-linear-export[3754018]: [main.mjs:48] [INFO]
+Apr 12 16:44:16 foo anqr-linear-export[3754018]: [export-issues] State distribution:
+Apr 12 16:44:16 foo anqr-linear-export[3754018]: [main.mjs:50] [INFO]   Backlog: 26
+Apr 12 16:44:16 foo anqr-linear-export[3754018]: [main.mjs:50] [INFO]   Todo: 8
+Apr 12 16:44:16 foo systemd[3918]: Finished anqr-linear-export.service - ANQR Linear issue export.
