@@ -1,0 +1,346 @@
+```text
+You are working directly in the ANQR repository. Your task is to make Linear issue processing reliable, autonomous, and production-safe.
+
+This is the only focus. Do not drift into unrelated harness work.
+
+Context you must treat as true
+
+- Linear currently has open Todo issues sitting idle.
+- There are 4 Linear worktrees, wt1 to wt4.
+- The intended operating model is that Linear should continuously keep up to 4 eligible issues in progress, one per healthy Linear worktree.
+- Existing Todo issues must eventually be processed even if no new webhook arrives.
+- When a Linear issue is completed in a worktree branch, the result must be pushed, integrated into main, and the issue must only then be closed with evidence.
+- The nightly Sonar flow is intended to create grouped meta-issues, then fan out child issues, then remove the original meta-issue after successful creation.
+- The current deployed behavior is not reliable enough.
+
+Observed facts you must design around
+
+- After restart at 18:15, Linear export found 33 open issues, including 10 in Todo.
+- The webhook receiver restarted and reported ready.
+- The logs do not show the 10 Todo issues being actively claimed after restart.
+- This means existing Todo issues are not being recovered reliably by startup behavior.
+- The current topology behaves like event-driven ingress, not guaranteed backlog reconciliation.
+- wt1 processed at least one issue and then became stuck with branch divergence and non-fast-forward sync failures.
+- A diverged worktree currently reduces effective Linear processing capacity.
+- Nightly systemd currently runs nightly ops with --skip-sonar, so the grouped Sonar meta-issue behavior is not active in the deployed service.
+- Several docs and helper tools still describe older units like anqr-linear-runner@ and anqr-queue-feeder that do not match the active deployed flow.
+
+Primary objective
+
+Make Linear reliable enough that:
+- eligible Todo issues are always eventually picked up
+- healthy capacity is always used up to the number of healthy Linear worktrees
+- stale or stuck issue execution is detected and repaired
+- diverged worktrees are quarantined and repaired instead of silently reducing throughput forever
+- issue closure only happens after push, integration, and evidence
+- nightly grouped Sonar issue generation works again, or is explicitly redesigned and wired back in truthfully
+- documentation matches the real deployed architecture
+
+Required delivery
+
+Implement the code changes, tests, service changes, and documentation changes needed to achieve this.
+Do not produce a theoretical plan only.
+Do not stop at diagnosis.
+Do not leave partial TODO comments.
+Complete the remediation.
+
+Rules
+
+- Keep the architecture hexagonal and contract-driven.
+- Preserve strong state discipline.
+- Do not add hidden side paths that bypass state tracking.
+- Do not close issues without evidence.
+- Do not assume webhooks are sufficient.
+- Do not use branch divergence as a normal steady-state condition.
+- Do not leave stale docs referring to inactive runtime units.
+- Do not claim something works unless tests and runtime validation prove it.
+
+What to implement
+
+1. Make Linear level-triggered, not only edge-triggered
+
+Add a Linear reconciliation loop that treats Linear state as a source of truth, not only webhook arrivals.
+
+Required behavior:
+- On startup, reconcile open Linear issues and local orchestration state.
+- Periodically reconcile open Linear issues and local orchestration state.
+- Webhooks remain useful, but only as hints and accelerators.
+- Existing Todo issues must be eligible for dispatch even if they were already Todo before restart.
+
+Minimum required reconciliation inputs:
+- current Linear open issues and their states
+- shared execution state and leases
+- worktree health and availability
+- integration queue and finalization state
+- stale in-progress execution markers
+- worktree divergence and quarantine state
+
+Minimum required reconciliation outputs:
+- enqueue or trigger missing Todo issues
+- recover stale In Progress items with no active runner
+- recover integration_pending items not being integrated
+- avoid duplicate claims
+- cap active work to healthy worktree capacity
+
+2. Enforce healthy-capacity dispatch
+
+Implement deterministic concurrency for Linear:
+- target concurrency = min(number of healthy Linear worktrees, number of eligible issues)
+- healthy Linear worktrees are wt1 to wt4 only
+- if all 4 are healthy and there are at least 4 eligible issues, then 4 issues should be in progress
+- if a worktree is unhealthy, capacity must reduce visibly and be logged clearly
+- when a worktree becomes healthy again, capacity must rise automatically without manual intervention
+
+Add explicit health classification for each Linear worktree:
+- available
+- executing
+- dirty_repairable
+- diverged
+- quarantined
+- integration_blocked
+- unavailable
+
+The dispatcher must never keep assigning work to a quarantined or diverged worktree.
+
+3. Fix diverged-branch handling
+
+wt1 divergence must not leave the system in repeated non-fast-forward failure.
+
+Implement a robust worktree repair path for divergence:
+- detect divergence explicitly
+- stop assigning new work to the affected worktree
+- classify it as unavailable or quarantined
+- attempt deterministic repair or reprovision
+- restore the worktree to a clean, known-good state
+- only then return it to the available pool
+
+Required safeguards:
+- no repeated infinite sync failure loops
+- no hidden auto-merge behavior that can corrupt evidence
+- no pretending the worktree is healthy while it is not
+- all divergence handling must be logged with cause, action, and result
+
+4. Make issue execution recovery explicit
+
+Add recovery logic for these cases:
+- Todo issue exists in Linear but is not queued, not leased, and not executing
+- In Progress issue exists in Linear but there is no valid lease or active executor
+- issue lease exists but heartbeat is stale
+- issue is marked integration_pending but is not being integrated
+- worktree crashed mid-execution
+- worktree completed local changes but integration never finished
+- issue was moved manually in Linear and local state needs reconciliation
+
+Recovery must be idempotent.
+Recovery must not duplicate work.
+Recovery must prefer repair and continuation over throwing work away.
+
+5. Make closure evidence-based and deterministic
+
+A Linear issue must only move to Done after all of the following are true:
+- worktree branch changes are committed
+- branch is pushed successfully
+- integration into main succeeds
+- verification commands ran and their results were captured
+- evidence comment or evidence body update was posted back to Linear
+
+Evidence must include, at minimum:
+- issue identifier
+- worktree id
+- commit sha
+- integration sha or resulting main sha
+- changed files summary
+- verification commands run
+- verification results
+- whether tests passed, failed, or were skipped with reason
+- whether docs were updated
+- timestamp and actor
+
+If integration fails:
+- do not close the issue
+- move it to the appropriate recoverable state
+- preserve evidence and next action
+
+6. Restore or redesign the nightly Sonar grouped issue flow
+
+The desired behavior is:
+- nightly Sonar scan produces grouped meta-issue content
+- grouped content results in creation of actionable Linear issues
+- original meta-issue is removed only after successful fan-out and confirmation
+- fan-out must be idempotent
+- duplicate child issue creation must be prevented
+- evidence of creation and cleanup must be recorded
+
+Current deployed nightly uses --skip-sonar.
+You must decide one of these two outcomes and implement it fully:
+- re-enable the Sonar grouped issue flow in nightly safely, or
+- move the Sonar grouped issue creation into a dedicated active service/timer path and update docs and ops accordingly
+
+Whichever path you choose:
+- the deployed units, code, and docs must agree
+- there must be an end-to-end testable path
+- there must be runtime logging proving it happened
+- stale descriptions of nightly behavior must be removed
+
+7. Update systemd and runtime wiring truthfully
+
+Audit active systemd units and reconcile code and docs to the real runtime.
+
+At present, there are references in docs and tools to older units such as:
+- anqr-linear-runner@*.service
+- anqr-linear-runner@*.timer
+- anqr-queue-feeder.service
+- anqr-queue-feeder.timer
+
+These references must be audited and corrected if they are no longer part of the deployed model.
+
+Update:
+- service files
+- startup recovery tools
+- verification tools
+- runbooks
+- architecture docs
+- audit reference docs
+- quickstart docs
+- any scripts that still try to manage old units
+
+The repo must describe the actual runtime, not a previous design.
+
+8. Improve observability for Linear reliability
+
+Add clear runtime logging and state visibility for:
+- backlog counts by relevant state
+- eligible issue count
+- claimed issue count
+- current active capacity
+- healthy/unhealthy Linear worktrees
+- stale lease recoveries
+- reconciler actions taken
+- issues skipped and why
+- integration queue depth
+- closure evidence publication
+- nightly Sonar grouped issue generation activity
+- divergence detection and repair attempts
+
+Add a concise operator view or command that answers:
+- how many open Todo issues exist
+- how many are currently eligible
+- how many are actively executing
+- which worktree owns which issue
+- which worktrees are healthy
+- which issues are stuck and why
+- whether the nightly grouped Sonar issue flow ran
+
+9. Add tests that prove reliability behavior
+
+Add or update automated tests for:
+- startup reconciliation picks up pre-existing Todo issues
+- periodic reconciliation reclaims missed Todo issues
+- max in-progress count matches healthy worktree capacity
+- duplicate claim prevention
+- stale lease recovery
+- crashed executor recovery
+- integration_pending recovery
+- divergence quarantine and recovery
+- evidence-based closeout
+- no close on integration failure
+- Sonar grouped meta-issue fan-out idempotency
+- docs and service references align with real active units where testable
+
+Prefer integration tests where behavior crosses boundaries.
+Use unit tests for pure state transitions and classifiers.
+
+10. Produce truthful documentation updates
+
+Update the relevant Linear and runtime docs so they describe:
+- webhook role
+- reconciler role
+- startup behavior
+- periodic catch-up behavior
+- four-worktree capacity rule
+- unhealthy-worktree degradation behavior
+- divergence quarantine and repair
+- evidence-required closeout
+- nightly grouped Sonar issue generation path
+- actual active systemd units and commands
+
+Explicitly remove or correct outdated claims about:
+- old polling timers if no longer used
+- old queue feeder units if no longer used
+- any statement that implies webhook events alone guarantee progress
+- any statement that implies issues are safely closed before integration and evidence
+
+Acceptance criteria
+
+The work is only complete when all of these are true:
+
+A. Backlog pickup
+- If 10 eligible Todo issues exist in Linear and 4 Linear worktrees are healthy, the system converges to 4 active issues without manual state toggling.
+
+B. Restart recovery
+- After service restart, pre-existing Todo issues are rediscovered and processed without requiring a new webhook event.
+
+C. Capacity truth
+- The number of active Linear executions never exceeds healthy Linear worktree capacity.
+- If one worktree is diverged or quarantined, capacity drops visibly to 3.
+- When repaired, capacity returns automatically.
+
+D. Divergence robustness
+- A non-fast-forward or diverged worktree is quarantined and repaired or reprovisioned.
+- It does not remain in silent repeated failure.
+- It does not keep receiving new work while unhealthy.
+
+E. Closure discipline
+- No issue reaches Done unless push, integration, and evidence publication all completed.
+- Integration failure leaves the issue open and recoverable.
+
+F. Sonar grouped issue automation
+- The grouped nightly Sonar issue flow is active and testable, or there is a clearly documented replacement path that is active and testable.
+- No stale claim remains in docs or services.
+
+G. Documentation truthfulness
+- Docs, service files, helper tools, and runtime behavior agree.
+
+H. Operator confidence
+- A maintainer can inspect logs or a status command and immediately see why Linear is or is not processing work.
+
+Suggested implementation sequence
+
+1. Audit actual runtime flow and remove stale assumptions.
+2. Implement reconciler and health-aware dispatch.
+3. Implement divergence quarantine and repair.
+4. Implement evidence-locked closeout.
+5. Restore or redesign nightly Sonar grouped issue automation.
+6. Update systemd helpers and docs.
+7. Add tests.
+8. Run full validation and fix any regressions.
+
+Validation you must run before finishing
+
+Run all relevant tests and quality checks for the touched areas.
+Also perform an end-to-end local validation of the Linear flow.
+
+Minimum validation should demonstrate:
+- startup with pre-existing Todo issues
+- automatic pickup without webhook state change
+- four healthy worktrees produce four active issues
+- one diverged worktree reduces capacity and is repaired
+- completed issue integrates and closes with evidence
+- integration failure does not close the issue
+- nightly Sonar grouped issue generation path is active and logged, or explicitly moved and proven
+
+Final output format required from you
+
+When finished, provide a concise implementation summary with:
+- files changed
+- runtime behavior changed
+- tests added or updated
+- docs updated
+- exact validation commands run
+- observed results
+- any residual risks
+
+Do not stop early.
+Implement the full remediation.
+```
+
