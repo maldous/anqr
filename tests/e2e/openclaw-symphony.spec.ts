@@ -418,11 +418,7 @@ const LOCAL_SERVICE_ROUTES = [
     provider: "codebuff-free",
     description: "Codebuff free tier",
   },
-  {
-    route: "symphony/ollama-qwen3-coder-next",
-    provider: "ollama-qwen3-coder-next",
-    description: "Local Ollama (qwen3-coder-next)",
-  },
+
 ];
 
 // ---------------------------------------------------------------------------
