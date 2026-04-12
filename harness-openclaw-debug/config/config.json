@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.openclaw.ai/schema/config.json",
+  "tts": {
+    "enabled": false,
+    "provider": "elevenlabs",
+    "elevenlabs": {
+      "voice": "21m00Tcm4TlvDq8ikWAM",
+      "model": "eleven_monolingual_v1"
+    }
+  },
+  "gateway": {
+    "http": {
+      "endpoints": {
+        "responses": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}

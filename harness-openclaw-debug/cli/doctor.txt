@@ -1,0 +1,92 @@
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+██░▄▄▄░██░▄▄░██░▄▄▄██░▀██░██░▄▄▀██░████░▄▄▀██░███░██
+██░███░██░▀▀░██░▄▄▄██░█░█░██░█████░████░▀▀░██░█░█░██
+██░▀▀▀░██░█████░▀▀▀██░██▄░██░▀▀▄██░▀▀░█░██░██▄▀▄▀▄██
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                  🦞 OPENCLAW 🦞                    
+ 
+┌  OpenClaw doctor
+│
+◇  Doctor changes ─────────────────────────────────────────────────────╮
+│                                                                      │
+│  Normalized talk.provider/providers shape (trimmed provider ids and  │
+│  merged missing compatibility fields).                               │
+│                                                                      │
+├──────────────────────────────────────────────────────────────────────╯
+│
+◇  Doctor ──────────────────────────────────────────────╮
+│                                                       │
+│  Run "openclaw doctor --fix" to apply these changes.  │
+│                                                       │
+├───────────────────────────────────────────────────────╯
+│
+◇  State integrity ─────────────────────────────────────────────────────╮
+│                                                                       │
+│  - State directory permissions are too open (~/.openclaw). Recommend  │
+│    chmod 700.                                                         │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────╯
+│
+◇  Session locks ──────────────────────────────────────────────────────────────╮
+│                                                                              │
+│  - Found 1 session lock file.                                                │
+│  - ~/.openclaw/agents/main/sessions/43bc3024-c7ae-4ffe-a9ef-f9dc21e62e5d.js  │
+│  onl.lock                                                                    │
+│    pid=3754488 (alive) age=1m0s stale=no                                     │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────╯
+│
+◇  Other gateway-like services detected ───────────────────────────╮
+│                                                                  │
+│  - anqr-discord-router.service (user, unit:                      │
+│    /home/user/.config/systemd/user/anqr-discord-router.service)  │
+│                                                                  │
+├──────────────────────────────────────────────────────────────────╯
+│
+◇  Cleanup hints ─────────────────────────────────────────────╮
+│                                                             │
+│  - systemctl --user disable --now openclaw-gateway.service  │
+│  - rm ~/.config/systemd/user/openclaw-gateway.service       │
+│                                                             │
+├─────────────────────────────────────────────────────────────╯
+│
+◇  Gateway recommendation ───────────────────────────────────────────────╮
+│                                                                        │
+│  Recommendation: run a single gateway per machine for most setups.     │
+│  One gateway supports multiple agents.                                 │
+│  If you need multiple gateways (e.g., a rescue bot on the same host),  │
+│  isolate ports + config/state (see docs:                               │
+│  /gateway#multiple-gateways-same-host).                                │
+│                                                                        │
+├────────────────────────────────────────────────────────────────────────╯
+│
+◇  Gateway service config ────────────────────────────────────────────────╮
+│                                                                         │
+│  - Gateway service PATH missing required dirs:                          │
+│    /home/user/.nvm/current/bin, /home/user/.npm-global/bin,             │
+│    /home/user/.volta/bin, /home/user/.asdf/shims, /home/user/.bun/bin,  │
+│    /home/user/.fnm/current/bin                                          │
+│  - Gateway service PATH includes version managers or package managers;  │
+│    recommend a minimal PATH.                                            │
+│    (/home/user/.nvm/versions/node/v25.8.0/bin)                          │
+│  - Gateway service entrypoint does not match the current install.       │
+│    (/usr/local/bin/openclaw -> /home/user/src/openclaw/dist/index.js)   │
+│                                                                         │
+├─────────────────────────────────────────────────────────────────────────╯
+│
+◇  Security ─────────────────────────────────╮
+│                                            │
+│  - No channel security warnings detected.  │
+│  - Run: openclaw security audit --deep     │
+│                                            │
+├────────────────────────────────────────────╯
+[36m[skills][39m [33mSkipping skill path that resolves outside its configured root.[39m
+[36m[skills][39m [33mSkipping skill path that resolves outside its configured root.[39m
+│
+◇  Skills status ────────────╮
+│                            │
+│  Eligible: 38              │
+│  Missing requirements: 17  │
+│  Blocked by allowlist: 0   │
+│                            │
+├────────────────────────────╯
