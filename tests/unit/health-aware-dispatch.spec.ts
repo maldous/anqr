@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 import { getHealthyLinearCapacity } from "../../harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity.mjs";
 
@@ -26,5 +28,36 @@ describe("getHealthyLinearCapacity", () => {
       expect(typeof wt.healthy).toBe("boolean");
       expect(typeof wt.executing).toBe("boolean");
     }
+  });
+});
+
+describe("selectLinearWorktree health-aware dispatch", () => {
+  const source = readFileSync(
+    resolve("harness/ops/integrations/model/symphony-agent-router/select-linear-worktree.mjs"),
+    "utf-8",
+  );
+
+  it("filters out quarantined worktrees", () => {
+    expect(source).toContain("quarantined");
+  });
+
+  it("filters out diverged worktrees", () => {
+    expect(source).toContain("diverged");
+  });
+
+  it("filters out unavailable worktrees", () => {
+    expect(source).toContain("unavailable");
+  });
+
+  it("uses UNHEALTHY_STATES set for filtering", () => {
+    expect(source).toContain("UNHEALTHY_STATES");
+  });
+
+  it("imports getWorktreeState for health checks", () => {
+    expect(source).toContain("getWorktreeState");
+  });
+
+  it("returns null when no healthy worktrees are available", () => {
+    expect(source).toContain("if (healthy.length === 0) return null");
   });
 });
