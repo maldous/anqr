@@ -340,7 +340,6 @@ const LOCAL_PROVIDERS = [
 // configuredProviders list, so the inventory test must NOT expect them.
 const BRIDGE_BLOCKLISTED_PROVIDERS = [{ name: "openclaw", model: "openclaw:main" }];
 
-// Providers the bridge actually exposes (excludes blocklisted)
 // Base provider names we expect in the bridge (excludes dynamically-named
 // openrouter sub-model variants which are validated separately)
 const ALL_EXPECTED_PROVIDER_NAMES = [
