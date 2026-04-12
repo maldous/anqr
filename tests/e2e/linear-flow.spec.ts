@@ -35,37 +35,32 @@ describe("Linear webhook receiver — live runtime", () => {
   });
 
   it("non-Issue event is filtered at ingress (no side effects)", async () => {
-    const res = await sendSignedWebhook(
-      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
-      { type: "Comment", action: "create", data: {} },
-    );
+    const res = await sendSignedWebhook(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
+      type: "Comment",
+      action: "create",
+      data: {},
+    });
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.status).toBe("ignored");
   });
 
   it("removed Issue is filtered at ingress", async () => {
-    const res = await sendSignedWebhook(
-      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
-      {
-        type: "Issue",
-        action: "remove",
-        data: { identifier: "E2E-REM-001", state: { name: "Todo" }, title: "Removed" },
-      },
-    );
+    const res = await sendSignedWebhook(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
+      type: "Issue",
+      action: "remove",
+      data: { identifier: "E2E-REM-001", state: { name: "Todo" }, title: "Removed" },
+    });
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe("ignored");
   });
 
   it("Backlog-state Issue is filtered at ingress", async () => {
-    const res = await sendSignedWebhook(
-      `${LINEAR_WEBHOOK_URL}/linear/webhook`,
-      {
-        type: "Issue",
-        action: "create",
-        data: { identifier: "E2E-BL-001", state: { name: "Backlog" }, title: "Backlog" },
-      },
-    );
+    const res = await sendSignedWebhook(`${LINEAR_WEBHOOK_URL}/linear/webhook`, {
+      type: "Issue",
+      action: "create",
+      data: { identifier: "E2E-BL-001", state: { name: "Backlog" }, title: "Backlog" },
+    });
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe("ignored");
   });

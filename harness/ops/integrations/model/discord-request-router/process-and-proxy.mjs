@@ -50,7 +50,8 @@ export function processAndProxy(worktree, req, res, rawBody) {
       logInfo(`📝 Discord message ID: ${discordMessageId}`);
     }
 
-    const sessionId = req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
+    const sessionId =
+      req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
     discordThreadName = getSessionThreadName(sessionId, parsedBody.messages);
     if (discordThreadName) {
       logInfo(`🧵 Discord thread: "${discordThreadName}"`);

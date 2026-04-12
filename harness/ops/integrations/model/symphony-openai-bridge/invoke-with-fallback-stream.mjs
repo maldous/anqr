@@ -58,6 +58,7 @@ export async function invokeWithFallbackStream(
   const triedProviders = [...initialExcluded];
   let lastError = null;
   let attemptNumber = 0;
+  let contextBudgetCap = null;
 
   while (true) {
     attemptNumber++;
@@ -113,6 +114,7 @@ export async function invokeWithFallbackStream(
             onChunk,
             cwd,
             useTools: route.useTools,
+            maxContextBudget: contextBudgetCap,
           });
 
       if (
@@ -206,6 +208,23 @@ export async function invokeWithFallbackStream(
       if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
         const details = parseContextErrorDetails(err);
         recordContextError(provider.name, details);
+        // Propagate the smallest known limit across the fallback chain so
+        // subsequent providers cap their tool + message budget immediately
+        // instead of repeating the same oversized request.
+        const limit = details.reportedLimit;
+        if (limit) {
+          contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, limit) : limit;
+          logInfo(
+            `📉 Context budget cap: ${contextBudgetCap} tokens (from ${provider.name} limit=${limit})`,
+          );
+        } else if (details.requestedTokens) {
+          // No explicit limit reported — estimate conservatively at 60% of what was requested
+          const estimated = Math.floor(details.requestedTokens * 0.6);
+          contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, estimated) : estimated;
+          logInfo(
+            `📉 Context budget cap (estimated): ${contextBudgetCap} tokens (from ${provider.name} requested=${details.requestedTokens})`,
+          );
+        }
       } else if (errorType === ERROR_TYPES.RATE_LIMITED) {
         const rlInfo = parseRateLimitInfo(err);
         recordRateLimit(provider.name, rlInfo);

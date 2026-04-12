@@ -111,7 +111,9 @@ function resolveLinearWebhookSecret(): string {
       const content = fs.readFileSync(envPath, "utf-8");
       const match = content.match(/^LINEAR_WEBHOOK_SECRET=(.+)$/m);
       if (match) return match[1].trim();
-    } catch { /* env file not available */ }
+    } catch {
+      /* env file not available */
+    }
   }
   return "";
 }

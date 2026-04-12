@@ -41,9 +41,7 @@ async function main() {
     // Idempotency: skip if an open issue with this title already exists
     const existing = await findOpenIssuesByTitle(title);
     if (existing.length > 0) {
-      console.log(
-        `[sonar-group] Skipping existing: ${title} (${existing[0].identifier})`,
-      );
+      console.log(`[sonar-group] Skipping existing: ${title} (${existing[0].identifier})`);
       continue;
     }
 

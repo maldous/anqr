@@ -16,4 +16,3 @@ export function extractCorrelationId(headers) {
 export function correlationIdFromRequest(req) {
   return extractCorrelationId(req?.headers) || generateCorrelationId();
 }
-

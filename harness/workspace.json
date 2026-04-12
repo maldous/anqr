@@ -1,796 +1,963 @@
 {
-  "configuration" : { },
-  "description" : "Current-runtime and target-architecture workspace for the ANQR harness.",
-  "documentation" : { },
-  "id" : 0,
-  "model" : {
-    "people" : [ {
-      "description" : "Runs the services, inspects logs, manages incidents, and controls rollout.",
-      "id" : "1",
-      "name" : "Harness Operator",
-      "properties" : {
-        "structurizr.dsl.identifier" : "operator"
-      },
-      "relationships" : [ {
-        "description" : "Operates the harness",
-        "destinationId" : "4",
-        "id" : "26",
-        "sourceId" : "1",
-        "tags" : "Relationship"
-      }, {
-        "description" : "Starts, stops, and inspects services",
-        "destinationId" : "21",
-        "id" : "27",
-        "sourceId" : "1",
-        "tags" : "Relationship"
-      } ],
-      "tags" : "Element,Person"
-    }, {
-      "description" : "Sends interactive requests through Discord and OpenClaw.",
-      "id" : "2",
-      "name" : "Discord User",
-      "properties" : {
-        "structurizr.dsl.identifier" : "discord_user"
-      },
-      "relationships" : [ {
-        "description" : "Sends interactive requests",
-        "destinationId" : "12",
-        "id" : "22",
-        "sourceId" : "2",
-        "tags" : "Relationship"
-      } ],
-      "tags" : "Element,Person"
-    }, {
-      "description" : "Uses Structurizr, docs, ADRs, and logs to review the harness.",
-      "id" : "3",
-      "name" : "Architecture Reviewer",
-      "properties" : {
-        "structurizr.dsl.identifier" : "architecture_reviewer"
-      },
-      "relationships" : [ {
-        "description" : "Reviews runtime and target design",
-        "destinationId" : "4",
-        "id" : "28",
-        "sourceId" : "3",
-        "tags" : "Relationship"
-      } ],
-      "tags" : "Element,Person"
-    } ],
-    "softwareSystems" : [ {
-      "containers" : [ {
-        "description" : "Current ingress and routing surfaces. Accepts Discord and Linear requests, normalizes them, and forwards work into the runtime. Current runtime includes Discord Router, Linear Webhook Receiver, Symphony Router, and OpenClaw integration.",
-        "documentation" : { },
-        "id" : "5",
-        "name" : "Ingress And Routing",
-        "properties" : {
-          "structurizr.dsl.identifier" : "anqr_harness.ingress"
+  "configuration": {},
+  "description": "Current-runtime and target-architecture workspace for the ANQR harness.",
+  "documentation": {},
+  "id": 0,
+  "model": {
+    "people": [
+      {
+        "description": "Runs the services, inspects logs, manages incidents, and controls rollout.",
+        "id": "1",
+        "name": "Harness Operator",
+        "properties": {
+          "structurizr.dsl.identifier": "operator"
         },
-        "relationships" : [ {
-          "description" : "Creates desired work and forwards routing decisions",
-          "destinationId" : "6",
-          "id" : "31",
-          "sourceId" : "5",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Reads or writes issue metadata",
-          "destinationId" : "14",
-          "id" : "47",
-          "sourceId" : "5",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container",
-        "technology" : "Node.js services"
-      }, {
-        "description" : "Current runtime state and queue logic. Today this responsibility is split between webhook-triggered dispatch, backlog reconciliation, queue control, runner self-pick, and durable file-backed state. Target state is one authoritative scheduler per repo.",
-        "documentation" : { },
-        "id" : "6",
-        "name" : "Scheduler And State Authority",
-        "properties" : {
-          "structurizr.dsl.identifier" : "anqr_harness.scheduler"
+        "relationships": [
+          {
+            "description": "Operates the harness",
+            "destinationId": "4",
+            "id": "26",
+            "sourceId": "1",
+            "tags": "Relationship"
+          },
+          {
+            "description": "Starts, stops, and inspects services",
+            "destinationId": "21",
+            "id": "27",
+            "sourceId": "1",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Person"
+      },
+      {
+        "description": "Sends interactive requests through Discord and OpenClaw.",
+        "id": "2",
+        "name": "Discord User",
+        "properties": {
+          "structurizr.dsl.identifier": "discord_user"
         },
-        "relationships" : [ {
-          "description" : "Assigns claimed work to executor slots",
-          "destinationId" : "7",
-          "id" : "32",
-          "sourceId" : "6",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Reads and writes durable queue, claim, lease, and worktree state",
-          "destinationId" : "11",
-          "id" : "36",
-          "sourceId" : "6",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Reads or writes issue state",
-          "destinationId" : "14",
-          "id" : "49",
-          "sourceId" : "6",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container",
-        "technology" : "Node.js services plus file-backed JSON state"
-      }, {
-        "description" : "Eight executor slots backed by git worktrees and worktree-local bridges. wt1-wt4 currently serve Linear. wt5-wt8 currently serve Discord.",
-        "documentation" : { },
-        "id" : "7",
-        "name" : "Executor Pool",
-        "properties" : {
-          "structurizr.dsl.identifier" : "anqr_harness.executors"
+        "relationships": [
+          {
+            "description": "Sends interactive requests",
+            "destinationId": "12",
+            "id": "22",
+            "sourceId": "2",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Person"
+      },
+      {
+        "description": "Uses Structurizr, docs, ADRs, and logs to review the harness.",
+        "id": "3",
+        "name": "Architecture Reviewer",
+        "properties": {
+          "structurizr.dsl.identifier": "architecture_reviewer"
         },
-        "relationships" : [ {
-          "description" : "Publishes candidates for integration",
-          "destinationId" : "8",
-          "id" : "33",
-          "sourceId" : "7",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Uses worktrees and writes execution evidence",
-          "destinationId" : "11",
-          "id" : "37",
-          "sourceId" : "7",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Calls routed AI providers",
-          "destinationId" : "15",
-          "id" : "40",
-          "sourceId" : "7",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Fetches and publishes branch state",
-          "destinationId" : "16",
-          "id" : "42",
-          "sourceId" : "7",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container",
-        "technology" : "systemd templated services plus Node.js execution bridge"
-      }, {
-        "description" : "Branch publication, candidate admission, and single-writer integration to mainline. Current runtime uses a dedicated integrator service and git-based merge-back flows.",
-        "documentation" : { },
-        "id" : "8",
-        "name" : "Integration And Repository Control",
-        "properties" : {
-          "structurizr.dsl.identifier" : "anqr_harness.integration"
+        "relationships": [
+          {
+            "description": "Reviews runtime and target design",
+            "destinationId": "4",
+            "id": "28",
+            "sourceId": "3",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Person"
+      }
+    ],
+    "softwareSystems": [
+      {
+        "containers": [
+          {
+            "description": "Current ingress and routing surfaces. Accepts Discord and Linear requests, normalizes them, and forwards work into the runtime. Current runtime includes Discord Router, Linear Webhook Receiver, Symphony Router, and OpenClaw integration.",
+            "documentation": {},
+            "id": "5",
+            "name": "Ingress And Routing",
+            "properties": {
+              "structurizr.dsl.identifier": "anqr_harness.ingress"
+            },
+            "relationships": [
+              {
+                "description": "Creates desired work and forwards routing decisions",
+                "destinationId": "6",
+                "id": "31",
+                "sourceId": "5",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Reads or writes issue metadata",
+                "destinationId": "14",
+                "id": "47",
+                "sourceId": "5",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container",
+            "technology": "Node.js services"
+          },
+          {
+            "description": "Current runtime state and queue logic. Today this responsibility is split between webhook-triggered dispatch, backlog reconciliation, queue control, runner self-pick, and durable file-backed state. Target state is one authoritative scheduler per repo.",
+            "documentation": {},
+            "id": "6",
+            "name": "Scheduler And State Authority",
+            "properties": {
+              "structurizr.dsl.identifier": "anqr_harness.scheduler"
+            },
+            "relationships": [
+              {
+                "description": "Assigns claimed work to executor slots",
+                "destinationId": "7",
+                "id": "32",
+                "sourceId": "6",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Reads and writes durable queue, claim, lease, and worktree state",
+                "destinationId": "11",
+                "id": "36",
+                "sourceId": "6",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Reads or writes issue state",
+                "destinationId": "14",
+                "id": "49",
+                "sourceId": "6",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container",
+            "technology": "Node.js services plus file-backed JSON state"
+          },
+          {
+            "description": "Eight executor slots backed by git worktrees and worktree-local bridges. wt1-wt4 currently serve Linear. wt5-wt8 currently serve Discord.",
+            "documentation": {},
+            "id": "7",
+            "name": "Executor Pool",
+            "properties": {
+              "structurizr.dsl.identifier": "anqr_harness.executors"
+            },
+            "relationships": [
+              {
+                "description": "Publishes candidates for integration",
+                "destinationId": "8",
+                "id": "33",
+                "sourceId": "7",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Uses worktrees and writes execution evidence",
+                "destinationId": "11",
+                "id": "37",
+                "sourceId": "7",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Calls routed AI providers",
+                "destinationId": "15",
+                "id": "40",
+                "sourceId": "7",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Fetches and publishes branch state",
+                "destinationId": "16",
+                "id": "42",
+                "sourceId": "7",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container",
+            "technology": "systemd templated services plus Node.js execution bridge"
+          },
+          {
+            "description": "Branch publication, candidate admission, and single-writer integration to mainline. Current runtime uses a dedicated integrator service and git-based merge-back flows.",
+            "documentation": {},
+            "id": "8",
+            "name": "Integration And Repository Control",
+            "properties": {
+              "structurizr.dsl.identifier": "anqr_harness.integration"
+            },
+            "relationships": [
+              {
+                "description": "Reads and writes integration and candidate state",
+                "destinationId": "11",
+                "id": "35",
+                "sourceId": "8",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Pushes integrated repository state",
+                "destinationId": "16",
+                "id": "44",
+                "sourceId": "8",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container",
+            "technology": "Node.js service plus Git"
+          },
+          {
+            "description": "Watchdog, worktree health, reconciliation support, and recovery automation. Current runtime still performs some git-mutating repair that must be removed for production.",
+            "documentation": {},
+            "id": "9",
+            "name": "Recovery, Health, And Safety Services",
+            "properties": {
+              "structurizr.dsl.identifier": "anqr_harness.recovery"
+            },
+            "relationships": [
+              {
+                "description": "Repairs job state, expires claims, and requests requeue",
+                "destinationId": "6",
+                "id": "34",
+                "sourceId": "9",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Reads health and quarantine state",
+                "destinationId": "11",
+                "id": "38",
+                "sourceId": "9",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container",
+            "technology": "Node.js services and timers"
+          },
+          {
+            "description": "Quality gates, diagnostics, reports, notifications, RAG rebuild, and audit outputs.",
+            "documentation": {},
+            "id": "10",
+            "name": "Quality, Evidence, And Reporting",
+            "properties": {
+              "structurizr.dsl.identifier": "anqr_harness.evidence"
+            },
+            "relationships": [
+              {
+                "description": "Writes reports and audit outputs",
+                "destinationId": "11",
+                "id": "39",
+                "sourceId": "10",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Reads or exports static-analysis findings",
+                "destinationId": "17",
+                "id": "45",
+                "sourceId": "10",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Reads inbound mail and sends notifications",
+                "destinationId": "20",
+                "id": "50",
+                "sourceId": "10",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Resolves documentation",
+                "destinationId": "18",
+                "id": "52",
+                "sourceId": "10",
+                "tags": "Relationship"
+              },
+              {
+                "description": "Builds embeddings and local model outputs",
+                "destinationId": "19",
+                "id": "54",
+                "sourceId": "10",
+                "tags": "Relationship"
+              }
+            ],
+            "tags": "Element,Container",
+            "technology": "Node.js, Python, Bash, reports"
+          },
+          {
+            "description": "File-backed durable state, evidence artifacts, integration queue state, and the git worktree fleet used by executors.",
+            "documentation": {},
+            "id": "11",
+            "name": "State Store And Worktree Fleet",
+            "properties": {
+              "structurizr.dsl.identifier": "anqr_harness.state_store"
+            },
+            "tags": "Element,Container,DataStore",
+            "technology": "Filesystem, JSON, Git worktrees"
+          }
+        ],
+        "description": "Repository-local orchestration, execution, integration, recovery, diagnostics, and evidence generation for ANQR.",
+        "documentation": {
+          "decisions": [
+            {
+              "content": "# ADR-0001 Truth Model And Status Boundary\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nPrevious harness documentation mixed three different statements:\n\n- what the runtime currently does\n- what the team originally intended\n- what the production target should become\n\nThat made review and recovery harder.\n\n## Decision\n\nHarness documentation must explicitly label statements as one of:\n\n- current reality\n- known nonconformance\n- target requirement\n\nDocumentation truth order is:\n\n1. runtime code\n2. systemd units\n3. observed logs and status output\n4. tests as intent evidence\n5. earlier documentation\n\n## Consequences\n\n- future docs must not describe a planned state as if it is already live\n- current faults must remain visible until they are removed from code and runtime\n- Structurizr views must model current runtime topology, not aspirational topology\n",
+              "date": "2026-04-12T12:00:23Z",
+              "format": "Markdown",
+              "id": "1",
+              "status": "Proposed",
+              "title": " ADR-0001 Truth Model And Status Boundary"
+            },
+            {
+              "content": "# ADR-0002 Authoritative Claim And Dispatch\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nThe current runtime allows more than one component to discover and dispatch runnable Linear work:\n\n- webhook receiver\n- backlog reconciler\n- runner self-pick behavior\n\nA lease is acquired too late to prevent duplicate dispatch.\n\n## Decision\n\nPer repository, one scheduler will own the transition:\n\n- `eligible -> claimed`\n\nThat claim must be atomic and durable.\n\nIngress may create desired work and dedupe deliveries.\n\nExecutors may only execute already-claimed work.\n\n## Consequences\n\n- webhook receiver no longer grants ownership\n- reconciler no longer directly dispatches runnable work\n- runner no longer self-picks global runnable work\n- duplicate dispatch becomes observable as rejected claim attempts rather than double execution\n",
+              "date": "2026-04-12T12:00:23Z",
+              "format": "Markdown",
+              "id": "2",
+              "status": "Proposed",
+              "title": " ADR-0002 Authoritative Claim And Dispatch"
+            },
+            {
+              "content": "# ADR-0003 Executor Pool And Worktree Boundaries\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nThe current platform uses eight long-lived worktrees:\n\n- `wt1` to `wt4` for Linear\n- `wt5` to `wt8` for Discord\n\nThat pool split is useful, but worktrees are currently overloaded as sandboxes, durable owners, repair surfaces, and branch identities.\n\n## Decision\n\nKeep worktrees as executor sandboxes.\n\nDo not use worktrees as the durable source of task truth.\n\nActive sandboxes must not be background-mutated by recovery or unrelated synchronization.\n\n## Consequences\n\n- idle sandboxes may refresh from `origin/main`\n- active sandboxes stay pinned to claim base until completion or expiry\n- recovery may quarantine or reprovision a sandbox\n- recovery may not commit, push, merge, or reset an active sandbox\n",
+              "date": "2026-04-12T12:00:23Z",
+              "format": "Markdown",
+              "id": "3",
+              "status": "Proposed",
+              "title": " ADR-0003 Executor Pool And Worktree Boundaries"
+            },
+            {
+              "content": "# ADR-0004 Repo-Serial Integration And Candidate Admission\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nCurrent execution allows parallel mutation but discovers many conflicts late, during cherry-pick integration.\n\nThe integrator is already single-writer by intent, but candidate admission rules are not explicit enough.\n\n## Decision\n\nEvery mutating execution attempt must emit a candidate record that includes:\n\n- repo\n- job\n- claim\n- base SHA\n- candidate SHA or patch identity\n- changed paths\n- validation summary\n\nIntegration is serialized once per repository.\n\nOnly the integrator may write the repository mainline.\n\n## Consequences\n\n- late conflict becomes an explicit candidate state\n- base drift is handled through stale-base or conflict policy\n- executors do not push to mainline\n- merge-back remains parallel in execution but serial in admission\n",
+              "date": "2026-04-12T12:00:23Z",
+              "format": "Markdown",
+              "id": "4",
+              "status": "Proposed",
+              "title": " ADR-0004 Repo-Serial Integration And Candidate Admission"
+            },
+            {
+              "content": "# ADR-0005 State-Only Recovery And Divergence Policy\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nThe current recovery daemon releases leases, retries pushes, auto-commits dirty work, syncs worktrees, and can propagate changes after mainline repair.\n\nThat makes recovery a second git writer.\n\n## Decision\n\nRecovery is limited to state repair, quarantine, reprovision request, and stale-claim handling.\n\nDivergence is resolved by sandbox disposal or explicit replan, not by hidden background mutation of active work.\n\n## Consequences\n\n- no recovery auto-commit\n- no recovery auto-push\n- no recovery merge into active worktree\n- no recovery reset of active worktree\n- divergence becomes a visible state transition\n",
+              "date": "2026-04-12T12:00:23Z",
+              "format": "Markdown",
+              "id": "5",
+              "status": "Proposed",
+              "title": " ADR-0005 State-Only Recovery And Divergence Policy"
+            },
+            {
+              "content": "# ADR-0006 Observability, Audit, And Evidence Contract\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nCurrent logs are good enough to infer failure patterns but not strong enough to prove one end-to-end execution chain cleanly.\n\n## Decision\n\nEvery job must have stable IDs across ingress, claim, execution, recovery, and integration.\n\nEvery mutating candidate must record validation and integration evidence.\n\nEvery recovery action must be provably state-only.\n\n## Consequences\n\n- correlation IDs alone are not enough\n- claim IDs and execution attempt IDs become mandatory\n- integration candidate IDs become mandatory\n- operator review becomes faster and more trustworthy\n",
+              "date": "2026-04-12T12:00:23Z",
+              "format": "Markdown",
+              "id": "6",
+              "status": "Proposed",
+              "title": " ADR-0006 Observability, Audit, And Evidence Contract"
+            },
+            {
+              "content": "# ADR-0007 Quality Gates And Mutating Work Admission\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nThe repository already exposes meaningful gate surfaces through `package.json` scripts and the `Makefile`.\n\nThe runtime needs a clear rule for what must run before mutating work can be admitted for integration.\n\n## Decision\n\nMutating work is not complete when the model returns.\n\nMutating work is complete only when:\n\n- required validation commands ran\n- results were recorded truthfully\n- candidate metadata exists\n- integration admission succeeded or conflict was recorded explicitly\n\nThe minimum harness-focused gate set is:\n\n- `npm run typecheck:harness`\n- `npm run lint:harness`\n- `npm run depcruise:harness`\n- `npm run test:unit`\n\nEscalate to `make quality-harness`, `make quality-fast`, or `make quality-full` according to change scope.\n\n## Consequences\n\n- gate results become part of candidate evidence\n- fake green merges are prohibited\n- operator confidence depends on recorded commands, not narrative claims\n",
+              "date": "2026-04-12T12:00:23Z",
+              "format": "Markdown",
+              "id": "7",
+              "status": "Proposed",
+              "title": " ADR-0007 Quality Gates And Mutating Work Admission"
+            }
+          ],
+          "sections": [
+            {
+              "content": "# ANQR Harness Architecture Index\n\n## Status\n\nThe harness is **not production safe in its current orchestration form**.\n\nThe runtime is partially implemented and actively used, but it still has structural faults:\n\n- duplicated dispatch authority\n- late lease acquisition\n- long-lived mutable worktrees acting as execution sandboxes and durable task owners at the same time\n- recovery logic that mutates git state\n- repo integration that is serialized too late\n- audit trails that are useful for inference but still weak for proof\n\nThis documentation set is written to replace mixed doctrine and partial remediation notes with one clear reference set.\n\n## Read this set in order\n\n1. [01-scope-status-and-truth-model.md](01-scope-status-and-truth-model.md)\n2. [02-current-runtime-and-service-topology.md](02-current-runtime-and-service-topology.md)\n3. [03-current-control-plane-and-flows.md](03-current-control-plane-and-flows.md)\n4. [04-known-failures-and-evidence.md](04-known-failures-and-evidence.md)\n5. [05-production-target-architecture.md](05-production-target-architecture.md)\n6. [06-state-machines.md](06-state-machines.md)\n7. [07-worktree-and-git-governance.md](07-worktree-and-git-governance.md)\n8. [08-quality-gates-and-post-ai-processing.md](08-quality-gates-and-post-ai-processing.md)\n9. [09-observability-and-audit.md](09-observability-and-audit.md)\n10. [10-operations-runbooks.md](10-operations-runbooks.md)\n11. [11-validation-and-rollout-plan.md](11-validation-and-rollout-plan.md)\n12. [workspace/README.md](workspace/README.md)\n\n## What this set governs\n\nThis set governs:\n\n- `harness/ops/*`\n- `services/systemd/*`\n- `workspace.dsl`\n- the worktree pool used by the executor fleet\n- the control-plane contract for Discord and Linear sourced work\n- post-AI validation, evidence, and merge admission\n\nThis set does not redefine the ANQR product architecture outside the harness.\n\n## Key decisions captured here\n\n- one repository may execute many jobs concurrently\n- one repository must integrate one candidate at a time\n- scheduler authority must be singular per repository\n- leases are execution guards, not ingress dedupe\n- worktrees are sandboxes, not the durable source of task truth\n- recovery must repair state before it repairs git, and it must not mutate active execution baselines\n",
+              "filename": "00-index.md",
+              "format": "Markdown",
+              "order": 1,
+              "title": ""
+            },
+            {
+              "content": "# Scope, Status, And Truth Model\n\n## Scope\n\nThe harness is the repository-local automation platform for ANQR. It currently covers:\n\n- Discord sourced interactive requests\n- Linear sourced issue execution\n- provider routing and AI execution bridges\n- queue control, reconciliation, integration, recovery, and watchdog loops\n- quality gate execution and evidence generation\n- operator diagnostics and support tooling\n\n## Current status\n\nCurrent status is:\n\n- operational enough to run work\n- observable enough to identify failure patterns\n- not reliable enough for unattended production execution\n\nThe gap is not mainly model quality. The gap is control-plane correctness.\n\n## Truth model\n\nWhen documentation, tests, and runtime disagree, use this order:\n\n1. committed runtime code\n2. committed systemd units\n3. observed logs and status outputs\n4. tests as intent evidence\n5. previous docs and architecture narratives\n\nThis rule exists because the current harness contains remediation-era services that were added after the original design, and those additions changed control-plane behavior.\n\n## What must be documented as distinct concerns\n\nEvery harness document must separate:\n\n- **current reality**\n- **known nonconformance**\n- **target requirement**\n\nThose three concerns must never be blended into one statement.\n\n## Current architectural intent\n\nThe intended operating model is:\n\n- executors `wt1` to `wt4` serve Linear sourced work\n- executors `wt5` to `wt8` serve Discord sourced work\n- some requests are read-only\n- some requests run commands\n- some requests mutate repository content\n- mutating work must pass quality gates and then merge back safely\n- ancillary services exist to keep the platform healthy, not to compete with executors for control\n\nThat intent is reasonable.\n\nThe current implementation does not consistently preserve it.\n\n## Production bar\n\nThe harness is only production ready when all of the following are true:\n\n- an eligible job is claimed once per repository\n- the claim exists before any worker starts executing\n- only one component has authority to decide ownership\n- active work is not invalidated by background git mutation\n- merge-back is serialized per repository\n- stale work is invalidated by state machine rules, not by ad hoc reset\n- audit records can prove who owned work, when, on which base SHA, and why ownership changed\n",
+              "filename": "01-scope-status-and-truth-model.md",
+              "format": "Markdown",
+              "order": 2,
+              "title": ""
+            },
+            {
+              "content": "# Current Runtime And Service Topology\n\n## Repository runtime roots\n\nThe current runtime roots are:\n\n- `harness/ops/*`\n- `services/systemd/*`\n\n## Main active service surfaces\n\n### Ingress and routing\n\n- `services/systemd/openclaw-gateway.service`\n  - OpenClaw gateway\n  - default port `18789`\n- `services/systemd/anqr-discord-router.service`\n  - Discord request router\n  - default port `18790`\n- `services/systemd/anqr-linear-webhook.service`\n  - Linear webhook receiver\n  - default port `18791`\n- `services/systemd/anqr-symphony-router.service`\n  - Symphony router\n  - default port `4319`\n\n### Execution plane\n\n- `services/systemd/anqr-symphony-executor@.service`\n  - eight executor instances\n  - working directories `~/src/anqr-wt1` through `~/src/anqr-wt8`\n  - ports `4321` through `4328`\n\n### Control-plane maintenance and recovery\n\n- `services/systemd/anqr-linear-reconciler.service`\n- `services/systemd/anqr-symphony-integrator.service`\n- `services/systemd/anqr-symphony-worktree-recovery.service`\n- `services/systemd/anqr-watchdog.service`\n- `services/systemd/anqr-worktree-health.service`\n- `services/systemd/anqr-worktree-health.timer`\n\n### Supporting automation\n\n- `services/systemd/anqr-nightly.service`\n- `services/systemd/anqr-nightly.timer`\n- `services/systemd/anqr-rag-rebuild.service`\n- `services/systemd/anqr-rag-rebuild.timer`\n- `services/systemd/anqr-email-ingest.service`\n- `services/systemd/anqr-email-ingest.timer`\n- `services/systemd/anqr-linear-export.service`\n- `services/systemd/anqr-linear-export.timer`\n- `services/systemd/anqr-context7-mcp.service`\n\n## Worktree pool mapping\n\n### Linear pool\n\n- `wt1`\n- `wt2`\n- `wt3`\n- `wt4`\n\nUsed for:\n\n- Linear issue execution\n- mutating repository work originating from issue automation\n- repository tasks that need branch publication and later integration\n\n### Discord pool\n\n- `wt5`\n- `wt6`\n- `wt7`\n- `wt8`\n\nUsed for:\n\n- Discord interactive work\n- read-only questions\n- command execution\n- repository mutation when a Discord request is allowed to change files\n\n## Current routing code paths\n\n### Discord path\n\n- `harness/ops/integrations/model/discord-request-router/*`\n- `harness/ops/integrations/model/symphony-openai-bridge/*`\n\nCurrent behavior:\n\n- Discord router selects the least-loaded Discord worktree\n- request cwd is rewritten toward the chosen worktree\n- the router forwards the request to the executor-local bridge\n- executor-local bridge performs the actual model and tool work\n\n### Linear path\n\n- `harness/ops/integrations/model/linear-webhook-receiver/*`\n- `harness/ops/integrations/model/symphony-agent-router/*`\n- `harness/ops/orchestration/linear-reconciler/*`\n- `harness/ops/orchestration/symphony-runner/*`\n\nCurrent behavior:\n\n- webhook receiver accepts eligible events\n- webhook receiver forwards to the Symphony router\n- reconciler also dispatches eligible Todo issues\n- runner can also pick eligible Todo issues directly from Linear state\n\nThat means the Linear path has more than one effective scheduler.\n\n## State and persistence\n\nCurrent state is file-backed through:\n\n- `harness/ops/core/symphony-state/*`\n- reports and runtime JSON under `reports/*`\n\nCurrent state surfaces include:\n\n- issue records\n- lease records\n- retry and cooldown metadata\n- finalization state\n- integration queue and lock\n- worktree state\n- global reconciler values\n- evidence and reporting artifacts\n\n## Current git and branch behavior\n\nThe current runtime uses:\n\n- long-lived named worktrees\n- per-worktree branches\n- executor-local sync against `origin/main`\n- branch publication from runner paths\n- cherry-pick based integration in the integrator\n- automated worktree repair and sync in the recovery daemon\n\nThe key risk is that git mutation is happening in more than one place.\n",
+              "filename": "02-current-runtime-and-service-topology.md",
+              "format": "Markdown",
+              "order": 3,
+              "title": ""
+            },
+            {
+              "content": "# Current Control Plane And Flows\n\n## Current control-plane actors\n\nThe current platform has these control-plane actors:\n\n- `linear-webhook-receiver`\n- `discord-request-router`\n- `symphony-agent-router`\n- `linear-reconciler`\n- `symphony-runner`\n- `symphony-queue-control`\n- `symphony-integrator`\n- `symphony-worktree-recovery`\n- `bridge-watchdog`\n- `worktree-health`\n\nNot all of them should own scheduling or git mutation.\n\nSome of them currently do.\n\n## Current Linear flow\n\n1. Linear changes state or emits an event.\n2. `linear-webhook-receiver` decides whether the event is eligible.\n3. It calls `trigger-issue-execution.mjs`.\n4. That posts to `/v1/linear/trigger` on the Symphony router.\n5. `dispatch-linear-execution.mjs` chooses a least-loaded worktree from `wt1` to `wt4`.\n6. The chosen executor gets `/v1/linear/execute`.\n7. The runner syncs the worktree from `origin/main`.\n8. The runner acquires a lease and starts work.\n9. Validation and finalization run.\n10. The runner may publish branch state.\n11. The integrator later cherry-picks into `main`.\n12. Recovery and reconciliation observe the same issue and may act again.\n\n## Current reconciler flow\n\n`linear-reconciler` does all of the following:\n\n- checks healthy capacity\n- inspects queue depth\n- feeds Todo from Backlog\n- detects stale work\n- re-enqueues stale integration candidates\n- dispatches Todo issues to the router\n\nThis means it is not only observing. It is scheduling.\n\n## Current runner flow\n\nThe runner currently does all of the following:\n\n- syncs the worktree from `origin/main` before lease acquisition\n- fetches issue detail\n- picks Todo issues directly through `pick-issue.mjs`\n- acquires and heartbeats a lease\n- runs AI work\n- validates results\n- may commit and push worktree branch state\n- updates Linear state and comments\n- emits completion and retry metadata\n\nThis makes the runner both executor and part-time scheduler.\n\n## Current recovery flow\n\nThe worktree recovery daemon currently does all of the following:\n\n- scans all worktrees\n- classifies them\n- releases stale leases\n- sets worktree state\n- retries pushes\n- auto-commits dirty work\n- pushes branches\n- for main repo repair, pushes `main`\n- propagates baseline fixes to other worktrees\n\nThis is too much authority for a recovery process.\n\n## Current integration flow\n\nThe integrator is already single-writer by intent:\n\n- reads integration queue\n- acquires integration lock\n- cherry-picks candidate branch head onto `main`\n- reports success or conflict\n\nThis is the most correct part of the current control plane, but it is still fed by unstable upstream ownership rules.\n\n## Why the current flow is unsafe\n\nThe system mixes three patterns:\n\n- edge-triggered webhook dispatch\n- level-triggered backlog reconciliation\n- worker-local self-pick\n\nThat combination is unsafe when all three can touch the same queue without an earlier authoritative claim.\n\n## Current execution classes\n\nThe runtime does not yet cleanly separate three classes of work:\n\n- read-only\n- command-only\n- mutating\n\nProduction design must treat them differently.\n\nRead-only and command-only tasks should not pay the full repository mutation cost.\n\nMutating tasks must go through the full state, validation, and integration pipeline.\n",
+              "filename": "03-current-control-plane-and-flows.md",
+              "format": "Markdown",
+              "order": 4,
+              "title": ""
+            },
+            {
+              "content": "# Known Failures And Evidence\n\n## Summary\n\nThe current failures are structural.\n\nProvider rate limits, individual AI errors, and flaky tasks exist, but they are not the main reason the harness behaves unpredictably.\n\n## Evidence-backed failure list\n\n| Failure | Current evidence | Current mechanism | Required correction |\n| --- | --- | --- | --- |\n| Duplicate Linear dispatch | Router logs show the same issue dispatched to more than one worktree. Example: `ANQ-1580` was sent to `wt1` and `wt2` within about one second. | Webhook and reconciler both triggered dispatch before a durable claim existed. | Create an atomic claim before dispatch and make one scheduler authoritative per repo. |\n| Repeated replay of the same issue | Router and reconciler logs show repeated redispatch of `ANQ-1617`. | Reconciler re-sees work as eligible because ownership and retry state are not stable enough. | Separate ingress from claim. Reconciler may only requeue expired claims, not redispatch runnable work opportunistically. |\n| Lease loss during execution and validation | Integration tests and logs include `lease_mismatch` and abandonment flows. | Lease starts too late and competes with other state mutations. | Move durable claim earlier. Keep lease as execution heartbeat only. |\n| Recovery mutates git | `anqr-symphony-worktree-recovery.service` sets `ANQR_AUTOMATION_COMMIT=1` and `ANQR_AUTOMATION_PUSH=1`. Recovery code performs commit, push, sync, and propagation work. | Recovery is acting as a second git writer. | Make recovery state-only. Do not allow background repair to commit, push, merge, or reset active workspaces. |\n| Late conflict discovery | Integrator logs show repeated cherry-pick conflicts for `ANQ-1617` before a later success. | Conflict is discovered after local execution, not at claim or candidate admission time. | Make candidate admission explicit and repo-serial. Treat base SHA drift as a first-class invalidation rule. |\n| Split scheduling authority | Webhook, reconciler, runner self-pick, queue control, and recovery all influence runnable work. | The control plane is split. | Introduce one repo-scoped scheduler with exclusive claim authority. |\n| Capacity is advisory, not authoritative | Router chooses least-loaded worktree using local `activeRequests`. | Local request counters do not prove issue ownership. | Capacity decisions must consume durable claim state, not only in-memory request counters. |\n| Worktrees drift and get repaired under load | Recovery and runner both sync or repair against `origin/main`. | Worktree baseline can move under or between executions. | Idle worktrees may refresh. Active worktrees must stay pinned to claim base until completion or expiry. |\n| Tests miss the control-plane failure mode | Current tests verify webhook ingress, worktree creation, and some lease-loss behavior. They do not prove scheduler exclusivity under concurrent ingress. | Tests prove local intent, not distributed correctness. | Add duplicate-dispatch, split-brain, restart, conflict, and lease-expiry concurrency tests. |\n\n## Current nonconformances that must be documented openly\n\n### The system is not effectively once\n\nThe current runtime is not effectively-once for mutating Linear work.\n\nIt is at best at-least-once with manual cleanup.\n\n### Ancillary services are not ancillary enough\n\n`linear-reconciler`, `symphony-worktree-recovery`, and parts of runner behavior are shaping execution ownership and git state.\n\nThat violates the intended model where executors do work and support services only recover from failure.\n\n### Worktree identity is overloaded\n\nA worktree currently represents:\n\n- a pool slot\n- a long-lived branch\n- a mutable sandbox\n- a repair surface\n- a possible durable owner of issue progress\n\nThose roles should be split.\n\n### Existing documentation mixed intent with remediation\n\nPrevious docs often described a desired state as if it already existed.\n\nThis set replaces that with explicit status labeling.\n",
+              "filename": "04-known-failures-and-evidence.md",
+              "format": "Markdown",
+              "order": 5,
+              "title": ""
+            },
+            {
+              "content": "# Production Target Architecture\n\n## Design objective\n\nThe target design must allow:\n\n- parallel execution across many tasks\n- exact or effective once claiming per repository\n- safe merge-back\n- clean propagation of upstream changes\n- bounded retries\n- reliable recovery\n- full auditability\n\n## Recommended control-plane model\n\nUse a **repo-scoped authoritative scheduler**.\n\nPer repository, the system must have:\n\n- one ingress-normalization path\n- one scheduler with exclusive claim authority\n- one execution lease model\n- one integration queue\n- one integration writer\n\n## Authoritative ownership boundaries\n\n### Ingress\n\nIngress may:\n\n- accept events\n- normalize payloads\n- dedupe delivery IDs\n- classify work as read-only, command-only, or mutating\n- write desired work into durable state\n\nIngress may not:\n\n- choose the final executor\n- grant durable ownership\n- mutate repository state\n\n### Scheduler\n\nScheduler may:\n\n- compute eligible jobs\n- reserve capacity\n- create claims atomically\n- assign a worker pool and executor\n- requeue expired claims\n\nScheduler must be the only actor allowed to transition:\n\n- `eligible -> claimed`\n\n### Executor\n\nExecutor may:\n\n- pull or receive a claimed job\n- create a task sandbox\n- heartbeat the lease\n- run AI work and tools\n- run quality gates\n- emit candidate artifacts or branch state\n\nExecutor may not:\n\n- decide global queue ownership\n- integrate directly to `main`\n\n### Integrator\n\nIntegrator may:\n\n- read candidate queue\n- verify base SHA and validation status\n- merge or cherry-pick one candidate at a time per repo\n- mark conflict, stale-base, or integrated outcomes\n\nIntegrator must be the only writer to the repository mainline.\n\n### Recovery\n\nRecovery may:\n\n- detect dead workers\n- expire claims\n- requeue work\n- quarantine sandboxes\n- request reprovisioning\n\nRecovery may not:\n\n- commit\n- push\n- fast-forward\n- rebase active sandboxes\n- reset active sandboxes\n- merge mainline changes into active sandboxes\n\n## Recommended execution classes\n\n### Read-only\n\nExamples:\n\n- simple questions\n- repository search\n- file counting\n- explanation tasks\n\nPolicy:\n\n- no integration path\n- no branch publication\n- no worktree required unless tools require repository access\n- fast timeout and cheap retry\n\n### Command-only\n\nExamples:\n\n- controlled shell commands\n- diagnostics\n- report generation\n\nPolicy:\n\n- no integration path unless explicitly configured to persist artifacts\n- sandbox required if filesystem mutation is possible\n- evidence required when operator-visible outputs matter\n\n### Mutating\n\nExamples:\n\n- file edits\n- test additions\n- refactors\n- service file changes\n- documentation updates\n\nPolicy:\n\n- claim required before execution\n- sandbox required\n- pinned base SHA required\n- quality gate policy required\n- candidate admission required\n- repo-serial integration required\n\n## Recommended merge strategy\n\nUse one of these two equivalent shapes:\n\n- patch artifact submission to a single integrator\n- task branch submission to a single integrator\n\nIn both cases:\n\n- the executor does not update `main`\n- the candidate records its base SHA\n- the integrator decides admission against current `main`\n- conflicts become explicit states, not silent resets\n\n## Recommended stale work rules\n\n- a claim is stale only after heartbeat expiry plus grace\n- a candidate is stale if its base SHA no longer satisfies integration policy\n- an active sandbox is invalid only when its claim expires or the operator cancels it\n- upstream `main` movement does not justify background mutation of an active sandbox\n\n## Multi-repo design\n\nFor multi-repo support, keep the same control-plane model but scope it per repo:\n\n- claim namespace per repo\n- executor pool mapping per repo\n- integration queue per repo\n- integration lock per repo\n\nCross-repo work becomes a parent job that coordinates child repo jobs with explicit dependency edges.\n\n## Constraints for worktree viability\n\nA worktree-based executor pool remains viable only if all of these are true:\n\n- worktrees are sandboxes, not durable source of truth\n- active worktrees are not background-mutated\n- only the scheduler owns task claims\n- only the integrator writes mainline\n- worktree refresh happens only when idle or when the sandbox is reprovisioned\n\nWithout those constraints, the current worktree-first model is not reliable.\n",
+              "filename": "05-production-target-architecture.md",
+              "format": "Markdown",
+              "order": 6,
+              "title": ""
+            },
+            {
+              "content": "# State Machines\n\n## Why state machines matter\n\nThe harness currently has state, but the transitions are not strict enough.\n\nProduction behavior requires explicit state machines for jobs, claims, candidates, and sandboxes.\n\n## Job lifecycle\n\n### Read-only and command-only jobs\n\n`received -> normalized -> eligible -> claimed -> executing -> completed`\n\nFailure branches:\n\n- `retry_wait`\n- `failed`\n- `dead_letter`\n\n### Mutating jobs\n\n`received -> normalized -> eligible -> claimed -> executing -> validation_pending -> candidate_ready -> integrating -> integrated`\n\nFailure branches:\n\n- `validation_failed`\n- `stale_claim`\n- `conflict`\n- `retry_wait`\n- `manual_review`\n- `dead_letter`\n\n## Claim lifecycle\n\n`none -> claimed -> active -> expired -> released`\n\nRequired claim fields:\n\n- `jobId`\n- `repoId`\n- `claimId`\n- `executionAttemptId`\n- `workerId`\n- `pool`\n- `claimedAt`\n- `leaseExpiresAt`\n- `baseSha`\n- `jobClass`\n\n## Lease lifecycle\n\n`created -> heartbeating -> expired`\n\nLease exists to protect active execution.\n\nLease does not replace ingress dedupe or atomic claim.\n\n## Candidate lifecycle\n\n`none -> candidate_ready -> integrating -> integrated`\n\nFailure branches:\n\n- `conflict`\n- `stale_base`\n- `rejected`\n- `manual_review`\n\nRequired candidate fields:\n\n- `integrationCandidateId`\n- `repoId`\n- `jobId`\n- `claimId`\n- `baseSha`\n- `candidateHeadSha`\n- `changedPaths`\n- `validationSummary`\n- `createdAt`\n\n## Worktree or sandbox lifecycle\n\n`idle -> provisioned -> executing -> awaiting_disposal -> disposed`\n\nFailure branches:\n\n- `quarantined`\n- `reprovisioning`\n\nA sandbox is not an owner record.\n\nIt is disposable execution infrastructure.\n\n## Current mismatch against target\n\nThe current runtime mixes issue state, lease state, worktree state, and finalization state, but still allows:\n\n- external redispatch before claim\n- recovery-driven mutation of git\n- requeue without strong attempt identity\n- late conflict discovery\n\nThe target model fixes that by making each transition authoritative and singular.\n",
+              "filename": "06-state-machines.md",
+              "format": "Markdown",
+              "order": 7,
+              "title": ""
+            },
+            {
+              "content": "# Worktree And Git Governance\n\n## Current worktree policy\n\nThe current fleet uses eight long-lived worktrees:\n\n- `wt1` to `wt4` for Linear\n- `wt5` to `wt8` for Discord\n\nThat split is acceptable as a pool definition.\n\nIt is not acceptable as a durable ownership model.\n\n## Required worktree policy\n\n### What a worktree is\n\nA worktree is:\n\n- an executor sandbox\n- a filesystem and git isolation boundary\n- a disposable pool slot\n\nA worktree is not:\n\n- a durable source of task truth\n- the authoritative scheduler state\n- the recovery authority\n- a reason to mutate other active worktrees\n\n## Refresh rules\n\n### Allowed\n\n- refresh idle worktrees from `origin/main`\n- reprovision quarantined worktrees\n- discard completed task sandboxes\n- rehydrate a fresh sandbox for a retry attempt\n\n### Forbidden\n\n- fast-forward active worktrees under an active claim\n- merge `main` into active worktrees in the background\n- auto-commit dirty active worktrees from recovery\n- push active worktree branches from recovery\n- reset active worktrees because another branch integrated\n\n## Branch and base rules\n\nEvery mutating attempt must record:\n\n- repository\n- branch or patch identity\n- base SHA\n- execution attempt ID\n\nEvery integration attempt must compare candidate base SHA to current mainline state.\n\n## Conflict policy\n\nWhen two mutating jobs overlap in the same repository:\n\n- both may execute in parallel\n- only one candidate may integrate at a time\n- later candidates must be checked against the new base\n- conflict becomes an explicit state\n- the platform must not hide the conflict with reset-and-retry loops\n\n## Invalidating stale work\n\nA task becomes stale when:\n\n- its claim expires\n- its worker dies and heartbeat grace elapses\n- its candidate cannot satisfy current integration policy\n- an operator cancels it\n\nA task does not become stale merely because:\n\n- another task integrated first\n- recovery decided to resync the pool\n- queue depth changed\n\n## Multi-repo rule\n\nIf the platform expands beyond one repo, each repo needs its own:\n\n- scheduler state\n- integration queue\n- integration lock\n- sandbox pool policy\n\nCross-repo work must be coordinated above the repo layer, not by sharing one blind scheduler loop.\n",
+              "filename": "07-worktree-and-git-governance.md",
+              "format": "Markdown",
+              "order": 8,
+              "title": ""
+            },
+            {
+              "content": "# Quality Gates And Post-AI Processing\n\n## Purpose\n\nPost-AI processing is mandatory for any mutating task.\n\nThe executor is not done when the model stops. It is done when the work has been validated, evidenced, and admitted for integration.\n\n## Gate tiers from the current repository\n\n### Base repository gates\n\nThe current repository exposes these important gate surfaces:\n\n- `make quality-fast`\n- `make quality-release`\n- `make quality-harness`\n- `make quality-full`\n\nThe current script layer also exposes targeted commands such as:\n\n- `npm run typecheck:harness`\n- `npm run lint:harness`\n- `npm run depcruise:harness`\n- `npm run test:unit`\n- `npm run queue:all:dry-run`\n- `npm run linear:reconciler:once`\n- `npm run harness:doctor`\n\n## Required gate policy by task class\n\n### Read-only\n\nRequired:\n\n- no repository gates\n- response evidence only when operator requested or when the task informs later action\n\n### Command-only\n\nRequired:\n\n- command exit status\n- output capture\n- any relevant diagnostics\n- no integration path unless artifacts are intentionally persisted\n\n### Mutating harness work\n\nFor changes touching `harness/*`, `services/systemd/*`, or `docs/harness/*`, the default minimum policy is:\n\n1. targeted repo validation\n   - `npm run typecheck:harness`\n   - `npm run lint:harness`\n   - `npm run depcruise:harness`\n2. baseline regression\n   - `npm run test:unit`\n3. harness dry-run checks when orchestration logic changed\n   - `make quality-harness`\n\nFor broader or cross-cutting repository changes, the candidate admission policy should escalate to:\n\n- `make quality-fast`\n\nFor release-grade change sets or production rollout work, candidate admission should escalate to:\n\n- `make quality-full`\n\n## Evidence required after mutating work\n\nEvery candidate must record:\n\n- commands run\n- pass or fail result for each command\n- changed paths\n- base SHA\n- candidate SHA\n- integration decision\n- rollback note or conflict note\n- follow-up required\n\n## Current gap\n\nThe current harness has evidence generation and gate surfaces, but it does not yet enforce a clean candidate admission policy before merge-back.\n\nThat policy is mandatory for production.\n",
+              "filename": "08-quality-gates-and-post-ai-processing.md",
+              "format": "Markdown",
+              "order": 9,
+              "title": ""
+            },
+            {
+              "content": "# Observability And Audit\n\n## Current strength\n\nThe current runtime already logs a lot of useful detail:\n\n- service identity\n- worktree identity\n- queue and dispatch events\n- some correlation IDs\n- issue transitions\n- integration attempts\n- recovery actions\n\nThat is enough to infer major failures.\n\n## Current weakness\n\nIt is still too hard to prove the exact causal chain for one job across ingress, claim, execution, recovery, and integration.\n\n## Required audit fields\n\nEvery job needs these identifiers:\n\n- `job_id`\n- `source_event_id`\n- `correlation_id`\n- `claim_id`\n- `execution_attempt_id`\n- `integration_candidate_id`\n- `integration_attempt_id`\n- `repo_id`\n- `worker_id`\n- `sandbox_id`\n- `worktree_id` when applicable\n\n## Required logs\n\n### Ingress\n\nLog:\n\n- original source\n- normalized job class\n- dedupe decision\n- repo selection\n- desired work record created\n\n### Claim and scheduler\n\nLog:\n\n- claim creation\n- actor creating claim\n- capacity decision\n- pool selection\n- worktree or sandbox selection\n- duplicate claim rejection\n\n### Executor\n\nLog:\n\n- base SHA at start\n- current HEAD at start\n- worker and sandbox identity\n- heartbeat renewals\n- validation steps\n- candidate emission\n\n### Recovery\n\nLog:\n\n- stale detection reason\n- worker liveness check\n- state transition performed\n- proof that no git mutation occurred\n\n### Integrator\n\nLog:\n\n- candidate selected\n- base SHA\n- current mainline SHA\n- merge or cherry-pick result\n- conflict files\n- integrated SHA\n\n## Required metrics\n\n- duplicate dispatch attempts\n- duplicate claim rejections\n- claim expiries\n- lease mismatches\n- validation failures\n- integration conflicts\n- stale-base rejections\n- retries by issue\n- quarantined sandboxes\n- recovery actions by type\n- mean queue age\n- integration latency\n- pool utilization by class\n\n## Current audit gaps that must be closed\n\n- no single authoritative claim record before dispatch\n- no universal attempt ID threaded through all services\n- too much reliance on local request counters\n- no strong proof that recovery did not mutate active jobs\n- no explicit candidate admission audit contract\n",
+              "filename": "09-observability-and-audit.md",
+              "format": "Markdown",
+              "order": 10,
+              "title": ""
+            },
+            {
+              "content": "# Operations Runbooks\n\n## Principle\n\nOperational safety comes before throughput.\n\nWhen the control plane is under repair, disable mutation and keep read-only and diagnostic work separate.\n\n## Runbook: controlled restart of routing or executor services\n\n1. stop new mutating work admission\n2. wait for active claims to drain or expire cleanly\n3. verify no candidate is mid-integration\n4. restart the target service\n5. confirm health endpoints\n6. resume admission\n\nCurrent helper scripts such as `harness/ops/orchestration/symphony-control.mjs` may remain useful, but service restart must follow the claim and integration state, not only timer state.\n\n## Runbook: duplicate execution suspected\n\n1. identify the issue identifier\n2. inspect scheduler, ingress, and router logs for duplicate trigger events\n3. identify all claim or attempt records\n4. cancel all but the authoritative claim\n5. quarantine any sandbox with ambiguous mutation history\n6. document the duplicate-dispatch root cause\n\n## Runbook: stale lease\n\n1. confirm worker heartbeat loss\n2. confirm worker process liveness\n3. expire claim after grace\n4. requeue the job as a new attempt\n5. preserve old attempt evidence\n6. do not mutate the old sandbox in place unless it is explicitly quarantined and isolated\n\n## Runbook: integration conflict\n\n1. capture candidate metadata and conflicting paths\n2. mark candidate `conflict`\n3. do not reset the sandbox into a new hidden state\n4. create a replan or manual-review path\n5. admit no silent auto-merge claim\n\n## Runbook: quarantined sandbox\n\n1. preserve audit metadata\n2. capture changed paths and current HEAD\n3. remove from scheduling pool\n4. reprovision a fresh sandbox\n5. only requeue the job if the claim is no longer active and retry policy allows it\n\n## Runbook: provider failure\n\n1. classify provider failure\n2. keep job ownership stable\n3. retry inside provider policy if claim is still valid\n4. do not re-dispatch the same job to another executor without expiring or releasing the claim first\n\n## Runbook: Discord read-only degradation\n\nIf mutating repo work is disabled, Discord may still serve:\n\n- read-only questions\n- diagnostics\n- documentation lookup\n- repository search\n\nThat mode must be declared clearly in operator status.\n",
+              "filename": "10-operations-runbooks.md",
+              "format": "Markdown",
+              "order": 11,
+              "title": ""
+            },
+            {
+              "content": "# Validation And Rollout Plan\n\n## Goal\n\nProve the architecture is correct before trusting it with unattended mutating work.\n\n## Required validation suites\n\n### Duplicate-dispatch suite\n\nProve:\n\n- webhook and reconciler can fire together\n- only one claim is created\n- all later claim attempts are rejected cleanly\n\n### Lease-expiry suite\n\nProve:\n\n- worker heartbeat loss expires the claim once\n- recovery requeues state without mutating git\n- retries create a new execution attempt\n\n### Integration-conflict suite\n\nProve:\n\n- two overlapping candidates can execute in parallel\n- only one integrates first\n- the other becomes `conflict` or `stale_base`\n- no hidden reset converts conflict into fake success\n\n### Restart suite\n\nProve:\n\n- restarting webhook, router, scheduler, integrator, or recovery does not duplicate an active claim\n- integration queue survives restart\n- idle sandboxes refresh safely after restart\n\n### Multi-repo suite\n\nIf multi-repo support is planned, prove:\n\n- repo A integration conflict does not block repo B\n- claims are unique within repo scope\n- cross-repo parent jobs respect dependency order\n\n## Rollout stages\n\n### Stage 1\n\n- documentation and state-machine alignment\n- control-plane authority reduction\n- recovery changed to state-only behavior\n\n### Stage 2\n\n- atomic claim before dispatch\n- candidate admission contract\n- repo-serial integration enforcement\n\n### Stage 3\n\n- concurrency and failure-injection tests\n- operator dashboards and metrics\n- dry-run shadow execution\n\n### Stage 4\n\n- limited mutating production rollout\n- bounded issue classes only\n- explicit incident review after every conflict, duplicate, or stale-claim event\n\n## Exit criteria for production\n\nThe mutating platform is production ready only when all of these hold:\n\n- zero duplicate claims in forced-concurrency tests\n- zero background git mutation by recovery\n- one writer to mainline per repo\n- full audit chain from event to integration\n- deterministic recovery after restart\n",
+              "filename": "11-validation-and-rollout-plan.md",
+              "format": "Markdown",
+              "order": 12,
+              "title": ""
+            }
+          ]
         },
-        "relationships" : [ {
-          "description" : "Reads and writes integration and candidate state",
-          "destinationId" : "11",
-          "id" : "35",
-          "sourceId" : "8",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Pushes integrated repository state",
-          "destinationId" : "16",
-          "id" : "44",
-          "sourceId" : "8",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container",
-        "technology" : "Node.js service plus Git"
-      }, {
-        "description" : "Watchdog, worktree health, reconciliation support, and recovery automation. Current runtime still performs some git-mutating repair that must be removed for production.",
-        "documentation" : { },
-        "id" : "9",
-        "name" : "Recovery, Health, And Safety Services",
-        "properties" : {
-          "structurizr.dsl.identifier" : "anqr_harness.recovery"
+        "id": "4",
+        "name": "ANQR Harness",
+        "properties": {
+          "structurizr.dsl.identifier": "anqr_harness"
         },
-        "relationships" : [ {
-          "description" : "Repairs job state, expires claims, and requests requeue",
-          "destinationId" : "6",
-          "id" : "34",
-          "sourceId" : "9",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Reads health and quarantine state",
-          "destinationId" : "11",
-          "id" : "38",
-          "sourceId" : "9",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container",
-        "technology" : "Node.js services and timers"
-      }, {
-        "description" : "Quality gates, diagnostics, reports, notifications, RAG rebuild, and audit outputs.",
-        "documentation" : { },
-        "id" : "10",
-        "name" : "Quality, Evidence, And Reporting",
-        "properties" : {
-          "structurizr.dsl.identifier" : "anqr_harness.evidence"
+        "relationships": [
+          {
+            "description": "Calls routed AI providers",
+            "destinationId": "15",
+            "id": "41",
+            "linkedRelationshipId": "40",
+            "sourceId": "4"
+          },
+          {
+            "description": "Fetches and publishes branch state",
+            "destinationId": "16",
+            "id": "43",
+            "linkedRelationshipId": "42",
+            "sourceId": "4"
+          },
+          {
+            "description": "Reads or exports static-analysis findings",
+            "destinationId": "17",
+            "id": "46",
+            "linkedRelationshipId": "45",
+            "sourceId": "4"
+          },
+          {
+            "description": "Reads or writes issue metadata",
+            "destinationId": "14",
+            "id": "48",
+            "linkedRelationshipId": "47",
+            "sourceId": "4"
+          },
+          {
+            "description": "Reads inbound mail and sends notifications",
+            "destinationId": "20",
+            "id": "51",
+            "linkedRelationshipId": "50",
+            "sourceId": "4"
+          },
+          {
+            "description": "Resolves documentation",
+            "destinationId": "18",
+            "id": "53",
+            "linkedRelationshipId": "52",
+            "sourceId": "4"
+          },
+          {
+            "description": "Builds embeddings and local model outputs",
+            "destinationId": "19",
+            "id": "55",
+            "linkedRelationshipId": "54",
+            "sourceId": "4"
+          }
+        ],
+        "tags": "Element,Software System"
+      },
+      {
+        "description": "External chat and voice surface.",
+        "documentation": {},
+        "id": "12",
+        "name": "Discord",
+        "properties": {
+          "structurizr.dsl.identifier": "discord"
         },
-        "relationships" : [ {
-          "description" : "Writes reports and audit outputs",
-          "destinationId" : "11",
-          "id" : "39",
-          "sourceId" : "10",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Reads or exports static-analysis findings",
-          "destinationId" : "17",
-          "id" : "45",
-          "sourceId" : "10",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Reads inbound mail and sends notifications",
-          "destinationId" : "20",
-          "id" : "50",
-          "sourceId" : "10",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Resolves documentation",
-          "destinationId" : "18",
-          "id" : "52",
-          "sourceId" : "10",
-          "tags" : "Relationship"
-        }, {
-          "description" : "Builds embeddings and local model outputs",
-          "destinationId" : "19",
-          "id" : "54",
-          "sourceId" : "10",
-          "tags" : "Relationship"
-        } ],
-        "tags" : "Element,Container",
-        "technology" : "Node.js, Python, Bash, reports"
-      }, {
-        "description" : "File-backed durable state, evidence artifacts, integration queue state, and the git worktree fleet used by executors.",
-        "documentation" : { },
-        "id" : "11",
-        "name" : "State Store And Worktree Fleet",
-        "properties" : {
-          "structurizr.dsl.identifier" : "anqr_harness.state_store"
+        "relationships": [
+          {
+            "description": "Delivers chat and voice sessions",
+            "destinationId": "13",
+            "id": "23",
+            "sourceId": "12",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Software System"
+      },
+      {
+        "description": "External gateway and bot runtime used to talk to Discord and route into the harness.",
+        "documentation": {},
+        "id": "13",
+        "name": "OpenClaw Gateway",
+        "properties": {
+          "structurizr.dsl.identifier": "openclaw"
         },
-        "tags" : "Element,Container,DataStore",
-        "technology" : "Filesystem, JSON, Git worktrees"
-      } ],
-      "description" : "Repository-local orchestration, execution, integration, recovery, diagnostics, and evidence generation for ANQR.",
-      "documentation" : {
-        "decisions" : [ {
-          "content" : "# ADR-0001 Truth Model And Status Boundary\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nPrevious harness documentation mixed three different statements:\n\n- what the runtime currently does\n- what the team originally intended\n- what the production target should become\n\nThat made review and recovery harder.\n\n## Decision\n\nHarness documentation must explicitly label statements as one of:\n\n- current reality\n- known nonconformance\n- target requirement\n\nDocumentation truth order is:\n\n1. runtime code\n2. systemd units\n3. observed logs and status output\n4. tests as intent evidence\n5. earlier documentation\n\n## Consequences\n\n- future docs must not describe a planned state as if it is already live\n- current faults must remain visible until they are removed from code and runtime\n- Structurizr views must model current runtime topology, not aspirational topology\n",
-          "date" : "2026-04-12T12:00:23Z",
-          "format" : "Markdown",
-          "id" : "1",
-          "status" : "Proposed",
-          "title" : " ADR-0001 Truth Model And Status Boundary"
-        }, {
-          "content" : "# ADR-0002 Authoritative Claim And Dispatch\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nThe current runtime allows more than one component to discover and dispatch runnable Linear work:\n\n- webhook receiver\n- backlog reconciler\n- runner self-pick behavior\n\nA lease is acquired too late to prevent duplicate dispatch.\n\n## Decision\n\nPer repository, one scheduler will own the transition:\n\n- `eligible -> claimed`\n\nThat claim must be atomic and durable.\n\nIngress may create desired work and dedupe deliveries.\n\nExecutors may only execute already-claimed work.\n\n## Consequences\n\n- webhook receiver no longer grants ownership\n- reconciler no longer directly dispatches runnable work\n- runner no longer self-picks global runnable work\n- duplicate dispatch becomes observable as rejected claim attempts rather than double execution\n",
-          "date" : "2026-04-12T12:00:23Z",
-          "format" : "Markdown",
-          "id" : "2",
-          "status" : "Proposed",
-          "title" : " ADR-0002 Authoritative Claim And Dispatch"
-        }, {
-          "content" : "# ADR-0003 Executor Pool And Worktree Boundaries\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nThe current platform uses eight long-lived worktrees:\n\n- `wt1` to `wt4` for Linear\n- `wt5` to `wt8` for Discord\n\nThat pool split is useful, but worktrees are currently overloaded as sandboxes, durable owners, repair surfaces, and branch identities.\n\n## Decision\n\nKeep worktrees as executor sandboxes.\n\nDo not use worktrees as the durable source of task truth.\n\nActive sandboxes must not be background-mutated by recovery or unrelated synchronization.\n\n## Consequences\n\n- idle sandboxes may refresh from `origin/main`\n- active sandboxes stay pinned to claim base until completion or expiry\n- recovery may quarantine or reprovision a sandbox\n- recovery may not commit, push, merge, or reset an active sandbox\n",
-          "date" : "2026-04-12T12:00:23Z",
-          "format" : "Markdown",
-          "id" : "3",
-          "status" : "Proposed",
-          "title" : " ADR-0003 Executor Pool And Worktree Boundaries"
-        }, {
-          "content" : "# ADR-0004 Repo-Serial Integration And Candidate Admission\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nCurrent execution allows parallel mutation but discovers many conflicts late, during cherry-pick integration.\n\nThe integrator is already single-writer by intent, but candidate admission rules are not explicit enough.\n\n## Decision\n\nEvery mutating execution attempt must emit a candidate record that includes:\n\n- repo\n- job\n- claim\n- base SHA\n- candidate SHA or patch identity\n- changed paths\n- validation summary\n\nIntegration is serialized once per repository.\n\nOnly the integrator may write the repository mainline.\n\n## Consequences\n\n- late conflict becomes an explicit candidate state\n- base drift is handled through stale-base or conflict policy\n- executors do not push to mainline\n- merge-back remains parallel in execution but serial in admission\n",
-          "date" : "2026-04-12T12:00:23Z",
-          "format" : "Markdown",
-          "id" : "4",
-          "status" : "Proposed",
-          "title" : " ADR-0004 Repo-Serial Integration And Candidate Admission"
-        }, {
-          "content" : "# ADR-0005 State-Only Recovery And Divergence Policy\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nThe current recovery daemon releases leases, retries pushes, auto-commits dirty work, syncs worktrees, and can propagate changes after mainline repair.\n\nThat makes recovery a second git writer.\n\n## Decision\n\nRecovery is limited to state repair, quarantine, reprovision request, and stale-claim handling.\n\nDivergence is resolved by sandbox disposal or explicit replan, not by hidden background mutation of active work.\n\n## Consequences\n\n- no recovery auto-commit\n- no recovery auto-push\n- no recovery merge into active worktree\n- no recovery reset of active worktree\n- divergence becomes a visible state transition\n",
-          "date" : "2026-04-12T12:00:23Z",
-          "format" : "Markdown",
-          "id" : "5",
-          "status" : "Proposed",
-          "title" : " ADR-0005 State-Only Recovery And Divergence Policy"
-        }, {
-          "content" : "# ADR-0006 Observability, Audit, And Evidence Contract\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nCurrent logs are good enough to infer failure patterns but not strong enough to prove one end-to-end execution chain cleanly.\n\n## Decision\n\nEvery job must have stable IDs across ingress, claim, execution, recovery, and integration.\n\nEvery mutating candidate must record validation and integration evidence.\n\nEvery recovery action must be provably state-only.\n\n## Consequences\n\n- correlation IDs alone are not enough\n- claim IDs and execution attempt IDs become mandatory\n- integration candidate IDs become mandatory\n- operator review becomes faster and more trustworthy\n",
-          "date" : "2026-04-12T12:00:23Z",
-          "format" : "Markdown",
-          "id" : "6",
-          "status" : "Proposed",
-          "title" : " ADR-0006 Observability, Audit, And Evidence Contract"
-        }, {
-          "content" : "# ADR-0007 Quality Gates And Mutating Work Admission\n\n- Status: Accepted\n- Date: 2026-04-12\n\n## Context\n\nThe repository already exposes meaningful gate surfaces through `package.json` scripts and the `Makefile`.\n\nThe runtime needs a clear rule for what must run before mutating work can be admitted for integration.\n\n## Decision\n\nMutating work is not complete when the model returns.\n\nMutating work is complete only when:\n\n- required validation commands ran\n- results were recorded truthfully\n- candidate metadata exists\n- integration admission succeeded or conflict was recorded explicitly\n\nThe minimum harness-focused gate set is:\n\n- `npm run typecheck:harness`\n- `npm run lint:harness`\n- `npm run depcruise:harness`\n- `npm run test:unit`\n\nEscalate to `make quality-harness`, `make quality-fast`, or `make quality-full` according to change scope.\n\n## Consequences\n\n- gate results become part of candidate evidence\n- fake green merges are prohibited\n- operator confidence depends on recorded commands, not narrative claims\n",
-          "date" : "2026-04-12T12:00:23Z",
-          "format" : "Markdown",
-          "id" : "7",
-          "status" : "Proposed",
-          "title" : " ADR-0007 Quality Gates And Mutating Work Admission"
-        } ],
-        "sections" : [ {
-          "content" : "# ANQR Harness Architecture Index\n\n## Status\n\nThe harness is **not production safe in its current orchestration form**.\n\nThe runtime is partially implemented and actively used, but it still has structural faults:\n\n- duplicated dispatch authority\n- late lease acquisition\n- long-lived mutable worktrees acting as execution sandboxes and durable task owners at the same time\n- recovery logic that mutates git state\n- repo integration that is serialized too late\n- audit trails that are useful for inference but still weak for proof\n\nThis documentation set is written to replace mixed doctrine and partial remediation notes with one clear reference set.\n\n## Read this set in order\n\n1. [01-scope-status-and-truth-model.md](01-scope-status-and-truth-model.md)\n2. [02-current-runtime-and-service-topology.md](02-current-runtime-and-service-topology.md)\n3. [03-current-control-plane-and-flows.md](03-current-control-plane-and-flows.md)\n4. [04-known-failures-and-evidence.md](04-known-failures-and-evidence.md)\n5. [05-production-target-architecture.md](05-production-target-architecture.md)\n6. [06-state-machines.md](06-state-machines.md)\n7. [07-worktree-and-git-governance.md](07-worktree-and-git-governance.md)\n8. [08-quality-gates-and-post-ai-processing.md](08-quality-gates-and-post-ai-processing.md)\n9. [09-observability-and-audit.md](09-observability-and-audit.md)\n10. [10-operations-runbooks.md](10-operations-runbooks.md)\n11. [11-validation-and-rollout-plan.md](11-validation-and-rollout-plan.md)\n12. [workspace/README.md](workspace/README.md)\n\n## What this set governs\n\nThis set governs:\n\n- `harness/ops/*`\n- `services/systemd/*`\n- `workspace.dsl`\n- the worktree pool used by the executor fleet\n- the control-plane contract for Discord and Linear sourced work\n- post-AI validation, evidence, and merge admission\n\nThis set does not redefine the ANQR product architecture outside the harness.\n\n## Key decisions captured here\n\n- one repository may execute many jobs concurrently\n- one repository must integrate one candidate at a time\n- scheduler authority must be singular per repository\n- leases are execution guards, not ingress dedupe\n- worktrees are sandboxes, not the durable source of task truth\n- recovery must repair state before it repairs git, and it must not mutate active execution baselines\n",
-          "filename" : "00-index.md",
-          "format" : "Markdown",
-          "order" : 1,
-          "title" : ""
-        }, {
-          "content" : "# Scope, Status, And Truth Model\n\n## Scope\n\nThe harness is the repository-local automation platform for ANQR. It currently covers:\n\n- Discord sourced interactive requests\n- Linear sourced issue execution\n- provider routing and AI execution bridges\n- queue control, reconciliation, integration, recovery, and watchdog loops\n- quality gate execution and evidence generation\n- operator diagnostics and support tooling\n\n## Current status\n\nCurrent status is:\n\n- operational enough to run work\n- observable enough to identify failure patterns\n- not reliable enough for unattended production execution\n\nThe gap is not mainly model quality. The gap is control-plane correctness.\n\n## Truth model\n\nWhen documentation, tests, and runtime disagree, use this order:\n\n1. committed runtime code\n2. committed systemd units\n3. observed logs and status outputs\n4. tests as intent evidence\n5. previous docs and architecture narratives\n\nThis rule exists because the current harness contains remediation-era services that were added after the original design, and those additions changed control-plane behavior.\n\n## What must be documented as distinct concerns\n\nEvery harness document must separate:\n\n- **current reality**\n- **known nonconformance**\n- **target requirement**\n\nThose three concerns must never be blended into one statement.\n\n## Current architectural intent\n\nThe intended operating model is:\n\n- executors `wt1` to `wt4` serve Linear sourced work\n- executors `wt5` to `wt8` serve Discord sourced work\n- some requests are read-only\n- some requests run commands\n- some requests mutate repository content\n- mutating work must pass quality gates and then merge back safely\n- ancillary services exist to keep the platform healthy, not to compete with executors for control\n\nThat intent is reasonable.\n\nThe current implementation does not consistently preserve it.\n\n## Production bar\n\nThe harness is only production ready when all of the following are true:\n\n- an eligible job is claimed once per repository\n- the claim exists before any worker starts executing\n- only one component has authority to decide ownership\n- active work is not invalidated by background git mutation\n- merge-back is serialized per repository\n- stale work is invalidated by state machine rules, not by ad hoc reset\n- audit records can prove who owned work, when, on which base SHA, and why ownership changed\n",
-          "filename" : "01-scope-status-and-truth-model.md",
-          "format" : "Markdown",
-          "order" : 2,
-          "title" : ""
-        }, {
-          "content" : "# Current Runtime And Service Topology\n\n## Repository runtime roots\n\nThe current runtime roots are:\n\n- `harness/ops/*`\n- `services/systemd/*`\n\n## Main active service surfaces\n\n### Ingress and routing\n\n- `services/systemd/openclaw-gateway.service`\n  - OpenClaw gateway\n  - default port `18789`\n- `services/systemd/anqr-discord-router.service`\n  - Discord request router\n  - default port `18790`\n- `services/systemd/anqr-linear-webhook.service`\n  - Linear webhook receiver\n  - default port `18791`\n- `services/systemd/anqr-symphony-router.service`\n  - Symphony router\n  - default port `4319`\n\n### Execution plane\n\n- `services/systemd/anqr-symphony-executor@.service`\n  - eight executor instances\n  - working directories `~/src/anqr-wt1` through `~/src/anqr-wt8`\n  - ports `4321` through `4328`\n\n### Control-plane maintenance and recovery\n\n- `services/systemd/anqr-linear-reconciler.service`\n- `services/systemd/anqr-symphony-integrator.service`\n- `services/systemd/anqr-symphony-worktree-recovery.service`\n- `services/systemd/anqr-watchdog.service`\n- `services/systemd/anqr-worktree-health.service`\n- `services/systemd/anqr-worktree-health.timer`\n\n### Supporting automation\n\n- `services/systemd/anqr-nightly.service`\n- `services/systemd/anqr-nightly.timer`\n- `services/systemd/anqr-rag-rebuild.service`\n- `services/systemd/anqr-rag-rebuild.timer`\n- `services/systemd/anqr-email-ingest.service`\n- `services/systemd/anqr-email-ingest.timer`\n- `services/systemd/anqr-linear-export.service`\n- `services/systemd/anqr-linear-export.timer`\n- `services/systemd/anqr-context7-mcp.service`\n\n## Worktree pool mapping\n\n### Linear pool\n\n- `wt1`\n- `wt2`\n- `wt3`\n- `wt4`\n\nUsed for:\n\n- Linear issue execution\n- mutating repository work originating from issue automation\n- repository tasks that need branch publication and later integration\n\n### Discord pool\n\n- `wt5`\n- `wt6`\n- `wt7`\n- `wt8`\n\nUsed for:\n\n- Discord interactive work\n- read-only questions\n- command execution\n- repository mutation when a Discord request is allowed to change files\n\n## Current routing code paths\n\n### Discord path\n\n- `harness/ops/integrations/model/discord-request-router/*`\n- `harness/ops/integrations/model/symphony-openai-bridge/*`\n\nCurrent behavior:\n\n- Discord router selects the least-loaded Discord worktree\n- request cwd is rewritten toward the chosen worktree\n- the router forwards the request to the executor-local bridge\n- executor-local bridge performs the actual model and tool work\n\n### Linear path\n\n- `harness/ops/integrations/model/linear-webhook-receiver/*`\n- `harness/ops/integrations/model/symphony-agent-router/*`\n- `harness/ops/orchestration/linear-reconciler/*`\n- `harness/ops/orchestration/symphony-runner/*`\n\nCurrent behavior:\n\n- webhook receiver accepts eligible events\n- webhook receiver forwards to the Symphony router\n- reconciler also dispatches eligible Todo issues\n- runner can also pick eligible Todo issues directly from Linear state\n\nThat means the Linear path has more than one effective scheduler.\n\n## State and persistence\n\nCurrent state is file-backed through:\n\n- `harness/ops/core/symphony-state/*`\n- reports and runtime JSON under `reports/*`\n\nCurrent state surfaces include:\n\n- issue records\n- lease records\n- retry and cooldown metadata\n- finalization state\n- integration queue and lock\n- worktree state\n- global reconciler values\n- evidence and reporting artifacts\n\n## Current git and branch behavior\n\nThe current runtime uses:\n\n- long-lived named worktrees\n- per-worktree branches\n- executor-local sync against `origin/main`\n- branch publication from runner paths\n- cherry-pick based integration in the integrator\n- automated worktree repair and sync in the recovery daemon\n\nThe key risk is that git mutation is happening in more than one place.\n",
-          "filename" : "02-current-runtime-and-service-topology.md",
-          "format" : "Markdown",
-          "order" : 3,
-          "title" : ""
-        }, {
-          "content" : "# Current Control Plane And Flows\n\n## Current control-plane actors\n\nThe current platform has these control-plane actors:\n\n- `linear-webhook-receiver`\n- `discord-request-router`\n- `symphony-agent-router`\n- `linear-reconciler`\n- `symphony-runner`\n- `symphony-queue-control`\n- `symphony-integrator`\n- `symphony-worktree-recovery`\n- `bridge-watchdog`\n- `worktree-health`\n\nNot all of them should own scheduling or git mutation.\n\nSome of them currently do.\n\n## Current Linear flow\n\n1. Linear changes state or emits an event.\n2. `linear-webhook-receiver` decides whether the event is eligible.\n3. It calls `trigger-issue-execution.mjs`.\n4. That posts to `/v1/linear/trigger` on the Symphony router.\n5. `dispatch-linear-execution.mjs` chooses a least-loaded worktree from `wt1` to `wt4`.\n6. The chosen executor gets `/v1/linear/execute`.\n7. The runner syncs the worktree from `origin/main`.\n8. The runner acquires a lease and starts work.\n9. Validation and finalization run.\n10. The runner may publish branch state.\n11. The integrator later cherry-picks into `main`.\n12. Recovery and reconciliation observe the same issue and may act again.\n\n## Current reconciler flow\n\n`linear-reconciler` does all of the following:\n\n- checks healthy capacity\n- inspects queue depth\n- feeds Todo from Backlog\n- detects stale work\n- re-enqueues stale integration candidates\n- dispatches Todo issues to the router\n\nThis means it is not only observing. It is scheduling.\n\n## Current runner flow\n\nThe runner currently does all of the following:\n\n- syncs the worktree from `origin/main` before lease acquisition\n- fetches issue detail\n- picks Todo issues directly through `pick-issue.mjs`\n- acquires and heartbeats a lease\n- runs AI work\n- validates results\n- may commit and push worktree branch state\n- updates Linear state and comments\n- emits completion and retry metadata\n\nThis makes the runner both executor and part-time scheduler.\n\n## Current recovery flow\n\nThe worktree recovery daemon currently does all of the following:\n\n- scans all worktrees\n- classifies them\n- releases stale leases\n- sets worktree state\n- retries pushes\n- auto-commits dirty work\n- pushes branches\n- for main repo repair, pushes `main`\n- propagates baseline fixes to other worktrees\n\nThis is too much authority for a recovery process.\n\n## Current integration flow\n\nThe integrator is already single-writer by intent:\n\n- reads integration queue\n- acquires integration lock\n- cherry-picks candidate branch head onto `main`\n- reports success or conflict\n\nThis is the most correct part of the current control plane, but it is still fed by unstable upstream ownership rules.\n\n## Why the current flow is unsafe\n\nThe system mixes three patterns:\n\n- edge-triggered webhook dispatch\n- level-triggered backlog reconciliation\n- worker-local self-pick\n\nThat combination is unsafe when all three can touch the same queue without an earlier authoritative claim.\n\n## Current execution classes\n\nThe runtime does not yet cleanly separate three classes of work:\n\n- read-only\n- command-only\n- mutating\n\nProduction design must treat them differently.\n\nRead-only and command-only tasks should not pay the full repository mutation cost.\n\nMutating tasks must go through the full state, validation, and integration pipeline.\n",
-          "filename" : "03-current-control-plane-and-flows.md",
-          "format" : "Markdown",
-          "order" : 4,
-          "title" : ""
-        }, {
-          "content" : "# Known Failures And Evidence\n\n## Summary\n\nThe current failures are structural.\n\nProvider rate limits, individual AI errors, and flaky tasks exist, but they are not the main reason the harness behaves unpredictably.\n\n## Evidence-backed failure list\n\n| Failure | Current evidence | Current mechanism | Required correction |\n| --- | --- | --- | --- |\n| Duplicate Linear dispatch | Router logs show the same issue dispatched to more than one worktree. Example: `ANQ-1580` was sent to `wt1` and `wt2` within about one second. | Webhook and reconciler both triggered dispatch before a durable claim existed. | Create an atomic claim before dispatch and make one scheduler authoritative per repo. |\n| Repeated replay of the same issue | Router and reconciler logs show repeated redispatch of `ANQ-1617`. | Reconciler re-sees work as eligible because ownership and retry state are not stable enough. | Separate ingress from claim. Reconciler may only requeue expired claims, not redispatch runnable work opportunistically. |\n| Lease loss during execution and validation | Integration tests and logs include `lease_mismatch` and abandonment flows. | Lease starts too late and competes with other state mutations. | Move durable claim earlier. Keep lease as execution heartbeat only. |\n| Recovery mutates git | `anqr-symphony-worktree-recovery.service` sets `ANQR_AUTOMATION_COMMIT=1` and `ANQR_AUTOMATION_PUSH=1`. Recovery code performs commit, push, sync, and propagation work. | Recovery is acting as a second git writer. | Make recovery state-only. Do not allow background repair to commit, push, merge, or reset active workspaces. |\n| Late conflict discovery | Integrator logs show repeated cherry-pick conflicts for `ANQ-1617` before a later success. | Conflict is discovered after local execution, not at claim or candidate admission time. | Make candidate admission explicit and repo-serial. Treat base SHA drift as a first-class invalidation rule. |\n| Split scheduling authority | Webhook, reconciler, runner self-pick, queue control, and recovery all influence runnable work. | The control plane is split. | Introduce one repo-scoped scheduler with exclusive claim authority. |\n| Capacity is advisory, not authoritative | Router chooses least-loaded worktree using local `activeRequests`. | Local request counters do not prove issue ownership. | Capacity decisions must consume durable claim state, not only in-memory request counters. |\n| Worktrees drift and get repaired under load | Recovery and runner both sync or repair against `origin/main`. | Worktree baseline can move under or between executions. | Idle worktrees may refresh. Active worktrees must stay pinned to claim base until completion or expiry. |\n| Tests miss the control-plane failure mode | Current tests verify webhook ingress, worktree creation, and some lease-loss behavior. They do not prove scheduler exclusivity under concurrent ingress. | Tests prove local intent, not distributed correctness. | Add duplicate-dispatch, split-brain, restart, conflict, and lease-expiry concurrency tests. |\n\n## Current nonconformances that must be documented openly\n\n### The system is not effectively once\n\nThe current runtime is not effectively-once for mutating Linear work.\n\nIt is at best at-least-once with manual cleanup.\n\n### Ancillary services are not ancillary enough\n\n`linear-reconciler`, `symphony-worktree-recovery`, and parts of runner behavior are shaping execution ownership and git state.\n\nThat violates the intended model where executors do work and support services only recover from failure.\n\n### Worktree identity is overloaded\n\nA worktree currently represents:\n\n- a pool slot\n- a long-lived branch\n- a mutable sandbox\n- a repair surface\n- a possible durable owner of issue progress\n\nThose roles should be split.\n\n### Existing documentation mixed intent with remediation\n\nPrevious docs often described a desired state as if it already existed.\n\nThis set replaces that with explicit status labeling.\n",
-          "filename" : "04-known-failures-and-evidence.md",
-          "format" : "Markdown",
-          "order" : 5,
-          "title" : ""
-        }, {
-          "content" : "# Production Target Architecture\n\n## Design objective\n\nThe target design must allow:\n\n- parallel execution across many tasks\n- exact or effective once claiming per repository\n- safe merge-back\n- clean propagation of upstream changes\n- bounded retries\n- reliable recovery\n- full auditability\n\n## Recommended control-plane model\n\nUse a **repo-scoped authoritative scheduler**.\n\nPer repository, the system must have:\n\n- one ingress-normalization path\n- one scheduler with exclusive claim authority\n- one execution lease model\n- one integration queue\n- one integration writer\n\n## Authoritative ownership boundaries\n\n### Ingress\n\nIngress may:\n\n- accept events\n- normalize payloads\n- dedupe delivery IDs\n- classify work as read-only, command-only, or mutating\n- write desired work into durable state\n\nIngress may not:\n\n- choose the final executor\n- grant durable ownership\n- mutate repository state\n\n### Scheduler\n\nScheduler may:\n\n- compute eligible jobs\n- reserve capacity\n- create claims atomically\n- assign a worker pool and executor\n- requeue expired claims\n\nScheduler must be the only actor allowed to transition:\n\n- `eligible -> claimed`\n\n### Executor\n\nExecutor may:\n\n- pull or receive a claimed job\n- create a task sandbox\n- heartbeat the lease\n- run AI work and tools\n- run quality gates\n- emit candidate artifacts or branch state\n\nExecutor may not:\n\n- decide global queue ownership\n- integrate directly to `main`\n\n### Integrator\n\nIntegrator may:\n\n- read candidate queue\n- verify base SHA and validation status\n- merge or cherry-pick one candidate at a time per repo\n- mark conflict, stale-base, or integrated outcomes\n\nIntegrator must be the only writer to the repository mainline.\n\n### Recovery\n\nRecovery may:\n\n- detect dead workers\n- expire claims\n- requeue work\n- quarantine sandboxes\n- request reprovisioning\n\nRecovery may not:\n\n- commit\n- push\n- fast-forward\n- rebase active sandboxes\n- reset active sandboxes\n- merge mainline changes into active sandboxes\n\n## Recommended execution classes\n\n### Read-only\n\nExamples:\n\n- simple questions\n- repository search\n- file counting\n- explanation tasks\n\nPolicy:\n\n- no integration path\n- no branch publication\n- no worktree required unless tools require repository access\n- fast timeout and cheap retry\n\n### Command-only\n\nExamples:\n\n- controlled shell commands\n- diagnostics\n- report generation\n\nPolicy:\n\n- no integration path unless explicitly configured to persist artifacts\n- sandbox required if filesystem mutation is possible\n- evidence required when operator-visible outputs matter\n\n### Mutating\n\nExamples:\n\n- file edits\n- test additions\n- refactors\n- service file changes\n- documentation updates\n\nPolicy:\n\n- claim required before execution\n- sandbox required\n- pinned base SHA required\n- quality gate policy required\n- candidate admission required\n- repo-serial integration required\n\n## Recommended merge strategy\n\nUse one of these two equivalent shapes:\n\n- patch artifact submission to a single integrator\n- task branch submission to a single integrator\n\nIn both cases:\n\n- the executor does not update `main`\n- the candidate records its base SHA\n- the integrator decides admission against current `main`\n- conflicts become explicit states, not silent resets\n\n## Recommended stale work rules\n\n- a claim is stale only after heartbeat expiry plus grace\n- a candidate is stale if its base SHA no longer satisfies integration policy\n- an active sandbox is invalid only when its claim expires or the operator cancels it\n- upstream `main` movement does not justify background mutation of an active sandbox\n\n## Multi-repo design\n\nFor multi-repo support, keep the same control-plane model but scope it per repo:\n\n- claim namespace per repo\n- executor pool mapping per repo\n- integration queue per repo\n- integration lock per repo\n\nCross-repo work becomes a parent job that coordinates child repo jobs with explicit dependency edges.\n\n## Constraints for worktree viability\n\nA worktree-based executor pool remains viable only if all of these are true:\n\n- worktrees are sandboxes, not durable source of truth\n- active worktrees are not background-mutated\n- only the scheduler owns task claims\n- only the integrator writes mainline\n- worktree refresh happens only when idle or when the sandbox is reprovisioned\n\nWithout those constraints, the current worktree-first model is not reliable.\n",
-          "filename" : "05-production-target-architecture.md",
-          "format" : "Markdown",
-          "order" : 6,
-          "title" : ""
-        }, {
-          "content" : "# State Machines\n\n## Why state machines matter\n\nThe harness currently has state, but the transitions are not strict enough.\n\nProduction behavior requires explicit state machines for jobs, claims, candidates, and sandboxes.\n\n## Job lifecycle\n\n### Read-only and command-only jobs\n\n`received -> normalized -> eligible -> claimed -> executing -> completed`\n\nFailure branches:\n\n- `retry_wait`\n- `failed`\n- `dead_letter`\n\n### Mutating jobs\n\n`received -> normalized -> eligible -> claimed -> executing -> validation_pending -> candidate_ready -> integrating -> integrated`\n\nFailure branches:\n\n- `validation_failed`\n- `stale_claim`\n- `conflict`\n- `retry_wait`\n- `manual_review`\n- `dead_letter`\n\n## Claim lifecycle\n\n`none -> claimed -> active -> expired -> released`\n\nRequired claim fields:\n\n- `jobId`\n- `repoId`\n- `claimId`\n- `executionAttemptId`\n- `workerId`\n- `pool`\n- `claimedAt`\n- `leaseExpiresAt`\n- `baseSha`\n- `jobClass`\n\n## Lease lifecycle\n\n`created -> heartbeating -> expired`\n\nLease exists to protect active execution.\n\nLease does not replace ingress dedupe or atomic claim.\n\n## Candidate lifecycle\n\n`none -> candidate_ready -> integrating -> integrated`\n\nFailure branches:\n\n- `conflict`\n- `stale_base`\n- `rejected`\n- `manual_review`\n\nRequired candidate fields:\n\n- `integrationCandidateId`\n- `repoId`\n- `jobId`\n- `claimId`\n- `baseSha`\n- `candidateHeadSha`\n- `changedPaths`\n- `validationSummary`\n- `createdAt`\n\n## Worktree or sandbox lifecycle\n\n`idle -> provisioned -> executing -> awaiting_disposal -> disposed`\n\nFailure branches:\n\n- `quarantined`\n- `reprovisioning`\n\nA sandbox is not an owner record.\n\nIt is disposable execution infrastructure.\n\n## Current mismatch against target\n\nThe current runtime mixes issue state, lease state, worktree state, and finalization state, but still allows:\n\n- external redispatch before claim\n- recovery-driven mutation of git\n- requeue without strong attempt identity\n- late conflict discovery\n\nThe target model fixes that by making each transition authoritative and singular.\n",
-          "filename" : "06-state-machines.md",
-          "format" : "Markdown",
-          "order" : 7,
-          "title" : ""
-        }, {
-          "content" : "# Worktree And Git Governance\n\n## Current worktree policy\n\nThe current fleet uses eight long-lived worktrees:\n\n- `wt1` to `wt4` for Linear\n- `wt5` to `wt8` for Discord\n\nThat split is acceptable as a pool definition.\n\nIt is not acceptable as a durable ownership model.\n\n## Required worktree policy\n\n### What a worktree is\n\nA worktree is:\n\n- an executor sandbox\n- a filesystem and git isolation boundary\n- a disposable pool slot\n\nA worktree is not:\n\n- a durable source of task truth\n- the authoritative scheduler state\n- the recovery authority\n- a reason to mutate other active worktrees\n\n## Refresh rules\n\n### Allowed\n\n- refresh idle worktrees from `origin/main`\n- reprovision quarantined worktrees\n- discard completed task sandboxes\n- rehydrate a fresh sandbox for a retry attempt\n\n### Forbidden\n\n- fast-forward active worktrees under an active claim\n- merge `main` into active worktrees in the background\n- auto-commit dirty active worktrees from recovery\n- push active worktree branches from recovery\n- reset active worktrees because another branch integrated\n\n## Branch and base rules\n\nEvery mutating attempt must record:\n\n- repository\n- branch or patch identity\n- base SHA\n- execution attempt ID\n\nEvery integration attempt must compare candidate base SHA to current mainline state.\n\n## Conflict policy\n\nWhen two mutating jobs overlap in the same repository:\n\n- both may execute in parallel\n- only one candidate may integrate at a time\n- later candidates must be checked against the new base\n- conflict becomes an explicit state\n- the platform must not hide the conflict with reset-and-retry loops\n\n## Invalidating stale work\n\nA task becomes stale when:\n\n- its claim expires\n- its worker dies and heartbeat grace elapses\n- its candidate cannot satisfy current integration policy\n- an operator cancels it\n\nA task does not become stale merely because:\n\n- another task integrated first\n- recovery decided to resync the pool\n- queue depth changed\n\n## Multi-repo rule\n\nIf the platform expands beyond one repo, each repo needs its own:\n\n- scheduler state\n- integration queue\n- integration lock\n- sandbox pool policy\n\nCross-repo work must be coordinated above the repo layer, not by sharing one blind scheduler loop.\n",
-          "filename" : "07-worktree-and-git-governance.md",
-          "format" : "Markdown",
-          "order" : 8,
-          "title" : ""
-        }, {
-          "content" : "# Quality Gates And Post-AI Processing\n\n## Purpose\n\nPost-AI processing is mandatory for any mutating task.\n\nThe executor is not done when the model stops. It is done when the work has been validated, evidenced, and admitted for integration.\n\n## Gate tiers from the current repository\n\n### Base repository gates\n\nThe current repository exposes these important gate surfaces:\n\n- `make quality-fast`\n- `make quality-release`\n- `make quality-harness`\n- `make quality-full`\n\nThe current script layer also exposes targeted commands such as:\n\n- `npm run typecheck:harness`\n- `npm run lint:harness`\n- `npm run depcruise:harness`\n- `npm run test:unit`\n- `npm run queue:all:dry-run`\n- `npm run linear:reconciler:once`\n- `npm run harness:doctor`\n\n## Required gate policy by task class\n\n### Read-only\n\nRequired:\n\n- no repository gates\n- response evidence only when operator requested or when the task informs later action\n\n### Command-only\n\nRequired:\n\n- command exit status\n- output capture\n- any relevant diagnostics\n- no integration path unless artifacts are intentionally persisted\n\n### Mutating harness work\n\nFor changes touching `harness/*`, `services/systemd/*`, or `docs/harness/*`, the default minimum policy is:\n\n1. targeted repo validation\n   - `npm run typecheck:harness`\n   - `npm run lint:harness`\n   - `npm run depcruise:harness`\n2. baseline regression\n   - `npm run test:unit`\n3. harness dry-run checks when orchestration logic changed\n   - `make quality-harness`\n\nFor broader or cross-cutting repository changes, the candidate admission policy should escalate to:\n\n- `make quality-fast`\n\nFor release-grade change sets or production rollout work, candidate admission should escalate to:\n\n- `make quality-full`\n\n## Evidence required after mutating work\n\nEvery candidate must record:\n\n- commands run\n- pass or fail result for each command\n- changed paths\n- base SHA\n- candidate SHA\n- integration decision\n- rollback note or conflict note\n- follow-up required\n\n## Current gap\n\nThe current harness has evidence generation and gate surfaces, but it does not yet enforce a clean candidate admission policy before merge-back.\n\nThat policy is mandatory for production.\n",
-          "filename" : "08-quality-gates-and-post-ai-processing.md",
-          "format" : "Markdown",
-          "order" : 9,
-          "title" : ""
-        }, {
-          "content" : "# Observability And Audit\n\n## Current strength\n\nThe current runtime already logs a lot of useful detail:\n\n- service identity\n- worktree identity\n- queue and dispatch events\n- some correlation IDs\n- issue transitions\n- integration attempts\n- recovery actions\n\nThat is enough to infer major failures.\n\n## Current weakness\n\nIt is still too hard to prove the exact causal chain for one job across ingress, claim, execution, recovery, and integration.\n\n## Required audit fields\n\nEvery job needs these identifiers:\n\n- `job_id`\n- `source_event_id`\n- `correlation_id`\n- `claim_id`\n- `execution_attempt_id`\n- `integration_candidate_id`\n- `integration_attempt_id`\n- `repo_id`\n- `worker_id`\n- `sandbox_id`\n- `worktree_id` when applicable\n\n## Required logs\n\n### Ingress\n\nLog:\n\n- original source\n- normalized job class\n- dedupe decision\n- repo selection\n- desired work record created\n\n### Claim and scheduler\n\nLog:\n\n- claim creation\n- actor creating claim\n- capacity decision\n- pool selection\n- worktree or sandbox selection\n- duplicate claim rejection\n\n### Executor\n\nLog:\n\n- base SHA at start\n- current HEAD at start\n- worker and sandbox identity\n- heartbeat renewals\n- validation steps\n- candidate emission\n\n### Recovery\n\nLog:\n\n- stale detection reason\n- worker liveness check\n- state transition performed\n- proof that no git mutation occurred\n\n### Integrator\n\nLog:\n\n- candidate selected\n- base SHA\n- current mainline SHA\n- merge or cherry-pick result\n- conflict files\n- integrated SHA\n\n## Required metrics\n\n- duplicate dispatch attempts\n- duplicate claim rejections\n- claim expiries\n- lease mismatches\n- validation failures\n- integration conflicts\n- stale-base rejections\n- retries by issue\n- quarantined sandboxes\n- recovery actions by type\n- mean queue age\n- integration latency\n- pool utilization by class\n\n## Current audit gaps that must be closed\n\n- no single authoritative claim record before dispatch\n- no universal attempt ID threaded through all services\n- too much reliance on local request counters\n- no strong proof that recovery did not mutate active jobs\n- no explicit candidate admission audit contract\n",
-          "filename" : "09-observability-and-audit.md",
-          "format" : "Markdown",
-          "order" : 10,
-          "title" : ""
-        }, {
-          "content" : "# Operations Runbooks\n\n## Principle\n\nOperational safety comes before throughput.\n\nWhen the control plane is under repair, disable mutation and keep read-only and diagnostic work separate.\n\n## Runbook: controlled restart of routing or executor services\n\n1. stop new mutating work admission\n2. wait for active claims to drain or expire cleanly\n3. verify no candidate is mid-integration\n4. restart the target service\n5. confirm health endpoints\n6. resume admission\n\nCurrent helper scripts such as `harness/ops/orchestration/symphony-control.mjs` may remain useful, but service restart must follow the claim and integration state, not only timer state.\n\n## Runbook: duplicate execution suspected\n\n1. identify the issue identifier\n2. inspect scheduler, ingress, and router logs for duplicate trigger events\n3. identify all claim or attempt records\n4. cancel all but the authoritative claim\n5. quarantine any sandbox with ambiguous mutation history\n6. document the duplicate-dispatch root cause\n\n## Runbook: stale lease\n\n1. confirm worker heartbeat loss\n2. confirm worker process liveness\n3. expire claim after grace\n4. requeue the job as a new attempt\n5. preserve old attempt evidence\n6. do not mutate the old sandbox in place unless it is explicitly quarantined and isolated\n\n## Runbook: integration conflict\n\n1. capture candidate metadata and conflicting paths\n2. mark candidate `conflict`\n3. do not reset the sandbox into a new hidden state\n4. create a replan or manual-review path\n5. admit no silent auto-merge claim\n\n## Runbook: quarantined sandbox\n\n1. preserve audit metadata\n2. capture changed paths and current HEAD\n3. remove from scheduling pool\n4. reprovision a fresh sandbox\n5. only requeue the job if the claim is no longer active and retry policy allows it\n\n## Runbook: provider failure\n\n1. classify provider failure\n2. keep job ownership stable\n3. retry inside provider policy if claim is still valid\n4. do not re-dispatch the same job to another executor without expiring or releasing the claim first\n\n## Runbook: Discord read-only degradation\n\nIf mutating repo work is disabled, Discord may still serve:\n\n- read-only questions\n- diagnostics\n- documentation lookup\n- repository search\n\nThat mode must be declared clearly in operator status.\n",
-          "filename" : "10-operations-runbooks.md",
-          "format" : "Markdown",
-          "order" : 11,
-          "title" : ""
-        }, {
-          "content" : "# Validation And Rollout Plan\n\n## Goal\n\nProve the architecture is correct before trusting it with unattended mutating work.\n\n## Required validation suites\n\n### Duplicate-dispatch suite\n\nProve:\n\n- webhook and reconciler can fire together\n- only one claim is created\n- all later claim attempts are rejected cleanly\n\n### Lease-expiry suite\n\nProve:\n\n- worker heartbeat loss expires the claim once\n- recovery requeues state without mutating git\n- retries create a new execution attempt\n\n### Integration-conflict suite\n\nProve:\n\n- two overlapping candidates can execute in parallel\n- only one integrates first\n- the other becomes `conflict` or `stale_base`\n- no hidden reset converts conflict into fake success\n\n### Restart suite\n\nProve:\n\n- restarting webhook, router, scheduler, integrator, or recovery does not duplicate an active claim\n- integration queue survives restart\n- idle sandboxes refresh safely after restart\n\n### Multi-repo suite\n\nIf multi-repo support is planned, prove:\n\n- repo A integration conflict does not block repo B\n- claims are unique within repo scope\n- cross-repo parent jobs respect dependency order\n\n## Rollout stages\n\n### Stage 1\n\n- documentation and state-machine alignment\n- control-plane authority reduction\n- recovery changed to state-only behavior\n\n### Stage 2\n\n- atomic claim before dispatch\n- candidate admission contract\n- repo-serial integration enforcement\n\n### Stage 3\n\n- concurrency and failure-injection tests\n- operator dashboards and metrics\n- dry-run shadow execution\n\n### Stage 4\n\n- limited mutating production rollout\n- bounded issue classes only\n- explicit incident review after every conflict, duplicate, or stale-claim event\n\n## Exit criteria for production\n\nThe mutating platform is production ready only when all of these hold:\n\n- zero duplicate claims in forced-concurrency tests\n- zero background git mutation by recovery\n- one writer to mainline per repo\n- full audit chain from event to integration\n- deterministic recovery after restart\n",
-          "filename" : "11-validation-and-rollout-plan.md",
-          "format" : "Markdown",
-          "order" : 12,
-          "title" : ""
-        } ]
+        "relationships": [
+          {
+            "description": "Forwards Discord work into the harness",
+            "destinationId": "5",
+            "id": "24",
+            "sourceId": "13",
+            "tags": "Relationship"
+          },
+          {
+            "description": "Forwards Discord work into the harness",
+            "destinationId": "4",
+            "id": "25",
+            "linkedRelationshipId": "24",
+            "sourceId": "13"
+          }
+        ],
+        "tags": "Element,Software System"
       },
-      "id" : "4",
-      "name" : "ANQR Harness",
-      "properties" : {
-        "structurizr.dsl.identifier" : "anqr_harness"
+      {
+        "description": "External issue tracker and webhook source.",
+        "documentation": {},
+        "id": "14",
+        "name": "Linear",
+        "properties": {
+          "structurizr.dsl.identifier": "linear"
+        },
+        "relationships": [
+          {
+            "description": "Sends webhook events and exposes issue state",
+            "destinationId": "5",
+            "id": "29",
+            "sourceId": "14",
+            "tags": "Relationship"
+          },
+          {
+            "description": "Sends webhook events and exposes issue state",
+            "destinationId": "4",
+            "id": "30",
+            "linkedRelationshipId": "29",
+            "sourceId": "14"
+          }
+        ],
+        "tags": "Element,Software System"
       },
-      "relationships" : [ {
-        "description" : "Calls routed AI providers",
-        "destinationId" : "15",
-        "id" : "41",
-        "linkedRelationshipId" : "40",
-        "sourceId" : "4"
-      }, {
-        "description" : "Fetches and publishes branch state",
-        "destinationId" : "16",
-        "id" : "43",
-        "linkedRelationshipId" : "42",
-        "sourceId" : "4"
-      }, {
-        "description" : "Reads or exports static-analysis findings",
-        "destinationId" : "17",
-        "id" : "46",
-        "linkedRelationshipId" : "45",
-        "sourceId" : "4"
-      }, {
-        "description" : "Reads or writes issue metadata",
-        "destinationId" : "14",
-        "id" : "48",
-        "linkedRelationshipId" : "47",
-        "sourceId" : "4"
-      }, {
-        "description" : "Reads inbound mail and sends notifications",
-        "destinationId" : "20",
-        "id" : "51",
-        "linkedRelationshipId" : "50",
-        "sourceId" : "4"
-      }, {
-        "description" : "Resolves documentation",
-        "destinationId" : "18",
-        "id" : "53",
-        "linkedRelationshipId" : "52",
-        "sourceId" : "4"
-      }, {
-        "description" : "Builds embeddings and local model outputs",
-        "destinationId" : "19",
-        "id" : "55",
-        "linkedRelationshipId" : "54",
-        "sourceId" : "4"
-      } ],
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "External chat and voice surface.",
-      "documentation" : { },
-      "id" : "12",
-      "name" : "Discord",
-      "properties" : {
-        "structurizr.dsl.identifier" : "discord"
+      {
+        "description": "External AI model providers and SDK endpoints.",
+        "documentation": {},
+        "id": "15",
+        "name": "AI Providers",
+        "properties": {
+          "structurizr.dsl.identifier": "ai_providers"
+        },
+        "tags": "Element,Software System"
       },
-      "relationships" : [ {
-        "description" : "Delivers chat and voice sessions",
-        "destinationId" : "13",
-        "id" : "23",
-        "sourceId" : "12",
-        "tags" : "Relationship"
-      } ],
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "External gateway and bot runtime used to talk to Discord and route into the harness.",
-      "documentation" : { },
-      "id" : "13",
-      "name" : "OpenClaw Gateway",
-      "properties" : {
-        "structurizr.dsl.identifier" : "openclaw"
+      {
+        "description": "Remote git origin used for fetch, push, and branch publication.",
+        "documentation": {},
+        "id": "16",
+        "name": "Git Remote",
+        "properties": {
+          "structurizr.dsl.identifier": "git_remote"
+        },
+        "tags": "Element,Software System"
       },
-      "relationships" : [ {
-        "description" : "Forwards Discord work into the harness",
-        "destinationId" : "5",
-        "id" : "24",
-        "sourceId" : "13",
-        "tags" : "Relationship"
-      }, {
-        "description" : "Forwards Discord work into the harness",
-        "destinationId" : "4",
-        "id" : "25",
-        "linkedRelationshipId" : "24",
-        "sourceId" : "13"
-      } ],
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "External issue tracker and webhook source.",
-      "documentation" : { },
-      "id" : "14",
-      "name" : "Linear",
-      "properties" : {
-        "structurizr.dsl.identifier" : "linear"
+      {
+        "description": "External static-analysis system.",
+        "documentation": {},
+        "id": "17",
+        "name": "SonarQube",
+        "properties": {
+          "structurizr.dsl.identifier": "sonarqube"
+        },
+        "tags": "Element,Software System"
       },
-      "relationships" : [ {
-        "description" : "Sends webhook events and exposes issue state",
-        "destinationId" : "5",
-        "id" : "29",
-        "sourceId" : "14",
-        "tags" : "Relationship"
-      }, {
-        "description" : "Sends webhook events and exposes issue state",
-        "destinationId" : "4",
-        "id" : "30",
-        "linkedRelationshipId" : "29",
-        "sourceId" : "14"
-      } ],
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "External AI model providers and SDK endpoints.",
-      "documentation" : { },
-      "id" : "15",
-      "name" : "AI Providers",
-      "properties" : {
-        "structurizr.dsl.identifier" : "ai_providers"
+      {
+        "description": "External documentation resolution service.",
+        "documentation": {},
+        "id": "18",
+        "name": "Context7 Cloud",
+        "properties": {
+          "structurizr.dsl.identifier": "context7"
+        },
+        "tags": "Element,Software System"
       },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "Remote git origin used for fetch, push, and branch publication.",
-      "documentation" : { },
-      "id" : "16",
-      "name" : "Git Remote",
-      "properties" : {
-        "structurizr.dsl.identifier" : "git_remote"
+      {
+        "description": "Local or adjacent model and embedding service.",
+        "documentation": {},
+        "id": "19",
+        "name": "Ollama",
+        "properties": {
+          "structurizr.dsl.identifier": "ollama"
+        },
+        "tags": "Element,Software System"
       },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "External static-analysis system.",
-      "documentation" : { },
-      "id" : "17",
-      "name" : "SonarQube",
-      "properties" : {
-        "structurizr.dsl.identifier" : "sonarqube"
+      {
+        "description": "Inbound and outbound mail systems.",
+        "documentation": {},
+        "id": "20",
+        "name": "Mail And SMTP",
+        "properties": {
+          "structurizr.dsl.identifier": "mail_and_smtp"
+        },
+        "tags": "Element,Software System"
       },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "External documentation resolution service.",
-      "documentation" : { },
-      "id" : "18",
-      "name" : "Context7 Cloud",
-      "properties" : {
-        "structurizr.dsl.identifier" : "context7"
-      },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "Local or adjacent model and embedding service.",
-      "documentation" : { },
-      "id" : "19",
-      "name" : "Ollama",
-      "properties" : {
-        "structurizr.dsl.identifier" : "ollama"
-      },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "Inbound and outbound mail systems.",
-      "documentation" : { },
-      "id" : "20",
-      "name" : "Mail And SMTP",
-      "properties" : {
-        "structurizr.dsl.identifier" : "mail_and_smtp"
-      },
-      "tags" : "Element,Software System"
-    }, {
-      "description" : "Host-level service manager for long-running services and timers.",
-      "documentation" : { },
-      "id" : "21",
-      "name" : "systemd User Services",
-      "properties" : {
-        "structurizr.dsl.identifier" : "systemd"
-      },
-      "relationships" : [ {
-        "description" : "Runs services and timers",
-        "destinationId" : "4",
-        "id" : "56",
-        "sourceId" : "21",
-        "tags" : "Relationship"
-      } ],
-      "tags" : "Element,Software System"
-    } ]
+      {
+        "description": "Host-level service manager for long-running services and timers.",
+        "documentation": {},
+        "id": "21",
+        "name": "systemd User Services",
+        "properties": {
+          "structurizr.dsl.identifier": "systemd"
+        },
+        "relationships": [
+          {
+            "description": "Runs services and timers",
+            "destinationId": "4",
+            "id": "56",
+            "sourceId": "21",
+            "tags": "Relationship"
+          }
+        ],
+        "tags": "Element,Software System"
+      }
+    ]
   },
-  "name" : "ANQR Harness Production Architecture v4",
-  "properties" : {
-    "structurizr.inspection.error" : "38",
-    "structurizr.inspection.info" : "0",
-    "structurizr.inspection.ignore" : "0",
-    "structurizr.inspection.warning" : "0"
+  "name": "ANQR Harness Production Architecture v4",
+  "properties": {
+    "structurizr.inspection.error": "38",
+    "structurizr.inspection.info": "0",
+    "structurizr.inspection.ignore": "0",
+    "structurizr.inspection.warning": "0"
   },
-  "views" : {
-    "configuration" : {
-      "branding" : { },
-      "styles" : {
-        "elements" : [ {
-          "background" : "#438dd5",
-          "color" : "#ffffff",
-          "tag" : "Container"
-        }, {
-          "background" : "#2e7d32",
-          "color" : "#ffffff",
-          "shape" : "Cylinder",
-          "tag" : "DataStore"
-        }, {
-          "background" : "#08427b",
-          "color" : "#ffffff",
-          "shape" : "Person",
-          "tag" : "Person"
-        }, {
-          "background" : "#1168bd",
-          "color" : "#ffffff",
-          "tag" : "Software System"
-        } ]
+  "views": {
+    "configuration": {
+      "branding": {},
+      "styles": {
+        "elements": [
+          {
+            "background": "#438dd5",
+            "color": "#ffffff",
+            "tag": "Container"
+          },
+          {
+            "background": "#2e7d32",
+            "color": "#ffffff",
+            "shape": "Cylinder",
+            "tag": "DataStore"
+          },
+          {
+            "background": "#08427b",
+            "color": "#ffffff",
+            "shape": "Person",
+            "tag": "Person"
+          },
+          {
+            "background": "#1168bd",
+            "color": "#ffffff",
+            "tag": "Software System"
+          }
+        ]
       },
-      "terminology" : { }
+      "terminology": {}
     },
-    "containerViews" : [ {
-      "automaticLayout" : {
-        "applied" : false,
-        "edgeSeparation" : 0,
-        "implementation" : "Graphviz",
-        "nodeSeparation" : 300,
-        "rankDirection" : "LeftRight",
-        "rankSeparation" : 300,
-        "vertices" : false
-      },
-      "elements" : [ {
-        "id" : "5",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "6",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "7",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "8",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "9",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "10",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "11",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "13",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "14",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "15",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "16",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "17",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "18",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "19",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "20",
-        "x" : 0,
-        "y" : 0
-      } ],
-      "externalSoftwareSystemBoundariesVisible" : false,
-      "key" : "container-view",
-      "name" : "Container View: ANQR Harness",
-      "order" : 2,
-      "relationships" : [ {
-        "id" : "24"
-      }, {
-        "id" : "29"
-      }, {
-        "id" : "31"
-      }, {
-        "id" : "32"
-      }, {
-        "id" : "33"
-      }, {
-        "id" : "34"
-      }, {
-        "id" : "35"
-      }, {
-        "id" : "36"
-      }, {
-        "id" : "37"
-      }, {
-        "id" : "38"
-      }, {
-        "id" : "39"
-      }, {
-        "id" : "40"
-      }, {
-        "id" : "42"
-      }, {
-        "id" : "44"
-      }, {
-        "id" : "45"
-      }, {
-        "id" : "47"
-      }, {
-        "id" : "49"
-      }, {
-        "id" : "50"
-      }, {
-        "id" : "52"
-      }, {
-        "id" : "54"
-      } ],
-      "softwareSystemId" : "4"
-    } ],
-    "systemContextViews" : [ {
-      "automaticLayout" : {
-        "applied" : false,
-        "edgeSeparation" : 0,
-        "implementation" : "Graphviz",
-        "nodeSeparation" : 300,
-        "rankDirection" : "LeftRight",
-        "rankSeparation" : 300,
-        "vertices" : false
-      },
-      "elements" : [ {
-        "id" : "1",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "3",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "4",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "13",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "14",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "15",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "16",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "17",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "18",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "19",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "20",
-        "x" : 0,
-        "y" : 0
-      }, {
-        "id" : "21",
-        "x" : 0,
-        "y" : 0
-      } ],
-      "enterpriseBoundaryVisible" : true,
-      "key" : "system-context",
-      "name" : "System Context View: ANQR Harness",
-      "order" : 1,
-      "relationships" : [ {
-        "id" : "25"
-      }, {
-        "id" : "26"
-      }, {
-        "id" : "27"
-      }, {
-        "id" : "28"
-      }, {
-        "id" : "30"
-      }, {
-        "id" : "41"
-      }, {
-        "id" : "43"
-      }, {
-        "id" : "46"
-      }, {
-        "id" : "48"
-      }, {
-        "id" : "51"
-      }, {
-        "id" : "53"
-      }, {
-        "id" : "55"
-      }, {
-        "id" : "56"
-      } ],
-      "softwareSystemId" : "4"
-    } ]
+    "containerViews": [
+      {
+        "automaticLayout": {
+          "applied": false,
+          "edgeSeparation": 0,
+          "implementation": "Graphviz",
+          "nodeSeparation": 300,
+          "rankDirection": "LeftRight",
+          "rankSeparation": 300,
+          "vertices": false
+        },
+        "elements": [
+          {
+            "id": "5",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "6",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "7",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "8",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "9",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "10",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "11",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "13",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "14",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "15",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "16",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "17",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "18",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "19",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "20",
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "externalSoftwareSystemBoundariesVisible": false,
+        "key": "container-view",
+        "name": "Container View: ANQR Harness",
+        "order": 2,
+        "relationships": [
+          {
+            "id": "24"
+          },
+          {
+            "id": "29"
+          },
+          {
+            "id": "31"
+          },
+          {
+            "id": "32"
+          },
+          {
+            "id": "33"
+          },
+          {
+            "id": "34"
+          },
+          {
+            "id": "35"
+          },
+          {
+            "id": "36"
+          },
+          {
+            "id": "37"
+          },
+          {
+            "id": "38"
+          },
+          {
+            "id": "39"
+          },
+          {
+            "id": "40"
+          },
+          {
+            "id": "42"
+          },
+          {
+            "id": "44"
+          },
+          {
+            "id": "45"
+          },
+          {
+            "id": "47"
+          },
+          {
+            "id": "49"
+          },
+          {
+            "id": "50"
+          },
+          {
+            "id": "52"
+          },
+          {
+            "id": "54"
+          }
+        ],
+        "softwareSystemId": "4"
+      }
+    ],
+    "systemContextViews": [
+      {
+        "automaticLayout": {
+          "applied": false,
+          "edgeSeparation": 0,
+          "implementation": "Graphviz",
+          "nodeSeparation": 300,
+          "rankDirection": "LeftRight",
+          "rankSeparation": 300,
+          "vertices": false
+        },
+        "elements": [
+          {
+            "id": "1",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "3",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "4",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "13",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "14",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "15",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "16",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "17",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "18",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "19",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "20",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "id": "21",
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "enterpriseBoundaryVisible": true,
+        "key": "system-context",
+        "name": "System Context View: ANQR Harness",
+        "order": 1,
+        "relationships": [
+          {
+            "id": "25"
+          },
+          {
+            "id": "26"
+          },
+          {
+            "id": "27"
+          },
+          {
+            "id": "28"
+          },
+          {
+            "id": "30"
+          },
+          {
+            "id": "41"
+          },
+          {
+            "id": "43"
+          },
+          {
+            "id": "46"
+          },
+          {
+            "id": "48"
+          },
+          {
+            "id": "51"
+          },
+          {
+            "id": "53"
+          },
+          {
+            "id": "55"
+          },
+          {
+            "id": "56"
+          }
+        ],
+        "softwareSystemId": "4"
+      }
+    ]
   }
 }

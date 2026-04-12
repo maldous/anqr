@@ -314,7 +314,8 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
     }
 
     case "reset_to_main": {
-      const resetPath = worktreeId === "main" ? PROJECT_ROOT : getWorktreePath(worktreeId.replace(/^wt/, ""));
+      const resetPath =
+        worktreeId === "main" ? PROJECT_ROOT : getWorktreePath(worktreeId.replace(/^wt/, ""));
       try {
         execFileSync("git", ["fetch", "origin", "main"], {
           cwd: resetPath,

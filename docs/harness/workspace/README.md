@@ -40,4 +40,7 @@ Then point Structurizr at the repository root and verify:
 - ADRs load from `docs/adrs`
 - system context and container views render cleanly
 - labels and relationships reflect the current runtime
+
+```
+
 ```

@@ -70,7 +70,10 @@ export const server = http.createServer(async (req, res) => {
 
   try {
     const skipAuth =
-      req.url === "/health" || req.url === "/v1/models" || req.url === "/v1/providers" || req.url === "/v1/responses";
+      req.url === "/health" ||
+      req.url === "/v1/models" ||
+      req.url === "/v1/providers" ||
+      req.url === "/v1/responses";
     if (!skipAuth && !checkAuth(req)) {
       logWarn(`Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
@@ -279,7 +282,8 @@ export const server = http.createServer(async (req, res) => {
       }
 
       const messages = Array.isArray(body.messages) ? body.messages : undefined;
-      const sessionId = req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
+      const sessionId =
+        req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
       const worktreeId = req.headers["x-worktree-id"] || null;
       const correlationId = req.headers["x-anqr-correlation-id"] || null;
       const isSymphonyRunner = req.headers["x-symphony-origin"] === "runner";
@@ -739,20 +743,20 @@ export const server = http.createServer(async (req, res) => {
         // First, let credit-gate select the best provider (with session awareness)
         const selectedProvider = await selectProvider(buildSelectionOptions(route, [], sessionId));
 
-      logInfo(
-        `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
-      );
+        logInfo(
+          `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
+        );
 
-      if (correlationId && selectedProvider) {
-        try {
-          recordProviderSelection(correlationId, {
-            providerName: selectedProvider.name,
-            model: selectedProvider.model,
-          });
-        } catch {
-          /* best-effort evidence */
+        if (correlationId && selectedProvider) {
+          try {
+            recordProviderSelection(correlationId, {
+              providerName: selectedProvider.name,
+              model: selectedProvider.model,
+            });
+          } catch {
+            /* best-effort evidence */
+          }
         }
-      }
 
         const isSelectedCodebuff =
           selectedProvider?.driver === "codebuff-sdk" ||

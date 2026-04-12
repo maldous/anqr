@@ -1249,7 +1249,9 @@ export async function executeIssue(issue, dryRun = false) {
           passed: validation.passed,
           typecheckPassed: validation.results?.find((r) => r.check === "typecheck")?.pass ?? null,
           testsPassed: validation.results?.find((r) => r.check === "vitest")?.pass ?? null,
-          lintPassed: validation.results?.find((r) => r.check === "oxlint" || r.check === "lint")?.pass ?? null,
+          lintPassed:
+            validation.results?.find((r) => r.check === "oxlint" || r.check === "lint")?.pass ??
+            null,
           errors: validation.results?.filter((r) => !r.pass).map((r) => r.check) || [],
         });
       } catch {

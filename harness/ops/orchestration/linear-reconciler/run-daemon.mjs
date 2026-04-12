@@ -4,9 +4,7 @@ import { runReconciliationCycle } from "./run-reconciliation-cycle.mjs";
 import { logInfo, logError } from "./logger.mjs";
 
 export async function runDaemon() {
-  logInfo(
-    `Starting daemon mode (poll every ${RECONCILER_POLL_INTERVAL_MS / 1000}s)`,
-  );
+  logInfo(`Starting daemon mode (poll every ${RECONCILER_POLL_INTERVAL_MS / 1000}s)`);
 
   const shutdown = (signal) => {
     logInfo(`Received ${signal}, shutting down...`);

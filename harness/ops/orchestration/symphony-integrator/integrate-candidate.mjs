@@ -163,9 +163,7 @@ export async function integrateCandidate(issueIdentifier) {
         "",
         "### Changed files",
         ...changedFiles.slice(0, 20).map((f) => `- \`${f}\``),
-        ...(changedFiles.length > 20
-          ? [`- ... and ${changedFiles.length - 20} more`]
-          : []),
+        ...(changedFiles.length > 20 ? [`- ... and ${changedFiles.length - 20} more`] : []),
         "",
         "### Diff summary",
         "```",

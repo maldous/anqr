@@ -36,7 +36,8 @@ function sseEvent(res, eventType, data) {
  */
 function extractTextContent(content) {
   if (typeof content === "string") return content;
-  if (!Array.isArray(content)) return typeof content === "object" ? JSON.stringify(content) : String(content || "");
+  if (!Array.isArray(content))
+    return typeof content === "object" ? JSON.stringify(content) : String(content || "");
 
   return content
     .map((part) => {
@@ -95,7 +96,10 @@ function responsesInputToMessages(input, instructions) {
         type: "function",
         function: {
           name: item.name || "unknown",
-          arguments: typeof item.arguments === "string" ? item.arguments : JSON.stringify(item.arguments || {}),
+          arguments:
+            typeof item.arguments === "string"
+              ? item.arguments
+              : JSON.stringify(item.arguments || {}),
         },
       };
 
@@ -117,7 +121,8 @@ function responsesInputToMessages(input, instructions) {
 
     // ── function_call_output: convert to tool message ──
     if (itemType === "function_call_output") {
-      const output = typeof item.output === "string" ? item.output : JSON.stringify(item.output || "");
+      const output =
+        typeof item.output === "string" ? item.output : JSON.stringify(item.output || "");
       messages.push({
         role: "tool",
         tool_call_id: item.call_id || item.id || "",
@@ -182,7 +187,8 @@ function buildChatBody(messages, model, stream, body) {
   if (typeof body.temperature === "number") chatBody.temperature = body.temperature;
   if (typeof body.max_output_tokens === "number") chatBody.max_tokens = body.max_output_tokens;
   if (typeof body.top_p === "number") chatBody.top_p = body.top_p;
-  if (typeof body.parallel_tool_calls === "boolean") chatBody.parallel_tool_calls = body.parallel_tool_calls;
+  if (typeof body.parallel_tool_calls === "boolean")
+    chatBody.parallel_tool_calls = body.parallel_tool_calls;
 
   return chatBody;
 }
@@ -680,7 +686,11 @@ export async function handleResponsesApi(req, res) {
 
   if (input === undefined || input === null) {
     return sendJson(res, 400, {
-      error: { message: "Missing required field: input", type: "invalid_request_error", code: null },
+      error: {
+        message: "Missing required field: input",
+        type: "invalid_request_error",
+        code: null,
+      },
     });
   }
 
@@ -697,7 +707,9 @@ export async function handleResponsesApi(req, res) {
   }
 
   logInfo(`📨 Responses API: model=${model}, messages=${messages.length}, stream=${stream}`);
-  logDebug(`Responses API input: type=${typeof input}, isArray=${Array.isArray(input)}, tools=${body.tools?.length || 0}`);
+  logDebug(
+    `Responses API input: type=${typeof input}, isArray=${Array.isArray(input)}, tools=${body.tools?.length || 0}`,
+  );
 
   if (stream) {
     req.setTimeout(0);

@@ -81,15 +81,16 @@ Use `basher` only when there is an actual reason to delegate agent work. Do not 
 
 The project has three env file locations that must stay in sync. They are **empty templates in git** but **populated with real secrets on the host**:
 
-| System Location | Loaded By |
-|---|---|
-| `~/.config/systemd/user/anqr-ops.env` | All systemd services via `EnvironmentFile=` |
-| `~/.config/symphony/anqr.env` | Executor and router services via `EnvironmentFile=` |
-| `~/.openclaw/.env` | OpenClaw Gateway (reads from its own config dir) |
+| System Location                       | Loaded By                                           |
+| ------------------------------------- | --------------------------------------------------- |
+| `~/.config/systemd/user/anqr-ops.env` | All systemd services via `EnvironmentFile=`         |
+| `~/.config/symphony/anqr.env`         | Executor and router services via `EnvironmentFile=` |
+| `~/.openclaw/.env`                    | OpenClaw Gateway (reads from its own config dir)    |
 
 The repo template is `services/systemd/anqr-ops.env` — committed with empty values as a key inventory. Real secrets are never committed.
 
 Key tokens that must be present in all three:
+
 - `OPENCLAW_GATEWAY_TOKEN` — authenticates harness services with the OpenClaw Gateway (value from `~/.openclaw/openclaw.json` → `gateway.auth.token`)
 - `LINEAR_WEBHOOK_SECRET` — HMAC signature verification for Linear webhooks
 - All provider API keys (`GROQ_TOKEN`, `GEMINI_TOKEN`, `MISTRAL_TOKEN`, etc.)

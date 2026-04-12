@@ -11,10 +11,7 @@ const RUNTIME_FILES = [
   "harness/ops/orchestration/symphony-control/get-timer-status.mjs",
 ];
 
-const STALE_PATTERNS = [
-  "anqr-linear-runner@",
-  "anqr-queue-feeder",
-];
+const STALE_PATTERNS = ["anqr-linear-runner@", "anqr-queue-feeder"];
 
 describe("stale service reference audit", () => {
   for (const filePath of RUNTIME_FILES) {

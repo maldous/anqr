@@ -289,6 +289,7 @@ The `NODE_OPTIONS=""` override is critical: without it, sonar-scanner's internal
 ### Linear Runner (continuous, every 2 min)
 
 Linear processing is driven by two complementary services:
+
 - `anqr-linear-webhook.service` — receives webhook events from Linear (edge-triggered)
 - `anqr-linear-reconciler.service` — periodic backlog reconciliation every 90s (level-triggered)
 

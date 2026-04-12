@@ -324,6 +324,6 @@ describe("Worktree Concurrency Tests", () => {
   });
 });
 
-    const content1 = fs.readFileSync(TEST_FILE, "utf-8");
+const content1 = fs.readFileSync(TEST_FILE, "utf-8");
 
-    const content2 = fs.readFileSync(TEST_FILE, "utf-8");
+const content2 = fs.readFileSync(TEST_FILE, "utf-8");

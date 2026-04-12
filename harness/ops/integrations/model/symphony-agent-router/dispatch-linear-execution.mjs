@@ -51,7 +51,9 @@ export function dispatchLinearExecution(identifier, correlationId) {
 
   target.activeRequests += 1;
   setGlobalActiveRequests(globalActiveRequests + 1);
-  logInfo(`Linear trigger: ${identifier} -> wt${target.id} executor [${correlationId || "no-correlation"}]`);
+  logInfo(
+    `Linear trigger: ${identifier} -> wt${target.id} executor [${correlationId || "no-correlation"}]`,
+  );
 
   const proxyBody = JSON.stringify({ identifier, source: "linear-webhook" });
   const proxyReq = http.request(

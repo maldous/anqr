@@ -98,6 +98,18 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
     );
   }
 
+  // Apply cross-provider context budget cap from fallback chain.
+  // When a previous provider reported a hard context limit (e.g. 413 / context_length_exceeded),
+  // cap our budget so tool selection and message truncation fit within the known limit.
+  // This prevents the same oversized tool payload from failing on every fallback provider.
+  if (options.maxContextBudget && options.maxContextBudget < effectiveMax) {
+    const previousMax = effectiveMax;
+    effectiveMax = options.maxContextBudget;
+    logInfo(
+      `📉 Cross-provider context cap for ${provider.name}: ${previousMax} → ${effectiveMax} (fallback chain limit)`,
+    );
+  }
+
   // Select tools dynamically based on provider's FINAL context budget
   let activeTools = null;
   let activeToolCount = 0;

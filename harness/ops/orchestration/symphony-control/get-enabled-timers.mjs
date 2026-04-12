@@ -12,11 +12,9 @@ export function getEnabledTimers() {
   const enabled = [];
   for (const unit of LINEAR_SERVICES) {
     try {
-      const output = execFileSync(
-        "systemctl",
-        ["--user", "is-enabled", unit],
-        { encoding: "utf-8" },
-      ).trim();
+      const output = execFileSync("systemctl", ["--user", "is-enabled", unit], {
+        encoding: "utf-8",
+      }).trim();
       if (output === "enabled") enabled.push(unit);
     } catch {
       /* unit not enabled or not found */

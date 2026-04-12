@@ -10,7 +10,9 @@ describe("evidence-locked closure", () => {
   const source = readFileSync(INTEGRATE_PATH, "utf-8");
 
   it("imports recordIntegrationResult from task-evidence", () => {
-    expect(source).toContain('import { recordIntegrationResult } from "../../core/task-evidence.mjs"');
+    expect(source).toContain(
+      'import { recordIntegrationResult } from "../../core/task-evidence.mjs"',
+    );
   });
 
   it("posts evidence comment before closing the issue", () => {

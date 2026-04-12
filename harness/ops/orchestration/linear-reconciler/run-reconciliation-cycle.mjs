@@ -9,7 +9,11 @@ import {
   enqueueIntegrationCandidate,
   setGlobalValue,
 } from "../../symphony-state.mjs";
-import { QUEUE_STATES, TARGET_MIN, RECONCILER_DISPATCH_COOLDOWN_MS } from "../../symphony-config.mjs";
+import {
+  QUEUE_STATES,
+  TARGET_MIN,
+  RECONCILER_DISPATCH_COOLDOWN_MS,
+} from "../../symphony-config.mjs";
 import { isDiscordSourced } from "../../core/discord-source.mjs";
 
 import { getHealthyLinearCapacity } from "./get-healthy-linear-capacity.mjs";

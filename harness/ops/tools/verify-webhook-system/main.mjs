@@ -52,10 +52,7 @@ export async function main() {
   }
 
   // Check nightly timer
-  const timersToCheck = [
-    "anqr-nightly.timer",
-    "anqr-worktree-health.timer",
-  ];
+  const timersToCheck = ["anqr-nightly.timer", "anqr-worktree-health.timer"];
 
   const activeTimers = [];
   const inactiveTimers = [];
