@@ -317,44 +317,22 @@ const DIRECT_PROVIDERS = [
   { name: "sambanova", model: "Meta-Llama-3.3-70B-Instruct", envVar: "SAMBANOVA_TOKEN" },
   { name: "cerebras", model: "llama3.1-8b", envVar: "CEREBRAS_TOKEN" },
   { name: "github-models", model: "gpt-4.1-mini", envVar: "GITHUB_MODELS_TOKEN" },
+  { name: "codebuff-paid", model: "codebuff-paid", envVar: null },
+  { name: "codebuff-free", model: "codebuff-free", envVar: null },
+  { name: "huggingface", model: "huggingface-inference", envVar: "HUGGINGFACE_TOKEN" },
+  { name: "fireworks", model: "fireworks-inference", envVar: "FIREWORKS_TOKEN" },
+  { name: "together", model: "together-inference", envVar: "TOGETHER_TOKEN" },
 ];
 
-const OPENROUTER_PROVIDERS = [
-  { name: "openrouter-nemotron-super", model: "nvidia/nemotron-3-super-120b-a12b:free" },
-  { name: "openrouter-free", model: "openrouter/free" },
-  { name: "openrouter-nemotron-nano-30b", model: "nvidia/nemotron-3-nano-30b-a3b:free" },
-  { name: "openrouter-qwen3-next-80b", model: "qwen/qwen3-next-80b-a3b-instruct:free" },
-  { name: "openrouter-step3-5-flash", model: "stepfun/step-3.5-flash:free" },
-  { name: "openrouter-trinity-mini", model: "arcee-ai/trinity-mini:free" },
-  { name: "openrouter-nemotron-nano-9b", model: "nvidia/nemotron-nano-9b-v2:free" },
-  { name: "openrouter-minimax-m2.5", model: "minimax/minimax-m2.5:free" },
-  { name: "openrouter-qwen3-coder", model: "qwen/qwen3-coder:free" },
-  { name: "openrouter-lfm-2.5-thinking", model: "liquid/lfm-2.5-1.2b-thinking:free" },
-  { name: "openrouter-lfm-2.5-instruct", model: "liquid/lfm-2.5-1.2b-instruct:free" },
-  { name: "openrouter-nemotron-nano-12b-vl", model: "nvidia/nemotron-nano-12b-v2-vl:free" },
-  { name: "openrouter-trinity-large", model: "arcee-ai/trinity-large-preview:free" },
-  { name: "openrouter-mistral-small-3.1", model: "mistralai/mistral-small-3.1-24b-instruct:free" },
-  { name: "openrouter-llama-3.3-70b", model: "meta-llama/llama-3.3-70b-instruct:free" },
-  { name: "openrouter-qwen3-4b", model: "qwen/qwen3-4b:free" },
-  { name: "openrouter-gpt-oss-120b", model: "openai/gpt-oss-120b:free" },
-  { name: "openrouter-gpt-oss-20b", model: "openai/gpt-oss-20b:free" },
-  { name: "openrouter-llama-3.2-3b", model: "meta-llama/llama-3.2-3b-instruct:free" },
-  {
-    name: "openrouter-dolphin-mistral",
-    model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
-  },
-  { name: "openrouter-gemma-3-27b", model: "google/gemma-3-27b-it:free" },
-  { name: "openrouter-glm-4.5-air", model: "z-ai/glm-4.5-air:free" },
-  { name: "openrouter-gemma-3n-e2b", model: "google/gemma-3n-e2b-it:free" },
-  { name: "openrouter-gemma-3-4b", model: "google/gemma-3-4b-it:free" },
-  { name: "openrouter-gemma-3n-e4b", model: "google/gemma-3n-e4b-it:free" },
-  { name: "openrouter-gemma-3-12b", model: "google/gemma-3-12b-it:free" },
-  { name: "openrouter-hermes-3-405b", model: "nousresearch/hermes-3-llama-3.1-405b:free" },
-];
+// OpenRouter providers now use dynamic vendor-model naming (e.g.
+// "openrouter-nvidia-nemotron-3-super-120b-a12b-free") and there are hundreds
+// of them. We validate via the health endpoint instead of a hardcoded list.
+const MINIMUM_OPENROUTER_PROVIDERS = 20;
 
 const LOCAL_PROVIDERS = [
   { name: "ollama-qwen2.5-coder-3b", model: "qwen2.5-coder:3b-instruct" },
   { name: "ollama-qwen2.5-coder-0.5b", model: "qwen2.5-coder:0.5b" },
+  { name: "ollama-qwen3-coder-next", model: "qwen3-coder-next" },
 ];
 
 // Providers in the credit-gate but blocklisted by the bridge — they appear in
@@ -363,9 +341,10 @@ const LOCAL_PROVIDERS = [
 const BRIDGE_BLOCKLISTED_PROVIDERS = [{ name: "openclaw", model: "openclaw:main" }];
 
 // Providers the bridge actually exposes (excludes blocklisted)
+// Base provider names we expect in the bridge (excludes dynamically-named
+// openrouter sub-model variants which are validated separately)
 const ALL_EXPECTED_PROVIDER_NAMES = [
   ...DIRECT_PROVIDERS,
-  ...OPENROUTER_PROVIDERS,
   ...LOCAL_PROVIDERS,
 ].map((p) => p.name);
 
@@ -374,6 +353,8 @@ const EXPECTED_ROUTES = [
   "symphony/text",
   "symphony/codex",
   "symphony/codebuff",
+  "symphony/codebuff-paid",
+  "symphony/codebuff-free",
   "symphony/groq",
   "symphony/mistral",
   "symphony/gemini",
@@ -381,9 +362,14 @@ const EXPECTED_ROUTES = [
   "symphony/openrouter",
   "symphony/sambanova",
   "symphony/cerebras", // advertised but excluded by tool probe — see Tool-Capability Probe Validation tests
+  "symphony/github-models",
+  "symphony/huggingface",
+  "symphony/fireworks",
+  "symphony/together",
   "symphony/ollama-local",
   "symphony/ollama-qwen2.5-coder-3b",
   "symphony/ollama-qwen2.5-coder-0.5b",
+  "symphony/ollama-qwen3-coder-next",
 ];
 
 // Routes that target a single named provider (remote APIs with dedicated keys)
@@ -396,6 +382,10 @@ const REMOTE_API_ROUTES = [
   { route: "symphony/gemini", provider: "gemini" },
   { route: "symphony/gemini-lite", provider: "gemini-lite" },
   { route: "symphony/sambanova", provider: "sambanova" },
+  { route: "symphony/github-models", provider: "github-models" },
+  { route: "symphony/huggingface", provider: "huggingface" },
+  { route: "symphony/fireworks", provider: "fireworks" },
+  { route: "symphony/together", provider: "together" },
 ];
 
 // Routes that use heuristic selection or pools
@@ -418,6 +408,21 @@ const LOCAL_SERVICE_ROUTES = [
     route: "symphony/ollama-qwen2.5-coder-0.5b",
     provider: "ollama-qwen2.5-coder-0.5b",
     description: "Local Ollama (qwen2.5-coder 0.5B)",
+  },
+  {
+    route: "symphony/codebuff-paid",
+    provider: "codebuff-paid",
+    description: "Codebuff paid tier",
+  },
+  {
+    route: "symphony/codebuff-free",
+    provider: "codebuff-free",
+    description: "Codebuff free tier",
+  },
+  {
+    route: "symphony/ollama-qwen3-coder-next",
+    provider: "ollama-qwen3-coder-next",
+    description: "Local Ollama (qwen3-coder-next)",
   },
 ];
 
@@ -448,21 +453,35 @@ test.describe("Provider Inventory (requires running bridge)", () => {
     if (missing.length > 0) {
       console.log(`[openclaw-e2e] ⚠️  Missing providers: ${missing.join(", ")}`);
     }
-    if (unexpected.length > 0) {
+    // Filter unexpected to only flag truly unknown base providers — sub-model
+    // variants (e.g. "groq-llama-3-3-70b-versatile") are dynamically generated
+    // and validated separately via the openrouter/sub-model tests.
+    const baseProviderPrefixes = ALL_EXPECTED_PROVIDER_NAMES.map((n) => n + "-");
+    const trulyUnexpected = unexpected.filter(
+      (name: string) =>
+        !name.startsWith("openrouter-") &&
+        !baseProviderPrefixes.some((prefix) => name.startsWith(prefix)),
+    );
+    if (trulyUnexpected.length > 0) {
       console.log(
-        `[openclaw-e2e] ⚠️  Unexpected providers (add to test): ${unexpected.join(", ")}`,
+        `[openclaw-e2e] ⚠️  Unexpected base providers (add to test): ${trulyUnexpected.join(", ")}`,
+      );
+    }
+    if (unexpected.length > trulyUnexpected.length) {
+      console.log(
+        `[openclaw-e2e] ℹ️  ${unexpected.length - trulyUnexpected.length} additional sub-model variants configured`,
       );
     }
     console.log(
       `[openclaw-e2e] Provider inventory: ${configured.length} configured, ` +
-        `${ALL_EXPECTED_PROVIDER_NAMES.length} expected, ` +
-        `${missing.length} missing, ${unexpected.length} unexpected`,
+        `${ALL_EXPECTED_PROVIDER_NAMES.length} base expected, ` +
+        `${missing.length} missing, ${trulyUnexpected.length} unexpected base`,
     );
 
     expect(missing, `Providers missing from bridge: ${missing.join(", ")}`).toHaveLength(0);
     expect(
-      unexpected,
-      `Providers in bridge not in test — update the test: ${unexpected.join(", ")}`,
+      trulyUnexpected,
+      `Unknown base providers in bridge — update the test: ${trulyUnexpected.join(", ")}`,
     ).toHaveLength(0);
   });
 
@@ -544,7 +563,7 @@ test.describe("Provider Inventory (requires running bridge)", () => {
     ).toHaveLength(0);
   });
 
-  test("all openrouter providers report available", async () => {
+  test("openrouter providers report available", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
 
@@ -554,18 +573,18 @@ test.describe("Provider Inventory (requires running bridge)", () => {
     const data = await res.json();
     const providers: Array<{ name: string; available: boolean }> = data.configuredProviders ?? [];
 
-    const orNames = OPENROUTER_PROVIDERS.map((p) => p.name);
-    const configured = providers.filter((p) => orNames.includes(p.name));
-    const unavailable = configured.filter((p) => !p.available).map((p) => p.name);
+    const orProviders = providers.filter((p) => p.name.startsWith("openrouter-"));
+    const unavailable = orProviders.filter((p) => !p.available).map((p) => p.name);
 
     console.log(
-      `[openclaw-e2e] OpenRouter availability: ${configured.length - unavailable.length}/${orNames.length} available` +
-        (unavailable.length > 0 ? ` (unavailable: ${unavailable.join(", ")})` : ""),
+      `[openclaw-e2e] OpenRouter availability: ${orProviders.length - unavailable.length}/${orProviders.length} available` +
+        (unavailable.length > 0 ? ` (unavailable: ${unavailable.slice(0, 10).join(", ")})` : ""),
     );
 
-    expect(configured.length, "OpenRouter providers missing from bridge config").toBe(
-      orNames.length,
-    );
+    expect(
+      orProviders.length,
+      "OpenRouter providers should be configured",
+    ).toBeGreaterThanOrEqual(MINIMUM_OPENROUTER_PROVIDERS);
   });
 });
 
@@ -791,7 +810,6 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
 
-    const orNames = new Set(OPENROUTER_PROVIDERS.map((p) => p.name));
     const selectedProviders = new Set<string>();
     const attempts = 3;
     let transientCount = 0;
@@ -812,7 +830,7 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
       if (status === 200 && typeof data._symphony_provider === "string") {
         selectedProviders.add(data._symphony_provider);
         expect(
-          orNames.has(data._symphony_provider),
+          data._symphony_provider.startsWith("openrouter-"),
           `symphony/openrouter selected non-openrouter provider: ${data._symphony_provider}`,
         ).toBe(true);
       }
@@ -894,7 +912,7 @@ test.describe("Local & Special Service Routes (requires running bridge)", () => 
 test.describe("OpenRouter Model Coverage (requires running bridge)", () => {
   test.setTimeout(300_000);
 
-  test("all 27 openrouter models are in the configured provider list", async () => {
+  test("openrouter models are in the configured provider list", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
 
@@ -902,20 +920,19 @@ test.describe("OpenRouter Model Coverage (requires running bridge)", () => {
       signal: AbortSignal.timeout(5_000),
     });
     const data = await res.json();
-    const configured = (data.configuredProviders ?? []).map((p: { name: string }) => p.name);
+    const configured: string[] = (data.configuredProviders ?? []).map((p: { name: string }) => p.name);
 
-    const missing = OPENROUTER_PROVIDERS.filter((p) => !configured.includes(p.name));
+    const orConfigured = configured.filter((name) => name.startsWith("openrouter-"));
 
     console.log(
-      `[openclaw-e2e] OpenRouter models: ${OPENROUTER_PROVIDERS.length} expected, ` +
-        `${OPENROUTER_PROVIDERS.length - missing.length} configured` +
-        (missing.length > 0 ? `, missing: ${missing.map((p) => p.name).join(", ")}` : ""),
+      `[openclaw-e2e] OpenRouter models: ${orConfigured.length} configured ` +
+        `(minimum ${MINIMUM_OPENROUTER_PROVIDERS} expected)`,
     );
 
     expect(
-      missing,
-      `OpenRouter models missing: ${missing.map((p) => p.name).join(", ")}`,
-    ).toHaveLength(0);
+      orConfigured.length,
+      `Only ${orConfigured.length} openrouter providers configured, expected at least ${MINIMUM_OPENROUTER_PROVIDERS}`,
+    ).toBeGreaterThanOrEqual(MINIMUM_OPENROUTER_PROVIDERS);
   });
 
   test("openrouter models are exercised via pool route", async () => {
