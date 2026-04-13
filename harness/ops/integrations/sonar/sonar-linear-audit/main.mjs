@@ -18,6 +18,7 @@ import { SONAR_HOST } from "./sonar-host.mjs";
 import { SONAR_TOKEN } from "./sonar-token.mjs";
 import { CONSOLIDATED_ISSUE_TITLE } from "./consolidated-issue-title.mjs";
 import { resolveStaleLinearIssues } from "./resolve-stale-linear-issues.mjs";
+import { findOrCreateConsolidatedIssue } from "./find-or-create-consolidated-issue.mjs";
 import { logInfo, logError } from "./logger.mjs";
 
 export async function main() {
@@ -77,7 +78,7 @@ export async function main() {
 
   // Find or create the consolidated summary issue
   const existingSummary = await findOpenIssuesByTitle(CONSOLIDATED_ISSUE_TITLE);
-  const summaryIssue = existingSummary.length > 0 ? existingSummary[0] : null;
+  const summaryIssue = await findOrCreateConsolidatedIssue(existingSummary);
 
   // Create/update grouped issues for each rule
   const groupedIssueIds = [];
@@ -137,17 +138,7 @@ export async function main() {
       `**Dashboard:** ${SONAR_HOST}/dashboard?id=${PROJECT_KEY}`,
     ].join("\n");
 
-    if (summaryIssue) {
-      await updateIssue(summaryIssue.id, { description: summaryDesc, priority: 1 });
-    } else {
-      await createIssue({
-        title: CONSOLIDATED_ISSUE_TITLE,
-        description: summaryDesc,
-        priority: 1,
-        labelIds: [LABELS.harness],
-        stateId: STATES.todo,
-      });
-    }
+    await updateIssue(summaryIssue.id, { description: summaryDesc, priority: 1 });
 
     sendNotification({
       subject: `Nightly sonar: ${issues.length} issues (${ruleGroups.length} rules), ${hotspotCount} hotspots`,

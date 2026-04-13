@@ -32,7 +32,12 @@ export async function probeCodebuffDetailed(provider = {}, options = {}) {
   }
 
   const cwd = normalizeCwd(process.cwd());
-  const prompt = "Reply with exactly: ok";
+  // Realistic probe: use a longer prompt that tests actual model capability,
+  // not just connectivity. Short "ok" probes pass even under rate limits.
+  const prompt =
+    mode === "free"
+      ? "Write a single JavaScript function called 'add' that takes two numbers and returns their sum. Reply with only the function, no explanation."
+      : "Reply with exactly: ok";
   const timeout = createCodebuffProbeTimeout();
 
   try {

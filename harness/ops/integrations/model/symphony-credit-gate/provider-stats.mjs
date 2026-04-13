@@ -59,4 +59,13 @@ export const PROVIDER_STATS = {
   probeFailures: {},
   probeTotalDuration: {},
   probeAvgDuration: {},
+
+  // Context-size tracking (populated from provider catalogs and refreshed dynamically)
+  contextLength: {}, // current known context window (tokens) per provider
+  contextLengthUpdatedAt: {}, // timestamp of last context-size refresh per provider
+  contextLengthSource: {}, // "catalog" | "api" | "static" | "unknown" per provider
+
+  // Probe-vs-usage reliability (tracks gap between probe success and real usage success)
+  usageSuccesses: {}, // real usage succeeded (not just probe)
+  usageFailures: {}, // real usage failed after probe succeeded
 };

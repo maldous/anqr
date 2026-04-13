@@ -5,7 +5,17 @@
  * using mock health snapshots (no real worktrees needed).
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const inferOwnerFromBranchMock = vi.fn<(snapshot: unknown) => string | null>(() => null);
+
+vi.mock(
+  "../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs",
+  () => ({
+    inferOwnerFromBranch: (snapshot: unknown) => inferOwnerFromBranchMock(snapshot),
+  }),
+);
+
 import { classifyWorktree } from "../../harness/ops/orchestration/symphony-worktree-recovery.mjs";
 
 function makeSnapshot(overrides = {}) {
@@ -26,6 +36,10 @@ function makeSnapshot(overrides = {}) {
 }
 
 describe("classifyWorktree", () => {
+  beforeEach(() => {
+    inferOwnerFromBranchMock.mockReturnValue(null);
+  });
+
   it("should classify clean worktree as clean/skip", () => {
     const result = classifyWorktree(makeSnapshot());
     expect(result.classification).toBe("clean");
@@ -91,7 +105,7 @@ describe("classifyWorktree", () => {
       }),
     );
     expect(result.classification).toBe("dirty_orphaned");
-    expect(result.repairAction).toBe("quarantine");
+    expect(result.repairAction).toBe("auto_commit_and_push");
     expect(result.confidence).toBeLessThan(0.5);
   });
 

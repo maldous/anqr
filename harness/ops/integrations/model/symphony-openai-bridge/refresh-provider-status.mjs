@@ -1,4 +1,8 @@
-import { getConfiguredProviders, probeAllProviders } from "../symphony-credit-gate.mjs";
+import {
+  getConfiguredProviders,
+  probeAllProviders,
+  enrichProviderContextSizes,
+} from "../symphony-credit-gate.mjs";
 import { reloadProvidersFromCatalogCache } from "../symphony-credit-gate/providers.mjs";
 
 import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";
@@ -72,6 +76,13 @@ export async function refreshProviderStatus(options = {}) {
       reloadProvidersFromCatalogCache();
     } catch (catalogErr) {
       logInfo(`Provider catalog refresh skipped: ${catalogErr.message}`);
+    }
+
+    // Enrich context-length data from catalog cache + known static sizes
+    try {
+      await enrichProviderContextSizes();
+    } catch (ctxErr) {
+      logInfo(`Context-size enrichment skipped: ${ctxErr.message}`);
     }
 
     const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];

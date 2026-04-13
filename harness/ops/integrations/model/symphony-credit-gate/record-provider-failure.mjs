@@ -4,6 +4,8 @@ import { isNeverPurchasedCredits } from "./is-never-purchased-credits.mjs";
 import { isTransientProviderFailureType } from "./is-transient-provider-failure-type.mjs";
 import { loadFailures } from "./load-failures.mjs";
 import { saveFailures } from "./save-failures.mjs";
+import { loadStats } from "./load-stats.mjs";
+import { saveStats } from "./save-stats.mjs";
 
 export function recordProviderFailure(providerName, errorType = "unknown") {
   const failures = loadFailures();
@@ -18,4 +20,8 @@ export function recordProviderFailure(providerName, errorType = "unknown") {
   };
   saveFailures(failures);
   recordProviderHealthFailure(providerName, text);
+  // Track usage failure inline (separate stats file from failures file)
+  const stats = loadStats();
+  stats.usageFailures[providerName] = (stats.usageFailures[providerName] || 0) + 1;
+  saveStats(stats);
 }

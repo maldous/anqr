@@ -46,7 +46,8 @@ export function getRankedProviders(options = {}) {
     if (excludeNames && excludeNames.has(provider.name)) continue;
 
     const probeEntry = probeResults[provider.name] || getCachedProbeEntry(provider.name) || null;
-    if (probeEntry?.permanentSkip || shouldSkipProviderFromCache(probeEntry)) continue;
+    if (probeEntry?.permanentSkip || shouldSkipProviderFromCache(probeEntry, provider.name))
+      continue;
 
     if (!includeAvailable && !probeEntry) {
       continue;
@@ -67,6 +68,7 @@ export function getRankedProviders(options = {}) {
       tier,
       selections,
       toolConfirmed: isProviderToolConfirmed(probeEntry),
+      contextLength: stats.contextLength?.[provider.name] || provider.contextLength || null,
     };
 
     if (typeof effectiveScore === "number") {

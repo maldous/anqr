@@ -1,1 +1,1 @@
-export const DEDUP_WINDOW_MS = 60_000;
+export const DEDUP_WINDOW_MS = 60 * 60 * 1000;

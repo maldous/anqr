@@ -51,6 +51,8 @@ import { isDiscordWorktree } from "../../core/worktree-config.mjs";
 import { resolve } from "node:path";
 import { runAgent, continueAgent } from "../../symphony-agent.mjs";
 import { runValidation, formatValidationFeedback } from "../../symphony-validation.mjs";
+import { writePreValidationPatch } from "./write-pre-validation-patch.mjs";
+import { removeTempFile } from "./remove-temp-file.mjs";
 import { getQueueSnapshot } from "../../symphony-queue-control.mjs";
 import { sendDiscordEmbed } from "../../integrations/notifications/openclaw-discord.mjs";
 import { voiceAnnounce } from "../../integrations/model/symphony-openai-bridge/voice-announce.mjs";
@@ -1112,7 +1114,15 @@ export async function executeIssue(issue, dryRun = false) {
       }
     }
 
+    let preValidationPatchFile = null;
+    try {
+      preValidationPatchFile = writePreValidationPatch(changedFiles);
+    } catch {
+      /* best-effort snapshot */
+    }
+
     let validation = await runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
+
     let validationFixAttempts = 0;
     let previousSignature = validation.signature;
 
@@ -1207,6 +1217,7 @@ export async function executeIssue(issue, dryRun = false) {
 
     // Lease check after validation fixes
     if (!leaseValid) {
+      removeTempFile(preValidationPatchFile);
       logWarn(`[runner] Lease lost during validation fixes of ${issue.identifier} — aborting`);
       gitRevert();
       recordTransition(issue.identifier, {
@@ -1242,6 +1253,9 @@ export async function executeIssue(issue, dryRun = false) {
       });
       return "done";
     }
+
+    // Clean up pre-validation patch file now that validation loop is done
+    removeTempFile(preValidationPatchFile);
 
     if (correlationId) {
       try {

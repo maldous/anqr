@@ -2,6 +2,7 @@ import { PROVIDERS } from "./providers.mjs";
 import { TIER_FREE_CLOUD } from "./tier-free-cloud.mjs";
 import { getProviderTier } from "./get-provider-tier.mjs";
 import { loadStats } from "./load-stats.mjs";
+import { getProbeUsageReliability } from "./record-probe-usage-reliability.mjs";
 
 export function getProviderStats(options = {}) {
   const includeAllProviders = options.includeAllProviders !== false;
@@ -122,6 +123,18 @@ export function getProviderStats(options = {}) {
 
       // Score
       score: stats.score[name] === null ? "pending" : stats.score[name], // null = not enough data
+
+      // Context-size tracking
+      contextLength: stats.contextLength?.[name] || null,
+      contextLengthSource: stats.contextLengthSource?.[name] || "unknown",
+      contextLengthK: stats.contextLength?.[name]
+        ? Math.round(stats.contextLength[name] / 1024)
+        : null,
+
+      // Probe-vs-usage reliability
+      probeUsageReliability: getProbeUsageReliability(name),
+      usageSuccesses: stats.usageSuccesses?.[name] || 0,
+      usageFailures: stats.usageFailures?.[name] || 0,
 
       // Probe metrics (separate from runtime)
       probeSelections: probeSelected,

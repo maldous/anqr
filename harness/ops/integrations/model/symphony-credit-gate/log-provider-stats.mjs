@@ -14,12 +14,15 @@ export function logProviderStats(options = {}) {
     excludeSet = new Set(options.excludeNames);
   }
 
-  logInfo(`📊 Provider Rankings (dynamic scoring):`);
+  logInfo(`📊 Provider Rankings (dynamic scoring with context-awareness):`);
   if (ranked.length > 0) {
     for (const { rank, name, score, tier } of ranked) {
       const data = stats[name];
+      const ctxLen = data?.contextLength || "?";
+      const ctxLabel = ctxLen !== "?" && ctxLen > 0 ? `${Math.round(ctxLen / 1024)}K` : "?";
+      const reliability = data?.probeUsageReliability ?? "?";
       logInfo(
-        `  #${rank} ${name} [${tier}]: score=${score}, ${data.selections} sel, ${data.successRate} success, ${data.avgDurationMs}ms avg`,
+        `  #${rank} ${name} [${tier}]: score=${score}, ${data.selections} sel, ${data.successRate} success, ${data.avgDurationMs}ms avg, ctx=${ctxLabel}, reliability=${reliability}`,
       );
     }
   } else {

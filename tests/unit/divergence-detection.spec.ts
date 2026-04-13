@@ -12,7 +12,7 @@ const CLASSIFY_PATH = resolve(
   "harness/ops/orchestration/symphony-worktree-recovery/classify-worktree.mjs",
 );
 const REPAIR_PATH = resolve(
-  "harness/ops/orchestration/symphony-worktree-recovery/execute-repair.mjs",
+  "harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs",
 );
 
 describe("divergence detection", () => {

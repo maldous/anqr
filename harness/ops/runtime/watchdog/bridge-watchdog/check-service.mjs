@@ -8,6 +8,7 @@ import { detectRapidRestarts } from "./detect-rapid-restarts.mjs";
 import { getServiceJournal } from "./get-service-journal.mjs";
 import { getServicePID } from "./get-service-pid.mjs";
 import { getServiceStatus } from "./get-service-status.mjs";
+import { getServiceActiveTime } from "./get-service-active-time.mjs";
 import { isTransientError } from "./is-transient-error.mjs";
 import { rapidRestartHistory } from "./rapid-restart-history.mjs";
 import { restartTimestamps } from "./restart-timestamps.mjs";
@@ -125,8 +126,11 @@ export async function checkService(service) {
   // If service is active, do a health check to verify it's actually working
   if (status === "active") {
     const health = await checkHealthEndpoint(service);
+    const activeSince = getServiceActiveTime(serviceName);
     if (!health.healthy) {
-      logWarn(`[watchdog] ⚠️ ${shortName}: Service active but unhealthy: ${health.reason}`);
+      logWarn(
+        `[watchdog] ⚠️ ${shortName}: Service active but unhealthy: ${health.reason}${activeSince ? ` (active since ${activeSince.toISOString()})` : ""}`,
+      );
       // Not rolling back immediately - give it time to recover
       // But log it for visibility
     } else {

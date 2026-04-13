@@ -2,7 +2,7 @@
 
 ## 1. Directory Overview
 
-This directory implements **ANQR Sonar-Linear Audit** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 11 non-README files and 0 subdirectories.
+This directory implements **ANQR Sonar-Linear Audit** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 10 non-README files and 0 subdirectories.
 
 ## 2. File Summaries
 
@@ -10,7 +10,7 @@ This directory implements **ANQR Sonar-Linear Audit** within the ANQR harness. T
 
 - **consolidated-issue-title.mjs** - Exports `CONSOLIDATED_ISSUE_TITLE`, a shared constant used by sibling modules.
 - **find-or-create-consolidated-issue.mjs** - Exports `findOrCreateConsolidatedIssue`, which finds or create consolidated issue.
-- **index.mjs** - Facade module that re-exports public members from `./sonar-token.mjs`, `./sonar-host.mjs`, `./project-key.mjs`, `./consolidated-issue-title.mjs`, `./resolve-stale-linear-issues.mjs`, `./find-or-create-consolidated-issue.mjs`, and 2 more siblings.
+- **index.mjs** - Facade module that re-exports public members from `./sonar-token.mjs`, `./sonar-host.mjs`, `./project-key.mjs`, `./consolidated-issue-title.mjs`, `./resolve-stale-linear-issues.mjs`, `./find-or-create-consolidated-issue.mjs`, and 1 more sibling.
 - **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`.
 - **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
 - **project-key.mjs** - Exports `PROJECT_KEY`, a shared constant used by sibling modules.
@@ -18,7 +18,6 @@ This directory implements **ANQR Sonar-Linear Audit** within the ANQR harness. T
 - **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
 - **sonar-host.mjs** - Exports `SONAR_HOST`, a shared constant used by sibling modules.
 - **sonar-token.mjs** - Exports `SONAR_TOKEN`, a shared constant used by sibling modules.
-- **update-consolidated-issue.mjs** - Exports `updateConsolidatedIssue`, which implements update consolidated issue.
 
 ## 3. Overall Directory Function
 

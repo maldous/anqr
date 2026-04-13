@@ -12,10 +12,19 @@ describe("getHealthyLinearCapacity", () => {
   });
 
   it("normalizes expanded worktree health classifications", () => {
-    const source = readFileSync(
-      resolve("harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity.mjs"),
+    const mainSource = readFileSync(
+      resolve(
+        "harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity/get-healthy-linear-capacity.mjs",
+      ),
       "utf-8",
     );
+    const normalizeSource = readFileSync(
+      resolve(
+        "harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity/normalize-worktree-state.mjs",
+      ),
+      "utf-8",
+    );
+    const source = mainSource + normalizeSource;
 
     expect(source).toContain("DIRTY_REPAIRABLE");
     expect(source).toContain("INTEGRATION_BLOCKED");
@@ -25,7 +34,9 @@ describe("getHealthyLinearCapacity", () => {
 
 describe("selectLinearWorktree health-aware dispatch", () => {
   const source = readFileSync(
-    resolve("harness/ops/integrations/model/symphony-agent-router/select-linear-worktree.mjs"),
+    resolve(
+      "harness/ops/integrations/model/symphony-agent-router/select-linear-worktree/select-linear-worktree.mjs",
+    ),
     "utf-8",
   );
 

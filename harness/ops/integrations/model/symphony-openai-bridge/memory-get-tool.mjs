@@ -5,7 +5,13 @@ import { getCurrentRequestCwd } from "./get-current-request-cwd.mjs";
 import { resolveRequestPath } from "./resolve-request-path.mjs";
 import { logError } from "./logger.mjs";
 
-export async function memoryGetTool({ file, path: pathAlias, from: fromLine, lines: lineCount }) {
+/** @param {{ file?: string, path?: string, from?: number, lines?: number }} params */
+export async function memoryGetTool({
+  file,
+  path: pathAlias,
+  from: fromLine,
+  lines: lineCount,
+} = {}) {
   try {
     const validFiles = ["MEMORY.md", "knowledge.md", "CLAUDE.md"];
 

@@ -59,3 +59,7 @@ export { saveProbeResult } from "./save-probe-result.mjs";
 export { isRecentlyProbed } from "./is-recently-probed.mjs";
 export { tryProvider } from "./try-provider.mjs";
 export { selectProvider } from "./select-provider.mjs";
+export { enrichProviderContextSizes } from "./enrich-provider-context-sizes.mjs";
+export { isStaleQuotaExhausted } from "./is-stale-quota-exhausted.mjs";
+export { isChronicProbeFailure } from "./is-chronic-probe-failure.mjs";
+export { getProbeUsageReliability } from "./record-probe-usage-reliability.mjs";

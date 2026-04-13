@@ -8,6 +8,8 @@ export function recordProviderSuccess(providerName) {
   const stats = loadStats();
   stats.successes[providerName] = (stats.successes[providerName] || 0) + 1;
   stats.lastSuccess[providerName] = Date.now();
+  // Batch usage tracking into same save (avoids double loadStats/saveStats)
+  stats.usageSuccesses[providerName] = (stats.usageSuccesses[providerName] || 0) + 1;
   saveStats(stats);
   recordProviderHealthSuccess(providerName);
   const gatewayKey = providerGatewayKey({ name: providerName });

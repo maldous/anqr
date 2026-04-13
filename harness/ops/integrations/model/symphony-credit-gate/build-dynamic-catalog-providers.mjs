@@ -87,7 +87,7 @@ export function buildDynamicCatalogProviders(staticProviders) {
     if (!hasConfiguredCredentials(provider)) continue;
 
     const baseProbeEntry = getCachedProbeEntry(provider.name);
-    if (shouldSkipProviderFromCache(baseProbeEntry)) continue;
+    if (shouldSkipProviderFromCache(baseProbeEntry, provider.name)) continue;
 
     const eligibleRows = rows.filter(isEligibleCatalogRow).sort(sortCatalogRows);
 

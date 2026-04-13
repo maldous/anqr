@@ -20,7 +20,7 @@ export async function tryProvider(provider) {
   });
 
   const cached = isRecentlyProbed(provider.name);
-  if (cached?.permanentSkip || shouldSkipProviderFromCache(cached)) {
+  if (cached?.permanentSkip || shouldSkipProviderFromCache(cached, provider.name)) {
     logDebug(`${provider.name}: skipped (durable cache skip)`, { providerName: provider.name });
     return null;
   }

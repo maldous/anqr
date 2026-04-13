@@ -45,12 +45,12 @@ describe("Worktree Concurrency Tests", () => {
   describe("Worktree Creation and Isolation", () => {
     it("should create a worktree with unique path and branch", () => {
       const id = testWorktreeIds[0];
-      const path = createWorktree(tempId);
+      const path = createWorktree(id);
 
       expect(existsSync(path)).toBe(true);
 
       // Remove it
-      removeWorktree(tempId);
+      removeWorktree(id);
 
       expect(existsSync(path)).toBe(false);
 
@@ -63,7 +63,7 @@ describe("Worktree Concurrency Tests", () => {
 
     it("should create multiple independent worktrees", () => {
       const id = testWorktreeIds[0];
-      const path = createWorktree(tempId);
+      const path = createWorktree(id);
       createdWorktrees.push(id);
 
       expect(existsSync(path)).toBe(true);
@@ -77,7 +77,7 @@ describe("Worktree Concurrency Tests", () => {
     });
 
     it("should have isolated working directories", () => {
-      const wt1Path = getWorktreePath(testWorktreeIds[0]);
+      const wt1Branch = getWorktreeBranch(testWorktreeIds[0]);
       const wt2Path = getWorktreePath(testWorktreeIds[1]);
 
       expect(() => {
@@ -89,10 +89,9 @@ describe("Worktree Concurrency Tests", () => {
     });
 
     it("should allow independent HEAD positions", () => {
-      const wt1Path = getWorktreePath(testWorktreeIds[0]);
       const wt2Path = getWorktreePath(testWorktreeIds[1]);
 
-      const wt1GitFile = resolve(wt1Path, ".git");
+      const wt1GitFile = resolve(getWorktreePath(testWorktreeIds[0]), ".git");
       const wt2GitFile = resolve(wt2Path, ".git");
 
       expect(existsSync(wt1GitFile)).toBe(true);
@@ -323,7 +322,3 @@ describe("Worktree Concurrency Tests", () => {
     });
   });
 });
-
-const content1 = fs.readFileSync(TEST_FILE, "utf-8");
-
-const content2 = fs.readFileSync(TEST_FILE, "utf-8");

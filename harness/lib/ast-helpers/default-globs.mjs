@@ -4,4 +4,7 @@ export const DEFAULT_GLOBS = [
   "!**/.git/**",
   "!**/dist/**",
   "!**/coverage/**",
+  "!**/*.test.*",
+  "!**/*.spec.*",
+  "!tests/**",
 ];

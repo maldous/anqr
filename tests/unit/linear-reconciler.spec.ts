@@ -27,7 +27,12 @@ describe("computeReconciliationActions", () => {
     const result = computeReconciliationActions({
       capacity: makeCapacity(4, 2),
       queueSnapshot: makeSnap(2),
-      eligibleTodoIssues: [makeIssue("ANQ-1"), makeIssue("ANQ-2"), makeIssue("ANQ-3"), makeIssue("ANQ-4")],
+      eligibleTodoIssues: [
+        makeIssue("ANQ-1"),
+        makeIssue("ANQ-2"),
+        makeIssue("ANQ-3"),
+        makeIssue("ANQ-4"),
+      ],
       activeLeases: new Set(),
       integrationCandidates: [],
       finalizationStates: {},
