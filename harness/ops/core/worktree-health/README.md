@@ -1,39 +1,30 @@
-# ANQR Worktree Health
+# Worktree Health
 
-## 1. Directory Overview
+## Purpose
+Directory for git worktree management and concurrency support; immediate files include `all-worktree-ids.mjs`, `get-current-branch.mjs`, `get-fleet-inventory.mjs`, `get-git-dirty-files.mjs`, and others.
 
-This directory implements **ANQR Worktree Health** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 10 non-README files and 0 subdirectories.
+## Contents
+- 10 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `all-worktree-ids.mjs` - Exports `ALL_WORKTREE_IDS`, a shared constant or state value used by sibling modules.
+- `get-current-branch.mjs` - Exports `getCurrentBranch`, the main helper defined in this file.
+- `get-fleet-inventory.mjs` - Exports `getFleetInventory`, the main helper defined in this file.
+- `get-git-dirty-files.mjs` - Exports `getGitDirtyFiles`, the main helper defined in this file.
+- `get-head-sha.mjs` - Exports `getHeadSha`, the main helper defined in this file.
+- `get-worktree-health-snapshot.mjs` - Exports `getWorktreeHealthSnapshot`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `write-fleet-health-file.mjs` - Exports `writeFleetHealthFile`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **all-worktree-ids.mjs** - Exports `ALL_WORKTREE_IDS`, a shared constant used by sibling modules.
-- **get-current-branch.mjs** - Exports `getCurrentBranch`, which gets current branch.
-- **get-fleet-inventory.mjs** - Exports `getFleetInventory`, which gets fleet inventory.
-- **get-git-dirty-files.mjs** - Exports `getGitDirtyFiles`, which gets git dirty files.
-- **get-head-sha.mjs** - Exports `getHeadSha`, which gets head sha.
-- **get-worktree-health-snapshot.mjs** - Exports `getWorktreeHealthSnapshot`, which gets worktree health snapshot.
-- **index.mjs** - Facade module that re-exports public members from `./all-worktree-ids.mjs`, `./get-git-dirty-files.mjs`, `./get-current-branch.mjs`, `./get-head-sha.mjs`, `./get-worktree-health-snapshot.mjs`, `./get-fleet-inventory.mjs`, and 1 more siblings.
-- **logger.mjs** - Shared logging helper module exporting `logInfo`.
-- **runtime.mjs** - Executable runtime entry point for this directory.
-- **write-fleet-health-file.mjs** - Exports `writeFleetHealthFile`, which writes fleet health file.
+## Operational Notes
+- Current on-disk inventory: 10 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Discord integration, Symphony integration, and git/worktree awareness.
-
-## 4. Usage Instructions
-
-```bash
-node ops/core/worktree-health/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:child_process`, `node:fs`, `node:path`
-- **Internal relative modules** - `../../lib/logger.mjs`, `../symphony-state.mjs`, `../worktree-config.mjs`, `./all-worktree-ids.mjs`, `./get-current-branch.mjs`, `./get-fleet-inventory.mjs`, `./get-git-dirty-files.mjs`, `./get-head-sha.mjs`, `./get-worktree-health-snapshot.mjs`, `./index.mjs`, `./logger.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

@@ -1,75 +1,55 @@
-# ANQR Model Integrations
+# Model
 
-## 1. Directory Overview
+## Purpose
+Directory for Discord ingress, delivery, or notification support; immediate files include `codebuff-cwd-isolation.spec.ts`, `codebuff-direct.mjs`, `codebuff-sdk-runner.mjs`, `discord-request-router.mjs`, and others, with child directories `codebuff-direct/`, `discord-request-router/`, `linear-webhook-receiver/`, `ollama-local-audit/`, and others.
 
-This directory implements **ANQR Model Integrations** within the ANQR harness. Key immediate entries include `symphony-openai-bridge-routing-edge-cases.spec.ts`, `symphony-openai-bridge-normalization.spec.ts`, `symphony-adaptive-context.spec.ts`, `symphony-session-state.spec.ts`. Linear issue execution now routes through the worktree executor HTTP surface instead of spawning legacy runner entrypoints. The current inventory is 24 non-README files and 11 subdirectories.
+## Contents
+- 25 immediate files
+- 11 child directories
 
-## 2. File Summaries
+## Key Files
+- `codebuff-cwd-isolation.spec.ts` - *
+- `codebuff-direct.mjs` - JavaScript/TypeScript module used by this directory.
+- `codebuff-sdk-runner.mjs` - Exports `PROJECT_ROOT`, a shared constant or state value used by sibling modules.
+- `discord-request-router.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-webhook-receiver.mjs` - JavaScript/TypeScript module used by this directory.
+- `litellm-config.yaml` - Support file used by this directory.
+- `model-injector-proxy.py` - Python script used by this directory.
+- `ollama-local-audit.mjs` - JavaScript/TypeScript module used by this directory.
+- `set-max-listeners.mjs` - Must be the first import in bridge entry points.
+- `startup-probe-bootstrap-mode.spec.ts` - JavaScript/TypeScript module used by this directory.
+- `symphony-adaptive-context.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-adaptive-context.spec.ts` - *
+- `symphony-agent-router.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-bridge-truncation.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-bridge-truncation.spec.ts` - @ts-ignore - No type declarations for .mjs module
+- `symphony-credit-gate.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-credit-gate.spec.ts` - *
+- `symphony-openai-bridge-fallback.spec.ts` - *
+- `symphony-openai-bridge-normalization.spec.ts` - *
+- `symphony-openai-bridge-routing-edge-cases.spec.ts` - Virtual file system for node:fs mock — tracks writes so reads return stored data
+- `symphony-openai-bridge.d.ts` - Type declaration file for the sibling module surface.
+- `symphony-openai-bridge.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-provider-health.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-session-state.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-session-state.spec.ts` - *
 
-### Files
+## Subdirectories
+- `codebuff-direct/` - Directory for operator tooling and diagnostics; immediate files include `build-prompt.mjs`, `codebuff-max-continuations.mjs`, `codebuff-max-steps.mjs`, `codebuff-model-id.mjs`, and others.
+- `discord-request-router/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `evict-expired-sessions.mjs`, `generate-thread-name.mjs`, `get-least-loaded-worktree.mjs`, `get-session-thread-name.mjs`, and others.
+- `linear-webhook-receiver/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `active-issues.mjs`, `dedup-window-ms.mjs`, `handle-health.mjs`, `handle-webhook.mjs`, and others.
+- `ollama-local-audit/` - Directory for runtime service bootstrap or environment support; immediate files include `check-model-available.mjs`, `check-model-responds.mjs`, `check-reachable.mjs`, `index.mjs`, and others.
+- `symphony-adaptive-context/` - Directory for operator tooling and diagnostics; immediate files include `classify-error.mjs`, `context-expand-factor.mjs`, `context-expand-threshold.mjs`, `context-initial-buffer.mjs`, and others.
+- `symphony-agent-router/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `dispatch-linear-execution.mjs`, `global-active-requests.mjs`, `handle-linear-queue.mjs`, `handle-linear-trigger.mjs`, and others, with child directories `select-linear-worktree/`.
+- `symphony-bridge-truncation/` - Directory for operator tooling and diagnostics; immediate files include `build-dynamic-catalog-limits.mjs`, `build-provider-max-input-tokens.mjs`, `chars-per-token.mjs`, `default-max-input-tokens.mjs`, and others.
+- `symphony-credit-gate/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `acquire-provider-lease.mjs`, `build-dynamic-catalog-providers.mjs`, `build-provider-probe-failure-breakdown.mjs`, `build-provider-probe-markdown.mjs`, and others, with child directories `calculate-provider-score/`, `enrich-provider-context-sizes/`, `get-provider-bootstrap-score/`.
+- `symphony-openai-bridge/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `active-requests.mjs`, `add-message-tool.mjs`, `add-subgoal-tool.mjs`, `additional-tokens.mjs`, and others, with child directories `build-selection-options/`, `handle-responses-api/`.
+- `symphony-provider-health/` - Directory for harness support logic; immediate files include `get-provider-health-state.mjs`, `health-state-file.mjs`, `health-states.mjs`, `index.mjs`, and others.
+- `symphony-session-state/` - Directory for harness support logic; immediate files include `adaptive-params-file.mjs`, `cleanup-expired-sessions.mjs`, `clear-session-messages.mjs`, `clear-session-provider.mjs`, and others.
 
-- **codebuff-cwd-isolation.spec.ts** - Module that implements codebuff cwd isolation.spec.
-- **codebuff-direct.mjs** - Facade module that re-exports public members from `./codebuff-direct/index.mjs`.
-- **codebuff-sdk-runner.mjs** - Exports `PROJECT_ROOT`, `REPORTS_DIR`, providing the reusable API for this directory concern.
-- **discord-request-router.mjs** - Facade module that re-exports public members from `./discord-request-router/index.mjs`, `./discord-request-router/runtime.mjs`.
-- **linear-webhook-receiver.mjs** - Facade module that re-exports public members from `./linear-webhook-receiver/index.mjs`, `./linear-webhook-receiver/runtime.mjs`.
-- **litellm-config.yaml** - YAML configuration file used by adjacent runtime or tooling modules.
-- **model-injector-proxy.py** - Python script defining `log()`, `check_ollama_health()`, `log_message()`, `_send_json()`, `do_GET()`, `do_POST()`.
-- **ollama-local-audit.mjs** - Facade module that re-exports public members from `./ollama-local-audit/index.mjs`, `./ollama-local-audit/runtime.mjs`.
-- **set-max-listeners.mjs** - Module that implements set max listeners.
-- **symphony-adaptive-context.mjs** - Facade module that re-exports public members from `./symphony-adaptive-context/index.mjs`.
-- **symphony-adaptive-context.spec.ts** - Module that implements symphony adaptive context.spec.
-- **symphony-agent-router.mjs** - Facade module that re-exports public members from `./symphony-agent-router/index.mjs`, `./symphony-agent-router/runtime.mjs`.
-- **symphony-bridge-truncation.mjs** - Facade module that re-exports public members from `./symphony-bridge-truncation/index.mjs`.
-- **symphony-bridge-truncation.spec.ts** - Module that implements symphony bridge truncation.spec.
-- **symphony-credit-gate.mjs** - Facade module that re-exports public members from `./symphony-credit-gate/index.mjs`.
-- **symphony-credit-gate.spec.ts** - Module that implements symphony credit gate.spec.
-- **symphony-openai-bridge-fallback.spec.ts** - Module that implements symphony openai bridge fallback.spec.
-- **symphony-openai-bridge-normalization.spec.ts** - Module that implements symphony openai bridge normalization.spec.
-- **symphony-openai-bridge-routing-edge-cases.spec.ts** - Module that implements symphony openai bridge routing edge cases.spec.
-- **symphony-openai-bridge.d.ts** - Module that implements symphony openai bridge.d.
-- **symphony-openai-bridge.mjs** - Facade module that re-exports public members from `./symphony-openai-bridge/index.mjs`, `./symphony-openai-bridge/runtime.mjs`.
-- **symphony-provider-health.mjs** - Facade module that re-exports public members from `./symphony-provider-health/index.mjs`.
-- **symphony-session-state.mjs** - Facade module that re-exports public members from `./symphony-session-state/index.mjs`.
-- **symphony-session-state.spec.ts** - Module that implements symphony session state.spec.
+## Operational Notes
+- Current on-disk inventory: 25 immediate files and 11 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **codebuff-direct/** - Contains **ANQR Codebuff Direct**; it contains 27 immediate files and has 0 child directories.
-- **discord-request-router/** - Contains **ANQR Discord Request Router**; it contains 22 immediate files and has 0 child directories.
-- **linear-webhook-receiver/** - Contains **ANQR Linear Webhook Receiver**; it contains 16 immediate files and has 0 child directories.
-- **ollama-local-audit/** - Contains **ANQR Ollama Local Audit**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **symphony-adaptive-context/** - Contains **ANQR Symphony Adaptive Context**; it contains 48 immediate files and has 0 child directories.
-- **symphony-agent-router/** - Contains **ANQR Symphony Agent Router**; it contains 24 immediate files and has 0 child directories.
-- **symphony-bridge-truncation/** - Contains **ANQR Symphony Bridge Truncation**; it contains 19 immediate files and has 0 child directories.
-- **symphony-credit-gate/** - Contains **ANQR Symphony Credit Gate**; it contains 154 immediate files and has 0 child directories.
-- **symphony-openai-bridge/** - Contains **ANQR Symphony OpenAI Bridge**; it contains 185 immediate files and has 0 child directories.
-- **symphony-provider-health/** - Contains **ANQR Symphony Provider Health**; it contains 13 immediate files and has 0 child directories.
-- **symphony-session-state/** - Contains **ANQR Symphony Session State**; it contains 34 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, network/API integration, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Discord integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-npx tsx ops/integrations/model/codebuff-cwd-isolation.spec.ts
-python3 ops/integrations/model/model-injector-proxy.py
-npx tsx ops/integrations/model/symphony-adaptive-context.spec.ts
-npx tsx ops/integrations/model/symphony-bridge-truncation.spec.ts
-npx tsx ops/integrations/model/symphony-credit-gate.spec.ts
-npx tsx ops/integrations/model/symphony-openai-bridge-fallback.spec.ts
-npx tsx ops/integrations/model/symphony-openai-bridge-normalization.spec.ts
-npx tsx ops/integrations/model/symphony-openai-bridge-routing-edge-cases.spec.ts
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:fs`, `node:path`, `node:url`
-- **External packages/services referenced in immediate code** - `vitest`, `zod`
-- **Internal relative modules** - `./codebuff-direct/index.mjs`, `./discord-request-router/index.mjs`, `./discord-request-router/runtime.mjs`, `./linear-webhook-receiver/index.mjs`, `./linear-webhook-receiver/runtime.mjs`, `./ollama-local-audit/index.mjs`, `./ollama-local-audit/runtime.mjs`, `./symphony-adaptive-context/index.mjs`, `./symphony-agent-router/index.mjs`, `./symphony-agent-router/runtime.mjs`, `./symphony-bridge-truncation.mjs`, `./symphony-bridge-truncation/index.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

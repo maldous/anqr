@@ -1,57 +1,41 @@
-# ANQR Symphony Worktree Pool
+# Symphony Worktree Pool
 
-## 1. Directory Overview
+## Purpose
+Utility surface for creating, listing, repairing, reprovisioning, and removing the git worktree fleet used by the concurrent executor pool.
 
-This directory implements **ANQR Symphony Worktree Pool** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 21 non-README files and 0 subdirectories.
+## Contents
+- 21 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `cleanup-worktree-pool.d.ts` - Type declaration file for the sibling module surface.
+- `cleanup-worktree-pool.mjs` - Exports `cleanupWorktreePool`, the main helper defined in this file.
+- `create-worktree.d.ts` - Type declaration file for the sibling module surface.
+- `create-worktree.mjs` - Exports `createWorktree`, the main helper defined in this file.
+- `get-symphony-worktrees.d.ts` - Type declaration file for the sibling module surface.
+- `get-symphony-worktrees.mjs` - Exports `getSymphonyWorktrees`, the main helper defined in this file.
+- `index.d.ts` - Type declaration file for the sibling module surface.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `init-worktree-pool.d.ts` - Type declaration file for the sibling module surface.
+- `init-worktree-pool.mjs` - Exports `initWorktreePool`, the main helper defined in this file.
+- `list-worktrees.d.ts` - Type declaration file for the sibling module surface.
+- `list-worktrees.mjs` - Exports `listWorktrees`, the main helper defined in this file.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `print-worktree-status.d.ts` - Type declaration file for the sibling module surface.
+- `print-worktree-status.mjs` - Exports `printWorktreeStatus`, the main helper defined in this file.
+- `remove-worktree.d.ts` - Type declaration file for the sibling module surface.
+- `remove-worktree.mjs` - Exports `removeWorktree`, the main helper defined in this file.
+- `repair-worktrees.d.ts` - Type declaration file for the sibling module surface.
+- `repair-worktrees.mjs` - Exports `repairWorktrees`, the main helper defined in this file.
+- `reprovision-worktree.mjs` - Exports `reprovisionWorktree`, the main helper defined in this file.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **cleanup-worktree-pool.d.ts** - Exports `cleanupWorktreePool`, which implements cleanup worktree pool.
-- **cleanup-worktree-pool.mjs** - Exports `cleanupWorktreePool`, which implements cleanup worktree pool.
-- **create-worktree.d.ts** - Exports `createWorktree`, which creates worktree.
-- **create-worktree.mjs** - Exports `createWorktree`, which creates worktree.
-- **get-symphony-worktrees.d.ts** - Exports `getSymphonyWorktrees`, which gets symphony worktrees.
-- **get-symphony-worktrees.mjs** - Exports `getSymphonyWorktrees`, which gets symphony worktrees.
-- **index.d.ts** - Facade module that re-exports public members from `./create-worktree.d.ts`, `./remove-worktree.d.ts`, `./list-worktrees.d.ts`, `./get-symphony-worktrees.d.ts`, `./init-worktree-pool.d.ts`, `./cleanup-worktree-pool.d.ts`, and 2 more siblings.
-- **index.mjs** - Facade module that re-exports public members from `./create-worktree.mjs`, `./remove-worktree.mjs`, `./list-worktrees.mjs`, `./get-symphony-worktrees.mjs`, `./init-worktree-pool.mjs`, `./cleanup-worktree-pool.mjs`, and 3 more siblings.
-- **init-worktree-pool.d.ts** - Exports `initWorktreePool`, which implements init worktree pool.
-- **init-worktree-pool.mjs** - Exports `initWorktreePool`, which implements init worktree pool.
-- **list-worktrees.d.ts** - Exports `listWorktrees`, which lists worktrees.
-- **list-worktrees.mjs** - Exports `listWorktrees`, which lists worktrees.
-- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
-- **print-worktree-status.d.ts** - Exports `printWorktreeStatus`, which implements print worktree status.
-- **print-worktree-status.mjs** - Exports `printWorktreeStatus`, which implements print worktree status.
-- **remove-worktree.d.ts** - Exports `removeWorktree`, which implements remove worktree.
-- **remove-worktree.mjs** - Exports `removeWorktree`, which implements remove worktree.
-- **repair-worktrees.d.ts** - Exports `repairWorktrees`, which implements repair worktrees.
-- **repair-worktrees.mjs** - Exports `repairWorktrees`, which implements repair worktrees.
-- **reprovision-worktree.mjs** - Exports `reprovisionWorktree`, which implements reprovision worktree.
-- **runtime.mjs** - Executable runtime entry point for this directory.
+## Operational Notes
+- This directory manages the physical executor sandboxes rather than routing or scheduling policy.
+- Its outputs must stay aligned with systemd instance naming and the scheduler's worktree partition assumptions.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include subprocess execution, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/orchestration/symphony-worktree-pool/runtime.mjs
-npx tsx ops/orchestration/symphony-worktree-pool/cleanup-worktree-pool.d.ts
-npx tsx ops/orchestration/symphony-worktree-pool/create-worktree.d.ts
-npx tsx ops/orchestration/symphony-worktree-pool/get-symphony-worktrees.d.ts
-npx tsx ops/orchestration/symphony-worktree-pool/index.d.ts
-npx tsx ops/orchestration/symphony-worktree-pool/init-worktree-pool.d.ts
-npx tsx ops/orchestration/symphony-worktree-pool/list-worktrees.d.ts
-npx tsx ops/orchestration/symphony-worktree-pool/print-worktree-status.d.ts
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:child_process`, `node:fs`, `node:path`
-- **Internal relative modules** - `../../core/worktree-config.mjs`, `../../lib/logger.mjs`, `./create-worktree.mjs`, `./get-symphony-worktrees.mjs`, `./list-worktrees.mjs`, `./logger.mjs`, `./remove-worktree.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Confirm the pool lifecycle matches the documented worktree topology, branch naming, dependency installation expectations, and repair workflow assumptions.

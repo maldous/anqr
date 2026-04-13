@@ -1,0 +1,1 @@
+Symphony OpenAI Bridge exposes the repository as an OpenAI-compatible tool runtime, executes AI work inside the correct checkout, and applies provider fallback, probing, and worktree-aware request handling.

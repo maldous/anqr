@@ -1,29 +1,21 @@
-# ANQR Types
+# Types
 
-## 1. Directory Overview
+## Purpose
+Directory for harness support logic; immediate files include `mjs-shim.d.ts`.
 
-This directory implements **ANQR Types** within the ANQR harness. Key immediate entries include `mjs-shim.d.ts`. The current inventory is 1 non-README files and 0 subdirectories.
+## Contents
+- 1 immediate file
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `mjs-shim.d.ts` - Type declaration file for the sibling module surface.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **mjs-shim.d.ts** - Module that implements mjs shim.d.
+## Operational Notes
+- Current on-disk inventory: 1 immediate file and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code.
-
-## 4. Usage Instructions
-
-```bash
-npx tsx ops/types/mjs-shim.d.ts
-```
-
-## 5. Dependencies
-
-- No explicit code-level dependency imports were found in the immediate non-README files.
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

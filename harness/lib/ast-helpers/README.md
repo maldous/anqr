@@ -1,37 +1,28 @@
-# AST Helpers
+# Ast Helpers
 
-## 1. Directory Overview
+## Purpose
+Directory for harness support logic; immediate files include `default-globs.mjs`, `index.mjs`, `is-class-like-initializer.mjs`, `is-function-like-initializer.mjs`, and others.
 
-This directory implements **AST Helpers** within the ANQR harness. Key immediate entries include `index.mjs`, `is-function-like-initializer.mjs`, `is-object-like-initializer.mjs`, `is-class-like-initializer.mjs`. The current inventory is 8 non-README files and 0 subdirectories.
+## Contents
+- 8 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `default-globs.mjs` - Exports `DEFAULT_GLOBS`, a shared constant or state value used by sibling modules.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `is-class-like-initializer.mjs` - Exports `isClassLikeInitializer`, a shared constant or state value used by sibling modules.
+- `is-function-like-initializer.mjs` - Exports `isFunctionLikeInitializer`, a shared constant or state value used by sibling modules.
+- `is-iife-initializer.mjs` - Exports `isIifeInitializer`, a shared constant or state value used by sibling modules.
+- `is-object-like-initializer.mjs` - Exports `isObjectLikeInitializer`, a shared constant or state value used by sibling modules.
+- `normalize-path.mjs` - Exports `normalizePath`, a shared constant or state value used by sibling modules.
+- `setup-epipe-handler.mjs` - Exports `setupEpipeHandler`, a shared constant or state value used by sibling modules.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **default-globs.mjs** - Exports `DEFAULT_GLOBS`, a shared constant used by sibling modules.
-- **index.mjs** - Facade module that re-exports public members from `./default-globs.mjs`, `./normalize-path.mjs`, `./is-function-like-initializer.mjs`, `./is-class-like-initializer.mjs`, `./is-object-like-initializer.mjs`, `./is-iife-initializer.mjs`, and 1 more siblings.
-- **is-class-like-initializer.mjs** - Exports `isClassLikeInitializer`, which checks whether class like initializer.
-- **is-function-like-initializer.mjs** - Exports `isFunctionLikeInitializer`, which checks whether function like initializer.
-- **is-iife-initializer.mjs** - Exports `isIifeInitializer`, which checks whether iife initializer.
-- **is-object-like-initializer.mjs** - Exports `isObjectLikeInitializer`, which checks whether object like initializer.
-- **normalize-path.mjs** - Exports `normalizePath`, which normalizes path.
-- **setup-epipe-handler.mjs** - Exports `setupEpipeHandler`, which sets up epipe handler.
+## Operational Notes
+- Current on-disk inventory: 8 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory use git/worktree awareness.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./lib/ast-helpers/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:path`, `node:process`
-- **External packages/services referenced in immediate code** - `ts-morph`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

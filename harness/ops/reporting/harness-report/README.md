@@ -1,61 +1,52 @@
-# ANQR Harness Report
+# Harness Report
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `allowed-root-dirs.mjs`, `check-ast-density.mjs`, `check-cspell-coverage.mjs`, `check-depcruise.mjs`, and others.
 
-This directory implements **ANQR Harness Report** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 32 non-README files and 0 subdirectories.
+## Contents
+- 32 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `allowed-root-dirs.mjs` - Exports `ALLOWED_ROOT_DIRS`, a shared constant or state value used by sibling modules.
+- `check-ast-density.mjs` - Exports `checkAstDensity`, the main helper defined in this file.
+- `check-cspell-coverage.mjs` - Exports `checkCspellCoverage`, the main helper defined in this file.
+- `check-depcruise.mjs` - Exports `checkDepcruise`, the main helper defined in this file.
+- `check-docs-freshness.mjs` - Exports `checkDocsFreshness`, the main helper defined in this file.
+- `check-knip.mjs` - Exports `checkKnip`, the main helper defined in this file.
+- `check-linear-rag-pipeline.mjs` - Exports `checkLinearRagPipeline`, the main helper defined in this file.
+- `check-lint.mjs` - Exports `checkLint`, the main helper defined in this file.
+- `check-litellm-routing.mjs` - Exports `checkLitellmRouting`, the main helper defined in this file.
+- `check-npm-script.mjs` - Exports `checkNpmScript`, the main helper defined in this file.
+- `check-ollama-health.mjs` - Exports `checkOllamaHealth`, the main helper defined in this file.
+- `check-pipeline-latency.mjs` - Exports `checkPipelineLatency`, the main helper defined in this file.
+- `check-repo-structure.mjs` - Exports `checkRepoStructure`, the main helper defined in this file.
+- `check-sonar-audit.mjs` - Exports `checkSonarAudit`, the main helper defined in this file.
+- `check-source-rag-index.mjs` - Exports `checkSourceRagIndex`, the main helper defined in this file.
+- `check-test-unit.mjs` - Exports `checkTestUnit`, the main helper defined in this file.
+- `check-typecheck.mjs` - Exports `checkTypecheck`, the main helper defined in this file.
+- `checks.mjs` - Exports `CHECKS`, a shared constant or state value used by sibling modules.
+- `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
+- `docs-freshness-days.mjs` - Exports `DOCS_FRESHNESS_DAYS`, a shared constant or state value used by sibling modules.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `main.mjs` - Exports `main`, the main helper defined in this file.
+- `ollama-base.mjs` - Exports `OLLAMA_BASE`, a shared constant or state value used by sibling modules.
+- `ping-timeout-ms.mjs` - Exports `PING_TIMEOUT_MS`, a shared constant or state value used by sibling modules.
+- `pinned-model.mjs` - Exports `PINNED_MODEL`, a shared constant or state value used by sibling modules.
+- `profiles.mjs` - Exports `PROFILES`, a shared constant or state value used by sibling modules.
+- `required-dirs.mjs` - Exports `REQUIRED_DIRS`, a shared constant or state value used by sibling modules.
+- `required-files.mjs` - Exports `REQUIRED_FILES`, a shared constant or state value used by sibling modules.
+- `root.mjs` - Exports `ROOT`, a shared constant or state value used by sibling modules.
+- `run-check.mjs` - Exports `runCheck`, the main helper defined in this file.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **allowed-root-dirs.mjs** - Exports `ALLOWED_ROOT_DIRS`, a shared `Set` constant used by this module group.
-- **check-ast-density.mjs** - Exports `checkAstDensity`, which checks ast density.
-- **check-cspell-coverage.mjs** - Exports `checkCspellCoverage`, which checks cspell coverage.
-- **check-depcruise.mjs** - Exports `checkDepcruise`, which checks depcruise.
-- **check-docs-freshness.mjs** - Exports `checkDocsFreshness`, which checks docs freshness.
-- **check-knip.mjs** - Exports `checkKnip`, which checks knip.
-- **check-linear-rag-pipeline.mjs** - Exports `checkLinearRagPipeline`, which checks linear rag pipeline.
-- **check-lint.mjs** - Exports `checkLint`, which checks lint.
-- **check-litellm-routing.mjs** - Exports `checkLitellmRouting`, which checks litellm routing.
-- **check-npm-script.mjs** - Exports `checkNpmScript`, which checks npm script.
-- **check-ollama-health.mjs** - Exports `checkOllamaHealth`, which checks ollama health.
-- **check-pipeline-latency.mjs** - Exports `checkPipelineLatency`, which checks pipeline latency.
-- **check-repo-structure.mjs** - Exports `checkRepoStructure`, which checks repo structure.
-- **check-sonar-audit.mjs** - Exports `checkSonarAudit`, which checks sonar audit.
-- **check-source-rag-index.mjs** - Exports `checkSourceRagIndex`, which checks source rag index.
-- **check-test-unit.mjs** - Exports `checkTestUnit`, which checks test unit.
-- **check-typecheck.mjs** - Exports `checkTypecheck`, which checks typecheck.
-- **checks.mjs** - Exports `CHECKS`, a shared constant used by sibling modules.
-- **dirname.mjs** - Exports `__dirname`, which implements dirname.
-- **docs-freshness-days.mjs** - Exports `DOCS_FRESHNESS_DAYS`, a shared constant used by sibling modules.
-- **index.mjs** - Facade module that re-exports public members from `./dirname.mjs`, `./root.mjs`, `./ollama-base.mjs`, `./pinned-model.mjs`, `./ping-timeout-ms.mjs`, `./docs-freshness-days.mjs`, and 22 more siblings.
-- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`.
-- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
-- **ollama-base.mjs** - Exports `OLLAMA_BASE`, a shared constant used by sibling modules.
-- **ping-timeout-ms.mjs** - Exports `PING_TIMEOUT_MS`, a shared constant used by sibling modules.
-- **pinned-model.mjs** - Exports `PINNED_MODEL`, a shared constant used by sibling modules.
-- **profiles.mjs** - Exports `PROFILES`, a shared constant used by sibling modules.
-- **required-dirs.mjs** - Exports `REQUIRED_DIRS`, a shared constant used by sibling modules.
-- **required-files.mjs** - Exports `REQUIRED_FILES`, a shared constant used by sibling modules.
-- **root.mjs** - Exports `ROOT`, a shared constant used by sibling modules.
-- **run-check.mjs** - Exports `runCheck`, which runs check.
-- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
+## Operational Notes
+- Current on-disk inventory: 32 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include file-system access, network/API integration, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Symphony integration, SonarQube integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/reporting/harness-report/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:child_process`, `node:fs`, `node:path`, `node:url`
-- **Internal relative modules** - `../../lib/logger.mjs`, `./allowed-root-dirs.mjs`, `./check-ast-density.mjs`, `./check-cspell-coverage.mjs`, `./check-depcruise.mjs`, `./check-docs-freshness.mjs`, `./check-knip.mjs`, `./check-linear-rag-pipeline.mjs`, `./check-lint.mjs`, `./check-litellm-routing.mjs`, `./check-npm-script.mjs`, `./check-ollama-health.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

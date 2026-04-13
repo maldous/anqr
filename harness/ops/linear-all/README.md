@@ -1,38 +1,29 @@
-# ANQR Linear All
+# Linear All
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `api-key.mjs`, `fetch-page.mjs`, `index.mjs`, `is-main.mjs`, and others.
 
-This directory implements **ANQR Linear All** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 9 non-README files and 0 subdirectories.
+## Contents
+- 9 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `api-key.mjs` - Exports `API_KEY`, a shared constant or state value used by sibling modules.
+- `fetch-page.mjs` - Exports `fetchPage`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `is-main.mjs` - Exports `isMain`, a shared constant or state value used by sibling modules.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `main.mjs` - Exports `main`, the main helper defined in this file.
+- `query.mjs` - Exports `query`, a shared constant or state value used by sibling modules.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `team-id.mjs` - Exports `TEAM_ID`, a shared constant or state value used by sibling modules.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **api-key.mjs** - Exports `API_KEY`, a shared constant used by sibling modules.
-- **fetch-page.mjs** - Exports `fetchPage`, which fetches page.
-- **index.mjs** - Facade module that re-exports public members from `./api-key.mjs`, `./team-id.mjs`, `./query.mjs`, `./fetch-page.mjs`, `./main.mjs`, `./is-main.mjs`.
-- **is-main.mjs** - Exports `isMain`, which checks whether main.
-- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`.
-- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
-- **query.mjs** - Exports `query`, which implements query.
-- **runtime.mjs** - Executable runtime entry point for this directory.
-- **team-id.mjs** - Exports `TEAM_ID`, a shared constant used by sibling modules.
+## Operational Notes
+- Current on-disk inventory: 9 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include file-system access, network/API integration, and Linear integration. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/linear-all/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:url`
-- **Internal relative modules** - `../lib/logger.mjs`, `./api-key.mjs`, `./fetch-page.mjs`, `./index.mjs`, `./logger.mjs`, `./team-id.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

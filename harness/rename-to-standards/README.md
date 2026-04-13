@@ -1,62 +1,52 @@
-# Rename to Standards
+# Rename To Standards
 
-## 1. Directory Overview
+## Purpose
+Directory for harness support logic; immediate files include `apply-plan.mjs`, `build-plan.mjs`, `choose-primary-entry.mjs`, `code-extensions.mjs`, and others.
 
-This directory implements **Rename to Standards** within the ANQR harness. The immediate code is centered on `main.mjs`, with `index.mjs` exposing the reusable surface for callers. The current inventory is 32 non-README files and 0 subdirectories.
+## Contents
+- 32 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `apply-plan.mjs` - Exports `applyPlan`, a shared constant or state value used by sibling modules.
+- `build-plan.mjs` - Exports `buildPlan`, a shared constant or state value used by sibling modules.
+- `choose-primary-entry.mjs` - Exports `choosePrimaryEntry`, a shared constant or state value used by sibling modules.
+- `code-extensions.mjs` - Exports `CODE_EXTENSIONS`, a shared constant or state value used by sibling modules.
+- `collect-module-specifiers.mjs` - Exports `collectModuleSpecifiers`, a shared constant or state value used by sibling modules.
+- `create-source-file.mjs` - Exports `createSourceFile`, a shared constant or state value used by sibling modules.
+- `default-dirs.mjs` - Exports `DEFAULT_DIRS`, a shared constant or state value used by sibling modules.
+- `detect-suggestion.mjs` - Exports `detectSuggestion`, a shared constant or state value used by sibling modules.
+- `ensure-dot.mjs` - Exports `ensureDot`, a shared constant or state value used by sibling modules.
+- `get-declaration-name.mjs` - Exports `getDeclarationName`, a shared constant or state value used by sibling modules.
+- `get-top-level-entries.mjs` - Exports `getTopLevelEntries`, a shared constant or state value used by sibling modules.
+- `has-jsx.mjs` - Exports `hasJsx`, a shared constant or state value used by sibling modules.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `is-code-file.mjs` - Exports `isCodeFile`, a shared constant or state value used by sibling modules.
+- `is-exported.mjs` - Exports `isExported`, a shared constant or state value used by sibling modules.
+- `is-type-only-file.mjs` - Exports `isTypeOnlyFile`, a shared constant or state value used by sibling modules.
+- `is-type-only-statement.mjs` - Exports `isTypeOnlyStatement`, a shared constant or state value used by sibling modules.
+- `main.mjs` - Exports `main`, a shared constant or state value used by sibling modules.
+- `normalize.mjs` - Exports `normalize`, a shared constant or state value used by sibling modules.
+- `parse-args.mjs` - Exports `parseArgs`, a shared constant or state value used by sibling modules.
+- `partition-collisions.mjs` - Exports `partitionCollisions`, a shared constant or state value used by sibling modules.
+- `rel.mjs` - Exports `rel`, a shared constant or state value used by sibling modules.
+- `replace-ext.mjs` - Exports `replaceExt`, a shared constant or state value used by sibling modules.
+- `require.mjs` - Exports `require`, a shared constant or state value used by sibling modules.
+- `rewrite-specifier.mjs` - Exports `rewriteSpecifier`, a shared constant or state value used by sibling modules.
+- `rewrite-text-at-spans.mjs` - Exports `rewriteTextAtSpans`, a shared constant or state value used by sibling modules.
+- `script-kind-for.mjs` - Exports `scriptKindFor`, a shared constant or state value used by sibling modules.
+- `should-skip.mjs` - Exports `shouldSkip`, a shared constant or state value used by sibling modules.
+- `strip-code-extension.mjs` - Exports `stripCodeExtension`, a shared constant or state value used by sibling modules.
+- `to-kebab.mjs` - Exports `toKebab`, a shared constant or state value used by sibling modules.
+- `ts.mjs` - Exports `ts`, a shared constant or state value used by sibling modules.
+- `walk.mjs` - Exports `walk`, a shared constant or state value used by sibling modules.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **apply-plan.mjs** - Exports `applyPlan`, which applies plan.
-- **build-plan.mjs** - Exports `buildPlan`, which builds plan.
-- **choose-primary-entry.mjs** - Exports `choosePrimaryEntry`, which chooses primary entry.
-- **code-extensions.mjs** - Exports `CODE_EXTENSIONS`, a shared `Set` constant used by this module group.
-- **collect-module-specifiers.mjs** - Exports `collectModuleSpecifiers`, which collects module specifiers.
-- **create-source-file.mjs** - Exports `createSourceFile`, which creates source file.
-- **default-dirs.mjs** - Exports `DEFAULT_DIRS`, a shared constant used by sibling modules.
-- **detect-suggestion.mjs** - Exports `detectSuggestion`, which detects suggestion.
-- **ensure-dot.mjs** - Exports `ensureDot`, which ensures dot.
-- **get-declaration-name.mjs** - Exports `getDeclarationName`, which gets declaration name.
-- **get-top-level-entries.mjs** - Exports `getTopLevelEntries`, which gets top level entries.
-- **has-jsx.mjs** - Exports `hasJsx`, which checks for jsx.
-- **index.mjs** - Facade module that re-exports public members from `./require.mjs`, `./ts.mjs`, `./default-dirs.mjs`, `./code-extensions.mjs`, `./parse-args.mjs`, `./normalize.mjs`, and 25 more siblings.
-- **is-code-file.mjs** - Exports `isCodeFile`, which checks whether code file.
-- **is-exported.mjs** - Exports `isExported`, which checks whether exported.
-- **is-type-only-file.mjs** - Exports `isTypeOnlyFile`, which checks whether type only file.
-- **is-type-only-statement.mjs** - Exports `isTypeOnlyStatement`, which checks whether type only statement.
-- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
-- **normalize.mjs** - Exports `normalize`, which implements normalize.
-- **parse-args.mjs** - Exports `parseArgs`, which parses args.
-- **partition-collisions.mjs** - Exports `partitionCollisions`, which partitions collisions.
-- **rel.mjs** - Exports `rel`, which implements rel.
-- **replace-ext.mjs** - Exports `replaceExt`, which replaces ext.
-- **require.mjs** - Exports `require`, which implements require.
-- **rewrite-specifier.mjs** - Exports `rewriteSpecifier`, which rewrites specifier.
-- **rewrite-text-at-spans.mjs** - Exports `rewriteTextAtSpans`, which rewrites text at spans.
-- **script-kind-for.mjs** - Exports `scriptKindFor`, which implements script kind for.
-- **should-skip.mjs** - Exports `shouldSkip`, which implements should skip.
-- **strip-code-extension.mjs** - Exports `stripCodeExtension`, which strips code extension.
-- **to-kebab.mjs** - Exports `toKebab`, which implements to kebab.
-- **ts.mjs** - Exports `ts`, which implements ts.
-- **walk.mjs** - Exports `walk`, which implements walk.
+## Operational Notes
+- Current on-disk inventory: 32 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory's behavior is coordinated by `main.mjs`, with the surrounding files supplying parsing, validation, formatting, state, or integration helpers. Verified immediate files in this directory include file-system access, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node rename-to-standards/main.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:fs`, `node:module`, `node:path`, `node:process`
-- **External packages/services referenced in immediate code** - `typescript`
-- **Internal relative modules** - `./apply-plan.mjs`, `./build-plan.mjs`, `./choose-primary-entry.mjs`, `./code-extensions.mjs`, `./collect-module-specifiers.mjs`, `./create-source-file.mjs`, `./default-dirs.mjs`, `./detect-suggestion.mjs`, `./ensure-dot.mjs`, `./get-declaration-name.mjs`, `./get-top-level-entries.mjs`, `./has-jsx.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

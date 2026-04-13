@@ -1,44 +1,40 @@
-# ANQR OpenClaw Discord Notifications
+# Openclaw Discord
 
-## 1. Directory Overview
+## Purpose
+Directory for OpenClaw gateway/runtime configuration; immediate files include `color-to-emoji.mjs`, `create-discord-thread.mjs`, `discord-stream-buffers.mjs`, `discord-text-channel-id.mjs`, and others, with child directories `discord-thread-cache/`, `send-via-open-claw/`.
 
-This directory implements **ANQR OpenClaw Discord Notifications** within the ANQR harness. Key immediate entries include `index.mjs`, `send-via-open-claw.mjs`, `discord-text-channel-id.mjs`, `stream-discord-update.mjs`. The current inventory is 15 non-README files and 0 subdirectories.
+## Contents
+- 19 immediate files
+- 2 child directories
 
-## 2. File Summaries
+## Key Files
+- `color-to-emoji.mjs` - Exports `colorToEmoji`, the main helper defined in this file.
+- `create-discord-thread.mjs` - Exports `createDiscordThread`, the main helper defined in this file.
+- `discord-stream-buffers.mjs` - Exports `discordStreamBuffers`, a shared constant or state value used by sibling modules.
+- `discord-text-channel-id.mjs` - Exports `DISCORD_TEXT_CHANNEL_ID`, a shared constant or state value used by sibling modules.
+- `discord-thread-cache.mjs` - Re-export facade that assembles the public surface for this directory.
+- `finalize-discord-stream.mjs` - Exports `finalizeDiscordStream`, the main helper defined in this file.
+- `flush-discord-stream.mjs` - Exports `flushDiscordStream`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `invoke-gateway.mjs` - Exports `invokeGateway`, the main helper defined in this file.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `openclaw-gateway-host.mjs` - Exports `OPENCLAW_GATEWAY_HOST`, a shared constant or state value used by sibling modules.
+- `openclaw-gateway-port.mjs` - Exports `OPENCLAW_GATEWAY_PORT`, a shared constant or state value used by sibling modules.
+- `openclaw-gateway-token.mjs` - Exports `OPENCLAW_GATEWAY_TOKEN`, a shared constant or state value used by sibling modules.
+- `send-discord-embed.mjs` - Exports `sendDiscordEmbed`, the main helper defined in this file.
+- `send-discord-message.mjs` - Exports `sendDiscordMessage`, the main helper defined in this file.
+- `send-via-open-claw.mjs` - Re-export facade that assembles the public surface for this directory.
+- `stream-discord-update.mjs` - Exports `streamDiscordUpdate`, the main helper defined in this file.
+- `stream-interval-ms.mjs` - Exports `STREAM_INTERVAL_MS`, a shared constant or state value used by sibling modules.
+- `stream-max-length.mjs` - Exports `STREAM_MAX_LENGTH`, a shared constant or state value used by sibling modules.
 
-### Files
+## Subdirectories
+- `discord-thread-cache/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `get-thread-channel-id.mjs`, `index.mjs`, `set-thread-channel-id.mjs`, `thread-cache-instance.mjs`.
+- `send-via-open-claw/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `delete-via-open-claw.mjs`, `index.mjs`, `send-via-open-claw.mjs`.
 
-- **color-to-emoji.mjs** - Exports `colorToEmoji`, which implements color to emoji.
-- **discord-stream-buffers.mjs** - Exports `discordStreamBuffers`, which implements discord stream buffers.
-- **discord-text-channel-id.mjs** - Exports `DISCORD_TEXT_CHANNEL_ID`, a shared constant used by sibling modules.
-- **flush-discord-stream.mjs** - Exports `flushDiscordStream`, which implements flush discord stream.
-- **index.mjs** - Facade module that re-exports public members from `./openclaw-gateway-host.mjs`, `./openclaw-gateway-port.mjs`, `./openclaw-gateway-token.mjs`, `./discord-text-channel-id.mjs`, `./discord-stream-buffers.mjs`, `./stream-interval-ms.mjs`, and 6 more siblings.
-- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logWarn`.
-- **openclaw-gateway-host.mjs** - Exports `OPENCLAW_GATEWAY_HOST`, a shared constant used by sibling modules.
-- **openclaw-gateway-port.mjs** - Exports `OPENCLAW_GATEWAY_PORT`, a shared constant used by sibling modules.
-- **openclaw-gateway-token.mjs** - Exports `OPENCLAW_GATEWAY_TOKEN`, a shared constant used by sibling modules.
-- **send-discord-embed.mjs** - Exports `sendDiscordEmbed`, which implements send discord embed.
-- **send-discord-message.mjs** - Exports `sendDiscordMessage`, which implements send discord message.
-- **send-via-open-claw.mjs** - Exports `sendViaOpenClaw`, which implements send via open claw.
-- **stream-discord-update.mjs** - Exports `streamDiscordUpdate`, which implements stream discord update.
-- **stream-interval-ms.mjs** - Exports `STREAM_INTERVAL_MS`, a shared constant used by sibling modules.
-- **stream-max-length.mjs** - Exports `STREAM_MAX_LENGTH`, a shared constant used by sibling modules.
+## Operational Notes
+- Current on-disk inventory: 19 immediate files and 2 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, timer, scheduling, cooldown, or watchdog behavior, Discord integration, and OpenClaw integration. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./ops/integrations/notifications/openclaw-discord/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:http`
-- **Internal relative modules** - `../../../lib/logger.mjs`, `./color-to-emoji.mjs`, `./discord-stream-buffers.mjs`, `./discord-text-channel-id.mjs`, `./flush-discord-stream.mjs`, `./logger.mjs`, `./openclaw-gateway-host.mjs`, `./openclaw-gateway-port.mjs`, `./openclaw-gateway-token.mjs`, `./send-via-open-claw.mjs`, `./stream-interval-ms.mjs`, `./stream-max-length.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

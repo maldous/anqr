@@ -1,31 +1,21 @@
-# ANQR Notifications
+# Notifications
 
-## 1. Directory Overview
+## Purpose
+Directory for notifications and operator feedback; immediate files include `notify.mjs`, with child directories `notify/`.
 
-This directory implements **ANQR Notifications** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 1 non-README files and 1 subdirectories.
+## Contents
+- 1 immediate file
+- 1 child directory
 
-## 2. File Summaries
+## Key Files
+- `notify.mjs` - JavaScript/TypeScript module used by this directory.
 
-### Files
+## Subdirectories
+- `notify/` - Directory for notifications and operator feedback; immediate files include `dirname.mjs`, `format-email-body.mjs`, `format-stdout.mjs`, `index.mjs`, and others.
 
-- **notify.mjs** - Facade module that re-exports public members from `./notify/index.mjs`, `./notify/runtime.mjs`.
+## Operational Notes
+- Current on-disk inventory: 1 immediate file and 1 child directory.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **notify/** - Contains **ANQR Notify**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-
-## 3. Overall Directory Function
-
-Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
-
-## 4. Usage Instructions
-
-This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
-
-## 5. Dependencies
-
-- **Internal relative modules** - `./notify/index.mjs`, `./notify/runtime.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

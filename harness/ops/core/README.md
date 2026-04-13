@@ -1,51 +1,38 @@
-# ANQR Core
+# Core
 
-## 1. Directory Overview
+## Purpose
+Directory for Discord ingress, delivery, or notification support; immediate files include `bridge-result.mjs`, `bridge-result.spec.ts`, `discord-source.mjs`, `linear-worktree-health-states.mjs`, and others, with child directories `bridge-result/`, `discord-source/`, `symphony-state/`, `symphony-validation/`, and others.
 
-This directory implements **ANQR Core** within the ANQR harness. Key immediate entries include `symphony-state.spec.ts`, `symphony-config.spec.ts`, `bridge-result.spec.ts`, `symphony-config.mjs`. The current inventory is 10 non-README files and 6 subdirectories.
+## Contents
+- 12 immediate files
+- 7 child directories
 
-## 2. File Summaries
+## Key Files
+- `bridge-result.mjs` - JavaScript/TypeScript module used by this directory.
+- `bridge-result.spec.ts` - JavaScript/TypeScript module used by this directory.
+- `discord-source.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-worktree-health-states.mjs` - Exports `LINEAR_WORKTREE_HEALTH_STATES`, a shared constant or state value used by sibling modules.
+- `symphony-config.mjs` - Exports `TARGET_MIN`, a shared constant or state value used by sibling modules.
+- `symphony-config.spec.ts` - JavaScript/TypeScript module used by this directory.
+- `symphony-state.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-state.spec.ts` - @ts-ignore - No type declarations for .mjs module
+- `symphony-validation.mjs` - JavaScript/TypeScript module used by this directory.
+- `task-evidence.mjs` - Re-export facade that assembles the public surface for this directory.
+- `worktree-config.mjs` - JavaScript/TypeScript module used by this directory.
+- `worktree-health.mjs` - JavaScript/TypeScript module used by this directory.
 
-### Files
+## Subdirectories
+- `bridge-result/` - Directory for harness support logic; immediate files include `index.mjs`, `infer-symphony-result-from-completion.mjs`, `normalize-count.mjs`, `normalize-failure-class.mjs`, and others.
+- `discord-source/` - Directory for Discord ingress, delivery, or notification support; immediate files include `detect-and-mark-discord-source.mjs`, `index.mjs`, `is-discord-sourced.mjs`, `mark-discord-source.mjs`.
+- `symphony-state/` - Directory for git worktree management and concurrency support; immediate files include `acquire-integration-lock.mjs`, `acquire-lease.mjs`, `acquire-state-lock.mjs`, `add-external-key.mjs`, and others, with child directories `acquire-state-lock/`.
+- `symphony-validation/` - Directory for harness support logic; immediate files include `filter-changed-files.mjs`, `format-validation-feedback.mjs`, `index.mjs`, `run-ast-density.mjs`, and others.
+- `task-evidence/` - Directory for git worktree management and concurrency support; immediate files include `create-evidence-record.mjs`, `get-evidence-dir.mjs`, `get-evidence-path.mjs`, `index.mjs`, and others.
+- `worktree-config/` - Directory for Discord ingress, delivery, or notification support; immediate files include `dirname.mjs`, `discord-worktree-ids.mjs`, `get-worktree-branch.mjs`, `get-worktree-path.mjs`, and others.
+- `worktree-health/` - Directory for git worktree management and concurrency support; immediate files include `all-worktree-ids.mjs`, `get-current-branch.mjs`, `get-fleet-inventory.mjs`, `get-git-dirty-files.mjs`, and others.
 
-- **bridge-result.mjs** - Facade module that re-exports public members from `./bridge-result/index.mjs`.
-- **bridge-result.spec.ts** - Module that implements bridge result.spec.
-- **discord-source.mjs** - Facade module that re-exports public members from `./discord-source/index.mjs`.
-- **symphony-config.mjs** - Module that implements symphony config.
-- **symphony-config.spec.ts** - Module that implements symphony config.spec.
-- **symphony-state.mjs** - Facade module that re-exports public members from `./symphony-state/index.mjs`.
-- **symphony-state.spec.ts** - Module that implements symphony state.spec.
-- **symphony-validation.mjs** - Facade module that re-exports public members from `./symphony-validation/index.mjs`.
-- **worktree-config.mjs** - Facade module that re-exports public members from `./worktree-config/index.mjs`.
-- **worktree-health.mjs** - Facade module that re-exports public members from `./worktree-health/index.mjs`, `./worktree-health/runtime.mjs`.
+## Operational Notes
+- Current on-disk inventory: 12 immediate files and 7 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **bridge-result/** - Contains **Bridge Result Normalization**; it contains 6 immediate files and has 0 child directories.
-- **discord-source/** - Contains **Discord Source Module**; it contains 4 immediate files and has 0 child directories.
-- **symphony-state/** - Contains **ANQR Symphony State**; it contains 62 immediate files and has 0 child directories.
-- **symphony-validation/** - Contains **ANQR Symphony Validation**; it contains 15 immediate files and has 0 child directories.
-- **worktree-config/** - Contains **Worktree Configuration**; it contains 11 immediate files and has 0 child directories.
-- **worktree-health/** - Contains **ANQR Worktree Health**; it contains 10 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Discord integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-npx tsx ops/core/bridge-result.spec.ts
-npx tsx ops/core/symphony-config.spec.ts
-npx tsx ops/core/symphony-state.spec.ts
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:fs`, `node:path`
-- **External packages/services referenced in immediate code** - `vitest`
-- **Internal relative modules** - `../linear-client.mjs`, `./bridge-result.mjs`, `./bridge-result/index.mjs`, `./discord-source/index.mjs`, `./symphony-state/index.mjs`, `./symphony-validation/index.mjs`, `./worktree-config/index.mjs`, `./worktree-health/index.mjs`, `./worktree-health/runtime.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

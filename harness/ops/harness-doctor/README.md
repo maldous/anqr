@@ -1,44 +1,35 @@
-# ANQR Harness Doctor
+# Harness Doctor
 
-## 1. Directory Overview
+## Purpose
+Directory for systemd topology and host runtime configuration; immediate files include `check-credit-gate.mjs`, `check-env-vars.mjs`, `check-harness-config.mjs`, `check-node-modules.mjs`, and others.
 
-This directory implements **ANQR Harness Doctor** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 15 non-README files and 0 subdirectories.
+## Contents
+- 15 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `check-credit-gate.mjs` - Exports `checkCreditGate`, the main helper defined in this file.
+- `check-env-vars.mjs` - Exports `checkEnvVars`, the main helper defined in this file.
+- `check-harness-config.mjs` - Exports `checkHarnessConfig`, the main helper defined in this file.
+- `check-node-modules.mjs` - Exports `checkNodeModules`, the main helper defined in this file.
+- `check-ollama.mjs` - Exports `checkOllama`, the main helper defined in this file.
+- `check-queue-state.mjs` - Exports `checkQueueState`, the main helper defined in this file.
+- `check-reports-dir.mjs` - Exports `checkReportsDir`, the main helper defined in this file.
+- `check-systemd-services.mjs` - Exports `checkSystemdServices`, the main helper defined in this file.
+- `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `is-main.mjs` - Exports `isMain`, a shared constant or state value used by sibling modules.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `main.mjs` - Exports `main`, the main helper defined in this file.
+- `root.mjs` - Exports `ROOT`, a shared constant or state value used by sibling modules.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **check-credit-gate.mjs** - Exports `checkCreditGate`, which checks credit gate.
-- **check-env-vars.mjs** - Exports `checkEnvVars`, which checks env vars.
-- **check-harness-config.mjs** - Exports `checkHarnessConfig`, which checks harness config.
-- **check-node-modules.mjs** - Exports `checkNodeModules`, which checks node modules.
-- **check-ollama.mjs** - Exports `checkOllama`, which checks ollama.
-- **check-queue-state.mjs** - Exports `checkQueueState`, which checks queue state.
-- **check-reports-dir.mjs** - Exports `checkReportsDir`, which checks reports dir.
-- **check-systemd-services.mjs** - Exports `checkSystemdServices`, which checks systemd services.
-- **dirname.mjs** - Exports `__dirname`, which implements dirname.
-- **index.mjs** - Facade module that re-exports public members from `./dirname.mjs`, `./root.mjs`, `./check-env-vars.mjs`, `./check-node-modules.mjs`, `./check-credit-gate.mjs`, `./check-ollama.mjs`, and 6 more siblings.
-- **is-main.mjs** - Exports `isMain`, which checks whether main.
-- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`.
-- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
-- **root.mjs** - Exports `ROOT`, a shared constant used by sibling modules.
-- **runtime.mjs** - Executable runtime entry point for this directory.
+## Operational Notes
+- Current on-disk inventory: 15 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include file-system access, network/API integration, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, and Symphony integration. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/harness-doctor/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:child_process`, `node:fs`, `node:path`, `node:url`
-- **Internal relative modules** - `../lib/logger.mjs`, `./check-credit-gate.mjs`, `./check-env-vars.mjs`, `./check-harness-config.mjs`, `./check-node-modules.mjs`, `./check-ollama.mjs`, `./check-queue-state.mjs`, `./check-reports-dir.mjs`, `./check-systemd-services.mjs`, `./dirname.mjs`, `./index.mjs`, `./logger.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

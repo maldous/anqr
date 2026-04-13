@@ -1,27 +1,21 @@
-# ANQR Openclaw Config - Settings
+# Settings
 
-## 1. Directory Overview
+## Purpose
+Directory for OpenClaw gateway/runtime configuration; immediate files include `tts.json`.
 
-This directory holds configuration data for **ANQR Openclaw Config - Settings** within the ANQR harness. Key immediate entries include `tts.json`. The current inventory is 1 non-README files and 0 subdirectories.
+## Contents
+- 1 immediate file
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `tts.json` - JSON configuration/data file with top-level keys `tts`.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **tts.json** - JSON configuration or data file with top-level keys `tts`.
+## Operational Notes
+- Current on-disk inventory: 1 immediate file and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-This directory primarily contributes configuration artifacts consumed by adjacent runtime code rather than executable logic of its own. Filenames and top-level keys show that the configuration targets OpenClaw, and voice/TTS behavior.
-
-## 4. Usage Instructions
-
-This directory is consumed indirectly by adjacent runtime modules. No standalone executable entry point is defined here.
-
-## 5. Dependencies
-
-- Immediate files are configuration artifacts rather than import-bearing source modules.
-
-## 6. Additional Comments
-
-- Behavioral meaning for configuration-only files was inferred from keys and structure rather than from executable code in this directory.
+## Review Focus
+Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.

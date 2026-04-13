@@ -1,33 +1,23 @@
-# ANQR Sonar Integration
+# Sonar
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `sonar-linear-audit.mjs`, `sonar-linear-sync.mjs`, with child directories `sonar-linear-audit/`, `sonar-linear-sync/`.
 
-This directory implements **ANQR Sonar Integration** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 2 non-README files and 2 subdirectories.
+## Contents
+- 2 immediate files
+- 2 child directories
 
-## 2. File Summaries
+## Key Files
+- `sonar-linear-audit.mjs` - JavaScript/TypeScript module used by this directory.
+- `sonar-linear-sync.mjs` - JavaScript/TypeScript module used by this directory.
 
-### Files
+## Subdirectories
+- `sonar-linear-audit/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `consolidated-issue-title.mjs`, `find-or-create-consolidated-issue.mjs`, `index.mjs`, `logger.mjs`, and others.
+- `sonar-linear-sync/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `apply-promote-and-requeue.mjs`, `build-duplication-linear-description.mjs`, `build-duplication-linear-title.mjs`, `build-hotspot-linear-description.mjs`, and others.
 
-- **sonar-linear-audit.mjs** - Facade module that re-exports public members from `./sonar-linear-audit/index.mjs`, `./sonar-linear-audit/runtime.mjs`.
-- **sonar-linear-sync.mjs** - Facade module that re-exports public members from `./sonar-linear-sync/index.mjs`.
+## Operational Notes
+- Current on-disk inventory: 2 immediate files and 2 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **sonar-linear-audit/** - Contains **ANQR Sonar-Linear Audit**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **sonar-linear-sync/** - Contains **ANQR Sonar-Linear Sync**; it contains 26 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation. Verified immediate files in this directory include Linear integration, and SonarQube integration.
-
-## 4. Usage Instructions
-
-This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
-
-## 5. Dependencies
-
-- **Internal relative modules** - `./sonar-linear-audit/index.mjs`, `./sonar-linear-audit/runtime.mjs`, `./sonar-linear-sync/index.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

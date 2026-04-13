@@ -1,53 +1,40 @@
-# ANQR Orchestration
+# Orchestration
 
-## 1. Directory Overview
+## Purpose
+Directory for serial integration back into the main repository; immediate files include `analyze-worktree-benchmark.mjs`, `latency-report.mjs`, `nightly-ops-pass.mjs`, `reset-queue.mjs`, and others, with child directories `analyze-worktree-benchmark/`, `latency-report/`, `linear-reconciler/`, `nightly-ops-pass/`, and others.
 
-This directory implements **ANQR Orchestration** within the ANQR harness. Key immediate entries include `symphony-worktree-pool.spec.ts`, `symphony-worktree-recovery.mjs`, `symphony-worktree-pool.mjs`, `symphony-queue-control.mjs`. The maintained concurrency surface now centers on executor services and worktree recovery rather than legacy runner timers. The current inventory is 12 non-README files and 9 subdirectories.
+## Contents
+- 11 immediate files
+- 10 child directories
 
-## 2. File Summaries
+## Key Files
+- `analyze-worktree-benchmark.mjs` - JavaScript/TypeScript module used by this directory.
+- `latency-report.mjs` - JavaScript/TypeScript module used by this directory.
+- `nightly-ops-pass.mjs` - JavaScript/TypeScript module used by this directory.
+- `reset-queue.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-control.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-integrator.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-queue-control.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-worktree-pool.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-worktree-pool.mjs.d.ts` - Type declaration file for the sibling module surface.
+- `symphony-worktree-pool.spec.ts` - Mock node modules
+- `symphony-worktree-recovery.mjs` - JavaScript/TypeScript module used by this directory.
 
-### Files
+## Subdirectories
+- `analyze-worktree-benchmark/` - Directory for git worktree management and concurrency support; immediate files include `compare-benchmarks.mjs`, `dirname.mjs`, `evidence-dir.mjs`, `extract-benchmark-metrics.mjs`, and others.
+- `latency-report/` - Directory for runtime service bootstrap or environment support; immediate files include `acceptable-ms.mjs`, `classify-latency.mjs`, `format-duration.mjs`, `generate-report.mjs`, and others.
+- `linear-reconciler/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `compute-reconciliation-actions.mjs`, `get-healthy-linear-capacity.mjs`, `index.mjs`, `logger.mjs`, and others, with child directories `compute-reconciliation-actions/`, `get-healthy-linear-capacity/`, `logger/`, `run-reconciliation-cycle/`.
+- `nightly-ops-pass/` - Directory for runtime service bootstrap or environment support; immediate files include `archive-report.mjs`, `dirname.mjs`, `dry-run-flag.mjs`, `dry-run.mjs`, and others.
+- `symphony-control/` - Directory for runtime service bootstrap or environment support; immediate files include `disable-all-timers.mjs`, `enable-all-timers.mjs`, `get-enabled-timers.mjs`, `get-timer-status.mjs`, and others.
+- `symphony-integrator/` - Directory for serial integration back into the main repository; immediate files include `find-issue-by-identifier.mjs`, `git.mjs`, `index.mjs`, `integrate-candidate.mjs`, and others, with child directories `integrate-candidate/`.
+- `symphony-queue-control/` - Directory for runtime service bootstrap or environment support; immediate files include `actions.mjs`, `count-enabled-timers.mjs`, `detect-stuck-work.mjs`, `drain-overflow.mjs`, and others.
+- `symphony-runner/` - Directory for Discord ingress, delivery, or notification support; immediate files include `acquire-lock.mjs`, `auto-detected-worktree-id.mjs`, `classify-provider-failure.mjs`, `current-branch-name-for-runner.mjs`, and others, with child directories `sync-worktree-before-validation/`.
+- `symphony-worktree-pool/` - Directory for git worktree management and concurrency support; immediate files include `cleanup-worktree-pool.d.ts`, `cleanup-worktree-pool.mjs`, `create-worktree.d.ts`, `create-worktree.mjs`, and others.
+- `symphony-worktree-recovery/` - Directory for fleet recovery, quarantine, and health enforcement; immediate files include `all-worktree-ids.mjs`, `attempt-cspell-auto-fix.mjs`, `check-baseline-health.mjs`, `check-quarantined-for-reprovisioning.mjs`, and others, with child directories `execute-repair/`.
 
-- **analyze-worktree-benchmark.mjs** - Facade module that re-exports public members from `./analyze-worktree-benchmark/index.mjs`, `./analyze-worktree-benchmark/runtime.mjs`.
-- **latency-report.mjs** - Facade module that re-exports public members from `./latency-report/index.mjs`, `./latency-report/runtime.mjs`.
-- **nightly-ops-pass.mjs** - Facade module that re-exports public members from `./nightly-ops-pass/index.mjs`, `./nightly-ops-pass/runtime.mjs`.
-- **reset-queue.mjs** - Module that implements reset queue.
-- **symphony-control.mjs** - Facade module that re-exports public members from `./symphony-control/index.mjs`, `./symphony-control/runtime.mjs`.
-- **symphony-integrator.mjs** - Facade module that re-exports public members from `./symphony-integrator/index.mjs`, `./symphony-integrator/runtime.mjs`.
-- **symphony-queue-control.mjs** - Facade module that re-exports public members from `./symphony-queue-control/index.mjs`, `./symphony-queue-control/runtime.mjs`.
-- **symphony-worktree-pool.mjs** - Facade module that re-exports public members from `./symphony-worktree-pool/index.mjs`, `./symphony-worktree-pool/runtime.mjs`.
-- **symphony-worktree-pool.mjs.d.ts** - Facade module that re-exports public members from `./symphony-worktree-pool/index.d.ts`.
-- **symphony-worktree-pool.spec.ts** - Module that implements symphony worktree pool.spec.
-- **symphony-worktree-recovery.mjs** - Facade module that re-exports public members from `./symphony-worktree-recovery/index.mjs`, `./symphony-worktree-recovery/runtime.mjs`.
+## Operational Notes
+- Current on-disk inventory: 11 immediate files and 10 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **analyze-worktree-benchmark/** - Contains **ANQR Worktree Benchmark Analysis**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **latency-report/** - Contains **ANQR Latency Report**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **nightly-ops-pass/** - Contains **ANQR Nightly Operations Pass**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **symphony-control/** - Contains **ANQR Symphony Control**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **symphony-integrator/** - Contains **ANQR Symphony Integrator**; it contains 14 immediate files and has 0 child directories.
-- **symphony-queue-control/** - Contains **ANQR Queue Control**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **symphony-runner/** - Contains **ANQR Symphony Runner internals**; execution logic retained behind the active executor HTTP surface while legacy runner facades have been removed.
-- **symphony-worktree-pool/** - Contains **ANQR Symphony Worktree Pool**; it contains 21 immediate files and has 0 child directories.
-- **symphony-worktree-recovery/** - Contains **ANQR Worktree Recovery**; it contains 17 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include Symphony integration, and git/worktree awareness.
-
-## 4. Usage Instructions
-
-```bash
-npx tsx ops/orchestration/symphony-worktree-pool.mjs.d.ts
-npx tsx ops/orchestration/symphony-worktree-pool.spec.ts
-```
-
-## 5. Dependencies
-
-- **External packages/services referenced in immediate code** - `vitest`
-- **Internal relative modules** - `../linear-client.mjs`, `../symphony-state.mjs`, `./analyze-worktree-benchmark/index.mjs`, `./analyze-worktree-benchmark/runtime.mjs`, `./latency-report/index.mjs`, `./latency-report/runtime.mjs`, `./nightly-ops-pass/index.mjs`, `./nightly-ops-pass/runtime.mjs`, `./symphony-control/index.mjs`, `./symphony-control/runtime.mjs`, `./symphony-integrator/index.mjs`, `./symphony-integrator/runtime.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether ownership, timing, and state transitions in this directory stay consistent with the harness concurrency and integration model.

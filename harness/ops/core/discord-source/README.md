@@ -1,32 +1,24 @@
-# Discord Source Module
+# Discord Source
 
-## 1. Directory Overview
+## Purpose
+Directory for Discord ingress, delivery, or notification support; immediate files include `detect-and-mark-discord-source.mjs`, `index.mjs`, `is-discord-sourced.mjs`, `mark-discord-source.mjs`.
 
-This directory implements **Discord Source Module** within the ANQR harness. Key immediate entries include `index.mjs`, `detect-and-mark-discord-source.mjs`, `is-discord-sourced.mjs`, `mark-discord-source.mjs`. The current inventory is 4 non-README files and 0 subdirectories.
+## Contents
+- 4 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `detect-and-mark-discord-source.mjs` - Exports `detectAndMarkDiscordSource`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `is-discord-sourced.mjs` - Exports `isDiscordSourced`, the main helper defined in this file.
+- `mark-discord-source.mjs` - Exports `markDiscordSource`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **detect-and-mark-discord-source.mjs** - Exports `detectAndMarkDiscordSource`, which detects and mark discord source.
-- **index.mjs** - Facade module that re-exports public members from `./is-discord-sourced.mjs`, `./mark-discord-source.mjs`, `./detect-and-mark-discord-source.mjs`.
-- **is-discord-sourced.mjs** - Exports `isDiscordSourced`, which checks whether discord sourced.
-- **mark-discord-source.mjs** - Exports `markDiscordSource`, which marks discord source.
+## Operational Notes
+- Current on-disk inventory: 4 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include Discord integration, and Symphony integration. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./ops/core/discord-source/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Internal relative modules** - `../symphony-state.mjs`, `./is-discord-sourced.mjs`, `./mark-discord-source.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

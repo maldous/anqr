@@ -1,69 +1,57 @@
-# ANQR Operations
+# Ops
 
-## 1. Directory Overview
+## Purpose
+Canonical operational runtime tree for the ANQR harness, covering state, orchestration, integrations, runtime services, notifications, tooling, and evidence generation.
 
-This directory implements **ANQR Operations** within the ANQR harness. Key immediate entries include `provider-probe-report.mjs`, `model-injector-proxy.py`, `self-healing-automation.sh`, and the active Linear/Symphony operational surfaces. Legacy issue-specific review scripts have been removed from the maintained surface.
+## Contents
+- 25 immediate files
+- 13 child directories
 
-## 2. File Summaries
+## Key Files
+- `email-ingest.mjs` - JavaScript/TypeScript module used by this directory.
+- `harness-doctor.mjs` - JavaScript/TypeScript module used by this directory.
+- `harness-report.mjs` - JavaScript/TypeScript module used by this directory.
+- `issue_hygiene.py` - Python script used by this directory.
+- `linear-all.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-client.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-guardian.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-reconciler.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-status.mjs` - JavaScript/TypeScript module used by this directory.
+- `model-injector-proxy.py` - Python script used by this directory.
+- `nightly-ops-pass.mjs` - JavaScript/TypeScript module used by this directory.
+- `notify.mjs` - JavaScript/TypeScript module used by this directory.
+- `ollama-local-audit.mjs` - JavaScript/TypeScript module used by this directory.
+- `provider-probe-report.mjs` - JavaScript/TypeScript module used by this directory.
+- `self-healing-automation.sh` - Shell script used by this directory.
+- `sonar-group-issues.mjs` - Group by rule
+- `sonar-linear-audit.mjs` - JavaScript/TypeScript module used by this directory.
+- `sonar-linear-mail.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-agent.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-config.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-credit-gate.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-queue-control.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-state.mjs` - v2: also exports setFinalizationState, getFinalizationState, enqueueIntegrationCandidate,
+- `symphony-validation.mjs` - JavaScript/TypeScript module used by this directory.
+- `sync-worktrees.mjs` - *
 
-### Files
+## Subdirectories
+- `core/` - Directory for Discord ingress, delivery, or notification support; immediate files include `bridge-result.mjs`, `bridge-result.spec.ts`, `discord-source.mjs`, `linear-worktree-health-states.mjs`, and others, with child directories `bridge-result/`, `discord-source/`, `symphony-state/`, `symphony-validation/`, and others.
+- `governance/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `linear-guardian.mjs`, with child directories `linear-guardian/`.
+- `harness-doctor/` - Directory for systemd topology and host runtime configuration; immediate files include `check-credit-gate.mjs`, `check-env-vars.mjs`, `check-harness-config.mjs`, `check-node-modules.mjs`, and others.
+- `integrations/` - Directory for harness support logic, with child directories `email/`, `linear/`, `model/`, `notifications/`, and others.
+- `lib/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `correlation-id.mjs`, `durable-kv.mjs`, `logger.mjs`, `logger.spec.ts`, and others, with child directories `correlation-id/`, `durable-kv/`, `logger/`, `notify/`, and others.
+- `linear-all/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `api-key.mjs`, `fetch-page.mjs`, `index.mjs`, `is-main.mjs`, and others.
+- `notifications/` - Directory for notifications and operator feedback; immediate files include `notify.mjs`, with child directories `notify/`.
+- `orchestration/` - Directory for serial integration back into the main repository; immediate files include `analyze-worktree-benchmark.mjs`, `latency-report.mjs`, `nightly-ops-pass.mjs`, `reset-queue.mjs`, and others, with child directories `analyze-worktree-benchmark/`, `latency-report/`, `linear-reconciler/`, `nightly-ops-pass/`, and others.
+- `reporting/` - Directory for harness support logic; immediate files include `harness-report.mjs`, with child directories `harness-report/`.
+- `runtime/` - Directory for runtime service bootstrap or environment support, with child directories `discord/`, `mcp/`, `openclaw-config/`, `symphony/`, and others.
+- `symphony/` - Directory for harness support logic; immediate files include `WORKFLOW.md`.
+- `tools/` - Directory for fleet recovery, quarantine, and health enforcement; immediate files include `recover-stale-in-progress.mjs`, `reset-retry-exhausted.mjs`, `startup-recovery.mjs`, `verify-webhook-system.mjs`, with child directories `linear-status/`, `recover-stale-in-progress/`, `startup-recovery/`, `verify-webhook-system/`.
+- `types/` - Directory for harness support logic; immediate files include `mjs-shim.d.ts`.
 
-- **email-ingest.mjs** - Module that implements email ingest.
-- **harness-doctor.mjs** - Facade module that re-exports public members from `./harness-doctor/index.mjs`, `./harness-doctor/runtime.mjs`.
-- **harness-report.mjs** - Module that implements harness report.
-- **issue_hygiene.py** - Python script that implements issue hygiene.
-- **linear-all.mjs** - Facade module that re-exports public members from `./linear-all/index.mjs`, `./linear-all/runtime.mjs`.
-- **linear-client.mjs** - Facade module that re-exports public members from `./integrations/linear/linear-client.mjs`.
-- **linear-guardian.mjs** - Module that implements linear guardian.
-- **model-injector-proxy.py** - Python script that implements model injector proxy.
-- **nightly-ops-pass.mjs** - Module that implements nightly ops pass.
-- **notify.mjs** - Module that implements notify.
-- **ollama-local-audit.mjs** - Module that implements ollama local audit.
-- **provider-probe-report.mjs** - Module that implements provider probe report using the Symphony credit-gate probe cache helpers.
-- **self-healing-automation.sh** - Shell script that implements self healing automation.
-- **sonar-linear-audit.mjs** - Module that implements sonar linear audit.
-- **sonar-linear-mail.mjs** - Module that implements sonar linear mail.
-- **symphony-agent.mjs** - Facade module that re-exports public members from `./runtime/symphony/symphony-agent.mjs`.
-- **symphony-config.mjs** - Facade module that re-exports public members from `./core/symphony-config.mjs`.
-- **symphony-credit-gate.mjs** - Facade module that re-exports public members from `./integrations/model/symphony-credit-gate.mjs`.
-- **symphony-queue-control.mjs** - Facade module that re-exports public members from `./orchestration/symphony-queue-control.mjs`.
-- **symphony-state.mjs** - Facade module that re-exports public members from `./core/symphony-state.mjs`.
-- **symphony-validation.mjs** - Facade module that re-exports public members from `./core/symphony-validation.mjs`.
-- **sync-worktrees.mjs** - Module that implements sync worktrees.
+## Operational Notes
+- This directory is the main maintained implementation surface for the harness.
+- The concurrency design depends on worktree isolation, state files, systemd service topology, and router-to-executor boundaries implemented under this tree.
 
-### Subdirectories
-
-- **core/** - Contains **ANQR Core**; it contains 10 immediate files and has 6 child directories.
-- **governance/** - Contains **ANQR Governance**; it acts mainly as a namespace over child directories and has 1 child directories.
-- **harness-doctor/** - Contains **ANQR Harness Doctor**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **integrations/** - Contains **ANQR Integrations**; it acts mainly as a namespace over child directories and has 5 child directories.
-- **lib/** - Contains **ANQR Library**; it contains 5 immediate files and has 4 child directories.
-- **linear-all/** - Contains **ANQR Linear All**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **notifications/** - Contains **ANQR Notifications**; it acts mainly as a namespace over child directories and has 1 child directories.
-- **orchestration/** - Contains **ANQR Orchestration**; it contains 12 immediate files and has 9 child directories.
-- **reporting/** - Contains **ANQR Reporting**; it acts mainly as a namespace over child directories and has 1 child directories.
-- **runtime/** - Contains **ANQR Runtime**; it acts mainly as a namespace over child directories and has 5 child directories.
-- **symphony/** - Contains **ANQR Symphony**; it contains 1 immediate files and has 0 child directories.
-- **tools/** - Contains **ANQR Tools**; it contains 4 immediate files and has 3 child directories.
-- **types/** - Contains **ANQR Types**; it contains 1 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include timer, scheduling, cooldown, or watchdog behavior, Linear integration, Symphony integration, SonarQube integration, and git/worktree awareness.
-
-## 4. Usage Instructions
-
-```bash
-python3 ops/issue_hygiene.py
-python3 ops/model-injector-proxy.py
-./ops/self-healing-automation.sh
-```
-
-## 5. Dependencies
-
-- **External packages/services referenced in immediate code** - `child_process`
-- **Internal relative modules** - `./core/symphony-config.mjs`, `./core/symphony-state.mjs`, `./core/symphony-validation.mjs`, `./governance/linear-guardian.mjs`, `./harness-doctor/index.mjs`, `./harness-doctor/runtime.mjs`, `./integrations/email/email-ingest.mjs`, `./integrations/linear/linear-client.mjs`, `./integrations/model/ollama-local-audit.mjs`, `./integrations/model/symphony-credit-gate.mjs`, `./integrations/model/symphony-credit-gate/provider-probe-diagnostics.mjs`, `./integrations/model/symphony-credit-gate/save-probe-cache.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Trace whether scheduler authority, execution ownership, state persistence, and evidence publication are cleanly separated across `core/`, `integrations/`, `orchestration/`, and `runtime/`.

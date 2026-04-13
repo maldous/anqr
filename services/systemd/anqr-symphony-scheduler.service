@@ -1,0 +1,21 @@
+[Unit]
+Description=ANQR Symphony Scheduler (ADR-0002 authoritative claim+dispatch)
+After=network.target anqr-symphony-router.service
+Wants=anqr-symphony-router.service
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/systemd/user/anqr-ops.env
+WorkingDirectory=%h/src/anqr
+ExecStart=/usr/bin/node harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-symphony-scheduler
+
+# Resource limits
+LimitNOFILE=4096
+
+[Install]
+WantedBy=default.target

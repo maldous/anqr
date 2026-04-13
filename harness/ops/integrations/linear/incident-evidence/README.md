@@ -1,37 +1,28 @@
-# ANQR Linear Incident Evidence
+# Incident Evidence
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `collect-incident-evidence.mjs`, `format-evidence-for-issue.mjs`, `get-git-context.mjs`, `get-service-journal.mjs`, and others.
 
-This directory implements **ANQR Linear Incident Evidence** within the ANQR harness. Key immediate entries include `index.mjs`, `get-state-file-info.mjs`, `format-evidence-for-issue.mjs`, `get-system-info.mjs`. The current inventory is 8 non-README files and 0 subdirectories.
+## Contents
+- 8 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `collect-incident-evidence.mjs` - Exports `collectIncidentEvidence`, the main helper defined in this file.
+- `format-evidence-for-issue.mjs` - Exports `formatEvidenceForIssue`, the main helper defined in this file.
+- `get-git-context.mjs` - Exports `getGitContext`, the main helper defined in this file.
+- `get-service-journal.mjs` - Exports `getServiceJournal`, the main helper defined in this file.
+- `get-state-file-info.mjs` - Exports `getStateFileInfo`, the main helper defined in this file.
+- `get-system-info.mjs` - Exports `getSystemInfo`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **collect-incident-evidence.mjs** - Exports `collectIncidentEvidence`, which collects incident evidence.
-- **format-evidence-for-issue.mjs** - Exports `formatEvidenceForIssue`, which formats evidence for issue.
-- **get-git-context.mjs** - Exports `getGitContext`, which gets git context.
-- **get-service-journal.mjs** - Exports `getServiceJournal`, which gets service journal.
-- **get-state-file-info.mjs** - Exports `getStateFileInfo`, which gets state file info.
-- **get-system-info.mjs** - Exports `getSystemInfo`, which gets system info.
-- **index.mjs** - Facade module that re-exports public members from `./get-service-journal.mjs`, `./get-git-context.mjs`, `./get-system-info.mjs`, `./get-state-file-info.mjs`, `./collect-incident-evidence.mjs`, `./format-evidence-for-issue.mjs`.
-- **logger.mjs** - Shared logging helper module exporting `logWarn`.
+## Operational Notes
+- Current on-disk inventory: 8 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include subprocess execution, Linear integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./ops/integrations/linear/incident-evidence/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:child_process`, `node:fs`
-- **Internal relative modules** - `../../../lib/logger.mjs`, `../../model/symphony-provider-health.mjs`, `./get-git-context.mjs`, `./get-service-journal.mjs`, `./get-state-file-info.mjs`, `./get-system-info.mjs`, `./logger.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

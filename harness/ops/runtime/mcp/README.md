@@ -1,33 +1,23 @@
-# ANQR MCP Runtime
+# Mcp
 
-## 1. Directory Overview
+## Purpose
+Directory for runtime service bootstrap or environment support; immediate files include `context7-http-service.mjs`, `context7-server.mjs`, with child directories `context7-http-service/`, `context7-server/`.
 
-This directory implements **ANQR MCP Runtime** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 2 non-README files and 2 subdirectories.
+## Contents
+- 2 immediate files
+- 2 child directories
 
-## 2. File Summaries
+## Key Files
+- `context7-http-service.mjs` - JavaScript/TypeScript module used by this directory.
+- `context7-server.mjs` - JavaScript/TypeScript module used by this directory.
 
-### Files
+## Subdirectories
+- `context7-http-service/` - Directory for runtime service bootstrap or environment support; immediate files include `handle-request.mjs`, `index.mjs`, `logger.mjs`, `port.mjs`, and others.
+- `context7-server/` - Directory for runtime service bootstrap or environment support; immediate files include `add-part.mjs`, `build-docs-arguments.mjs`, `build-resolve-arguments.mjs`, `call-local-tool.mjs`, and others.
 
-- **context7-http-service.mjs** - Facade module that re-exports public members from `./context7-http-service/index.mjs`, `./context7-http-service/runtime.mjs`.
-- **context7-server.mjs** - Facade module that re-exports public members from `./context7-server/index.mjs`, `./context7-server/runtime.mjs`.
+## Operational Notes
+- Current on-disk inventory: 2 immediate files and 2 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **context7-http-service/** - Contains **Context7 HTTP Service**; it contains 10 immediate files and has 0 child directories.
-- **context7-server/** - Contains **ANQR Context7 Server**; it contains 51 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
-
-## 4. Usage Instructions
-
-This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
-
-## 5. Dependencies
-
-- **Internal relative modules** - `./context7-http-service/index.mjs`, `./context7-http-service/runtime.mjs`, `./context7-server/index.mjs`, `./context7-server/runtime.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.

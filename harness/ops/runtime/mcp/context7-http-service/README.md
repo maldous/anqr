@@ -1,39 +1,30 @@
-# Context7 HTTP Service
+# Context7 Http Service
 
-## 1. Directory Overview
+## Purpose
+Directory for runtime service bootstrap or environment support; immediate files include `handle-request.mjs`, `index.mjs`, `logger.mjs`, `port.mjs`, and others.
 
-This directory implements **Context7 HTTP Service** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 10 non-README files and 0 subdirectories.
+## Contents
+- 10 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `handle-request.mjs` - Exports `handleRequest`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `port.mjs` - Exports `PORT`, a shared constant or state value used by sibling modules.
+- `read-body.mjs` - Exports `readBody`, the main helper defined in this file.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `send-json.mjs` - Exports `sendJSON`, the main helper defined in this file.
+- `server.mjs` - Exports `server`, a shared constant or state value used by sibling modules.
+- `shutdown.mjs` - Exports `shutdown`, the main helper defined in this file.
+- `started-at.mjs` - Exports `startedAt`, a shared constant or state value used by sibling modules.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **handle-request.mjs** - Exports `handleRequest`, which implements handle request.
-- **index.mjs** - Facade module that re-exports public members from `./port.mjs`, `./started-at.mjs`, `./read-body.mjs`, `./send-json.mjs`, `./handle-request.mjs`, `./server.mjs`, and 1 more siblings.
-- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
-- **port.mjs** - Exports `PORT`, a shared constant used by sibling modules.
-- **read-body.mjs** - Exports `readBody`, which reads body.
-- **runtime.mjs** - Executable runtime entry point for this directory.
-- **send-json.mjs** - Exports `sendJSON`, which implements send json.
-- **server.mjs** - Exports `server`, which implements server.
-- **shutdown.mjs** - Exports `shutdown`, which implements shutdown.
-- **started-at.mjs** - Exports `startedAt`, which implements started at.
+## Operational Notes
+- Current on-disk inventory: 10 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory use network/API integration. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/runtime/mcp/context7-http-service/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:http`
-- **Internal relative modules** - `../../../lib/logger.mjs`, `../context7-server.mjs`, `./handle-request.mjs`, `./index.mjs`, `./logger.mjs`, `./read-body.mjs`, `./send-json.mjs`, `./server.mjs`, `./started-at.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.

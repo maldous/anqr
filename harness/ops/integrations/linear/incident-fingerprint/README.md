@@ -1,31 +1,23 @@
-# ANQR Linear Incident Fingerprint
+# Incident Fingerprint
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `build-fingerprint-marker.mjs`, `generate-incident-fingerprint.mjs`, `index.mjs`.
 
-This directory implements **ANQR Linear Incident Fingerprint** within the ANQR harness. Key immediate entries include `index.mjs`, `generate-incident-fingerprint.mjs`, `build-fingerprint-marker.mjs`. The current inventory is 3 non-README files and 0 subdirectories.
+## Contents
+- 3 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `build-fingerprint-marker.mjs` - Exports `buildFingerprintMarker`, the main helper defined in this file.
+- `generate-incident-fingerprint.mjs` - Exports `generateIncidentFingerprint`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **build-fingerprint-marker.mjs** - Exports `buildFingerprintMarker`, which builds fingerprint marker.
-- **generate-incident-fingerprint.mjs** - Exports `generateIncidentFingerprint`, which implements generate incident fingerprint.
-- **index.mjs** - Facade module that re-exports public members from `./generate-incident-fingerprint.mjs`, `./build-fingerprint-marker.mjs`.
+## Operational Notes
+- Current on-disk inventory: 3 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory use Linear integration.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./ops/integrations/linear/incident-fingerprint/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:crypto`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

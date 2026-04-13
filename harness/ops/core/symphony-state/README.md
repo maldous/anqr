@@ -1,91 +1,82 @@
-# ANQR Symphony State
+# Symphony State
 
-## 1. Directory Overview
+## Purpose
+Directory for git worktree management and concurrency support; immediate files include `acquire-integration-lock.mjs`, `acquire-lease.mjs`, `acquire-state-lock.mjs`, `add-external-key.mjs`, and others, with child directories `acquire-state-lock/`.
 
-This directory implements **ANQR Symphony State** within the ANQR harness. Key immediate entries include `index.mjs`, `get-next-repairable-issue-for-worktree.mjs`, `list-repairable-issues-for-worktree.mjs`, `mark-issue-human-only.mjs`. The current inventory is 62 non-README files and 0 subdirectories.
+## Contents
+- 62 immediate files
+- 1 child directory
 
-## 2. File Summaries
+## Key Files
+- `acquire-integration-lock.mjs` - Exports `acquireIntegrationLock`, the main helper defined in this file.
+- `acquire-lease.mjs` - Exports `acquireLease`, the main helper defined in this file.
+- `acquire-state-lock.mjs` - Re-export facade that assembles the public surface for this directory.
+- `add-external-key.mjs` - Exports `addExternalKey`, the main helper defined in this file.
+- `calculate-exponential-backoff.mjs` - Exports `calculateExponentialBackoff`, the main helper defined in this file.
+- `can-execute-issue.mjs` - Exports `canExecuteIssue`, the main helper defined in this file.
+- `can-feed-issue.mjs` - Exports `canFeedIssue`, the main helper defined in this file.
+- `check-latency-baseline.mjs` - Exports `checkLatencyBaseline`, the main helper defined in this file.
+- `clear-cooldown.mjs` - Exports `clearCooldown`, the main helper defined in this file.
+- `clear-quarantine.mjs` - Exports `clearQuarantine`, the main helper defined in this file.
+- `default-lease-ms.mjs` - Exports `DEFAULT_LEASE_MS`, a shared constant or state value used by sibling modules.
+- `dequeue-integration-candidate.mjs` - Exports `dequeueIntegrationCandidate`, the main helper defined in this file.
+- `empty-store.mjs` - Exports `emptyStore`, the main helper defined in this file.
+- `enqueue-integration-candidate.mjs` - Exports `enqueueIntegrationCandidate`, the main helper defined in this file.
+- `ensure-dir.mjs` - Exports `ensureDir`, the main helper defined in this file.
+- `find-expired-leases.mjs` - Exports `findExpiredLeases`, the main helper defined in this file.
+- `get-finalization-state.mjs` - Exports `getFinalizationState`, the main helper defined in this file.
+- `get-fleet-snapshot.mjs` - Exports `getFleetSnapshot`, the main helper defined in this file.
+- `get-global-value.mjs` - Exports `getGlobalValue`, the main helper defined in this file.
+- `get-issue-state.mjs` - Exports `getIssueState`, the main helper defined in this file.
+- `get-latency-metrics.mjs` - Exports `getLatencyMetrics`, the main helper defined in this file.
+- `get-lock-file.mjs` - Exports `getLockFile`, the main helper defined in this file.
+- `get-next-repairable-issue-for-worktree.mjs` - Exports `getNextRepairableIssueForWorktree`, the main helper defined in this file.
+- `get-state-dir.mjs` - Exports `getStateDir`, the main helper defined in this file.
+- `get-state-file.mjs` - Exports `getStateFile`, the main helper defined in this file.
+- `get-worktree-state.mjs` - Exports `getWorktreeState`, the main helper defined in this file.
+- `heartbeat-lease.mjs` - Exports `heartbeatLease`, the main helper defined in this file.
+- `history-limit.mjs` - Exports `HISTORY_LIMIT`, a shared constant or state value used by sibling modules.
+- `host-id.mjs` - Exports `HOST_ID`, a shared constant or state value used by sibling modules.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `is-lock-process-alive.mjs` - Exports `isLockProcessAlive`, the main helper defined in this file.
+- `lease-is-active.mjs` - Exports `leaseIsActive`, the main helper defined in this file.
+- `list-integration-candidates.mjs` - Exports `listIntegrationCandidates`, the main helper defined in this file.
+- `list-repairable-issues-for-worktree.mjs` - Exports `listRepairableIssuesForWorktree`, the main helper defined in this file.
+- `list-worktrees-by-state.mjs` - Exports `listWorktreesByState`, the main helper defined in this file.
+- `load-state.mjs` - Exports `loadState`, the main helper defined in this file.
+- `lock-max-retries.mjs` - Exports `LOCK_MAX_RETRIES`, a shared constant or state value used by sibling modules.
+- `lock-retry-interval-ms.mjs` - Exports `LOCK_RETRY_INTERVAL_MS`, a shared constant or state value used by sibling modules.
+- `lock-stale-ms.mjs` - Exports `LOCK_STALE_MS`, a shared constant or state value used by sibling modules.
+- `mark-issue-human-only.mjs` - Exports `markIssueHumanOnly`, the main helper defined in this file.
+- `mark-retry-exhausted.mjs` - Exports `markRetryExhausted`, the main helper defined in this file.
+- `mutate-state.mjs` - Exports `mutateState`, the main helper defined in this file.
+- `normalize-record.mjs` - Exports `normalizeRecord`, the main helper defined in this file.
+- `note-attempt-start.mjs` - Exports `noteAttemptStart`, the main helper defined in this file.
+- `now-iso.mjs` - Exports `nowIso`, the main helper defined in this file.
+- `patch-issue-state.mjs` - Exports `patchIssueState`, the main helper defined in this file.
+- `prune-history.mjs` - Exports `pruneHistory`, the main helper defined in this file.
+- `record-completion.mjs` - Exports `recordCompletion`, the main helper defined in this file.
+- `record-quarantine.mjs` - Exports `recordQuarantine`, the main helper defined in this file.
+- `record-retry-event.mjs` - Exports `recordRetryEvent`, the main helper defined in this file.
+- `record-transition.mjs` - Exports `recordTransition`, the main helper defined in this file.
+- `release-integration-lock.mjs` - Exports `releaseIntegrationLock`, the main helper defined in this file.
+- `release-lease.mjs` - Exports `releaseLease`, the main helper defined in this file.
+- `release-state-lock.mjs` - Exports `releaseStateLock`, the main helper defined in this file.
+- `repairable-finalization-states.mjs` - Exports `REPAIRABLE_FINALIZATION_STATES`, a shared constant or state value used by sibling modules.
+- `reset-retry-state.mjs` - Exports `resetRetryState`, the main helper defined in this file.
+- `save-state.mjs` - Exports `saveState`, the main helper defined in this file.
+- `set-cooldown.mjs` - Exports `setCooldown`, the main helper defined in this file.
+- `set-finalization-state.mjs` - Exports `setFinalizationState`, the main helper defined in this file.
+- `set-global-value.mjs` - Exports `setGlobalValue`, the main helper defined in this file.
+- `set-worktree-state.mjs` - Exports `setWorktreeState`, the main helper defined in this file.
+- `with-state-lock.mjs` - Exports `withStateLock`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- `acquire-state-lock/` - Directory for harness support logic; immediate files include `acquire-state-lock.mjs`, `index.mjs`, `sleep-sync.mjs`.
 
-- **acquire-integration-lock.mjs** - Exports `acquireIntegrationLock`, which acquires integration lock.
-- **acquire-lease.mjs** - Exports `acquireLease`, which acquires lease.
-- **acquire-state-lock.mjs** - Exports `acquireStateLock`, which acquires state lock.
-- **add-external-key.mjs** - Exports `addExternalKey`, which implements add external key.
-- **calculate-exponential-backoff.mjs** - Exports `calculateExponentialBackoff`, which calculates exponential backoff.
-- **can-execute-issue.mjs** - Exports `canExecuteIssue`, which determines whether execute issue.
-- **can-feed-issue.mjs** - Exports `canFeedIssue`, which determines whether feed issue.
-- **check-latency-baseline.mjs** - Exports `checkLatencyBaseline`, which checks latency baseline.
-- **clear-cooldown.mjs** - Exports `clearCooldown`, which clears cooldown.
-- **clear-quarantine.mjs** - Exports `clearQuarantine`, which clears quarantine.
-- **default-lease-ms.mjs** - Exports `DEFAULT_LEASE_MS`, a shared constant used by sibling modules.
-- **dequeue-integration-candidate.mjs** - Exports `dequeueIntegrationCandidate`, which dequeues integration candidate.
-- **empty-store.mjs** - Exports `emptyStore`, which implements empty store.
-- **enqueue-integration-candidate.mjs** - Exports `enqueueIntegrationCandidate`, which enqueues integration candidate.
-- **ensure-dir.mjs** - Exports `ensureDir`, which ensures dir.
-- **find-expired-leases.mjs** - Exports `findExpiredLeases`, which finds expired leases.
-- **get-finalization-state.mjs** - Exports `getFinalizationState`, which gets finalization state.
-- **get-fleet-snapshot.mjs** - Exports `getFleetSnapshot`, which gets fleet snapshot.
-- **get-global-value.mjs** - Exports `getGlobalValue`, which gets global value.
-- **get-issue-state.mjs** - Exports `getIssueState`, which gets issue state.
-- **get-latency-metrics.mjs** - Exports `getLatencyMetrics`, which gets latency metrics.
-- **get-lock-file.mjs** - Exports `getLockFile`, which gets lock file.
-- **get-next-repairable-issue-for-worktree.mjs** - Exports `getNextRepairableIssueForWorktree`, which gets next repairable issue for worktree.
-- **get-state-dir.mjs** - Exports `getStateDir`, which gets state dir.
-- **get-state-file.mjs** - Exports `getStateFile`, which gets state file.
-- **get-worktree-state.mjs** - Exports `getWorktreeState`, which gets worktree state.
-- **heartbeat-lease.mjs** - Exports `heartbeatLease`, which implements heartbeat lease.
-- **history-limit.mjs** - Exports `HISTORY_LIMIT`, a shared constant used by sibling modules.
-- **host-id.mjs** - Exports `HOST_ID`, a shared constant used by sibling modules.
-- **index.mjs** - Facade module that re-exports public members from `./get-state-dir.mjs`, `./get-state-file.mjs`, `./get-lock-file.mjs`, `./default-lease-ms.mjs`, `./history-limit.mjs`, `./host-id.mjs`, and 55 more siblings.
-- **is-lock-process-alive.mjs** - Exports `isLockProcessAlive`, which checks whether lock process alive.
-- **lease-is-active.mjs** - Exports `leaseIsActive`, which implements lease is active.
-- **list-integration-candidates.mjs** - Exports `listIntegrationCandidates`, which lists integration candidates.
-- **list-repairable-issues-for-worktree.mjs** - Exports `listRepairableIssuesForWorktree`, which lists repairable issues for worktree.
-- **list-worktrees-by-state.mjs** - Exports `listWorktreesByState`, which lists worktrees by state.
-- **load-state.mjs** - Exports `loadState`, which loads state.
-- **lock-max-retries.mjs** - Exports `LOCK_MAX_RETRIES`, a shared constant used by sibling modules.
-- **lock-retry-interval-ms.mjs** - Exports `LOCK_RETRY_INTERVAL_MS`, a shared constant used by sibling modules.
-- **lock-stale-ms.mjs** - Exports `LOCK_STALE_MS`, a shared constant used by sibling modules.
-- **mark-issue-human-only.mjs** - Exports `markIssueHumanOnly`, which marks issue human only.
-- **mark-retry-exhausted.mjs** - Exports `markRetryExhausted`, which marks retry exhausted.
-- **mutate-state.mjs** - Exports `mutateState`, which implements mutate state.
-- **normalize-record.mjs** - Exports `normalizeRecord`, which normalizes record.
-- **note-attempt-start.mjs** - Exports `noteAttemptStart`, which implements note attempt start.
-- **now-iso.mjs** - Exports `nowIso`, which implements now iso.
-- **patch-issue-state.mjs** - Exports `patchIssueState`, which implements patch issue state.
-- **prune-history.mjs** - Exports `pruneHistory`, which implements prune history.
-- **record-completion.mjs** - Exports `recordCompletion`, which implements record completion.
-- **record-quarantine.mjs** - Exports `recordQuarantine`, which implements record quarantine.
-- **record-retry-event.mjs** - Exports `recordRetryEvent`, which implements record retry event.
-- **record-transition.mjs** - Exports `recordTransition`, which implements record transition.
-- **release-integration-lock.mjs** - Exports `releaseIntegrationLock`, which releases integration lock.
-- **release-lease.mjs** - Exports `releaseLease`, which releases lease.
-- **release-state-lock.mjs** - Exports `releaseStateLock`, which releases state lock.
-- **repairable-finalization-states.mjs** - Exports `REPAIRABLE_FINALIZATION_STATES`, a shared `Set` constant used by this module group.
-- **reset-retry-state.mjs** - Exports `resetRetryState`, which implements reset retry state.
-- **save-state.mjs** - Exports `saveState`, which implements save state.
-- **set-cooldown.mjs** - Exports `setCooldown`, which implements set cooldown.
-- **set-finalization-state.mjs** - Exports `setFinalizationState`, which implements set finalization state.
-- **set-global-value.mjs** - Exports `setGlobalValue`, which implements set global value.
-- **set-worktree-state.mjs** - Exports `setWorktreeState`, which implements set worktree state.
-- **with-state-lock.mjs** - Exports `withStateLock`, which implements with state lock.
+## Operational Notes
+- Current on-disk inventory: 62 immediate files and 1 child directory.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, timer, scheduling, cooldown, or watchdog behavior, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./ops/core/symphony-state/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:fs`, `node:os`, `node:path`
-- **Internal relative modules** - `./acquire-state-lock.mjs`, `./can-execute-issue.mjs`, `./default-lease-ms.mjs`, `./empty-store.mjs`, `./ensure-dir.mjs`, `./get-global-value.mjs`, `./get-issue-state.mjs`, `./get-lock-file.mjs`, `./get-state-dir.mjs`, `./get-state-file.mjs`, `./history-limit.mjs`, `./host-id.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

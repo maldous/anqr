@@ -1,37 +1,28 @@
-# ANQR Test Discord Integration
+# Test Discord
 
-## 1. Directory Overview
+## Purpose
+Directory for OpenClaw gateway/runtime configuration; immediate files include `index.mjs`, `logger.mjs`, `openclaw-gateway-host.mjs`, `openclaw-gateway-port.mjs`, and others.
 
-This directory implements **ANQR Test Discord Integration** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 8 non-README files and 0 subdirectories.
+## Contents
+- 8 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `openclaw-gateway-host.mjs` - Exports `OPENCLAW_GATEWAY_HOST`, a shared constant or state value used by sibling modules.
+- `openclaw-gateway-port.mjs` - Exports `OPENCLAW_GATEWAY_PORT`, a shared constant or state value used by sibling modules.
+- `openclaw-gateway-token.mjs` - Exports `OPENCLAW_GATEWAY_TOKEN`, a shared constant or state value used by sibling modules.
+- `run-tests.mjs` - Exports `runTests`, the main helper defined in this file.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `test-voice-announcement.mjs` - Exports `testVoiceAnnouncement`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **index.mjs** - Facade module that re-exports public members from `./openclaw-gateway-host.mjs`, `./openclaw-gateway-port.mjs`, `./openclaw-gateway-token.mjs`, `./test-voice-announcement.mjs`, `./run-tests.mjs`.
-- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`, `logWarn`.
-- **openclaw-gateway-host.mjs** - Exports `OPENCLAW_GATEWAY_HOST`, a shared constant used by sibling modules.
-- **openclaw-gateway-port.mjs** - Exports `OPENCLAW_GATEWAY_PORT`, a shared constant used by sibling modules.
-- **openclaw-gateway-token.mjs** - Exports `OPENCLAW_GATEWAY_TOKEN`, a shared constant used by sibling modules.
-- **run-tests.mjs** - Exports `runTests`, which runs tests.
-- **runtime.mjs** - Executable runtime entry point for this directory.
-- **test-voice-announcement.mjs** - Exports `testVoiceAnnouncement`, which implements test voice announcement.
+## Operational Notes
+- Current on-disk inventory: 8 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include network/API integration, Discord integration, OpenClaw integration, and Symphony integration. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/integrations/notifications/test-discord/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:http`
-- **Internal relative modules** - `../../../lib/logger.mjs`, `./index.mjs`, `./logger.mjs`, `./openclaw-gateway-host.mjs`, `./openclaw-gateway-port.mjs`, `./openclaw-gateway-token.mjs`, `./test-voice-announcement.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

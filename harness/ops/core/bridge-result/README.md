@@ -1,34 +1,26 @@
-# Bridge Result Normalization
+# Bridge Result
 
-## 1. Directory Overview
+## Purpose
+Directory for harness support logic; immediate files include `index.mjs`, `infer-symphony-result-from-completion.mjs`, `normalize-count.mjs`, `normalize-failure-class.mjs`, and others.
 
-This directory implements **Bridge Result Normalization** within the ANQR harness. Key immediate entries include `index.mjs`, `infer-symphony-result-from-completion.mjs`, `normalize-symphony-result.mjs`, `normalize-string-array.mjs`. The current inventory is 6 non-README files and 0 subdirectories.
+## Contents
+- 6 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `infer-symphony-result-from-completion.mjs` - Exports `inferSymphonyResultFromCompletion`, the main helper defined in this file.
+- `normalize-count.mjs` - Exports `normalizeCount`, the main helper defined in this file.
+- `normalize-failure-class.mjs` - Exports `normalizeFailureClass`, the main helper defined in this file.
+- `normalize-string-array.mjs` - Exports `normalizeStringArray`, the main helper defined in this file.
+- `normalize-symphony-result.mjs` - Exports `normalizeSymphonyResult`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **index.mjs** - Facade module that re-exports public members from `./normalize-string-array.mjs`, `./normalize-count.mjs`, `./normalize-failure-class.mjs`, `./normalize-symphony-result.mjs`, `./infer-symphony-result-from-completion.mjs`.
-- **infer-symphony-result-from-completion.mjs** - Exports `inferSymphonyResultFromCompletion`, which implements infer symphony result from completion.
-- **normalize-count.mjs** - Exports `normalizeCount`, which normalizes count.
-- **normalize-failure-class.mjs** - Exports `normalizeFailureClass`, which normalizes failure class.
-- **normalize-string-array.mjs** - Exports `normalizeStringArray`, which normalizes string array.
-- **normalize-symphony-result.mjs** - Exports `normalizeSymphonyResult`, which normalizes symphony result.
+## Operational Notes
+- Current on-disk inventory: 6 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory use Symphony integration.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./ops/core/bridge-result/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Internal relative modules** - `./normalize-count.mjs`, `./normalize-failure-class.mjs`, `./normalize-string-array.mjs`, `./normalize-symphony-result.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

@@ -1,56 +1,39 @@
-# ANQR Harness
+# Harness
 
-## 1. Directory Overview
+## Purpose
+Top-level harness entry surface that combines the Structurizr architecture model, thin CLI facade modules, and the maintained `ops/` runtime tree.
 
-This directory is the root of the ANQR harness. It combines thin top-level entry files, repository-local utility scripts, Structurizr workspace artifacts, and the canonical `ops/` runtime tree. The current inventory is 12 non-README files and 8 subdirectories.
+## Contents
+- 12 immediate files
+- 8 child directories
 
-## 2. File Summaries
+## Key Files
+- `agent-docs-check.mjs` - JavaScript/TypeScript module used by this directory.
+- `audit-ast-density.mjs` - JavaScript/TypeScript module used by this directory.
+- `contracts-check.mjs` - JavaScript/TypeScript module used by this directory.
+- `export-linear-all.mjs` - JavaScript/TypeScript module used by this directory.
+- `generate-openapi.ts` - @ts-ignore - harness logger implemented in .mjs for runtime parity
+- `git-setup.sh` - Shell script used by this directory.
+- `list-ast-names.mjs` - JavaScript/TypeScript module used by this directory.
+- `rename-to-standards.mjs` - JavaScript/TypeScript module used by this directory.
+- `show-metrics.py` - Python script used by this directory.
+- `sonar-export.sh` - Shell script used by this directory.
+- `workspace.dsl` - Support file used by this directory.
+- `workspace.json` - JSON configuration/data file with top-level keys `configuration`, `description`, `documentation`, `id`, `model`, `name`, `properties`, `views`.
 
-### Files
+## Subdirectories
+- `agent-docs-check/` - Directory for runtime service bootstrap or environment support; immediate files include `compare-sets.mjs`, `errors.mjs`, `index.mjs`, `logger.mjs`, and others.
+- `audit-ast-density/` - Directory for runtime service bootstrap or environment support; immediate files include `collect-heavy-nodes.mjs`, `default-threshold.mjs`, `describe-variable-declaration.mjs`, `format-entry.mjs`, and others.
+- `contracts-check/` - Directory for runtime service bootstrap or environment support; immediate files include `allowed-schema-import-sources.mjs`, `collect-files.mjs`, `contracts-root.mjs`, `errors.mjs`, and others.
+- `export-linear-all/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `fetch-all-issues.mjs`, `index.mjs`, `main.mjs`.
+- `lib/` - Directory for harness support logic; immediate files include `ast-helpers.mjs`, with child directories `ast-helpers/`.
+- `list-ast-names/` - Directory for runtime service bootstrap or environment support; immediate files include `collect-top-level-entries.mjs`, `describe-variable-declaration.mjs`, `flatten-results.mjs`, `format-flat.mjs`, and others.
+- `ops/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `email-ingest.mjs`, `harness-doctor.mjs`, `harness-report.mjs`, `issue_hygiene.py`, and others, with child directories `core/`, `governance/`, `harness-doctor/`, `integrations/`, and others.
+- `rename-to-standards/` - Directory for harness support logic; immediate files include `apply-plan.mjs`, `build-plan.mjs`, `choose-primary-entry.mjs`, `code-extensions.mjs`, and others.
 
-- **agent-docs-check.mjs** - Facade module that re-exports public members from `./agent-docs-check/index.mjs`, `./agent-docs-check/runtime.mjs`.
-- **audit-ast-density.mjs** - Facade module that re-exports public members from `./audit-ast-density/index.mjs`, `./audit-ast-density/runtime.mjs`.
-- **contracts-check.mjs** - Facade module that re-exports public members from `./contracts-check/index.mjs`, `./contracts-check/runtime.mjs`.
-- **export-linear-all.mjs** - Facade module that re-exports public members from `./export-linear-all/index.mjs`.
-- **generate-openapi.ts** - Generates an OpenAPI document from the QR API contract and writes it to the repository's `docs/api` output path.
-- **git-setup.sh** - Shell script that implements git setup.
-- **list-ast-names.mjs** - Facade module that re-exports public members from `./list-ast-names/index.mjs`, `./list-ast-names/runtime.mjs`.
-- **rename-to-standards.mjs** - Facade module that re-exports public members from `./rename-to-standards/index.mjs`.
-- **show-metrics.py** - Python script that queries the local Symphony stats endpoint and prints ranked provider metrics.
-- **sonar-export.sh** - Shell script that exports SonarQube issues, hotspots, duplication data, and measures into a consolidated report.
-- **workspace.dsl** - Structurizr DSL workspace file defining the architecture model and views.
-- **workspace.json** - JSON configuration or data file with top-level keys `configuration`, `description`, `documentation`, `id`, `lastModifiedDate`, `model`, `name`, `properties`.
+## Operational Notes
+- This directory is the documentation and entry-point bridge between the repository root and the deeper harness runtime tree.
+- The strongest architecture intent files here are `workspace.dsl` and the facade modules that pin public command names to maintained implementations.
 
-### Subdirectories
-
-- **agent-docs-check/** - Contains **agent-docs-check**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **audit-ast-density/** - Contains **AST Density Audit**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **contracts-check/** - Contains **Contracts Check**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **export-linear-all/** - Contains **export-linear-all**; it contains a module set centered on `main.mjs` and has 0 child directories.
-- **lib/** - Contains **Lib**; it acts mainly as a namespace over child directories and has 1 child directories.
-- **list-ast-names/** - Contains **List AST Names**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **ops/** - Contains **ANQR Operations**; it contains 24 immediate files and has 14 child directories.
-- **rename-to-standards/** - Contains **Rename to Standards**; it contains a module set centered on `main.mjs` and has 0 child directories.
-
-## 3. Overall Directory Function
-
-At the repository root, thin top-level facade and utility files sit beside the canonical `ops/` runtime tree and the Structurizr workspace files. Verified immediate files in this directory include file-system access, network/API integration, Linear integration, Symphony integration, SonarQube integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-npx tsx generate-openapi.ts
-./git-setup.sh
-python3 show-metrics.py
-./sonar-export.sh
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:fs/promises`, `node:path`, `node:url`
-- **External packages/services referenced in immediate code** - `@ts-rest/open-api`
-- **Internal relative modules** - `../packages/contracts/api/src`, `./agent-docs-check/index.mjs`, `./agent-docs-check/runtime.mjs`, `./audit-ast-density/index.mjs`, `./audit-ast-density/runtime.mjs`, `./contracts-check/index.mjs`, `./contracts-check/runtime.mjs`, `./export-linear-all/index.mjs`, `./list-ast-names/index.mjs`, `./list-ast-names/runtime.mjs`, `./ops/lib/logger.mjs`, `./rename-to-standards/index.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Confirm the top-level wrappers still map cleanly into the maintained `ops/` implementations and that workspace artifacts match the real runtime topology.

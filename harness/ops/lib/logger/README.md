@@ -1,32 +1,24 @@
-# ANQR Logger
+# Logger
 
-## 1. Directory Overview
+## Purpose
+Directory for harness support logic; immediate files include `create-logger.mjs`, `get-caller-info.mjs`, `index.mjs`, `log-levels.mjs`.
 
-This directory implements **ANQR Logger** within the ANQR harness. Key immediate entries include `index.mjs`, `get-caller-info.mjs`, `log-levels.mjs`, `create-logger.mjs`. The current inventory is 4 non-README files and 0 subdirectories.
+## Contents
+- 4 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `create-logger.mjs` - Exports `createLogger`, the main helper defined in this file.
+- `get-caller-info.mjs` - Exports `getCallerInfo`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `log-levels.mjs` - Exports `LOG_LEVELS`, a shared constant or state value used by sibling modules.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **create-logger.mjs** - Exports `createLogger`, which creates logger.
-- **get-caller-info.mjs** - Exports `getCallerInfo`, which gets caller info.
-- **index.mjs** - Facade module that re-exports public members from `./log-levels.mjs`, `./get-caller-info.mjs`, `./create-logger.mjs`.
-- **log-levels.mjs** - Exports `LOG_LEVELS`, a shared constant used by sibling modules.
+## Operational Notes
+- Current on-disk inventory: 4 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./ops/lib/logger/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Internal relative modules** - `./get-caller-info.mjs`, `./log-levels.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

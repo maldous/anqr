@@ -1,31 +1,25 @@
-# ANQR Integrations
+# Integrations
 
-## 1. Directory Overview
+## Purpose
+Directory for harness support logic, with child directories `email/`, `linear/`, `model/`, `notifications/`, and others.
 
-This directory implements **ANQR Integrations** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 0 non-README files and 5 subdirectories.
+## Contents
+- 0 immediate files
+- 5 child directories
 
-## 2. File Summaries
+## Key Files
+- No immediate non-README files in this directory.
 
-### Subdirectories
+## Subdirectories
+- `email/` - Directory for harness support logic; immediate files include `email-ingest.mjs`, with child directories `email-ingest/`.
+- `linear/` - Directory for Discord ingress, delivery, or notification support; immediate files include `agent-workflow-create-issue.mjs`, `analyze-canceled-issues.mjs`, `create-ast-audit-issues.mjs`, `create-issue-template.mjs`, and others, with child directories `agent-workflow-create-issue/`, `analyze-canceled-issues/`, `create-issue-template/`, `delete-sonar-issues/`, and others.
+- `model/` - Directory for Discord ingress, delivery, or notification support; immediate files include `codebuff-cwd-isolation.spec.ts`, `codebuff-direct.mjs`, `codebuff-sdk-runner.mjs`, `discord-request-router.mjs`, and others, with child directories `codebuff-direct/`, `discord-request-router/`, `linear-webhook-receiver/`, `ollama-local-audit/`, and others.
+- `notifications/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `openclaw-discord.mjs`, `test-discord.mjs`, with child directories `openclaw-discord/`, `test-discord/`.
+- `sonar/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `sonar-linear-audit.mjs`, `sonar-linear-sync.mjs`, with child directories `sonar-linear-audit/`, `sonar-linear-sync/`.
 
-- **email/** - Contains **ANQR Email Integrations**; it acts mainly as a namespace over child directories and has 1 child directories.
-- **linear/** - Contains **ANQR Linear Integrations**; it contains 29 immediate files and has 18 child directories.
-- **model/** - Contains **ANQR Model Integrations**; it contains 24 immediate files and has 11 child directories.
-- **notifications/** - Contains **ANQR Notifications**; it acts mainly as a namespace over child directories and has 2 child directories.
-- **sonar/** - Contains **ANQR Sonar Integration**; it acts mainly as a namespace over child directories and has 2 child directories.
+## Operational Notes
+- Current on-disk inventory: 0 immediate files and 5 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation.
-
-## 4. Usage Instructions
-
-This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
-
-## 5. Dependencies
-
-- No explicit code-level dependency imports were found in the immediate non-README files.
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

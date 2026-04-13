@@ -1,42 +1,34 @@
-# ANQR Ollama Local Audit
+# Ollama Local Audit
 
-## 1. Directory Overview
+## Purpose
+Directory for runtime service bootstrap or environment support; immediate files include `check-model-available.mjs`, `check-model-responds.mjs`, `check-reachable.mjs`, `index.mjs`, and others.
 
-This directory implements **ANQR Ollama Local Audit** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 14 non-README files and 0 subdirectories.
+## Contents
+- 14 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `check-model-available.mjs` - Exports `checkModelAvailable`, the main helper defined in this file.
+- `check-model-responds.mjs` - Exports `checkModelResponds`, the main helper defined in this file.
+- `check-reachable.mjs` - Exports `checkReachable`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `main.mjs` - Exports `main`, the main helper defined in this file.
+- `ollama-base.mjs` - Exports `OLLAMA_BASE`, a shared constant or state value used by sibling modules.
+- `ping-timeout-ms.mjs` - Exports `PING_TIMEOUT_MS`, a shared constant or state value used by sibling modules.
+- `pinned-model.mjs` - Exports `PINNED_MODEL`, a shared constant or state value used by sibling modules.
+- `print-summary.mjs` - Exports `printSummary`, the main helper defined in this file.
+- `prompt-timeout-ms.mjs` - Exports `PROMPT_TIMEOUT_MS`, a shared constant or state value used by sibling modules.
+- `record.mjs` - Exports `record`, the main helper defined in this file.
+- `results.mjs` - Exports `results`, a shared constant or state value used by sibling modules.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **check-model-available.mjs** - Exports `checkModelAvailable`, which checks model available.
-- **check-model-responds.mjs** - Exports `checkModelResponds`, which checks model responds.
-- **check-reachable.mjs** - Exports `checkReachable`, which checks reachable.
-- **index.mjs** - Facade module that re-exports public members from `./ollama-base.mjs`, `./pinned-model.mjs`, `./prompt-timeout-ms.mjs`, `./ping-timeout-ms.mjs`, `./results.mjs`, `./record.mjs`, and 5 more siblings.
-- **logger.mjs** - Shared logging helper module exporting `logInfo`.
-- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
-- **ollama-base.mjs** - Exports `OLLAMA_BASE`, a shared constant used by sibling modules.
-- **ping-timeout-ms.mjs** - Exports `PING_TIMEOUT_MS`, a shared constant used by sibling modules.
-- **pinned-model.mjs** - Exports `PINNED_MODEL`, a shared constant used by sibling modules.
-- **print-summary.mjs** - Exports `printSummary`, which implements print summary.
-- **prompt-timeout-ms.mjs** - Exports `PROMPT_TIMEOUT_MS`, a shared constant used by sibling modules.
-- **record.mjs** - Exports `record`, which implements record.
-- **results.mjs** - Exports `results`, an initially empty array used by sibling modules.
-- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
+## Operational Notes
+- Current on-disk inventory: 14 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include network/API integration, and timer, scheduling, cooldown, or watchdog behavior. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/integrations/model/ollama-local-audit/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Internal relative modules** - `../../../lib/logger.mjs`, `./check-model-available.mjs`, `./check-model-responds.mjs`, `./check-reachable.mjs`, `./index.mjs`, `./logger.mjs`, `./ollama-base.mjs`, `./ping-timeout-ms.mjs`, `./pinned-model.mjs`, `./print-summary.mjs`, `./prompt-timeout-ms.mjs`, `./record.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

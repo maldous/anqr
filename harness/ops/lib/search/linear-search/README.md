@@ -1,46 +1,37 @@
-# ANQR Linear Search
+# Linear Search
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `build-search-entry.mjs`, `compute-lexical-score.mjs`, `compute-recency-bonus.mjs`, `detect-project-root.mjs`, and others.
 
-This directory implements **ANQR Linear Search** within the ANQR harness. Key immediate entries include `index.mjs`, `search-linear-issues.mjs`, `build-search-entry.mjs`, `get-linear-index-stats.mjs`. The current inventory is 17 non-README files and 0 subdirectories.
+## Contents
+- 17 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `build-search-entry.mjs` - Exports `buildSearchEntry`, the main helper defined in this file.
+- `compute-lexical-score.mjs` - Exports `computeLexicalScore`, the main helper defined in this file.
+- `compute-recency-bonus.mjs` - Exports `computeRecencyBonus`, the main helper defined in this file.
+- `detect-project-root.mjs` - Exports `detectProjectRoot`, the main helper defined in this file.
+- `extract-title.mjs` - Exports `extractTitle`, the main helper defined in this file.
+- `get-linear-index-stats.mjs` - Exports `getLinearIndexStats`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `linear-index-cache.mjs` - Exports `setLinearIndexCache`, the main helper defined in this file.
+- `linear-index-dir.mjs` - Exports `LINEAR_INDEX_DIR`, a shared constant or state value used by sibling modules.
+- `linear-index-file.mjs` - Exports `LINEAR_INDEX_FILE`, a shared constant or state value used by sibling modules.
+- `load-linear-index.mjs` - Exports `loadLinearIndex`, the main helper defined in this file.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `normalize-text.mjs` - Exports `normalizeText`, the main helper defined in this file.
+- `project-root.mjs` - Exports `PROJECT_ROOT`, a shared constant or state value used by sibling modules.
+- `search-linear-issues.mjs` - Exports `searchLinearIssues`, the main helper defined in this file.
+- `tokenize.mjs` - Exports `tokenize`, the main helper defined in this file.
+- `warm-linear-index.mjs` - Exports `warmLinearIndex`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **build-search-entry.mjs** - Exports `buildSearchEntry`, which builds search entry.
-- **compute-lexical-score.mjs** - Exports `computeLexicalScore`, which implements compute lexical score.
-- **compute-recency-bonus.mjs** - Exports `computeRecencyBonus`, which implements compute recency bonus.
-- **detect-project-root.mjs** - Exports `detectProjectRoot`, which detects project root.
-- **extract-title.mjs** - Exports `extractTitle`, which implements extract title.
-- **get-linear-index-stats.mjs** - Exports `getLinearIndexStats`, which gets linear index stats.
-- **index.mjs** - Facade module that re-exports public members from `./detect-project-root.mjs`, `./project-root.mjs`, `./linear-index-dir.mjs`, `./linear-index-file.mjs`, `./linear-index-cache.mjs`, `./normalize-text.mjs`, and 9 more siblings.
-- **linear-index-cache.mjs** - Exports `linearIndexCache`, `setLinearIndexCache`, providing the reusable API for this directory concern.
-- **linear-index-dir.mjs** - Exports `LINEAR_INDEX_DIR`, a shared constant used by sibling modules.
-- **linear-index-file.mjs** - Exports `LINEAR_INDEX_FILE`, a shared constant used by sibling modules.
-- **load-linear-index.mjs** - Exports `loadLinearIndex`, which loads linear index.
-- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
-- **normalize-text.mjs** - Exports `normalizeText`, which normalizes text.
-- **project-root.mjs** - Exports `PROJECT_ROOT`, a shared constant used by sibling modules.
-- **search-linear-issues.mjs** - Exports `searchLinearIssues`, which implements search linear issues.
-- **tokenize.mjs** - Exports `tokenize`, which implements tokenize.
-- **warm-linear-index.mjs** - Exports `warmLinearIndex`, which implements warm linear index.
+## Operational Notes
+- Current on-disk inventory: 17 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, subprocess execution, Linear integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./ops/lib/search/linear-search/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:child_process`, `node:fs`, `node:fs/promises`, `node:path`
-- **Internal relative modules** - `../../logger.mjs`, `../../rag/embeddings.mjs`, `./build-search-entry.mjs`, `./compute-lexical-score.mjs`, `./compute-recency-bonus.mjs`, `./detect-project-root.mjs`, `./extract-title.mjs`, `./linear-index-cache.mjs`, `./linear-index-dir.mjs`, `./linear-index-file.mjs`, `./load-linear-index.mjs`, `./logger.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

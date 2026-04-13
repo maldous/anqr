@@ -1,43 +1,34 @@
-# ANQR Symphony Integrator
+# Symphony Integrator
 
-## 1. Directory Overview
+## Purpose
+Single-writer integration service that drains queued worktree candidates, admits them into the mainline repository, and publishes evidence back to the issue system.
 
-This directory implements **ANQR Symphony Integrator** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 14 non-README files and 0 subdirectories.
+## Contents
+- 14 immediate files
+- 1 child directory
 
-## 2. File Summaries
+## Key Files
+- `find-issue-by-identifier.mjs` - Exports `findIssueByIdentifier`, the main helper defined in this file.
+- `git.mjs` - Exports `git`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `integrate-candidate.mjs` - Re-export facade that assembles the public surface for this directory.
+- `integrator-id.mjs` - Exports `INTEGRATOR_ID`, a shared constant or state value used by sibling modules.
+- `lock-ttl-ms.mjs` - Exports `LOCK_TTL_MS`, a shared constant or state value used by sibling modules.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `mode.mjs` - Exports `mode`, a shared constant or state value used by sibling modules.
+- `poll-interval-ms.mjs` - Exports `POLL_INTERVAL_MS`, a shared constant or state value used by sibling modules.
+- `process-queue.mjs` - Exports `processQueue`, the main helper defined in this file.
+- `run-daemon.mjs` - Exports `runDaemon`, the main helper defined in this file.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `scan-for-repaired-candidates.mjs` - Exports `scanForRepairedCandidates`, the main helper defined in this file.
+- `show-status.mjs` - Exports `showStatus`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- `integrate-candidate/` - Directory for serial integration back into the main repository; immediate files include `build-evidence-comment.mjs`, `index.mjs`, `integrate-candidate.mjs`, `publish-evidence-and-close.mjs`.
 
-- **find-issue-by-identifier.mjs** - Exports `findIssueByIdentifier`, which finds issue by identifier.
-- **git.mjs** - Exports `git`, which implements git.
-- **index.mjs** - Facade module that re-exports public members from `./integrator-id.mjs`, `./poll-interval-ms.mjs`, `./lock-ttl-ms.mjs`, `./git.mjs`, `./integrate-candidate.mjs`, `./find-issue-by-identifier.mjs`, and 5 more siblings.
-- **integrate-candidate.mjs** - Exports `integrateCandidate`, which implements integrate candidate.
-- **integrator-id.mjs** - Exports `INTEGRATOR_ID`, a shared constant used by sibling modules.
-- **lock-ttl-ms.mjs** - Exports `LOCK_TTL_MS`, a shared constant used by sibling modules.
-- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
-- **mode.mjs** - Exports `mode`, which implements mode.
-- **poll-interval-ms.mjs** - Exports `POLL_INTERVAL_MS`, a shared constant used by sibling modules.
-- **process-queue.mjs** - Exports `processQueue`, which implements process queue.
-- **run-daemon.mjs** - Exports `runDaemon`, which runs daemon.
-- **runtime.mjs** - Executable runtime entry point for this directory.
-- **scan-for-repaired-candidates.mjs** - Exports `scanForRepairedCandidates`, which implements scan for repaired candidates.
-- **show-status.mjs** - Exports `showStatus`, which shows status.
+## Operational Notes
+- This directory is the enforcement point for serial repository integration after concurrent worktree execution.
+- Its logic is critical to the stated design principle that one repository may execute many jobs concurrently but integrate one candidate at a time.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/orchestration/symphony-integrator/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:child_process`
-- **Internal relative modules** - `../../core/worktree-config.mjs`, `../../lib/logger.mjs`, `../../linear-client.mjs`, `../../symphony-state.mjs`, `./find-issue-by-identifier.mjs`, `./git.mjs`, `./index.mjs`, `./integrate-candidate.mjs`, `./integrator-id.mjs`, `./lock-ttl-ms.mjs`, `./logger.mjs`, `./poll-interval-ms.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Validate single-writer guarantees, queue handling, evidence publication, repaired-candidate scanning, and whether integration remains the only path back to `main`.

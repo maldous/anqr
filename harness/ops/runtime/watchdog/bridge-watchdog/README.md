@@ -1,71 +1,61 @@
-# ANQR Bridge Watchdog
+# Bridge Watchdog
 
-## 1. Directory Overview
+## Purpose
+Directory for fleet recovery, quarantine, and health enforcement; immediate files include `activating-state-start.mjs`, `catastrophic-patterns.mjs`, `check-file-integrity.mjs`, `check-health-endpoint.mjs`, and others, with child directories `quarantine-and-restart/`.
 
-This directory implements **ANQR Bridge Watchdog** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 42 non-README files and 0 subdirectories.
+## Contents
+- 41 immediate files
+- 1 child directory
 
-## 2. File Summaries
+## Key Files
+- `activating-state-start.mjs` - Exports `activatingStateStart`, a shared constant or state value used by sibling modules.
+- `catastrophic-patterns.mjs` - Exports `CATASTROPHIC_PATTERNS`, a shared constant or state value used by sibling modules.
+- `check-file-integrity.mjs` - Exports `checkFileIntegrity`, the main helper defined in this file.
+- `check-health-endpoint.mjs` - Exports `checkHealthEndpoint`, the main helper defined in this file.
+- `check-interval-ms.mjs` - Exports `CHECK_INTERVAL_MS`, a shared constant or state value used by sibling modules.
+- `check-service.mjs` - Exports `checkService`, the main helper defined in this file.
+- `detect-catastrophic-errors.mjs` - Exports `detectCatastrophicErrors`, the main helper defined in this file.
+- `detect-rapid-restarts.mjs` - Exports `detectRapidRestarts`, the main helper defined in this file.
+- `get-current-commit.mjs` - Exports `getCurrentCommit`, the main helper defined in this file.
+- `get-service-active-time.mjs` - Exports `getServiceActiveTime`, the main helper defined in this file.
+- `get-service-journal.mjs` - Exports `getServiceJournal`, the main helper defined in this file.
+- `get-service-pid.mjs` - Exports `getServicePID`, the main helper defined in this file.
+- `get-service-status.mjs` - Exports `getServiceStatus`, the main helper defined in this file.
+- `health-check-timeout-ms.mjs` - Exports `HEALTH_CHECK_TIMEOUT_MS`, a shared constant or state value used by sibling modules.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `is-in-cooldown.mjs` - Exports `isInCooldown`, the main helper defined in this file.
+- `is-transient-error.mjs` - Exports `isTransientError`, the main helper defined in this file.
+- `last-recovery-action.mjs` - Exports `lastRecoveryAction`, a shared constant or state value used by sibling modules.
+- `last-trigger-rate-alert.mjs` - Exports `setLastTriggerRateAlert`, the main helper defined in this file.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `monitor-loop.mjs` - Exports `monitorLoop`, the main helper defined in this file.
+- `monitored-services.mjs` - Exports `MONITORED_SERVICES`, a shared constant or state value used by sibling modules.
+- `quarantine-and-restart.mjs` - Re-export facade that assembles the public surface for this directory.
+- `rapid-restart-history.mjs` - Exports `rapidRestartHistory`, a shared constant or state value used by sibling modules.
+- `rapid-restart-threshold.mjs` - Exports `RAPID_RESTART_THRESHOLD`, a shared constant or state value used by sibling modules.
+- `rapid-restart-window-ms.mjs` - Exports `RAPID_RESTART_WINDOW_MS`, a shared constant or state value used by sibling modules.
+- `recovery-cooldown-ms.mjs` - Exports `RECOVERY_COOLDOWN_MS`, a shared constant or state value used by sibling modules.
+- `restart-timestamps.mjs` - Exports `restartTimestamps`, a shared constant or state value used by sibling modules.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `shutdown.mjs` - Exports `shutdown`, the main helper defined in this file.
+- `shutting-down.mjs` - Exports `setShuttingDown`, the main helper defined in this file.
+- `startup-grace-period-ms.mjs` - Exports `STARTUP_GRACE_PERIOD_MS`, a shared constant or state value used by sibling modules.
+- `track-watchdog-trigger.mjs` - Exports `trackWatchdogTrigger`, the main helper defined in this file.
+- `transient-patterns.mjs` - Exports `TRANSIENT_PATTERNS`, a shared constant or state value used by sibling modules.
+- `trigger-rate-alert-cooldown-ms.mjs` - Exports `TRIGGER_RATE_ALERT_COOLDOWN_MS`, a shared constant or state value used by sibling modules.
+- `trigger-rate-threshold.mjs` - Exports `TRIGGER_RATE_THRESHOLD`, a shared constant or state value used by sibling modules.
+- `trigger-rate-window-ms.mjs` - Exports `TRIGGER_RATE_WINDOW_MS`, a shared constant or state value used by sibling modules.
+- `update-memory.mjs` - Exports `updateMemory`, the main helper defined in this file.
+- `verify-and-notify-recovery.mjs` - Exports `verifyAndNotifyRecovery`, the main helper defined in this file.
+- `watchdog-trigger-history.mjs` - Exports `watchdogTriggerHistory`, a shared constant or state value used by sibling modules.
+- `worktree-id.mjs` - Exports `WORKTREE_ID`, a shared constant or state value used by sibling modules.
 
-### Files
+## Subdirectories
+- `quarantine-and-restart/` - Directory for fleet recovery, quarantine, and health enforcement; immediate files include `index.mjs`, `quarantine-and-restart.mjs`, `write-evidence-record.mjs`.
 
-- **activating-state-start.mjs** - Exports `activatingStateStart`, which implements activating state start.
-- **catastrophic-patterns.mjs** - Exports `CATASTROPHIC_PATTERNS`, a shared constant used by sibling modules.
-- **check-file-integrity.mjs** - Exports `checkFileIntegrity`, which checks file integrity.
-- **check-health-endpoint.mjs** - Exports `checkHealthEndpoint`, which checks health endpoint.
-- **check-interval-ms.mjs** - Exports `CHECK_INTERVAL_MS`, a shared constant used by sibling modules.
-- **check-service.mjs** - Exports `checkService`, which checks service.
-- **detect-catastrophic-errors.mjs** - Exports `detectCatastrophicErrors`, which detects catastrophic errors.
-- **detect-rapid-restarts.mjs** - Exports `detectRapidRestarts`, which detects rapid restarts.
-- **get-current-commit.mjs** - Exports `getCurrentCommit`, which gets current commit.
-- **get-previous-commit.mjs** - Exports `getPreviousCommit`, which gets previous commit.
-- **get-service-active-time.mjs** - Exports `getServiceActiveTime`, which gets service active time.
-- **get-service-journal.mjs** - Exports `getServiceJournal`, which gets service journal.
-- **get-service-pid.mjs** - Exports `getServicePID`, which gets service pid.
-- **get-service-status.mjs** - Exports `getServiceStatus`, which gets service status.
-- **health-check-timeout-ms.mjs** - Exports `HEALTH_CHECK_TIMEOUT_MS`, a shared constant used by sibling modules.
-- **index.mjs** - Facade module that re-exports public members from `./check-interval-ms.mjs`, `./startup-grace-period-ms.mjs`, `./rapid-restart-window-ms.mjs`, `./rapid-restart-threshold.mjs`, `./health-check-timeout-ms.mjs`, `./worktree-id.mjs`, and 33 more siblings.
-- **is-in-cooldown.mjs** - Exports `isInCooldown`, which checks whether in cooldown.
-- **is-transient-error.mjs** - Exports `isTransientError`, which checks whether transient error.
-- **last-recovery-action.mjs** - Exports `lastRecoveryAction`, which implements last recovery action.
-- **last-trigger-rate-alert.mjs** - Exports `lastTriggerRateAlert`, `setLastTriggerRateAlert`, providing the reusable API for this directory concern.
-- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
-- **monitor-loop.mjs** - Exports `monitorLoop`, which implements monitor loop.
-- **monitored-services.mjs** - Exports `MONITORED_SERVICES`, a shared constant used by sibling modules.
-- **rapid-restart-history.mjs** - Exports `rapidRestartHistory`, which implements rapid restart history.
-- **rapid-restart-threshold.mjs** - Exports `RAPID_RESTART_THRESHOLD`, a shared constant used by sibling modules.
-- **rapid-restart-window-ms.mjs** - Exports `RAPID_RESTART_WINDOW_MS`, a shared constant used by sibling modules.
-- **recovery-cooldown-ms.mjs** - Exports `RECOVERY_COOLDOWN_MS`, a shared constant used by sibling modules.
-- **restart-timestamps.mjs** - Exports `restartTimestamps`, which implements restart timestamps.
-- **rollback-and-restart.mjs** - Exports `rollbackAndRestart`, which implements rollback and restart.
-- **runtime.mjs** - Executable runtime entry point for this directory.
-- **shutdown.mjs** - Exports `shutdown`, which implements shutdown.
-- **shutting-down.mjs** - Exports `setShuttingDown`, `shuttingDown`, providing the reusable API for this directory concern.
-- **startup-grace-period-ms.mjs** - Exports `STARTUP_GRACE_PERIOD_MS`, a shared constant used by sibling modules.
-- **track-watchdog-trigger.mjs** - Exports `trackWatchdogTrigger`, which implements track watchdog trigger.
-- **transient-patterns.mjs** - Exports `TRANSIENT_PATTERNS`, a shared constant used by sibling modules.
-- **trigger-rate-alert-cooldown-ms.mjs** - Exports `TRIGGER_RATE_ALERT_COOLDOWN_MS`, a shared constant used by sibling modules.
-- **trigger-rate-threshold.mjs** - Exports `TRIGGER_RATE_THRESHOLD`, a shared constant used by sibling modules.
-- **trigger-rate-window-ms.mjs** - Exports `TRIGGER_RATE_WINDOW_MS`, a shared constant used by sibling modules.
-- **update-memory.mjs** - Exports `updateMemory`, which implements update memory.
-- **verify-and-notify-recovery.mjs** - Exports `verifyAndNotifyRecovery`, which verifies and notify recovery.
-- **watchdog-trigger-history.mjs** - Exports `watchdogTriggerHistory`, an initially empty array used by sibling modules.
-- **worktree-id.mjs** - Exports `WORKTREE_ID`, a shared constant used by sibling modules.
+## Operational Notes
+- Current on-disk inventory: 41 immediate files and 1 child directory.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, network/API integration, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Discord integration, OpenClaw integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/runtime/watchdog/bridge-watchdog/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:child_process`, `node:fs/promises`, `node:path`
-- **Internal relative modules** - `../../../integrations/linear/incident-manager.mjs`, `../../../integrations/notifications/openclaw-discord.mjs`, `../../../lib/logger.mjs`, `./activating-state-start.mjs`, `./catastrophic-patterns.mjs`, `./check-file-integrity.mjs`, `./check-health-endpoint.mjs`, `./check-interval-ms.mjs`, `./check-service.mjs`, `./detect-catastrophic-errors.mjs`, `./detect-rapid-restarts.mjs`, `./get-current-commit.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.

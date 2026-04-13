@@ -1,76 +1,68 @@
-# ANQR Symphony Adaptive Context
+# Symphony Adaptive Context
 
-## 1. Directory Overview
+## Purpose
+Directory for operator tooling and diagnostics; immediate files include `classify-error.mjs`, `context-expand-factor.mjs`, `context-expand-threshold.mjs`, `context-initial-buffer.mjs`, and others.
 
-This directory implements **ANQR Symphony Adaptive Context** within the ANQR harness. Key immediate entries include `index.mjs`, `should-reduce-context-for-tpm.mjs`, `rate-limit-max-backoff-ms.mjs`, `rate-limit-default-backoff-ms.mjs`. The current inventory is 48 non-README files and 0 subdirectories.
+## Contents
+- 48 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `classify-error.mjs` - Exports `classifyError`, the main helper defined in this file.
+- `context-expand-factor.mjs` - Exports `CONTEXT_EXPAND_FACTOR`, a shared constant or state value used by sibling modules.
+- `context-expand-threshold.mjs` - Exports `CONTEXT_EXPAND_THRESHOLD`, a shared constant or state value used by sibling modules.
+- `context-initial-buffer.mjs` - Exports `CONTEXT_INITIAL_BUFFER`, a shared constant or state value used by sibling modules.
+- `context-shrink-buffer.mjs` - Exports `CONTEXT_SHRINK_BUFFER`, a shared constant or state value used by sibling modules.
+- `context-shrink-factor.mjs` - Exports `CONTEXT_SHRINK_FACTOR`, a shared constant or state value used by sibling modules.
+- `create-provider-state.mjs` - Exports `createProviderState`, the main helper defined in this file.
+- `error-types.mjs` - Exports `ERROR_TYPES`, a shared constant or state value used by sibling modules.
+- `extract-error-string.mjs` - Exports `extractErrorString`, the main helper defined in this file.
+- `get-adaptive-stats.mjs` - Exports `getAdaptiveStats`, the main helper defined in this file.
+- `get-effective-max-tokens.mjs` - Exports `getEffectiveMaxTokens`, the main helper defined in this file.
+- `get-header-value.mjs` - Exports `getHeaderValue`, the main helper defined in this file.
+- `get-or-create-state.mjs` - Exports `getOrCreateState`, the main helper defined in this file.
+- `get-provider-adaptive-state.mjs` - Exports `getProviderAdaptiveState`, the main helper defined in this file.
+- `get-requests-per-minute.mjs` - Exports `getRequestsPerMinute`, the main helper defined in this file.
+- `get-response-headers.mjs` - Exports `getResponseHeaders`, the main helper defined in this file.
+- `get-status-code.mjs` - Exports `getStatusCode`, the main helper defined in this file.
+- `get-throttled-providers.mjs` - Exports `getThrottledProviders`, the main helper defined in this file.
+- `get-tokens-per-minute.mjs` - Exports `getTokensPerMinute`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `is-auth-error.mjs` - Exports `isAuthError`, the main helper defined in this file.
+- `is-context-error.mjs` - Exports `isContextError`, the main helper defined in this file.
+- `is-provider-throttled.mjs` - Exports `isProviderThrottled`, the main helper defined in this file.
+- `is-rate-limit-error.mjs` - Exports `isRateLimitError`, the main helper defined in this file.
+- `is-server-error.mjs` - Exports `isServerError`, the main helper defined in this file.
+- `is-timeout-error.mjs` - Exports `isTimeoutError`, the main helper defined in this file.
+- `is-tool-hallucination-error.mjs` - Exports `isToolHallucinationError`, the main helper defined in this file.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `max-window-events.mjs` - Exports `MAX_WINDOW_EVENTS`, a shared constant or state value used by sibling modules.
+- `parse-context-error-details.mjs` - Exports `parseContextErrorDetails`, the main helper defined in this file.
+- `parse-header-int.mjs` - Exports `parseHeaderInt`, the main helper defined in this file.
+- `parse-rate-limit-info.mjs` - Exports `parseRateLimitInfo`, the main helper defined in this file.
+- `parse-reset-header.mjs` - Exports `parseResetHeader`, the main helper defined in this file.
+- `provider-states.mjs` - Exports `providerStates`, a shared constant or state value used by sibling modules.
+- `prune-request-events.mjs` - Exports `pruneRequestEvents`, the main helper defined in this file.
+- `prune-token-events.mjs` - Exports `pruneTokenEvents`, the main helper defined in this file.
+- `rate-limit-default-backoff-ms.mjs` - Exports `RATE_LIMIT_DEFAULT_BACKOFF_MS`, a shared constant or state value used by sibling modules.
+- `rate-limit-max-backoff-ms.mjs` - Exports `RATE_LIMIT_MAX_BACKOFF_MS`, a shared constant or state value used by sibling modules.
+- `record-context-error.mjs` - Exports `recordContextError`, the main helper defined in this file.
+- `record-context-success.mjs` - Exports `recordContextSuccess`, the main helper defined in this file.
+- `record-error-type.mjs` - Exports `recordErrorType`, the main helper defined in this file.
+- `record-rate-limit.mjs` - Exports `recordRateLimit`, the main helper defined in this file.
+- `record-token-usage.mjs` - Exports `recordTokenUsage`, the main helper defined in this file.
+- `request-window-ms.mjs` - Exports `REQUEST_WINDOW_MS`, a shared constant or state value used by sibling modules.
+- `reset-adaptive-state.mjs` - Exports `resetAdaptiveState`, the main helper defined in this file.
+- `should-reduce-context-for-tpm.mjs` - Exports `shouldReduceContextForTPM`, the main helper defined in this file.
+- `token-window-ms.mjs` - Exports `TOKEN_WINDOW_MS`, a shared constant or state value used by sibling modules.
+- `tpm-proactive-threshold.mjs` - Exports `TPM_PROACTIVE_THRESHOLD`, a shared constant or state value used by sibling modules.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **classify-error.mjs** - Exports `classifyError`, which implements classify error.
-- **context-expand-factor.mjs** - Exports `CONTEXT_EXPAND_FACTOR`, a shared constant used by sibling modules.
-- **context-expand-threshold.mjs** - Exports `CONTEXT_EXPAND_THRESHOLD`, a shared constant used by sibling modules.
-- **context-initial-buffer.mjs** - Exports `CONTEXT_INITIAL_BUFFER`, a shared constant used by sibling modules.
-- **context-shrink-buffer.mjs** - Exports `CONTEXT_SHRINK_BUFFER`, a shared constant used by sibling modules.
-- **context-shrink-factor.mjs** - Exports `CONTEXT_SHRINK_FACTOR`, a shared constant used by sibling modules.
-- **create-provider-state.mjs** - Exports `createProviderState`, which creates provider state.
-- **error-types.mjs** - Exports `ERROR_TYPES`, a shared constant used by sibling modules.
-- **extract-error-string.mjs** - Exports `extractErrorString`, which implements extract error string.
-- **get-adaptive-stats.mjs** - Exports `getAdaptiveStats`, which gets adaptive stats.
-- **get-effective-max-tokens.mjs** - Exports `getEffectiveMaxTokens`, which gets effective max tokens.
-- **get-header-value.mjs** - Exports `getHeaderValue`, which gets header value.
-- **get-or-create-state.mjs** - Exports `getOrCreateState`, which gets or create state.
-- **get-provider-adaptive-state.mjs** - Exports `getProviderAdaptiveState`, which gets provider adaptive state.
-- **get-requests-per-minute.mjs** - Exports `getRequestsPerMinute`, which gets requests per minute.
-- **get-response-headers.mjs** - Exports `getResponseHeaders`, which gets response headers.
-- **get-status-code.mjs** - Exports `getStatusCode`, which gets status code.
-- **get-throttled-providers.mjs** - Exports `getThrottledProviders`, which gets throttled providers.
-- **get-tokens-per-minute.mjs** - Exports `getTokensPerMinute`, which gets tokens per minute.
-- **index.mjs** - Facade module that re-exports public members from `./token-window-ms.mjs`, `./request-window-ms.mjs`, `./context-shrink-factor.mjs`, `./context-shrink-buffer.mjs`, `./context-expand-factor.mjs`, `./context-expand-threshold.mjs`, and 40 more siblings.
-- **is-auth-error.mjs** - Exports `isAuthError`, which checks whether auth error.
-- **is-context-error.mjs** - Exports `isContextError`, which checks whether context error.
-- **is-provider-throttled.mjs** - Exports `isProviderThrottled`, which checks whether provider throttled.
-- **is-rate-limit-error.mjs** - Exports `isRateLimitError`, which checks whether rate limit error.
-- **is-server-error.mjs** - Exports `isServerError`, which checks whether server error.
-- **is-timeout-error.mjs** - Exports `isTimeoutError`, which checks whether timeout error.
-- **is-tool-hallucination-error.mjs** - Exports `isToolHallucinationError`, which checks whether tool hallucination error.
-- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logInfo`.
-- **max-window-events.mjs** - Exports `MAX_WINDOW_EVENTS`, a shared constant used by sibling modules.
-- **parse-context-error-details.mjs** - Exports `parseContextErrorDetails`, which parses context error details.
-- **parse-header-int.mjs** - Exports `parseHeaderInt`, which parses header int.
-- **parse-rate-limit-info.mjs** - Exports `parseRateLimitInfo`, which parses rate limit info.
-- **parse-reset-header.mjs** - Exports `parseResetHeader`, which parses reset header.
-- **provider-states.mjs** - Exports `providerStates`, which implements provider states.
-- **prune-request-events.mjs** - Exports `pruneRequestEvents`, which implements prune request events.
-- **prune-token-events.mjs** - Exports `pruneTokenEvents`, which implements prune token events.
-- **rate-limit-default-backoff-ms.mjs** - Exports `RATE_LIMIT_DEFAULT_BACKOFF_MS`, a shared constant used by sibling modules.
-- **rate-limit-max-backoff-ms.mjs** - Exports `RATE_LIMIT_MAX_BACKOFF_MS`, a shared constant used by sibling modules.
-- **record-context-error.mjs** - Exports `recordContextError`, which implements record context error.
-- **record-context-success.mjs** - Exports `recordContextSuccess`, which implements record context success.
-- **record-error-type.mjs** - Exports `recordErrorType`, which implements record error type.
-- **record-rate-limit.mjs** - Exports `recordRateLimit`, which implements record rate limit.
-- **record-token-usage.mjs** - Exports `recordTokenUsage`, which implements record token usage.
-- **request-window-ms.mjs** - Exports `REQUEST_WINDOW_MS`, a shared constant used by sibling modules.
-- **reset-adaptive-state.mjs** - Exports `resetAdaptiveState`, which implements reset adaptive state.
-- **should-reduce-context-for-tpm.mjs** - Exports `shouldReduceContextForTPM`, which implements should reduce context for tpm.
-- **token-window-ms.mjs** - Exports `TOKEN_WINDOW_MS`, a shared constant used by sibling modules.
-- **tpm-proactive-threshold.mjs** - Exports `TPM_PROACTIVE_THRESHOLD`, a shared constant used by sibling modules.
+## Operational Notes
+- Current on-disk inventory: 48 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include timer, scheduling, cooldown, or watchdog behavior, and Symphony integration.
-
-## 4. Usage Instructions
-
-```javascript
-import * as moduleApi from "./ops/integrations/model/symphony-adaptive-context/index.mjs";
-```
-
-## 5. Dependencies
-
-- **Internal relative modules** - `../../../lib/logger.mjs`, `../symphony-bridge-truncation.mjs`, `./context-expand-factor.mjs`, `./context-expand-threshold.mjs`, `./context-initial-buffer.mjs`, `./context-shrink-buffer.mjs`, `./context-shrink-factor.mjs`, `./create-provider-state.mjs`, `./error-types.mjs`, `./extract-error-string.mjs`, `./get-header-value.mjs`, `./get-or-create-state.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

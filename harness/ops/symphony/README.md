@@ -1,27 +1,21 @@
-# ANQR Symphony
+# Symphony
 
-## 1. Directory Overview
+## Purpose
+Directory for harness support logic; immediate files include `WORKFLOW.md`.
 
-This directory implements **ANQR Symphony** within the ANQR harness. Key immediate entries include `WORKFLOW.md`. The current inventory is 1 non-README files and 0 subdirectories.
+## Contents
+- 1 immediate file
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `WORKFLOW.md` - Documentation file headed by "Symphony Agent Prompt".
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **WORKFLOW.md** - Markdown document titled **Symphony Agent Prompt**.
+## Operational Notes
+- Current on-disk inventory: 1 immediate file and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include timer, scheduling, cooldown, or watchdog behavior, Symphony integration, and git/worktree awareness.
-
-## 4. Usage Instructions
-
-This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
-
-## 5. Dependencies
-
-- No explicit code-level dependency imports were found in the immediate non-README files.
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

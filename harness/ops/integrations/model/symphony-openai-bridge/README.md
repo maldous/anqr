@@ -1,216 +1,220 @@
-# ANQR Symphony OpenAI Bridge
+# Symphony Openai Bridge
 
-## 1. Directory Overview
+## Purpose
+Worktree-local OpenAI-compatible bridge that exposes repository tools to AI providers, performs request execution inside the correct checkout, and coordinates provider fallback, probing, and startup checks.
 
-This directory implements **ANQR Symphony OpenAI Bridge** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. Worktree executors now expose targeted Linear execution through the bridge HTTP surface, replacing the old spawned runner trigger path. The current inventory is 185 non-README files and 0 subdirectories.
+## Contents
+- 199 immediate files
+- 2 child directories
 
-## 2. File Summaries
+## Key Files
+- `active-requests.mjs` - Exports `activeRequests`, a shared constant or state value used by sibling modules.
+- `add-message-tool.mjs` - Exports `addMessageTool`, the main helper defined in this file.
+- `add-subgoal-tool.mjs` - Exports `addSubgoalTool`, the main helper defined in this file.
+- `additional-tokens.mjs` - Exports `additionalTokens`, a shared constant or state value used by sibling modules.
+- `advertised-models.mjs` - Exports `ADVERTISED_MODELS`, a shared constant or state value used by sibling modules.
+- `api-key.mjs` - Exports `API_KEY`, a shared constant or state value used by sibling modules.
+- `apply-cache-to-status.mjs` - Exports `applyCacheToStatus`, the main helper defined in this file.
+- `apply-patch-tool.mjs` - Exports `applyPatchTool`, the main helper defined in this file.
+- `ask-user-tool.mjs` - Exports `askUserTool`, the main helper defined in this file.
+- `bridge-metrics.mjs` - Exports `BRIDGE_METRICS`, a shared constant or state value used by sibling modules.
+- `bridge-parent-root.mjs` - Exports `BRIDGE_PARENT_ROOT`, a shared constant or state value used by sibling modules.
+- `bridge-provider-blocklist-reasons.mjs` - Exports `BRIDGE_PROVIDER_BLOCKLIST_REASONS`, a shared constant or state value used by sibling modules.
+- `bridge-provider-blocklist.mjs` - Exports `BRIDGE_PROVIDER_BLOCKLIST`, a shared constant or state value used by sibling modules.
+- `bridge-root.mjs` - Exports `BRIDGE_ROOT`, a shared constant or state value used by sibling modules.
+- `build-catalog-definitions.mjs` - Exports `buildCatalogDefinitions`, the main helper defined in this file.
+- `build-openrouter-providers-from-catalog.mjs` - Exports `buildOpenrouterProvidersFromCatalog`, the main helper defined in this file.
+- `build-provider-name-from-model-id.mjs` - Exports `buildProviderNameFromModelId`, the main helper defined in this file.
+- `build-selection-options.mjs` - Re-export facade that assembles the public surface for this directory.
+- `calculate-timeout-ms.mjs` - Exports `calculateTimeoutMs`, the main helper defined in this file.
+- `check-auth.mjs` - Exports `checkAuth`, the main helper defined in this file.
+- `classify-tool-probe-error-outcome.mjs` - Exports `classifyToolProbeErrorOutcome`, the main helper defined in this file.
+- `code-search-tool.mjs` - Exports `codeSearchTool`, the main helper defined in this file.
+- `codex-sandbox-mode.mjs` - Exports `CODEX_SANDBOX_MODE`, a shared constant or state value used by sibling modules.
+- `coerce-optional-number-input.mjs` - Exports `coerceOptionalNumberInput`, the main helper defined in this file.
+- `coerce-string-array-input.mjs` - Exports `coerceStringArrayInput`, the main helper defined in this file.
+- `context7-http-base.mjs` - Exports `CONTEXT7_HTTP_BASE`, a shared constant or state value used by sibling modules.
+- `control-repo-root.mjs` - Exports `CONTROL_REPO_ROOT`, a shared constant or state value used by sibling modules.
+- `convert-messages.mjs` - Exports `convertMessages`, the main helper defined in this file.
+- `create-open-ai-compatible-model.mjs` - Exports `createOpenAiCompatibleModel`, the main helper defined in this file.
+- `create-provider-model.mjs` - Exports `createProviderModel`, the main helper defined in this file.
+- `current-branch-name.mjs` - Exports `currentBranchName`, the main helper defined in this file.
+- `current-head-sha.mjs` - Exports `currentHeadSha`, the main helper defined in this file.
+- `current-request-id.mjs` - Exports `setCurrentRequestId`, the main helper defined in this file.
+- `detect-control-repo-root.mjs` - Exports `detectControlRepoRoot`, the main helper defined in this file.
+- `ensure-string.mjs` - Exports `ensureString`, the main helper defined in this file.
+- `error-to-string.mjs` - Exports `errorToString`, the main helper defined in this file.
+- `estimate-tool-overhead-tokens.mjs` - Exports `estimateToolOverheadTokens`, the main helper defined in this file.
+- `exec-tool.mjs` - Exports `execTool`, the main helper defined in this file.
+- `execute-linear-issue-request.mjs` - Exports `executeLinearIssueRequest`, the main helper defined in this file.
+- `extract-tool-probe-answer.mjs` - Exports `extractToolProbeAnswer`, the main helper defined in this file.
+- `fallback-delay-ms.mjs` - Exports `FALLBACK_DELAY_MS`, a shared constant or state value used by sibling modules.
+- `fetch-provider-catalog-json.mjs` - Exports `fetchProviderCatalogJson`, the main helper defined in this file.
+- `filter-tools-by-tier.mjs` - Exports `filterToolsByTier`, the main helper defined in this file.
+- `finalize-worktree-request.mjs` - Exports `finalizeWorktreeRequest`, the main helper defined in this file.
+- `find-files-tool.mjs` - Exports `findFilesTool`, the main helper defined in this file.
+- `format-elapsed.mjs` - Exports `formatElapsed`, the main helper defined in this file.
+- `gateway-batch-delay-ms.mjs` - Exports `GATEWAY_BATCH_DELAY_MS`, a shared constant or state value used by sibling modules.
+- `gateway-batch-size.mjs` - Exports `GATEWAY_BATCH_SIZE`, a shared constant or state value used by sibling modules.
+- `get-cached-openrouter-models.mjs` - Exports `getCachedOpenrouterModels`, the main helper defined in this file.
+- `get-current-request-cwd.mjs` - Exports `getCurrentRequestCwd`, the main helper defined in this file.
+- `get-current-request-id.mjs` - Exports `getCurrentRequestId`, the main helper defined in this file.
+- `get-provider-gateway.mjs` - Exports `getProviderGateway`, the main helper defined in this file.
+- `glob-tool.mjs` - Exports `globTool`, the main helper defined in this file.
+- `handle-responses-api.mjs` - Re-export facade that assembles the public surface for this directory.
+- `has-tracked-changes.mjs` - Exports `hasTrackedChanges`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `install-console-output-guard.mjs` - Exports `installConsoleOutputGuard`, the main helper defined in this file.
+- `invoke-codebuff-direct-stream-to-sse.mjs` - Exports `invokeCodebuffDirectStreamToSSE`, the main helper defined in this file.
+- `invoke-with-ai.mjs` - Exports `invokeWithAI`, the main helper defined in this file.
+- `invoke-with-aiinner.mjs` - Exports `invokeWithAIInner`, the main helper defined in this file.
+- `invoke-with-codex.mjs` - Exports `invokeWithCodex`, the main helper defined in this file.
+- `invoke-with-fallback-stream.mjs` - Exports `invokeWithFallbackStream`, the main helper defined in this file.
+- `invoke-with-fallback.mjs` - Exports `invokeWithFallback`, the main helper defined in this file.
+- `is-invalid-model-answer-text.mjs` - Exports `isInvalidModelAnswerText`, the main helper defined in this file.
+- `is-openrouter-text-tool-model.mjs` - Exports `isOpenrouterTextToolModel`, the main helper defined in this file.
+- `is-path-within-root.mjs` - Exports `isPathWithinRoot`, the main helper defined in this file.
+- `is-probably-binary-content.mjs` - Exports `isProbablyBinaryContent`, the main helper defined in this file.
+- `is-probe-running.mjs` - Exports `setIsProbeRunning`, the main helper defined in this file.
+- `is-retryable-error-deep.mjs` - Exports `isRetryableErrorDeep`, the main helper defined in this file.
+- `is-retryable-error.mjs` - Exports `isRetryableError`, the main helper defined in this file.
+- `is-voice-noise.mjs` - Exports `isVoiceNoise`, the main helper defined in this file.
+- `is-worktree-bridge.mjs` - Exports `IS_WORKTREE_BRIDGE`, a shared constant or state value used by sibling modules.
+- `known-tool-capable.mjs` - Exports `KNOWN_TOOL_CAPABLE`, a shared constant or state value used by sibling modules.
+- `known-tool-names.mjs` - Exports `knownToolNames`, a shared constant or state value used by sibling modules.
+- `last-probe-start-time.mjs` - Exports `setLastProbeStartTime`, the main helper defined in this file.
+- `last-probe-time-check.mjs` - Exports `setLastProbeTimeCheck`, the main helper defined in this file.
+- `list-directory-tool.mjs` - Exports `listDirectoryTool`, the main helper defined in this file.
+- `list-dirty-files.mjs` - Exports `listDirtyFiles`, the main helper defined in this file.
+- `load-probe-cache.mjs` - Exports `loadProbeCache`, the main helper defined in this file.
+- `load-provider-catalog-cache.mjs` - Exports `loadProviderCatalogCache`, the main helper defined in this file.
+- `log-bridge-stats.mjs` - Exports `logBridgeStats`, the main helper defined in this file.
+- `log-memory.mjs` - Exports `logMemory`, the main helper defined in this file.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `lookup-agent-info-tool.mjs` - Exports `lookupAgentInfoTool`, the main helper defined in this file.
+- `max-concurrent-requests.mjs` - Exports `MAX_CONCURRENT_REQUESTS`, a shared constant or state value used by sibling modules.
+- `max-response-text-bytes.mjs` - Exports `MAX_RESPONSE_TEXT_BYTES`, a shared constant or state value used by sibling modules.
+- `max-tool-iterations.mjs` - Exports `MAX_TOOL_ITERATIONS`, a shared constant or state value used by sibling modules.
+- `maybe-gc.mjs` - Exports `maybeGC`, a shared constant or state value used by sibling modules.
+- `memory-get-tool.mjs` - Exports `memoryGetTool`, the main helper defined in this file.
+- `memory-search-tool.mjs` - Exports `memorySearchTool`, the main helper defined in this file.
+- `model-id.mjs` - Exports `MODEL_ID`, a shared constant or state value used by sibling modules.
+- `non-tool-capable-providers.mjs` - Exports `nonToolCapableProviders`, a shared constant or state value used by sibling modules.
+- `normalize-generic-provider-catalog.mjs` - Exports `normalizeGenericProviderCatalog`, the main helper defined in this file.
+- `normalize-model-id.mjs` - Exports `normalizeModelId`, the main helper defined in this file.
+- `normalize-openrouter-catalog.mjs` - Exports `normalizeOpenrouterCatalog`, the main helper defined in this file.
+- `normalize-request-cwd.mjs` - Exports `normalizeRequestCwd`, the main helper defined in this file.
+- `openclaw-gateway-host.mjs` - Exports `OPENCLAW_GATEWAY_HOST`, a shared constant or state value used by sibling modules.
+- `openclaw-gateway-port.mjs` - Exports `OPENCLAW_GATEWAY_PORT`, a shared constant or state value used by sibling modules.
+- `openclaw-gateway-token.mjs` - Exports `OPENCLAW_GATEWAY_TOKEN`, a shared constant or state value used by sibling modules.
+- `openrouter-provider-name-set.mjs` - Exports `OPENROUTER_PROVIDER_NAME_SET`, a shared constant or state value used by sibling modules.
+- `openrouter-provider-names.mjs` - Exports `OPENROUTER_PROVIDER_NAMES`, a shared constant or state value used by sibling modules.
+- `parse-body.mjs` - Exports `parseBody`, the main helper defined in this file.
+- `parse-worktree-number.mjs` - Exports `parseWorktreeNumber`, the main helper defined in this file.
+- `port.mjs` - Exports `PORT`, a shared constant or state value used by sibling modules.
+- `probe-all-tool-capability.mjs` - Exports `probeAllToolCapability`, the main helper defined in this file.
+- `probe-cache-file.mjs` - Exports `PROBE_CACHE_FILE`, a shared constant or state value used by sibling modules.
+- `probe-cache-ttl-ms.mjs` - Exports `PROBE_CACHE_TTL_MS`, a shared constant or state value used by sibling modules.
+- `probe-completion-count.mjs` - Exports `setProbeCompletionCount`, the main helper defined in this file.
+- `probe-completions-before-ranking.mjs` - Exports `PROBE_COMPLETIONS_BEFORE_RANKING`, a shared constant or state value used by sibling modules.
+- `probe-cycle-interval-ms.mjs` - Exports `PROBE_CYCLE_INTERVAL_MS`, a shared constant or state value used by sibling modules.
+- `probe-cycle-turn-threshold.mjs` - Exports `PROBE_CYCLE_TURN_THRESHOLD`, a shared constant or state value used by sibling modules.
+- `probe-gateway-batched.mjs` - Exports `probeGatewayBatched`, the main helper defined in this file.
+- `probe-lock-file.mjs` - Exports `PROBE_LOCK_FILE`, a shared constant or state value used by sibling modules.
+- `probe-mistral-tool-capability-via-http.mjs` - Exports `probeMistralToolCapabilityViaHttp`, the main helper defined in this file.
+- `probe-tool-capability-for-provider.mjs` - Exports `probeToolCapabilityForProvider`, the main helper defined in this file.
+- `probe-turn-counter.mjs` - Exports `setProbeTurnCounter`, the main helper defined in this file.
+- `propose-str-replace-tool.mjs` - Exports `proposeStrReplaceTool`, the main helper defined in this file.
+- `propose-write-file-tool.mjs` - Exports `proposeWriteFileTool`, the main helper defined in this file.
+- `provider-catalog-cache-file.mjs` - Exports `PROVIDER_CATALOG_CACHE_FILE`, a shared constant or state value used by sibling modules.
+- `provider-status-cache.mjs` - Exports `providerStatusCache`, a shared constant or state value used by sibling modules.
+- `provider-supports-tools.mjs` - Exports `providerSupportsTools`, the main helper defined in this file.
+- `provider-tool-support-hint.mjs` - Exports `providerToolSupportHint`, the main helper defined in this file.
+- `raw-tool-json-re.mjs` - Exports `RAW_TOOL_JSON_RE`, a shared constant or state value used by sibling modules.
+- `read-docs-tool.mjs` - Exports `readDocsTool`, the main helper defined in this file.
+- `read-file-tool.mjs` - Exports `readFileTool`, the main helper defined in this file.
+- `read-files-tool.mjs` - Exports `readFilesTool`, the main helper defined in this file.
+- `read-generic-provider-tool-support.mjs` - Exports `readGenericProviderToolSupport`, the main helper defined in this file.
+- `read-subtree-tool.mjs` - Exports `readSubtreeTool`, the main helper defined in this file.
+- `record-bridge-metrics.mjs` - Exports `recordBridgeMetrics`, the main helper defined in this file.
+- `record-successful-metrics.mjs` - Exports `recordSuccessfulMetrics`, the main helper defined in this file.
+- `refresh-live-provider-catalogs.mjs` - Exports `refreshLiveProviderCatalogs`, the main helper defined in this file.
+- `refresh-provider-status.mjs` - Exports `refreshProviderStatus`, the main helper defined in this file.
+- `release-probe-lock.mjs` - Exports `releaseProbeLock`, the main helper defined in this file.
+- `remap-repo-path-to-bridge-root.mjs` - Exports `remapRepoPathToBridgeRoot`, the main helper defined in this file.
+- `request-count.mjs` - Exports `setRequestCount`, the main helper defined in this file.
+- `request-cwd-storage.mjs` - Exports `requestCwdStorage`, a shared constant or state value used by sibling modules.
+- `request-id-counter.mjs` - Exports `setRequestIdCounter`, the main helper defined in this file.
+- `request-timeout-ms.mjs` - Exports `REQUEST_TIMEOUT_MS`, a shared constant or state value used by sibling modules.
+- `resolve-request-dir.mjs` - Exports `resolveRequestDir`, the main helper defined in this file.
+- `resolve-request-path.mjs` - Exports `resolveRequestPath`, the main helper defined in this file.
+- `resolve-route.mjs` - Exports `resolveRoute`, the main helper defined in this file.
+- `run-continuous-provider-probe.mjs` - Exports `runContinuousProviderProbe`, the main helper defined in this file.
+- `run-file-change-hooks-tool.mjs` - Exports `runFileChangeHooksTool`, the main helper defined in this file.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `safe-log-debug.mjs` - Exports `safeLogDebug`, a shared constant or state value used by sibling modules.
+- `sanitize-for-discord-preview.mjs` - Exports `sanitizeForDiscordPreview`, the main helper defined in this file.
+- `sanitize-text-for-speech.mjs` - Exports `sanitizeTextForSpeech`, the main helper defined in this file.
+- `save-probe-cache.mjs` - Exports `saveProbeCache`, the main helper defined in this file.
+- `save-provider-catalog-cache.mjs` - Exports `saveProviderCatalogCache`, the main helper defined in this file.
+- `search-linear-issues-tool.mjs` - Exports `searchLinearIssuesTool`, the main helper defined in this file.
+- `select-tools-for-provider.mjs` - Exports `selectToolsForProvider`, the main helper defined in this file.
+- `send-json.mjs` - Exports `sendJson`, the main helper defined in this file.
+- `server.mjs` - Exports `server`, a shared constant or state value used by sibling modules.
+- `set-current-request-id.mjs` - Re-export facade that assembles the public surface for this directory.
+- `set-messages-tool.mjs` - Exports `setMessagesTool`, the main helper defined in this file.
+- `set-output-tool.mjs` - Exports `setOutputTool`, the main helper defined in this file.
+- `setup-process-handlers.mjs` - Exports `setupProcessHandlers`, the main helper defined in this file.
+- `should-use-tools-for-request.mjs` - Exports `shouldUseToolsForRequest`, the main helper defined in this file.
+- `shutdown.mjs` - Exports `shutdown`, the main helper defined in this file.
+- `skill-tool.mjs` - Exports `skillTool`, the main helper defined in this file.
+- `sleep.mjs` - Exports `sleep`, the main helper defined in this file.
+- `spawn-agents-tool.mjs` - Exports `spawnAgentsTool`, the main helper defined in this file.
+- `speech-emoji-re.mjs` - Exports `SPEECH_EMOJI_RE`, a shared constant or state value used by sibling modules.
+- `startup-banner.mjs` - Exports `logStartupBanner`, the main helper defined in this file.
+- `startup-context7-verify.mjs` - Exports `verifyContext7Health`, the main helper defined in this file.
+- `startup-discord-notify.mjs` - Exports `sendStartupDiscordNotification`, the main helper defined in this file.
+- `startup-probe-init.mjs` - Exports `initializeProbes`, the main helper defined in this file.
+- `startup-retrieval-warmup.mjs` - Exports `runRetrievalWarmup`, the main helper defined in this file.
+- `startup-self-test.mjs` - Exports `runStartupSelfTests`, the main helper defined in this file.
+- `stats-log-interval.mjs` - Exports `STATS_LOG_INTERVAL`, a shared constant or state value used by sibling modules.
+- `str-replace-tool.mjs` - Exports `strReplaceTool`, the main helper defined in this file.
+- `suggest-followups-tool.mjs` - Exports `suggestFollowupsTool`, the main helper defined in this file.
+- `task-completed-tool.mjs` - Exports `taskCompletedTool`, the main helper defined in this file.
+- `think-deeply-tool.mjs` - Exports `thinkDeeplyTool`, the main helper defined in this file.
+- `to-provider-metrics-usage.mjs` - Exports `toProviderMetricsUsage`, the main helper defined in this file.
+- `tool-capable-providers.mjs` - Exports `toolCapableProviders`, a shared constant or state value used by sibling modules.
+- `tool-probe-retry-delay-ms.mjs` - Exports `TOOL_PROBE_RETRY_DELAY_MS`, a shared constant or state value used by sibling modules.
+- `tool-probe-retry-scheduled.mjs` - Exports `setToolProbeRetryScheduled`, the main helper defined in this file.
+- `tool-probe-timeout-ms.mjs` - Exports `TOOL_PROBE_TIMEOUT_MS`, a shared constant or state value used by sibling modules.
+- `tools-proxy.mjs` - Exports `toolsProxy`, a shared constant or state value used by sibling modules.
+- `tools.mjs` - Exports `tools`, a shared constant or state value used by sibling modules.
+- `track-file-change.mjs` - Exports `trackFileChange`, the main helper defined in this file.
+- `try-acquire-probe-lock.mjs` - Exports `tryAcquireProbeLock`, the main helper defined in this file.
+- `unauthorized.mjs` - Exports `unauthorized`, the main helper defined in this file.
+- `unwrap-aierror.mjs` - Exports `unwrapAIError`, the main helper defined in this file.
+- `update-subgoal-tool.mjs` - Exports `updateSubgoalTool`, the main helper defined in this file.
+- `valid-tokens.mjs` - Exports `VALID_TOKENS`, a shared constant or state value used by sibling modules.
+- `verify-worktree-freshness-non-blocking.mjs` - Exports `verifyWorktreeFreshnessNonBlocking`, the main helper defined in this file.
+- `voice-announce.mjs` - Exports `voiceAnnounce`, the main helper defined in this file.
+- `voice-speak-tool.mjs` - Exports `voiceSpeakTool`, the main helper defined in this file.
+- `voice-system-prompt.mjs` - Exports `VOICE_SYSTEM_PROMPT`, a shared constant or state value used by sibling modules.
+- `voice-transcript-re.mjs` - Exports `VOICE_TRANSCRIPT_RE`, a shared constant or state value used by sibling modules.
+- `wait-for-probe-cache.mjs` - Exports `waitForProbeCache`, the main helper defined in this file.
+- `web-search-tool.mjs` - Exports `webSearchTool`, the main helper defined in this file.
+- `with-request-cwd.mjs` - Exports `withRequestCwd`, the main helper defined in this file.
+- `worktree-checkout-pattern.mjs` - Exports `WORKTREE_CHECKOUT_PATTERN`, a shared constant or state value used by sibling modules.
+- `wrap-tools-with-fallback.mjs` - Exports `wrapToolsWithFallback`, the main helper defined in this file.
+- `write-file-tool.mjs` - Exports `writeFileTool`, the main helper defined in this file.
+- `write-todos-tool.mjs` - Exports `writeTodosTool`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- `build-selection-options/` - Directory for OpenAI-compatible bridge execution and tool exposure; immediate files include `build-selection-options.mjs`, `index.mjs`, `is-provider-healthy.mjs`.
+- `handle-responses-api/` - Directory for OpenAI-compatible bridge execution and tool exposure; immediate files include `build-chat-body.mjs`, `extract-text-content.mjs`, `handle-non-streaming.mjs`, `handle-responses-api.mjs`, and others, with child directories `helpers/`.
 
-- **active-requests.mjs** - Exports `activeRequests`, which implements active requests.
-- **add-message-tool.mjs** - Exports `addMessageTool`, which implements add message tool.
-- **add-subgoal-tool.mjs** - Exports `addSubgoalTool`, which implements add subgoal tool.
-- **additional-tokens.mjs** - Exports `additionalTokens`, which implements additional tokens.
-- **advertised-models.mjs** - Exports `ADVERTISED_MODELS`, a shared constant used by sibling modules.
-- **api-key.mjs** - Exports `API_KEY`, a shared constant used by sibling modules.
-- **apply-patch-tool.mjs** - Exports `applyPatchTool`, which applies patch tool.
-- **ask-user-tool.mjs** - Exports `askUserTool`, which implements ask user tool.
-- **bridge-metrics.mjs** - Exports `BRIDGE_METRICS`, a shared constant used by sibling modules.
-- **bridge-parent-root.mjs** - Exports `BRIDGE_PARENT_ROOT`, a shared constant used by sibling modules.
-- **bridge-provider-blocklist-reasons.mjs** - Exports `BRIDGE_PROVIDER_BLOCKLIST_REASONS`, a shared constant used by sibling modules.
-- **bridge-provider-blocklist.mjs** - Exports `BRIDGE_PROVIDER_BLOCKLIST`, a shared `Set` constant used by this module group.
-- **bridge-root.mjs** - Exports `BRIDGE_ROOT`, a shared constant used by sibling modules.
-- **build-catalog-definitions.mjs** - Exports `buildCatalogDefinitions`, which builds catalog definitions.
-- **build-openrouter-providers-from-catalog.mjs** - Exports `buildOpenrouterProvidersFromCatalog`, which builds openrouter providers from catalog.
-- **build-provider-name-from-model-id.mjs** - Exports `buildProviderNameFromModelId`, which builds provider name from model id.
-- **build-selection-options.mjs** - Exports `buildSelectionOptions`, which builds selection options.
-- **calculate-timeout-ms.mjs** - Exports `calculateTimeoutMs`, which calculates timeout ms.
-- **check-auth.mjs** - Exports `checkAuth`, which checks auth.
-- **classify-tool-probe-error-outcome.mjs** - Exports `classifyToolProbeErrorOutcome`, which implements classify tool probe error outcome.
-- **code-search-tool.mjs** - Exports `codeSearchTool`, which implements code search tool.
-- **codex-sandbox-mode.mjs** - Exports `CODEX_SANDBOX_MODE`, a shared constant used by sibling modules.
-- **coerce-optional-number-input.mjs** - Exports `coerceOptionalNumberInput`, which implements coerce optional number input.
-- **coerce-string-array-input.mjs** - Exports `coerceStringArrayInput`, which implements coerce string array input.
-- **context7-http-base.mjs** - Exports `CONTEXT7_HTTP_BASE`, a shared constant used by sibling modules.
-- **control-repo-root.mjs** - Exports `CONTROL_REPO_ROOT`, a shared constant used by sibling modules.
-- **convert-messages.mjs** - Exports `convertMessages`, which implements convert messages.
-- **create-open-ai-compatible-model.mjs** - Exports `createOpenAiCompatibleModel`, which creates open ai compatible model.
-- **create-provider-model.mjs** - Exports `createProviderModel`, which creates provider model.
-- **current-branch-name.mjs** - Exports `currentBranchName`, which implements current branch name.
-- **current-head-sha.mjs** - Exports `currentHeadSha`, which implements current head sha.
-- **current-request-id.mjs** - Exports `currentRequestId`, `setCurrentRequestId`, providing the reusable API for this directory concern.
-- **detect-control-repo-root.mjs** - Exports `detectControlRepoRoot`, which detects control repo root.
-- **ensure-string.mjs** - Exports `ensureString`, which ensures string.
-- **error-to-string.mjs** - Exports `errorToString`, which implements error to string.
-- **execute-linear-issue-request.mjs** - Exports `executeLinearIssueRequest`, which executes a targeted Linear issue within the current worktree executor.
-- **exec-tool.mjs** - Exports `execTool`, which implements exec tool.
-- **extract-tool-probe-answer.mjs** - Exports `extractToolProbeAnswer`, which implements extract tool probe answer.
-- **fallback-delay-ms.mjs** - Exports `FALLBACK_DELAY_MS`, a shared constant used by sibling modules.
-- **fetch-provider-catalog-json.mjs** - Exports `fetchProviderCatalogJson`, which fetches provider catalog json.
-- **finalize-worktree-request.mjs** - Exports `finalizeWorktreeRequest`, which implements finalize worktree request.
-- **find-files-tool.mjs** - Exports `findFilesTool`, which finds files tool.
-- **format-elapsed.mjs** - Exports `formatElapsed`, which formats elapsed.
-- **gateway-batch-delay-ms.mjs** - Exports `GATEWAY_BATCH_DELAY_MS`, a shared constant used by sibling modules.
-- **gateway-batch-size.mjs** - Exports `GATEWAY_BATCH_SIZE`, a shared constant used by sibling modules.
-- **get-cached-context-window-by-provider-name.mjs** - Exports `getCachedContextWindowByProviderName`, which gets cached context window by provider name.
-- **get-cached-openrouter-models.mjs** - Exports `getCachedOpenrouterModels`, which gets cached openrouter models.
-- **get-current-request-cwd.mjs** - Exports `getCurrentRequestCwd`, which gets current request cwd.
-- **get-current-request-id.mjs** - Exports `getCurrentRequestId`, which gets current request id.
-- **get-provider-gateway.mjs** - Exports `getProviderGateway`, which gets provider gateway.
-- **glob-tool.mjs** - Exports `globTool`, which implements glob tool.
-- **has-tracked-changes.mjs** - Exports `hasTrackedChanges`, which checks for tracked changes.
-- **index.mjs** - Facade module that re-exports public members from `./codex-sandbox-mode.mjs`, `./context7-http-base.mjs`, `./openclaw-gateway-host.mjs`, `./openclaw-gateway-port.mjs`, `./openclaw-gateway-token.mjs`, `./format-elapsed.mjs`, and 151 more siblings.
-- **invoke-codebuff-direct-stream-to-sse.mjs** - Exports `invokeCodebuffDirectStreamToSSE`, which implements invoke codebuff direct stream to sse.
-- **invoke-with-ai.mjs** - Exports `invokeWithAI`, which implements invoke with ai.
-- **invoke-with-aiinner.mjs** - Exports `invokeWithAIInner`, which implements invoke with aiinner.
-- **invoke-with-codex.mjs** - Exports `invokeWithCodex`, which implements invoke with codex.
-- **invoke-with-fallback-stream.mjs** - Exports `invokeWithFallbackStream`, which implements invoke with fallback stream.
-- **invoke-with-fallback.mjs** - Exports `invokeWithFallback`, which implements invoke with fallback.
-- **is-openrouter-text-tool-model.mjs** - Exports `isOpenrouterTextToolModel`, which checks whether openrouter text tool model.
-- **is-path-within-root.mjs** - Exports `isPathWithinRoot`, which checks whether path within root.
-- **is-probably-binary-content.mjs** - Exports `isProbablyBinaryContent`, which checks whether probably binary content.
-- **is-probe-running.mjs** - Exports `isProbeRunning`, `setIsProbeRunning`, providing the reusable API for this directory concern.
-- **is-retryable-error-deep.mjs** - Exports `isRetryableErrorDeep`, which checks whether retryable error deep.
-- **is-retryable-error.mjs** - Exports `isRetryableError`, which checks whether retryable error.
-- **is-voice-noise.mjs** - Exports `isVoiceNoise`, which checks whether voice noise.
-- **is-worktree-bridge.mjs** - Exports `IS_WORKTREE_BRIDGE`, a shared constant used by sibling modules.
-- **known-tool-capable.mjs** - Exports `KNOWN_TOOL_CAPABLE`, a shared `Set` constant used by this module group.
-- **known-tool-names.mjs** - Exports `knownToolNames`, a shared `Set` constant used by this module group.
-- **last-probe-start-time.mjs** - Exports `lastProbeStartTime`, `setLastProbeStartTime`, providing the reusable API for this directory concern.
-- **last-probe-time-check.mjs** - Exports `lastProbeTimeCheck`, `setLastProbeTimeCheck`, providing the reusable API for this directory concern.
-- **list-directory-tool.mjs** - Exports `listDirectoryTool`, which lists directory tool.
-- **list-dirty-files.mjs** - Exports `listDirtyFiles`, which lists dirty files.
-- **load-probe-cache.mjs** - Exports `loadProbeCache`, which loads probe cache.
-- **load-provider-catalog-cache.mjs** - Exports `loadProviderCatalogCache`, which loads provider catalog cache.
-- **log-bridge-stats.mjs** - Exports `logBridgeStats`, which implements log bridge stats.
-- **log-memory.mjs** - Exports `logMemory`, which implements log memory.
-- **logger.mjs** - Shared logging helper module exporting `logDebug`, `logError`, `logInfo`, `logWarn`.
-- **lookup-agent-info-tool.mjs** - Exports `lookupAgentInfoTool`, which implements lookup agent info tool.
-- **max-concurrent-requests.mjs** - Exports `MAX_CONCURRENT_REQUESTS`, a shared constant used by sibling modules.
-- **max-response-text-bytes.mjs** - Exports `MAX_RESPONSE_TEXT_BYTES`, a shared constant used by sibling modules.
-- **max-tool-iterations.mjs** - Exports `MAX_TOOL_ITERATIONS`, a shared constant used by sibling modules.
-- **maybe-gc.mjs** - Exports `maybeGC`, which implements maybe gc.
-- **memory-get-tool.mjs** - Exports `memoryGetTool`, which implements memory get tool.
-- **memory-search-tool.mjs** - Exports `memorySearchTool`, which implements memory search tool.
-- **model-id.mjs** - Exports `MODEL_ID`, a shared constant used by sibling modules.
-- **non-tool-capable-providers.mjs** - Exports `nonToolCapableProviders`, a shared `Set` constant used by this module group.
-- **normalize-generic-provider-catalog.mjs** - Exports `normalizeGenericProviderCatalog`, which normalizes generic provider catalog.
-- **normalize-model-id.mjs** - Exports `normalizeModelId`, which normalizes model id.
-- **normalize-openrouter-catalog.mjs** - Exports `normalizeOpenrouterCatalog`, which normalizes openrouter catalog.
-- **normalize-request-cwd.mjs** - Exports `normalizeRequestCwd`, which normalizes request cwd.
-- **openclaw-gateway-host.mjs** - Exports `OPENCLAW_GATEWAY_HOST`, a shared constant used by sibling modules.
-- **openclaw-gateway-port.mjs** - Exports `OPENCLAW_GATEWAY_PORT`, a shared constant used by sibling modules.
-- **openclaw-gateway-token.mjs** - Exports `OPENCLAW_GATEWAY_TOKEN`, a shared constant used by sibling modules.
-- **openrouter-provider-name-set.mjs** - Exports `OPENROUTER_PROVIDER_NAME_SET`, a shared `Set` constant used by this module group.
-- **openrouter-provider-names.mjs** - Exports `OPENROUTER_PROVIDER_NAMES`, a shared constant used by sibling modules.
-- **parse-body.mjs** - Exports `parseBody`, which parses body.
-- **port.mjs** - Exports `PORT`, a shared constant used by sibling modules.
-- **probe-all-tool-capability.mjs** - Exports `probeAllToolCapability`, which implements probe all tool capability.
-- **probe-cache-file.mjs** - Exports `PROBE_CACHE_FILE`, a shared constant used by sibling modules.
-- **probe-cache-ttl-ms.mjs** - Exports `PROBE_CACHE_TTL_MS`, a shared constant used by sibling modules.
-- **probe-completion-count.mjs** - Exports `probeCompletionCount`, `setProbeCompletionCount`, providing the reusable API for this directory concern.
-- **probe-completions-before-ranking.mjs** - Exports `PROBE_COMPLETIONS_BEFORE_RANKING`, a shared constant used by sibling modules.
-- **probe-cycle-interval-ms.mjs** - Exports `PROBE_CYCLE_INTERVAL_MS`, a shared constant used by sibling modules.
-- **probe-cycle-turn-threshold.mjs** - Exports `PROBE_CYCLE_TURN_THRESHOLD`, a shared constant used by sibling modules.
-- **probe-gateway-batched.mjs** - Exports `probeGatewayBatched`, which implements probe gateway batched.
-- **probe-mistral-tool-capability-via-http.mjs** - Exports `probeMistralToolCapabilityViaHttp`, which implements probe mistral tool capability via http.
-- **probe-tool-capability-for-provider.mjs** - Exports `probeToolCapabilityForProvider`, which implements probe tool capability for provider.
-- **probe-turn-counter.mjs** - Exports `probeTurnCounter`, `setProbeTurnCounter`, providing the reusable API for this directory concern.
-- **propose-str-replace-tool.mjs** - Exports `proposeStrReplaceTool`, which implements propose str replace tool.
-- **propose-write-file-tool.mjs** - Exports `proposeWriteFileTool`, which implements propose write file tool.
-- **provider-catalog-cache-file.mjs** - Exports `PROVIDER_CATALOG_CACHE_FILE`, a shared constant used by sibling modules.
-- **provider-status-cache.mjs** - Exports `providerStatusCache`, which implements provider status cache.
-- **provider-supports-tools.mjs** - Exports `providerSupportsTools`, which implements provider supports tools.
-- **provider-tool-support-hint.mjs** - Exports `providerToolSupportHint`, which implements provider tool support hint.
-- **raw-tool-json-re.mjs** - Exports `RAW_TOOL_JSON_RE`, a regular-expression constant used for validation.
-- **read-docs-tool.mjs** - Exports `readDocsTool`, which reads docs tool.
-- **read-file-tool.mjs** - Exports `readFileTool`, which reads file tool.
-- **read-files-tool.mjs** - Exports `readFilesTool`, which reads files tool.
-- **read-generic-provider-tool-support.mjs** - Exports `readGenericProviderToolSupport`, which reads generic provider tool support.
-- **read-subtree-tool.mjs** - Exports `readSubtreeTool`, which reads subtree tool.
-- **record-bridge-metrics.mjs** - Exports `recordBridgeMetrics`, which implements record bridge metrics.
-- **record-successful-metrics.mjs** - Exports `recordSuccessfulMetrics`, which implements record successful metrics.
-- **refresh-live-provider-catalogs.mjs** - Exports `refreshLiveProviderCatalogs`, which implements refresh live provider catalogs.
-- **refresh-provider-status.mjs** - Exports `refreshProviderStatus`, which implements refresh provider status.
-- **remap-repo-path-to-bridge-root.mjs** - Exports `remapRepoPathToBridgeRoot`, which implements remap repo path to bridge root.
-- **request-count.mjs** - Exports `requestCount`, `setRequestCount`, providing the reusable API for this directory concern.
-- **request-cwd-storage.mjs** - Exports `requestCwdStorage`, which implements request cwd storage.
-- **request-id-counter.mjs** - Exports `requestIdCounter`, `setRequestIdCounter`, providing the reusable API for this directory concern.
-- **request-timeout-ms.mjs** - Exports `REQUEST_TIMEOUT_MS`, a shared constant used by sibling modules.
-- **resolve-request-dir.mjs** - Exports `resolveRequestDir`, which resolves request dir.
-- **resolve-request-path.mjs** - Exports `resolveRequestPath`, which resolves request path.
-- **resolve-route.mjs** - Exports `resolveRoute`, which resolves route.
-- **run-continuous-provider-probe.mjs** - Exports `runContinuousProviderProbe`, which runs continuous provider probe.
-- **run-file-change-hooks-tool.mjs** - Exports `runFileChangeHooksTool`, which runs file change hooks tool.
-- **runtime.mjs** - Executable runtime entry point for this directory.
-- **safe-log-debug.mjs** - Exports `safeLogDebug`, which implements safe log debug.
-- **sanitize-for-discord-preview.mjs** - Exports `sanitizeForDiscordPreview`, which implements sanitize for discord preview.
-- **sanitize-text-for-speech.mjs** - Exports `sanitizeTextForSpeech`, which implements sanitize text for speech.
-- **save-probe-cache.mjs** - Exports `saveProbeCache`, which implements save probe cache.
-- **save-provider-catalog-cache.mjs** - Exports `saveProviderCatalogCache`, which implements save provider catalog cache.
-- **search-linear-issues-tool.mjs** - Exports `searchLinearIssuesTool`, which implements search linear issues tool.
-- **send-json.mjs** - Exports `sendJson`, which implements send json.
-- **server.mjs** - Exports `server`, which implements server.
-- **set-current-request-id.mjs** - Facade module that re-exports public members from `./current-request-id.mjs`.
-- **set-messages-tool.mjs** - Exports `setMessagesTool`, which implements set messages tool.
-- **set-output-tool.mjs** - Exports `setOutputTool`, which implements set output tool.
-- **setup-process-handlers.mjs** - Exports `setupProcessHandlers`, which sets up process handlers.
-- **shutdown.mjs** - Exports `shutdown`, which implements shutdown.
-- **skill-tool.mjs** - Exports `skillTool`, which implements skill tool.
-- **sleep.mjs** - Exports `sleep`, which implements sleep.
-- **spawn-agents-tool.mjs** - Exports `spawnAgentsTool`, which implements spawn agents tool.
-- **speech-emoji-re.mjs** - Exports `SPEECH_EMOJI_RE`, a regular-expression constant used for validation.
-- **startup-banner.mjs** - Exports `logStartupBanner`, which implements log startup banner.
-- **startup-context7-verify.mjs** - Exports `verifyContext7Health`, which verifies context7 health.
-- **startup-discord-notify.mjs** - Exports `sendStartupDiscordNotification`, which implements send startup discord notification.
-- **startup-probe-init.mjs** - Exports `initializeProbes`, which implements initialize probes.
-- **startup-retrieval-warmup.mjs** - Exports `runRetrievalWarmup`, which runs retrieval warmup.
-- **startup-self-test.mjs** - Exports `runStartupSelfTests`, which runs startup self tests.
-- **stats-log-interval.mjs** - Exports `STATS_LOG_INTERVAL`, a shared constant used by sibling modules.
-- **str-replace-tool.mjs** - Exports `strReplaceTool`, which implements str replace tool.
-- **suggest-followups-tool.mjs** - Exports `suggestFollowupsTool`, which implements suggest followups tool.
-- **task-completed-tool.mjs** - Exports `taskCompletedTool`, which implements task completed tool.
-- **think-deeply-tool.mjs** - Exports `thinkDeeplyTool`, which implements think deeply tool.
-- **to-provider-metrics-usage.mjs** - Exports `toProviderMetricsUsage`, which implements to provider metrics usage.
-- **tool-capable-providers.mjs** - Exports `toolCapableProviders`, a shared `Set` constant used by this module group.
-- **tool-probe-retry-delay-ms.mjs** - Exports `TOOL_PROBE_RETRY_DELAY_MS`, a shared constant used by sibling modules.
-- **tool-probe-retry-scheduled.mjs** - Exports `setToolProbeRetryScheduled`, `toolProbeRetryScheduled`, providing the reusable API for this directory concern.
-- **tool-probe-timeout-ms.mjs** - Exports `TOOL_PROBE_TIMEOUT_MS`, a shared constant used by sibling modules.
-- **tools-proxy.mjs** - Exports `toolsProxy`, which implements tools proxy.
-- **tools.mjs** - Exports `tools`, which implements tools.
-- **track-file-change.mjs** - Exports `trackFileChange`, which implements track file change.
-- **unauthorized.mjs** - Exports `unauthorized`, which implements unauthorized.
-- **unwrap-aierror.mjs** - Exports `unwrapAIError`, which implements unwrap aierror.
-- **update-subgoal-tool.mjs** - Exports `updateSubgoalTool`, which implements update subgoal tool.
-- **valid-tokens.mjs** - Exports `VALID_TOKENS`, a shared `Set` constant used by this module group.
-- **verify-worktree-freshness-non-blocking.mjs** - Exports `verifyWorktreeFreshnessNonBlocking`, which verifies worktree freshness non blocking.
-- **voice-announce.mjs** - Exports `voiceAnnounce`, which implements voice announce.
-- **voice-speak-tool.mjs** - Exports `voiceSpeakTool`, which implements voice speak tool.
-- **voice-system-prompt.mjs** - Exports `VOICE_SYSTEM_PROMPT`, a shared constant used by sibling modules.
-- **voice-transcript-re.mjs** - Exports `VOICE_TRANSCRIPT_RE`, a regular-expression constant used for validation.
-- **web-search-tool.mjs** - Exports `webSearchTool`, which implements web search tool.
-- **with-request-cwd.mjs** - Exports `withRequestCwd`, which implements with request cwd.
-- **worktree-checkout-pattern.mjs** - Exports `WORKTREE_CHECKOUT_PATTERN`, a regular-expression constant used for validation.
-- **write-file-tool.mjs** - Exports `writeFileTool`, which writes file tool.
-- **write-todos-tool.mjs** - Exports `writeTodosTool`, which writes todos tool.
+## Operational Notes
+- Each executor instance runs this bridge inside either the main repo or a specific worktree, depending on the systemd unit.
+- This directory is central to Codex integration, tool capability probing, and the shared completion contract consumed by the surrounding Symphony runtime.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, network/API integration, subprocess execution, timer, scheduling, cooldown, or watchdog behavior, Linear integration, Discord integration, OpenClaw integration, Symphony integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/integrations/model/symphony-openai-bridge/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:async_hooks`, `node:child_process`, `node:fs`, `node:fs/promises`, `node:http`, `node:path`
-- **External packages/services referenced in immediate code** - `@ai-sdk/google`, `@ai-sdk/groq`, `@ai-sdk/openai`, `@openai/codex-sdk`, `@openrouter/ai-sdk-provider`, `ai`, `zod`
-- **Internal relative modules** - `../../../lib/logger.mjs`, `../../../lib/rag/vector-store.mjs`, `../../../lib/search/hybrid-search.mjs`, `../../../lib/search/linear-search.mjs`, `../../../lib/update-memory.mjs`, `../../notifications/openclaw-discord.mjs`, `../codebuff-direct.mjs`, `../symphony-adaptive-context.mjs`, `../symphony-bridge-truncation.mjs`, `../symphony-credit-gate.mjs`, `../symphony-credit-gate/project-root.mjs`, `../symphony-credit-gate/providers.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check the bridge contract around tool exposure, worktree isolation, provider fallback, adaptive context integration, continuous probe behavior, Codex execution, and request finalization.

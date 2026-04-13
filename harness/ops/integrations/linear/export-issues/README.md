@@ -1,38 +1,29 @@
-# ANQR Linear Export Issues
+# Export Issues
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `done-days-lookback.mjs`, `fetch-recent-done-issues.mjs`, `index.mjs`, `logger.mjs`, and others.
 
-This directory implements **ANQR Linear Export Issues** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 9 non-README files and 0 subdirectories.
+## Contents
+- 9 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `done-days-lookback.mjs` - Exports `DONE_DAYS_LOOKBACK`, a shared constant or state value used by sibling modules.
+- `fetch-recent-done-issues.mjs` - Exports `fetchRecentDoneIssues`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `main.mjs` - Exports `main`, the main helper defined in this file.
+- `open-states.mjs` - Exports `OPEN_STATES`, a shared constant or state value used by sibling modules.
+- `output-dir.mjs` - Exports `OUTPUT_DIR`, a shared constant or state value used by sibling modules.
+- `output-file.mjs` - Exports `OUTPUT_FILE`, a shared constant or state value used by sibling modules.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **done-days-lookback.mjs** - Exports `DONE_DAYS_LOOKBACK`, a shared constant used by sibling modules.
-- **fetch-recent-done-issues.mjs** - Exports `fetchRecentDoneIssues`, which fetches recent done issues.
-- **index.mjs** - Facade module that re-exports public members from `./open-states.mjs`, `./done-days-lookback.mjs`, `./output-dir.mjs`, `./output-file.mjs`, `./fetch-recent-done-issues.mjs`, `./main.mjs`.
-- **logger.mjs** - Shared logging helper module exporting `logError`, `logInfo`.
-- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
-- **open-states.mjs** - Exports `OPEN_STATES`, a shared constant used by sibling modules.
-- **output-dir.mjs** - Exports `OUTPUT_DIR`, a shared constant used by sibling modules.
-- **output-file.mjs** - Exports `OUTPUT_FILE`, a shared constant used by sibling modules.
-- **runtime.mjs** - Executable runtime entry point. Imports `main()` from `./index.mjs` and invokes it.
+## Operational Notes
+- Current on-disk inventory: 9 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include file-system access, and Linear integration. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/integrations/linear/export-issues/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:fs/promises`
-- **Internal relative modules** - `../../../lib/logger.mjs`, `../linear-client.mjs`, `./done-days-lookback.mjs`, `./fetch-recent-done-issues.mjs`, `./index.mjs`, `./logger.mjs`, `./open-states.mjs`, `./output-dir.mjs`, `./output-file.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

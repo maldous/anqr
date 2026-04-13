@@ -1,52 +1,43 @@
-# ANQR Email Ingest
+# Email Ingest
 
-## 1. Directory Overview
+## Purpose
+Directory for runtime service bootstrap or environment support; immediate files include `allowed-senders.mjs`, `dirname.mjs`, `dry-run.mjs`, `ensure-dir.mjs`, and others.
 
-This directory implements **ANQR Email Ingest** within the ANQR harness. The immediate code follows the common harness pattern of helper modules plus `main.mjs` orchestration, `index.mjs` facade exports, and `runtime.mjs` bootstrap execution. The current inventory is 23 non-README files and 0 subdirectories.
+## Contents
+- 23 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `allowed-senders.mjs` - Exports `ALLOWED_SENDERS`, a shared constant or state value used by sibling modules.
+- `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
+- `dry-run.mjs` - Exports `DRY_RUN`, a shared constant or state value used by sibling modules.
+- `ensure-dir.mjs` - Exports `ensureDir`, the main helper defined in this file.
+- `extract-text-content.mjs` - Exports `extractTextContent`, the main helper defined in this file.
+- `find-existing-by-external-key.mjs` - Exports `findExistingByExternalKey`, the main helper defined in this file.
+- `get-message-content.mjs` - Exports `getMessageContent`, the main helper defined in this file.
+- `human-user-name.mjs` - Exports `HUMAN_USER_NAME`, a shared constant or state value used by sibling modules.
+- `index-mail.mjs` - Exports `indexMail`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `ingest-email.mjs` - Exports `INGEST_EMAIL`, a shared constant or state value used by sibling modules.
+- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
+- `lookup-human-assignee.mjs` - Exports `lookupHumanAssignee`, the main helper defined in this file.
+- `main.mjs` - Exports `main`, the main helper defined in this file.
+- `notmuch-query.mjs` - Exports `NOTMUCH_QUERY`, a shared constant or state value used by sibling modules.
+- `project-root.mjs` - Exports `PROJECT_ROOT`, a shared constant or state value used by sibling modules.
+- `reports-dir.mjs` - Exports `REPORTS_DIR`, a shared constant or state value used by sibling modules.
+- `run.mjs` - Exports `run`, the main helper defined in this file.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `search-unprocessed.mjs` - Exports `searchUnprocessed`, the main helper defined in this file.
+- `sync-mail.mjs` - Exports `syncMail`, the main helper defined in this file.
+- `tag-message.mjs` - Exports `tagMessage`, the main helper defined in this file.
+- `write-report.mjs` - Exports `writeReport`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **allowed-senders.mjs** - Exports `ALLOWED_SENDERS`, a shared constant used by sibling modules.
-- **dirname.mjs** - Exports `__dirname`, which implements dirname.
-- **dry-run.mjs** - Exports `DRY_RUN`, a shared constant used by sibling modules.
-- **ensure-dir.mjs** - Exports `ensureDir`, which ensures dir.
-- **extract-text-content.mjs** - Exports `extractTextContent`, which implements extract text content.
-- **find-existing-by-external-key.mjs** - Exports `findExistingByExternalKey`, which finds existing by external key.
-- **get-message-content.mjs** - Exports `getMessageContent`, which gets message content.
-- **human-user-name.mjs** - Exports `HUMAN_USER_NAME`, a shared constant used by sibling modules.
-- **index-mail.mjs** - Exports `indexMail`, which re-exports the directory's public modules.
-- **index.mjs** - Facade module that re-exports public members from `./dirname.mjs`, `./project-root.mjs`, `./reports-dir.mjs`, `./ingest-email.mjs`, `./human-user-name.mjs`, `./allowed-senders.mjs`, and 14 more siblings.
-- **ingest-email.mjs** - Exports `INGEST_EMAIL`, a shared constant used by sibling modules.
-- **logger.mjs** - Shared logging helper module exporting `logError`.
-- **lookup-human-assignee.mjs** - Exports `lookupHumanAssignee`, which implements lookup human assignee.
-- **main.mjs** - Primary orchestration module for the directory. It coordinates the immediate helper modules.
-- **notmuch-query.mjs** - Exports `NOTMUCH_QUERY`, a shared constant used by sibling modules.
-- **project-root.mjs** - Exports `PROJECT_ROOT`, a shared constant used by sibling modules.
-- **reports-dir.mjs** - Exports `REPORTS_DIR`, a shared constant used by sibling modules.
-- **run.mjs** - Exports `run`, which implements run.
-- **runtime.mjs** - Executable runtime entry point for this directory.
-- **search-unprocessed.mjs** - Exports `searchUnprocessed`, which implements search unprocessed.
-- **sync-mail.mjs** - Exports `syncMail`, which implements sync mail.
-- **tag-message.mjs** - Exports `tagMessage`, which implements tag message.
-- **write-report.mjs** - Exports `writeReport`, which writes report.
+## Operational Notes
+- Current on-disk inventory: 23 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory is structured as a reusable module set plus an executable entry path: helper files implement the detail work, `main.mjs` coordinates it, `index.mjs` re-exports the public API, and `runtime.mjs` executes the workflow. Verified immediate files in this directory include file-system access, subprocess execution, and Symphony integration. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/integrations/email/email-ingest/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:child_process`, `node:fs`, `node:path`, `node:url`
-- **Internal relative modules** - `../../../lib/logger.mjs`, `../../../lib/notify.mjs`, `../../../linear-client.mjs`, `./allowed-senders.mjs`, `./dirname.mjs`, `./dry-run.mjs`, `./ensure-dir.mjs`, `./extract-text-content.mjs`, `./find-existing-by-external-key.mjs`, `./get-message-content.mjs`, `./human-user-name.mjs`, `./index-mail.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

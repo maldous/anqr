@@ -1,46 +1,37 @@
-# ANQR Linear Agent Workflow Test Suite
+# Test Agent Workflow
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `assert-condition.mjs`, `get-current-status.mjs`, `index.mjs`, `log-test-result.mjs`, and others.
 
-This directory implements **ANQR Linear Agent Workflow Test Suite** within the ANQR harness. The immediate code includes a standalone runtime entry point alongside helper modules. The current inventory is 17 non-README files and 0 subdirectories.
+## Contents
+- 17 immediate files
+- 0 child directories
 
-## 2. File Summaries
+## Key Files
+- `assert-condition.mjs` - Exports `assertCondition`, the main helper defined in this file.
+- `get-current-status.mjs` - Exports `getCurrentStatus`, the main helper defined in this file.
+- `index.mjs` - Re-export facade that assembles the public surface for this directory.
+- `log-test-result.mjs` - Exports `logTestResult`, the main helper defined in this file.
+- `print-completion-summary.mjs` - Exports `printCompletionSummary`, the main helper defined in this file.
+- `print-test-results.mjs` - Exports `printTestResults`, the main helper defined in this file.
+- `results.mjs` - Exports `results`, a shared constant or state value used by sibling modules.
+- `run-agent-workflow-tests.mjs` - Exports `runAgentWorkflowTests`, the main helper defined in this file.
+- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `test-basic-issue-creation.mjs` - Exports `testBasicIssueCreation`, the main helper defined in this file.
+- `test-error-handling.mjs` - Exports `testErrorHandling`, the main helper defined in this file.
+- `test-issue-categorization.mjs` - Exports `testIssueCategorization`, the main helper defined in this file.
+- `test-issue-formatting.mjs` - Exports `testIssueFormatting`, the main helper defined in this file.
+- `test-priority-handling.mjs` - Exports `testPriorityHandling`, the main helper defined in this file.
+- `test-programmatic-usage.mjs` - Exports `testProgrammaticUsage`, the main helper defined in this file.
+- `test-state-handling.mjs` - Exports `testStateHandling`, the main helper defined in this file.
+- `test-success-reporting.mjs` - Exports `testSuccessReporting`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- No child directories in this directory.
 
-- **assert-condition.mjs** - Exports `assertCondition`, which implements assert condition.
-- **get-current-status.mjs** - Exports `getCurrentStatus`, which gets current status.
-- **index.mjs** - Facade module that re-exports public members from `./results.mjs`, `./log-test-result.mjs`, `./assert-condition.mjs`, `./test-basic-issue-creation.mjs`, `./test-issue-categorization.mjs`, `./test-issue-formatting.mjs`, and 7 more siblings.
-- **log-test-result.mjs** - Exports `logTestResult`, which implements log test result.
-- **print-completion-summary.mjs** - Exports `printCompletionSummary`, which implements print completion summary.
-- **print-test-results.mjs** - Exports `printTestResults`, which implements print test results.
-- **results.mjs** - Exports `results`, which implements results.
-- **run-agent-workflow-tests.mjs** - Exports `runAgentWorkflowTests`, which runs agent workflow tests.
-- **runtime.mjs** - Executable runtime entry point for this directory.
-- **test-basic-issue-creation.mjs** - Exports `testBasicIssueCreation`, which implements test basic issue creation.
-- **test-error-handling.mjs** - Exports `testErrorHandling`, which implements test error handling.
-- **test-issue-categorization.mjs** - Exports `testIssueCategorization`, which implements test issue categorization.
-- **test-issue-formatting.mjs** - Exports `testIssueFormatting`, which implements test issue formatting.
-- **test-priority-handling.mjs** - Exports `testPriorityHandling`, which implements test priority handling.
-- **test-programmatic-usage.mjs** - Exports `testProgrammaticUsage`, which implements test programmatic usage.
-- **test-state-handling.mjs** - Exports `testStateHandling`, which implements test state handling.
-- **test-success-reporting.mjs** - Exports `testSuccessReporting`, which implements test success reporting.
+## Operational Notes
+- Current on-disk inventory: 17 immediate files and 0 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, network/API integration, Linear integration, and Discord integration. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-node ops/integrations/linear/test-agent-workflow/runtime.mjs
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:fs/promises`
-- **Internal relative modules** - `../agent-workflow-create-issue.mjs`, `./assert-condition.mjs`, `./index.mjs`, `./log-test-result.mjs`, `./print-completion-summary.mjs`, `./print-test-results.mjs`, `./results.mjs`, `./test-basic-issue-creation.mjs`, `./test-error-handling.mjs`, `./test-issue-categorization.mjs`, `./test-issue-formatting.mjs`, `./test-priority-handling.mjs`
-
-## 6. Additional Comments
-
-- This README was regenerated from the verified file inventory and current code contents in this directory.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

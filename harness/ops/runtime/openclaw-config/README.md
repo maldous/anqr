@@ -1,41 +1,37 @@
-# ANQR OpenClaw Configuration
+# Openclaw Config
 
-## 1. Directory Overview
+## Purpose
+Repository copy of the OpenClaw gateway and workspace configuration that the harness expects to sync into `~/.openclaw/` for Discord, voice, approvals, models, and workspace identity.
 
-This directory holds configuration data for **ANQR OpenClaw Configuration** within the ANQR harness. Key immediate entries include `openclaw.json`, `exec-approvals.json`, `models.json`, `clawdbot.json`. The current inventory is 6 non-README files and 6 subdirectories.
+## Contents
+- 7 immediate files
+- 11 child directories
 
-## 2. File Summaries
+## Key Files
+- `.env.example` - Environment variable template or inventory file.
+- `clawdbot.json` - JSON configuration/data file with top-level keys `meta`, `agents`, `commands`, `messages`, `talk`, `gateway`, `wizard`.
+- `config.json` - JSON configuration/data file with top-level keys `$schema`, `tts`, `gateway`.
+- `exec-approvals.json` - JSON configuration/data file with top-level keys `version`, `socket`, `defaults`, `agents`.
+- `models.json` - JSON configuration/data file with top-level keys `providers`, `agents`.
+- `openclaw.json` - JSON configuration/data file with top-level keys `meta`, `env`, `wizard`, `auth`, `models`, `agents`, `tools`, `messages`, and others.
+- `update-check.json` - JSON configuration/data file with top-level keys `lastCheckedAt`, `lastNotifiedVersion`, `lastNotifiedTag`.
 
-### Files
+## Subdirectories
+- `agents/` - Directory for OpenClaw gateway/runtime configuration, with child directories `main/`, `voice/`.
+- `canvas/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `index.html`.
+- `credentials/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `discord-default-allowFrom.json`, `discord-pairing.json`.
+- `cron/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `jobs.json`.
+- `devices/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `paired.json`, `pending.json`.
+- `identity/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `device-auth.json`, `device.json`.
+- `settings/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `tts.json`.
+- `skills/` - Directory for OpenClaw gateway/runtime configuration.
+- `subagents/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `runs.json`.
+- `workspace/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `AGENTS.md`, `HEARTBEAT.md`, `IDENTITY.md`, `plan.md`, and others.
+- `workspace-voice/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `AGENTS.md`, `BOOTSTRAP.md`, `HEARTBEAT.md`, `IDENTITY.md`, and others.
 
-- **.env.example** - Example configuration file used as a template for local setup.
-- **clawdbot.json** - JSON configuration or data file with top-level keys `meta`, `agents`, `commands`, `messages`, `talk`, `gateway`, `wizard`.
-- **config.json** - JSON configuration or data file with top-level keys `$schema`, `tts`, `gateway`.
-- **exec-approvals.json** - JSON configuration or data file with top-level keys `version`, `socket`, `defaults`, `agents`.
-- **models.json** - JSON configuration or data file with top-level keys `providers`, `agents`.
-- **openclaw.json** - JSON configuration or data file with top-level keys `meta`, `env`, `wizard`, `auth`, `models`, `agents`, `tools`, `messages`.
+## Operational Notes
+- This tree is configuration, not executable orchestration code, but it materially shapes Discord and OpenClaw behavior.
+- The harness depends on operators syncing selected files from this directory into the live OpenClaw config home.
 
-### Subdirectories
-
-- **agents/** - Contains **OpenClaw Agent Configuration**; it acts mainly as a namespace over child directories and has 2 child directories.
-- **credentials/** - Contains **ANQR Openclaw Config - Credentials**; it holds configuration data and has 0 child directories.
-- **identity/** - Contains **ANQR Openclaw Config - Identity**; it holds configuration data and has 0 child directories.
-- **settings/** - Contains **ANQR Openclaw Config - Settings**; it holds configuration data and has 0 child directories.
-- **workspace/** - Contains **ANQR Workspace**; it contains 7 immediate files and has 0 child directories.
-- **workspace-voice/** - Contains **ANQR Voice Workspace**; it contains 7 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-This directory primarily contributes configuration artifacts consumed by adjacent runtime code rather than executable logic of its own. Filenames and top-level keys show that the configuration targets OpenClaw, and model selection behavior.
-
-## 4. Usage Instructions
-
-This directory is consumed indirectly by adjacent runtime modules. No standalone executable entry point is defined here.
-
-## 5. Dependencies
-
-- Immediate files are configuration artifacts rather than import-bearing source modules.
-
-## 6. Additional Comments
-
-- Behavioral meaning for configuration-only files was inferred from keys and structure rather than from executable code in this directory.
+## Review Focus
+Check which files are true source-of-truth config, which are runtime-state placeholders, and how the Discord, voice, and approval settings line up with the systemd service topology.

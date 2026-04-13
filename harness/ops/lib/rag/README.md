@@ -1,41 +1,31 @@
-# RAG Pipeline - Retrieval Augmented Generation
+# Rag
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `build-index-linear.mjs`, `build-index.mjs`, `chunker.mjs`, `embeddings.mjs`, and others, with child directories `build-index/`, `build-index-linear/`, `chunker/`, `embeddings/`, and others.
 
-This directory implements **RAG Pipeline - Retrieval Augmented Generation** within the ANQR harness. Key immediate entries include `build-index-linear.mjs`, `vector-store.mjs`, `linear-chunker.mjs`, `build-index.mjs`. The current inventory is 6 non-README files and 6 subdirectories.
+## Contents
+- 6 immediate files
+- 6 child directories
 
-## 2. File Summaries
+## Key Files
+- `build-index-linear.mjs` - JavaScript/TypeScript module used by this directory.
+- `build-index.mjs` - JavaScript/TypeScript module used by this directory.
+- `chunker.mjs` - JavaScript/TypeScript module used by this directory.
+- `embeddings.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-chunker.mjs` - JavaScript/TypeScript module used by this directory.
+- `vector-store.mjs` - JavaScript/TypeScript module used by this directory.
 
-### Files
+## Subdirectories
+- `build-index/` - Directory for RAG indexing and retrieval support; immediate files include `build-candidate-list.mjs`, `classify-file.mjs`, `detect-project-root.mjs`, `discover-tracked-files.mjs`, and others.
+- `build-index-linear/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `build-linear-index.mjs`, `detect-project-root.mjs`, `export-path.mjs`, `index-dir.mjs`, and others.
+- `chunker/` - Directory for RAG indexing and retrieval support; immediate files include `build-line-starts.mjs`, `chunk-code.mjs`, `chunk-file.mjs`, `chunk-generic-text.mjs`, and others.
+- `embeddings/` - Directory for RAG indexing and retrieval support; immediate files include `cosine-similarity.mjs`, `embedding-model.mjs`, `embedding-timeout-ms.mjs`, `failure-cooldown-ms.mjs`, and others.
+- `linear-chunker/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `as-comma-list.mjs`, `chunk-linear-issue.mjs`, `chunk-linear-issues.mjs`, `compact-whitespace.mjs`, and others.
+- `vector-store/` - Directory for RAG indexing and retrieval support; immediate files include `atomic-write-json.mjs`, `cleanup-stale-index-files.mjs`, `clear-index.mjs`, `default-extensions.mjs`, and others.
 
-- **build-index-linear.mjs** - Facade module that re-exports public members from `./build-index-linear/index.mjs`, `./build-index-linear/runtime.mjs`.
-- **build-index.mjs** - Facade module that re-exports public members from `./build-index/index.mjs`, `./build-index/runtime.mjs`.
-- **chunker.mjs** - Facade module that re-exports public members from `./chunker/index.mjs`.
-- **embeddings.mjs** - Facade module that re-exports public members from `./embeddings/index.mjs`.
-- **linear-chunker.mjs** - Facade module that re-exports public members from `./linear-chunker/index.mjs`.
-- **vector-store.mjs** - Facade module that re-exports public members from `./vector-store/index.mjs`.
+## Operational Notes
+- Current on-disk inventory: 6 immediate files and 6 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **build-index/** - Contains **RAG Build Index**; it contains a runtime-oriented module set with helper files, `main.mjs`, and `runtime.mjs` and has 0 child directories.
-- **build-index-linear/** - Contains **Linear RAG Index Builder**; it contains 12 immediate files and has 0 child directories.
-- **chunker/** - Contains **ANQR RAG Chunker**; it contains 34 immediate files and has 0 child directories.
-- **embeddings/** - Contains **ANQR RAG Embeddings**; it contains 20 immediate files and has 0 child directories.
-- **linear-chunker/** - Contains **Linear Issue Chunker**; it contains 9 immediate files and has 0 child directories.
-- **vector-store/** - Contains **ANQR Vector Store**; it contains 39 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory use Linear integration.
-
-## 4. Usage Instructions
-
-This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
-
-## 5. Dependencies
-
-- **Internal relative modules** - `./build-index-linear/index.mjs`, `./build-index-linear/runtime.mjs`, `./build-index/index.mjs`, `./build-index/runtime.mjs`, `./chunker/index.mjs`, `./embeddings/index.mjs`, `./linear-chunker/index.mjs`, `./vector-store/index.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

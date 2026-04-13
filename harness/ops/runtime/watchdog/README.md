@@ -1,31 +1,21 @@
-# ANQR Watchdog
+# Watchdog
 
-## 1. Directory Overview
+## Purpose
+Directory for fleet recovery, quarantine, and health enforcement; immediate files include `bridge-watchdog.mjs`, with child directories `bridge-watchdog/`.
 
-This directory implements **ANQR Watchdog** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 1 non-README files and 1 subdirectories.
+## Contents
+- 1 immediate file
+- 1 child directory
 
-## 2. File Summaries
+## Key Files
+- `bridge-watchdog.mjs` - JavaScript/TypeScript module used by this directory.
 
-### Files
+## Subdirectories
+- `bridge-watchdog/` - Directory for fleet recovery, quarantine, and health enforcement; immediate files include `activating-state-start.mjs`, `catastrophic-patterns.mjs`, `check-file-integrity.mjs`, `check-health-endpoint.mjs`, and others, with child directories `quarantine-and-restart/`.
 
-- **bridge-watchdog.mjs** - Facade module that re-exports public members from `./bridge-watchdog/index.mjs`, `./bridge-watchdog/runtime.mjs`.
+## Operational Notes
+- Current on-disk inventory: 1 immediate file and 1 child directory.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **bridge-watchdog/** - Contains **ANQR Bridge Watchdog**; it contains 42 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation. Verified immediate files in this directory use timer, scheduling, cooldown, or watchdog behavior.
-
-## 4. Usage Instructions
-
-This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
-
-## 5. Dependencies
-
-- **Internal relative modules** - `./bridge-watchdog/index.mjs`, `./bridge-watchdog/runtime.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.

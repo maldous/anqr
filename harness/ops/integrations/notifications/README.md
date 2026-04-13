@@ -1,33 +1,23 @@
-# ANQR Notifications
+# Notifications
 
-## 1. Directory Overview
+## Purpose
+Directory for OpenClaw gateway/runtime configuration; immediate files include `openclaw-discord.mjs`, `test-discord.mjs`, with child directories `openclaw-discord/`, `test-discord/`.
 
-This directory implements **ANQR Notifications** within the ANQR harness. It primarily acts as a namespace and aggregation layer for child directories, with only a small amount of immediate code. The current inventory is 2 non-README files and 2 subdirectories.
+## Contents
+- 2 immediate files
+- 2 child directories
 
-## 2. File Summaries
+## Key Files
+- `openclaw-discord.mjs` - JavaScript/TypeScript module used by this directory.
+- `test-discord.mjs` - JavaScript/TypeScript module used by this directory.
 
-### Files
+## Subdirectories
+- `openclaw-discord/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `color-to-emoji.mjs`, `create-discord-thread.mjs`, `discord-stream-buffers.mjs`, `discord-text-channel-id.mjs`, and others, with child directories `discord-thread-cache/`, `send-via-open-claw/`.
+- `test-discord/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `index.mjs`, `logger.mjs`, `openclaw-gateway-host.mjs`, `openclaw-gateway-port.mjs`, and others.
 
-- **openclaw-discord.mjs** - Facade module that re-exports public members from `./openclaw-discord/index.mjs`.
-- **test-discord.mjs** - Facade module that re-exports public members from `./test-discord/index.mjs`, `./test-discord/runtime.mjs`.
+## Operational Notes
+- Current on-disk inventory: 2 immediate files and 2 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **openclaw-discord/** - Contains **ANQR OpenClaw Discord Notifications**; it contains 15 immediate files and has 0 child directories.
-- **test-discord/** - Contains **ANQR Test Discord Integration**; it contains 8 immediate files and has 0 child directories.
-
-## 3. Overall Directory Function
-
-Most of the behavior lives in child directories; the immediate directory mainly provides namespacing and lightweight aggregation. Verified immediate files in this directory include Discord integration, and OpenClaw integration.
-
-## 4. Usage Instructions
-
-This directory does not define an obvious standalone entry point. Its files are consumed by adjacent harness modules or by child directories.
-
-## 5. Dependencies
-
-- **Internal relative modules** - `./openclaw-discord/index.mjs`, `./test-discord/index.mjs`, `./test-discord/runtime.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

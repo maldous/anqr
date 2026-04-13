@@ -1,42 +1,33 @@
-# ANQR Library
+# Lib
 
-## 1. Directory Overview
+## Purpose
+Directory for Linear ingestion, reconciliation, or issue management; immediate files include `correlation-id.mjs`, `durable-kv.mjs`, `logger.mjs`, `logger.spec.ts`, and others, with child directories `correlation-id/`, `durable-kv/`, `logger/`, `notify/`, and others.
 
-This directory implements **ANQR Library** within the ANQR harness. Key immediate entries include `sonar-linear-sync.mjs`, `update-memory.mjs`, `logger.spec.ts`, `notify.mjs`. The current inventory is 5 non-README files and 4 subdirectories.
+## Contents
+- 8 immediate files
+- 6 child directories
 
-## 2. File Summaries
+## Key Files
+- `correlation-id.mjs` - Re-export facade that assembles the public surface for this directory.
+- `durable-kv.mjs` - Re-export facade that assembles the public surface for this directory.
+- `logger.mjs` - JavaScript/TypeScript module used by this directory.
+- `logger.spec.ts` - *
+- `notify.mjs` - JavaScript/TypeScript module used by this directory.
+- `sonar-linear-sync.mjs` - JavaScript/TypeScript module used by this directory.
+- `structured-log.mjs` - Exports `createStructuredLogger`, the main helper defined in this file.
+- `update-memory.mjs` - Exports `updateMemory`, the main helper defined in this file.
 
-### Files
+## Subdirectories
+- `correlation-id/` - Directory for harness support logic; immediate files include `correlation-id-from-request.mjs`, `extract-correlation-id.mjs`, `generate-correlation-id.mjs`, `index.mjs`.
+- `durable-kv/` - Directory for harness support logic; immediate files include `create-durable-map.mjs`, `create-durable-queue.mjs`, `create-durable-set.mjs`, `index.mjs`, and others, with child directories `store-helpers/`.
+- `logger/` - Directory for harness support logic; immediate files include `create-logger.mjs`, `get-caller-info.mjs`, `index.mjs`, `log-levels.mjs`.
+- `notify/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `check-dedup.mjs`, `dedup-window-ms.mjs`, `dirname.mjs`, `ensure-dir.mjs`, and others.
+- `rag/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `build-index-linear.mjs`, `build-index.mjs`, `chunker.mjs`, `embeddings.mjs`, and others, with child directories `build-index/`, `build-index-linear/`, `chunker/`, `embeddings/`, and others.
+- `search/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `hybrid-search.mjs`, `linear-search.mjs`, with child directories `hybrid-search/`, `linear-search/`.
 
-- **logger.mjs** - Facade module that re-exports public members from `./logger/index.mjs`.
-- **logger.spec.ts** - Module that implements logger.spec.
-- **notify.mjs** - Facade module that re-exports public members from `./notify/index.mjs`.
-- **sonar-linear-sync.mjs** - Facade module that re-exports public members from `../integrations/sonar/sonar-linear-sync.mjs`.
-- **update-memory.mjs** - Exports `updateMemory`, which implements update memory.
+## Operational Notes
+- Current on-disk inventory: 8 immediate files and 6 child directories.
+- This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
-### Subdirectories
-
-- **logger/** - Contains **ANQR Logger**; it contains 4 immediate files and has 0 child directories.
-- **notify/** - Contains **ANQR Notify Library**; it contains 16 immediate files and has 0 child directories.
-- **rag/** - Contains **RAG Pipeline - Retrieval Augmented Generation**; it contains 6 immediate files and has 6 child directories.
-- **search/** - Contains **ANQR Search Library**; it acts mainly as a namespace over child directories and has 2 child directories.
-
-## 3. Overall Directory Function
-
-The directory primarily provides reusable modules that are imported by sibling runtime, orchestration, or validation code. Verified immediate files in this directory include file-system access, Linear integration, Symphony integration, SonarQube integration, and git/worktree awareness. Environment-driven configuration is present in the immediate code.
-
-## 4. Usage Instructions
-
-```bash
-npx tsx ops/lib/logger.spec.ts
-```
-
-## 5. Dependencies
-
-- **Node.js built-ins** - `node:fs/promises`, `node:path`
-- **External packages/services referenced in immediate code** - `vitest`
-- **Internal relative modules** - `../integrations/sonar/sonar-linear-sync.mjs`, `./logger.mjs`, `./logger/index.mjs`, `./notify/index.mjs`
-
-## 6. Additional Comments
-
-- No direct standalone runtime entry point is defined in the immediate directory contents.
+## Review Focus
+Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
