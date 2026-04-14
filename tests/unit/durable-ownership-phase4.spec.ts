@@ -23,9 +23,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 let rawStateOnDisk: Record<string, unknown> = {};
 
-const { normalizeRecord } = await import(
-  "../../harness/ops/core/symphony-state/normalize-record.mjs"
-);
+const { normalizeRecord } =
+  await import("../../harness/ops/core/symphony-state/normalize-record.mjs");
 
 // ---------------------------------------------------------------------------
 // Mock I/O and infrastructure — let all pure logic run for real
@@ -45,9 +44,8 @@ vi.mock("../../harness/ops/core/symphony-state/load-state.mjs", () => ({
       updatedAt: data.updatedAt || "",
       hostId: data.hostId || "test",
       global: {
-        integrationQueue: [],
         integrationLock: null,
-        ...(data.global || {}),
+        ...data.global,
       },
       issues: {} as Record<string, unknown>,
       worktreeStates: data.worktreeStates || {},
@@ -87,22 +85,12 @@ function emptyStore() {
     version: 1,
     updatedAt: "",
     hostId: "test",
-    global: { integrationQueue: [], integrationLock: null },
+    global: { integrationLock: null },
     issues: {} as Record<string, unknown>,
     worktreeStates: {} as Record<string, unknown>,
   };
 }
 
-function activeLease(runId: string | null = null) {
-  return {
-    owner: "scheduler",
-    nonce: "scheduler-test-1",
-    run_id: runId,
-    acquired_at: new Date().toISOString(),
-    heartbeat_at: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 600_000).toISOString(),
-  };
-}
 
 // ---------------------------------------------------------------------------
 // 1. Scheduler sets worktree to "executing" at claim time
@@ -114,15 +102,11 @@ describe("Scheduler worktree state at claim time (Phase 4)", () => {
   });
 
   it("should allow setting worktree to executing after claiming an issue", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
-    const { getWorktreeState } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-state.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
+    const { getWorktreeState } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-state.mjs");
 
     // Claim the issue
     const claim = claimIssue("ANQ-P4-1", { worktreeId: "wt1", source: "scheduler" });
@@ -140,15 +124,11 @@ describe("Scheduler worktree state at claim time (Phase 4)", () => {
   });
 
   it("should prevent double-assignment: second claim sees worktree as executing", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
-    const { getWorktreeState } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-state.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
+    const { getWorktreeState } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-state.mjs");
 
     // First claim + worktree set
     claimIssue("ANQ-P4-2A", { worktreeId: "wt1", source: "scheduler" });
@@ -174,12 +154,10 @@ describe("execute-issue executing guard (Phase 4)", () => {
   });
 
   it("should not reject executing → executing when guard checks first", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
-    const { getWorktreeState } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-state.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
+    const { getWorktreeState } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-state.mjs");
 
     // Scheduler sets worktree to executing
     transitionWorktree("wt2", "executing", { assignedIssue: "ANQ-P4-3" });
@@ -198,12 +176,10 @@ describe("execute-issue executing guard (Phase 4)", () => {
   });
 
   it("should still transition dirty_owned → executing for sticky repair", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
-    const { getWorktreeState } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-state.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
+    const { getWorktreeState } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-state.mjs");
 
     // Set up dirty_owned worktree (from previous repair)
     const store = emptyStore();
@@ -243,31 +219,24 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
     ],
   }));
 
-  vi.mock(
-    "../../harness/ops/integrations/model/symphony-agent-router/worktrees.mjs",
-    () => ({ WORKTREES: mockWorktrees }),
-  );
-  vi.mock(
-    "../../harness/ops/integrations/model/symphony-agent-router/logger.mjs",
-    () => ({
-      logInfo: () => {},
-      logWarn: () => {},
-      logError: () => {},
-      logDebug: () => {},
-    }),
-  );
+  vi.mock("../../harness/ops/integrations/model/symphony-agent-router/worktrees.mjs", () => ({
+    WORKTREES: mockWorktrees,
+  }));
+  vi.mock("../../harness/ops/integrations/model/symphony-agent-router/logger.mjs", () => ({
+    logInfo: () => {},
+    logWarn: () => {},
+    logError: () => {},
+    logDebug: () => {},
+  }));
 
   // Also mock the symphony-state import path used by the reconciler
   // The reconciler uses ../../../symphony-state.mjs relative to its location
-  vi.mock(
-    "../../harness/ops/symphony-state.mjs",
-    async () => {
-      const actual = await vi.importActual(
-        "../../harness/ops/core/symphony-state/index.mjs",
-      ) as Record<string, unknown>;
-      return actual;
-    },
-  );
+  vi.mock("../../harness/ops/symphony-state.mjs", async () => {
+    const actual = (await vi.importActual(
+      "../../harness/ops/core/symphony-state/index.mjs",
+    )) as Record<string, unknown>;
+    return actual;
+  });
 
   beforeEach(() => {
     rawStateOnDisk = emptyStore();
@@ -278,9 +247,8 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
   });
 
   it("should set counter to 1 when durable state is executing but counter is 0", async () => {
-    const { reconcileWorktreeCounters } = await import(
-      "../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs"
-    );
+    const { reconcileWorktreeCounters } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs");
 
     // Set wt1 as executing in durable state
     const store = emptyStore();
@@ -293,9 +261,8 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
   });
 
   it("should set counter to 0 when durable state is not executing but counter > 0", async () => {
-    const { reconcileWorktreeCounters } = await import(
-      "../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs"
-    );
+    const { reconcileWorktreeCounters } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs");
 
     // wt2 has stale counter but durable state is available
     mockWorktrees[1].activeRequests = 1;
@@ -309,9 +276,8 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
   });
 
   it("should not modify counters when already in sync", async () => {
-    const { reconcileWorktreeCounters } = await import(
-      "../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs"
-    );
+    const { reconcileWorktreeCounters } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs");
 
     // wt1 executing with counter=1, wt2 available with counter=0
     mockWorktrees[0].activeRequests = 1;
@@ -325,9 +291,8 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
   });
 
   it("should not touch Discord worktrees (wt5+)", async () => {
-    const { reconcileWorktreeCounters } = await import(
-      "../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs"
-    );
+    const { reconcileWorktreeCounters } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs");
 
     // wt5 has activeRequests=2 but no durable state — should not be corrected
     mockWorktrees[4].activeRequests = 2;
@@ -339,9 +304,8 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
   });
 
   it("should handle missing durable state as not-executing", async () => {
-    const { reconcileWorktreeCounters } = await import(
-      "../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs"
-    );
+    const { reconcileWorktreeCounters } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs");
 
     // wt3 has counter=1 but no durable state at all
     mockWorktrees[2].activeRequests = 1;
@@ -359,29 +323,25 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
 
 describe("getHealthyLinearCapacity assignedIssue field (Phase 4)", () => {
   // Mock the health states and normalize function
-  vi.mock(
-    "../../harness/ops/core/linear-worktree-health-states.mjs",
-    () => ({
-      LINEAR_WORKTREE_HEALTH_STATES: {
-        AVAILABLE: "available",
-        EXECUTING: "executing",
-        DIRTY_REPAIRABLE: "dirty_repairable",
-        QUARANTINED: "quarantined",
-        DIVERGED: "diverged",
-        INTEGRATION_BLOCKED: "integration_blocked",
-        UNAVAILABLE: "unavailable",
-      },
-    }),
-  );
+  vi.mock("../../harness/ops/core/linear-worktree-health-states.mjs", () => ({
+    LINEAR_WORKTREE_HEALTH_STATES: {
+      AVAILABLE: "available",
+      EXECUTING: "executing",
+      DIRTY_REPAIRABLE: "dirty_repairable",
+      QUARANTINED: "quarantined",
+      DIVERGED: "diverged",
+      INTEGRATION_BLOCKED: "integration_blocked",
+      UNAVAILABLE: "unavailable",
+    },
+  }));
 
   beforeEach(() => {
     rawStateOnDisk = emptyStore();
   });
 
   it("should return assignedIssue instead of issueIdentifier", async () => {
-    const { getHealthyLinearCapacity } = await import(
-      "../../harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity/get-healthy-linear-capacity.mjs"
-    );
+    const { getHealthyLinearCapacity } =
+      await import("../../harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity/get-healthy-linear-capacity.mjs");
 
     const store = emptyStore();
     store.worktreeStates["wt1"] = {
@@ -399,9 +359,8 @@ describe("getHealthyLinearCapacity assignedIssue field (Phase 4)", () => {
   });
 
   it("should fall back to issueIdentifier for backwards compatibility", async () => {
-    const { getHealthyLinearCapacity } = await import(
-      "../../harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity/get-healthy-linear-capacity.mjs"
-    );
+    const { getHealthyLinearCapacity } =
+      await import("../../harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity/get-healthy-linear-capacity.mjs");
 
     const store = emptyStore();
     store.worktreeStates["wt2"] = {
@@ -417,9 +376,8 @@ describe("getHealthyLinearCapacity assignedIssue field (Phase 4)", () => {
   });
 
   it("should report correct available count excluding executing worktrees", async () => {
-    const { getHealthyLinearCapacity } = await import(
-      "../../harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity/get-healthy-linear-capacity.mjs"
-    );
+    const { getHealthyLinearCapacity } =
+      await import("../../harness/ops/orchestration/linear-reconciler/get-healthy-linear-capacity/get-healthy-linear-capacity.mjs");
 
     const store = emptyStore();
     store.worktreeStates["wt1"] = { state: "executing", assignedIssue: "ANQ-A" };
@@ -444,24 +402,15 @@ describe("Full durable ownership lifecycle (Phase 4)", () => {
   });
 
   it("should complete: claim → wt executing → execute → wt available", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { acquireLease } = await import(
-      "../../harness/ops/core/symphony-state/acquire-lease.mjs"
-    );
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
-    const { getWorktreeState } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-state.mjs"
-    );
-    const { releaseLease } = await import(
-      "../../harness/ops/core/symphony-state/release-lease.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { acquireLease } =
+      await import("../../harness/ops/core/symphony-state/acquire-lease.mjs");
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
+    const { getWorktreeState } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-state.mjs");
 
     // Step 1: Scheduler claims issue and sets worktree to executing
     const claim = claimIssue("ANQ-LIFECYCLE", { worktreeId: "wt1", source: "scheduler" });
@@ -497,15 +446,11 @@ describe("Full durable ownership lifecycle (Phase 4)", () => {
   });
 
   it("should show worktree as executing across scheduler cycles", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
-    const { getWorktreeState } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-state.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
+    const { getWorktreeState } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-state.mjs");
 
     // Cycle 1: Claim issue A for wt1
     claimIssue("ANQ-CYCLE-A", { worktreeId: "wt1", source: "scheduler" });

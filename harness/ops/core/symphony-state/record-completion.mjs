@@ -1,17 +1,21 @@
 import { transitionIssue } from "./transition-issue.mjs";
-import { patchIssueState } from "./patch-issue-state.mjs";
+import { loadState } from "./load-state.mjs";
+import { normalizeRecord } from "./normalize-record.mjs";
+import { saveState } from "./save-state.mjs";
+import { withStateLock } from "./with-state-lock.mjs";
 
 /**
  * Record execution completion metadata.
  *
- * Remediation Blocker 2: attempts `transitionIssue("completed")` when
- * the current phase allows it (e.g., evidence_pending → completed).
+ * Attempts `transitionIssue("completed")` when the current phase
+ * allows it (e.g., evidence_pending → completed).
  *
  * When the transition is not valid (e.g., issue is still in
- * `integration_pending` because integration hasn't run yet), falls
- * back to metadata-only patch.  With the inferExecutionPhase priority
- * fix, `completed_at` does not trump `finalization.state`, so the
- * metadata patch is safe and does not prematurely mark the phase.
+ * `integration_pending` because integration hasn't run yet), only
+ * sets `latency_ms` (pure observation metadata). Does NOT set
+ * `completed_at` on the fallback path — `completed_at` is a
+ * lifecycle-determining field that must only be set through a
+ * validated transition.
  */
 export function recordCompletion(issueIdentifier, details = {}) {
   const completedAt = details.completedAt || new Date().toISOString();
@@ -24,10 +28,19 @@ export function recordCompletion(issueIdentifier, details = {}) {
   });
   if (result.ok) return result.record;
 
-  // Current phase does not allow → completed (expected: the runner
-  // records timing before integration runs).  Apply metadata only.
-  return patchIssueState(issueIdentifier, {
-    completed_at: completedAt,
-    latency_ms: latencyMs,
-  });
+  // Transition rejected (expected: runner records timing before
+  // integration runs). Only set latency_ms — pure observation
+  // metadata that does not affect lifecycle phase.
+  if (latencyMs !== null) {
+    return withStateLock(() => {
+      const store = loadState();
+      const current = normalizeRecord(store.issues[issueIdentifier] || { issueIdentifier });
+      current.latency_ms = latencyMs;
+      store.issues[issueIdentifier] = current;
+      saveState(store);
+      return current;
+    });
+  }
+
+  return null;
 }

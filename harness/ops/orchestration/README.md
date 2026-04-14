@@ -1,13 +1,16 @@
 # Orchestration
 
 ## Purpose
+
 Long-running control-loop surface for scheduling, queue control, worktree execution, integration, reconciliation, recovery, and fleet measurement.
 
 ## Contents
+
 - 11 immediate files
 - 11 child directories
 
 ## Key Files
+
 - `analyze-worktree-benchmark.mjs` - JavaScript/TypeScript module used by this directory.
 - `latency-report.mjs` - JavaScript/TypeScript module used by this directory.
 - `nightly-ops-pass.mjs` - JavaScript/TypeScript module used by this directory.
@@ -21,6 +24,7 @@ Long-running control-loop surface for scheduling, queue control, worktree execut
 - `symphony-worktree-recovery.mjs` - JavaScript/TypeScript module used by this directory.
 
 ## Subdirectories
+
 - `analyze-worktree-benchmark/` - Analyze Worktree Benchmark scope; immediate files include `compare-benchmarks.mjs`, `dirname.mjs`, `evidence-dir.mjs`, `extract-benchmark-metrics.mjs`, and others.
 - `latency-report/` - Latency Report scope; immediate files include `acceptable-ms.mjs`, `classify-latency.mjs`, `format-duration.mjs`, `generate-report.mjs`, and others.
 - `linear-reconciler/` - Linear Reconciler scope; immediate files include `compute-reconciliation-actions.mjs`, `get-healthy-linear-capacity.mjs`, `index.mjs`, `logger.mjs`, and others; child directories include `compute-reconciliation-actions/`, `get-healthy-linear-capacity/`, `logger/`, `run-reconciliation-cycle/`.
@@ -34,8 +38,10 @@ Long-running control-loop surface for scheduling, queue control, worktree execut
 - `symphony-worktree-recovery/` - Symphony Worktree Recovery scope; immediate files include `all-worktree-ids.mjs`, `check-baseline-health.mjs`, `check-quarantined-for-reprovisioning.mjs`, `classify-worktree.mjs`, and others; child directories include `execute-repair/`.
 
 ## Operational Notes
+
 - Current on-disk inventory: 11 immediate file(s) and 11 child directories.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

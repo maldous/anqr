@@ -4,60 +4,60 @@ High-Confidence Automation Readiness Requirements for the ANQR Host-Local Harnes
 
 # Execution Progress
 
-| Workstream                    | Status         | Started    | Completed  | Notes                                                                                                                                                                                                      |
-| ----------------------------- | -------------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A. Authoritative scheduling   | ✅ Complete    | 2026-04-13 | 2026-04-14 | All dispatch paths (trigger + queue drain) verify scheduler claims; scheduler requires worktreeId at claim time; `verifySchedulerClaim` extracted to shared module; ADR-0002/router/scheduler docs aligned |
-| B. State model normalization  | 🟡 In Progress | 2026-04-15 | —          | Phase 0 complete; Phase 1 complete; Phase 2 complete; Phase 3 mostly complete; Phase 4 complete; Phase 5 mostly complete. All 7 remediation blockers resolved. Phases 6–7 remaining. |
-| C. Recovery demotion          | ✅ Complete    | 2026-04-13 | 2026-04-14 | All recovery git publication removed (including baseline cspell auto-fix + worktree propagation); `checkBaselineHealth` is detect-only; ADR-0005/ADR-0006/recovery docs aligned                            |
-| D. Boundary hardening         | ⬜ Not Started | —          | —          | Depends on A, B, C                                                                                                                                                                                         |
-| E. Config/lifecycle hardening | ⬜ Not Started | —          | —          | Partially parallel                                                                                                                                                                                         |
-| F. Provider-routing evidence  | ⬜ Not Started | —          | —          | Parallel after A, B                                                                                                                                                                                        |
-| G. Evidence/closure model     | ⬜ Not Started | —          | —          | Depends on A–F                                                                                                                                                                                             |
-| H. Documentation alignment    | ⬜ Not Started | —          | —          | Continuous                                                                                                                                                                                                 |
+| Workstream                    | Status         | Started    | Completed  | Notes                                                                                                                                                                                                                                                     |
+| ----------------------------- | -------------- | ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A. Authoritative scheduling   | ✅ Complete    | 2026-04-13 | 2026-04-14 | All dispatch paths (trigger + queue drain) verify scheduler claims; scheduler requires worktreeId at claim time; `verifySchedulerClaim` extracted to shared module; ADR-0002/router/scheduler docs aligned                                                |
+| B. State model normalization  | 🟡 In Progress | 2026-04-15 | —          | Phase 0 complete; Phase 1 complete; Phase 2 mostly complete; Phase 3 mostly complete (lifecycle fallbacks removed); Phase 4 mostly complete (atomic release done); Phase 5 partially complete (integrationQueue artifacts removed). Phases 6–7 remaining. |
+| C. Recovery demotion          | ✅ Complete    | 2026-04-13 | 2026-04-14 | All recovery git publication removed (including baseline cspell auto-fix + worktree propagation); `checkBaselineHealth` is detect-only; ADR-0005/ADR-0006/recovery docs aligned                                                                           |
+| D. Boundary hardening         | ⬜ Not Started | —          | —          | Depends on A, B, C                                                                                                                                                                                                                                        |
+| E. Config/lifecycle hardening | ⬜ Not Started | —          | —          | Partially parallel                                                                                                                                                                                                                                        |
+| F. Provider-routing evidence  | ⬜ Not Started | —          | —          | Parallel after A, B                                                                                                                                                                                                                                       |
+| G. Evidence/closure model     | ⬜ Not Started | —          | —          | Depends on A–F                                                                                                                                                                                                                                            |
+| H. Documentation alignment    | ⬜ Not Started | —          | —          | Continuous                                                                                                                                                                                                                                                |
 
 ## Decisions Log
 
-| Date       | Decision                                                                   | Rationale                                                                                                                                                                                    |
-| ---------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-13 | Use feature flag `SCHEDULER_AUTHORITATIVE` for phased rollout              | Allows shadow-mode testing before cutting over; old paths remain functional until validated                                                                                                  |
-| 2026-04-13 | Create `symphony-scheduler/` as new orchestration module                   | Cleanest separation of concerns; scheduler is a new first-class actor, not bolted onto existing code                                                                                         |
-| 2026-04-13 | Scheduler claims via `claimIssue()` with atomic lease + durable assignment | Reuses existing `withStateLock` + `acquireLease` for atomicity; adds assignment metadata                                                                                                     |
-| 2026-04-13 | Reconciler converted to feed desired-work queue, not dispatch directly     | Preserves level-triggered safety net role while removing scheduling authority                                                                                                                |
-| 2026-04-13 | Runner self-pick removed behind feature flag                               | Runner becomes pure executor of already-claimed work; sticky repair preserved as local concern                                                                                               |
-| 2026-04-13 | Recovery git mutation removed (Workstream C)                               | `execute-repair.mjs` stripped of `auto_commit_and_push`, `retry_push`, and main-repo push; recovery limited to quarantine/reprovision/state-repair per ADR-0005                              |
-| 2026-04-14 | Scheduler consumes desired-work queue (review remediation)                 | Per updated ADR-0002: desired-work is advisory, Linear state is authoritative; scheduler drains queue each cycle for priority boosting                                                       |
-| 2026-04-14 | Router hardened in authoritative mode (review remediation)                 | Per ADR-0002: router verifies scheduler claim before dispatch; returns 409 for unclaimed issues                                                                                              |
-| 2026-04-14 | Recovery evidence emission added (review remediation)                      | Per updated ADR-0006: every recovery action emits structured evidence classifying action class, target, ownership, state-only vs sandbox-reset                                               |
-| 2026-04-14 | reset_to_main gets active-sandbox guard (review remediation)               | Defense-in-depth: explicit leaseIsActive check before sandbox reset, falls back to quarantine if active                                                                                      |
-| 2026-04-14 | Tests rewritten to exercise real modules (review remediation)              | claimIssue tested via real module with mocked fs layer; recovery evidence structure verified against source                                                                                  |
-| 2026-04-14 | Router verifies scheduler ownership + assignment (2nd review)              | `verifySchedulerClaim` now checks `lease.owner === "scheduler"` and `assignment.worktreeId` exists; returns 409 with specific reason codes                                                   |
-| 2026-04-14 | Scheduler assigns worktreeId at claim time (2nd review)                    | Scheduler selects from `capacity.worktrees` and passes worktreeId into `claimIssue()`; claim+assignment atomic; router honours assignment                                                    |
-| 2026-04-14 | Router uses scheduler's durable assignment (2nd review)                    | In authoritative mode, router reads `assignedWorktreeId` from claim state and dispatches to that worktree instead of re-selecting                                                            |
-| 2026-04-14 | `isNonPublishing` derived from action class (2nd review)                   | Per ADR-0006: `buildEvidence` derives `isNonPublishing` from explicit `NON_PUBLISHING_ACTIONS` set rather than hardcoding                                                                    |
-| 2026-04-14 | Behavioral recovery tests added (2nd review)                               | `recovery-behavioral.spec.ts` exercises real `executeRepair` with mocked deps; proves runtime demotion, active-lease guard, evidence structure                                               |
-| 2026-04-14 | PLAN.md corrected to partially complete (2nd review)                       | Workstreams A and C marked 🟡 Partially Complete with explicit remaining items listed                                                                                                        |
-| 2026-04-14 | Legacy bypass paths removed (Workstream A completion)                      | `SCHEDULER_AUTHORITATIVE` flag made permanent; all `if (!SCHEDULER_AUTHORITATIVE)` bypass code removed from runner, router, webhook, reconciler                                              |
-| 2026-04-14 | Legacy reconciler dispatch helper deleted                                  | `run-reconciliation-cycle/dispatch-issue.mjs` and its exports removed so the reconciler no longer exposes a dormant direct-dispatch helper                                                   |
-| 2026-04-14 | `reset_to_main` explicitly classified (Workstream C completion)            | ADR-0005 updated with sandbox maintenance exception; execute-repair.mjs documents safety guarantees; recovery README reflects non-publishing contract                                        |
-| 2026-04-14 | Scheduler README created                                                   | Documents authority boundaries, scheduling cycle flow, claim contract, systemd service, and operational notes                                                                                |
-| 2026-04-14 | Legacy path removal tests added                                            | Source-verification tests prove runner/webhook/reconciler no longer contain bypass code                                                                                                      |
-| 2026-04-14 | Router queue bypass closed (3rd review)                                    | `verifySchedulerClaim` extracted to shared module; `runtime.mjs` queue drain now re-verifies claims before dispatch; items with expired/invalid claims are dropped                           |
-| 2026-04-14 | Scheduler requires worktreeId (3rd review)                                 | Scheduler stops dispatch loop when no worktrees available rather than claiming with null assignment; router rejects claims missing `assignment.worktreeId`                                   |
-| 2026-04-14 | Claims without worktree assignment are rejected                            | `claimIssue()` now rejects missing `worktreeId`; null-assignment claims are no longer creatable even by direct callers                                                                       |
-| 2026-04-14 | Recovery baseline auto-fix removed (3rd review)                            | `attemptCspellAutoFix` and `propagateBaselineFixToCleanWorktrees` deleted; `checkBaselineHealth` rewritten to detect-and-report only; recovery daemon contains zero git publication commands |
-| 2026-04-14 | ADRs and READMEs aligned to code (3rd review)                              | ADR-0002, ADR-0005, ADR-0006, scheduler README, router README, recovery README all corrected to match implemented behavior                                                                   |
-| 2026-04-15 | Phase 0: `normalizeRecord` assignment persistence hotfix (Workstream B)    | `normalizeRecord()` was silently dropping the `assignment` field written by `claimIssue()` — A-integrity bug that B exposed. Fixed by adding `assignment` to normalized schema.              |
-| 2026-04-15 | Revised Workstream B plan per external reviewer guidance                    | 7-phase plan: Phase 0 hotfix → Phase 1 schema/helpers → Phase 2 transition APIs → Phase 3 migrate writers → Phase 4 durable ownership in router → Phase 5 bidirectional ownership → Phase 6 tests → Phase 7 docs |
-| 2026-04-15 | `inferExecutionPhase()` over persisted `executionPhase`                    | Reviewer: do not persist `executionPhase` yet — add read-side helper first to avoid creating another truth source before mutating paths are unified                                          |
-| 2026-04-15 | No store version bump in Phase 1                                           | Reviewer: only bump version when on-disk shape changes materially or old readers/writers would misinterpret state. Adding optional fields does not qualify.                                  |
-| 2026-04-15 | `transitionIssue()`/`transitionWorktree()` as sole lifecycle write APIs    | Reviewer: old mutation helpers (`patchIssueState`, `setFinalizationState`, `setWorktreeState`) must be deprecated quickly, not left as open-ended alternatives                               |
-| 2026-04-15 | Router reconstruction as transitional safety, not final model              | Reviewer: durable ownership is the authority; router counter reconstruction is a guardrail on startup, not the correctness model                                                            |
-| 2026-04-15 | `worktreeStates[wtId].assignedIssue` as primary ownership record           | Reviewer: make durable worktree state the primary owner record; reverse scan of issues is validation/repair, not the authority lookup path                                                  |
-| 2026-04-15 | `finalization.state` authoritative, `integrationQueue` derived             | Reviewer: state belongs with the issue record; queues are easier to rebuild than issue history/state                                                                                        |
-| 2026-04-15 | Honest B assessment: phases 3–5 are NOT complete per external review       | External reviewer identified 7 blockers: worktree normalization on load, lifecycle helpers still using patchIssueState, non-atomic claim+worktree, releaseLease not bidirectional, no dispatch rollback |
-| 2026-04-15 | `claimAndAssignWorktree` in symphony-state layer (Blocker 3)               | Atomic helper claims issue and assigns worktree under one lock; schedule-cycle calls this instead of separate claimIssue + transitionWorktree                                               |
-| 2026-04-15 | `releaseLease` clears worktree ownership (Blocker 4)                       | After releasing issue-side lease, also transitions worktree to available with null assignedIssue; sequential lock acquisition (safe, conservative direction)                                 |
-| 2026-04-15 | `inferExecutionPhase` priority: finalization before completed_at           | Runner sets completed_at before integration runs; old priority let completed_at trump finalization.state=integration_pending, incorrectly returning "completed"                              |
+| Date       | Decision                                                                   | Rationale                                                                                                                                                                                                        |
+| ---------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-13 | Use feature flag `SCHEDULER_AUTHORITATIVE` for phased rollout              | Allows shadow-mode testing before cutting over; old paths remain functional until validated                                                                                                                      |
+| 2026-04-13 | Create `symphony-scheduler/` as new orchestration module                   | Cleanest separation of concerns; scheduler is a new first-class actor, not bolted onto existing code                                                                                                             |
+| 2026-04-13 | Scheduler claims via `claimIssue()` with atomic lease + durable assignment | Reuses existing `withStateLock` + `acquireLease` for atomicity; adds assignment metadata                                                                                                                         |
+| 2026-04-13 | Reconciler converted to feed desired-work queue, not dispatch directly     | Preserves level-triggered safety net role while removing scheduling authority                                                                                                                                    |
+| 2026-04-13 | Runner self-pick removed behind feature flag                               | Runner becomes pure executor of already-claimed work; sticky repair preserved as local concern                                                                                                                   |
+| 2026-04-13 | Recovery git mutation removed (Workstream C)                               | `execute-repair.mjs` stripped of `auto_commit_and_push`, `retry_push`, and main-repo push; recovery limited to quarantine/reprovision/state-repair per ADR-0005                                                  |
+| 2026-04-14 | Scheduler consumes desired-work queue (review remediation)                 | Per updated ADR-0002: desired-work is advisory, Linear state is authoritative; scheduler drains queue each cycle for priority boosting                                                                           |
+| 2026-04-14 | Router hardened in authoritative mode (review remediation)                 | Per ADR-0002: router verifies scheduler claim before dispatch; returns 409 for unclaimed issues                                                                                                                  |
+| 2026-04-14 | Recovery evidence emission added (review remediation)                      | Per updated ADR-0006: every recovery action emits structured evidence classifying action class, target, ownership, state-only vs sandbox-reset                                                                   |
+| 2026-04-14 | reset_to_main gets active-sandbox guard (review remediation)               | Defense-in-depth: explicit leaseIsActive check before sandbox reset, falls back to quarantine if active                                                                                                          |
+| 2026-04-14 | Tests rewritten to exercise real modules (review remediation)              | claimIssue tested via real module with mocked fs layer; recovery evidence structure verified against source                                                                                                      |
+| 2026-04-14 | Router verifies scheduler ownership + assignment (2nd review)              | `verifySchedulerClaim` now checks `lease.owner === "scheduler"` and `assignment.worktreeId` exists; returns 409 with specific reason codes                                                                       |
+| 2026-04-14 | Scheduler assigns worktreeId at claim time (2nd review)                    | Scheduler selects from `capacity.worktrees` and passes worktreeId into `claimIssue()`; claim+assignment atomic; router honours assignment                                                                        |
+| 2026-04-14 | Router uses scheduler's durable assignment (2nd review)                    | In authoritative mode, router reads `assignedWorktreeId` from claim state and dispatches to that worktree instead of re-selecting                                                                                |
+| 2026-04-14 | `isNonPublishing` derived from action class (2nd review)                   | Per ADR-0006: `buildEvidence` derives `isNonPublishing` from explicit `NON_PUBLISHING_ACTIONS` set rather than hardcoding                                                                                        |
+| 2026-04-14 | Behavioral recovery tests added (2nd review)                               | `recovery-behavioral.spec.ts` exercises real `executeRepair` with mocked deps; proves runtime demotion, active-lease guard, evidence structure                                                                   |
+| 2026-04-14 | PLAN.md corrected to partially complete (2nd review)                       | Workstreams A and C marked 🟡 Partially Complete with explicit remaining items listed                                                                                                                            |
+| 2026-04-14 | Legacy bypass paths removed (Workstream A completion)                      | `SCHEDULER_AUTHORITATIVE` flag made permanent; all `if (!SCHEDULER_AUTHORITATIVE)` bypass code removed from runner, router, webhook, reconciler                                                                  |
+| 2026-04-14 | Legacy reconciler dispatch helper deleted                                  | `run-reconciliation-cycle/dispatch-issue.mjs` and its exports removed so the reconciler no longer exposes a dormant direct-dispatch helper                                                                       |
+| 2026-04-14 | `reset_to_main` explicitly classified (Workstream C completion)            | ADR-0005 updated with sandbox maintenance exception; execute-repair.mjs documents safety guarantees; recovery README reflects non-publishing contract                                                            |
+| 2026-04-14 | Scheduler README created                                                   | Documents authority boundaries, scheduling cycle flow, claim contract, systemd service, and operational notes                                                                                                    |
+| 2026-04-14 | Legacy path removal tests added                                            | Source-verification tests prove runner/webhook/reconciler no longer contain bypass code                                                                                                                          |
+| 2026-04-14 | Router queue bypass closed (3rd review)                                    | `verifySchedulerClaim` extracted to shared module; `runtime.mjs` queue drain now re-verifies claims before dispatch; items with expired/invalid claims are dropped                                               |
+| 2026-04-14 | Scheduler requires worktreeId (3rd review)                                 | Scheduler stops dispatch loop when no worktrees available rather than claiming with null assignment; router rejects claims missing `assignment.worktreeId`                                                       |
+| 2026-04-14 | Claims without worktree assignment are rejected                            | `claimIssue()` now rejects missing `worktreeId`; null-assignment claims are no longer creatable even by direct callers                                                                                           |
+| 2026-04-14 | Recovery baseline auto-fix removed (3rd review)                            | `attemptCspellAutoFix` and `propagateBaselineFixToCleanWorktrees` deleted; `checkBaselineHealth` rewritten to detect-and-report only; recovery daemon contains zero git publication commands                     |
+| 2026-04-14 | ADRs and READMEs aligned to code (3rd review)                              | ADR-0002, ADR-0005, ADR-0006, scheduler README, router README, recovery README all corrected to match implemented behavior                                                                                       |
+| 2026-04-15 | Phase 0: `normalizeRecord` assignment persistence hotfix (Workstream B)    | `normalizeRecord()` was silently dropping the `assignment` field written by `claimIssue()` — A-integrity bug that B exposed. Fixed by adding `assignment` to normalized schema.                                  |
+| 2026-04-15 | Revised Workstream B plan per external reviewer guidance                   | 7-phase plan: Phase 0 hotfix → Phase 1 schema/helpers → Phase 2 transition APIs → Phase 3 migrate writers → Phase 4 durable ownership in router → Phase 5 bidirectional ownership → Phase 6 tests → Phase 7 docs |
+| 2026-04-15 | `inferExecutionPhase()` over persisted `executionPhase`                    | Reviewer: do not persist `executionPhase` yet — add read-side helper first to avoid creating another truth source before mutating paths are unified                                                              |
+| 2026-04-15 | No store version bump in Phase 1                                           | Reviewer: only bump version when on-disk shape changes materially or old readers/writers would misinterpret state. Adding optional fields does not qualify.                                                      |
+| 2026-04-15 | `transitionIssue()`/`transitionWorktree()` as sole lifecycle write APIs    | Reviewer: old mutation helpers (`patchIssueState`, `setFinalizationState`, `setWorktreeState`) must be deprecated quickly, not left as open-ended alternatives                                                   |
+| 2026-04-15 | Router reconstruction as transitional safety, not final model              | Reviewer: durable ownership is the authority; router counter reconstruction is a guardrail on startup, not the correctness model                                                                                 |
+| 2026-04-15 | `worktreeStates[wtId].assignedIssue` as primary ownership record           | Reviewer: make durable worktree state the primary owner record; reverse scan of issues is validation/repair, not the authority lookup path                                                                       |
+| 2026-04-15 | `finalization.state` authoritative, `integrationQueue` derived             | Reviewer: state belongs with the issue record; queues are easier to rebuild than issue history/state                                                                                                             |
+| 2026-04-15 | Honest B assessment: phases 3–5 are NOT complete per external review       | External reviewer identified 7 blockers: worktree normalization on load, lifecycle helpers still using patchIssueState, non-atomic claim+worktree, releaseLease not bidirectional, no dispatch rollback          |
+| 2026-04-15 | `claimAndAssignWorktree` in symphony-state layer (Blocker 3)               | Atomic helper claims issue and assigns worktree under one lock; schedule-cycle calls this instead of separate claimIssue + transitionWorktree                                                                    |
+| 2026-04-15 | `releaseLease` clears worktree ownership (Blocker 4)                       | After releasing issue-side lease, also transitions worktree to available with null assignedIssue; sequential lock acquisition (safe, conservative direction)                                                     |
+| 2026-04-15 | `inferExecutionPhase` priority: finalization before completed_at           | Runner sets completed_at before integration runs; old priority let completed_at trump finalization.state=integration_pending, incorrectly returning "completed"                                                  |
 
 ## Workstream A Detailed Progress
 
@@ -92,9 +92,9 @@ High-Confidence Automation Readiness Requirements for the ANQR Host-Local Harnes
 - [x] Regression test: claim → save → fresh load → verifySchedulerClaim passes (restart proof)
 - [x] Regression test: patchIssueState does not drop existing assignment through multiple patches
 
-### Phase 1 — Define the truth model (PARTIAL)
+### Phase 1 — Define the truth model (COMPLETE)
 
-Schema and helpers exist, but worktree schema is not enforced on load.
+Phase 1 deliverables are done. Schema, helpers, transition map, and `inferExecutionPhase` all exist and are tested. Worktree schema is enforced on load via `normalizeWorktreeRecord()` in `loadState()`. Remaining ownership and lifecycle enforcement gaps belong to Phases 3–5, not Phase 1.
 
 - [x] `issue-phases.mjs` — execution phase enum: `eligible`, `claimed`, `executing`, `cooldown`, `blocked`, `validation_failed`, `commit_failed`, `push_failed`, `integration_pending`, `evidence_pending`, `integration_failed`, `completed` (12 phases) + `FINALIZATION_STATE_TO_PHASE` mapping
 - [x] `worktree-record-schema.mjs` — strict schema: `{ worktreeId, state, assignedIssue, owner, leasedAt, quarantinedAt, reason, repairAttempts, lastError, updatedAt }` + `normalizeWorktreeRecord()` with backwards-compatible `issueIdentifier` support
@@ -108,7 +108,7 @@ Schema and helpers exist, but worktree schema is not enforced on load.
 
 ### Phase 2 — Transition helpers (MOSTLY COMPLETE)
 
-Transition helpers exist and work, but old mutation helpers are still used by lifecycle-significant code.
+Transition helpers exist and work, but old mutation helpers (`patchIssueState`, `setFinalizationState`, `setWorktreeState`) are still live-exported and still called from lifecycle-significant fallback paths in Phase 3 helpers.
 
 - [x] `transitionIssue(identifier, targetPhase, metadata)` — validates phase transition via `isValidIssueTransition`, infers current phase via `inferExecutionPhase`, applies metadata as patch, records transition in history with `from`/`to`/`reason`, all atomic within `withStateLock`
 - [x] `transitionWorktree(worktreeId, targetState, metadata)` — validates state transition via `isValidWorktreeTransition`, applies metadata, normalizes result via `normalizeWorktreeRecord`, all atomic within `withStateLock`
@@ -116,11 +116,11 @@ Transition helpers exist and work, but old mutation helpers are still used by li
 - [x] `patchIssueState`, `setFinalizationState`, `setWorktreeState` marked `@deprecated` with one-time `console.warn` per process
 - [x] All modules exported from `symphony-state/index.mjs`
 - [x] Tests: `transition-helpers-phase2.spec.ts` — 27 tests covering transitionIssue, transitionWorktree, getWorktreeOwner, and deprecation warnings
-- [ ] Old mutation helpers still live and exported; lifecycle-significant code still uses them (see Phase 3 blockers)
+- [ ] Old mutation helpers still live and exported; lifecycle-significant fallback code still uses them in all 6 lifecycle helpers (see Phase 3)
 
-### Phase 3 — Migrate writers (NOT COMPLETE)
+### Phase 3 — Migrate writers (MOSTLY COMPLETE)
 
-Some lifecycle-mutating paths delegated to transition helpers, but six lifecycle-significant helpers still use `patchIssueState()` directly, and `releaseLease()` does not maintain bidirectional ownership.
+All six lifecycle-significant helpers (`setCooldown`, `clearCooldown`, `markRetryExhausted`, `markIssueHumanOnly`, `resetRetryState`, `recordCompletion`) no longer fall back to `patchIssueState()` for lifecycle-significant mutations. If a transition is rejected, the helpers either return null (reject) or limit themselves to genuinely metadata-only cleanup (clearing stale fields that do not determine the current phase). `releaseLease()` is now a single atomic operation under one lock.
 
 **What is done:**
 
@@ -138,24 +138,25 @@ Some lifecycle-mutating paths delegated to transition helpers, but six lifecycle
 - [x] `quarantine-worktree.mjs` — replaced `setWorktreeState` with `transitionWorktree`
 - [x] Tests: `transition-migration-phase3.spec.ts` — 24 tests
 
-**What is NOT done (blockers):**
+**What is NOT done:**
 
-- [x] **BLOCKER 2:** All 6 lifecycle helpers now delegate to `transitionIssue()` with `patchIssueState` fallback for edge-case phases:
-  - `set-cooldown.mjs` → `transitionIssue("cooldown")`
-  - `clear-cooldown.mjs` → `transitionIssue("eligible")` when in cooldown; metadata-only otherwise
-  - `mark-retry-exhausted.mjs` → `transitionIssue("blocked")`
-  - `mark-issue-human-only.mjs` → `transitionIssue("blocked")`
-  - `reset-retry-state.mjs` → `transitionIssue("eligible")`
-  - `record-completion.mjs` → `transitionIssue("completed")` when valid; metadata-only otherwise
-- [x] **BLOCKER 4:** `releaseLease()` now clears worktree ownership bidirectionally via sequential `transitionWorktree("available")` after issue-side release
+- [x] **BLOCKER 2 (RESOLVED):** All 6 lifecycle helpers no longer fall back to `patchIssueState()` for lifecycle-significant mutations:
+  - `set-cooldown.mjs` — rejects with null if transition invalid (no fallback)
+  - `clear-cooldown.mjs` — transitions for cooldown→eligible; uses direct locked write for metadata-only `cooldown_until: null` cleanup (does not set lifecycle fields)
+  - `mark-retry-exhausted.mjs` — rejects with null if transition invalid (no fallback)
+  - `mark-issue-human-only.mjs` — rejects with null if transition invalid (no fallback)
+  - `reset-retry-state.mjs` — returns current state as no-op for already-eligible issues; rejects with null otherwise (no fallback)
+  - `record-completion.mjs` — only sets `latency_ms` (observation metadata) when transition rejected; does NOT set `completed_at`
+- [x] **BLOCKER 4 (RESOLVED):** `releaseLease()` now performs issue lease release AND worktree ownership cleanup inside a single `withStateLock` call — truly atomic bidirectional release.
 
-### Phase 4 — Durable ownership authoritative in router/scheduler (PARTIAL)
+### Phase 4 — Durable ownership authoritative in router/scheduler (MOSTLY COMPLETE)
 
-Meaningful progress on durable ownership, but claim+worktree ownership are still split across two writes and dispatch failure has no rollback.
+Strong progress on durable ownership. `claimAndAssignWorktree()` is atomic (claim side). `releaseLease()` is now atomic (release side) — issue lease release and worktree ownership cleanup happen under one lock. Dispatch failure rollback uses the atomic `releaseLease()`.
 
 **What is done:**
 
-- [x] `schedule-cycle.mjs` — scheduler sets worktree to `"executing"` durably at claim time via `transitionWorktree`
+- [x] `schedule-cycle.mjs` — scheduler sets worktree to `"executing"` durably at claim time via `claimAndAssignWorktree()`
+- [x] `claimAndAssignWorktree()` — atomic issue claim + worktree assignment under one `withStateLock` call
 - [x] `execute-issue.mjs` — guarded `transitionWorktree("executing")`: skips if worktree already executing (scheduler set it)
 - [x] Router startup reconstruction in `runtime.mjs` — reads durable `worktreeStates` on startup and initializes `activeRequests` counters
 - [x] `handle-linear-trigger.mjs` — trusts scheduler assignment: skips `activeRequests >= 1` busy check when target is from scheduler's durable claim
@@ -165,11 +166,13 @@ Meaningful progress on durable ownership, but claim+worktree ownership are still
 - [x] `reconcile-worktree-counters.mjs` — periodic reconciliation syncs transient counters with durable state
 - [x] `get-healthy-linear-capacity.mjs` — renamed `issueIdentifier` field to `assignedIssue`
 - [x] Tests: `durable-ownership-phase4.spec.ts`
+- [x] `schedule-cycle.mjs` calls `releaseLease()` on dispatch failure
 
-**What is NOT done (blockers):**
+**What is NOT done:**
 
-- [x] **BLOCKER 3:** `claimAndAssignWorktree()` added to symphony-state layer — claims issue and sets worktree to executing in one `withStateLock` transaction; `schedule-cycle.mjs` updated to call it
-- [x] **BLOCKER 5:** `schedule-cycle.mjs` now calls `releaseLease()` on dispatch failure, which (via Blocker 4) rolls back both issue claim and worktree ownership
+- [x] **BLOCKER 3b (RESOLVED):** `releaseLease()` rewritten to perform issue lease release + worktree ownership cleanup inside ONE `withStateLock` call. Inlines the transition logic (same pattern as `claimAndAssignWorktree`) to avoid lock reentrancy.
+- [x] **BLOCKER 5b (RESOLVED):** Dispatch rollback in `schedule-cycle.mjs` calls `releaseLease()`, which is now atomic.
+- [ ] Remaining: verify no other callers of `releaseLease` assume the old two-stage return contract.
 
 ### Phase 5 — Bidirectional ownership and authority normalization (NOT COMPLETE)
 
@@ -184,45 +187,48 @@ Integration candidacy is derived from finalization state (good), but the central
 - [x] `process-queue.mjs` — removed `scanForRepairedCandidates` call
 - [x] `get-worktree-health-snapshot.mjs` — uses `getWorktreeOwner()` as primary ownership
 - [x] `infer-owner-from-branch.mjs` — checks durable worktree state first, then fallbacks
+- [x] Worktree schema is normalized on load via `normalizeWorktreeRecord()` in `loadState()`
+- [x] `claimAndAssignWorktree()` sets both sides atomically
+- [x] `releaseLease()` clears worktree ownership (two-stage, not atomic — see Phase 4)
 - [x] Tests: `bidirectional-ownership-phase5.spec.ts` — 17 tests
 
 **What is NOT done:**
 
-- [x] Worktree ownership is now maintained bidirectionally: `claimAndAssignWorktree()` sets both sides atomically; `releaseLease()` clears both sides
-- [x] Worktree schema is normalized on load via `normalizeWorktreeRecord()` in `loadState()`
-- [ ] Persistent `integrationQueue` still exists in `empty-store.mjs`, `load-state.mjs`, and comments — not fatal but not "authority normalization complete"
-- [x] Test proves worktree ownership is cleared when lease is released (`remediation-blockers.spec.ts`)
-- [x] Test proves scheduler dispatch failure rolls back state (`remediation-blockers.spec.ts`)
-- [x] Test proves `loadState()` normalizes worktree records (`remediation-blockers.spec.ts`)
-- [x] Test proves claim + worktree ownership remain consistent — atomic helper rejects partial writes (`remediation-blockers.spec.ts`)
+- [x] `integrationQueue` removed from `empty-store.mjs` and `load-state.mjs` store schema defaults
+- [ ] `enqueueIntegrationCandidate()` and `dequeueIntegrationCandidate()` still exist as deprecated no-ops, still called from `execute-issue.mjs`, `run-reconciliation-cycle.mjs`, and `integrate-candidate.mjs` — caller cleanup remaining
+- [x] `releaseLease()` is now atomic (resolved via Blocker 3b)
+- [ ] `infer-owner-from-branch.mjs` still has git-log and reverse-scan fallbacks — acceptable for repair, but shows durable ownership is not yet strong enough to stand alone everywhere
+- [x] Tests strengthened: direct `normalizeWorktreeRecord` tests (real module), rejection tests proving lifecycle helpers return null (not silently mutate), atomic release tests
 
 ### Remediation Blockers (ordered by correctness priority)
 
-Blockers 1, 3, 4, and 5 are **correctness and authority defects** and must be fixed first.
-Blocker 2 is important but less dangerous than the ownership inconsistency bugs.
-Blocker 7 is a verification pass that ensures Blocker 1 doesn't regress readers.
+Blockers marked DONE have real code changes. Blockers marked PARTIALLY DONE or NOT DONE still require work.
+Blockers 2, 3b, and 5b are the remaining correctness defects. Blocker 6 is dead-structure cleanup.
+Blocker 8 addresses test quality — tests currently overstate what is proven.
 
-| # | Blocker | Phase | Status |
-|---|---------|-------|--------|
-| 1 | Normalize worktree state on load in `load-state.mjs` | 1 | ✅ DONE |
-| 7 | Verify all `worktreeStates` readers handle normalized records after Blocker 1 | 1 | ✅ DONE (loadState is single entry point — all readers covered) |
-| 3 | Add atomic `claimAndAssignWorktree()` helper in symphony-state layer under one lock; update `schedule-cycle.mjs` to call it | 4 | ✅ DONE |
-| 4 | Clear worktree ownership when lease is released in `release-lease.mjs` | 3/5 | ✅ DONE |
-| 5 | Add rollback on scheduler dispatch failure in `schedule-cycle.mjs` (release claim + clear worktree) | 4 | ✅ DONE |
-| 2 | Migrate 6 lifecycle helpers off `patchIssueState()`: `set-cooldown`, `clear-cooldown`, `mark-retry-exhausted`, `mark-issue-human-only`, `reset-retry-state`, `record-completion` | 3 | ✅ DONE |
+| #   | Blocker                                                                                                                           | Phase | Status                                             |
+| --- | --------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------- |
+| 1   | Normalize worktree state on load in `load-state.mjs`                                                                              | 1     | ✅ DONE                                            |
+| 7   | Verify all `worktreeStates` readers handle normalized records                                                                     | 1     | ✅ DONE                                            |
+| 3a  | Add atomic `claimAndAssignWorktree()` helper (claim side)                                                                         | 4     | ✅ DONE                                            |
+| 3b  | Make `releaseLease()` truly atomic bidirectional (release side) — releases issue lease + clears worktree ownership under one lock | 4/5   | ✅ DONE                                            |
+| 4   | Clear worktree ownership when lease is released                                                                                   | 3/5   | ✅ DONE (now atomic via 3b)                        |
+| 5a  | Dispatch failure calls `releaseLease()`                                                                                           | 4     | ✅ DONE                                            |
+| 5b  | Dispatch rollback uses atomic bidirectional release (depends on 3b)                                                               | 4     | ✅ DONE                                            |
+| 2   | Remove `patchIssueState()` fallbacks from 6 lifecycle helpers — split metadata helpers from lifecycle helpers properly            | 3     | ✅ DONE                                            |
+| 6   | Remove persistent `integrationQueue` artifact from state model; remove deprecated no-op callers                                   | 5     | PARTIAL (schema cleaned; caller removal remaining) |
+| 8   | Strengthen tests: direct module tests, rejection tests, atomic release tests                                                      | 6     | ✅ DONE                                            |
 
-**Remediation order:**
-1. Update PLAN.md with honest partial assessment (this update)
-2. Blocker 1: normalize worktree state on load
-3. Add tests for the normalization fix immediately
-4. Blocker 7: verify all worktreeStates readers
-5. Blocker 3: atomic claim + worktree ownership in state layer
-6. Blocker 4: clear worktree ownership on lease release
-7. Blocker 5: rollback on scheduler dispatch failure
-8. Add tests for blockers 3–5
-9. Blocker 2: migrate remaining lifecycle helpers off patchIssueState
-10. Run validation
-11. Review and fix follow-up issues
+**Remediation order (corrected):**
+
+1. ✅ Update PLAN.md with honest partial assessment
+2. ✅ Blocker 2: removed `patchIssueState()` fallbacks — lifecycle helpers reject or use metadata-only writes
+3. ✅ Blocker 3b: `releaseLease()` rewritten as atomic bidirectional release (one lock)
+4. ✅ Blocker 5b: dispatch rollback uses atomic `releaseLease()` (no code change needed)
+5. ⚠️ Blocker 6: `integrationQueue` removed from store schema; deprecated caller cleanup remaining
+6. ✅ Blocker 8: direct module tests, rejection tests, atomic release tests added
+7. Run validation
+8. Review and fix follow-up issues
 
 ### Phase 6 — Tests (NOT STARTED)
 

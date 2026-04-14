@@ -23,9 +23,8 @@ let rawStateOnDisk: Record<string, unknown> = {};
 
 // We need normalizeRecord to be real — it's the module under test.
 // Import it eagerly so the loadState mock can use it.
-const { normalizeRecord } = await import(
-  "../../harness/ops/core/symphony-state/normalize-record.mjs"
-);
+const { normalizeRecord } =
+  await import("../../harness/ops/core/symphony-state/normalize-record.mjs");
 
 // ---------------------------------------------------------------------------
 // Mock only the I/O and lock layers — let normalizeRecord run for real
@@ -49,9 +48,8 @@ vi.mock("../../harness/ops/core/symphony-state/load-state.mjs", () => ({
       updatedAt: data.updatedAt || "",
       hostId: data.hostId || "test",
       global: {
-        integrationQueue: [],
         integrationLock: null,
-        ...(data.global || {}),
+        ...data.global,
       },
       issues: {} as Record<string, unknown>,
       worktreeStates: data.worktreeStates || {},
@@ -154,19 +152,16 @@ describe("Assignment roundtrip — claim → save → load → getIssueState", (
       version: 1,
       updatedAt: "",
       hostId: "test",
-      global: { integrationQueue: [], integrationLock: null },
+      global: { integrationLock: null },
       issues: {},
       worktreeStates: {},
     };
   });
 
   it("should preserve assignment through claim → save → load → getIssueState", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { getIssueState } = await import(
-      "../../harness/ops/core/symphony-state/get-issue-state.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { getIssueState } =
+      await import("../../harness/ops/core/symphony-state/get-issue-state.mjs");
 
     // Step 1: Claim issue (writes lease + assignment to state)
     const claimResult = claimIssue("ANQ-RT-100", {
@@ -193,12 +188,9 @@ describe("Assignment roundtrip — claim → save → load → getIssueState", (
   });
 
   it("should preserve lease through claim → save → load → getIssueState", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { getIssueState } = await import(
-      "../../harness/ops/core/symphony-state/get-issue-state.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { getIssueState } =
+      await import("../../harness/ops/core/symphony-state/get-issue-state.mjs");
 
     claimIssue("ANQ-RT-200", { worktreeId: "wt1" });
     const state = getIssueState("ANQ-RT-200");
@@ -219,19 +211,16 @@ describe("Restart semantics — verifySchedulerClaim after load", () => {
       version: 1,
       updatedAt: "",
       hostId: "test",
-      global: { integrationQueue: [], integrationLock: null },
+      global: { integrationLock: null },
       issues: {},
       worktreeStates: {},
     };
   });
 
   it("should pass verifySchedulerClaim after save → fresh load (restart proof)", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { verifySchedulerClaim } = await import(
-      "../../harness/ops/integrations/model/symphony-agent-router/verify-scheduler-claim.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { verifySchedulerClaim } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/verify-scheduler-claim.mjs");
 
     // Step 1: Scheduler claims an issue
     const claimResult = claimIssue("ANQ-RS-100", {
@@ -253,9 +242,8 @@ describe("Restart semantics — verifySchedulerClaim after load", () => {
   });
 
   it("should fail verifySchedulerClaim for unclaimed issue after restart", async () => {
-    const { verifySchedulerClaim } = await import(
-      "../../harness/ops/integrations/model/symphony-agent-router/verify-scheduler-claim.mjs"
-    );
+    const { verifySchedulerClaim } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/verify-scheduler-claim.mjs");
 
     const verification = verifySchedulerClaim("ANQ-RS-200");
     expect(verification.allowed).toBe(false);
@@ -273,19 +261,16 @@ describe("patchIssueState preserves assignment", () => {
       version: 1,
       updatedAt: "",
       hostId: "test",
-      global: { integrationQueue: [], integrationLock: null },
+      global: { integrationLock: null },
       issues: {},
       worktreeStates: {},
     };
   });
 
   it("should preserve assignment when patching unrelated fields", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { patchIssueState } = await import(
-      "../../harness/ops/core/symphony-state/patch-issue-state.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { patchIssueState } =
+      await import("../../harness/ops/core/symphony-state/patch-issue-state.mjs");
 
     // Claim issue (creates assignment)
     claimIssue("ANQ-PI-100", { worktreeId: "wt4", source: "scheduler" });
@@ -304,12 +289,9 @@ describe("patchIssueState preserves assignment", () => {
   });
 
   it("should preserve assignment through multiple patches", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { patchIssueState } = await import(
-      "../../harness/ops/core/symphony-state/patch-issue-state.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { patchIssueState } =
+      await import("../../harness/ops/core/symphony-state/patch-issue-state.mjs");
 
     claimIssue("ANQ-PI-200", { worktreeId: "wt1" });
 

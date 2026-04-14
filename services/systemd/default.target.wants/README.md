@@ -2,31 +2,39 @@
 
 <<<<<<< ours — heading `Purpose` (F, confidence: medium)
 // hint: Logic changed on both sides. Requires understanding intent of each change.
+
 ## Purpose
+
 Default Target contains the code, configuration, or support files that implement this part of the harness architecture.
 
 =======
+
 ## Purpose
 
 Directory for systemd topology and host runtime configuration; immediate files include `anqr-context7-mcp.service`, `anqr-discord-router.service`, `anqr-linear-webhook.service`, `anqr-symphony-executor@1.service`, `anqr-symphony-scheduler.service`, and others.
 
->>>>>>> theirs — heading `Purpose` (F, confidence: medium)
-<<<<<<< ours — heading `Contents` (F, confidence: medium)
-// hint: Logic changed on both sides. Requires understanding intent of each change.
+> > > > > > > theirs — heading `Purpose` (F, confidence: medium)
+> > > > > > > <<<<<<< ours — heading `Contents` (F, confidence: medium)
+> > > > > > > // hint: Logic changed on both sides. Requires understanding intent of each change.
+
 ## Contents
+
 - 18 immediate files
 - 0 child directories
 
 =======
+
 ## Contents
 
 - 20 immediate files
 - 0 child directories
 
->>>>>>> theirs — heading `Contents` (F, confidence: medium)
-<<<<<<< ours — heading `Key Files` (F, confidence: medium)
-// hint: Logic changed on both sides. Requires understanding intent of each change.
+> > > > > > > theirs — heading `Contents` (F, confidence: medium)
+> > > > > > > <<<<<<< ours — heading `Key Files` (F, confidence: medium)
+> > > > > > > // hint: Logic changed on both sides. Requires understanding intent of each change.
+
 ## Key Files
+
 - `anqr-context7-mcp.service` - systemd unit for ANQR Context7 MCP Documentation Service; starts `%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/runtime/mcp/context7-http-service.mjs`.
 - `anqr-discord-router.service` - systemd unit for ANQR Discord request router (load balancer); starts `%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/integrations/model/discord-request-router.mjs`.
 - `anqr-linear-webhook.service` - systemd unit for ANQR Linear webhook receiver (event-driven ingress); starts `%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/integrations/model/linear-webhook-receiver.mjs`.
@@ -47,6 +55,7 @@ Directory for systemd topology and host runtime configuration; immediate files i
 - `openclaw-gateway.service` - systemd unit for OpenClaw Gateway (v2026.4.1); starts `/usr/local/bin/openclaw gateway --port 18789`.
 
 =======
+
 ## Key Files
 
 - `anqr-context7-mcp.service` - systemd unit for ANQR Context7 MCP Documentation Service; starts `%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/runtime/mcp/context7-http-service.mjs`.
@@ -68,25 +77,31 @@ Directory for systemd topology and host runtime configuration; immediate files i
 - `model-injector-proxy.service` - systemd unit for Model Injector Proxy — fixes Codex CLI model=None bug; starts `/usr/bin/python3 %h/src/anqr/harness/ops/model-injector-proxy.py`.
 - `openclaw-gateway.service` - systemd unit for OpenClaw Gateway (v2026.4.1); starts `/usr/local/bin/openclaw gateway --port 18789`.
 
->>>>>>> theirs — heading `Key Files` (F, confidence: medium)
+> > > > > > > theirs — heading `Key Files` (F, confidence: medium)
+
 ## Subdirectories
 
 - No child directories in this directory.
 
 <<<<<<< ours — heading `Operational Notes` (S+F, confidence: low)
 // hint: Structural and logic conflict. Both design and behavior differ.
+
 ## Operational Notes
+
 - Current on-disk inventory: 18 immediate file(s) and 0 child directories.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 =======
+
 ## Operational Notes
 
 - Current on-disk inventory: 18 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
->>>>>>> theirs — heading `Operational Notes` (S+F, confidence: low)
+> > > > > > > theirs — heading `Operational Notes` (S+F, confidence: low)
+
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.
 
 # Default Target

@@ -1,16 +1,18 @@
 import { getIssueState } from "./get-issue-state.mjs";
 import { transitionIssue } from "./transition-issue.mjs";
-import { patchIssueState } from "./patch-issue-state.mjs";
 
 /**
  * Mark an issue as human-only (blocked).
  *
- * Remediation Blocker 2: delegates to `transitionIssue("blocked")`
- * so the lifecycle transition is validated and recorded in history.
+ * Delegates to `transitionIssue("blocked")` so the lifecycle transition
+ * is validated and recorded in history.
+ *
+ * If the transition is rejected, logs a warning and returns null.
+ * Lifecycle-significant fields (`human_only`, `blocked_reason`) are
+ * NEVER written through a raw patch fallback.
  */
 export function markIssueHumanOnly(issueIdentifier, extra = {}) {
-  const source =
-    extra.source || getIssueState(issueIdentifier)?.source || "human";
+  const source = extra.source || getIssueState(issueIdentifier)?.source || "human";
 
   const metadata = {
     human_only: true,
@@ -22,7 +24,9 @@ export function markIssueHumanOnly(issueIdentifier, extra = {}) {
   const result = transitionIssue(issueIdentifier, "blocked", metadata);
   if (result.ok) return result.record;
 
-  // Fallback: transition not valid from current phase.
-  const { reason: _reason, ...patch } = metadata;
-  return patchIssueState(issueIdentifier, patch);
+  // Transition rejected — do NOT silently mutate lifecycle state.
+  console.warn(
+    `[markIssueHumanOnly] transition ${result.from} → blocked rejected for ${issueIdentifier}`,
+  );
+  return null;
 }

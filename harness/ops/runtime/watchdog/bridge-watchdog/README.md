@@ -1,6 +1,7 @@
 # Bridge Watchdog
 
 ## Purpose
+
 Bridge Watchdog contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
@@ -53,11 +54,14 @@ Bridge Watchdog contains the code, configuration, or support files that implemen
 - `worktree-id.mjs` - Exports `WORKTREE_ID`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - `quarantine-and-restart/` - Quarantine And Restart scope; immediate files include `index.mjs`, `quarantine-and-restart.mjs`, `write-evidence-record.mjs`.
 
 ## Operational Notes
+
 - Current on-disk inventory: 41 immediate file(s) and 1 child directory.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

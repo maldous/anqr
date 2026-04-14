@@ -23,7 +23,7 @@ beforeEach(() => {
   mutateState((store) => {
     store.issues = {};
     store.worktreeStates = {};
-    store.global = { integrationQueue: [], integrationLock: null };
+    store.global = { integrationLock: null };
     return store;
   });
 });

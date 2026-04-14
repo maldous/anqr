@@ -24,7 +24,7 @@ let mockState: Record<string, unknown> = {
   version: 1,
   updatedAt: "",
   hostId: "test",
-  global: { integrationQueue: [], integrationLock: null },
+  global: { integrationLock: null },
   issues: {},
   worktreeStates: {},
 };
@@ -74,7 +74,7 @@ describe("Scheduler exclusivity — ADR-0002 (real claimIssue module)", () => {
       version: 1,
       updatedAt: "",
       hostId: "test",
-      global: { integrationQueue: [], integrationLock: null },
+      global: { integrationLock: null },
       issues: {},
       worktreeStates: {},
     };
@@ -223,7 +223,7 @@ describe("Multi-issue claim with worktree assignment — ADR-0002 integration", 
       version: 1,
       updatedAt: "",
       hostId: "test",
-      global: { integrationQueue: [], integrationLock: null },
+      global: { integrationLock: null },
       issues: {},
       worktreeStates: {},
     };

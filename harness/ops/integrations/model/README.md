@@ -1,6 +1,7 @@
 # Model
 
 ## Purpose
+
 AI execution integration layer that handles ingress transport, bridge hosting, scheduler-aware dispatch, provider routing, context control, session state, and bridge-side health.
 
 ## Contents
@@ -10,7 +11,9 @@ AI execution integration layer that handles ingress transport, bridge hosting, s
 
 <<<<<<< ours — heading `Key Files` (S+F, confidence: low)
 // hint: Structural and logic conflict. Both design and behavior differ.
+
 ## Key Files
+
 - `codebuff-cwd-isolation.spec.ts` - JavaScript/TypeScript module used by this directory.
 - `codebuff-direct.mjs` - JavaScript/TypeScript module used by this directory.
 - `codebuff-sdk-runner.mjs` - Exports `PROJECT_ROOT`, a shared constant or state value used by sibling modules.
@@ -38,6 +41,7 @@ AI execution integration layer that handles ingress transport, bridge hosting, s
 - `symphony-session-state.spec.ts` - JavaScript/TypeScript module used by this directory.
 
 =======
+
 ## Key Files
 
 - `codebuff-cwd-isolation.spec.ts` - \*
@@ -66,8 +70,10 @@ AI execution integration layer that handles ingress transport, bridge hosting, s
 - `symphony-session-state.mjs` - JavaScript/TypeScript module used by this directory.
 - `symphony-session-state.spec.ts` - \*
 
->>>>>>> theirs — heading `Key Files` (S+F, confidence: low)
+> > > > > > > theirs — heading `Key Files` (S+F, confidence: low)
+
 ## Subdirectories
+
 - `codebuff-direct/` - Codebuff Direct scope; immediate files include `build-prompt.mjs`, `codebuff-max-continuations.mjs`, `codebuff-max-steps.mjs`, `codebuff-model-id.mjs`, and others.
 - `discord-request-router/` - Discord Request Router scope; immediate files include `evict-expired-sessions.mjs`, `generate-thread-name.mjs`, `get-least-loaded-worktree.mjs`, `get-session-thread-name.mjs`, and others.
 - `linear-webhook-receiver/` - Linear Webhook Receiver scope; immediate files include `active-issues.mjs`, `dedup-window-ms.mjs`, `handle-health.mjs`, `handle-webhook.mjs`, and others.
@@ -81,8 +87,10 @@ AI execution integration layer that handles ingress transport, bridge hosting, s
 - `symphony-session-state/` - Symphony Session State scope; immediate files include `adaptive-params-file.mjs`, `cleanup-expired-sessions.mjs`, `clear-session-messages.mjs`, `clear-session-provider.mjs`, and others.
 
 ## Operational Notes
+
 - Current on-disk inventory: 25 immediate file(s) and 11 child directories.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

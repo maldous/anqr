@@ -1,6 +1,7 @@
 # Symphony Credit Gate
 
 ## Purpose
+
 Provider-selection subsystem that ranks AI backends using health state, probe results, leases, credit-awareness, recent outcomes, and context-size enrichment before each execution path chooses a provider.
 
 ## Contents
@@ -169,13 +170,16 @@ Provider-selection subsystem that ranks AI backends using health state, probe re
 - `write-provider-probe-report-files.mjs` - Exports `writeProviderProbeReportFiles`, the main helper defined in this file.
 
 ## Subdirectories
+
 - `calculate-provider-score/` - Calculate Provider Score scope; immediate files include `calculate-provider-score.mjs`, `compute-context-length-score.mjs`, `index.mjs`.
 - `enrich-provider-context-sizes/` - Enrich Provider Context Sizes scope; immediate files include `build-context-map-from-api.mjs`, `build-context-map-from-catalog.mjs`, `constants.mjs`, `enrich-provider-context-sizes.mjs`, and others.
 - `get-provider-bootstrap-score/` - Get Provider Bootstrap Score scope; immediate files include `compute-context-bootstrap-boost.mjs`, `get-provider-bootstrap-score.mjs`, `index.mjs`.
 
 ## Operational Notes
+
 - Current on-disk inventory: 157 immediate file(s) and 3 child directories.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

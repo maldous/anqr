@@ -14,7 +14,6 @@ import {
   calculateExponentialBackoff,
   transitionIssue,
   getFinalizationState,
-  enqueueIntegrationCandidate,
   transitionWorktree,
   getWorktreeState,
 } from "../../symphony-state.mjs";
@@ -295,7 +294,6 @@ export async function executeIssue(issue, dryRun = false) {
           },
           reason: "branch_push_retry_success",
         });
-        enqueueIntegrationCandidate(issue.identifier);
         await updateIssue(issue.id, { stateId: STATES.inReview });
         await addComment(issue.id, "✅ Branch push retry succeeded — re-enqueued for integration.");
         recordTransition(issue.identifier, {
@@ -1521,7 +1519,6 @@ ${String(r.detail).slice(0, 1000)}\n`,
           },
           reason: "branch_push_success",
         });
-        await enqueueIntegrationCandidate(issue.identifier);
       } else {
         transitionIssue(issue.identifier, "push_failed", {
           finalization: {

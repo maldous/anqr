@@ -1,6 +1,7 @@
 # Symphony Integrator
 
 ## Purpose
+
 Single-writer integration service that drains integration candidates, cherry-picks them onto mainline one at a time, and publishes evidence-backed closeout.
 
 ## Contents
@@ -26,11 +27,14 @@ Single-writer integration service that drains integration candidates, cherry-pic
 - `show-status.mjs` - Exports `showStatus`, the main helper defined in this file.
 
 ## Subdirectories
+
 - `integrate-candidate/` - Integrate Candidate scope; immediate files include `build-evidence-comment.mjs`, `index.mjs`, `integrate-candidate.mjs`, `publish-evidence-and-close.mjs`.
 
 ## Operational Notes
+
 - Current on-disk inventory: 14 immediate file(s) and 1 child directory.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

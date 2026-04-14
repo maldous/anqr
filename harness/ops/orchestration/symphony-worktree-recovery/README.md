@@ -1,6 +1,7 @@
 # Symphony Worktree Recovery
 
 ## Purpose
+
 Recovery daemon for classifying unhealthy worktrees, quarantining or reprovisioning damaged sandboxes, and performing non-publishing maintenance that keeps the executor fleet usable.
 
 ## Contents
@@ -9,6 +10,7 @@ Recovery daemon for classifying unhealthy worktrees, quarantining or reprovision
 - 1 child directory
 
 ## Key Files
+
 - `all-worktree-ids.mjs` - Exports `ALL_WORKTREE_IDS`, a shared constant or state value used by sibling modules.
 - `check-baseline-health.mjs` - Exports `checkBaselineHealth`, the main helper defined in this file.
 - `check-quarantined-for-reprovisioning.mjs` - Exports `checkQuarantinedForReprovisioning`, the main helper defined in this file.
@@ -26,11 +28,14 @@ Recovery daemon for classifying unhealthy worktrees, quarantining or reprovision
 - `show-status.mjs` - Exports `showStatus`, the main helper defined in this file.
 
 ## Subdirectories
+
 - `execute-repair/` - Execute Repair scope; immediate files include `execute-repair.mjs`, `index.mjs`.
 
 ## Operational Notes
+
 - This directory reflects the Workstream C demotion of recovery away from code publication and toward state repair, quarantine, and sandbox maintenance only.
 - The recovery path remains sensitive because it can still classify, reset, quarantine, and otherwise interfere with executor availability.
 
 ## Review Focus
+
 Verify that recovery remains non-publishing, avoids active sandboxes, and emits evidence for every action while still keeping the worktree fleet serviceable.

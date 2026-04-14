@@ -17,30 +17,22 @@ import { describe, it, expect } from "vitest";
 // ---------------------------------------------------------------------------
 
 const { ISSUE_PHASES, FINALIZATION_STATE_TO_PHASE, VALID_ISSUE_PHASES } =
-  await import(
-    "../../harness/ops/core/symphony-state/issue-phases.mjs"
-  );
+  await import("../../harness/ops/core/symphony-state/issue-phases.mjs");
 
-const {
-  WORKTREE_STATES,
-  VALID_WORKTREE_STATES,
-  normalizeWorktreeRecord,
-} = await import(
-  "../../harness/ops/core/symphony-state/worktree-record-schema.mjs"
-);
+const { WORKTREE_STATES, VALID_WORKTREE_STATES, normalizeWorktreeRecord } =
+  await import("../../harness/ops/core/symphony-state/worktree-record-schema.mjs");
 
 const {
   ISSUE_TRANSITION_MAP,
   WORKTREE_TRANSITION_MAP,
-  isValidIssueTransition,
-  isValidWorktreeTransition,
-} = await import(
-  "../../harness/ops/core/symphony-state/transition-map.mjs"
-);
+} = await import("../../harness/ops/core/symphony-state/transition-map.mjs");
+const { isValidIssueTransition } =
+  await import("../../harness/ops/core/symphony-state/is-valid-issue-transition.mjs");
+const { isValidWorktreeTransition } =
+  await import("../../harness/ops/core/symphony-state/is-valid-worktree-transition.mjs");
 
-const { inferExecutionPhase } = await import(
-  "../../harness/ops/core/symphony-state/infer-execution-phase.mjs"
-);
+const { inferExecutionPhase } =
+  await import("../../harness/ops/core/symphony-state/infer-execution-phase.mjs");
 
 // ---------------------------------------------------------------------------
 // 1. ISSUE_PHASES enum

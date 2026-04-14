@@ -21,9 +21,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 let rawStateOnDisk: Record<string, unknown> = {};
 
 // Import normalizeRecord eagerly for the loadState mock
-const { normalizeRecord } = await import(
-  "../../harness/ops/core/symphony-state/normalize-record.mjs"
-);
+const { normalizeRecord } =
+  await import("../../harness/ops/core/symphony-state/normalize-record.mjs");
 
 // ---------------------------------------------------------------------------
 // Mock I/O and infrastructure — let all pure logic run for real
@@ -43,9 +42,8 @@ vi.mock("../../harness/ops/core/symphony-state/load-state.mjs", () => ({
       updatedAt: data.updatedAt || "",
       hostId: data.hostId || "test",
       global: {
-        integrationQueue: [],
         integrationLock: null,
-        ...(data.global || {}),
+        ...data.global,
       },
       issues: {} as Record<string, unknown>,
       worktreeStates: data.worktreeStates || {},
@@ -85,7 +83,7 @@ function emptyStore() {
     version: 1,
     updatedAt: "",
     hostId: "test",
-    global: { integrationQueue: [], integrationLock: null },
+    global: { integrationLock: null },
     issues: {} as Record<string, unknown>,
     worktreeStates: {} as Record<string, unknown>,
   };
@@ -112,9 +110,8 @@ describe("transitionIssue", () => {
   });
 
   it("should reject invalid target phase", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     const result = transitionIssue("ANQ-100", "nonexistent_phase");
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("invalid_target_phase");
@@ -123,9 +120,8 @@ describe("transitionIssue", () => {
   });
 
   it("should reject invalid transition (eligible → completed)", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     const result = transitionIssue("ANQ-100", "completed");
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("invalid_transition");
@@ -134,9 +130,8 @@ describe("transitionIssue", () => {
   });
 
   it("should succeed for valid transition (eligible → claimed)", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     const result = transitionIssue("ANQ-100", "claimed", {
       lease: activeLease(),
       assignment: { worktreeId: "wt1", source: "scheduler", claimedBy: "scheduler" },
@@ -148,9 +143,8 @@ describe("transitionIssue", () => {
   });
 
   it("should apply metadata as patch to the record", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     const lease = activeLease();
     const result = transitionIssue("ANQ-200", "claimed", {
       lease,
@@ -165,9 +159,8 @@ describe("transitionIssue", () => {
   });
 
   it("should record transition in history with from/to/reason", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     const result = transitionIssue("ANQ-300", "claimed", {
       lease: activeLease(),
       assignment: { worktreeId: "wt1" },
@@ -186,24 +179,23 @@ describe("transitionIssue", () => {
   });
 
   it("should default reason to null in history when not provided", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     const result = transitionIssue("ANQ-350", "claimed", {
       lease: activeLease(),
       assignment: { worktreeId: "wt1" },
     });
     expect(result.ok).toBe(true);
-    const transitions = (result.record as Record<string, unknown>)
-      .transitions as Array<Record<string, unknown>>;
+    const transitions = (result.record as Record<string, unknown>).transitions as Array<
+      Record<string, unknown>
+    >;
     const last = transitions[transitions.length - 1];
     expect(last.reason).toBeNull();
   });
 
   it("should handle first-time issue (no existing state) starting as eligible", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     // Issue doesn't exist in store — should be inferred as eligible
     const result = transitionIssue("ANQ-NEW", "blocked", {
       human_only: true,
@@ -217,9 +209,8 @@ describe("transitionIssue", () => {
   });
 
   it("should correctly infer phase from active lease as claimed", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     // Set up an issue with an active lease (no run_id → claimed)
     const store = emptyStore();
     store.issues["ANQ-400"] = {
@@ -238,9 +229,8 @@ describe("transitionIssue", () => {
   });
 
   it("should correctly infer phase from active lease with run_id as executing", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     const store = emptyStore();
     store.issues["ANQ-450"] = {
       issueIdentifier: "ANQ-450",
@@ -259,9 +249,8 @@ describe("transitionIssue", () => {
   });
 
   it("should preserve existing record fields through transition", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     const store = emptyStore();
     store.issues["ANQ-500"] = {
       issueIdentifier: "ANQ-500",
@@ -281,9 +270,8 @@ describe("transitionIssue", () => {
   });
 
   it("should reject transition when issue is in wrong phase", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
     const store = emptyStore();
     store.issues["ANQ-600"] = {
       issueIdentifier: "ANQ-600",
@@ -310,9 +298,8 @@ describe("transitionWorktree", () => {
   });
 
   it("should reject invalid target state", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
     const result = transitionWorktree("wt1", "nonexistent_state");
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("invalid_target_state");
@@ -320,9 +307,8 @@ describe("transitionWorktree", () => {
   });
 
   it("should reject invalid transition (available → dirty_owned)", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
     const result = transitionWorktree("wt1", "dirty_owned");
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("invalid_transition");
@@ -331,9 +317,8 @@ describe("transitionWorktree", () => {
   });
 
   it("should succeed for valid transition (available → executing)", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
     const result = transitionWorktree("wt1", "executing", {
       assignedIssue: "ANQ-100",
       owner: "scheduler",
@@ -345,9 +330,8 @@ describe("transitionWorktree", () => {
   });
 
   it("should normalize result via normalizeWorktreeRecord", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
     const result = transitionWorktree("wt2", "executing", {
       assignedIssue: "ANQ-200",
     });
@@ -363,9 +347,8 @@ describe("transitionWorktree", () => {
   });
 
   it("should default from-state to available for unknown worktree", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
     // wt-new doesn't exist in store → defaults to available
     const result = transitionWorktree("wt-new", "executing");
     expect(result.ok).toBe(true);
@@ -373,9 +356,8 @@ describe("transitionWorktree", () => {
   });
 
   it("should preserve metadata fields through transition", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
     const result = transitionWorktree("wt3", "executing", {
       assignedIssue: "ANQ-300",
       owner: "scheduler",
@@ -389,9 +371,8 @@ describe("transitionWorktree", () => {
   });
 
   it("should handle executing → dirty_owned transition", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
     const store = emptyStore();
     store.worktreeStates["wt4"] = {
       state: "executing",
@@ -408,9 +389,8 @@ describe("transitionWorktree", () => {
   });
 
   it("should handle quarantined → available transition", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
     const store = emptyStore();
     store.worktreeStates["wt5"] = {
       state: "quarantined",
@@ -440,9 +420,8 @@ describe("getWorktreeOwner", () => {
   });
 
   it("should return assignedIssue from worktree state", async () => {
-    const { getWorktreeOwner } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-owner.mjs"
-    );
+    const { getWorktreeOwner } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-owner.mjs");
     const store = emptyStore();
     store.worktreeStates["wt1"] = { assignedIssue: "ANQ-100", state: "executing" };
     rawStateOnDisk = store;
@@ -451,9 +430,8 @@ describe("getWorktreeOwner", () => {
   });
 
   it("should return issueIdentifier (old field) for backwards compat", async () => {
-    const { getWorktreeOwner } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-owner.mjs"
-    );
+    const { getWorktreeOwner } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-owner.mjs");
     const store = emptyStore();
     store.worktreeStates["wt2"] = { issueIdentifier: "ANQ-200", state: "dirty_owned" };
     rawStateOnDisk = store;
@@ -462,16 +440,14 @@ describe("getWorktreeOwner", () => {
   });
 
   it("should return null for unknown worktree", async () => {
-    const { getWorktreeOwner } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-owner.mjs"
-    );
+    const { getWorktreeOwner } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-owner.mjs");
     expect(getWorktreeOwner("wt-nonexistent")).toBeNull();
   });
 
   it("should return null when no assignment exists", async () => {
-    const { getWorktreeOwner } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-owner.mjs"
-    );
+    const { getWorktreeOwner } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-owner.mjs");
     const store = emptyStore();
     store.worktreeStates["wt3"] = { state: "available" };
     rawStateOnDisk = store;
@@ -491,9 +467,8 @@ describe("Deprecation warnings on old mutation helpers", () => {
 
   it("patchIssueState should emit deprecation warning", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const { patchIssueState } = await import(
-      "../../harness/ops/core/symphony-state/patch-issue-state.mjs"
-    );
+    const { patchIssueState } =
+      await import("../../harness/ops/core/symphony-state/patch-issue-state.mjs");
 
     patchIssueState("ANQ-DEP-1", { source: "test" });
 
@@ -506,9 +481,8 @@ describe("Deprecation warnings on old mutation helpers", () => {
 
   it("patchIssueState should still function correctly", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const { patchIssueState } = await import(
-      "../../harness/ops/core/symphony-state/patch-issue-state.mjs"
-    );
+    const { patchIssueState } =
+      await import("../../harness/ops/core/symphony-state/patch-issue-state.mjs");
 
     const result = patchIssueState("ANQ-DEP-2", { source: "test", retry_count: 5 });
     expect(result.source).toBe("test");
@@ -519,9 +493,8 @@ describe("Deprecation warnings on old mutation helpers", () => {
 
   it("setFinalizationState should emit deprecation warning", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const { setFinalizationState } = await import(
-      "../../harness/ops/core/symphony-state/set-finalization-state.mjs"
-    );
+    const { setFinalizationState } =
+      await import("../../harness/ops/core/symphony-state/set-finalization-state.mjs");
 
     setFinalizationState("ANQ-DEP-3", { state: "integration_pending" });
 
@@ -534,9 +507,8 @@ describe("Deprecation warnings on old mutation helpers", () => {
 
   it("setWorktreeState should emit deprecation warning", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const { setWorktreeState } = await import(
-      "../../harness/ops/core/symphony-state/set-worktree-state.mjs"
-    );
+    const { setWorktreeState } =
+      await import("../../harness/ops/core/symphony-state/set-worktree-state.mjs");
 
     setWorktreeState("wt-dep", { state: "executing" });
 

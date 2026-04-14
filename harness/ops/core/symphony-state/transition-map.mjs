@@ -41,7 +41,7 @@ export const ISSUE_TRANSITION_MAP = Object.freeze({
 
   [ISSUE_PHASES.claimed]: new Set([
     ISSUE_PHASES.executing,
-    ISSUE_PHASES.eligible,   // lease expired or released
+    ISSUE_PHASES.eligible, // lease expired or released
     ISSUE_PHASES.blocked,
   ]),
 
@@ -52,70 +52,58 @@ export const ISSUE_TRANSITION_MAP = Object.freeze({
     ISSUE_PHASES.integration_pending,
     ISSUE_PHASES.cooldown,
     ISSUE_PHASES.blocked,
-    ISSUE_PHASES.eligible,   // lease expired
+    ISSUE_PHASES.eligible, // lease expired
   ]),
 
   [ISSUE_PHASES.cooldown]: new Set([
-    ISSUE_PHASES.eligible,   // cooldown expired
+    ISSUE_PHASES.eligible, // cooldown expired
     ISSUE_PHASES.blocked,
   ]),
 
   [ISSUE_PHASES.blocked]: new Set([
-    ISSUE_PHASES.eligible,   // manual unblock / retry reset
+    ISSUE_PHASES.eligible, // manual unblock / retry reset
   ]),
 
   [ISSUE_PHASES.validation_failed]: new Set([
-    ISSUE_PHASES.executing,  // sticky repair retry
-    ISSUE_PHASES.blocked,    // exhausted retries
-    ISSUE_PHASES.eligible,   // manual reset
+    ISSUE_PHASES.executing, // sticky repair retry
+    ISSUE_PHASES.blocked, // exhausted retries
+    ISSUE_PHASES.eligible, // manual reset
   ]),
 
   [ISSUE_PHASES.commit_failed]: new Set([
-    ISSUE_PHASES.executing,  // sticky repair retry
-    ISSUE_PHASES.blocked,    // exhausted retries
-    ISSUE_PHASES.eligible,   // manual reset
+    ISSUE_PHASES.executing, // sticky repair retry
+    ISSUE_PHASES.blocked, // exhausted retries
+    ISSUE_PHASES.eligible, // manual reset
   ]),
 
   [ISSUE_PHASES.push_failed]: new Set([
-    ISSUE_PHASES.executing,  // sticky repair retry
-    ISSUE_PHASES.blocked,    // exhausted retries
-    ISSUE_PHASES.eligible,   // manual reset
+    ISSUE_PHASES.executing, // sticky repair retry
+    ISSUE_PHASES.blocked, // exhausted retries
+    ISSUE_PHASES.eligible, // manual reset
   ]),
 
   [ISSUE_PHASES.integration_pending]: new Set([
     ISSUE_PHASES.evidence_pending,
     ISSUE_PHASES.integration_failed,
-    ISSUE_PHASES.completed,  // direct completion (no evidence needed)
+    ISSUE_PHASES.completed, // direct completion (no evidence needed)
   ]),
 
   [ISSUE_PHASES.evidence_pending]: new Set([
     ISSUE_PHASES.completed,
     ISSUE_PHASES.integration_pending, // retry evidence publication
-    ISSUE_PHASES.integration_failed,  // error during closeout
+    ISSUE_PHASES.integration_failed, // error during closeout
   ]),
 
   [ISSUE_PHASES.integration_failed]: new Set([
     ISSUE_PHASES.integration_pending, // retry integration
-    ISSUE_PHASES.blocked,             // exhausted retries
-    ISSUE_PHASES.eligible,            // manual reset
+    ISSUE_PHASES.blocked, // exhausted retries
+    ISSUE_PHASES.eligible, // manual reset
   ]),
 
   [ISSUE_PHASES.completed]: new Set([
-    ISSUE_PHASES.eligible,   // reopen / operator action
+    ISSUE_PHASES.eligible, // reopen / operator action
   ]),
 });
-
-/**
- * Check whether an issue phase transition is valid.
- *
- * @param {string} from - Current phase
- * @param {string} to   - Target phase
- * @returns {boolean}
- */
-export function isValidIssueTransition(from, to) {
-  const allowed = ISSUE_TRANSITION_MAP[from];
-  return allowed ? allowed.has(to) : false;
-}
 
 // ---------------------------------------------------------------------------
 // Worktree state transitions
@@ -133,10 +121,7 @@ export function isValidIssueTransition(from, to) {
  * - Watchdog blocks: any → quarantined
  */
 export const WORKTREE_TRANSITION_MAP = Object.freeze({
-  [WORKTREE_STATES.available]: new Set([
-    WORKTREE_STATES.executing,
-    WORKTREE_STATES.quarantined,
-  ]),
+  [WORKTREE_STATES.available]: new Set([WORKTREE_STATES.executing, WORKTREE_STATES.quarantined]),
 
   [WORKTREE_STATES.executing]: new Set([
     WORKTREE_STATES.dirty_owned,
@@ -145,37 +130,23 @@ export const WORKTREE_TRANSITION_MAP = Object.freeze({
   ]),
 
   [WORKTREE_STATES.dirty_owned]: new Set([
-    WORKTREE_STATES.executing,       // sticky repair
-    WORKTREE_STATES.available,       // cleaned
+    WORKTREE_STATES.executing, // sticky repair
+    WORKTREE_STATES.available, // cleaned
     WORKTREE_STATES.quarantined,
-    WORKTREE_STATES.dirty_orphaned,  // owner lost
+    WORKTREE_STATES.dirty_orphaned, // owner lost
   ]),
 
   [WORKTREE_STATES.dirty_orphaned]: new Set([
     WORKTREE_STATES.quarantined,
-    WORKTREE_STATES.available,       // cleaned via reset
-    WORKTREE_STATES.dirty_owned,     // owner identified
+    WORKTREE_STATES.available, // cleaned via reset
+    WORKTREE_STATES.dirty_owned, // owner identified
   ]),
 
   [WORKTREE_STATES.quarantined]: new Set([
-    WORKTREE_STATES.available,       // cleared
-    WORKTREE_STATES.dirty_owned,     // repair attempt
+    WORKTREE_STATES.available, // cleared
+    WORKTREE_STATES.dirty_owned, // repair attempt
   ]),
 
-  [WORKTREE_STATES.blocked]: new Set([
-    WORKTREE_STATES.available,
-    WORKTREE_STATES.quarantined,
-  ]),
+  [WORKTREE_STATES.blocked]: new Set([WORKTREE_STATES.available, WORKTREE_STATES.quarantined]),
 });
 
-/**
- * Check whether a worktree state transition is valid.
- *
- * @param {string} from - Current state
- * @param {string} to   - Target state
- * @returns {boolean}
- */
-export function isValidWorktreeTransition(from, to) {
-  const allowed = WORKTREE_TRANSITION_MAP[from];
-  return allowed ? allowed.has(to) : false;
-}

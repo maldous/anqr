@@ -21,9 +21,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 let rawStateOnDisk: Record<string, unknown> = {};
 
-const { normalizeRecord } = await import(
-  "../../harness/ops/core/symphony-state/normalize-record.mjs"
-);
+const { normalizeRecord } =
+  await import("../../harness/ops/core/symphony-state/normalize-record.mjs");
 
 // ---------------------------------------------------------------------------
 // Mock I/O and infrastructure — let all pure logic run for real
@@ -43,9 +42,8 @@ vi.mock("../../harness/ops/core/symphony-state/load-state.mjs", () => ({
       updatedAt: data.updatedAt || "",
       hostId: data.hostId || "test",
       global: {
-        integrationQueue: [],
         integrationLock: null,
-        ...(data.global || {}),
+        ...data.global,
       },
       issues: {} as Record<string, unknown>,
       worktreeStates: data.worktreeStates || {},
@@ -85,7 +83,7 @@ function emptyStore() {
     version: 1,
     updatedAt: "",
     hostId: "test",
-    global: { integrationQueue: [], integrationLock: null },
+    global: { integrationLock: null },
     issues: {} as Record<string, unknown>,
     worktreeStates: {} as Record<string, unknown>,
   };
@@ -101,16 +99,14 @@ describe("listIntegrationCandidates — derived from finalization.state (Phase 5
   });
 
   it("should return empty array when no issues exist", async () => {
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
     expect(listIntegrationCandidates()).toEqual([]);
   });
 
   it("should return issues with integration_pending finalization state", async () => {
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
     const store = emptyStore();
     store.issues["ANQ-100"] = {
       issueIdentifier: "ANQ-100",
@@ -123,9 +119,8 @@ describe("listIntegrationCandidates — derived from finalization.state (Phase 5
   });
 
   it("should return issues with evidence_pending_closeout finalization state", async () => {
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
     const store = emptyStore();
     store.issues["ANQ-200"] = {
       issueIdentifier: "ANQ-200",
@@ -138,9 +133,8 @@ describe("listIntegrationCandidates — derived from finalization.state (Phase 5
   });
 
   it("should NOT return issues with completed finalization state", async () => {
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
     const store = emptyStore();
     store.issues["ANQ-300"] = {
       issueIdentifier: "ANQ-300",
@@ -153,9 +147,8 @@ describe("listIntegrationCandidates — derived from finalization.state (Phase 5
   });
 
   it("should NOT return issues with repairable finalization state", async () => {
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
     const store = emptyStore();
     store.issues["ANQ-400"] = {
       issueIdentifier: "ANQ-400",
@@ -168,9 +161,8 @@ describe("listIntegrationCandidates — derived from finalization.state (Phase 5
   });
 
   it("should NOT return issues without finalization", async () => {
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
     const store = emptyStore();
     store.issues["ANQ-500"] = { issueIdentifier: "ANQ-500" };
     rawStateOnDisk = store;
@@ -180,9 +172,8 @@ describe("listIntegrationCandidates — derived from finalization.state (Phase 5
   });
 
   it("should return multiple candidates from mixed states", async () => {
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
     const store = emptyStore();
     store.issues["ANQ-A"] = {
       issueIdentifier: "ANQ-A",
@@ -206,9 +197,8 @@ describe("listIntegrationCandidates — derived from finalization.state (Phase 5
   });
 
   it("should ignore persistent integrationQueue array entirely", async () => {
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
     const store = emptyStore();
     // Old-style: persistent queue has an entry, but issue has no matching finalization
     (store.global as Record<string, unknown>).integrationQueue = ["ANQ-STALE"];
@@ -225,45 +215,9 @@ describe("listIntegrationCandidates — derived from finalization.state (Phase 5
 });
 
 // ---------------------------------------------------------------------------
-// 2. enqueueIntegrationCandidate is a deprecated no-op
+// Phase 5: enqueueIntegrationCandidate / dequeueIntegrationCandidate modules
+// have been removed. Integration candidates are derived from finalization.state.
 // ---------------------------------------------------------------------------
-
-describe("enqueueIntegrationCandidate — deprecated no-op (Phase 5)", () => {
-  beforeEach(() => {
-    rawStateOnDisk = emptyStore();
-  });
-
-  it("should return empty array and not modify state", async () => {
-    const { enqueueIntegrationCandidate } = await import(
-      "../../harness/ops/core/symphony-state/enqueue-integration-candidate.mjs"
-    );
-    const before = JSON.parse(JSON.stringify(rawStateOnDisk));
-    const result = enqueueIntegrationCandidate("ANQ-NOP");
-    expect(result).toEqual([]);
-    // State should not have been modified (no new integrationQueue entries)
-    expect(rawStateOnDisk).toEqual(before);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 3. dequeueIntegrationCandidate is a deprecated no-op
-// ---------------------------------------------------------------------------
-
-describe("dequeueIntegrationCandidate — deprecated no-op (Phase 5)", () => {
-  beforeEach(() => {
-    rawStateOnDisk = emptyStore();
-  });
-
-  it("should return empty array and not modify state", async () => {
-    const { dequeueIntegrationCandidate } = await import(
-      "../../harness/ops/core/symphony-state/dequeue-integration-candidate.mjs"
-    );
-    const before = JSON.parse(JSON.stringify(rawStateOnDisk));
-    const result = dequeueIntegrationCandidate("ANQ-NOP");
-    expect(result).toEqual([]);
-    expect(rawStateOnDisk).toEqual(before);
-  });
-});
 
 // ---------------------------------------------------------------------------
 // 4. scanForRepairedCandidates is a no-op
@@ -271,9 +225,8 @@ describe("dequeueIntegrationCandidate — deprecated no-op (Phase 5)", () => {
 
 describe("scanForRepairedCandidates — no-op (Phase 5)", () => {
   it("should be callable without error", async () => {
-    const { scanForRepairedCandidates } = await import(
-      "../../harness/ops/orchestration/symphony-integrator/scan-for-repaired-candidates.mjs"
-    );
+    const { scanForRepairedCandidates } =
+      await import("../../harness/ops/orchestration/symphony-integrator/scan-for-repaired-candidates.mjs");
     // Should not throw
     expect(() => scanForRepairedCandidates()).not.toThrow();
   });
@@ -289,18 +242,13 @@ describe("Finalization-driven integration lifecycle (Phase 5)", () => {
   });
 
   it("should appear in candidates when finalization transitions to integration_pending", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { acquireLease } = await import(
-      "../../harness/ops/core/symphony-state/acquire-lease.mjs"
-    );
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { acquireLease } =
+      await import("../../harness/ops/core/symphony-state/acquire-lease.mjs");
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
 
     // Step 1: Claim → Execute → Push success → integration_pending
     claimIssue("ANQ-LIFE-1", { worktreeId: "wt1", source: "scheduler" });
@@ -321,18 +269,13 @@ describe("Finalization-driven integration lifecycle (Phase 5)", () => {
   });
 
   it("should leave candidates when finalization transitions to completed", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { acquireLease } = await import(
-      "../../harness/ops/core/symphony-state/acquire-lease.mjs"
-    );
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { acquireLease } =
+      await import("../../harness/ops/core/symphony-state/acquire-lease.mjs");
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
 
     // Set up: claim → execute → integration_pending
     claimIssue("ANQ-LIFE-2", { worktreeId: "wt2", source: "scheduler" });
@@ -363,18 +306,13 @@ describe("Finalization-driven integration lifecycle (Phase 5)", () => {
   });
 
   it("should handle integration failure → repair → re-appear as candidate", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { acquireLease } = await import(
-      "../../harness/ops/core/symphony-state/acquire-lease.mjs"
-    );
-    const { listIntegrationCandidates } = await import(
-      "../../harness/ops/core/symphony-state/list-integration-candidates.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { acquireLease } =
+      await import("../../harness/ops/core/symphony-state/acquire-lease.mjs");
+    const { listIntegrationCandidates } =
+      await import("../../harness/ops/core/symphony-state/list-integration-candidates.mjs");
 
     // Set up: claim → execute → integration_pending
     claimIssue("ANQ-LIFE-3", { worktreeId: "wt3", source: "scheduler" });
@@ -414,9 +352,8 @@ describe("Durable ownership authority (Phase 5)", () => {
   });
 
   it("getWorktreeOwner should return assignedIssue from durable state", async () => {
-    const { getWorktreeOwner } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-owner.mjs"
-    );
+    const { getWorktreeOwner } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-owner.mjs");
     const store = emptyStore();
     store.worktreeStates["wt1"] = { state: "executing", assignedIssue: "ANQ-OWN-1" };
     rawStateOnDisk = store;
@@ -425,17 +362,15 @@ describe("Durable ownership authority (Phase 5)", () => {
   });
 
   it("getWorktreeOwner should return null for unassigned worktree", async () => {
-    const { getWorktreeOwner } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-owner.mjs"
-    );
+    const { getWorktreeOwner } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-owner.mjs");
     rawStateOnDisk = emptyStore();
     expect(getWorktreeOwner("wt99")).toBeNull();
   });
 
   it("getWorktreeOwner should handle backwards-compatible issueIdentifier", async () => {
-    const { getWorktreeOwner } = await import(
-      "../../harness/ops/core/symphony-state/get-worktree-owner.mjs"
-    );
+    const { getWorktreeOwner } =
+      await import("../../harness/ops/core/symphony-state/get-worktree-owner.mjs");
     const store = emptyStore();
     store.worktreeStates["wt2"] = { state: "executing", issueIdentifier: "ANQ-OLD" };
     rawStateOnDisk = store;

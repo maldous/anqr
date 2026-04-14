@@ -1,11 +1,14 @@
 import { transitionIssue } from "./transition-issue.mjs";
-import { patchIssueState } from "./patch-issue-state.mjs";
 
 /**
  * Mark an issue as retry-exhausted (blocked).
  *
- * Remediation Blocker 2: delegates to `transitionIssue("blocked")`
- * so the lifecycle transition is validated and recorded in history.
+ * Delegates to `transitionIssue("blocked")` so the lifecycle transition
+ * is validated and recorded in history.
+ *
+ * If the transition is rejected, logs a warning and returns null.
+ * Lifecycle-significant fields (`retry_exhausted`, `blocked_reason`,
+ * `lease: null`) are NEVER written through a raw patch fallback.
  */
 export function markRetryExhausted(issueIdentifier, details = {}) {
   const metadata = {
@@ -21,7 +24,9 @@ export function markRetryExhausted(issueIdentifier, details = {}) {
   const result = transitionIssue(issueIdentifier, "blocked", metadata);
   if (result.ok) return result.record;
 
-  // Fallback: transition not valid from current phase.
-  const { reason: _reason, ...patch } = metadata;
-  return patchIssueState(issueIdentifier, patch);
+  // Transition rejected — do NOT silently mutate lifecycle state.
+  console.warn(
+    `[markRetryExhausted] transition ${result.from} → blocked rejected for ${issueIdentifier}`,
+  );
+  return null;
 }

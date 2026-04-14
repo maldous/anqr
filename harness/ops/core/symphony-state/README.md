@@ -1,13 +1,16 @@
 # Symphony State
 
 ## Purpose
+
 Symphony State contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 63 immediate files
 - 1 child directory
 
 ## Key Files
+
 - `acquire-integration-lock.mjs` - Exports `acquireIntegrationLock`, the main helper defined in this file.
 - `acquire-lease.mjs` - Exports `acquireLease`, the main helper defined in this file.
 - `acquire-state-lock.mjs` - Re-export facade that assembles the public surface for this directory.
@@ -73,11 +76,14 @@ Symphony State contains the code, configuration, or support files that implement
 - `with-state-lock.mjs` - Exports `withStateLock`, the main helper defined in this file.
 
 ## Subdirectories
+
 - `acquire-state-lock/` - Acquire State Lock scope; immediate files include `acquire-state-lock.mjs`, `index.mjs`, `sleep-sync.mjs`.
 
 ## Operational Notes
+
 - Current on-disk inventory: 63 immediate file(s) and 1 child directory.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

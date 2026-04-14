@@ -1,16 +1,18 @@
 import { transitionIssue } from "./transition-issue.mjs";
-import { patchIssueState } from "./patch-issue-state.mjs";
 
 /**
  * Put an issue into cooldown.
  *
- * Remediation Blocker 2: delegates to `transitionIssue("cooldown")`
- * instead of raw `patchIssueState` so the lifecycle transition is
- * validated and recorded in history.
+ * Delegates to `transitionIssue("cooldown")` so the lifecycle transition
+ * is validated and recorded in history.
  *
- * Falls back to metadata-only patch when the transition is not valid
- * from the current phase (e.g., issue already in a post-execution
- * finalization state).
+ * If the transition is rejected (issue is in a phase that cannot reach
+ * cooldown), logs a warning and returns null. Callers should handle the
+ * null return gracefully.
+ *
+ * Lifecycle-significant fields (`cooldown_until`) are NEVER written
+ * through a raw patch fallback — if the transition is invalid, the
+ * issue state is not mutated.
  */
 export function setCooldown(issueIdentifier, ms, reason = "cooldown", signature = null) {
   const metadata = {
@@ -23,13 +25,9 @@ export function setCooldown(issueIdentifier, ms, reason = "cooldown", signature 
   const result = transitionIssue(issueIdentifier, "cooldown", metadata);
   if (result.ok) return result.record;
 
-  // Fallback: current phase does not allow → cooldown (e.g., issue is
-  // in integration_pending). Apply metadata only — the cooldown field
-  // will take effect when the issue returns to a phase that checks it.
-  const patch = {
-    cooldown_until: metadata.cooldown_until,
-    last_failure_reason: reason,
-  };
-  if (signature !== null) patch.last_failure_signature = signature;
-  return patchIssueState(issueIdentifier, patch);
+  // Transition rejected — do NOT silently mutate lifecycle state.
+  console.warn(
+    `[setCooldown] transition ${result.from} → cooldown rejected for ${issueIdentifier}`,
+  );
+  return null;
 }

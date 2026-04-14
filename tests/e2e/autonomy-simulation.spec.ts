@@ -14,8 +14,6 @@ import {
   mutateState,
   setFinalizationState,
   getFinalizationState,
-  enqueueIntegrationCandidate,
-  dequeueIntegrationCandidate,
   listIntegrationCandidates,
   acquireIntegrationLock,
   releaseIntegrationLock,
@@ -33,7 +31,7 @@ beforeEach(() => {
   mutateState((store) => {
     store.issues = {};
     store.worktreeStates = {};
-    store.global = { integrationQueue: [], integrationLock: null };
+    store.global = { integrationLock: null };
     return store;
   });
 });
@@ -71,7 +69,6 @@ describe("Scenario 1: Validation failure → recovery → integration", () => {
       attempts: 0,
       lastError: null,
     });
-    enqueueIntegrationCandidate(issue);
     setWorktreeState(worktree, { state: "available", issueIdentifier: null });
 
     // Step 4: Integrator promotes to main
@@ -82,7 +79,6 @@ describe("Scenario 1: Validation failure → recovery → integration", () => {
       state: "integrated_main",
       integratedMainSha: "main_new_sha",
     });
-    dequeueIntegrationCandidate(issue);
     releaseIntegrationLock("int-1");
 
     // Verify final state
@@ -111,15 +107,12 @@ describe("Scenario 2: Two worktrees conflict → serial integration", () => {
       headSha: "sha_b",
       baseMainSha: "main_0",
     });
-    enqueueIntegrationCandidate("ANQ-S2A");
-    enqueueIntegrationCandidate("ANQ-S2B");
 
     // First integrates successfully
     setFinalizationState("ANQ-S2A", {
       state: "integrated_main",
       integratedMainSha: "main_1",
     });
-    dequeueIntegrationCandidate("ANQ-S2A");
 
     // Second conflicts
     setFinalizationState("ANQ-S2B", {
@@ -127,7 +120,6 @@ describe("Scenario 2: Two worktrees conflict → serial integration", () => {
       lastError: "CONFLICT in shared-file.ts",
       attempts: 1,
     });
-    dequeueIntegrationCandidate("ANQ-S2B");
 
     // Verify second is repairable on same worktree
     const repair = getNextRepairableIssueForWorktree("wt2");
@@ -141,14 +133,12 @@ describe("Scenario 2: Two worktrees conflict → serial integration", () => {
       lastError: null,
       attempts: 0,
     });
-    enqueueIntegrationCandidate("ANQ-S2B");
 
     // Second integrates
     setFinalizationState("ANQ-S2B", {
       state: "integrated_main",
       integratedMainSha: "main_2",
     });
-    dequeueIntegrationCandidate("ANQ-S2B");
 
     // Both done
     expect(getFinalizationState("ANQ-S2A")!.state).toBe("integrated_main");
@@ -314,7 +304,6 @@ describe("Scenario 6: Network failure during push → retry", () => {
       attempts: 0,
       lastError: null,
     });
-    enqueueIntegrationCandidate(issue);
 
     expect(getFinalizationState(issue)!.state).toBe("integration_pending");
     expect(listIntegrationCandidates()).toContain(issue);
@@ -353,7 +342,10 @@ describe("Scenario 8: Integration crashes while lock held", () => {
     }
 
     // Candidates remain in queue
-    enqueueIntegrationCandidate("ANQ-S8");
+    setFinalizationState("ANQ-S8", {
+      state: "integration_pending",
+      worktreeId: "wt1",
+    });
     expect(listIntegrationCandidates()).toContain("ANQ-S8");
 
     // New integrator can proceed

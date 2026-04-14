@@ -1,6 +1,7 @@
 # Openclaw Config
 
 ## Purpose
+
 Source-controlled OpenClaw configuration tree that supplies gateway auth, model routing, approval, Discord, voice, and workspace settings expected by the live OpenClaw runtime.
 
 ## Contents
@@ -19,6 +20,7 @@ Source-controlled OpenClaw configuration tree that supplies gateway auth, model 
 - `update-check.json` - JSON configuration/data file with top-level keys `lastCheckedAt`, `lastNotifiedVersion`, `lastNotifiedTag`.
 
 ## Subdirectories
+
 - `agents/` - Agents scope; child directories include `main/`, `voice/`.
 - `canvas/` - Canvas scope; immediate files include `index.html`.
 - `credentials/` - Credentials scope; immediate files include `discord-default-allowFrom.json`, `discord-pairing.json`.
@@ -32,8 +34,10 @@ Source-controlled OpenClaw configuration tree that supplies gateway auth, model 
 - `workspace-voice/` - Workspace Voice scope; immediate files include `AGENTS.md`, `BOOTSTRAP.md`, `HEARTBEAT.md`, `IDENTITY.md`, and others.
 
 ## Operational Notes
+
 - Current on-disk inventory: 7 immediate file(s) and 11 child directories.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

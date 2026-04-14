@@ -1,24 +1,30 @@
 # Services Systemd
 
 ## Purpose
+
 User-level systemd unit inventory for the harness control plane, authoritative scheduler, executor fleet, recovery loops, timers, ingress surfaces, and support gateways.
 
 <<<<<<< ours — heading `Contents` (F, confidence: medium)
 // hint: Logic changed on both sides. Requires understanding intent of each change.
+
 ## Contents
+
 - 27 immediate files
 - 4 child directories
 
 =======
+
 ## Contents
 
 - 29 immediate files
 - 4 child directories
 
->>>>>>> theirs — heading `Contents` (F, confidence: medium)
-<<<<<<< ours — heading `Key Files` (F, confidence: medium)
-// hint: Logic changed on both sides. Requires understanding intent of each change.
+> > > > > > > theirs — heading `Contents` (F, confidence: medium)
+> > > > > > > <<<<<<< ours — heading `Key Files` (F, confidence: medium)
+> > > > > > > // hint: Logic changed on both sides. Requires understanding intent of each change.
+
 ## Key Files
+
 - `.gitignore` - Support file used by this directory.
 - `.gitkeep` - Support file used by this directory.
 - `anqr-context7-mcp.service` - systemd unit for ANQR Context7 MCP Documentation Service; starts `%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/runtime/mcp/context7-http-service.mjs`.
@@ -48,6 +54,7 @@ User-level systemd unit inventory for the harness control plane, authoritative s
 - `openclaw-gateway.service` - systemd unit for OpenClaw Gateway (v2026.4.1); starts `/usr/local/bin/openclaw gateway --port 18789`.
 
 =======
+
 ## Key Files
 
 - `.gitignore` - Support file used by this directory.
@@ -78,16 +85,19 @@ User-level systemd unit inventory for the harness control plane, authoritative s
 - `model-injector-proxy.service` - systemd unit for Model Injector Proxy — fixes Codex CLI model=None bug; starts `/usr/bin/python3 %h/src/anqr/harness/ops/model-injector-proxy.py`.
 - `openclaw-gateway.service` - systemd unit for OpenClaw Gateway (v2026.4.1); starts `/usr/local/bin/openclaw gateway --port 18789`.
 
->>>>>>> theirs — heading `Key Files` (F, confidence: medium)
-<<<<<<< ours — heading `Subdirectories` (F, confidence: medium)
-// hint: Logic changed on both sides. Requires understanding intent of each change.
+> > > > > > > theirs — heading `Key Files` (F, confidence: medium)
+> > > > > > > <<<<<<< ours — heading `Subdirectories` (F, confidence: medium)
+> > > > > > > // hint: Logic changed on both sides. Requires understanding intent of each change.
+
 ## Subdirectories
+
 - `clawdbot-gateway.service.d/` - Clawdbot Gateway Service scope; immediate files include `ollama.conf`.
 - `default.target.wants/` - Default Target scope; immediate files include `anqr-context7-mcp.service`, `anqr-discord-router.service`, `anqr-linear-webhook.service`, `anqr-symphony-executor@1.service`, and others.
 - `symphony-anqr.service.d/` - Symphony Anqr Service scope; immediate files include `override.conf`.
 - `timers.target.wants/` - Timers Target scope; immediate files include `anqr-email-ingest.timer`, `anqr-linear-export.timer`, `anqr-nightly.timer`, `anqr-rag-rebuild.timer`, and others.
 
 =======
+
 ## Subdirectories
 
 - `clawdbot-gateway.service.d/` - Directory for systemd topology and host runtime configuration; immediate files include `ollama.conf`.
@@ -95,10 +105,13 @@ User-level systemd unit inventory for the harness control plane, authoritative s
 - `symphony-anqr.service.d/` - Directory for systemd topology and host runtime configuration; immediate files include `override.conf`.
 - `timers.target.wants/` - Directory for systemd topology and host runtime configuration; immediate files include `anqr-email-ingest.timer`, `anqr-linear-export.timer`, `anqr-nightly.timer`, `anqr-rag-rebuild.timer`, and others.
 
->>>>>>> theirs — heading `Subdirectories` (F, confidence: medium)
+> > > > > > > theirs — heading `Subdirectories` (F, confidence: medium)
+
 ## Operational Notes
+
 - These units are the deployed host runtime for the harness.
 - The current topology includes a dedicated scheduler service in addition to router, executor, integrator, recovery, watchdog, ingress, and sidecar services.
 
 ## Review Focus
+
 Verify service boundaries, startup ordering, scheduler inclusion, worktree-to-unit mapping, env sourcing, timer cadence, and whether enabled units match the current architecture.

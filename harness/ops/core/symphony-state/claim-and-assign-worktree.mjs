@@ -15,7 +15,8 @@
 import { DEFAULT_LEASE_MS } from "./default-lease-ms.mjs";
 import { HOST_ID } from "./host-id.mjs";
 import { inferExecutionPhase } from "./infer-execution-phase.mjs";
-import { isValidIssueTransition, isValidWorktreeTransition } from "./transition-map.mjs";
+import { isValidIssueTransition } from "./is-valid-issue-transition.mjs";
+import { isValidWorktreeTransition } from "./is-valid-worktree-transition.mjs";
 import { normalizeRecord } from "./normalize-record.mjs";
 import { normalizeWorktreeRecord } from "./worktree-record-schema.mjs";
 import { nowIso } from "./now-iso.mjs";
@@ -66,9 +67,7 @@ export function claimAndAssignWorktree(issueIdentifier, details = {}) {
     const store = loadState();
 
     // --- Issue side: validate claim transition ---
-    const currentIssue = normalizeRecord(
-      store.issues[issueIdentifier] || { issueIdentifier },
-    );
+    const currentIssue = normalizeRecord(store.issues[issueIdentifier] || { issueIdentifier });
     const issueFrom = inferExecutionPhase(currentIssue);
 
     if (!isValidIssueTransition(issueFrom, "claimed")) {

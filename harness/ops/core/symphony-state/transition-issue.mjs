@@ -18,7 +18,7 @@
 
 import { VALID_ISSUE_PHASES } from "./issue-phases.mjs";
 import { inferExecutionPhase } from "./infer-execution-phase.mjs";
-import { isValidIssueTransition } from "./transition-map.mjs";
+import { isValidIssueTransition } from "./is-valid-issue-transition.mjs";
 import { normalizeRecord } from "./normalize-record.mjs";
 import { pruneHistory } from "./prune-history.mjs";
 import { HOST_ID } from "./host-id.mjs";
@@ -44,9 +44,7 @@ export function transitionIssue(issueIdentifier, targetPhase, metadata = {}) {
 
   return withStateLock(() => {
     const store = loadState();
-    const current = normalizeRecord(
-      store.issues[issueIdentifier] || { issueIdentifier },
-    );
+    const current = normalizeRecord(store.issues[issueIdentifier] || { issueIdentifier });
     const from = inferExecutionPhase(current);
 
     if (!isValidIssueTransition(from, targetPhase)) {

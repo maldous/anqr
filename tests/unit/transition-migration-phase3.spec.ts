@@ -24,9 +24,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 let rawStateOnDisk: Record<string, unknown> = {};
 
-const { normalizeRecord } = await import(
-  "../../harness/ops/core/symphony-state/normalize-record.mjs"
-);
+const { normalizeRecord } =
+  await import("../../harness/ops/core/symphony-state/normalize-record.mjs");
 
 // ---------------------------------------------------------------------------
 // Mock I/O and infrastructure — let all pure logic run for real
@@ -46,9 +45,8 @@ vi.mock("../../harness/ops/core/symphony-state/load-state.mjs", () => ({
       updatedAt: data.updatedAt || "",
       hostId: data.hostId || "test",
       global: {
-        integrationQueue: [],
         integrationLock: null,
-        ...(data.global || {}),
+        ...data.global,
       },
       issues: {} as Record<string, unknown>,
       worktreeStates: data.worktreeStates || {},
@@ -88,7 +86,7 @@ function emptyStore() {
     version: 1,
     updatedAt: "",
     hostId: "test",
-    global: { integrationQueue: [], integrationLock: null },
+    global: { integrationLock: null },
     issues: {} as Record<string, unknown>,
     worktreeStates: {} as Record<string, unknown>,
   };
@@ -126,9 +124,7 @@ describe("claimIssue (Phase 3 migration)", () => {
   });
 
   it("should reject when worktreeId is missing", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     // @ts-expect-error — intentionally omitting worktreeId to test validation
     const result = claimIssue("ANQ-100", {});
     expect(result.ok).toBe(false);
@@ -136,9 +132,7 @@ describe("claimIssue (Phase 3 migration)", () => {
   });
 
   it("should claim an eligible issue successfully", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     const result = claimIssue("ANQ-100", { worktreeId: "wt1", source: "scheduler" });
     expect(result.ok).toBe(true);
     expect(result.lease).toBeDefined();
@@ -148,9 +142,7 @@ describe("claimIssue (Phase 3 migration)", () => {
   });
 
   it("should reject claiming an already-claimed issue", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     // First claim succeeds
     const first = claimIssue("ANQ-200", { worktreeId: "wt1" });
     expect(first.ok).toBe(true);
@@ -162,9 +154,7 @@ describe("claimIssue (Phase 3 migration)", () => {
   });
 
   it("should reject claiming a blocked issue", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     const store = emptyStore();
     store.issues["ANQ-300"] = {
       issueIdentifier: "ANQ-300",
@@ -178,9 +168,7 @@ describe("claimIssue (Phase 3 migration)", () => {
   });
 
   it("should reject claiming an issue on cooldown", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     const store = emptyStore();
     store.issues["ANQ-350"] = {
       issueIdentifier: "ANQ-350",
@@ -194,9 +182,7 @@ describe("claimIssue (Phase 3 migration)", () => {
   });
 
   it("should record transition history on successful claim", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     claimIssue("ANQ-400", { worktreeId: "wt1" });
 
     const store = rawStateOnDisk as Record<string, Record<string, Record<string, unknown>>>;
@@ -220,12 +206,9 @@ describe("acquireLease (Phase 3 migration)", () => {
   });
 
   it("should acquire a lease on a claimed issue", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { acquireLease } = await import(
-      "../../harness/ops/core/symphony-state/acquire-lease.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { acquireLease } =
+      await import("../../harness/ops/core/symphony-state/acquire-lease.mjs");
 
     claimIssue("ANQ-500", { worktreeId: "wt1" });
     const result = acquireLease("ANQ-500", { runId: "run-abc" });
@@ -235,9 +218,8 @@ describe("acquireLease (Phase 3 migration)", () => {
   });
 
   it("should reject acquiring lease on eligible issue (not claimed)", async () => {
-    const { acquireLease } = await import(
-      "../../harness/ops/core/symphony-state/acquire-lease.mjs"
-    );
+    const { acquireLease } =
+      await import("../../harness/ops/core/symphony-state/acquire-lease.mjs");
 
     // Issue is eligible, not claimed — eligible → executing is not valid
     const result = acquireLease("ANQ-550", { runId: "run-xyz" });
@@ -246,9 +228,8 @@ describe("acquireLease (Phase 3 migration)", () => {
   });
 
   it("should reject acquiring lease when already executing", async () => {
-    const { acquireLease } = await import(
-      "../../harness/ops/core/symphony-state/acquire-lease.mjs"
-    );
+    const { acquireLease } =
+      await import("../../harness/ops/core/symphony-state/acquire-lease.mjs");
     const store = emptyStore();
     store.issues["ANQ-600"] = {
       issueIdentifier: "ANQ-600",
@@ -262,12 +243,9 @@ describe("acquireLease (Phase 3 migration)", () => {
   });
 
   it("should record transition history on successful acquire", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { acquireLease } = await import(
-      "../../harness/ops/core/symphony-state/acquire-lease.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { acquireLease } =
+      await import("../../harness/ops/core/symphony-state/acquire-lease.mjs");
 
     claimIssue("ANQ-650", { worktreeId: "wt1" });
     acquireLease("ANQ-650", { runId: "run-123" });
@@ -293,21 +271,17 @@ describe("releaseLease (Phase 3 migration)", () => {
   });
 
   it("should return ok with released=false when no lease exists", async () => {
-    const { releaseLease } = await import(
-      "../../harness/ops/core/symphony-state/release-lease.mjs"
-    );
+    const { releaseLease } =
+      await import("../../harness/ops/core/symphony-state/release-lease.mjs");
     const result = releaseLease("ANQ-700");
     expect(result.ok).toBe(true);
     expect(result.released).toBe(false);
   });
 
   it("should release an active lease and transition to eligible", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { releaseLease } = await import(
-      "../../harness/ops/core/symphony-state/release-lease.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { releaseLease } =
+      await import("../../harness/ops/core/symphony-state/release-lease.mjs");
 
     claimIssue("ANQ-750", { worktreeId: "wt1" });
     const result = releaseLease("ANQ-750");
@@ -321,12 +295,9 @@ describe("releaseLease (Phase 3 migration)", () => {
   });
 
   it("should reject release when nonce does not match", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { releaseLease } = await import(
-      "../../harness/ops/core/symphony-state/release-lease.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { releaseLease } =
+      await import("../../harness/ops/core/symphony-state/release-lease.mjs");
 
     claimIssue("ANQ-800", { worktreeId: "wt1" });
     const result = releaseLease("ANQ-800", "wrong-nonce");
@@ -335,9 +306,8 @@ describe("releaseLease (Phase 3 migration)", () => {
   });
 
   it("should clean up stale (expired) lease via direct cleanup", async () => {
-    const { releaseLease } = await import(
-      "../../harness/ops/core/symphony-state/release-lease.mjs"
-    );
+    const { releaseLease } =
+      await import("../../harness/ops/core/symphony-state/release-lease.mjs");
     const store = emptyStore();
     store.issues["ANQ-850"] = {
       issueIdentifier: "ANQ-850",
@@ -355,9 +325,8 @@ describe("releaseLease (Phase 3 migration)", () => {
   });
 
   it("should release lease and return to integration_pending when finalization exists", async () => {
-    const { releaseLease } = await import(
-      "../../harness/ops/core/symphony-state/release-lease.mjs"
-    );
+    const { releaseLease } =
+      await import("../../harness/ops/core/symphony-state/release-lease.mjs");
     const store = emptyStore();
     store.issues["ANQ-900"] = {
       issueIdentifier: "ANQ-900",
@@ -388,12 +357,10 @@ describe("recordQuarantine (Phase 3 migration)", () => {
   });
 
   it("should quarantine an executing worktree", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
-    const { recordQuarantine } = await import(
-      "../../harness/ops/core/symphony-state/record-quarantine.mjs"
-    );
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
+    const { recordQuarantine } =
+      await import("../../harness/ops/core/symphony-state/record-quarantine.mjs");
 
     // First set up the worktree as executing
     transitionWorktree("wt1", "executing", { assignedIssue: "ANQ-100" });
@@ -413,9 +380,8 @@ describe("recordQuarantine (Phase 3 migration)", () => {
   });
 
   it("should quarantine an available worktree", async () => {
-    const { recordQuarantine } = await import(
-      "../../harness/ops/core/symphony-state/record-quarantine.mjs"
-    );
+    const { recordQuarantine } =
+      await import("../../harness/ops/core/symphony-state/record-quarantine.mjs");
 
     // available → quarantined is valid
     const result = recordQuarantine("wt2", { reason: "diverged" });
@@ -435,12 +401,8 @@ describe("clearQuarantine (Phase 3 migration)", () => {
   });
 
   it("should clear quarantine and return to available", async () => {
-    const { transitionWorktree } = await import(
-      "../../harness/ops/core/symphony-state/transition-worktree.mjs"
-    );
-    const { clearQuarantine } = await import(
-      "../../harness/ops/core/symphony-state/clear-quarantine.mjs"
-    );
+    const { clearQuarantine } =
+      await import("../../harness/ops/core/symphony-state/clear-quarantine.mjs");
 
     // Set up quarantined worktree
     const store = emptyStore();
@@ -466,9 +428,8 @@ describe("clearQuarantine (Phase 3 migration)", () => {
   });
 
   it("should reject clearing quarantine on a non-quarantined worktree", async () => {
-    const { clearQuarantine } = await import(
-      "../../harness/ops/core/symphony-state/clear-quarantine.mjs"
-    );
+    const { clearQuarantine } =
+      await import("../../harness/ops/core/symphony-state/clear-quarantine.mjs");
 
     // Default state is available — available → available is invalid
     const result = clearQuarantine("wt4");
@@ -487,9 +448,8 @@ describe("transitionIssue finalization deep-merge", () => {
   });
 
   it("should deep-merge finalization with existing finalization fields", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
 
     // Set up issue in executing phase with existing finalization
     const store = emptyStore();
@@ -527,9 +487,8 @@ describe("transitionIssue finalization deep-merge", () => {
   });
 
   it("should work correctly when no prior finalization exists", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
 
     // Set up issue in executing phase without finalization
     const store = emptyStore();
@@ -563,9 +522,8 @@ describe("integrated_main phase mapping", () => {
   });
 
   it("should infer completed phase from integrated_main finalization state", async () => {
-    const { inferExecutionPhase } = await import(
-      "../../harness/ops/core/symphony-state/infer-execution-phase.mjs"
-    );
+    const { inferExecutionPhase } =
+      await import("../../harness/ops/core/symphony-state/infer-execution-phase.mjs");
     const record = normalizeRecord({
       issueIdentifier: "ANQ-PM-1",
       finalization: { state: "integrated_main" },
@@ -574,9 +532,8 @@ describe("integrated_main phase mapping", () => {
   });
 
   it("should allow evidence_pending → completed transition for integrated_main", async () => {
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
 
     const store = emptyStore();
     store.issues["ANQ-PM-2"] = {
@@ -609,15 +566,11 @@ describe("Full issue lifecycle via migrated helpers", () => {
   });
 
   it("should complete a full lifecycle: eligible → claimed → executing → integration_pending → evidence_pending → completed", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    const { acquireLease } = await import(
-      "../../harness/ops/core/symphony-state/acquire-lease.mjs"
-    );
-    const { transitionIssue } = await import(
-      "../../harness/ops/core/symphony-state/transition-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    const { acquireLease } =
+      await import("../../harness/ops/core/symphony-state/acquire-lease.mjs");
+    const { transitionIssue } =
+      await import("../../harness/ops/core/symphony-state/transition-issue.mjs");
 
     // Step 1: Claim
     const claim = claimIssue("ANQ-LIFE", { worktreeId: "wt1", source: "linear" });

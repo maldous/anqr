@@ -1,6 +1,7 @@
 # Symphony Openai Bridge
 
 ## Purpose
+
 Worktree-local OpenAI-compatible bridge that exposes repository tools, runs AI requests in the correct checkout, integrates Codex and other providers, and applies fallback, probing, and request finalization.
 
 ## Contents
@@ -211,12 +212,15 @@ Worktree-local OpenAI-compatible bridge that exposes repository tools, runs AI r
 - `write-todos-tool.mjs` - Exports `writeTodosTool`, the main helper defined in this file.
 
 ## Subdirectories
+
 - `build-selection-options/` - Build Selection Options scope; immediate files include `build-selection-options.mjs`, `index.mjs`, `is-provider-healthy.mjs`.
 - `handle-responses-api/` - Handle Responses Api scope; immediate files include `build-chat-body.mjs`, `extract-text-content.mjs`, `handle-non-streaming.mjs`, `handle-responses-api.mjs`, and others; child directories include `helpers/`.
 
 ## Operational Notes
+
 - Each executor bridge runs in either a specific worktree or the main repo, depending on the service entry point.
 - This directory remains the central runtime for Codex integration, tool execution, fallback, provider probing, and request/result collection.
 
 ## Review Focus
+
 Check worktree isolation, path remapping, Codex integration, provider fallback, and bridge startup/teardown behavior against the intended runtime model.

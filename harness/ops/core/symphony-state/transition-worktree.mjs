@@ -10,7 +10,7 @@
  */
 
 import { VALID_WORKTREE_STATES, normalizeWorktreeRecord } from "./worktree-record-schema.mjs";
-import { isValidWorktreeTransition } from "./transition-map.mjs";
+import { isValidWorktreeTransition } from "./is-valid-worktree-transition.mjs";
 import { loadState } from "./load-state.mjs";
 import { saveState } from "./save-state.mjs";
 import { withStateLock } from "./with-state-lock.mjs";

@@ -15,7 +15,6 @@ export function loadState() {
     store.updatedAt = data.updatedAt || store.updatedAt;
     store.hostId = data.hostId || HOST_ID;
     store.global = {
-      integrationQueue: [],
       integrationLock: null,
       ...data.global,
     };

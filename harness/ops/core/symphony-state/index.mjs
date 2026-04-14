@@ -45,8 +45,6 @@ export { getLatencyMetrics } from "./get-latency-metrics.mjs";
 export { REPAIRABLE_FINALIZATION_STATES } from "./repairable-finalization-states.mjs";
 export { setFinalizationState } from "./set-finalization-state.mjs";
 export { getFinalizationState } from "./get-finalization-state.mjs";
-export { enqueueIntegrationCandidate } from "./enqueue-integration-candidate.mjs";
-export { dequeueIntegrationCandidate } from "./dequeue-integration-candidate.mjs";
 export { listIntegrationCandidates } from "./list-integration-candidates.mjs";
 export { acquireIntegrationLock } from "./acquire-integration-lock.mjs";
 export { releaseIntegrationLock } from "./release-integration-lock.mjs";
@@ -62,8 +60,14 @@ export { checkLatencyBaseline } from "./check-latency-baseline.mjs";
 export { claimIssue } from "./claim-issue.mjs";
 export { claimAndAssignWorktree } from "./claim-and-assign-worktree.mjs";
 export { ISSUE_PHASES, FINALIZATION_STATE_TO_PHASE, VALID_ISSUE_PHASES } from "./issue-phases.mjs";
-export { WORKTREE_STATES, VALID_WORKTREE_STATES, normalizeWorktreeRecord } from "./worktree-record-schema.mjs";
-export { ISSUE_TRANSITION_MAP, WORKTREE_TRANSITION_MAP, isValidIssueTransition, isValidWorktreeTransition } from "./transition-map.mjs";
+export {
+  WORKTREE_STATES,
+  VALID_WORKTREE_STATES,
+  normalizeWorktreeRecord,
+} from "./worktree-record-schema.mjs";
+export { ISSUE_TRANSITION_MAP, WORKTREE_TRANSITION_MAP } from "./transition-map.mjs";
+export { isValidIssueTransition } from "./is-valid-issue-transition.mjs";
+export { isValidWorktreeTransition } from "./is-valid-worktree-transition.mjs";
 export { inferExecutionPhase } from "./infer-execution-phase.mjs";
 export { transitionIssue } from "./transition-issue.mjs";
 export { transitionWorktree } from "./transition-worktree.mjs";

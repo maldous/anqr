@@ -1,6 +1,7 @@
 # Core
 
 ## Purpose
+
 Core contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
@@ -9,6 +10,7 @@ Core contains the code, configuration, or support files that implement this part
 - 7 child directories
 
 ## Key Files
+
 - `bridge-result.mjs` - JavaScript/TypeScript module used by this directory.
 - `bridge-result.spec.ts` - JavaScript/TypeScript module used by this directory.
 - `discord-source.mjs` - JavaScript/TypeScript module used by this directory.
@@ -23,6 +25,7 @@ Core contains the code, configuration, or support files that implement this part
 - `worktree-health.mjs` - JavaScript/TypeScript module used by this directory.
 
 ## Subdirectories
+
 - `bridge-result/` - Bridge Result scope; immediate files include `index.mjs`, `infer-symphony-result-from-completion.mjs`, `normalize-count.mjs`, `normalize-failure-class.mjs`, and others.
 - `discord-source/` - Discord Source scope; immediate files include `detect-and-mark-discord-source.mjs`, `index.mjs`, `is-discord-sourced.mjs`, `mark-discord-source.mjs`.
 - `symphony-state/` - Symphony State scope; immediate files include `acquire-integration-lock.mjs`, `acquire-lease.mjs`, `acquire-state-lock.mjs`, `add-external-key.mjs`, and others; child directories include `acquire-state-lock/`.
@@ -32,8 +35,10 @@ Core contains the code, configuration, or support files that implement this part
 - `worktree-health/` - Worktree Health scope; immediate files include `all-worktree-ids.mjs`, `get-current-branch.mjs`, `get-fleet-inventory.mjs`, `get-git-dirty-files.mjs`, and others.
 
 ## Operational Notes
+
 - Current on-disk inventory: 12 immediate file(s) and 7 child directories.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

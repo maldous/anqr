@@ -9,57 +9,8 @@ import { RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD } from "../../../symphony-confi
 import { getWorktreePath, PROJECT_ROOT } from "../../../core/worktree-config.mjs";
 import { execFileSync } from "node:child_process";
 import { sendDiscordEmbed } from "../../../integrations/notifications/openclaw-discord.mjs";
+import { buildEvidence } from "./build-evidence.mjs";
 import { logInfo, logWarn } from "../logger.mjs";
-
-/**
- * Build structured evidence for a recovery action — ADR-0006.
- *
- * Every recovery action must emit evidence identifying:
- * - actionClass: state_only | quarantine | reprovision | sandbox_reset | demotion
- * - target: worktreeId
- * - reason: why this action was taken
- * - ownershipBasis: inferred owner or null
- * - isStateOnly: whether the action only modifies durable state (no filesystem)
- * - isNonPublishing: whether the action does NOT commit/push/publish code
- */
-function buildEvidence(actionClass, worktreeId, reason, ownershipBasis = null) {
-  // ADR-0005: All recovery actions are non-publishing. ADR-0006: Evidence
-  // must classify actions explicitly rather than inheriting a default.
-  // These sets enumerate every known action class so that adding a new class
-  // forces a conscious classification decision.
-  const STATE_ONLY_ACTIONS = new Set([
-    "skip",
-    "reclaim_lease",
-    "continue_repair",
-    "quarantine",
-    "reprovision",
-  ]);
-  const NON_PUBLISHING_ACTIONS = new Set([
-    "skip",
-    "reclaim_lease",
-    "continue_repair",
-    "quarantine",
-    "reprovision",
-    "sandbox_reset",
-    "demotion",
-  ]);
-
-  const effectiveClass = actionClass === "demotion" ? "quarantine" : actionClass;
-  const isStateOnly = STATE_ONLY_ACTIONS.has(effectiveClass);
-  // Use original actionClass for isNonPublishing so that every class
-  // (including "demotion" itself) is explicitly enumerated in the set.
-  const isNonPublishing = NON_PUBLISHING_ACTIONS.has(actionClass);
-
-  return {
-    actionClass,
-    target: worktreeId,
-    reason,
-    ownershipBasis,
-    isStateOnly,
-    isNonPublishing,
-    timestamp: new Date().toISOString(),
-  };
-}
 
 export async function executeRepair(worktreeId, classification) {
   const { repairAction, inferredOwner } = classification;
@@ -116,10 +67,10 @@ export async function executeRepair(worktreeId, classification) {
       logWarn(
         `[recovery] retry_push requested for ${worktreeId} — demoted to quarantine (ADR-0005: recovery shall not publish code)`,
       );
-      const result = await executeRepair(
-        worktreeId,
-        { ...classification, repairAction: "quarantine" },
-      );
+      const result = await executeRepair(worktreeId, {
+        ...classification,
+        repairAction: "quarantine",
+      });
       // Override evidence to record the demotion
       result.evidence = buildEvidence(
         "demotion",
@@ -135,10 +86,10 @@ export async function executeRepair(worktreeId, classification) {
       logWarn(
         `[recovery] auto_commit_and_push requested for ${worktreeId} — demoted to quarantine (ADR-0005: recovery shall not publish code)`,
       );
-      const result = await executeRepair(
-        worktreeId,
-        { ...classification, repairAction: "quarantine" },
-      );
+      const result = await executeRepair(worktreeId, {
+        ...classification,
+        repairAction: "quarantine",
+      });
       result.evidence = buildEvidence(
         "demotion",
         worktreeId,
@@ -190,10 +141,7 @@ export async function executeRepair(worktreeId, classification) {
         logWarn(
           `[recovery] reset_to_main blocked: ${worktreeId} has an active lease — quarantining instead`,
         );
-        return executeRepair(
-          worktreeId,
-          { ...classification, repairAction: "quarantine" },
-        );
+        return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" });
       }
 
       const resetPath =
@@ -232,10 +180,7 @@ export async function executeRepair(worktreeId, classification) {
         };
       } catch (err) {
         logWarn(`[recovery] Reset to main failed for ${worktreeId}: ${err.message}`);
-        return executeRepair(
-          worktreeId,
-          { ...classification, repairAction: "quarantine" },
-        );
+        return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" });
       }
     }
 

@@ -16,8 +16,6 @@ import {
   mutateState,
   setFinalizationState,
   getFinalizationState,
-  enqueueIntegrationCandidate,
-  dequeueIntegrationCandidate,
   listIntegrationCandidates,
   acquireIntegrationLock,
   releaseIntegrationLock,
@@ -26,7 +24,7 @@ import {
 beforeEach(() => {
   mutateState((store) => {
     store.issues = {};
-    store.global = { integrationQueue: [], integrationLock: null };
+    store.global = { integrationLock: null };
     return store;
   });
 });
@@ -42,7 +40,6 @@ describe("Integration queue flow", () => {
       headSha: "abc123def",
       baseMainSha: "main000",
     });
-    enqueueIntegrationCandidate("ANQ-900");
 
     const queue = listIntegrationCandidates();
     expect(queue).toContain("ANQ-900");
@@ -59,7 +56,6 @@ describe("Integration queue flow", () => {
       branch: "symphony/wt2",
       headSha: "def456",
     });
-    enqueueIntegrationCandidate("ANQ-901");
 
     // Simulate integrator success
     setFinalizationState("ANQ-901", {
@@ -67,7 +63,6 @@ describe("Integration queue flow", () => {
       integratedMainSha: "main123",
       lastError: null,
     });
-    dequeueIntegrationCandidate("ANQ-901");
 
     const fin = getFinalizationState("ANQ-901");
     expect(fin!.state).toBe("integrated_main");
@@ -86,7 +81,6 @@ describe("Integration queue flow", () => {
       headSha: "ghi789",
       attempts: 0,
     });
-    enqueueIntegrationCandidate("ANQ-902");
 
     // Simulate integrator conflict
     setFinalizationState("ANQ-902", {
@@ -94,7 +88,6 @@ describe("Integration queue flow", () => {
       lastError: "CONFLICT in src/main.tsx",
       attempts: 1,
     });
-    dequeueIntegrationCandidate("ANQ-902");
 
     const fin = getFinalizationState("ANQ-902");
     expect(fin!.state).toBe("integration_failed_repairable");
@@ -149,7 +142,6 @@ describe("Integration queue flow", () => {
       branch: "symphony/wt1",
       headSha: "abc123",
     });
-    enqueueIntegrationCandidate("ANQ-910");
 
     // Simulate conflict
     setFinalizationState("ANQ-910", {
@@ -157,7 +149,6 @@ describe("Integration queue flow", () => {
       lastError: "CONFLICT in src/main.tsx",
       attempts: 1,
     });
-    dequeueIntegrationCandidate("ANQ-910");
 
     // Simulate repair: runner fixes and re-pushes with new headSha
     setFinalizationState("ANQ-910", {
@@ -166,7 +157,6 @@ describe("Integration queue flow", () => {
       lastError: null,
       attempts: 0,
     });
-    enqueueIntegrationCandidate("ANQ-910");
 
     const queue = listIntegrationCandidates();
     expect(queue).toContain("ANQ-910");
@@ -208,8 +198,6 @@ describe("Integration queue flow", () => {
       branch: "symphony/wt2",
       headSha: "sha2",
     });
-    enqueueIntegrationCandidate("ANQ-920");
-    enqueueIntegrationCandidate("ANQ-921");
 
     // First integrator acquires lock
     const lock1 = acquireIntegrationLock("int-1", 60_000);
@@ -224,7 +212,6 @@ describe("Integration queue flow", () => {
       state: "integrated_main",
       integratedMainSha: "main_sha_1",
     });
-    dequeueIntegrationCandidate("ANQ-920");
     releaseIntegrationLock("int-1");
 
     // Second integrator can now proceed
@@ -235,7 +222,6 @@ describe("Integration queue flow", () => {
       state: "integrated_main",
       integratedMainSha: "main_sha_2",
     });
-    dequeueIntegrationCandidate("ANQ-921");
     releaseIntegrationLock("int-2");
 
     // Both integrated

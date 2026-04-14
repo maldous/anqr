@@ -6,10 +6,7 @@ import { normalizeRecord } from "./normalize-record.mjs";
  * Issues whose finalization.state is in this set are candidates for
  * cherry-pick to main and/or evidence publication.
  */
-const INTEGRATION_READY_STATES = new Set([
-  "integration_pending",
-  "evidence_pending_closeout",
-]);
+const INTEGRATION_READY_STATES = new Set(["integration_pending", "evidence_pending_closeout"]);
 
 /**
  * Derive integration candidates from issue finalization states.

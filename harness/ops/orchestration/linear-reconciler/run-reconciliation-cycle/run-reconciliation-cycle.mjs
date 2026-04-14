@@ -1,13 +1,11 @@
 import { getQueueSnapshot, feedQueue, detectStuckWork } from "../../../symphony-queue-control.mjs";
 import { listIssuesByState } from "../../../linear-client.mjs";
-import { createDurableQueue } from "../../../lib/durable-kv.mjs";
 import {
   canExecuteIssue,
   leaseIsActive,
   getIssueState,
   listIntegrationCandidates,
   getFinalizationState,
-  enqueueIntegrationCandidate,
   setGlobalValue,
   loadState,
 } from "../../../symphony-state.mjs";
@@ -19,32 +17,9 @@ import {
 import { isDiscordSourced } from "../../../core/discord-source.mjs";
 import { getHealthyLinearCapacity } from "../get-healthy-linear-capacity.mjs";
 import { computeReconciliationActions } from "../compute-reconciliation-actions.mjs";
-import { logInfo, logWarn, logError, logDebug } from "../logger.mjs";
+import { logInfo, logWarn, logDebug } from "../logger.mjs";
 import { recoverInProgressIssue } from "./recover-in-progress-issue.mjs";
-
-/**
- * ADR-0002: The reconciler feeds the desired-work queue for the scheduler.
- * It does not dispatch directly — the scheduler owns claim and dispatch.
- */
-async function feedDesiredWorkQueue(eligibleIssues) {
-  const desiredWorkQueue = createDurableQueue("symphony-desired-work");
-  const existing = new Set(desiredWorkQueue.items().map((item) => item.identifier));
-  let fed = 0;
-
-  for (const issue of eligibleIssues) {
-    if (existing.has(issue.identifier)) continue;
-    desiredWorkQueue.enqueue({
-      identifier: issue.identifier,
-      title: issue.title,
-      source: "reconciler",
-      reason: "reconciler_backlog_pickup",
-      timestamp: new Date().toISOString(),
-    });
-    fed++;
-    logInfo(`Fed ${issue.identifier} to desired-work queue (scheduler will claim)`);
-  }
-  return fed;
-}
+import { feedDesiredWorkQueue } from "./feed-desired-work-queue.mjs";
 
 export async function runReconciliationCycle() {
   const cycleStart = Date.now();
@@ -137,15 +112,12 @@ export async function runReconciliationCycle() {
     }
 
     if (action.type === "re_enqueue_integration") {
-      try {
-        enqueueIntegrationCandidate(action.issueIdentifier);
-        reEnqueued++;
-        logInfo(
-          `Re-enqueued ${action.issueIdentifier} for integration (${action.reason}, ${Math.round(action.ageMs / 60000)}min)`,
-        );
-      } catch (err) {
-        logError(`Re-enqueue error for ${action.issueIdentifier}: ${err.message}`);
-      }
+      // Phase 5: integration candidates are derived from finalization.state.
+      // No explicit enqueue needed — the candidate is already visible.
+      reEnqueued++;
+      logInfo(
+        `Re-enqueued ${action.issueIdentifier} for integration (${action.reason}, ${Math.round(action.ageMs / 60000)}min)`,
+      );
     }
   }
 

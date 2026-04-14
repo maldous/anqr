@@ -1,6 +1,7 @@
 # Linear
 
 ## Purpose
+
 Linear contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
@@ -10,7 +11,9 @@ Linear contains the code, configuration, or support files that implement this pa
 
 <<<<<<< ours — heading `Key Files` (F, confidence: medium)
 // hint: Logic changed on both sides. Requires understanding intent of each change.
+
 ## Key Files
+
 - `agent-workflow-create-issue.mjs` - JavaScript/TypeScript module used by this directory.
 - `analyze-canceled-issues.mjs` - JavaScript/TypeScript module used by this directory.
 - `create-ast-audit-issues.mjs` - JavaScript/TypeScript module used by this directory.
@@ -38,6 +41,7 @@ Linear contains the code, configuration, or support files that implement this pa
 - `validate-issue.mjs` - JavaScript/TypeScript module used by this directory.
 
 =======
+
 ## Key Files
 
 - `agent-workflow-create-issue.mjs` - JavaScript/TypeScript module used by this directory.
@@ -66,8 +70,10 @@ Linear contains the code, configuration, or support files that implement this pa
 - `test-agent-workflow.mjs` - JavaScript/TypeScript module used by this directory.
 - `validate-issue.mjs` - JavaScript/TypeScript module used by this directory.
 
->>>>>>> theirs — heading `Key Files` (F, confidence: medium)
+> > > > > > > theirs — heading `Key Files` (F, confidence: medium)
+
 ## Subdirectories
+
 - `agent-workflow-create-issue/` - Agent Workflow Create Issue scope; immediate files include `args.mjs`, `available-labels.mjs`, `available-states.mjs`, `create-linear-issue-workflow.mjs`, and others.
 - `analyze-canceled-issues/` - Analyze Canceled Issues scope; immediate files include `correct-cancel-patterns.mjs`, `index.mjs`, `logger.mjs`, `main.mjs`, and others.
 - `create-issue-template/` - Create Issue Template scope; immediate files include `customize-issue.mjs`, `index.mjs`, `issue-template.mjs`, `main.mjs`, and others.
@@ -87,8 +93,10 @@ Linear contains the code, configuration, or support files that implement this pa
 - `validate-issue/` - Validate Issue scope; immediate files include `calculate-validation-score.mjs`, `determine-priority.mjs`, `format-validation-result.mjs`, `get-issue-quality-checklist.mjs`, and others.
 
 ## Operational Notes
+
 - Current on-disk inventory: 25 immediate file(s) and 17 child directories.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

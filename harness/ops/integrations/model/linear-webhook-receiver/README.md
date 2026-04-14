@@ -1,6 +1,7 @@
 # Linear Webhook Receiver
 
 ## Purpose
+
 Authenticated Linear ingress surface that validates webhook events, records evidence, and turns accepted events into scheduler-path desired-work signals rather than directly claiming work.
 
 ## Contents
@@ -32,8 +33,10 @@ Authenticated Linear ingress surface that validates webhook events, records evid
 - No child directories in this directory.
 
 ## Operational Notes
+
 - This receiver verifies the Linear signature, deduplicates deliveries, records ingress evidence, and then triggers the scheduler-aligned path.
 - Its role after Workstream A is write-side ingress and traceability, not independent dispatch authority.
 
 ## Review Focus
+
 Confirm that webhook handling remains ingress-only and does not recreate an alternate global dispatcher.

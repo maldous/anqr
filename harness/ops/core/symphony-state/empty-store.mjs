@@ -8,7 +8,6 @@ export function emptyStore() {
     issues: {},
     worktreeStates: {},
     global: {
-      integrationQueue: [],
       integrationLock: null,
     },
   };

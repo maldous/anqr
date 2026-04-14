@@ -3,7 +3,7 @@
  *
  * Covers:
  * - setFinalizationState merges safely
- * - enqueueIntegrationCandidate deduplicates
+ * - listIntegrationCandidates derives from finalization.state
  * - acquireIntegrationLock is exclusive
  * - getNextRepairableIssueForWorktree returns sticky owner only
  */
@@ -12,8 +12,6 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
   setFinalizationState,
   getFinalizationState,
-  enqueueIntegrationCandidate,
-  dequeueIntegrationCandidate,
   listIntegrationCandidates,
   acquireIntegrationLock,
   releaseIntegrationLock,
@@ -26,7 +24,7 @@ import {
 beforeEach(() => {
   mutateState((store) => {
     store.issues = {};
-    store.global = { integrationQueue: [], integrationLock: null };
+    store.global = { integrationLock: null };
     return store;
   });
 });
@@ -111,9 +109,7 @@ describe("Integration Queue (Phase 5: derived from finalization.state)", () => {
       state: "integration_pending",
       worktreeId: "wt1",
     });
-    // Calling enqueue is now a no-op — candidacy is driven by state
-    enqueueIntegrationCandidate("ANQ-300");
-    enqueueIntegrationCandidate("ANQ-300");
+    // Phase 5: candidacy is derived from finalization.state — no explicit enqueue
 
     const candidates = listIntegrationCandidates();
     expect(candidates.filter((id: string) => id === "ANQ-300")).toHaveLength(1);
@@ -132,8 +128,6 @@ describe("Integration Queue (Phase 5: derived from finalization.state)", () => {
     setFinalizationState("ANQ-400", {
       state: "integrated_main",
     });
-    // dequeueIntegrationCandidate is now a no-op
-    dequeueIntegrationCandidate("ANQ-400");
 
     const candidates = listIntegrationCandidates();
     expect(candidates).not.toContain("ANQ-400");
@@ -145,9 +139,7 @@ describe("Integration Queue (Phase 5: derived from finalization.state)", () => {
       state: "integration_pending",
       worktreeId: "wt1",
     });
-    // enqueue/dequeue are no-ops
-    enqueueIntegrationCandidate("ANQ-500");
-    dequeueIntegrationCandidate("ANQ-999");
+    // Phase 5: enqueue/dequeue removed — candidacy derived from finalization.state
 
     const candidates = listIntegrationCandidates();
     expect(candidates).toContain("ANQ-500");

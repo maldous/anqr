@@ -1,21 +1,26 @@
 # Symphony Runner
 
 ## Purpose
+
 Worktree-local executor that runs already-assigned work inside an isolated checkout, performs validation, commits/pushes worktree results, and prepares candidates for serial integration.
 
 <<<<<<< ours — heading `Contents` (F, confidence: medium)
 // hint: Logic changed on both sides. Requires understanding intent of each change.
+
 ## Contents
+
 - 54 immediate files
 - 1 child directory
 
 =======
+
 ## Contents
 
 - 54 immediate files
 - 1 child directory
 
->>>>>>> theirs — heading `Contents` (F, confidence: medium)
+> > > > > > > theirs — heading `Contents` (F, confidence: medium)
+
 ## Key Files
 
 - `acquire-lock.mjs` - Exports `acquireLock`, the main helper defined in this file.
@@ -74,11 +79,14 @@ Worktree-local executor that runs already-assigned work inside an isolated check
 - `write-pre-validation-patch.mjs` - Exports `writePreValidationPatch`, the main helper defined in this file.
 
 ## Subdirectories
+
 - `sync-worktree-before-validation/` - Sync Worktree Before Validation scope; immediate files include `git.mjs`, `index.mjs`, `sync-worktree-before-validation.mjs`.
 
 ## Operational Notes
+
 - This directory now reflects the post-Workstream A model where the runner executes assigned work instead of globally self-picking runnable issues.
 - Sticky repair remains a local executor concern, but global admission is expected to come from the scheduler.
 
 ## Review Focus
+
 Check that the runner behaves as a pure executor of claimed work, with only local repair handling and no global dispatch authority.

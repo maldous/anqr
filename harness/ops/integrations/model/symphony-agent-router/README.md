@@ -1,6 +1,7 @@
 # Symphony Agent Router
 
 ## Purpose
+
 Router control plane that accepts scheduler-issued triggers, verifies scheduler-owned claims and durable worktree assignment, and forwards work into the assigned worktree-local bridge.
 
 ## Contents
@@ -9,6 +10,7 @@ Router control plane that accepts scheduler-issued triggers, verifies scheduler-
 - 1 child directory
 
 ## Key Files
+
 - `dispatch-linear-execution.mjs` - Exports `dispatchLinearExecution`, the main helper defined in this file.
 - `global-active-requests.mjs` - Exports `setGlobalActiveRequests`, the main helper defined in this file.
 - `handle-linear-queue.mjs` - Exports `handleLinearQueue`, the main helper defined in this file.
@@ -37,11 +39,14 @@ Router control plane that accepts scheduler-issued triggers, verifies scheduler-
 - `worktrees.mjs` - Exports `WORKTREES`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - `select-linear-worktree/` - Select Linear Worktree scope; immediate files include `index.mjs`, `normalize-worktree-state.mjs`, `select-linear-worktree.mjs`.
 
 ## Operational Notes
+
 - After Workstream A, the router is transport and load-shedding logic, not a claim originator.
 - Both immediate trigger handling and queued trigger draining are expected to re-verify scheduler-owned claims before dispatch.
 
 ## Review Focus
+
 Check that the router honours durable assignment and no longer re-selects worktrees or dispatches unclaimed work.

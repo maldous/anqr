@@ -1,9 +1,4 @@
-import {
-  dequeueIntegrationCandidate,
-  getFinalizationState,
-  transitionIssue,
-  getIssueState,
-} from "../../../symphony-state.mjs";
+import { getFinalizationState, transitionIssue, getIssueState } from "../../../symphony-state.mjs";
 import { updateIssue, addComment, STATES } from "../../../linear-client.mjs";
 import { recordIntegrationResult } from "../../../core/task-evidence.mjs";
 import { findIssueByIdentifier } from "../find-issue-by-identifier.mjs";
@@ -20,7 +15,6 @@ export async function integrateCandidate(issueIdentifier) {
     logWarn(
       `[integrator] ${issueIdentifier}: unexpected finalization state: ${finalization?.state}`,
     );
-    dequeueIntegrationCandidate(issueIdentifier);
     return { ok: false, reason: "invalid_state" };
   }
 
@@ -28,7 +22,6 @@ export async function integrateCandidate(issueIdentifier) {
 
   if (finalization.state === "evidence_pending_closeout") {
     if (!finalization.integratedMainSha) {
-      dequeueIntegrationCandidate(issueIdentifier);
       return { ok: false, reason: "missing_integrated_main_sha" };
     }
     const closeout = await publishEvidenceAndClose({
@@ -39,7 +32,6 @@ export async function integrateCandidate(issueIdentifier) {
       diffStat: finalization.diffStat || "(cached)",
     });
     if (!closeout.ok) return closeout;
-    dequeueIntegrationCandidate(issueIdentifier);
     return { ok: true, mainSha: finalization.integratedMainSha, closeoutOnly: true };
   }
 
@@ -113,7 +105,6 @@ export async function integrateCandidate(issueIdentifier) {
         }
       }
 
-      dequeueIntegrationCandidate(issueIdentifier);
       return { ok: false, reason: "conflict" };
     }
 
@@ -184,7 +175,6 @@ export async function integrateCandidate(issueIdentifier) {
       reason: "evidence_published",
     });
 
-    dequeueIntegrationCandidate(issueIdentifier);
     return { ok: true, mainSha: pushedMainSha };
   } catch (err) {
     logError(`[integrator] Unexpected error for ${issueIdentifier}: ${err.message}`);
@@ -206,7 +196,6 @@ export async function integrateCandidate(issueIdentifier) {
       reason: "infra_error",
     });
 
-    dequeueIntegrationCandidate(issueIdentifier);
     return { ok: false, reason: "infra_error", error: err.message };
   }
 }

@@ -1,6 +1,7 @@
 # Symphony Worktree Pool
 
 ## Purpose
+
 Lifecycle tooling for provisioning, listing, repairing, reprovisioning, and removing the git worktree fleet used by the executor pool.
 
 ## Contents
@@ -37,8 +38,10 @@ Lifecycle tooling for provisioning, listing, repairing, reprovisioning, and remo
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 21 immediate file(s) and 0 child directories.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
+
 Check that the current implementation in this directory still matches its intended role in the harness architecture.

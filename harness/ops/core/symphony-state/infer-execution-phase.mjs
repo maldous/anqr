@@ -39,9 +39,7 @@ export function inferExecutionPhase(record, now = Date.now()) {
     const lease = record.lease;
     // If the lease has a run_id, the runner has started execution.
     // Otherwise the scheduler has claimed but the runner hasn't picked it up.
-    return lease && lease.run_id
-      ? ISSUE_PHASES.executing
-      : ISSUE_PHASES.claimed;
+    return lease && lease.run_id ? ISSUE_PHASES.executing : ISSUE_PHASES.claimed;
   }
 
   // 2. Hard blocks — needs human attention
