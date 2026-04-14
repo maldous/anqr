@@ -1,7 +1,9 @@
 # Symphony Agent Router
 
 ## Purpose
-Control-plane router that accepts orchestrated work, selects an eligible executor worktree, and forwards Linear-triggered execution into the correct worktree-local bridge.
+Control-plane router that accepts scheduler-claimed work, honours the scheduler's durable worktree assignment, and forwards Linear-triggered execution into the correct worktree-local bridge.
+
+**ADR-0002 compliance:** The router is transport only. It always verifies that the scheduler has claimed the issue before dispatch. `verifySchedulerClaim()` checks active lease existence, scheduler ownership, and durable worktree assignment. Unclaimed dispatch is rejected with 409.
 
 ## Contents
 - 25 immediate files
@@ -38,8 +40,9 @@ Control-plane router that accepts orchestrated work, selects an eligible executo
 - `select-linear-worktree/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `index.mjs`, `normalize-worktree-state.mjs`, `select-linear-worktree.mjs`.
 
 ## Operational Notes
-- This router is the main fan-out point between ingress and executor worktrees.
-- Its selection and queue behavior are especially important for the wt1-wt4 Linear partition and for avoiding duplicate or stale dispatch.
+- This router is the main fan-out point between the scheduler and executor worktrees.
+- In authoritative mode (permanent), the router reads the scheduler's assigned worktreeId from durable state and dispatches to that worktree. Fallback to `selectLinearWorktree()` occurs only when the assigned worktree is not found.
+- The router shares the filesystem-backed `symphony-state.json` with the scheduler. Both run on the same host.
 
 ## Review Focus
-Audit queue semantics, worktree selection, concurrency limits, request proxying, and whether router authority overlaps with reconciler or runner logic.
+Verify the router always enforces scheduler claim verification (no bypass), honours durable worktree assignments, and does not originate scheduling authority.

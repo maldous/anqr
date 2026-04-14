@@ -9,8 +9,8 @@ import { linearQueue } from "./linear-queue.mjs";
 import { selectLinearWorktree } from "./select-linear-worktree.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
-export function dispatchLinearExecution(identifier, correlationId) {
-  const target = selectLinearWorktree();
+export function dispatchLinearExecution(identifier, correlationId, assignedTarget = null) {
+  const target = assignedTarget || selectLinearWorktree();
 
   if (!target || target.activeRequests >= 1) {
     if (linearQueue.length >= MAX_QUEUE_LENGTH) {

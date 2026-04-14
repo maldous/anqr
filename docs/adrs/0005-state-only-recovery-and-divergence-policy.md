@@ -1,6 +1,6 @@
 # ADR-0005 State-Only Recovery And Divergence Policy
 
-- Status: Accepted
+- Status: Accepted (sandbox maintenance classified)
 - Date: 2026-04-12
 
 ## Context
@@ -15,10 +15,22 @@ Recovery is limited to state repair, quarantine, reprovision request, and stale-
 
 Divergence is resolved by sandbox disposal or explicit replan, not by hidden background mutation of active work.
 
+### Sandbox maintenance exception
+
+`reset_to_main` on inactive worktrees (no active lease) is classified as **sandbox maintenance**, not code publishing. It resets a diverged worktree to `origin/main` so it can be reused by the executor fleet. This is explicitly allowed because:
+
+- It only affects worktrees with no active lease (defense-in-depth guard blocks active worktrees)
+- It does not commit, push, or publish code
+- It restores the worktree to a clean, known state for future use
+- Evidence is emitted with `actionClass: "sandbox_reset"` and `isNonPublishing: true`
+- On failure, it falls back to quarantine rather than leaving partial state
+
 ## Consequences
 
 - no recovery auto-commit
 - no recovery auto-push
 - no recovery merge into active worktree
-- no recovery reset of active worktree
+- no recovery reset of active worktree (active-lease guard enforced)
+- sandbox reset of inactive diverged worktrees is allowed as maintenance
 - divergence becomes a visible state transition
+- every recovery action emits structured evidence per ADR-0006

@@ -78,6 +78,22 @@ export const RECONCILER_POLL_INTERVAL_MS = 90_000; // 90 sec — periodic backlo
 export const RECONCILER_DISPATCH_COOLDOWN_MS = 5_000; // 5 sec — delay between dispatches to avoid thundering herd
 
 // ---------------------------------------------------------------------------
+// Authoritative scheduler (Workstream A — ADR-0002)
+//
+// Authoritative mode is now PERMANENT. Legacy bypass paths have been removed.
+// This constant is retained for documentation and any defensive checks, but
+// the architecture no longer supports toggling back to split-dispatch mode.
+//
+// - Webhook receiver is write-only ingress (enqueues desired-work)
+// - Reconciler feeds desired-work queue (does not dispatch directly)
+// - Runner does not self-pick global work (only --issue and sticky repair)
+// - Router always verifies scheduler claims before dispatch
+// ---------------------------------------------------------------------------
+export const SCHEDULER_AUTHORITATIVE = true;
+export const SCHEDULER_POLL_INTERVAL_MS = 15_000; // 15 sec — scheduler cycle interval
+export const SCHEDULER_MAX_DISPATCH_PER_CYCLE = 4; // max issues to claim+dispatch in one cycle
+
+// ---------------------------------------------------------------------------
 // Recovery daemon configuration (Phase 3)
 // ---------------------------------------------------------------------------
 export const RECOVERY_POLL_INTERVAL_MS = 60_000; // 1 min scan interval

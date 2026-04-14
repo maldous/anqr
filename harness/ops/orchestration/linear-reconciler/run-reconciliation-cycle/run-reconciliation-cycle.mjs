@@ -1,5 +1,6 @@
 import { getQueueSnapshot, feedQueue, detectStuckWork } from "../../../symphony-queue-control.mjs";
 import { listIssuesByState } from "../../../linear-client.mjs";
+import { createDurableQueue } from "../../../lib/durable-kv.mjs";
 import {
   canExecuteIssue,
   leaseIsActive,
@@ -18,9 +19,32 @@ import {
 import { isDiscordSourced } from "../../../core/discord-source.mjs";
 import { getHealthyLinearCapacity } from "../get-healthy-linear-capacity.mjs";
 import { computeReconciliationActions } from "../compute-reconciliation-actions.mjs";
-import { logInfo, logWarn, logDebug } from "../logger.mjs";
-import { dispatchIssue } from "./dispatch-issue.mjs";
+import { logInfo, logWarn, logError, logDebug } from "../logger.mjs";
 import { recoverInProgressIssue } from "./recover-in-progress-issue.mjs";
+
+/**
+ * ADR-0002: The reconciler feeds the desired-work queue for the scheduler.
+ * It does not dispatch directly — the scheduler owns claim and dispatch.
+ */
+async function feedDesiredWorkQueue(eligibleIssues) {
+  const desiredWorkQueue = createDurableQueue("symphony-desired-work");
+  const existing = new Set(desiredWorkQueue.items().map((item) => item.identifier));
+  let fed = 0;
+
+  for (const issue of eligibleIssues) {
+    if (existing.has(issue.identifier)) continue;
+    desiredWorkQueue.enqueue({
+      identifier: issue.identifier,
+      title: issue.title,
+      source: "reconciler",
+      reason: "reconciler_backlog_pickup",
+      timestamp: new Date().toISOString(),
+    });
+    fed++;
+    logInfo(`Fed ${issue.identifier} to desired-work queue (scheduler will claim)`);
+  }
+  return fed;
+}
 
 export async function runReconciliationCycle() {
   const cycleStart = Date.now();
@@ -95,7 +119,10 @@ export async function runReconciliationCycle() {
 
   for (const action of actions) {
     if (action.type === "dispatch") {
-      if (await dispatchIssue(action)) dispatched++;
+      // ADR-0002: Reconciler feeds the desired-work queue. The scheduler
+      // owns claim and dispatch authority.
+      const fed = await feedDesiredWorkQueue([{ identifier: action.issueIdentifier, title: action.title }]);
+      dispatched += fed;
       if (RECONCILER_DISPATCH_COOLDOWN_MS > 0) {
         await new Promise((r) => setTimeout(r, RECONCILER_DISPATCH_COOLDOWN_MS));
       }

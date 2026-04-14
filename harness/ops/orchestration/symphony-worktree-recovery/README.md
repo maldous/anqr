@@ -1,7 +1,9 @@
 # Symphony Worktree Recovery
 
 ## Purpose
-Recovery daemon for quarantining, classifying, and repairing unhealthy worktrees while attempting to keep the executor fleet usable after drift, conflicts, or corruption.
+Recovery daemon for quarantining, classifying, and repairing unhealthy worktrees while keeping the executor fleet usable after drift, conflicts, or corruption.
+
+**ADR-0005 compliance:** Recovery is limited to state repair, quarantine, reprovision request, stale-claim handling, and sandbox maintenance. It does **not** publish code (no auto-commit, no auto-push, no merge). `retry_push` and `auto_commit_and_push` actions are demoted to quarantine. `reset_to_main` is classified as sandbox maintenance (non-publishing) and guarded against active leases.
 
 ## Contents
 - 18 immediate files
@@ -32,7 +34,9 @@ Recovery daemon for quarantining, classifying, and repairing unhealthy worktrees
 
 ## Operational Notes
 - This is one of the most sensitive directories in the current harness architecture because recovery mistakes can destabilize every executor.
-- The code here should be read alongside the ADRs that call for state-only recovery and careful divergence handling.
+- The code here should be read alongside ADR-0005 (state-only recovery) and ADR-0006 (evidence contract).
+- Every recovery action emits structured evidence via `buildEvidence()` with `actionClass`, `isStateOnly`, and `isNonPublishing` classification.
+- `reset_to_main` is the only action that performs filesystem mutation (git fetch/reset/clean). It is classified as sandbox maintenance, explicitly guarded against active leases, and always non-publishing.
 
 ## Review Focus
-Review whether recovery is state-first, whether git mutation remains too aggressive, and how quarantine, divergence detection, and repair propagation interact with active execution.
+Verify that recovery remains non-publishing (no commit/push), that evidence is emitted for every action, that `reset_to_main` only runs on inactive worktrees, and that the recovery action surface matches ADR-0005 + ADR-0006.

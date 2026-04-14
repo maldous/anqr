@@ -59,3 +59,4 @@ export { recordQuarantine } from "./record-quarantine.mjs";
 export { clearQuarantine } from "./clear-quarantine.mjs";
 export { getFleetSnapshot } from "./get-fleet-snapshot.mjs";
 export { checkLatencyBaseline } from "./check-latency-baseline.mjs";
+export { claimIssue } from "./claim-issue.mjs";

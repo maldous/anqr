@@ -11,7 +11,6 @@ import { executeIssue } from "./execute-issue.mjs";
 import { getWorkingTreeStatus } from "./get-working-tree-status.mjs";
 import { logWorkingTreeEntries } from "./log-working-tree-entries.mjs";
 import { maybeRunPreflights } from "./maybe-run-preflights.mjs";
-import { pickIssue } from "./pick-issue.mjs";
 import { releaseLock } from "./release-lock.mjs";
 import { showStatus } from "./show-status.mjs";
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
@@ -140,10 +139,9 @@ export async function main() {
     }
 
     const preflight = dryRun ? { pass: true } : await maybeRunPreflights();
-    const baselineOnly = !preflight.pass;
     if (!preflight.pass) {
       logWarn(
-        `[runner] Baseline pre-flight ${preflight.check} failed — only baseline-repair issues may run this cycle`,
+        `[runner] Baseline pre-flight ${preflight.check} failed — execution limited to sticky repair and --issue targets`,
       );
     }
 
@@ -211,10 +209,8 @@ export async function main() {
             );
           }
         }
-        // Priority 2/3: new work
-        if (!issue) {
-          issue = await pickIssue({ excludeIds, baselineOnly });
-        }
+        // ADR-0002: Runners do not self-pick global work. They only execute
+        // work assigned via --issue flag or sticky repair for this worktree.
       }
       if (!issue) break;
       const status = await executeIssue(issue, dryRun);

@@ -75,59 +75,31 @@ For a single direct shell action, prefer `run_terminal_command`.
 
 Use `basher` only when there is an actual reason to delegate agent work. Do not spawn `basher` just to run one obvious shell command.
 
-## Environment Files and Installation
+## Environment Files, Symlinks, and Secrets
 
-### Env Files (Secrets)
+See **ADR-0010** (`docs/adrs/0010-external-symlinks-and-secrets-inventory.md`) for the canonical reference covering:
 
-The project has three env file locations that must stay in sync. They are **empty templates in git** but **populated with real secrets on the host**:
+- Which external paths are symlinked to the project (systemd services/timers, symphony env, openclaw config)
+- Which files contain secrets and are NOT symlinked (env files, openclaw.json, identity, credentials)
+- Every sensitive key name per file, for operator rotation guidance
+- Runtime state directories that are host-only
 
-| System Location                       | Loaded By                                           |
-| ------------------------------------- | --------------------------------------------------- |
-| `~/.config/systemd/user/anqr-ops.env` | All systemd services via `EnvironmentFile=`         |
-| `~/.config/symphony/anqr.env`         | Executor and router services via `EnvironmentFile=` |
-| `~/.openclaw/.env`                    | OpenClaw Gateway (reads from its own config dir)    |
+### Quick Reference
 
-The repo template is `services/systemd/anqr-ops.env` — committed with empty values as a key inventory. Real secrets are never committed.
+- **Repo template:** `services/systemd/anqr-ops.env` — committed with empty values as a key inventory
+- **Live secrets:** `~/.config/systemd/user/anqr-ops.env` — regular file with populated values (not symlinked to repo)
+- **Symphony env:** `~/.config/symphony/anqr.env` — symlinked to the live systemd env file above
+- **OpenClaw secrets:** `~/.openclaw/.env`, `openclaw.json`, `clawdbot.json`, `exec-approvals.json`, `identity/`, `credentials/`, `devices/` — regular files, never committed
+- **OpenClaw config:** `~/.openclaw/config.json`, `models.json`, subdirectories — symlinked to `harness/ops/runtime/openclaw-config/`
 
-Key tokens that must be present in all three:
-
-- `OPENCLAW_GATEWAY_TOKEN` — authenticates harness services with the OpenClaw Gateway (value from `~/.openclaw/openclaw.json` → `gateway.auth.token`)
-- `LINEAR_WEBHOOK_SECRET` — HMAC signature verification for Linear webhooks
-- All provider API keys (`GROQ_TOKEN`, `GEMINI_TOKEN`, `MISTRAL_TOKEN`, etc.)
-
-### Systemd Service Files
-
-`services/systemd/*.service` and `*.timer` are the source of truth. They must be **symlinked** (not copied) into `~/.config/systemd/user/`:
+### After Changing Services or Config
 
 ```bash
-cd /home/user/src/anqr
-for f in services/systemd/*.service services/systemd/*.timer; do
-  ln -sf "$(realpath "$f")" ~/.config/systemd/user/"$(basename "$f")"
-done
+# After modifying .service or .timer files (symlinks update automatically):
 systemctl --user daemon-reload
-```
 
-After any change to a `.service` or `.timer` file in the repo, run `systemctl --user daemon-reload` — the symlinks ensure the live config always matches the repo.
-
-### OpenClaw Config
-
-`harness/ops/runtime/openclaw-config/` is the source of truth for OpenClaw Gateway configuration. Key files must be synced to `~/.openclaw/`:
-
-```bash
-cd harness/ops/runtime/openclaw-config
-for f in openclaw.json config.json models.json clawdbot.json exec-approvals.json; do
-  cp "$f" ~/.openclaw/"$f"
-done
-```
-
-Note: `~/.openclaw/` also contains runtime state (`.env`, `lcm.db`, `tasks/`, `cron/`, backups) that is NOT in the repo.
-
-### After Updating Env or Config
-
-All three env files must have `chmod 600` (owner-only) since they contain secrets. After updating env files or openclaw config, restart affected services:
-
-```bash
-chmod 600 ~/.config/systemd/user/anqr-ops.env ~/.config/symphony/anqr.env ~/.openclaw/.env
+# After updating secrets in the live env file:
+chmod 600 ~/.config/systemd/user/anqr-ops.env ~/.openclaw/.env
 systemctl --user restart anqr-symphony-executor@{1..8}.service anqr-discord-router.service anqr-linear-webhook.service
 ```
 

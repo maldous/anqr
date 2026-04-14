@@ -132,14 +132,17 @@ export function classifyWorktree(snapshot) {
       result.classification = "dirty_owned";
       result.confidence = 0.6;
       result.inferredOwner = inferred;
+      // ADR-0005: Recovery shall not publish code. Quarantine low-confidence
+      // dirty worktrees instead of auto-committing.
       result.repairAction =
         result.confidence >= RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD
           ? "continue_repair"
-          : "auto_commit_and_push";
+          : "quarantine";
     } else {
       result.classification = "dirty_orphaned";
       result.confidence = 0.3;
-      result.repairAction = "auto_commit_and_push";
+      // ADR-0005: Recovery shall not auto-commit orphaned dirty worktrees.
+      result.repairAction = "quarantine";
     }
     return result;
   }

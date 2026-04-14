@@ -1,5 +1,35 @@
+import { createDurableQueue } from "../../../lib/durable-kv.mjs";
 import { activeIssues } from "./active-issues.mjs";
-import { logInfo, logWarn, logError } from "./logger.mjs";
+import { logInfo, logError } from "./logger.mjs";
+
+/**
+ * Enqueue desired work into the durable Linear queue for the scheduler.
+ * ADR-0002: Ingress writes desired work; it does NOT choose an executor.
+ */
+async function enqueueDesiredWork(processedEvent, correlationId) {
+  const desiredWorkQueue = createDurableQueue("symphony-desired-work");
+
+  // Dedupe: skip if already queued
+  const existing = desiredWorkQueue.items();
+  if (existing.some((item) => item.identifier === processedEvent.identifier)) {
+    logInfo(`Issue ${processedEvent.identifier} already in desired-work queue — skipping`);
+    return true;
+  }
+
+  desiredWorkQueue.enqueue({
+    identifier: processedEvent.identifier,
+    title: processedEvent.title,
+    action: processedEvent.action,
+    source: "linear-webhook",
+    correlationId,
+    timestamp: new Date().toISOString(),
+  });
+
+  logInfo(
+    `📝 Enqueued ${processedEvent.identifier} to desired-work queue (scheduler will claim)`,
+  );
+  return true;
+}
 
 export async function triggerIssueExecution(processedEvent, correlationId) {
   // Check if this issue is already being processed
@@ -13,45 +43,10 @@ export async function triggerIssueExecution(processedEvent, correlationId) {
   // Mark issue as active
   activeIssues.add(processedEvent.identifier);
 
-  // Use the router's queue endpoint to signal new work
-  // The router will route to least-loaded wt1-4 executor
-  const routerUrl = "http://127.0.0.1:4319/v1/linear/trigger";
-
-  // Build thread name from Linear issue identifier and title
-  const threadName = `${processedEvent.identifier}: ${processedEvent.title}`;
-  logInfo(`📝 Linear thread name: ${threadName}`);
-
   try {
-    // Send minimal trigger payload - the executor will fetch issue details
-    const response = await fetch(routerUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer local-symphony",
-        "x-linear-identifier": processedEvent.identifier,
-        "x-linear-action": processedEvent.action,
-        "x-linear-thread-name": threadName,
-        "x-anqr-correlation-id": correlationId,
-      },
-      body: JSON.stringify({
-        identifier: processedEvent.identifier,
-        title: processedEvent.title,
-        action: processedEvent.action,
-        source: "linear-webhook",
-        threadName: threadName,
-        correlationId,
-        timestamp: new Date().toISOString(),
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logWarn(`Trigger returned ${response.status}: ${errorText}`);
-      return false;
-    }
-
-    logInfo(`Triggered execution for ${processedEvent.identifier} (${processedEvent.action})`);
-    return true;
+    // ADR-0002: Webhook is write-only ingress. It enqueues desired work;
+    // it does NOT choose an executor or dispatch.
+    return await enqueueDesiredWork(processedEvent, correlationId);
   } catch (err) {
     logError(`Failed to trigger execution: ${err.message}`);
     return false;
