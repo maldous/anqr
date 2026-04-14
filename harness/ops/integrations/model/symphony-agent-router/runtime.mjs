@@ -11,6 +11,7 @@ import {
   server,
 } from "./index.mjs";
 
+import { verifySchedulerClaim } from "./verify-scheduler-claim.mjs";
 import { logInfo, logWarn, logDebug } from "./logger.mjs";
 
 setInterval(() => {
@@ -51,8 +52,32 @@ setInterval(() => {
     toProcess.push(linearQueue.dequeue());
   }
   for (const item of toProcess) {
-    logInfo(`Processing queued trigger: ${item.identifier}`);
-    dispatchLinearExecution(item.identifier);
+    // ADR-0002: Every dispatch path must verify the scheduler claim.
+    // Queue-drained items must be re-verified because the claim may have
+    // expired or been released while the item was queued.
+    const claimCheck = verifySchedulerClaim(item.identifier);
+    if (!claimCheck.allowed) {
+      logWarn(
+        `[router] Dropping queued item ${item.identifier}: scheduler claim invalid (${claimCheck.reason})`,
+      );
+      continue;
+    }
+
+    // Resolve the assigned worktree from the scheduler's durable claim
+    let target = null;
+    if (claimCheck.assignedWorktreeId) {
+      const assignedId = parseInt(claimCheck.assignedWorktreeId.replace(/^wt/, ""), 10);
+      target = !isNaN(assignedId) ? WORKTREES.find((w) => w.id === assignedId) || null : null;
+      if (!target) {
+        logWarn(
+          `[router] Dropping queued item ${item.identifier}: assigned worktree ${claimCheck.assignedWorktreeId} not found in pool — claim may be stale`,
+        );
+        continue;
+      }
+    }
+
+    logInfo(`Processing queued trigger: ${item.identifier} -> ${claimCheck.assignedWorktreeId || "(selection)"}`);
+    dispatchLinearExecution(item.identifier, item.correlationId || null, target);
   }
 }, QUEUE_POLL_INTERVAL_MS);
 

@@ -1,9 +1,13 @@
 import { runCspell } from "../../core/symphony-validation.mjs";
 
 import { MAIN_REPO_ROOT } from "./main-repo-root.mjs";
-import { attemptCspellAutoFix } from "./attempt-cspell-auto-fix.mjs";
 import { logInfo, logWarn } from "./logger.mjs";
 
+/**
+ * ADR-0005: Recovery detects baseline health issues but does NOT auto-fix them.
+ * Cspell failures are logged for operator attention. Recovery does not commit,
+ * push, or propagate fixes — that is the operator's or runner's responsibility.
+ */
 export async function checkBaselineHealth() {
   logInfo("[recovery] 🔍 Running baseline cspell check...");
 
@@ -16,11 +20,12 @@ export async function checkBaselineHealth() {
       return;
     }
 
-    logWarn("[recovery] ⚠️ Baseline cspell failing");
-    const fixed = await attemptCspellAutoFix(result.detail);
-    if (!fixed) {
-      logWarn("[recovery] Could not auto-fix cspell — manual intervention may be needed");
-    }
+    // ADR-0005: Report the failure but do not attempt auto-fix.
+    // Recovery is not a git writer. Operator or scheduled maintenance
+    // must handle cspell dictionary updates.
+    logWarn(
+      "[recovery] ⚠️ Baseline cspell failing — operator intervention required (recovery does not auto-fix)",
+    );
   } catch (err) {
     logWarn(`[recovery] Baseline health check error: ${err.message}`);
   }

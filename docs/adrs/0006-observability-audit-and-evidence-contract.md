@@ -15,9 +15,11 @@ A prior draft of this ADR stated that every recovery action must be provably sta
 
 The safety boundary that matters most is not “no filesystem mutation whatsoever.” The safety boundary is:
 
-- no hidden code publication by recovery
+- no code publication by recovery (no `git add`, `git commit`, `git push`, `git merge` anywhere in the daemon — including baseline health)
 - no mutation of active sandboxes by unrelated recovery
 - enough evidence to prove what class of recovery action occurred
+
+The entire recovery subsystem — `executeRepair`, `checkBaselineHealth`, and the daemon entrypoint — follows this contract. Baseline health detects cspell failures and reports them for operator intervention; it does not auto-fix.
 
 ## Decision
 

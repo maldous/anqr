@@ -30,7 +30,7 @@ Directory for serial integration back into the main repository; immediate files 
 - `symphony-queue-control/` - Directory for runtime service bootstrap or environment support; immediate files include `actions.mjs`, `count-enabled-timers.mjs`, `detect-stuck-work.mjs`, `drain-overflow.mjs`, and others.
 - `symphony-runner/` - Directory for Discord ingress, delivery, or notification support; immediate files include `acquire-lock.mjs`, `auto-detected-worktree-id.mjs`, `classify-provider-failure.mjs`, `current-branch-name-for-runner.mjs`, and others, with child directories `sync-worktree-before-validation/`.
 - `symphony-worktree-pool/` - Directory for git worktree management and concurrency support; immediate files include `cleanup-worktree-pool.d.ts`, `cleanup-worktree-pool.mjs`, `create-worktree.d.ts`, `create-worktree.mjs`, and others.
-- `symphony-worktree-recovery/` - Directory for fleet recovery, quarantine, and health enforcement; immediate files include `all-worktree-ids.mjs`, `attempt-cspell-auto-fix.mjs`, `check-baseline-health.mjs`, `check-quarantined-for-reprovisioning.mjs`, and others, with child directories `execute-repair/`.
+- `symphony-worktree-recovery/` - Directory for fleet recovery, quarantine, and health enforcement; immediate files include `all-worktree-ids.mjs`, `check-baseline-health.mjs`, `check-quarantined-for-reprovisioning.mjs`, `classify-worktree.mjs`, and others, with child directories `execute-repair/`.
 
 ## Operational Notes
 - Current on-disk inventory: 11 immediate files and 10 child directories.

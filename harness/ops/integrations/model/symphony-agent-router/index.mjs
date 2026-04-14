@@ -19,4 +19,5 @@ export { QUEUE_POLL_INTERVAL_MS } from "./queue-poll-interval-ms.mjs";
 export { dispatchLinearExecution } from "./dispatch-linear-execution.mjs";
 export { handleLinearTrigger } from "./handle-linear-trigger.mjs";
 export { handleLinearQueue } from "./handle-linear-queue.mjs";
+export { verifySchedulerClaim } from "./verify-scheduler-claim.mjs";
 export { server } from "./server.mjs";

@@ -3,16 +3,15 @@
 ## Purpose
 Recovery daemon for quarantining, classifying, and repairing unhealthy worktrees while keeping the executor fleet usable after drift, conflicts, or corruption.
 
-**ADR-0005 compliance:** Recovery is limited to state repair, quarantine, reprovision request, stale-claim handling, and sandbox maintenance. It does **not** publish code (no auto-commit, no auto-push, no merge). `retry_push` and `auto_commit_and_push` actions are demoted to quarantine. `reset_to_main` is classified as sandbox maintenance (non-publishing) and guarded against active leases.
+**ADR-0005 compliance:** Recovery is limited to state repair, quarantine, reprovision request, stale-claim handling, and sandbox maintenance. It contains **no** `git add`, `git commit`, `git push`, or `git merge` commands anywhere in the daemon. `retry_push` and `auto_commit_and_push` actions are demoted to quarantine. `reset_to_main` is classified as sandbox maintenance (non-publishing, git fetch/reset/clean only) and guarded against active leases. Baseline health checks detect cspell failures and report them for operator intervention — they do not auto-fix.
 
 ## Contents
-- 18 immediate files
+- 15 immediate files
 - 1 child directory
 
 ## Key Files
 - `all-worktree-ids.mjs` - Exports `ALL_WORKTREE_IDS`, a shared constant or state value used by sibling modules.
-- `attempt-cspell-auto-fix.mjs` - Exports `attemptCspellAutoFix`, the main helper defined in this file.
-- `check-baseline-health.mjs` - Exports `checkBaselineHealth`, the main helper defined in this file.
+- `check-baseline-health.mjs` - Exports `checkBaselineHealth`, detect-only baseline cspell check (no auto-fix, no git mutation).
 - `check-quarantined-for-reprovisioning.mjs` - Exports `checkQuarantinedForReprovisioning`, the main helper defined in this file.
 - `classify-worktree.mjs` - Exports `classifyWorktree`, the main helper defined in this file.
 - `detect-divergence.mjs` - Exports `detectDivergence`, the main helper defined in this file.
@@ -22,8 +21,6 @@ Recovery daemon for quarantining, classifying, and repairing unhealthy worktrees
 - `infer-owner-from-branch.mjs` - Exports `inferOwnerFromBranch`, the main helper defined in this file.
 - `logger.mjs` - Re-export facade that assembles the public surface for this directory.
 - `main-repo-root.mjs` - Exports `MAIN_REPO_ROOT`, a shared constant or state value used by sibling modules.
-- `parse-cspell-unknown-words.mjs` - Exports `parseCspellUnknownWords`, the main helper defined in this file.
-- `propagate-baseline-fix-to-clean-worktrees.mjs` - Exports `propagateBaselineFixToCleanWorktrees`, the main helper defined in this file.
 - `run-daemon.mjs` - Exports `runDaemon`, the main helper defined in this file.
 - `run-recovery-cycle.mjs` - Exports `runRecoveryCycle`, the main helper defined in this file.
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
@@ -37,6 +34,7 @@ Recovery daemon for quarantining, classifying, and repairing unhealthy worktrees
 - The code here should be read alongside ADR-0005 (state-only recovery) and ADR-0006 (evidence contract).
 - Every recovery action emits structured evidence via `buildEvidence()` with `actionClass`, `isStateOnly`, and `isNonPublishing` classification.
 - `reset_to_main` is the only action that performs filesystem mutation (git fetch/reset/clean). It is classified as sandbox maintenance, explicitly guarded against active leases, and always non-publishing.
+- `checkBaselineHealth` runs cspell on the main repo and reports failures. It does **not** auto-fix, commit, push, or propagate changes. The removed `attemptCspellAutoFix` and `propagateBaselineFixToCleanWorktrees` modules were deleted because they violated ADR-0005.
 
 ## Review Focus
-Verify that recovery remains non-publishing (no commit/push), that evidence is emitted for every action, that `reset_to_main` only runs on inactive worktrees, and that the recovery action surface matches ADR-0005 + ADR-0006.
+Verify that recovery contains no `git add`, `git commit`, `git push`, or `git merge` commands anywhere in the daemon (including baseline health). Verify evidence is emitted for every `executeRepair` action, `reset_to_main` only runs on inactive worktrees, and the recovery action surface matches ADR-0005 + ADR-0006.

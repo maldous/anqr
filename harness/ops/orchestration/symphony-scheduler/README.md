@@ -39,10 +39,11 @@ The authoritative scheduler for the ANQR harness. Per ADR-0002, this is the **si
 
 4. Claim + Dispatch (up to SCHEDULER_MAX_DISPATCH_PER_CYCLE)
    ├── Select available worktree from capacity pool (no double-assignment)
+   ├── If no worktree available → stop dispatch (do not claim without assignment)
    ├── claimIssue(identifier, { worktreeId, source: "scheduler" })
    │   └── Atomic: withStateLock → acquireLease → set assignment
    └── HTTP POST to router /v1/linear/trigger
-       └── Router verifies claim before dispatch (transport only)
+       └── Router verifies claim on all paths before dispatch (transport only)
 ```
 
 ### Authority Boundaries
@@ -101,7 +102,7 @@ systemctl --user start anqr-symphony-scheduler.service
 - The scheduler shares the filesystem-backed `symphony-state.json` with the router and recovery daemon. All run on the same host.
 - Desired-work signals are advisory. If the queue is empty, the scheduler still discovers eligible work from Linear state directly.
 - The drain limit (`MAX_DRAIN_PER_CYCLE = 100`) prevents unbounded queue processing.
-- Worktree assignment is best-effort within a cycle. If all worktrees are occupied, the claim succeeds with `worktreeId: null` and the router falls back to its own selection.
+- Worktree assignment is mandatory. If all worktrees are occupied, the scheduler stops dispatching for that cycle rather than claiming without assignment. The router rejects claims missing `assignment.worktreeId`.
 
 ## Review Focus
 

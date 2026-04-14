@@ -365,42 +365,82 @@ describe("Desired-work queue consumption — ADR-0002", () => {
 });
 
 describe("Router claim verification — ADR-0002 (always enforced)", () => {
-  it("should verify router always verifies scheduler claims with no bypass", () => {
+  it("should verify trigger path verifies scheduler claims", () => {
     const source = fs.readFileSync(
       "harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs",
       "utf-8",
     );
-    // Router must always call verifySchedulerClaim
+    // Trigger path must import and call verifySchedulerClaim from shared module
     expect(source).toContain("verifySchedulerClaim");
-    // Router must import claim-checking state functions
-    expect(source).toContain("leaseIsActive");
-    expect(source).toContain("getIssueState");
-    // There must be NO bypass path — SCHEDULER_AUTHORITATIVE is no longer imported
+    expect(source).toContain('import { verifySchedulerClaim }');
+    expect(source).toContain('./verify-scheduler-claim.mjs');
+    // There must be NO bypass path
     expect(source).not.toContain("SCHEDULER_AUTHORITATIVE");
-    // ADR-0002: Must check lease.owner === "scheduler" (not just any active lease)
-    expect(source).toContain('.owner !== "scheduler"');
-    expect(source).toContain('"not_scheduler_owned"');
   });
 
-  it("should verify router checks durable assignment metadata", () => {
+  it("should verify shared verifySchedulerClaim module checks all three conditions", () => {
     const source = fs.readFileSync(
-      "harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs",
+      "harness/ops/integrations/model/symphony-agent-router/verify-scheduler-claim.mjs",
       "utf-8",
     );
-    // Must check that assignment exists with worktreeId
-    expect(source).toContain("assignment");
+    // Must import claim-checking state functions
+    expect(source).toContain("leaseIsActive");
+    expect(source).toContain("getIssueState");
+    // Must check lease.owner === "scheduler"
+    expect(source).toContain('.owner !== "scheduler"');
+    expect(source).toContain('"not_scheduler_owned"');
+    // Must check durable assignment with worktreeId
     expect(source).toContain("assignment.worktreeId");
     expect(source).toContain('"no_worktree_assignment"');
+    // Must check active lease
+    expect(source).toContain('"no_active_claim"');
+  });
+
+  it("should verify router queue drain also verifies scheduler claims (no bypass)", () => {
+    const source = fs.readFileSync(
+      "harness/ops/integrations/model/symphony-agent-router/runtime.mjs",
+      "utf-8",
+    );
+    // Queue drain must import and call verifySchedulerClaim
+    expect(source).toContain("verifySchedulerClaim");
+    expect(source).toContain('import { verifySchedulerClaim }');
+    expect(source).toContain('./verify-scheduler-claim.mjs');
+    // Must check claim validity before dispatch
+    expect(source).toContain("claimCheck.allowed");
+    // Must drop items with invalid claims (not dispatch blindly)
+    expect(source).toContain("claimCheck.reason");
+    expect(source).toContain("continue");
+    // Must resolve assigned worktree from claim, not self-select
+    expect(source).toContain("claimCheck.assignedWorktreeId");
+  });
+
+  it("should verify queue drain does NOT call dispatchLinearExecution without claim verification", () => {
+    const source = fs.readFileSync(
+      "harness/ops/integrations/model/symphony-agent-router/runtime.mjs",
+      "utf-8",
+    );
+    // The old bypass pattern — bare dispatchLinearExecution(item.identifier) — must not exist
+    expect(source).not.toMatch(/dispatchLinearExecution\(item\.identifier\)\s*;/);
+    // Every dispatch must go through claim verification first
+    const verifyIndex = source.indexOf("verifySchedulerClaim(item.identifier)");
+    const dispatchIndex = source.indexOf("dispatchLinearExecution(item.identifier");
+    expect(verifyIndex).toBeGreaterThan(-1);
+    expect(dispatchIndex).toBeGreaterThan(verifyIndex);
   });
 
   it("should verify router rejects unclaimed dispatch with 409", () => {
-    const source = fs.readFileSync(
+    const triggerSource = fs.readFileSync(
       "harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs",
       "utf-8",
     );
-    // Must return 409 when claim check fails
-    expect(source).toContain("409");
-    expect(source).toContain("no_active_claim");
+    // Trigger path must return 409 when claim check fails
+    expect(triggerSource).toContain("409");
+    // Reason codes live in the shared verifySchedulerClaim module
+    const claimSource = fs.readFileSync(
+      "harness/ops/integrations/model/symphony-agent-router/verify-scheduler-claim.mjs",
+      "utf-8",
+    );
+    expect(claimSource).toContain("no_active_claim");
   });
 
   it("should verify router uses scheduler-assigned worktree", () => {
@@ -408,11 +448,8 @@ describe("Router claim verification — ADR-0002 (always enforced)", () => {
       "harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs",
       "utf-8",
     );
-    // Router must import WORKTREES to look up assigned worktree
     expect(source).toContain('import { WORKTREES }');
-    // Must read assignedWorktreeId from claim check result
     expect(source).toContain("claimCheck.assignedWorktreeId");
-    // Must find the worktree entry by ID
     expect(source).toContain("WORKTREES.find");
   });
 });
@@ -441,6 +478,21 @@ describe("Scheduler worktree assignment at claim time — ADR-0002", () => {
     expect(source).toContain("assignedThisCycle");
     expect(source).toContain(".add(");
     expect(source).toContain(".has(");
+  });
+
+  it("should verify scheduler stops dispatch when no worktree available (no null-assignment claims)", () => {
+    const source = fs.readFileSync(
+      "harness/ops/orchestration/symphony-scheduler/schedule-cycle.mjs",
+      "utf-8",
+    );
+    // When pool is exhausted, scheduler must break — not claim with null worktreeId
+    expect(source).toContain("if (!worktreeId)");
+    expect(source).toContain("break");
+    // The break must come before claimIssue — scheduler must not claim without assignment
+    const noWorktreeGuard = source.indexOf("if (!worktreeId)");
+    const claimCall = source.indexOf("claimIssue(issue.identifier", noWorktreeGuard);
+    const breakStmt = source.indexOf("break", noWorktreeGuard);
+    expect(breakStmt).toBeLessThan(claimCall);
   });
 });
 

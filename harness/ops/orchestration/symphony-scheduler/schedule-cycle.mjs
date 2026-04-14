@@ -117,8 +117,16 @@ export async function scheduleCycle() {
   let claimRejected = 0;
 
   for (const issue of eligible.slice(0, dispatchBudget)) {
-    // Pick an available worktree not yet assigned in this cycle
+    // Pick an available worktree not yet assigned in this cycle.
+    // ADR-0002: The scheduler must assign a worktreeId at claim time.
+    // If no worktree is available, skip — do not claim without assignment.
     const worktreeId = availableWorktrees.find((wt) => !assignedThisCycle.has(wt)) || null;
+    if (!worktreeId) {
+      logDebug(
+        `[scheduler] No available worktrees remaining this cycle — stopping dispatch`,
+      );
+      break;
+    }
 
     const claim = claimIssue(issue.identifier, {
       worktreeId,
@@ -133,9 +141,7 @@ export async function scheduleCycle() {
       continue;
     }
 
-    if (worktreeId) {
-      assignedThisCycle.add(worktreeId);
-    }
+    assignedThisCycle.add(worktreeId);
 
     const ok = await dispatchToExecutor(issue.identifier, null);
     if (ok) {

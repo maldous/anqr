@@ -80,6 +80,98 @@ describe("Recovery shall not publish code — ADR-0005", () => {
       expect(content).not.toContain("repairAction = 'auto_commit_and_push'");
     });
   });
+
+  describe("recovery daemon baseline-health non-publication — ADR-0005", () => {
+    it("should verify checkBaselineHealth does not import or call attemptCspellAutoFix", () => {
+      const content = fs.readFileSync(
+        "harness/ops/orchestration/symphony-worktree-recovery/check-baseline-health.mjs",
+        "utf-8",
+      );
+      // Must NOT import attemptCspellAutoFix (removed)
+      expect(content).not.toContain("attemptCspellAutoFix");
+      // Must NOT import propagateBaselineFixToCleanWorktrees (removed)
+      expect(content).not.toContain("propagateBaselineFixToCleanWorktrees");
+      // Must NOT contain any git commands
+      expect(content).not.toContain('"add"');
+      expect(content).not.toContain('"commit"');
+      expect(content).not.toContain('"push"');
+      expect(content).not.toContain('"merge"');
+      expect(content).not.toContain("execFileSync");
+      expect(content).not.toContain("child_process");
+    });
+
+    it("should verify attemptCspellAutoFix module has been deleted", () => {
+      expect(() =>
+        fs.readFileSync(
+          "harness/ops/orchestration/symphony-worktree-recovery/attempt-cspell-auto-fix.mjs",
+          "utf-8",
+        ),
+      ).toThrow();
+    });
+
+    it("should verify propagateBaselineFixToCleanWorktrees module has been deleted", () => {
+      expect(() =>
+        fs.readFileSync(
+          "harness/ops/orchestration/symphony-worktree-recovery/propagate-baseline-fix-to-clean-worktrees.mjs",
+          "utf-8",
+        ),
+      ).toThrow();
+    });
+
+    it("should verify parseCspellUnknownWords module has been deleted (dead code after auto-fix removal)", () => {
+      expect(() =>
+        fs.readFileSync(
+          "harness/ops/orchestration/symphony-worktree-recovery/parse-cspell-unknown-words.mjs",
+          "utf-8",
+        ),
+      ).toThrow();
+    });
+
+    it("should verify recovery index.mjs does not export deleted modules", () => {
+      const content = fs.readFileSync(
+        "harness/ops/orchestration/symphony-worktree-recovery/index.mjs",
+        "utf-8",
+      );
+      expect(content).not.toContain("attemptCspellAutoFix");
+      expect(content).not.toContain("propagateBaselineFixToCleanWorktrees");
+      expect(content).not.toContain("parseCspellUnknownWords");
+      // Must still export checkBaselineHealth (detect-only)
+      expect(content).toContain("checkBaselineHealth");
+    });
+
+    it("should verify run-daemon.mjs contains no git publication commands", () => {
+      const content = fs.readFileSync(
+        "harness/ops/orchestration/symphony-worktree-recovery/run-daemon.mjs",
+        "utf-8",
+      );
+      // Daemon must not import any git-mutating modules
+      expect(content).not.toContain("attemptCspellAutoFix");
+      expect(content).not.toContain("propagateBaselineFixToCleanWorktrees");
+      // Daemon must not contain git commands
+      expect(content).not.toContain("execFileSync");
+      expect(content).not.toContain('"push"');
+      expect(content).not.toContain('"commit"');
+      expect(content).not.toContain('"merge"');
+    });
+
+    it("should verify the entire recovery directory tree contains no git commit/push/merge commands outside execute-repair", () => {
+      const recoveryDir = "harness/ops/orchestration/symphony-worktree-recovery";
+      const filesToCheck = [
+        `${recoveryDir}/run-daemon.mjs`,
+        `${recoveryDir}/check-baseline-health.mjs`,
+        `${recoveryDir}/run-recovery-cycle.mjs`,
+        `${recoveryDir}/classify-worktree.mjs`,
+        `${recoveryDir}/index.mjs`,
+      ];
+      for (const file of filesToCheck) {
+        const content = fs.readFileSync(file, "utf-8");
+        // None of these files should contain git publication commands
+        expect(content).not.toContain('"commit"');
+        expect(content).not.toContain('"push"');
+        expect(content).not.toMatch(/git.*merge/);
+      }
+    });
+  });
 });
 
 describe("Recovery evidence contract — ADR-0006", () => {

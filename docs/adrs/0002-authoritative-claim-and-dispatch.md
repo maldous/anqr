@@ -1,6 +1,6 @@
 # ADR-0002 Authoritative Claim And Dispatch
 
-- Status: Accepted (legacy paths removed)
+- Status: Accepted
 - Date: 2026-04-14
 
 ## Context
@@ -42,8 +42,11 @@ In authoritative mode:
 - reconciler feeds scheduler intent and repair inputs, but does not directly dispatch runnable work
 - runners do not self-pick global runnable work
 - router accepts scheduler-assigned work for transport and worktree selection, but does not originate global ownership
+- every router dispatch path — both trigger and queue-drain — verifies the scheduler claim before forwarding to an executor
 
-The migration flag `SCHEDULER_AUTHORITATIVE` is retained as a permanent `true` constant for documentation. All legacy bypass paths have been removed from the codebase. The authoritative scheduling model is now the only supported mode.
+The migration flag `SCHEDULER_AUTHORITATIVE` is retained as a permanent `true` constant for documentation. The authoritative scheduling model is the only supported mode.
+
+The scheduler always assigns a `worktreeId` at claim time. Claims without worktree assignment are not created — the scheduler skips an issue if no worktree is available. The router rejects dispatch for claims missing `assignment.worktreeId`.
 
 ## Consequences
 
@@ -52,5 +55,5 @@ The migration flag `SCHEDULER_AUTHORITATIVE` is retained as a permanent `true` c
 - runner no longer self-picks global runnable work
 - duplicate dispatch becomes observable as rejected claim attempts rather than double execution
 - desired-work queue semantics must be documented and tested as advisory ingress, not independent truth
-- router always verifies scheduler claims — no bypass mode exists
-- legacy bypass paths have been removed; the flag is permanent
+- router verifies scheduler claims on all dispatch paths (trigger endpoint and queue drain) — no bypass mode exists
+- the flag is permanent
