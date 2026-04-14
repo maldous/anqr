@@ -104,12 +104,13 @@ Current behavior:
 
 Current behavior:
 
-- webhook receiver accepts eligible events
-- webhook receiver forwards to the Symphony router
-- reconciler also dispatches eligible Todo issues
-- runner can also pick eligible Todo issues directly from Linear state
+- webhook receiver accepts eligible events and writes desired-work ingress
+- reconciler feeds desired-work signals instead of dispatching runnable work
+- the authoritative scheduler claims runnable issues, assigns worktrees, and dispatches through the router
+- the router verifies scheduler-owned claims on both trigger and queue-drain paths before forwarding to executors
+- runners execute assigned work only; they do not self-pick global Linear work
 
-That means the Linear path has more than one effective scheduler.
+That means the Linear path now has one effective scheduler for global issue admission and claim.
 
 ## State and persistence
 

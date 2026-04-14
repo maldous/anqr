@@ -1,13 +1,16 @@
 # Watchdog Monitor
 
 ## Purpose
+
 Directory for fleet recovery, quarantine, and health enforcement; immediate files include `args.mjs`, `bridge-arg.mjs`, `check-bridge-health.mjs`, `codebuff-port.mjs`, and others.
 
 ## Contents
+
 - 18 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `args.mjs` - Exports `args`, a shared constant or state value used by sibling modules.
 - `bridge-arg.mjs` - Exports `bridgeArg`, a shared constant or state value used by sibling modules.
 - `check-bridge-health.mjs` - Exports `checkBridgeHealth`, the main helper defined in this file.
@@ -28,11 +31,14 @@ Directory for fleet recovery, quarantine, and health enforcement; immediate file
 - `worktree-id.mjs` - Exports `WORKTREE_ID`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 18 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.

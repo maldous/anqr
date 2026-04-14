@@ -1,13 +1,16 @@
 # Review Open Issues
 
 ## Purpose
+
 Directory for Linear ingestion, reconciliation, or issue management; immediate files include `dirname.mjs`, `exec-async.mjs`, `extract-check-name.mjs`, `extract-sonar-dup-key.mjs`, and others.
 
 ## Contents
+
 - 15 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
 - `exec-async.mjs` - Exports `execAsync`, a shared constant or state value used by sibling modules.
 - `extract-check-name.mjs` - Exports `extractCheckName`, the main helper defined in this file.
@@ -25,11 +28,14 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - `stale-days.mjs` - Exports `STALE_DAYS`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 15 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

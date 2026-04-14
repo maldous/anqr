@@ -1,13 +1,16 @@
 # Github Linear Sync Audit
 
 ## Purpose
+
 Directory for Linear ingestion, reconciliation, or issue management; immediate files include `audit-sync.mjs`, `close-git-hub-issue.mjs`, `extract-linear-identifier.mjs`, `fetch-git-hub-issues.mjs`, and others.
 
 ## Contents
+
 - 12 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `audit-sync.mjs` - Exports `auditSync`, the main helper defined in this file.
 - `close-git-hub-issue.mjs` - Exports `closeGitHubIssue`, the main helper defined in this file.
 - `extract-linear-identifier.mjs` - Exports `extractLinearIdentifier`, the main helper defined in this file.
@@ -22,11 +25,14 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 12 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

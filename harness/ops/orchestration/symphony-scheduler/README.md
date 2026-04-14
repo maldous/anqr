@@ -48,13 +48,13 @@ The authoritative scheduler for the ANQR harness. Per ADR-0002, this is the **si
 
 ### Authority Boundaries
 
-| Component | Role | What it does NOT do |
-|---|---|---|
-| **Scheduler** | Owns `eligible → claimed` | Does not execute issues |
-| **Router** | Transport — honours scheduler assignment | Does not originate claims |
-| **Runner** | Executes claimed work | Does not self-pick global work |
-| **Webhook** | Write-only ingress → desired-work queue | Does not dispatch or claim |
-| **Reconciler** | Feeds desired-work queue + recovery | Does not dispatch directly |
+| Component      | Role                                     | What it does NOT do            |
+| -------------- | ---------------------------------------- | ------------------------------ |
+| **Scheduler**  | Owns `eligible → claimed`                | Does not execute issues        |
+| **Router**     | Transport — honours scheduler assignment | Does not originate claims      |
+| **Runner**     | Executes claimed work                    | Does not self-pick global work |
+| **Webhook**    | Write-only ingress → desired-work queue  | Does not dispatch or claim     |
+| **Reconciler** | Feeds desired-work queue + recovery      | Does not dispatch directly     |
 
 ### Claim Contract
 
@@ -64,6 +64,7 @@ Every `claimIssue()` call produces a durable state record containing:
 - **`assignment`** — Worktree assignment with `worktreeId`, `claimedBy: "scheduler"`, `source`, `timestamp`
 
 The router's `verifySchedulerClaim()` checks all three conditions:
+
 1. Active lease exists (`leaseIsActive`)
 2. Lease owner is `"scheduler"` (not a stale runner lease)
 3. Assignment metadata exists with a `worktreeId`

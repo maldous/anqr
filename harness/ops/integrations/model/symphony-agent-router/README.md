@@ -1,15 +1,18 @@
 # Symphony Agent Router
 
 ## Purpose
+
 Control-plane router that accepts scheduler-claimed work, honours the scheduler's durable worktree assignment, and forwards Linear-triggered execution into the correct worktree-local bridge.
 
 **ADR-0002 compliance:** The router is transport only. Every dispatch path — both the `/v1/linear/trigger` endpoint and the queue-drain loop in `runtime.mjs` — verifies the scheduler claim via `verifySchedulerClaim()` before forwarding to an executor. The check requires active lease, scheduler ownership, and durable worktree assignment. Unclaimed or expired claims are rejected (409 on trigger, dropped on queue drain).
 
 ## Contents
+
 - 26 immediate files
 - 1 child directory
 
 ## Key Files
+
 - `verify-scheduler-claim.mjs` - Exports `verifySchedulerClaim`, the shared claim-verification function used by both `handleLinearTrigger` and `runtime.mjs` queue drain.
 - `dispatch-linear-execution.mjs` - Exports `dispatchLinearExecution`, the main helper defined in this file.
 - `global-active-requests.mjs` - Exports `setGlobalActiveRequests`, the main helper defined in this file.
@@ -38,13 +41,16 @@ Control-plane router that accepts scheduler-claimed work, honours the scheduler'
 - `worktrees.mjs` - Exports `WORKTREES`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - `select-linear-worktree/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `index.mjs`, `normalize-worktree-state.mjs`, `select-linear-worktree.mjs`.
 
 ## Operational Notes
+
 - This router is the main fan-out point between the scheduler and executor worktrees.
 - In authoritative mode (permanent), the router reads the scheduler's assigned worktreeId from durable state and dispatches to that worktree. Fallback to `selectLinearWorktree()` occurs only when the assigned worktree is not found (removed/reprovisioned).
 - The queue-drain loop in `runtime.mjs` re-verifies scheduler claims before dispatching queued items. Claims may expire while queued, so re-verification is mandatory.
 - The router shares the filesystem-backed `symphony-state.json` with the scheduler. Both run on the same host.
 
 ## Review Focus
+
 Verify both dispatch paths (trigger endpoint and queue drain) enforce `verifySchedulerClaim()`, honour durable worktree assignments, and that the router does not originate scheduling authority.

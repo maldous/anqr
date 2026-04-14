@@ -1,13 +1,16 @@
 # Linear Client
 
 ## Purpose
+
 Directory for Linear ingestion, reconciliation, or issue management; immediate files include `add-comment.mjs`, `create-issue.mjs`, `find-open-issues-by-description-fragment.mjs`, `find-open-issues-by-identifier.mjs`, and others.
 
 ## Contents
+
 - 20 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `add-comment.mjs` - Exports `addComment`, the main helper defined in this file.
 - `create-issue.mjs` - Exports `createIssue`, the main helper defined in this file.
 - `find-open-issues-by-description-fragment.mjs` - Exports `findOpenIssuesByDescriptionFragment`, the main helper defined in this file.
@@ -30,11 +33,14 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - `update-issue.mjs` - Exports `updateIssue`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 20 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

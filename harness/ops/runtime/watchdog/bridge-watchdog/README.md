@@ -1,13 +1,16 @@
 # Bridge Watchdog
 
 ## Purpose
+
 Directory for fleet recovery, quarantine, and health enforcement; immediate files include `activating-state-start.mjs`, `catastrophic-patterns.mjs`, `check-file-integrity.mjs`, `check-health-endpoint.mjs`, and others, with child directories `quarantine-and-restart/`.
 
 ## Contents
+
 - 41 immediate files
 - 1 child directory
 
 ## Key Files
+
 - `activating-state-start.mjs` - Exports `activatingStateStart`, a shared constant or state value used by sibling modules.
 - `catastrophic-patterns.mjs` - Exports `CATASTROPHIC_PATTERNS`, a shared constant or state value used by sibling modules.
 - `check-file-integrity.mjs` - Exports `checkFileIntegrity`, the main helper defined in this file.
@@ -51,11 +54,14 @@ Directory for fleet recovery, quarantine, and health enforcement; immediate file
 - `worktree-id.mjs` - Exports `WORKTREE_ID`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - `quarantine-and-restart/` - Directory for fleet recovery, quarantine, and health enforcement; immediate files include `index.mjs`, `quarantine-and-restart.mjs`, `write-evidence-record.mjs`.
 
 ## Operational Notes
+
 - Current on-disk inventory: 41 immediate files and 1 child directory.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.

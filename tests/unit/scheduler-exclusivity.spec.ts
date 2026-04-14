@@ -20,7 +20,14 @@ import fs from "node:fs";
 // Mock filesystem layer so we can exercise real claimIssue
 // ---------------------------------------------------------------------------
 
-let mockState: Record<string, unknown> = { version: 1, updatedAt: "", hostId: "test", global: { integrationQueue: [], integrationLock: null }, issues: {}, worktreeStates: {} };
+let mockState: Record<string, unknown> = {
+  version: 1,
+  updatedAt: "",
+  hostId: "test",
+  global: { integrationQueue: [], integrationLock: null },
+  issues: {},
+  worktreeStates: {},
+};
 let mockLockHeld = false;
 
 vi.mock("../../harness/ops/core/symphony-state/load-state.mjs", () => ({
@@ -28,14 +35,20 @@ vi.mock("../../harness/ops/core/symphony-state/load-state.mjs", () => ({
 }));
 
 vi.mock("../../harness/ops/core/symphony-state/save-state.mjs", () => ({
-  saveState: (store: unknown) => { mockState = JSON.parse(JSON.stringify(store)); },
+  saveState: (store: unknown) => {
+    mockState = JSON.parse(JSON.stringify(store));
+  },
 }));
 
 vi.mock("../../harness/ops/core/symphony-state/with-state-lock.mjs", () => ({
   withStateLock: <T>(fn: () => T): T => {
     if (mockLockHeld) throw new Error("Lock contention");
     mockLockHeld = true;
-    try { return fn(); } finally { mockLockHeld = false; }
+    try {
+      return fn();
+    } finally {
+      mockLockHeld = false;
+    }
   },
 }));
 
@@ -69,9 +82,7 @@ describe("Scheduler exclusivity — ADR-0002 (real claimIssue module)", () => {
   });
 
   it("should claim an unclaimed issue successfully", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     const result = claimIssue("ANQ-100", { worktreeId: "wt1" });
     expect(result.ok).toBe(true);
     expect(result.lease).toBeDefined();
@@ -83,9 +94,7 @@ describe("Scheduler exclusivity — ADR-0002 (real claimIssue module)", () => {
   });
 
   it("should reject duplicate claim for already-claimed issue", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     const first = claimIssue("ANQ-200", { worktreeId: "wt1" });
     expect(first.ok).toBe(true);
 
@@ -95,58 +104,48 @@ describe("Scheduler exclusivity — ADR-0002 (real claimIssue module)", () => {
   });
 
   it("should reject claim for human-only issue", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     (mockState as Record<string, unknown>).issues = {
       "ANQ-300": { issueIdentifier: "ANQ-300", human_only: true },
     };
-    const result = claimIssue("ANQ-300");
+    const result = claimIssue("ANQ-300", { worktreeId: "wt1" });
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("human_only");
   });
 
   it("should reject claim for retry-exhausted issue", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     (mockState as Record<string, unknown>).issues = {
       "ANQ-400": { issueIdentifier: "ANQ-400", retry_exhausted: true },
     };
-    const result = claimIssue("ANQ-400");
+    const result = claimIssue("ANQ-400", { worktreeId: "wt1" });
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("retry_exhausted");
   });
 
   it("should reject claim for blocked issue", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     (mockState as Record<string, unknown>).issues = {
       "ANQ-500": { issueIdentifier: "ANQ-500", blocked_reason: "manual_block" },
     };
-    const result = claimIssue("ANQ-500");
+    const result = claimIssue("ANQ-500", { worktreeId: "wt1" });
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("blocked");
   });
 
   it("should reject claim for issue on cooldown", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     const future = new Date(Date.now() + 600_000).toISOString();
     (mockState as Record<string, unknown>).issues = {
       "ANQ-600": { issueIdentifier: "ANQ-600", cooldown_until: future },
     };
-    const result = claimIssue("ANQ-600");
+    const result = claimIssue("ANQ-600", { worktreeId: "wt1" });
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("cooldown_active");
   });
 
   it("should allow claim after lease expires", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     // First claim
     claimIssue("ANQ-700", { worktreeId: "wt1" });
 
@@ -161,18 +160,14 @@ describe("Scheduler exclusivity — ADR-0002 (real claimIssue module)", () => {
   });
 
   it("should allow claiming multiple different issues", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
-    expect(claimIssue("ANQ-801").ok).toBe(true);
-    expect(claimIssue("ANQ-802").ok).toBe(true);
-    expect(claimIssue("ANQ-803").ok).toBe(true);
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    expect(claimIssue("ANQ-801", { worktreeId: "wt1" }).ok).toBe(true);
+    expect(claimIssue("ANQ-802", { worktreeId: "wt2" }).ok).toBe(true);
+    expect(claimIssue("ANQ-803", { worktreeId: "wt3" }).ok).toBe(true);
   });
 
   it("should persist claim in state store after successful claim", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     claimIssue("ANQ-900", { worktreeId: "wt2", source: "scheduler" });
 
     const issues = (mockState as Record<string, Record<string, unknown>>).issues;
@@ -189,9 +184,7 @@ describe("Scheduler exclusivity — ADR-0002 (real claimIssue module)", () => {
     // 1. Active lease exists
     // 2. lease.owner === "scheduler"
     // 3. assignment.worktreeId is set
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
     const result = claimIssue("ANQ-1000", { worktreeId: "wt3", source: "scheduler" });
     expect(result.ok).toBe(true);
 
@@ -215,13 +208,12 @@ describe("Scheduler exclusivity — ADR-0002 (real claimIssue module)", () => {
     expect(assignment.source).toBe("scheduler");
   });
 
-  it("should create claim with null worktreeId when none provided", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+  it("should reject claim when worktreeId is missing", async () => {
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
+    // @ts-expect-error — intentionally testing runtime rejection of missing worktreeId
     const result = claimIssue("ANQ-1100", { worktreeId: undefined, source: "scheduler" });
-    expect(result.ok).toBe(true);
-    expect(result.assignment.worktreeId).toBeNull();
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("missing_worktree_assignment");
   });
 });
 
@@ -239,9 +231,7 @@ describe("Multi-issue claim with worktree assignment — ADR-0002 integration", 
   });
 
   it("should assign different worktrees to different issues", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
 
     // Simulate scheduler assigning from available pool: wt1, wt2, wt3, wt4
     const worktreePool = ["wt1", "wt2", "wt3", "wt4"];
@@ -250,13 +240,12 @@ describe("Multi-issue claim with worktree assignment — ADR-0002 integration", 
 
     const issues = ["ANQ-2001", "ANQ-2002", "ANQ-2003"];
     for (const issueId of issues) {
-      const worktreeId = worktreePool.find((wt) => !assignedThisCycle.has(wt)) ?? null;
-      const result = claimIssue(issueId, { worktreeId: worktreeId ?? undefined, source: "scheduler" });
+      const worktreeId = worktreePool.find((wt) => !assignedThisCycle.has(wt));
+      if (!worktreeId) throw new Error("Test error: pool unexpectedly exhausted");
+      const result = claimIssue(issueId, { worktreeId, source: "scheduler" });
       expect(result.ok).toBe(true);
-      if (worktreeId) {
-        assignedThisCycle.add(worktreeId);
-        claims.push({ identifier: issueId, worktreeId });
-      }
+      assignedThisCycle.add(worktreeId);
+      claims.push({ identifier: issueId, worktreeId });
     }
 
     // Each claim should have a unique worktree
@@ -277,38 +266,41 @@ describe("Multi-issue claim with worktree assignment — ADR-0002 integration", 
     }
   });
 
-  it("should prevent same-cycle double-assignment to a worktree", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+  it("should reject claim when same-cycle assignment pool is exhausted", async () => {
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
 
     // Simulate scheduler with only 2 available worktrees and 3 issues
     const worktreePool = ["wt1", "wt2"];
     const assignedThisCycle = new Set<string>();
-    const results: Array<{ ok: boolean; worktreeId: string | null }> = [];
+    const results: Array<{ ok: boolean; worktreeId: string | null; reason?: string }> = [];
 
     for (const issueId of ["ANQ-3001", "ANQ-3002", "ANQ-3003"]) {
       const worktreeId = worktreePool.find((wt) => !assignedThisCycle.has(wt)) ?? null;
-      const result = claimIssue(issueId, { worktreeId: worktreeId ?? undefined, source: "scheduler" });
+      const result = claimIssue(issueId, {
+        // @ts-expect-error — pool exhaustion intentionally passes undefined to test rejection
+        worktreeId: worktreeId ?? undefined,
+        source: "scheduler",
+      });
       if (result.ok && worktreeId) {
         assignedThisCycle.add(worktreeId);
       }
-      results.push({ ok: result.ok, worktreeId });
+      results.push({ ok: result.ok, worktreeId, reason: result.reason });
     }
 
-    // First two get unique worktrees
+    // First two get unique worktrees and succeed
     expect(results[0].worktreeId).toBe("wt1");
+    expect(results[0].ok).toBe(true);
     expect(results[1].worktreeId).toBe("wt2");
-    // Third gets null worktreeId (pool exhausted) — still claimed but router-selected
+    expect(results[1].ok).toBe(true);
+
+    // Third has no available worktree and must be rejected rather than claimed
     expect(results[2].worktreeId).toBeNull();
-    // All three claims succeed (even without worktreeId)
-    expect(results.every((r) => r.ok)).toBe(true);
+    expect(results[2].ok).toBe(false);
+    expect(results[2].reason).toBe("missing_worktree_assignment");
   });
 
   it("should reject claim for already-claimed issue even with different worktree", async () => {
-    const { claimIssue } = await import(
-      "../../harness/ops/core/symphony-state/claim-issue.mjs"
-    );
+    const { claimIssue } = await import("../../harness/ops/core/symphony-state/claim-issue.mjs");
 
     const first = claimIssue("ANQ-4001", { worktreeId: "wt1" });
     expect(first.ok).toBe(true);
@@ -372,8 +364,8 @@ describe("Router claim verification — ADR-0002 (always enforced)", () => {
     );
     // Trigger path must import and call verifySchedulerClaim from shared module
     expect(source).toContain("verifySchedulerClaim");
-    expect(source).toContain('import { verifySchedulerClaim }');
-    expect(source).toContain('./verify-scheduler-claim.mjs');
+    expect(source).toContain("import { verifySchedulerClaim }");
+    expect(source).toContain("./verify-scheduler-claim.mjs");
     // There must be NO bypass path
     expect(source).not.toContain("SCHEDULER_AUTHORITATIVE");
   });
@@ -403,8 +395,8 @@ describe("Router claim verification — ADR-0002 (always enforced)", () => {
     );
     // Queue drain must import and call verifySchedulerClaim
     expect(source).toContain("verifySchedulerClaim");
-    expect(source).toContain('import { verifySchedulerClaim }');
-    expect(source).toContain('./verify-scheduler-claim.mjs');
+    expect(source).toContain("import { verifySchedulerClaim }");
+    expect(source).toContain("./verify-scheduler-claim.mjs");
     // Must check claim validity before dispatch
     expect(source).toContain("claimCheck.allowed");
     // Must drop items with invalid claims (not dispatch blindly)
@@ -448,7 +440,7 @@ describe("Router claim verification — ADR-0002 (always enforced)", () => {
       "harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs",
       "utf-8",
     );
-    expect(source).toContain('import { WORKTREES }');
+    expect(source).toContain("import { WORKTREES }");
     expect(source).toContain("claimCheck.assignedWorktreeId");
     expect(source).toContain("WORKTREES.find");
   });
@@ -496,12 +488,25 @@ describe("Scheduler worktree assignment at claim time — ADR-0002", () => {
   });
 });
 
-describe("Legacy path removal verification — ADR-0002 completion", () => {
-  it("runner should not self-pick global work", () => {
-    const source = fs.readFileSync(
-      "harness/ops/orchestration/symphony-runner/main.mjs",
+describe("Systemd topology — ADR-0002", () => {
+  it("should verify scheduler service is enabled in default.target.wants", () => {
+    const service = fs.readFileSync("services/systemd/anqr-symphony-scheduler.service", "utf-8");
+    const enabledUnit = fs.readFileSync(
+      "services/systemd/default.target.wants/anqr-symphony-scheduler.service",
       "utf-8",
     );
+    expect(service).toContain(
+      "ExecStart=/usr/bin/node harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon",
+    );
+    expect(enabledUnit).toContain(
+      "ExecStart=/usr/bin/node harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon",
+    );
+  });
+});
+
+describe("Legacy path removal verification — ADR-0002 completion", () => {
+  it("runner should not self-pick global work", () => {
+    const source = fs.readFileSync("harness/ops/orchestration/symphony-runner/main.mjs", "utf-8");
     // Runner must not import SCHEDULER_AUTHORITATIVE (no toggle)
     expect(source).not.toContain("SCHEDULER_AUTHORITATIVE");
     // Runner must not import pickIssue (no self-pick)

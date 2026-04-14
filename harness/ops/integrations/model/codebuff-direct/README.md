@@ -1,13 +1,16 @@
 # Codebuff Direct
 
 ## Purpose
+
 Directory for operator tooling and diagnostics; immediate files include `build-prompt.mjs`, `codebuff-max-continuations.mjs`, `codebuff-max-steps.mjs`, `codebuff-model-id.mjs`, and others.
 
 ## Contents
+
 - 27 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-prompt.mjs` - Exports `buildPrompt`, the main helper defined in this file.
 - `codebuff-max-continuations.mjs` - Exports `CODEBUFF_MAX_CONTINUATIONS`, a shared constant or state value used by sibling modules.
 - `codebuff-max-steps.mjs` - Exports `CODEBUFF_MAX_STEPS`, a shared constant or state value used by sibling modules.
@@ -37,11 +40,14 @@ Directory for operator tooling and diagnostics; immediate files include `build-p
 - `try-mode.mjs` - Exports `tryMode`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 27 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

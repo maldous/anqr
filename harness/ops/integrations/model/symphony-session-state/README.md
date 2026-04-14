@@ -1,13 +1,16 @@
 # Symphony Session State
 
 ## Purpose
+
 Directory for harness support logic; immediate files include `adaptive-params-file.mjs`, `cleanup-expired-sessions.mjs`, `clear-session-messages.mjs`, `clear-session-provider.mjs`, and others.
 
 ## Contents
+
 - 34 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `adaptive-params-file.mjs` - Exports `ADAPTIVE_PARAMS_FILE`, a shared constant or state value used by sibling modules.
 - `cleanup-expired-sessions.mjs` - Exports `cleanupExpiredSessions`, the main helper defined in this file.
 - `clear-session-messages.mjs` - Exports `clearSessionMessages`, the main helper defined in this file.
@@ -44,11 +47,14 @@ Directory for harness support logic; immediate files include `adaptive-params-fi
 - `verify-session-messages.mjs` - Exports `verifySessionMessages`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 34 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

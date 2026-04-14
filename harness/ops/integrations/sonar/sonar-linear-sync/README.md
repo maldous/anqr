@@ -1,13 +1,16 @@
 # Sonar Linear Sync
 
 ## Purpose
+
 Directory for Linear ingestion, reconciliation, or issue management; immediate files include `apply-promote-and-requeue.mjs`, `build-duplication-linear-description.mjs`, `build-duplication-linear-title.mjs`, `build-hotspot-linear-description.mjs`, and others.
 
 ## Contents
+
 - 26 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `apply-promote-and-requeue.mjs` - Exports `applyPromoteAndRequeue`, the main helper defined in this file.
 - `build-duplication-linear-description.mjs` - Exports `buildDuplicationLinearDescription`, the main helper defined in this file.
 - `build-duplication-linear-title.mjs` - Exports `buildDuplicationLinearTitle`, the main helper defined in this file.
@@ -36,11 +39,14 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - `sync-sonar-to-linear.mjs` - Exports `syncSonarToLinear`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 26 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

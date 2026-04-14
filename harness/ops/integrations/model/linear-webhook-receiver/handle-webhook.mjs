@@ -66,7 +66,7 @@ export function handleWebhook(req, res) {
       });
 
       // Try to determine if this issue was created from Discord
-      // This info is used by pickIssue() to route to the correct worktree type
+      // This info is used by scheduler and router logic to keep Discord-sourced work on the Discord pool
       try {
         const { getIssueDetail } = await import("../../linear/linear-client.mjs");
         const issueData = await getIssueDetail(processedEvent.identifier);

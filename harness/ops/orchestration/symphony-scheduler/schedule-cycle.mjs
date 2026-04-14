@@ -122,9 +122,7 @@ export async function scheduleCycle() {
     // If no worktree is available, skip — do not claim without assignment.
     const worktreeId = availableWorktrees.find((wt) => !assignedThisCycle.has(wt)) || null;
     if (!worktreeId) {
-      logDebug(
-        `[scheduler] No available worktrees remaining this cycle — stopping dispatch`,
-      );
+      logDebug(`[scheduler] No available worktrees remaining this cycle — stopping dispatch`);
       break;
     }
 
@@ -134,9 +132,7 @@ export async function scheduleCycle() {
     });
 
     if (!claim.ok) {
-      logDebug(
-        `[scheduler] Claim rejected for ${issue.identifier}: ${claim.reason}`,
-      );
+      logDebug(`[scheduler] Claim rejected for ${issue.identifier}: ${claim.reason}`);
       claimRejected++;
       continue;
     }
@@ -146,7 +142,9 @@ export async function scheduleCycle() {
     const ok = await dispatchToExecutor(issue.identifier, null);
     if (ok) {
       dispatched++;
-      logInfo(`[scheduler] Claimed + dispatched ${issue.identifier} -> ${worktreeId || "(router-selected)"}: ${issue.title}`);
+      logInfo(
+        `[scheduler] Claimed + dispatched ${issue.identifier} -> ${worktreeId}: ${issue.title}`,
+      );
     } else {
       logWarn(`[scheduler] Dispatch failed for ${issue.identifier} after successful claim`);
     }

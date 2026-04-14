@@ -5,13 +5,8 @@ import {
   releaseLease,
   leaseIsActive,
 } from "../../../symphony-state.mjs";
-import {
-  RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD,
-} from "../../../symphony-config.mjs";
-import {
-  getWorktreePath,
-  PROJECT_ROOT,
-} from "../../../core/worktree-config.mjs";
+import { RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD } from "../../../symphony-config.mjs";
+import { getWorktreePath, PROJECT_ROOT } from "../../../core/worktree-config.mjs";
 import { execFileSync } from "node:child_process";
 import { sendDiscordEmbed } from "../../../integrations/notifications/openclaw-discord.mjs";
 import { logInfo, logWarn } from "../logger.mjs";
@@ -32,8 +27,22 @@ function buildEvidence(actionClass, worktreeId, reason, ownershipBasis = null) {
   // must classify actions explicitly rather than inheriting a default.
   // These sets enumerate every known action class so that adding a new class
   // forces a conscious classification decision.
-  const STATE_ONLY_ACTIONS = new Set(["skip", "reclaim_lease", "continue_repair", "quarantine", "reprovision"]);
-  const NON_PUBLISHING_ACTIONS = new Set(["skip", "reclaim_lease", "continue_repair", "quarantine", "reprovision", "sandbox_reset", "demotion"]);
+  const STATE_ONLY_ACTIONS = new Set([
+    "skip",
+    "reclaim_lease",
+    "continue_repair",
+    "quarantine",
+    "reprovision",
+  ]);
+  const NON_PUBLISHING_ACTIONS = new Set([
+    "skip",
+    "reclaim_lease",
+    "continue_repair",
+    "quarantine",
+    "reprovision",
+    "sandbox_reset",
+    "demotion",
+  ]);
 
   const effectiveClass = actionClass === "demotion" ? "quarantine" : actionClass;
   const isStateOnly = STATE_ONLY_ACTIONS.has(effectiveClass);
@@ -52,7 +61,7 @@ function buildEvidence(actionClass, worktreeId, reason, ownershipBasis = null) {
   };
 }
 
-export async function executeRepair(worktreeId, classification, snapshot = {}) {
+export async function executeRepair(worktreeId, classification) {
   const { repairAction, inferredOwner } = classification;
 
   switch (repairAction) {
@@ -75,10 +84,15 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
           ok: true,
           action: "reclaim_lease",
           nextState: "dirty_owned",
-          evidence: buildEvidence("reclaim_lease", worktreeId, "stale_lease_released", inferredOwner),
+          evidence: buildEvidence(
+            "reclaim_lease",
+            worktreeId,
+            "stale_lease_released",
+            inferredOwner,
+          ),
         };
       }
-      return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" }, snapshot);
+      return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" });
     }
 
     case "continue_repair": {
@@ -88,7 +102,12 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
         ok: true,
         action: "continue_repair",
         nextState: "dirty_owned",
-        evidence: buildEvidence("continue_repair", worktreeId, "repair_state_confirmed", inferredOwner),
+        evidence: buildEvidence(
+          "continue_repair",
+          worktreeId,
+          "repair_state_confirmed",
+          inferredOwner,
+        ),
       };
     }
 
@@ -100,10 +119,14 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
       const result = await executeRepair(
         worktreeId,
         { ...classification, repairAction: "quarantine" },
-        snapshot,
       );
       // Override evidence to record the demotion
-      result.evidence = buildEvidence("demotion", worktreeId, "retry_push_demoted_to_quarantine", inferredOwner);
+      result.evidence = buildEvidence(
+        "demotion",
+        worktreeId,
+        "retry_push_demoted_to_quarantine",
+        inferredOwner,
+      );
       return result;
     }
 
@@ -115,9 +138,13 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
       const result = await executeRepair(
         worktreeId,
         { ...classification, repairAction: "quarantine" },
-        snapshot,
       );
-      result.evidence = buildEvidence("demotion", worktreeId, "auto_commit_and_push_demoted_to_quarantine", inferredOwner);
+      result.evidence = buildEvidence(
+        "demotion",
+        worktreeId,
+        "auto_commit_and_push_demoted_to_quarantine",
+        inferredOwner,
+      );
       return result;
     }
 
@@ -133,7 +160,12 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
         ok: true,
         action: "quarantine",
         nextState: "quarantined",
-        evidence: buildEvidence("quarantine", worktreeId, classification.classification, inferredOwner),
+        evidence: buildEvidence(
+          "quarantine",
+          worktreeId,
+          classification.classification,
+          inferredOwner,
+        ),
       };
     }
 
@@ -155,11 +187,12 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
       // Defense-in-depth: explicitly verify the sandbox is not actively executing.
       const wtState = getWorktreeState(worktreeId);
       if (wtState && leaseIsActive(wtState)) {
-        logWarn(`[recovery] reset_to_main blocked: ${worktreeId} has an active lease — quarantining instead`);
+        logWarn(
+          `[recovery] reset_to_main blocked: ${worktreeId} has an active lease — quarantining instead`,
+        );
         return executeRepair(
           worktreeId,
           { ...classification, repairAction: "quarantine" },
-          snapshot,
         );
       }
 
@@ -202,7 +235,6 @@ export async function executeRepair(worktreeId, classification, snapshot = {}) {
         return executeRepair(
           worktreeId,
           { ...classification, repairAction: "quarantine" },
-          snapshot,
         );
       }
     }

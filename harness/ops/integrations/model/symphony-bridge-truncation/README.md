@@ -1,13 +1,16 @@
 # Symphony Bridge Truncation
 
 ## Purpose
+
 Directory for operator tooling and diagnostics; immediate files include `build-dynamic-catalog-limits.mjs`, `build-provider-max-input-tokens.mjs`, `chars-per-token.mjs`, `default-max-input-tokens.mjs`, and others.
 
 ## Contents
+
 - 20 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-dynamic-catalog-limits.mjs` - Exports `buildDynamicCatalogLimits`, the main helper defined in this file.
 - `build-provider-max-input-tokens.mjs` - Exports `buildProviderMaxInputTokens`, the main helper defined in this file.
 - `chars-per-token.mjs` - Exports `CHARS_PER_TOKEN`, a shared constant or state value used by sibling modules.
@@ -30,11 +33,14 @@ Directory for operator tooling and diagnostics; immediate files include `build-d
 - `validate-context-coherence.mjs` - Exports `validateContextCoherence`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 20 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

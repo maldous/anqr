@@ -1,13 +1,16 @@
 # Task Evidence
 
 ## Purpose
+
 Directory for git worktree management and concurrency support; immediate files include `create-evidence-record.mjs`, `get-evidence-dir.mjs`, `get-evidence-path.mjs`, `index.mjs`, and others.
 
 ## Contents
+
 - 14 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `create-evidence-record.mjs` - Exports `createEvidenceRecord`, the main helper defined in this file.
 - `get-evidence-dir.mjs` - Exports `getEvidenceDir`, the main helper defined in this file.
 - `get-evidence-path.mjs` - Exports `getEvidencePath`, the main helper defined in this file.
@@ -24,11 +27,14 @@ Directory for git worktree management and concurrency support; immediate files i
 - `update-evidence-record.mjs` - Exports `updateEvidenceRecord`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 14 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

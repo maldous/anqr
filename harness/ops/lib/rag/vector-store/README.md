@@ -1,13 +1,16 @@
 # Vector Store
 
 ## Purpose
+
 Directory for RAG indexing and retrieval support; immediate files include `atomic-write-json.mjs`, `cleanup-stale-index-files.mjs`, `clear-index.mjs`, `default-extensions.mjs`, and others.
 
 ## Contents
+
 - 39 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `atomic-write-json.mjs` - Exports `atomicWriteJSON`, the main helper defined in this file.
 - `cleanup-stale-index-files.mjs` - Exports `cleanupStaleIndexFiles`, the main helper defined in this file.
 - `clear-index.mjs` - Exports `clearIndex`, the main helper defined in this file.
@@ -49,11 +52,14 @@ Directory for RAG indexing and retrieval support; immediate files include `atomi
 - `to-stored-path.mjs` - Exports `toStoredPath`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 39 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

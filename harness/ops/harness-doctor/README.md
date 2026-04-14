@@ -1,13 +1,16 @@
 # Harness Doctor
 
 ## Purpose
+
 Directory for systemd topology and host runtime configuration; immediate files include `check-credit-gate.mjs`, `check-env-vars.mjs`, `check-harness-config.mjs`, `check-node-modules.mjs`, and others.
 
 ## Contents
+
 - 15 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `check-credit-gate.mjs` - Exports `checkCreditGate`, the main helper defined in this file.
 - `check-env-vars.mjs` - Exports `checkEnvVars`, the main helper defined in this file.
 - `check-harness-config.mjs` - Exports `checkHarnessConfig`, the main helper defined in this file.
@@ -25,11 +28,14 @@ Directory for systemd topology and host runtime configuration; immediate files i
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 15 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

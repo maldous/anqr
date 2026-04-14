@@ -1,22 +1,25 @@
 # Linear
 
 ## Purpose
+
 Directory for Discord ingress, delivery, or notification support; immediate files include `agent-workflow-create-issue.mjs`, `analyze-canceled-issues.mjs`, `create-ast-audit-issues.mjs`, `create-issue-template.mjs`, and others, with child directories `agent-workflow-create-issue/`, `analyze-canceled-issues/`, `create-issue-template/`, `delete-sonar-issues/`, and others.
 
 ## Contents
+
 - 25 immediate files
 - 17 child directories
 
 ## Key Files
+
 - `agent-workflow-create-issue.mjs` - JavaScript/TypeScript module used by this directory.
 - `analyze-canceled-issues.mjs` - JavaScript/TypeScript module used by this directory.
-- `create-ast-audit-issues.mjs` - *
+- `create-ast-audit-issues.mjs` - \*
 - `create-issue-template.mjs` - JavaScript/TypeScript module used by this directory.
 - `create-linear-rag-issues.mjs` - Exports `chunkLinearIssue`, the main helper defined in this file.
-- `create-run-file-change-hooks-bug.mjs` - *
-- `create-test-coverage-issues.mjs` - *
+- `create-run-file-change-hooks-bug.mjs` - \*
+- `create-test-coverage-issues.mjs` - \*
 - `delete-sonar-issues.mjs` - JavaScript/TypeScript module used by this directory.
-- `deprioritize-test-coverage-issues.mjs` - *
+- `deprioritize-test-coverage-issues.mjs` - \*
 - `export-issues.mjs` - JavaScript/TypeScript module used by this directory.
 - `get-discord-label-id.mjs` - JavaScript/TypeScript module used by this directory.
 - `github-linear-sync-audit.mjs` - JavaScript/TypeScript module used by this directory.
@@ -26,8 +29,8 @@ Directory for Discord ingress, delivery, or notification support; immediate file
 - `incident-resolution.mjs` - JavaScript/TypeScript module used by this directory.
 - `issue-hygiene.mjs` - JavaScript/TypeScript module used by this directory.
 - `linear-client.mjs` - JavaScript/TypeScript module used by this directory.
-- `list-canceled-issues.mjs` - *
-- `list-open-issues.mjs` - *
+- `list-canceled-issues.mjs` - \*
+- `list-open-issues.mjs` - \*
 - `README-workflow.md` - Documentation file headed by "Linear Agent Workflow Documentation".
 - `reopen-marked-issues.mjs` - JavaScript/TypeScript module used by this directory.
 - `review-open-issues.mjs` - JavaScript/TypeScript module used by this directory.
@@ -35,6 +38,7 @@ Directory for Discord ingress, delivery, or notification support; immediate file
 - `validate-issue.mjs` - JavaScript/TypeScript module used by this directory.
 
 ## Subdirectories
+
 - `agent-workflow-create-issue/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `args.mjs`, `available-labels.mjs`, `available-states.mjs`, `create-linear-issue-workflow.mjs`, and others.
 - `analyze-canceled-issues/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `correct-cancel-patterns.mjs`, `index.mjs`, `logger.mjs`, `main.mjs`, and others.
 - `create-issue-template/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `customize-issue.mjs`, `index.mjs`, `issue-template.mjs`, `main.mjs`, and others.
@@ -54,8 +58,10 @@ Directory for Discord ingress, delivery, or notification support; immediate file
 - `validate-issue/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `calculate-validation-score.mjs`, `determine-priority.mjs`, `format-validation-result.mjs`, `get-issue-quality-checklist.mjs`, and others.
 
 ## Operational Notes
+
 - Current on-disk inventory: 25 immediate files and 17 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

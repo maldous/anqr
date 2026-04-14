@@ -47,22 +47,16 @@ vi.mock("node:child_process", () => {
   return { default: { execFileSync }, execFileSync };
 });
 
-vi.mock(
-  "../../harness/ops/integrations/notifications/openclaw-discord.mjs",
-  () => ({
-    sendDiscordEmbed: vi.fn().mockResolvedValue(undefined),
-  }),
-);
+vi.mock("../../harness/ops/integrations/notifications/openclaw-discord.mjs", () => ({
+  sendDiscordEmbed: vi.fn().mockResolvedValue(undefined),
+}));
 
-vi.mock(
-  "../../harness/ops/orchestration/symphony-worktree-recovery/logger.mjs",
-  () => ({
-    logInfo: vi.fn(),
-    logWarn: vi.fn(),
-    logError: vi.fn(),
-    logDebug: vi.fn(),
-  }),
-);
+vi.mock("../../harness/ops/orchestration/symphony-worktree-recovery/logger.mjs", () => ({
+  logInfo: vi.fn(),
+  logWarn: vi.fn(),
+  logError: vi.fn(),
+  logDebug: vi.fn(),
+}));
 
 // ---------------------------------------------------------------------------
 // Evidence validation helper
@@ -106,9 +100,8 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
   });
 
   it("skip action: returns unchanged state with state-only evidence", async () => {
-    const { executeRepair } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const result = await executeRepair("wt1", {
       repairAction: "skip",
       inferredOwner: null,
@@ -130,9 +123,8 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
   });
 
   it("quarantine action: records quarantine with evidence", async () => {
-    const { executeRepair } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const result = await executeRepair("wt2", {
       repairAction: "quarantine",
       inferredOwner: "ANQ-500",
@@ -148,15 +140,17 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
       target: "wt2",
       isStateOnly: true,
     });
-    expect(mockRecordQuarantine).toHaveBeenCalledWith("wt2", expect.objectContaining({
-      reason: "dirty_orphaned",
-    }));
+    expect(mockRecordQuarantine).toHaveBeenCalledWith(
+      "wt2",
+      expect.objectContaining({
+        reason: "dirty_orphaned",
+      }),
+    );
   });
 
   it("retry_push: demoted to quarantine at runtime — no git push executed", async () => {
-    const { executeRepair } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const { execFileSync } = await import("node:child_process");
 
     const result = await executeRepair("wt3", {
@@ -182,9 +176,8 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
   });
 
   it("auto_commit_and_push: demoted to quarantine at runtime — no git commands", async () => {
-    const { executeRepair } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const { execFileSync } = await import("node:child_process");
 
     const result = await executeRepair("wt4", {
@@ -207,13 +200,15 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
   });
 
   it("reset_to_main: blocked when worktree has active lease — falls back to quarantine", async () => {
-    const { executeRepair } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const { execFileSync } = await import("node:child_process");
 
     // Set up active lease
-    mockGetWorktreeState.mockReturnValue({ state: "executing", lease: { expires_at: new Date(Date.now() + 600_000).toISOString() } });
+    mockGetWorktreeState.mockReturnValue({
+      state: "executing",
+      lease: { expires_at: new Date(Date.now() + 600_000).toISOString() },
+    });
     mockLeaseIsActive.mockReturnValue(true);
 
     const result = await executeRepair("wt1", {
@@ -234,9 +229,8 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
   });
 
   it("reset_to_main: executes sandbox reset when no active lease", async () => {
-    const { executeRepair } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const { execFileSync } = await import("node:child_process");
 
     // No active lease
@@ -291,9 +285,8 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
   });
 
   it("reprovision action: quarantines with missing reason", async () => {
-    const { executeRepair } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const result = await executeRepair("wt4", {
       repairAction: "reprovision",
       inferredOwner: null,
@@ -309,15 +302,17 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
       target: "wt4",
       isStateOnly: true,
     });
-    expect(mockRecordQuarantine).toHaveBeenCalledWith("wt4", expect.objectContaining({
-      reason: "missing",
-    }));
+    expect(mockRecordQuarantine).toHaveBeenCalledWith(
+      "wt4",
+      expect.objectContaining({
+        reason: "missing",
+      }),
+    );
   });
 
   it("continue_repair: sets worktree state with evidence", async () => {
-    const { executeRepair } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const result = await executeRepair("wt1", {
       repairAction: "continue_repair",
       inferredOwner: "ANQ-800",
@@ -341,9 +336,8 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
   });
 
   it("unknown action: returns error with evidence", async () => {
-    const { executeRepair } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const result = await executeRepair("wt1", {
       repairAction: "nonexistent_action",
       inferredOwner: null,

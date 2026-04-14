@@ -1,13 +1,16 @@
 # Openclaw Gateway Singleton
 
 ## Purpose
+
 Directory for OpenClaw gateway/runtime configuration; immediate files include `child-process.mjs`, `cleanup-stale-lock.mjs`, `cli.mjs`, `config-path.mjs`, and others.
 
 ## Contents
+
 - 38 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `child-process.mjs` - Exports `setChildProcess`, the main helper defined in this file.
 - `cleanup-stale-lock.mjs` - Exports `cleanupStaleLock`, the main helper defined in this file.
 - `cli.mjs` - Exports `CLI`, a shared constant or state value used by sibling modules.
@@ -48,11 +51,14 @@ Directory for OpenClaw gateway/runtime configuration; immediate files include `c
 - `write-lock-metadata.mjs` - Exports `writeLockMetadata`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 38 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.

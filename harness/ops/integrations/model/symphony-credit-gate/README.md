@@ -1,13 +1,16 @@
 # Symphony Credit Gate
 
 ## Purpose
+
 Provider selection and probe subsystem that ranks AI backends, caches health and usage signals, enforces lease-style access coordination, and keeps low-credit or degraded providers from destabilizing execution.
 
 ## Contents
+
 - 157 immediate files
 - 3 child directories
 
 ## Key Files
+
 - `acquire-provider-lease.mjs` - Exports `acquireProviderLease`, the main helper defined in this file.
 - `build-dynamic-catalog-providers.mjs` - Exports `buildDynamicCatalogProviders`, the main helper defined in this file.
 - `build-provider-probe-failure-breakdown.mjs` - Exports `buildProviderProbeFailureBreakdown`, the main helper defined in this file.
@@ -167,13 +170,16 @@ Provider selection and probe subsystem that ranks AI backends, caches health and
 - `write-provider-probe-report-files.mjs` - Exports `writeProviderProbeReportFiles`, the main helper defined in this file.
 
 ## Subdirectories
+
 - `calculate-provider-score/` - Directory for provider selection, probing, and credit-aware routing; immediate files include `calculate-provider-score.mjs`, `compute-context-length-score.mjs`, `index.mjs`.
 - `enrich-provider-context-sizes/` - Directory for provider selection, probing, and credit-aware routing; immediate files include `build-context-map-from-api.mjs`, `build-context-map-from-catalog.mjs`, `constants.mjs`, `enrich-provider-context-sizes.mjs`, and others.
 - `get-provider-bootstrap-score/` - Directory for provider selection, probing, and credit-aware routing; immediate files include `compute-context-bootstrap-boost.mjs`, `get-provider-bootstrap-score.mjs`, `index.mjs`.
 
 ## Operational Notes
+
 - This directory is the harness mechanism for balancing paid, free-cloud, and local-safety-net providers.
 - Probe results, provider metrics, and failure memory here shape nearly every routed AI request elsewhere in the harness.
 
 ## Review Focus
+
 Verify probe freshness, provider ranking, safety-net fallback, lease handling, context-size enrichment, and whether failure state can skew routing under sustained concurrency.

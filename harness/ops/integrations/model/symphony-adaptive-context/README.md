@@ -1,13 +1,16 @@
 # Symphony Adaptive Context
 
 ## Purpose
+
 Directory for operator tooling and diagnostics; immediate files include `classify-error.mjs`, `context-expand-factor.mjs`, `context-expand-threshold.mjs`, `context-initial-buffer.mjs`, and others.
 
 ## Contents
+
 - 48 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `classify-error.mjs` - Exports `classifyError`, the main helper defined in this file.
 - `context-expand-factor.mjs` - Exports `CONTEXT_EXPAND_FACTOR`, a shared constant or state value used by sibling modules.
 - `context-expand-threshold.mjs` - Exports `CONTEXT_EXPAND_THRESHOLD`, a shared constant or state value used by sibling modules.
@@ -58,11 +61,14 @@ Directory for operator tooling and diagnostics; immediate files include `classif
 - `tpm-proactive-threshold.mjs` - Exports `TPM_PROACTIVE_THRESHOLD`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 48 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

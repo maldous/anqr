@@ -25,9 +25,7 @@ async function enqueueDesiredWork(processedEvent, correlationId) {
     timestamp: new Date().toISOString(),
   });
 
-  logInfo(
-    `📝 Enqueued ${processedEvent.identifier} to desired-work queue (scheduler will claim)`,
-  );
+  logInfo(`📝 Enqueued ${processedEvent.identifier} to desired-work queue (scheduler will claim)`);
   return true;
 }
 

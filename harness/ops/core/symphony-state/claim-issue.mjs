@@ -17,7 +17,7 @@ import { withStateLock } from "./with-state-lock.mjs";
  *
  * @param {string} issueIdentifier
  * @param {object} details
- * @param {string} [details.worktreeId] - assigned worktree (null if scheduler could not pre-assign)
+ * @param {string} details.worktreeId - assigned worktree (required; claims without assignment are rejected)
  * @param {string} [details.source]   - ingress source (webhook, reconciler, operator)
  * @param {string} [details.correlationId]
  * @param {number} [details.ttlMs]
@@ -42,6 +42,12 @@ export function claimIssue(issueIdentifier, details = {}) {
       return { ok: false, reason: "cooldown_active" };
     }
 
+    // ADR-0002: scheduler claims must always include a durable worktree assignment.
+    // Claims without assignment are rejected rather than created with a null worktree.
+    if (!details.worktreeId) {
+      return { ok: false, reason: "missing_worktree_assignment" };
+    }
+
     const ttlMs = Number(details.ttlMs || DEFAULT_LEASE_MS);
     const nonce = `scheduler-${HOST_ID}-${now}`;
 
@@ -57,7 +63,7 @@ export function claimIssue(issueIdentifier, details = {}) {
 
     // Create assignment record
     const assignment = {
-      worktreeId: details.worktreeId || null,
+      worktreeId: details.worktreeId,
       source: details.source || "scheduler",
       correlationId: details.correlationId || null,
       claimedAt: nowIso(),

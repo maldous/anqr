@@ -1,13 +1,16 @@
 # Symphony State
 
 ## Purpose
+
 Directory for git worktree management and concurrency support; immediate files include `acquire-integration-lock.mjs`, `acquire-lease.mjs`, `acquire-state-lock.mjs`, `add-external-key.mjs`, and others, with child directories `acquire-state-lock/`.
 
 ## Contents
+
 - 62 immediate files
 - 1 child directory
 
 ## Key Files
+
 - `acquire-integration-lock.mjs` - Exports `acquireIntegrationLock`, the main helper defined in this file.
 - `acquire-lease.mjs` - Exports `acquireLease`, the main helper defined in this file.
 - `acquire-state-lock.mjs` - Re-export facade that assembles the public surface for this directory.
@@ -72,11 +75,14 @@ Directory for git worktree management and concurrency support; immediate files i
 - `with-state-lock.mjs` - Exports `withStateLock`, the main helper defined in this file.
 
 ## Subdirectories
+
 - `acquire-state-lock/` - Directory for harness support logic; immediate files include `acquire-state-lock.mjs`, `index.mjs`, `sleep-sync.mjs`.
 
 ## Operational Notes
+
 - Current on-disk inventory: 62 immediate files and 1 child directory.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

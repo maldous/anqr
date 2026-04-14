@@ -1,13 +1,16 @@
 # Discord Request Router
 
 ## Purpose
+
 Directory for OpenClaw gateway/runtime configuration; immediate files include `evict-expired-sessions.mjs`, `generate-thread-name.mjs`, `get-least-loaded-worktree.mjs`, `get-session-thread-name.mjs`, and others.
 
 ## Contents
+
 - 25 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `evict-expired-sessions.mjs` - Exports `evictExpiredSessions`, the main helper defined in this file.
 - `generate-thread-name.mjs` - Exports `generateThreadName`, the main helper defined in this file.
 - `get-least-loaded-worktree.mjs` - Exports `getLeastLoadedWorktree`, the main helper defined in this file.
@@ -35,11 +38,14 @@ Directory for OpenClaw gateway/runtime configuration; immediate files include `e
 - `worktree-urls.mjs` - Exports `WORKTREE_URLS`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 25 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

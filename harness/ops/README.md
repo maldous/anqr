@@ -1,13 +1,16 @@
 # Ops
 
 ## Purpose
+
 Canonical operational runtime tree for the ANQR harness, covering state, orchestration, integrations, runtime services, notifications, tooling, and evidence generation.
 
 ## Contents
+
 - 25 immediate files
 - 13 child directories
 
 ## Key Files
+
 - `email-ingest.mjs` - JavaScript/TypeScript module used by this directory.
 - `harness-doctor.mjs` - JavaScript/TypeScript module used by this directory.
 - `harness-report.mjs` - JavaScript/TypeScript module used by this directory.
@@ -32,9 +35,10 @@ Canonical operational runtime tree for the ANQR harness, covering state, orchest
 - `symphony-queue-control.mjs` - JavaScript/TypeScript module used by this directory.
 - `symphony-state.mjs` - v2: also exports setFinalizationState, getFinalizationState, enqueueIntegrationCandidate,
 - `symphony-validation.mjs` - JavaScript/TypeScript module used by this directory.
-- `sync-worktrees.mjs` - *
+- `sync-worktrees.mjs` - \*
 
 ## Subdirectories
+
 - `core/` - Directory for Discord ingress, delivery, or notification support; immediate files include `bridge-result.mjs`, `bridge-result.spec.ts`, `discord-source.mjs`, `linear-worktree-health-states.mjs`, and others, with child directories `bridge-result/`, `discord-source/`, `symphony-state/`, `symphony-validation/`, and others.
 - `governance/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `linear-guardian.mjs`, with child directories `linear-guardian/`.
 - `harness-doctor/` - Directory for systemd topology and host runtime configuration; immediate files include `check-credit-gate.mjs`, `check-env-vars.mjs`, `check-harness-config.mjs`, `check-node-modules.mjs`, and others.
@@ -50,8 +54,10 @@ Canonical operational runtime tree for the ANQR harness, covering state, orchest
 - `types/` - Directory for harness support logic; immediate files include `mjs-shim.d.ts`.
 
 ## Operational Notes
+
 - This directory is the main maintained implementation surface for the harness.
 - The concurrency design depends on worktree isolation, state files, systemd service topology, and router-to-executor boundaries implemented under this tree.
 
 ## Review Focus
+
 Trace whether scheduler authority, execution ownership, state persistence, and evidence publication are cleanly separated across `core/`, `integrations/`, `orchestration/`, and `runtime/`.

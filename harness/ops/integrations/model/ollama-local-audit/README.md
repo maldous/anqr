@@ -1,13 +1,16 @@
 # Ollama Local Audit
 
 ## Purpose
+
 Directory for runtime service bootstrap or environment support; immediate files include `check-model-available.mjs`, `check-model-responds.mjs`, `check-reachable.mjs`, `index.mjs`, and others.
 
 ## Contents
+
 - 14 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `check-model-available.mjs` - Exports `checkModelAvailable`, the main helper defined in this file.
 - `check-model-responds.mjs` - Exports `checkModelResponds`, the main helper defined in this file.
 - `check-reachable.mjs` - Exports `checkReachable`, the main helper defined in this file.
@@ -24,11 +27,14 @@ Directory for runtime service bootstrap or environment support; immediate files 
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 14 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

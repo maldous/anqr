@@ -1,13 +1,16 @@
 # Validate Issue
 
 ## Purpose
+
 Directory for Linear ingestion, reconciliation, or issue management; immediate files include `calculate-validation-score.mjs`, `determine-priority.mjs`, `format-validation-result.mjs`, `get-issue-quality-checklist.mjs`, and others.
 
 ## Contents
+
 - 11 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `calculate-validation-score.mjs` - Exports `calculateValidationScore`, the main helper defined in this file.
 - `determine-priority.mjs` - Exports `determinePriority`, the main helper defined in this file.
 - `format-validation-result.mjs` - Exports `formatValidationResult`, the main helper defined in this file.
@@ -21,11 +24,14 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - `validate-issue-input.mjs` - Exports `validateIssueInput`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 11 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

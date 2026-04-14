@@ -1,13 +1,16 @@
 # Symphony Agent
 
 ## Purpose
+
 Directory for runtime service bootstrap or environment support; immediate files include `allowed-commands.mjs`, `assert-mutation-context.mjs`, `build-issue-prompt.mjs`, `call-llm.mjs`, and others.
 
 ## Contents
+
 - 31 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `allowed-commands.mjs` - Exports `ALLOWED_COMMANDS`, a shared constant or state value used by sibling modules.
 - `assert-mutation-context.mjs` - Exports `assertMutationContext`, the main helper defined in this file.
 - `build-issue-prompt.mjs` - Exports `buildIssuePrompt`, the main helper defined in this file.
@@ -41,11 +44,14 @@ Directory for runtime service bootstrap or environment support; immediate files 
 - `validate-path.mjs` - Exports `validatePath`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 31 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.

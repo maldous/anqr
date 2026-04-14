@@ -1,13 +1,16 @@
 # Orchestration
 
 ## Purpose
+
 Directory for serial integration back into the main repository; immediate files include `analyze-worktree-benchmark.mjs`, `latency-report.mjs`, `nightly-ops-pass.mjs`, `reset-queue.mjs`, and others, with child directories `analyze-worktree-benchmark/`, `latency-report/`, `linear-reconciler/`, `nightly-ops-pass/`, and others.
 
 ## Contents
+
 - 11 immediate files
 - 10 child directories
 
 ## Key Files
+
 - `analyze-worktree-benchmark.mjs` - JavaScript/TypeScript module used by this directory.
 - `latency-report.mjs` - JavaScript/TypeScript module used by this directory.
 - `nightly-ops-pass.mjs` - JavaScript/TypeScript module used by this directory.
@@ -21,6 +24,7 @@ Directory for serial integration back into the main repository; immediate files 
 - `symphony-worktree-recovery.mjs` - JavaScript/TypeScript module used by this directory.
 
 ## Subdirectories
+
 - `analyze-worktree-benchmark/` - Directory for git worktree management and concurrency support; immediate files include `compare-benchmarks.mjs`, `dirname.mjs`, `evidence-dir.mjs`, `extract-benchmark-metrics.mjs`, and others.
 - `latency-report/` - Directory for runtime service bootstrap or environment support; immediate files include `acceptable-ms.mjs`, `classify-latency.mjs`, `format-duration.mjs`, `generate-report.mjs`, and others.
 - `linear-reconciler/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `compute-reconciliation-actions.mjs`, `get-healthy-linear-capacity.mjs`, `index.mjs`, `logger.mjs`, and others, with child directories `compute-reconciliation-actions/`, `get-healthy-linear-capacity/`, `logger/`, `run-reconciliation-cycle/`.
@@ -33,8 +37,10 @@ Directory for serial integration back into the main repository; immediate files 
 - `symphony-worktree-recovery/` - Directory for fleet recovery, quarantine, and health enforcement; immediate files include `all-worktree-ids.mjs`, `check-baseline-health.mjs`, `check-quarantined-for-reprovisioning.mjs`, `classify-worktree.mjs`, and others, with child directories `execute-repair/`.
 
 ## Operational Notes
+
 - Current on-disk inventory: 11 immediate files and 10 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether ownership, timing, and state transitions in this directory stay consistent with the harness concurrency and integration model.

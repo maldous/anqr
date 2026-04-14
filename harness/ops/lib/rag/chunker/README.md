@@ -1,13 +1,16 @@
 # Chunker
 
 ## Purpose
+
 Directory for RAG indexing and retrieval support; immediate files include `build-line-starts.mjs`, `chunk-code.mjs`, `chunk-file.mjs`, `chunk-generic-text.mjs`, and others.
 
 ## Contents
+
 - 34 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-line-starts.mjs` - Exports `buildLineStarts`, the main helper defined in this file.
 - `chunk-code.mjs` - Exports `chunkCode`, the main helper defined in this file.
 - `chunk-file.mjs` - Exports `chunkFile`, the main helper defined in this file.
@@ -44,11 +47,14 @@ Directory for RAG indexing and retrieval support; immediate files include `build
 - `trim-segment-bounds.mjs` - Exports `trimSegmentBounds`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 34 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

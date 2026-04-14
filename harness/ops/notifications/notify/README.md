@@ -1,13 +1,16 @@
 # Notify
 
 ## Purpose
+
 Directory for notifications and operator feedback; immediate files include `dirname.mjs`, `format-email-body.mjs`, `format-stdout.mjs`, `index.mjs`, and others.
 
 ## Contents
+
 - 10 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
 - `format-email-body.mjs` - Exports `formatEmailBody`, the main helper defined in this file.
 - `format-stdout.mjs` - Exports `formatStdout`, the main helper defined in this file.
@@ -20,11 +23,14 @@ Directory for notifications and operator feedback; immediate files include `dirn
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 10 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

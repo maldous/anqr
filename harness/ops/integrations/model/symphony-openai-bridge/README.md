@@ -1,13 +1,16 @@
 # Symphony Openai Bridge
 
 ## Purpose
+
 Worktree-local OpenAI-compatible bridge that exposes repository tools to AI providers, performs request execution inside the correct checkout, and coordinates provider fallback, probing, and startup checks.
 
 ## Contents
+
 - 199 immediate files
 - 2 child directories
 
 ## Key Files
+
 - `active-requests.mjs` - Exports `activeRequests`, a shared constant or state value used by sibling modules.
 - `add-message-tool.mjs` - Exports `addMessageTool`, the main helper defined in this file.
 - `add-subgoal-tool.mjs` - Exports `addSubgoalTool`, the main helper defined in this file.
@@ -209,12 +212,15 @@ Worktree-local OpenAI-compatible bridge that exposes repository tools to AI prov
 - `write-todos-tool.mjs` - Exports `writeTodosTool`, the main helper defined in this file.
 
 ## Subdirectories
+
 - `build-selection-options/` - Directory for OpenAI-compatible bridge execution and tool exposure; immediate files include `build-selection-options.mjs`, `index.mjs`, `is-provider-healthy.mjs`.
 - `handle-responses-api/` - Directory for OpenAI-compatible bridge execution and tool exposure; immediate files include `build-chat-body.mjs`, `extract-text-content.mjs`, `handle-non-streaming.mjs`, `handle-responses-api.mjs`, and others, with child directories `helpers/`.
 
 ## Operational Notes
+
 - Each executor instance runs this bridge inside either the main repo or a specific worktree, depending on the systemd unit.
 - This directory is central to Codex integration, tool capability probing, and the shared completion contract consumed by the surrounding Symphony runtime.
 
 ## Review Focus
+
 Check the bridge contract around tool exposure, worktree isolation, provider fallback, adaptive context integration, continuous probe behavior, Codex execution, and request finalization.

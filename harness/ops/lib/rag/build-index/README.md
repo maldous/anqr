@@ -1,13 +1,16 @@
 # Build Index
 
 ## Purpose
+
 Directory for RAG indexing and retrieval support; immediate files include `build-candidate-list.mjs`, `classify-file.mjs`, `detect-project-root.mjs`, `discover-tracked-files.mjs`, and others.
 
 ## Contents
+
 - 29 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-candidate-list.mjs` - Exports `buildCandidateList`, the main helper defined in this file.
 - `classify-file.mjs` - Exports `classifyFile`, the main helper defined in this file.
 - `detect-project-root.mjs` - Exports `detectProjectRoot`, the main helper defined in this file.
@@ -39,11 +42,14 @@ Directory for RAG indexing and retrieval support; immediate files include `build
 - `verbose.mjs` - Exports `VERBOSE`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 29 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

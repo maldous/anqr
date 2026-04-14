@@ -1,13 +1,16 @@
 # Linear Search
 
 ## Purpose
+
 Directory for Linear ingestion, reconciliation, or issue management; immediate files include `build-search-entry.mjs`, `compute-lexical-score.mjs`, `compute-recency-bonus.mjs`, `detect-project-root.mjs`, and others.
 
 ## Contents
+
 - 17 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-search-entry.mjs` - Exports `buildSearchEntry`, the main helper defined in this file.
 - `compute-lexical-score.mjs` - Exports `computeLexicalScore`, the main helper defined in this file.
 - `compute-recency-bonus.mjs` - Exports `computeRecencyBonus`, the main helper defined in this file.
@@ -27,11 +30,14 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - `warm-linear-index.mjs` - Exports `warmLinearIndex`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 17 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

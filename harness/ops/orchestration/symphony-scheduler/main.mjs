@@ -19,9 +19,7 @@ export async function main() {
   }
 
   // Daemon mode
-  logInfo(
-    `[scheduler] Starting daemon mode (poll every ${SCHEDULER_POLL_INTERVAL_MS / 1000}s)`,
-  );
+  logInfo(`[scheduler] Starting daemon mode (poll every ${SCHEDULER_POLL_INTERVAL_MS / 1000}s)`);
 
   const shutdown = (signal) => {
     logInfo(`[scheduler] Received ${signal}, shutting down...`);

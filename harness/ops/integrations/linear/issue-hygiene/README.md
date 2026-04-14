@@ -1,13 +1,16 @@
 # Issue Hygiene
 
 ## Purpose
+
 Directory for Linear ingestion, reconciliation, or issue management; immediate files include `action-delay-ms.mjs`, `analysis-delay-ms.mjs`, `analyze-comments.mjs`, `analyze-issue.mjs`, and others.
 
 ## Contents
+
 - 15 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `action-delay-ms.mjs` - Exports `ACTION_DELAY_MS`, a shared constant or state value used by sibling modules.
 - `analysis-delay-ms.mjs` - Exports `ANALYSIS_DELAY_MS`, a shared constant or state value used by sibling modules.
 - `analyze-comments.mjs` - Exports `analyzeComments`, the main helper defined in this file.
@@ -25,11 +28,14 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - `systemic-failure-threshold.mjs` - Exports `SYSTEMIC_FAILURE_THRESHOLD`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 15 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.

@@ -224,7 +224,9 @@ describe("Recovery evidence contract — ADR-0006", () => {
       expect(content).toContain("NON_PUBLISHING_ACTIONS.has(");
       // The buildEvidence return object must derive isNonPublishing from the set,
       // not hardcode it. Check the return block (not comments/docs).
-      const returnBlock = content.slice(content.indexOf("return {", content.indexOf("NON_PUBLISHING_ACTIONS.has")));
+      const returnBlock = content.slice(
+        content.indexOf("return {", content.indexOf("NON_PUBLISHING_ACTIONS.has")),
+      );
       const firstReturn = returnBlock.slice(0, returnBlock.indexOf("};") + 2);
       expect(firstReturn).not.toContain("isNonPublishing: true");
       expect(firstReturn).not.toContain("isNonPublishing: false");

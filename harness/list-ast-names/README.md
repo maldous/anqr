@@ -1,13 +1,16 @@
 # List Ast Names
 
 ## Purpose
+
 Directory for runtime service bootstrap or environment support; immediate files include `collect-top-level-entries.mjs`, `describe-variable-declaration.mjs`, `flatten-results.mjs`, `format-flat.mjs`, and others.
 
 ## Contents
+
 - 11 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `collect-top-level-entries.mjs` - Exports `collectTopLevelEntries`, a shared constant or state value used by sibling modules.
 - `describe-variable-declaration.mjs` - Exports `describeVariableDeclaration`, a shared constant or state value used by sibling modules.
 - `flatten-results.mjs` - Exports `flattenResults`, a shared constant or state value used by sibling modules.
@@ -21,11 +24,14 @@ Directory for runtime service bootstrap or environment support; immediate files 
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
+
 - Current on-disk inventory: 11 immediate files and 0 child directories.
 - This README was aligned to the current directory contents rather than older architectural intent documents alone.
 
 ## Review Focus
+
 Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.

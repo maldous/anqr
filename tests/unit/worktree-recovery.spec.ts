@@ -98,14 +98,15 @@ describe("classifyWorktree", () => {
     expect(result.repairAction).toBe("reclaim_lease");
   });
 
-  it("should classify dirty orphaned with no context", () => {
+  it("should classify dirty orphaned with no context as quarantine (ADR-0005)", () => {
     const result = classifyWorktree(
       makeSnapshot({
         gitDirtyFiles: ["M src/main.tsx", "A src/new-file.ts"],
       }),
     );
     expect(result.classification).toBe("dirty_orphaned");
-    expect(result.repairAction).toBe("auto_commit_and_push");
+    // ADR-0005: Recovery shall not auto-commit orphaned dirty worktrees — quarantine instead
+    expect(result.repairAction).toBe("quarantine");
     expect(result.confidence).toBeLessThan(0.5);
   });
 
