@@ -4,6 +4,7 @@
 Symphony Anqr Service contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 1 immediate file
 - 0 child directories
 
@@ -11,6 +12,7 @@ Symphony Anqr Service contains the code, configuration, or support files that im
 - `override.conf` - systemd unit used by the harness runtime.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
@@ -19,3 +21,5 @@ Symphony Anqr Service contains the code, configuration, or support files that im
 
 ## Review Focus
 Check that the current implementation in this directory still matches its intended role in the harness architecture.
+
+# Symphony Anqr Service

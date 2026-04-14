@@ -4,10 +4,12 @@
 Authenticated Linear ingress surface that validates webhook events, records evidence, and turns accepted events into scheduler-path desired-work signals rather than directly claiming work.
 
 ## Contents
+
 - 16 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `active-issues.mjs` - Exports `activeIssues`, a shared constant or state value used by sibling modules.
 - `dedup-window-ms.mjs` - Exports `DEDUP_WINDOW_MS`, a shared constant or state value used by sibling modules.
 - `handle-health.mjs` - Exports `handleHealth`, the main helper defined in this file.
@@ -26,6 +28,7 @@ Authenticated Linear ingress surface that validates webhook events, records evid
 - `worktree-ids.mjs` - Exports `WORKTREE_IDS`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

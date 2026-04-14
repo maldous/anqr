@@ -4,10 +4,12 @@
 Discord-side load balancer that routes interactive Discord work into the Discord executor partition and sheds or delays traffic when that pool is saturated.
 
 ## Contents
+
 - 25 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `evict-expired-sessions.mjs` - Exports `evictExpiredSessions`, the main helper defined in this file.
 - `generate-thread-name.mjs` - Exports `generateThreadName`, the main helper defined in this file.
 - `get-least-loaded-worktree.mjs` - Exports `getLeastLoadedWorktree`, the main helper defined in this file.
@@ -35,6 +37,7 @@ Discord-side load balancer that routes interactive Discord work into the Discord
 - `worktree-urls.mjs` - Exports `WORKTREE_URLS`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

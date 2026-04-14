@@ -4,10 +4,12 @@
 Handle Responses Api contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 9 immediate files
 - 1 child directory
 
 ## Key Files
+
 - `build-chat-body.mjs` - Exports `buildChatBody`, the main helper defined in this file.
 - `extract-text-content.mjs` - Exports `extractTextContent`, the main helper defined in this file.
 - `handle-non-streaming.mjs` - Exports `handleNonStreaming`, the main helper defined in this file.

@@ -4,10 +4,12 @@
 Linear Search contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 17 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-search-entry.mjs` - Exports `buildSearchEntry`, the main helper defined in this file.
 - `compute-lexical-score.mjs` - Exports `computeLexicalScore`, the main helper defined in this file.
 - `compute-recency-bonus.mjs` - Exports `computeRecencyBonus`, the main helper defined in this file.
@@ -27,6 +29,7 @@ Linear Search contains the code, configuration, or support files that implement 
 - `warm-linear-index.mjs` - Exports `warmLinearIndex`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

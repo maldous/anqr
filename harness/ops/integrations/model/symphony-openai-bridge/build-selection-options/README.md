@@ -4,15 +4,18 @@
 Build Selection Options contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 3 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-selection-options.mjs` - Exports `buildSelectionOptions`, the main helper defined in this file.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `is-provider-healthy.mjs` - Exports `isProviderHealthy`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

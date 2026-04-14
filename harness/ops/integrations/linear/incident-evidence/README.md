@@ -4,10 +4,12 @@
 Incident Evidence contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 8 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `collect-incident-evidence.mjs` - Exports `collectIncidentEvidence`, the main helper defined in this file.
 - `format-evidence-for-issue.mjs` - Exports `formatEvidenceForIssue`, the main helper defined in this file.
 - `get-git-context.mjs` - Exports `getGitContext`, the main helper defined in this file.
@@ -18,6 +20,7 @@ Incident Evidence contains the code, configuration, or support files that implem
 - `logger.mjs` - Re-export facade that assembles the public surface for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

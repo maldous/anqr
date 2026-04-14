@@ -4,6 +4,7 @@
 Clawdbot Gateway Service contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 1 immediate file
 - 0 child directories
 
@@ -11,6 +12,7 @@ Clawdbot Gateway Service contains the code, configuration, or support files that
 - `ollama.conf` - systemd unit used by the harness runtime.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
@@ -19,3 +21,5 @@ Clawdbot Gateway Service contains the code, configuration, or support files that
 
 ## Review Focus
 Check that the current implementation in this directory still matches its intended role in the harness architecture.
+
+# Clawdbot Gateway Service

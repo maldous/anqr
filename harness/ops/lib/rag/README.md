@@ -4,10 +4,12 @@
 Rag contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 6 immediate files
 - 6 child directories
 
 ## Key Files
+
 - `build-index-linear.mjs` - JavaScript/TypeScript module used by this directory.
 - `build-index.mjs` - JavaScript/TypeScript module used by this directory.
 - `chunker.mjs` - JavaScript/TypeScript module used by this directory.

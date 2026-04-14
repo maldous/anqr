@@ -4,10 +4,12 @@
 Test Agent Workflow contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 17 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `assert-condition.mjs` - Exports `assertCondition`, the main helper defined in this file.
 - `get-current-status.mjs` - Exports `getCurrentStatus`, the main helper defined in this file.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
@@ -27,6 +29,7 @@ Test Agent Workflow contains the code, configuration, or support files that impl
 - `test-success-reporting.mjs` - Exports `testSuccessReporting`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

@@ -4,9 +4,12 @@
 Linear contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 25 immediate files
 - 17 child directories
 
+<<<<<<< ours — heading `Key Files` (F, confidence: medium)
+// hint: Logic changed on both sides. Requires understanding intent of each change.
 ## Key Files
 - `agent-workflow-create-issue.mjs` - JavaScript/TypeScript module used by this directory.
 - `analyze-canceled-issues.mjs` - JavaScript/TypeScript module used by this directory.
@@ -34,6 +37,36 @@ Linear contains the code, configuration, or support files that implement this pa
 - `test-agent-workflow.mjs` - JavaScript/TypeScript module used by this directory.
 - `validate-issue.mjs` - JavaScript/TypeScript module used by this directory.
 
+=======
+## Key Files
+
+- `agent-workflow-create-issue.mjs` - JavaScript/TypeScript module used by this directory.
+- `analyze-canceled-issues.mjs` - JavaScript/TypeScript module used by this directory.
+- `create-ast-audit-issues.mjs` - \*
+- `create-issue-template.mjs` - JavaScript/TypeScript module used by this directory.
+- `create-linear-rag-issues.mjs` - Exports `chunkLinearIssue`, the main helper defined in this file.
+- `create-run-file-change-hooks-bug.mjs` - \*
+- `create-test-coverage-issues.mjs` - \*
+- `delete-sonar-issues.mjs` - JavaScript/TypeScript module used by this directory.
+- `deprioritize-test-coverage-issues.mjs` - \*
+- `export-issues.mjs` - JavaScript/TypeScript module used by this directory.
+- `get-discord-label-id.mjs` - JavaScript/TypeScript module used by this directory.
+- `github-linear-sync-audit.mjs` - JavaScript/TypeScript module used by this directory.
+- `incident-evidence.mjs` - JavaScript/TypeScript module used by this directory.
+- `incident-fingerprint.mjs` - JavaScript/TypeScript module used by this directory.
+- `incident-manager.mjs` - JavaScript/TypeScript module used by this directory.
+- `incident-resolution.mjs` - JavaScript/TypeScript module used by this directory.
+- `issue-hygiene.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-client.mjs` - JavaScript/TypeScript module used by this directory.
+- `list-canceled-issues.mjs` - \*
+- `list-open-issues.mjs` - \*
+- `README-workflow.md` - Documentation file headed by "Linear Agent Workflow Documentation".
+- `reopen-marked-issues.mjs` - JavaScript/TypeScript module used by this directory.
+- `review-open-issues.mjs` - JavaScript/TypeScript module used by this directory.
+- `test-agent-workflow.mjs` - JavaScript/TypeScript module used by this directory.
+- `validate-issue.mjs` - JavaScript/TypeScript module used by this directory.
+
+>>>>>>> theirs — heading `Key Files` (F, confidence: medium)
 ## Subdirectories
 - `agent-workflow-create-issue/` - Agent Workflow Create Issue scope; immediate files include `args.mjs`, `available-labels.mjs`, `available-states.mjs`, `create-linear-issue-workflow.mjs`, and others.
 - `analyze-canceled-issues/` - Analyze Canceled Issues scope; immediate files include `correct-cancel-patterns.mjs`, `index.mjs`, `logger.mjs`, `main.mjs`, and others.

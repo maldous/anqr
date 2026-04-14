@@ -4,10 +4,12 @@
 Contracts Check contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 13 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `allowed-schema-import-sources.mjs` - Exports `allowedSchemaImportSources`, a shared constant or state value used by sibling modules.
 - `collect-files.mjs` - Exports `collectFiles`, the main helper defined in this file.
 - `contracts-root.mjs` - Exports `contractsRoot`, a shared constant or state value used by sibling modules.
@@ -23,6 +25,7 @@ Contracts Check contains the code, configuration, or support files that implemen
 - `schema-carrying-packages.mjs` - Exports `schemaCarryingPackages`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

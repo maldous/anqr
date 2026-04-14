@@ -4,10 +4,12 @@
 Mcp contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 2 immediate files
 - 2 child directories
 
 ## Key Files
+
 - `context7-http-service.mjs` - JavaScript/TypeScript module used by this directory.
 - `context7-server.mjs` - JavaScript/TypeScript module used by this directory.
 

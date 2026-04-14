@@ -4,10 +4,12 @@
 Build Index Linear contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 12 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-linear-index.mjs` - Exports `buildLinearIndex`, the main helper defined in this file.
 - `detect-project-root.mjs` - Exports `detectProjectRoot`, the main helper defined in this file.
 - `export-path.mjs` - Exports `EXPORT_PATH`, a shared constant or state value used by sibling modules.
@@ -22,6 +24,7 @@ Build Index Linear contains the code, configuration, or support files that imple
 - `write-file.mjs` - Exports `writeFile`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

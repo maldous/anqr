@@ -4,10 +4,12 @@
 Linear Client contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 20 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `add-comment.mjs` - Exports `addComment`, the main helper defined in this file.
 - `create-issue.mjs` - Exports `createIssue`, the main helper defined in this file.
 - `find-open-issues-by-description-fragment.mjs` - Exports `findOpenIssuesByDescriptionFragment`, the main helper defined in this file.
@@ -30,6 +32,7 @@ Linear Client contains the code, configuration, or support files that implement 
 - `update-issue.mjs` - Exports `updateIssue`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

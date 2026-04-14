@@ -4,10 +4,12 @@
 Discord contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 1 immediate file
 - 1 child directory
 
 ## Key Files
+
 - `openclaw-gateway-singleton.mjs` - JavaScript/TypeScript module used by this directory.
 
 ## Subdirectories

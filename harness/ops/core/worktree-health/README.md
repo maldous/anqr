@@ -4,10 +4,12 @@
 Worktree Health contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 10 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `all-worktree-ids.mjs` - Exports `ALL_WORKTREE_IDS`, a shared constant or state value used by sibling modules.
 - `get-current-branch.mjs` - Exports `getCurrentBranch`, the main helper defined in this file.
 - `get-fleet-inventory.mjs` - Exports `getFleetInventory`, the main helper defined in this file.
@@ -20,6 +22,7 @@ Worktree Health contains the code, configuration, or support files that implemen
 - `write-fleet-health-file.mjs` - Exports `writeFleetHealthFile`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

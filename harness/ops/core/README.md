@@ -4,6 +4,7 @@
 Core contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 12 immediate files
 - 7 child directories
 

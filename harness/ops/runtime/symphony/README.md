@@ -4,6 +4,7 @@
 Symphony contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 3 immediate files
 - 2 child directories
 

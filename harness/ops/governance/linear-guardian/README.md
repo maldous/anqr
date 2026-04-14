@@ -4,10 +4,12 @@
 Linear Guardian contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 19 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `actions.mjs` - Exports `actions`, a shared constant or state value used by sibling modules.
 - `build-comment-body.mjs` - Exports `buildCommentBody`, the main helper defined in this file.
 - `build-issue-body.mjs` - Exports `buildIssueBody`, the main helper defined in this file.
@@ -29,6 +31,7 @@ Linear Guardian contains the code, configuration, or support files that implemen
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

@@ -4,15 +4,27 @@
 Tools contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 4 immediate files
 - 4 child directories
 
+<<<<<<< ours — heading `Key Files` (F, confidence: medium)
+// hint: Logic changed on both sides. Requires understanding intent of each change.
 ## Key Files
 - `recover-stale-in-progress.mjs` - JavaScript/TypeScript module used by this directory.
 - `reset-retry-exhausted.mjs` - JavaScript/TypeScript module used by this directory.
 - `startup-recovery.mjs` - JavaScript/TypeScript module used by this directory.
 - `verify-webhook-system.mjs` - JavaScript/TypeScript module used by this directory.
 
+=======
+## Key Files
+
+- `recover-stale-in-progress.mjs` - JavaScript/TypeScript module used by this directory.
+- `reset-retry-exhausted.mjs` - \*
+- `startup-recovery.mjs` - JavaScript/TypeScript module used by this directory.
+- `verify-webhook-system.mjs` - JavaScript/TypeScript module used by this directory.
+
+>>>>>>> theirs — heading `Key Files` (F, confidence: medium)
 ## Subdirectories
 - `linear-status/` - Linear Status scope; immediate files include `index.mjs`, `logger.mjs`, `main.mjs`, `runtime.mjs`; child directories include `logger/`, `main/`.
 - `recover-stale-in-progress/` - Recover Stale In Progress scope; immediate files include `index.mjs`, `issue-age.mjs`, `logger.mjs`, `main.mjs`, and others.

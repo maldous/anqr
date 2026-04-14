@@ -4,10 +4,12 @@
 Sonar Linear Sync contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 26 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `apply-promote-and-requeue.mjs` - Exports `applyPromoteAndRequeue`, the main helper defined in this file.
 - `build-duplication-linear-description.mjs` - Exports `buildDuplicationLinearDescription`, the main helper defined in this file.
 - `build-duplication-linear-title.mjs` - Exports `buildDuplicationLinearTitle`, the main helper defined in this file.
@@ -36,6 +38,7 @@ Sonar Linear Sync contains the code, configuration, or support files that implem
 - `sync-sonar-to-linear.mjs` - Exports `syncSonarToLinear`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

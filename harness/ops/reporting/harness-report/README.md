@@ -4,10 +4,12 @@
 Harness Report contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 32 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `allowed-root-dirs.mjs` - Exports `ALLOWED_ROOT_DIRS`, a shared constant or state value used by sibling modules.
 - `check-ast-density.mjs` - Exports `checkAstDensity`, the main helper defined in this file.
 - `check-cspell-coverage.mjs` - Exports `checkCspellCoverage`, the main helper defined in this file.
@@ -42,6 +44,7 @@ Harness Report contains the code, configuration, or support files that implement
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

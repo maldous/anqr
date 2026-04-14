@@ -4,10 +4,12 @@
 Openclaw Discord contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 19 immediate files
 - 2 child directories
 
 ## Key Files
+
 - `color-to-emoji.mjs` - Exports `colorToEmoji`, the main helper defined in this file.
 - `create-discord-thread.mjs` - Exports `createDiscordThread`, the main helper defined in this file.
 - `discord-stream-buffers.mjs` - Exports `discordStreamBuffers`, a shared constant or state value used by sibling modules.

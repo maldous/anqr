@@ -4,10 +4,12 @@
 Watchdog Monitor contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 18 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `args.mjs` - Exports `args`, a shared constant or state value used by sibling modules.
 - `bridge-arg.mjs` - Exports `bridgeArg`, a shared constant or state value used by sibling modules.
 - `check-bridge-health.mjs` - Exports `checkBridgeHealth`, the main helper defined in this file.
@@ -28,6 +30,7 @@ Watchdog Monitor contains the code, configuration, or support files that impleme
 - `worktree-id.mjs` - Exports `WORKTREE_ID`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

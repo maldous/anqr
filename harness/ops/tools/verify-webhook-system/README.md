@@ -4,10 +4,12 @@
 Verify Webhook System contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 7 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `check-systemd-service.mjs` - Exports `checkSystemdService`, the main helper defined in this file.
 - `check-systemd-timer.mjs` - Exports `checkSystemdTimer`, the main helper defined in this file.
 - `get-systemd-status.mjs` - Exports `getSystemdStatus`, the main helper defined in this file.
@@ -17,6 +19,7 @@ Verify Webhook System contains the code, configuration, or support files that im
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

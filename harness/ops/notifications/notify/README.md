@@ -4,10 +4,12 @@
 Notify contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 10 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
 - `format-email-body.mjs` - Exports `formatEmailBody`, the main helper defined in this file.
 - `format-stdout.mjs` - Exports `formatStdout`, the main helper defined in this file.
@@ -20,6 +22,7 @@ Notify contains the code, configuration, or support files that implement this pa
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

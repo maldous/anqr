@@ -4,10 +4,12 @@
 Export Issues contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 9 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `done-days-lookback.mjs` - Exports `DONE_DAYS_LOOKBACK`, a shared constant or state value used by sibling modules.
 - `fetch-recent-done-issues.mjs` - Exports `fetchRecentDoneIssues`, the main helper defined in this file.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
@@ -19,6 +21,7 @@ Export Issues contains the code, configuration, or support files that implement 
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

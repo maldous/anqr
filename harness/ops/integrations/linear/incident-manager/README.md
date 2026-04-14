@@ -4,10 +4,12 @@
 Incident Manager contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 8 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-incident-description.mjs` - Exports `buildIncidentDescription`, the main helper defined in this file.
 - `build-incident-title.mjs` - Exports `buildIncidentTitle`, the main helper defined in this file.
 - `create-or-update-incident.mjs` - Exports `createOrUpdateIncident`, the main helper defined in this file.
@@ -18,6 +20,7 @@ Incident Manager contains the code, configuration, or support files that impleme
 - `logger.mjs` - Re-export facade that assembles the public surface for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

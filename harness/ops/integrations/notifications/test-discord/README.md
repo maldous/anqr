@@ -4,10 +4,12 @@
 Test Discord contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 8 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `logger.mjs` - Re-export facade that assembles the public surface for this directory.
 - `openclaw-gateway-host.mjs` - Exports `OPENCLAW_GATEWAY_HOST`, a shared constant or state value used by sibling modules.
@@ -18,6 +20,7 @@ Test Discord contains the code, configuration, or support files that implement t
 - `test-voice-announcement.mjs` - Exports `testVoiceAnnouncement`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

@@ -7,6 +7,8 @@ Canonical operational runtime tree for the ANQR harness, covering shared state, 
 - 26 immediate files
 - 13 child directories
 
+<<<<<<< ours — heading `Key Files` (S+F, confidence: low)
+// hint: Structural and logic conflict. Both design and behavior differ.
 ## Key Files
 - `email-ingest.mjs` - JavaScript/TypeScript module used by this directory.
 - `harness-doctor.mjs` - JavaScript/TypeScript module used by this directory.
@@ -35,6 +37,36 @@ Canonical operational runtime tree for the ANQR harness, covering shared state, 
 - `symphony-validation.mjs` - JavaScript/TypeScript module used by this directory.
 - `sync-worktrees.mjs` - JavaScript/TypeScript module used by this directory.
 
+=======
+## Key Files
+
+- `email-ingest.mjs` - JavaScript/TypeScript module used by this directory.
+- `harness-doctor.mjs` - JavaScript/TypeScript module used by this directory.
+- `harness-report.mjs` - JavaScript/TypeScript module used by this directory.
+- `issue_hygiene.py` - Python script used by this directory.
+- `linear-all.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-client.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-guardian.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-reconciler.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-status.mjs` - JavaScript/TypeScript module used by this directory.
+- `model-injector-proxy.py` - Python script used by this directory.
+- `nightly-ops-pass.mjs` - JavaScript/TypeScript module used by this directory.
+- `notify.mjs` - JavaScript/TypeScript module used by this directory.
+- `ollama-local-audit.mjs` - JavaScript/TypeScript module used by this directory.
+- `provider-probe-report.mjs` - JavaScript/TypeScript module used by this directory.
+- `self-healing-automation.sh` - Shell script used by this directory.
+- `sonar-group-issues.mjs` - Group by rule
+- `sonar-linear-audit.mjs` - JavaScript/TypeScript module used by this directory.
+- `sonar-linear-mail.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-agent.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-config.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-credit-gate.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-queue-control.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-state.mjs` - v2: also exports setFinalizationState, getFinalizationState, enqueueIntegrationCandidate,
+- `symphony-validation.mjs` - JavaScript/TypeScript module used by this directory.
+- `sync-worktrees.mjs` - \*
+
+>>>>>>> theirs — heading `Key Files` (S+F, confidence: low)
 ## Subdirectories
 - `core/` - Core scope; immediate files include `bridge-result.mjs`, `bridge-result.spec.ts`, `discord-source.mjs`, `linear-worktree-health-states.mjs`, and others; child directories include `bridge-result/`, `discord-source/`, `symphony-state/`, `symphony-validation/`, and others.
 - `governance/` - Governance scope; immediate files include `linear-guardian.mjs`; child directories include `linear-guardian/`.

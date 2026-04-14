@@ -4,10 +4,12 @@
 Agent Docs Check contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 12 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `compare-sets.mjs` - Exports `compareSets`, the main helper defined in this file.
 - `errors.mjs` - Exports `errors`, a shared constant or state value used by sibling modules.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
@@ -22,6 +24,7 @@ Agent Docs Check contains the code, configuration, or support files that impleme
 - `sorted.mjs` - Exports `sorted`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

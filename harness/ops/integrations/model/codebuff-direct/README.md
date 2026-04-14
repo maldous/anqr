@@ -4,10 +4,12 @@
 Codebuff Direct contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 27 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-prompt.mjs` - Exports `buildPrompt`, the main helper defined in this file.
 - `codebuff-max-continuations.mjs` - Exports `CODEBUFF_MAX_CONTINUATIONS`, a shared constant or state value used by sibling modules.
 - `codebuff-max-steps.mjs` - Exports `CODEBUFF_MAX_STEPS`, a shared constant or state value used by sibling modules.
@@ -37,6 +39,7 @@ Codebuff Direct contains the code, configuration, or support files that implemen
 - `try-mode.mjs` - Exports `tryMode`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

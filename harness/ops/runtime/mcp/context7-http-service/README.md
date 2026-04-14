@@ -4,10 +4,12 @@
 Context7 Http Service contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 10 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `handle-request.mjs` - Exports `handleRequest`, the main helper defined in this file.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `logger.mjs` - Re-export facade that assembles the public surface for this directory.
@@ -20,6 +22,7 @@ Context7 Http Service contains the code, configuration, or support files that im
 - `started-at.mjs` - Exports `startedAt`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

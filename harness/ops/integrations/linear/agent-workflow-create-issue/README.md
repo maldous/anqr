@@ -4,10 +4,12 @@
 Agent Workflow Create Issue contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 12 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `args.mjs` - Exports `args`, a shared constant or state value used by sibling modules.
 - `available-labels.mjs` - Exports `AVAILABLE_LABELS`, a shared constant or state value used by sibling modules.
 - `available-states.mjs` - Exports `AVAILABLE_STATES`, a shared constant or state value used by sibling modules.
@@ -22,6 +24,7 @@ Agent Workflow Create Issue contains the code, configuration, or support files t
 - `workflow-create-linear-issue.mjs` - Exports `workflowCreateLinearIssue`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

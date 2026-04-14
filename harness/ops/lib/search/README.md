@@ -4,10 +4,12 @@
 Search contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 2 immediate files
 - 2 child directories
 
 ## Key Files
+
 - `hybrid-search.mjs` - JavaScript/TypeScript module used by this directory.
 - `linear-search.mjs` - JavaScript/TypeScript module used by this directory.
 

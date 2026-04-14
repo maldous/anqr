@@ -4,10 +4,12 @@
 Enrich Provider Context Sizes contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 8 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-context-map-from-api.mjs` - Exports `buildContextMapFromApi`, the main helper defined in this file.
 - `build-context-map-from-catalog.mjs` - Exports `buildContextMapFromCatalog`, the main helper defined in this file.
 - `constants.mjs` - Exports `CONTEXT_REFRESH_INTERVAL_MS`, a shared constant or state value used by sibling modules.
@@ -18,6 +20,7 @@ Enrich Provider Context Sizes contains the code, configuration, or support files
 - `parse-models-from-api-response.mjs` - Exports `parseModelsFromApiResponse`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

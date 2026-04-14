@@ -4,16 +4,19 @@
 Logger contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 4 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `log-error.mjs` - Exports `logError`, a shared constant or state value used by sibling modules.
 - `log-warn.mjs` - Exports `logWarn`, a shared constant or state value used by sibling modules.
 - `prefix.mjs` - Exports `PREFIX`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

@@ -4,10 +4,12 @@
 Worktree-local OpenAI-compatible bridge that exposes repository tools, runs AI requests in the correct checkout, integrates Codex and other providers, and applies fallback, probing, and request finalization.
 
 ## Contents
+
 - 199 immediate files
 - 2 child directories
 
 ## Key Files
+
 - `active-requests.mjs` - Exports `activeRequests`, a shared constant or state value used by sibling modules.
 - `add-message-tool.mjs` - Exports `addMessageTool`, the main helper defined in this file.
 - `add-subgoal-tool.mjs` - Exports `addSubgoalTool`, the main helper defined in this file.

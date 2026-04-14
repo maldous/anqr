@@ -4,10 +4,12 @@
 Ollama Local Audit contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 14 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `check-model-available.mjs` - Exports `checkModelAvailable`, the main helper defined in this file.
 - `check-model-responds.mjs` - Exports `checkModelResponds`, the main helper defined in this file.
 - `check-reachable.mjs` - Exports `checkReachable`, the main helper defined in this file.
@@ -24,6 +26,7 @@ Ollama Local Audit contains the code, configuration, or support files that imple
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

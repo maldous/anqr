@@ -4,6 +4,7 @@
 Recovery daemon for classifying unhealthy worktrees, quarantining or reprovisioning damaged sandboxes, and performing non-publishing maintenance that keeps the executor fleet usable.
 
 ## Contents
+
 - 15 immediate files
 - 1 child directory
 

@@ -4,10 +4,12 @@
 Symphony Adaptive Context contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 48 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `classify-error.mjs` - Exports `classifyError`, the main helper defined in this file.
 - `context-expand-factor.mjs` - Exports `CONTEXT_EXPAND_FACTOR`, a shared constant or state value used by sibling modules.
 - `context-expand-threshold.mjs` - Exports `CONTEXT_EXPAND_THRESHOLD`, a shared constant or state value used by sibling modules.
@@ -58,6 +60,7 @@ Symphony Adaptive Context contains the code, configuration, or support files tha
 - `tpm-proactive-threshold.mjs` - Exports `TPM_PROACTIVE_THRESHOLD`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

@@ -4,10 +4,12 @@
 Review Open Issues contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 15 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
 - `exec-async.mjs` - Exports `execAsync`, a shared constant or state value used by sibling modules.
 - `extract-check-name.mjs` - Exports `extractCheckName`, the main helper defined in this file.
@@ -25,6 +27,7 @@ Review Open Issues contains the code, configuration, or support files that imple
 - `stale-days.mjs` - Exports `STALE_DAYS`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

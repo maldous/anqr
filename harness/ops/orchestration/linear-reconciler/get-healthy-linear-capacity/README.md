@@ -4,15 +4,18 @@
 Get Healthy Linear Capacity contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 3 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `get-healthy-linear-capacity.mjs` - Exports `getHealthyLinearCapacity`, the main helper defined in this file.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `normalize-worktree-state.mjs` - Exports `normalizeWorktreeState`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

@@ -4,10 +4,12 @@
 Build Index contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 29 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-candidate-list.mjs` - Exports `buildCandidateList`, the main helper defined in this file.
 - `classify-file.mjs` - Exports `classifyFile`, the main helper defined in this file.
 - `detect-project-root.mjs` - Exports `detectProjectRoot`, the main helper defined in this file.
@@ -39,6 +41,7 @@ Build Index contains the code, configuration, or support files that implement th
 - `verbose.mjs` - Exports `VERBOSE`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

@@ -4,10 +4,12 @@
 Latency Report contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 10 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `acceptable-ms.mjs` - Exports `ACCEPTABLE_MS`, a shared constant or state value used by sibling modules.
 - `classify-latency.mjs` - Exports `classifyLatency`, the main helper defined in this file.
 - `format-duration.mjs` - Exports `formatDuration`, the main helper defined in this file.
@@ -20,6 +22,7 @@ Latency Report contains the code, configuration, or support files that implement
 - `target-ms.mjs` - Exports `TARGET_MS`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

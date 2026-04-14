@@ -4,10 +4,12 @@
 Worktree Config contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 11 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
 - `discord-worktree-ids.mjs` - Exports `DISCORD_WORKTREE_IDS`, a shared constant or state value used by sibling modules.
 - `get-worktree-branch.mjs` - Exports `getWorktreeBranch`, the main helper defined in this file.
@@ -21,6 +23,7 @@ Worktree Config contains the code, configuration, or support files that implemen
 - `worktree-prefix.mjs` - Exports `WORKTREE_PREFIX`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

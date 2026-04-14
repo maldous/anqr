@@ -4,10 +4,12 @@
 Linear Status contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 4 immediate files
 - 2 child directories
 
 ## Key Files
+
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `logger.mjs` - Re-export facade that assembles the public surface for this directory.
 - `main.mjs` - Re-export facade that assembles the public surface for this directory.

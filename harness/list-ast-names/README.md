@@ -4,10 +4,12 @@
 List Ast Names contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 11 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `collect-top-level-entries.mjs` - Exports `collectTopLevelEntries`, a shared constant or state value used by sibling modules.
 - `describe-variable-declaration.mjs` - Exports `describeVariableDeclaration`, a shared constant or state value used by sibling modules.
 - `flatten-results.mjs` - Exports `flattenResults`, a shared constant or state value used by sibling modules.
@@ -21,6 +23,7 @@ List Ast Names contains the code, configuration, or support files that implement
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

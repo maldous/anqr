@@ -4,10 +4,12 @@
 Notify contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 16 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `check-dedup.mjs` - Exports `checkDedup`, the main helper defined in this file.
 - `dedup-window-ms.mjs` - Exports `DEDUP_WINDOW_MS`, a shared constant or state value used by sibling modules.
 - `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
@@ -26,6 +28,7 @@ Notify contains the code, configuration, or support files that implement this pa
 - `state-dir.mjs` - Exports `STATE_DIR`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

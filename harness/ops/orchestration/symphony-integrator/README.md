@@ -4,10 +4,12 @@
 Single-writer integration service that drains integration candidates, cherry-picks them onto mainline one at a time, and publishes evidence-backed closeout.
 
 ## Contents
+
 - 14 immediate files
 - 1 child directory
 
 ## Key Files
+
 - `find-issue-by-identifier.mjs` - Exports `findIssueByIdentifier`, the main helper defined in this file.
 - `git.mjs` - Exports `git`, the main helper defined in this file.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.

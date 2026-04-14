@@ -4,10 +4,12 @@
 Validate Issue contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 11 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `calculate-validation-score.mjs` - Exports `calculateValidationScore`, the main helper defined in this file.
 - `determine-priority.mjs` - Exports `determinePriority`, the main helper defined in this file.
 - `format-validation-result.mjs` - Exports `formatValidationResult`, the main helper defined in this file.
@@ -21,6 +23,7 @@ Validate Issue contains the code, configuration, or support files that implement
 - `validate-issue-input.mjs` - Exports `validateIssueInput`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

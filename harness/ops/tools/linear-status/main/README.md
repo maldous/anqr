@@ -4,16 +4,19 @@
 Main contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 4 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `has-active-cooldown.mjs` - Exports `hasActiveCooldown`, the main helper defined in this file.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `main.mjs` - Exports `main`, the main helper defined in this file.
 - `pad.mjs` - Exports `pad`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

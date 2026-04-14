@@ -4,10 +4,12 @@
 Github Linear Sync Audit contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 12 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `audit-sync.mjs` - Exports `auditSync`, the main helper defined in this file.
 - `close-git-hub-issue.mjs` - Exports `closeGitHubIssue`, the main helper defined in this file.
 - `extract-linear-identifier.mjs` - Exports `extractLinearIdentifier`, the main helper defined in this file.
@@ -22,6 +24,7 @@ Github Linear Sync Audit contains the code, configuration, or support files that
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

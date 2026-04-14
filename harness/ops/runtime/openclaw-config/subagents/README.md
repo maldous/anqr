@@ -4,13 +4,16 @@
 Subagents contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 1 immediate file
 - 0 child directories
 
 ## Key Files
+
 - `runs.json` - JSON configuration/data file with top-level keys `version`, `runs`.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

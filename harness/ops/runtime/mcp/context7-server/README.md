@@ -4,10 +4,12 @@
 Context7 Server contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 51 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `add-part.mjs` - Exports `addPart`, the main helper defined in this file.
 - `build-docs-arguments.mjs` - Exports `buildDocsArguments`, the main helper defined in this file.
 - `build-resolve-arguments.mjs` - Exports `buildResolveArguments`, the main helper defined in this file.
@@ -61,6 +63,7 @@ Context7 Server contains the code, configuration, or support files that implemen
 - `tool-registry.mjs` - Exports `setToolRegistry`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

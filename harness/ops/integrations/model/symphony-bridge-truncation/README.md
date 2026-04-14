@@ -4,10 +4,12 @@
 Symphony Bridge Truncation contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 20 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-dynamic-catalog-limits.mjs` - Exports `buildDynamicCatalogLimits`, the main helper defined in this file.
 - `build-provider-max-input-tokens.mjs` - Exports `buildProviderMaxInputTokens`, the main helper defined in this file.
 - `chars-per-token.mjs` - Exports `CHARS_PER_TOKEN`, a shared constant or state value used by sibling modules.
@@ -30,6 +32,7 @@ Symphony Bridge Truncation contains the code, configuration, or support files th
 - `validate-context-coherence.mjs` - Exports `validateContextCoherence`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

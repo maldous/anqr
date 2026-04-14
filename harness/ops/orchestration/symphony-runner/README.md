@@ -3,11 +3,21 @@
 ## Purpose
 Worktree-local executor that runs already-assigned work inside an isolated checkout, performs validation, commits/pushes worktree results, and prepares candidates for serial integration.
 
+<<<<<<< ours — heading `Contents` (F, confidence: medium)
+// hint: Logic changed on both sides. Requires understanding intent of each change.
 ## Contents
 - 54 immediate files
 - 1 child directory
 
+=======
+## Contents
+
+- 54 immediate files
+- 1 child directory
+
+>>>>>>> theirs — heading `Contents` (F, confidence: medium)
 ## Key Files
+
 - `acquire-lock.mjs` - Exports `acquireLock`, the main helper defined in this file.
 - `auto-detected-worktree-id.mjs` - Exports `setAutoDetectedWorktreeId`, the main helper defined in this file.
 - `classify-provider-failure.mjs` - Exports `classifyProviderFailure`, the main helper defined in this file.

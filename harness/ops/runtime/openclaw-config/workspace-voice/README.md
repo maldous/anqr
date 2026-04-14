@@ -4,6 +4,7 @@
 Workspace Voice contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 7 immediate files
 - 0 child directories
 
@@ -17,6 +18,7 @@ Workspace Voice contains the code, configuration, or support files that implemen
 - `USER.md` - Markdown documentation file headed by "# USER.md - About Your Human".
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

@@ -4,10 +4,12 @@
 External-system adapter layer that connects the harness to Linear, email, Sonar, model providers, Discord, and OpenClaw notification channels.
 
 ## Contents
+
 - 0 immediate files
 - 5 child directories
 
 ## Key Files
+
 - No immediate non-README files in this directory.
 
 ## Subdirectories

@@ -4,10 +4,12 @@
 Hybrid Search contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 27 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `collect-project-files.mjs` - Exports `collectProjectFiles`, the main helper defined in this file.
 - `compute-fingerprint.mjs` - Exports `computeFingerprint`, the main helper defined in this file.
 - `cosine-similarity.mjs` - JavaScript/TypeScript module used by this directory.
@@ -37,6 +39,7 @@ Hybrid Search contains the code, configuration, or support files that implement 
 - `warm-search-index.mjs` - Exports `warmSearchIndex`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

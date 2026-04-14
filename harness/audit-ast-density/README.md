@@ -4,10 +4,12 @@
 Audit Ast Density contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 9 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `collect-heavy-nodes.mjs` - Exports `collectHeavyNodes`, a shared constant or state value used by sibling modules.
 - `default-threshold.mjs` - Exports `DEFAULT_THRESHOLD`, a shared constant or state value used by sibling modules.
 - `describe-variable-declaration.mjs` - Exports `describeVariableDeclaration`, a shared constant or state value used by sibling modules.
@@ -19,6 +21,7 @@ Audit Ast Density contains the code, configuration, or support files that implem
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

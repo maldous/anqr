@@ -4,10 +4,12 @@
 Notifications contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 2 immediate files
 - 2 child directories
 
 ## Key Files
+
 - `openclaw-discord.mjs` - JavaScript/TypeScript module used by this directory.
 - `test-discord.mjs` - JavaScript/TypeScript module used by this directory.
 

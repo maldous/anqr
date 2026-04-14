@@ -4,10 +4,12 @@
 Symphony Provider Health contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 13 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `get-provider-health-state.mjs` - Exports `getProviderHealthState`, the main helper defined in this file.
 - `health-state-file.mjs` - Exports `HEALTH_STATE_FILE`, a shared constant or state value used by sibling modules.
 - `health-states.mjs` - Exports `HEALTH_STATES`, a shared constant or state value used by sibling modules.
@@ -23,6 +25,7 @@ Symphony Provider Health contains the code, configuration, or support files that
 - `state-dir.mjs` - Exports `STATE_DIR`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

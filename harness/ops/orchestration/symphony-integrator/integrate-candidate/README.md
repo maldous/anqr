@@ -4,16 +4,19 @@
 Integrate Candidate contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 4 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `build-evidence-comment.mjs` - Exports `buildEvidenceComment`, the main helper defined in this file.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `integrate-candidate.mjs` - Exports `integrateCandidate`, the main helper defined in this file.
 - `publish-evidence-and-close.mjs` - Exports `publishEvidenceAndClose`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

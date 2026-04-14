@@ -4,10 +4,12 @@
 Linear All contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 9 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `api-key.mjs` - Exports `API_KEY`, a shared constant or state value used by sibling modules.
 - `fetch-page.mjs` - Exports `fetchPage`, the main helper defined in this file.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
@@ -19,6 +21,7 @@ Linear All contains the code, configuration, or support files that implement thi
 - `team-id.mjs` - Exports `TEAM_ID`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

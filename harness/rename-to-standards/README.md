@@ -4,10 +4,12 @@
 Rename To Standards contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 32 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `apply-plan.mjs` - Exports `applyPlan`, a shared constant or state value used by sibling modules.
 - `build-plan.mjs` - Exports `buildPlan`, a shared constant or state value used by sibling modules.
 - `choose-primary-entry.mjs` - Exports `choosePrimaryEntry`, a shared constant or state value used by sibling modules.
@@ -42,6 +44,7 @@ Rename To Standards contains the code, configuration, or support files that impl
 - `walk.mjs` - Exports `walk`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

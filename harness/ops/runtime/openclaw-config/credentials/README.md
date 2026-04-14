@@ -4,14 +4,17 @@
 Credentials contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 2 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `discord-default-allowFrom.json` - JSON configuration/data file with top-level keys `version`, `allowFrom`.
 - `discord-pairing.json` - JSON configuration/data file with top-level keys `version`, `requests`.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

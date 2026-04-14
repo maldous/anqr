@@ -4,10 +4,12 @@
 Lifecycle tooling for provisioning, listing, repairing, reprovisioning, and removing the git worktree fleet used by the executor pool.
 
 ## Contents
+
 - 21 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `cleanup-worktree-pool.d.ts` - Type declaration file for the sibling module surface.
 - `cleanup-worktree-pool.mjs` - Exports `cleanupWorktreePool`, the main helper defined in this file.
 - `create-worktree.d.ts` - Type declaration file for the sibling module surface.
@@ -31,6 +33,7 @@ Lifecycle tooling for provisioning, listing, repairing, reprovisioning, and remo
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

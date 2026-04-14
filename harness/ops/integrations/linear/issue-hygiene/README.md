@@ -4,10 +4,12 @@
 Issue Hygiene contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 15 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `action-delay-ms.mjs` - Exports `ACTION_DELAY_MS`, a shared constant or state value used by sibling modules.
 - `analysis-delay-ms.mjs` - Exports `ANALYSIS_DELAY_MS`, a shared constant or state value used by sibling modules.
 - `analyze-comments.mjs` - Exports `analyzeComments`, the main helper defined in this file.
@@ -25,6 +27,7 @@ Issue Hygiene contains the code, configuration, or support files that implement 
 - `systemic-failure-threshold.mjs` - Exports `SYSTEMIC_FAILURE_THRESHOLD`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

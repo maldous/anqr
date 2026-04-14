@@ -4,10 +4,12 @@
 Embeddings contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 20 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `cosine-similarity.mjs` - Exports `cosineSimilarity`, the main helper defined in this file.
 - `embedding-model.mjs` - Exports `EMBEDDING_MODEL`, a shared constant or state value used by sibling modules.
 - `embedding-timeout-ms.mjs` - Exports `EMBEDDING_TIMEOUT_MS`, a shared constant or state value used by sibling modules.
@@ -30,6 +32,7 @@ Embeddings contains the code, configuration, or support files that implement thi
 - `to-positive-int.mjs` - Exports `toPositiveInt`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

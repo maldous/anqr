@@ -4,10 +4,12 @@
 Harness Doctor contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 15 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `check-credit-gate.mjs` - Exports `checkCreditGate`, the main helper defined in this file.
 - `check-env-vars.mjs` - Exports `checkEnvVars`, the main helper defined in this file.
 - `check-harness-config.mjs` - Exports `checkHarnessConfig`, the main helper defined in this file.
@@ -25,6 +27,7 @@ Harness Doctor contains the code, configuration, or support files that implement
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

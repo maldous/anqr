@@ -4,10 +4,12 @@
 Symphony Queue Control contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 16 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `actions.mjs` - Exports `actions`, a shared constant or state value used by sibling modules.
 - `count-enabled-timers.mjs` - Exports `countEnabledTimers`, the main helper defined in this file.
 - `detect-stuck-work.mjs` - Exports `detectStuckWork`, the main helper defined in this file.
@@ -26,6 +28,7 @@ Symphony Queue Control contains the code, configuration, or support files that i
 - `validate-concurrency-config.mjs` - Exports `validateConcurrencyConfig`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

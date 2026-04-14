@@ -4,10 +4,12 @@
 Source-controlled OpenClaw configuration tree that supplies gateway auth, model routing, approval, Discord, voice, and workspace settings expected by the live OpenClaw runtime.
 
 ## Contents
+
 - 7 immediate files
 - 11 child directories
 
 ## Key Files
+
 - `.env.example` - Environment variable template or inventory file.
 - `clawdbot.json` - JSON configuration/data file with top-level keys `meta`, `agents`, `commands`, `messages`, `talk`, `gateway`, `wizard`.
 - `config.json` - JSON configuration/data file with top-level keys `$schema`, `tts`, `gateway`.

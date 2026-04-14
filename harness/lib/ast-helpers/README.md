@@ -4,10 +4,12 @@
 Ast Helpers contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 8 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `default-globs.mjs` - Exports `DEFAULT_GLOBS`, a shared constant or state value used by sibling modules.
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `is-class-like-initializer.mjs` - Exports `isClassLikeInitializer`, a shared constant or state value used by sibling modules.
@@ -18,6 +20,7 @@ Ast Helpers contains the code, configuration, or support files that implement th
 - `setup-epipe-handler.mjs` - Exports `setupEpipeHandler`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

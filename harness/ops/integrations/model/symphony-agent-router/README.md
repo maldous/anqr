@@ -4,6 +4,7 @@
 Router control plane that accepts scheduler-issued triggers, verifies scheduler-owned claims and durable worktree assignment, and forwards work into the assigned worktree-local bridge.
 
 ## Contents
+
 - 26 immediate files
 - 1 child directory
 

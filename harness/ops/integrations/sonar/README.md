@@ -4,10 +4,12 @@
 Sonar contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 2 immediate files
 - 2 child directories
 
 ## Key Files
+
 - `sonar-linear-audit.mjs` - JavaScript/TypeScript module used by this directory.
 - `sonar-linear-sync.mjs` - JavaScript/TypeScript module used by this directory.
 

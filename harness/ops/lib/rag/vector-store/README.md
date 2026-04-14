@@ -4,10 +4,12 @@
 Vector Store contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 39 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `atomic-write-json.mjs` - Exports `atomicWriteJSON`, the main helper defined in this file.
 - `cleanup-stale-index-files.mjs` - Exports `cleanupStaleIndexFiles`, the main helper defined in this file.
 - `clear-index.mjs` - Exports `clearIndex`, the main helper defined in this file.
@@ -49,6 +51,7 @@ Vector Store contains the code, configuration, or support files that implement t
 - `to-stored-path.mjs` - Exports `toStoredPath`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

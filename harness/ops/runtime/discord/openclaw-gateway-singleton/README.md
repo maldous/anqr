@@ -4,10 +4,12 @@
 Openclaw Gateway Singleton contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 38 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `child-process.mjs` - Exports `setChildProcess`, the main helper defined in this file.
 - `cleanup-stale-lock.mjs` - Exports `cleanupStaleLock`, the main helper defined in this file.
 - `cli.mjs` - Exports `CLI`, a shared constant or state value used by sibling modules.
@@ -48,6 +50,7 @@ Openclaw Gateway Singleton contains the code, configuration, or support files th
 - `write-lock-metadata.mjs` - Exports `writeLockMetadata`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

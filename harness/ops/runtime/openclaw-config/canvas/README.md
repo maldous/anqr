@@ -4,13 +4,16 @@
 Canvas contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 1 immediate file
 - 0 child directories
 
 ## Key Files
+
 - `index.html` - Static HTML asset used by this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

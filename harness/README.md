@@ -4,6 +4,7 @@
 Top-level harness surface that connects repository-local entry points, architecture workspace artifacts, and the maintained operations runtime tree.
 
 ## Contents
+
 - 12 immediate files
 - 8 child directories
 

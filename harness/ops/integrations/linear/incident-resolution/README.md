@@ -4,10 +4,12 @@
 Incident Resolution contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 10 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `auto-resolve-incident.mjs` - Exports `autoResolveIncident`, the main helper defined in this file.
 - `can-auto-resolve.mjs` - Exports `canAutoResolve`, the main helper defined in this file.
 - `check-service-health.mjs` - Exports `checkServiceHealth`, the main helper defined in this file.
@@ -20,6 +22,7 @@ Incident Resolution contains the code, configuration, or support files that impl
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

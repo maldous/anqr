@@ -4,13 +4,16 @@
 Cron contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 1 immediate file
 - 0 child directories
 
 ## Key Files
+
 - `jobs.json` - JSON configuration/data file with top-level keys `version`, `jobs`.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

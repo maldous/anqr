@@ -4,10 +4,12 @@
 Bridge Watchdog contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 41 immediate files
 - 1 child directory
 
 ## Key Files
+
 - `activating-state-start.mjs` - Exports `activatingStateStart`, a shared constant or state value used by sibling modules.
 - `catastrophic-patterns.mjs` - Exports `CATASTROPHIC_PATTERNS`, a shared constant or state value used by sibling modules.
 - `check-file-integrity.mjs` - Exports `checkFileIntegrity`, the main helper defined in this file.

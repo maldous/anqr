@@ -4,10 +4,12 @@
 Provider-selection subsystem that ranks AI backends using health state, probe results, leases, credit-awareness, recent outcomes, and context-size enrichment before each execution path chooses a provider.
 
 ## Contents
+
 - 157 immediate files
 - 3 child directories
 
 ## Key Files
+
 - `acquire-provider-lease.mjs` - Exports `acquireProviderLease`, the main helper defined in this file.
 - `build-dynamic-catalog-providers.mjs` - Exports `buildDynamicCatalogProviders`, the main helper defined in this file.
 - `build-provider-probe-failure-breakdown.mjs` - Exports `buildProviderProbeFailureBreakdown`, the main helper defined in this file.

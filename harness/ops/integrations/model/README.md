@@ -4,9 +4,12 @@
 AI execution integration layer that handles ingress transport, bridge hosting, scheduler-aware dispatch, provider routing, context control, session state, and bridge-side health.
 
 ## Contents
+
 - 25 immediate files
 - 11 child directories
 
+<<<<<<< ours — heading `Key Files` (S+F, confidence: low)
+// hint: Structural and logic conflict. Both design and behavior differ.
 ## Key Files
 - `codebuff-cwd-isolation.spec.ts` - JavaScript/TypeScript module used by this directory.
 - `codebuff-direct.mjs` - JavaScript/TypeScript module used by this directory.
@@ -34,6 +37,36 @@ AI execution integration layer that handles ingress transport, bridge hosting, s
 - `symphony-session-state.mjs` - JavaScript/TypeScript module used by this directory.
 - `symphony-session-state.spec.ts` - JavaScript/TypeScript module used by this directory.
 
+=======
+## Key Files
+
+- `codebuff-cwd-isolation.spec.ts` - \*
+- `codebuff-direct.mjs` - JavaScript/TypeScript module used by this directory.
+- `codebuff-sdk-runner.mjs` - Exports `PROJECT_ROOT`, a shared constant or state value used by sibling modules.
+- `discord-request-router.mjs` - JavaScript/TypeScript module used by this directory.
+- `linear-webhook-receiver.mjs` - JavaScript/TypeScript module used by this directory.
+- `litellm-config.yaml` - Support file used by this directory.
+- `model-injector-proxy.py` - Python script used by this directory.
+- `ollama-local-audit.mjs` - JavaScript/TypeScript module used by this directory.
+- `set-max-listeners.mjs` - Must be the first import in bridge entry points.
+- `startup-probe-bootstrap-mode.spec.ts` - JavaScript/TypeScript module used by this directory.
+- `symphony-adaptive-context.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-adaptive-context.spec.ts` - \*
+- `symphony-agent-router.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-bridge-truncation.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-bridge-truncation.spec.ts` - @ts-ignore - No type declarations for .mjs module
+- `symphony-credit-gate.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-credit-gate.spec.ts` - \*
+- `symphony-openai-bridge-fallback.spec.ts` - \*
+- `symphony-openai-bridge-normalization.spec.ts` - \*
+- `symphony-openai-bridge-routing-edge-cases.spec.ts` - Virtual file system for node:fs mock — tracks writes so reads return stored data
+- `symphony-openai-bridge.d.ts` - Type declaration file for the sibling module surface.
+- `symphony-openai-bridge.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-provider-health.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-session-state.mjs` - JavaScript/TypeScript module used by this directory.
+- `symphony-session-state.spec.ts` - \*
+
+>>>>>>> theirs — heading `Key Files` (S+F, confidence: low)
 ## Subdirectories
 - `codebuff-direct/` - Codebuff Direct scope; immediate files include `build-prompt.mjs`, `codebuff-max-continuations.mjs`, `codebuff-max-steps.mjs`, `codebuff-model-id.mjs`, and others.
 - `discord-request-router/` - Discord Request Router scope; immediate files include `evict-expired-sessions.mjs`, `generate-thread-name.mjs`, `get-least-loaded-worktree.mjs`, `get-session-thread-name.mjs`, and others.

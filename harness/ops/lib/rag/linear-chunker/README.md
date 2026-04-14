@@ -4,10 +4,12 @@
 Linear Chunker contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 9 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `as-comma-list.mjs` - Exports `asCommaList`, the main helper defined in this file.
 - `chunk-linear-issue.mjs` - Exports `chunkLinearIssue`, the main helper defined in this file.
 - `chunk-linear-issues.mjs` - Exports `chunkLinearIssues`, the main helper defined in this file.
@@ -19,6 +21,7 @@ Linear Chunker contains the code, configuration, or support files that implement
 - `truncate-description.mjs` - Exports `truncateDescription`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

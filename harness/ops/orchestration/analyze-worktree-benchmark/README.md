@@ -4,10 +4,12 @@
 Analyze Worktree Benchmark contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 11 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `compare-benchmarks.mjs` - Exports `compareBenchmarks`, the main helper defined in this file.
 - `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
 - `evidence-dir.mjs` - Exports `EVIDENCE_DIR`, a shared constant or state value used by sibling modules.
@@ -21,6 +23,7 @@ Analyze Worktree Benchmark contains the code, configuration, or support files th
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes

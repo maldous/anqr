@@ -4,10 +4,12 @@
 Task Evidence contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
+
 - 14 immediate files
 - 0 child directories
 
 ## Key Files
+
 - `create-evidence-record.mjs` - Exports `createEvidenceRecord`, the main helper defined in this file.
 - `get-evidence-dir.mjs` - Exports `getEvidenceDir`, the main helper defined in this file.
 - `get-evidence-path.mjs` - Exports `getEvidencePath`, the main helper defined in this file.
@@ -24,6 +26,7 @@ Task Evidence contains the code, configuration, or support files that implement 
 - `update-evidence-record.mjs` - Exports `updateEvidenceRecord`, the main helper defined in this file.
 
 ## Subdirectories
+
 - No child directories in this directory.
 
 ## Operational Notes
