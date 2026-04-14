@@ -7,7 +7,7 @@ High-Confidence Automation Readiness Requirements for the ANQR Host-Local Harnes
 | Workstream                    | Status         | Started    | Completed  | Notes                                                                                                                                                                                                                                                     |
 | ----------------------------- | -------------- | ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A. Authoritative scheduling   | ✅ Complete    | 2026-04-13 | 2026-04-14 | All dispatch paths (trigger + queue drain) verify scheduler claims; scheduler requires worktreeId at claim time; `verifySchedulerClaim` extracted to shared module; ADR-0002/router/scheduler docs aligned                                                |
-| B. State model normalization  | 🟡 In Progress | 2026-04-15 | —          | Phase 0 complete; Phase 1 complete; Phase 2 mostly complete; Phase 3 mostly complete (lifecycle fallbacks removed); Phase 4 mostly complete (atomic release done); Phase 5 partially complete (integrationQueue artifacts removed). Phases 6–7 remaining. |
+| B. State model normalization  | 🟡 In Progress | 2026-04-15 | —          | Phases 0–5 complete. Phase 0: A-integrity hotfix. Phase 1: schema/helpers/transition map. Phase 2: transition APIs + deprecated helpers removed from production surface. Phase 3: all writers migrated. Phase 4: atomic claim+release, all callers verified. Phase 5: integrationQueue removed, ownership fallbacks observable. Phases 6–7 remaining. |
 | C. Recovery demotion          | ✅ Complete    | 2026-04-13 | 2026-04-14 | All recovery git publication removed (including baseline cspell auto-fix + worktree propagation); `checkBaselineHealth` is detect-only; ADR-0005/ADR-0006/recovery docs aligned                                                                           |
 | D. Boundary hardening         | ⬜ Not Started | —          | —          | Depends on A, B, C                                                                                                                                                                                                                                        |
 | E. Config/lifecycle hardening | ⬜ Not Started | —          | —          | Partially parallel                                                                                                                                                                                                                                        |
@@ -56,7 +56,7 @@ High-Confidence Automation Readiness Requirements for the ANQR Host-Local Harnes
 | 2026-04-15 | `finalization.state` authoritative, `integrationQueue` derived             | Reviewer: state belongs with the issue record; queues are easier to rebuild than issue history/state                                                                                                             |
 | 2026-04-15 | Honest B assessment: phases 3–5 are NOT complete per external review       | External reviewer identified 7 blockers: worktree normalization on load, lifecycle helpers still using patchIssueState, non-atomic claim+worktree, releaseLease not bidirectional, no dispatch rollback          |
 | 2026-04-15 | `claimAndAssignWorktree` in symphony-state layer (Blocker 3)               | Atomic helper claims issue and assigns worktree under one lock; schedule-cycle calls this instead of separate claimIssue + transitionWorktree                                                                    |
-| 2026-04-15 | `releaseLease` clears worktree ownership (Blocker 4)                       | After releasing issue-side lease, also transitions worktree to available with null assignedIssue; sequential lock acquisition (safe, conservative direction)                                                     |
+| 2026-04-15 | `releaseLease` clears worktree ownership (Blocker 4)                       | After releasing issue-side lease, also transitions worktree to available with null assignedIssue; sequential lock acquisition (safe, conservative direction). *Superseded by Blocker 3b: rewritten as single atomic operation under one `withStateLock` call — no longer sequential.* |
 | 2026-04-15 | `inferExecutionPhase` priority: finalization before completed_at           | Runner sets completed_at before integration runs; old priority let completed_at trump finalization.state=integration_pending, incorrectly returning "completed"                                                  |
 
 ## Workstream A Detailed Progress
@@ -106,9 +106,9 @@ Phase 1 deliverables are done. Schema, helpers, transition map, and `inferExecut
 - [x] **BLOCKER 1:** `loadState()` now normalizes `worktreeStates` via `normalizeWorktreeRecord()` on load
 - [x] **BLOCKER 7:** All worktreeStates readers verified — `loadState` is the single entry point, so normalization there covers all downstream readers
 
-### Phase 2 — Transition helpers (MOSTLY COMPLETE)
+### Phase 2 — Transition helpers (COMPLETE)
 
-Transition helpers exist and work, but old mutation helpers (`patchIssueState`, `setFinalizationState`, `setWorktreeState`) are still live-exported and still called from lifecycle-significant fallback paths in Phase 3 helpers.
+Transition helpers are the sole lifecycle write APIs. Old mutation helpers have been fully addressed: `setFinalizationState` and `setWorktreeState` removed from production exports (no production callers remain); `patchIssueState` repositioned as the legitimate metadata-only write API (not deprecated — used for `retry_count`, `latency_ms`, `source`, `transitions`, etc.).
 
 - [x] `transitionIssue(identifier, targetPhase, metadata)` — validates phase transition via `isValidIssueTransition`, infers current phase via `inferExecutionPhase`, applies metadata as patch, records transition in history with `from`/`to`/`reason`, all atomic within `withStateLock`
 - [x] `transitionWorktree(worktreeId, targetState, metadata)` — validates state transition via `isValidWorktreeTransition`, applies metadata, normalizes result via `normalizeWorktreeRecord`, all atomic within `withStateLock`
@@ -116,9 +116,9 @@ Transition helpers exist and work, but old mutation helpers (`patchIssueState`, 
 - [x] `patchIssueState`, `setFinalizationState`, `setWorktreeState` marked `@deprecated` with one-time `console.warn` per process
 - [x] All modules exported from `symphony-state/index.mjs`
 - [x] Tests: `transition-helpers-phase2.spec.ts` — 27 tests covering transitionIssue, transitionWorktree, getWorktreeOwner, and deprecation warnings
-- [ ] Old mutation helpers still live and exported; lifecycle-significant fallback code still uses them in all 6 lifecycle helpers (see Phase 3)
+- [x] Old mutation helpers resolved: `setFinalizationState` and `setWorktreeState` removed from `index.mjs` production exports (tests import directly from module files); `patchIssueState` repositioned as legitimate metadata-only write API with updated JSDoc
 
-### Phase 3 — Migrate writers (MOSTLY COMPLETE)
+### Phase 3 — Migrate writers (COMPLETE)
 
 All six lifecycle-significant helpers (`setCooldown`, `clearCooldown`, `markRetryExhausted`, `markIssueHumanOnly`, `resetRetryState`, `recordCompletion`) no longer fall back to `patchIssueState()` for lifecycle-significant mutations. If a transition is rejected, the helpers either return null (reject) or limit themselves to genuinely metadata-only cleanup (clearing stale fields that do not determine the current phase). `releaseLease()` is now a single atomic operation under one lock.
 
@@ -149,7 +149,7 @@ All six lifecycle-significant helpers (`setCooldown`, `clearCooldown`, `markRetr
   - `record-completion.mjs` — only sets `latency_ms` (observation metadata) when transition rejected; does NOT set `completed_at`
 - [x] **BLOCKER 4 (RESOLVED):** `releaseLease()` now performs issue lease release AND worktree ownership cleanup inside a single `withStateLock` call — truly atomic bidirectional release.
 
-### Phase 4 — Durable ownership authoritative in router/scheduler (MOSTLY COMPLETE)
+### Phase 4 — Durable ownership authoritative in router/scheduler (COMPLETE)
 
 Strong progress on durable ownership. `claimAndAssignWorktree()` is atomic (claim side). `releaseLease()` is now atomic (release side) — issue lease release and worktree ownership cleanup happen under one lock. Dispatch failure rollback uses the atomic `releaseLease()`.
 
@@ -172,11 +172,11 @@ Strong progress on durable ownership. `claimAndAssignWorktree()` is atomic (clai
 
 - [x] **BLOCKER 3b (RESOLVED):** `releaseLease()` rewritten to perform issue lease release + worktree ownership cleanup inside ONE `withStateLock` call. Inlines the transition logic (same pattern as `claimAndAssignWorktree`) to avoid lock reentrancy.
 - [x] **BLOCKER 5b (RESOLVED):** Dispatch rollback in `schedule-cycle.mjs` calls `releaseLease()`, which is now atomic.
-- [ ] Remaining: verify no other callers of `releaseLease` assume the old two-stage return contract.
+- [x] Verified: all 8 `releaseLease()` callers use fire-and-forget or single-result pattern. None inspect a multi-stage return contract. Callers: `schedule-cycle.mjs`, `execute-issue.mjs`, `execute-repair.mjs`, `recover-in-progress-issue.mjs`, `symphony-runner/main.mjs`, `recover-stale-in-progress/main.mjs`, `startup-recovery/main.mjs`, `detect-stuck-work.mjs`.
 
-### Phase 5 — Bidirectional ownership and authority normalization (NOT COMPLETE)
+### Phase 5 — Bidirectional ownership and authority normalization (COMPLETE)
 
-Integration candidacy is derived from finalization state (good), but the central claim — "durable worktree state is the primary ownership record" — is not fully true yet.
+Integration candidacy is derived from finalization state. Durable worktree state is the primary ownership record. Recovery fallbacks (git-log heuristic, issue reverse-scan) are retained for repair context only and now log warnings when activated, making the authority gap observable and measurable.
 
 **What is done:**
 
@@ -189,22 +189,20 @@ Integration candidacy is derived from finalization state (good), but the central
 - [x] `infer-owner-from-branch.mjs` — checks durable worktree state first, then fallbacks
 - [x] Worktree schema is normalized on load via `normalizeWorktreeRecord()` in `loadState()`
 - [x] `claimAndAssignWorktree()` sets both sides atomically
-- [x] `releaseLease()` clears worktree ownership (two-stage, not atomic — see Phase 4)
+- [x] `releaseLease()` clears worktree ownership (now atomic — resolved via Blocker 3b)
 - [x] Tests: `bidirectional-ownership-phase5.spec.ts` — 17 tests
 
 **What is NOT done:**
 
 - [x] `integrationQueue` removed from `empty-store.mjs` and `load-state.mjs` store schema defaults
-- [ ] `enqueueIntegrationCandidate()` and `dequeueIntegrationCandidate()` still exist as deprecated no-ops, still called from `execute-issue.mjs`, `run-reconciliation-cycle.mjs`, and `integrate-candidate.mjs` — caller cleanup remaining
+- [x] `enqueueIntegrationCandidate()` and `dequeueIntegrationCandidate()` deprecated no-op modules deleted; all callers cleaned from `execute-issue.mjs`, `run-reconciliation-cycle.mjs`, and `integrate-candidate.mjs`; exports removed from `index.mjs` and `symphony-state.mjs`. (Minor: stale `vi.fn()` mock remains in `runner-lease-loss.spec.ts` — not an active workflow surface.)
 - [x] `releaseLease()` is now atomic (resolved via Blocker 3b)
-- [ ] `infer-owner-from-branch.mjs` still has git-log and reverse-scan fallbacks — acceptable for repair, but shows durable ownership is not yet strong enough to stand alone everywhere
+- [x] `infer-owner-from-branch.mjs` fallbacks made observable — logs warnings when git-log or reverse-scan heuristics activate, with clear JSDoc documenting the three-tier authority hierarchy (fallbacks retained for repair context only)
 - [x] Tests strengthened: direct `normalizeWorktreeRecord` tests (real module), rejection tests proving lifecycle helpers return null (not silently mutate), atomic release tests
 
 ### Remediation Blockers (ordered by correctness priority)
 
-Blockers marked DONE have real code changes. Blockers marked PARTIALLY DONE or NOT DONE still require work.
-Blockers 2, 3b, and 5b are the remaining correctness defects. Blocker 6 is dead-structure cleanup.
-Blocker 8 addresses test quality — tests currently overstate what is proven.
+All correctness blockers (1, 2, 3a, 3b, 4, 5a, 5b, 7, 8) are resolved with real code changes. Blocker 6 (dead-structure cleanup) is also resolved: `integrationQueue` removed from schema, deprecated no-op modules deleted, all callers cleaned.
 
 | #   | Blocker                                                                                                                           | Phase | Status                                             |
 | --- | --------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------- |
@@ -216,7 +214,7 @@ Blocker 8 addresses test quality — tests currently overstate what is proven.
 | 5a  | Dispatch failure calls `releaseLease()`                                                                                           | 4     | ✅ DONE                                            |
 | 5b  | Dispatch rollback uses atomic bidirectional release (depends on 3b)                                                               | 4     | ✅ DONE                                            |
 | 2   | Remove `patchIssueState()` fallbacks from 6 lifecycle helpers — split metadata helpers from lifecycle helpers properly            | 3     | ✅ DONE                                            |
-| 6   | Remove persistent `integrationQueue` artifact from state model; remove deprecated no-op callers                                   | 5     | PARTIAL (schema cleaned; caller removal remaining) |
+| 6   | Remove persistent `integrationQueue` artifact from state model; remove deprecated no-op callers                                   | 5     | ✅ DONE                                            |
 | 8   | Strengthen tests: direct module tests, rejection tests, atomic release tests                                                      | 6     | ✅ DONE                                            |
 
 **Remediation order (corrected):**
@@ -225,7 +223,7 @@ Blocker 8 addresses test quality — tests currently overstate what is proven.
 2. ✅ Blocker 2: removed `patchIssueState()` fallbacks — lifecycle helpers reject or use metadata-only writes
 3. ✅ Blocker 3b: `releaseLease()` rewritten as atomic bidirectional release (one lock)
 4. ✅ Blocker 5b: dispatch rollback uses atomic `releaseLease()` (no code change needed)
-5. ⚠️ Blocker 6: `integrationQueue` removed from store schema; deprecated caller cleanup remaining
+5. ✅ Blocker 6: `integrationQueue` removed from store schema; deprecated no-op modules deleted; all callers cleaned
 6. ✅ Blocker 8: direct module tests, rejection tests, atomic release tests added
 7. Run validation
 8. Review and fix follow-up issues

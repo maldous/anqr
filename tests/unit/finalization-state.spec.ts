@@ -10,7 +10,6 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import {
-  setFinalizationState,
   getFinalizationState,
   listIntegrationCandidates,
   acquireIntegrationLock,
@@ -19,6 +18,7 @@ import {
   listRepairableIssuesForWorktree,
   mutateState,
 } from "../../harness/ops/core/symphony-state.mjs";
+import { setFinalizationState } from "../../harness/ops/core/symphony-state/set-finalization-state.mjs";
 
 // Reset state before each test
 beforeEach(() => {

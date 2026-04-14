@@ -8,12 +8,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   mutateState,
-  setFinalizationState,
   getFinalizationState,
-  setWorktreeState,
   getWorktreeState,
   acquireLease,
 } from "../../harness/ops/core/symphony-state.mjs";
+import { setFinalizationState } from "../../harness/ops/core/symphony-state/set-finalization-state.mjs";
+import { setWorktreeState } from "../../harness/ops/core/symphony-state/set-worktree-state.mjs";
 import { executeRepair } from "../../harness/ops/orchestration/symphony-worktree-recovery.mjs";
 
 beforeEach(() => {

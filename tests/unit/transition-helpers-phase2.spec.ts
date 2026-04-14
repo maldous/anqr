@@ -465,7 +465,7 @@ describe("Deprecation warnings on old mutation helpers", () => {
     rawStateOnDisk = emptyStore();
   });
 
-  it("patchIssueState should emit deprecation warning", async () => {
+  it("patchIssueState should NOT emit deprecation warning (metadata-only API)", async () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { patchIssueState } =
       await import("../../harness/ops/core/symphony-state/patch-issue-state.mjs");
@@ -475,7 +475,7 @@ describe("Deprecation warnings on old mutation helpers", () => {
     const deprecationCalls = warnSpy.mock.calls.filter(
       (args) => typeof args[0] === "string" && args[0].includes("patchIssueState"),
     );
-    expect(deprecationCalls.length).toBeGreaterThanOrEqual(1);
+    expect(deprecationCalls).toHaveLength(0);
     warnSpy.mockRestore();
   });
 

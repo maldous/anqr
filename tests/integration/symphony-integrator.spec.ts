@@ -14,12 +14,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   mutateState,
-  setFinalizationState,
   getFinalizationState,
   listIntegrationCandidates,
   acquireIntegrationLock,
   releaseIntegrationLock,
 } from "../../harness/ops/core/symphony-state.mjs";
+import { setFinalizationState } from "../../harness/ops/core/symphony-state/set-finalization-state.mjs";
 
 beforeEach(() => {
   mutateState((store) => {

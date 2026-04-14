@@ -3,7 +3,7 @@
  *
  * Defines the canonical shape for worktree state records and provides
  * a normalizer that enforces it. The current codebase uses freeform
- * patches via setWorktreeState(); this schema locks the expected shape
+ * patches via transitionWorktree(); this schema locks the expected shape
  * so that all readers and future transition helpers agree on fields.
  *
  * Design rule: normalizeWorktreeRecord() is additive — it accepts

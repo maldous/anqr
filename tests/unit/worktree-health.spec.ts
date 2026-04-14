@@ -10,7 +10,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   mutateState,
-  setWorktreeState,
   getWorktreeState,
   listWorktreesByState,
   recordQuarantine,
@@ -18,6 +17,7 @@ import {
   getFleetSnapshot,
   loadState,
 } from "../../harness/ops/core/symphony-state.mjs";
+import { setWorktreeState } from "../../harness/ops/core/symphony-state/set-worktree-state.mjs";
 
 beforeEach(() => {
   mutateState((store) => {

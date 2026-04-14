@@ -43,14 +43,18 @@ export { recordCompletion } from "./record-completion.mjs";
 export { recordRetryEvent } from "./record-retry-event.mjs";
 export { getLatencyMetrics } from "./get-latency-metrics.mjs";
 export { REPAIRABLE_FINALIZATION_STATES } from "./repairable-finalization-states.mjs";
-export { setFinalizationState } from "./set-finalization-state.mjs";
+// setFinalizationState removed from production exports (Phase 2 completion).
+// No production callers remain — all migrated to transitionIssue().
+// Tests import directly from ./set-finalization-state.mjs.
 export { getFinalizationState } from "./get-finalization-state.mjs";
 export { listIntegrationCandidates } from "./list-integration-candidates.mjs";
 export { acquireIntegrationLock } from "./acquire-integration-lock.mjs";
 export { releaseIntegrationLock } from "./release-integration-lock.mjs";
 export { getNextRepairableIssueForWorktree } from "./get-next-repairable-issue-for-worktree.mjs";
 export { listRepairableIssuesForWorktree } from "./list-repairable-issues-for-worktree.mjs";
-export { setWorktreeState } from "./set-worktree-state.mjs";
+// setWorktreeState removed from production exports (Phase 2 completion).
+// No production callers remain — all migrated to transitionWorktree().
+// Tests import directly from ./set-worktree-state.mjs.
 export { getWorktreeState } from "./get-worktree-state.mjs";
 export { listWorktreesByState } from "./list-worktrees-by-state.mjs";
 export { recordQuarantine } from "./record-quarantine.mjs";

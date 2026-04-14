@@ -55,10 +55,7 @@ vi.mock("../../harness/ops/symphony-state.mjs", () => ({
   recordCompletion: vi.fn(),
   recordRetryEvent: vi.fn(),
   calculateExponentialBackoff: vi.fn(),
-  setFinalizationState: vi.fn(),
   getFinalizationState: vi.fn(),
-  enqueueIntegrationCandidate: vi.fn(),
-  setWorktreeState: vi.fn(),
   getWorktreeState: vi.fn(),
 }));
 

@@ -19,14 +19,14 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // Mock all external dependencies of execute-repair.mjs
 // ---------------------------------------------------------------------------
 
-const mockSetWorktreeState = vi.fn();
+const mockTransitionWorktree = vi.fn();
 const mockGetWorktreeState = vi.fn().mockReturnValue(null);
 const mockRecordQuarantine = vi.fn();
 const mockReleaseLease = vi.fn();
 const mockLeaseIsActive = vi.fn().mockReturnValue(false);
 
 vi.mock("../../harness/ops/symphony-state.mjs", () => ({
-  setWorktreeState: (...args: unknown[]) => mockSetWorktreeState(...args),
+  transitionWorktree: (...args: unknown[]) => mockTransitionWorktree(...args),
   getWorktreeState: (...args: unknown[]) => mockGetWorktreeState(...args),
   recordQuarantine: (...args: unknown[]) => mockRecordQuarantine(...args),
   releaseLease: (...args: unknown[]) => mockReleaseLease(...args),
@@ -118,7 +118,7 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
       isStateOnly: true,
     });
     // skip must not call any state-mutation functions
-    expect(mockSetWorktreeState).not.toHaveBeenCalled();
+    expect(mockTransitionWorktree).not.toHaveBeenCalled();
     expect(mockRecordQuarantine).not.toHaveBeenCalled();
   });
 
@@ -278,9 +278,8 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
       expect(args[0]).not.toBe("push");
     }
     // Must have set worktree state to available
-    expect(mockSetWorktreeState).toHaveBeenCalledWith("wt2", {
-      state: "available",
-      issueIdentifier: null,
+    expect(mockTransitionWorktree).toHaveBeenCalledWith("wt2", "available", {
+      assignedIssue: null,
     });
   });
 
@@ -329,9 +328,8 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
       ownershipBasis: "ANQ-800",
       isStateOnly: true,
     });
-    expect(mockSetWorktreeState).toHaveBeenCalledWith("wt1", {
-      state: "dirty_owned",
-      issueIdentifier: "ANQ-800",
+    expect(mockTransitionWorktree).toHaveBeenCalledWith("wt1", "dirty_owned", {
+      assignedIssue: "ANQ-800",
     });
   });
 

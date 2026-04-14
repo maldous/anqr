@@ -3,20 +3,18 @@ import { normalizeRecord } from "./normalize-record.mjs";
 import { saveState } from "./save-state.mjs";
 import { withStateLock } from "./with-state-lock.mjs";
 
-let _deprecationWarned = false;
-
 /**
- * @deprecated Use `transitionIssue()` for lifecycle state changes (Phase 2+).
- * This helper applies freeform patches without lifecycle validation.
- * It will be removed or restricted once all callers are migrated (Phase 3).
+ * Metadata-only write API — applies freeform patches to issue records
+ * without lifecycle validation or phase transition enforcement.
+ *
+ * Use this for observation metadata such as `retry_count`, `latency_ms`,
+ * `source`, `transitions`, `attempt_started_at`, `external_keys`, etc.
+ *
+ * **Do NOT use this for lifecycle state changes** (phase transitions,
+ * finalization state, `completed_at`, or any field that determines the
+ * current execution phase). Use `transitionIssue()` for those.
  */
 export function patchIssueState(issueIdentifier, patch = {}) {
-  if (!_deprecationWarned) {
-    _deprecationWarned = true;
-    console.warn(
-      "[deprecation] patchIssueState() is deprecated for lifecycle changes. Use transitionIssue() instead.",
-    );
-  }
   return withStateLock(() => {
     const store = loadState();
     const current = normalizeRecord(store.issues[issueIdentifier] || { issueIdentifier });
