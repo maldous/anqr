@@ -473,12 +473,15 @@ describe("inferExecutionPhase", () => {
     expect(inferExecutionPhase(record, now)).toBe("executing");
   });
 
-  it("should prioritize completed_at over blocked", () => {
+  it("should prioritize blocked over completed_at", () => {
+    // Priority fix: blocked (priority 2) beats completed_at (priority 5)
+    // because a blocked issue needs human attention regardless of
+    // whether it previously completed.
     const record = {
       completed_at: "2026-04-15T00:00:00Z",
       human_only: true,
     };
-    expect(inferExecutionPhase(record, now)).toBe("completed");
+    expect(inferExecutionPhase(record, now)).toBe("blocked");
   });
 
   it("should prioritize blocked over cooldown", () => {

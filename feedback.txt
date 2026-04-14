@@ -1,0 +1,434 @@
+Here is the critical assessment.
+
+## Executive judgment
+
+The developer’s claim that **all phases up to 5 of Workstream B have been completed correctly** does **not** stand.
+
+My judgment:
+
+* **Phase 0**: complete
+* **Phase 1**: partially complete
+* **Phase 2**: mostly complete
+* **Phase 3**: **not complete**
+* **Phase 4**: **partially complete**
+* **Phase 5**: **not complete**
+
+So the right summary is:
+
+```text
+Workstream B has real progress.
+It has not completed phases 3–5 correctly.
+Do not treat B as closed or nearly closed yet.
+```
+
+The biggest reasons are:
+
+1. **The new worktree schema is not authoritative on read.**
+   `loadState()` normalizes issues but still returns raw `worktreeStates`. That means Phase 1 did not actually lock the worktree truth model across the system.
+
+2. **Lifecycle writes are still not forced through transition helpers.**
+   Multiple lifecycle-significant helpers still mutate issue state through `patchIssueState()`:
+
+   * `set-cooldown.mjs`
+   * `clear-cooldown.mjs`
+   * `mark-retry-exhausted.mjs`
+   * `mark-issue-human-only.mjs`
+   * `reset-retry-state.mjs`
+   * `record-completion.mjs`
+
+   That directly contradicts the “sole lifecycle write APIs” claim for Phases 2–3.
+
+3. **Bidirectional ownership is not actually normalized.**
+   `releaseLease()` clears the issue lease, but it does **not** clear or transition durable worktree ownership. That leaves issue and worktree truth capable of drifting apart.
+
+4. **Claim + worktree ownership are still not atomic.**
+   `claimIssue()` writes the issue claim. `schedule-cycle.mjs` writes `transitionWorktree(..., "executing")` afterward in a second step. If dispatch fails or the process dies between those two operations, the two authority records diverge.
+
+5. **Scheduler dispatch failure has no rollback.**
+   `schedule-cycle.mjs` logs dispatch failure after claim, but does not release the claim or clear the worktree state. That is a real ownership leak.
+
+## What is genuinely good
+
+The developer did fix real things:
+
+* the **assignment persistence bug** in `normalizeRecord()` is fixed
+* issue phase helpers exist
+* transition helpers exist
+* router startup reconstruction exists
+* durable state is used more heavily in scheduler/router decisions
+* integration candidacy is now derived from `finalization.state`
+
+That is good progress. It is not the same as “phases 0–5 completed correctly”.
+
+---
+
+## Phase-by-phase assessment
+
+### Phase 0 — A-integrity hotfix
+
+**Status: complete**
+
+This was the right first move.
+
+`normalizeRecord()` now preserves `assignment`. That closes the specific Workstream A durability bug that B exposed.
+
+Files:
+
+* `harness/ops/core/symphony-state/normalize-record.mjs`
+* `tests/unit/assignment-roundtrip.spec.ts`
+
+No objection here.
+
+---
+
+### Phase 1 — Define the truth model
+
+**Status: partially complete**
+
+What is good:
+
+* `issue-phases.mjs` exists
+* `worktree-record-schema.mjs` exists
+* `transition-map.mjs` exists
+* `infer-execution-phase.mjs` exists
+* no store version bump was forced
+
+What is still wrong:
+
+* the **worktree schema is not actually enforced on load**
+* `loadState()` still does:
+
+  ```js
+  store.worktreeStates = data.worktreeStates || {};
+  ```
+
+  with no normalization step
+
+That means old and new worktree shapes can coexist, and readers still see raw state.
+
+Files:
+
+* `harness/ops/core/symphony-state/load-state.mjs`
+* `harness/ops/core/symphony-state/worktree-record-schema.mjs`
+
+That is not a locked truth model. It is a schema definition plus partial usage.
+
+---
+
+### Phase 2 — Transition helpers
+
+**Status: mostly complete**
+
+What is good:
+
+* `transitionIssue()` exists
+* `transitionWorktree()` exists
+* `getWorktreeOwner()` exists
+* transition validation maps exist
+* helper tests exist
+
+What is not fully correct:
+
+* the codebase still leaves old mutation helpers live and exported
+* more importantly, lifecycle-significant code still uses them
+
+So Phase 2 exists technically, but it is not yet the real authority surface for lifecycle mutation.
+
+Files:
+
+* `harness/ops/core/symphony-state/transition-issue.mjs`
+* `harness/ops/core/symphony-state/transition-worktree.mjs`
+* `harness/ops/core/symphony-state/index.mjs`
+
+---
+
+### Phase 3 — Writer migration
+
+**Status: not complete**
+
+The developer’s own phase claim here is too generous.
+
+They say:
+
+> All lifecycle-mutating paths now delegate to transitionIssue/transitionWorktree instead of deprecated mutation helpers.
+
+That is false.
+
+These are still lifecycle-significant and still use `patchIssueState()` directly:
+
+* `harness/ops/core/symphony-state/set-cooldown.mjs`
+* `harness/ops/core/symphony-state/clear-cooldown.mjs`
+* `harness/ops/core/symphony-state/mark-retry-exhausted.mjs`
+* `harness/ops/core/symphony-state/mark-issue-human-only.mjs`
+* `harness/ops/core/symphony-state/reset-retry-state.mjs`
+* `harness/ops/core/symphony-state/record-completion.mjs`
+
+Those are not metadata-only helpers. They change lifecycle meaning:
+
+* cooldown eligibility
+* blocked state
+* retry exhaustion
+* human-only state
+* completion
+
+That means the “sole lifecycle write APIs” goal is not met.
+
+There is also a second major problem:
+
+### `releaseLease()` is not bidirectional
+
+It clears issue-side lease state, but it does not clear or transition the worktree record.
+
+File:
+
+* `harness/ops/core/symphony-state/release-lease.mjs`
+
+That leaves issue/worktree ownership drift possible, which means the writer migration is not clean.
+
+So Phase 3 is **not complete**.
+
+---
+
+### Phase 4 — Durable ownership authoritative in router/scheduler
+
+**Status: partially complete**
+
+This phase has meaningful progress:
+
+* router startup reconstructs transient counters from durable worktree state
+* `selectLinearWorktree()` now filters using durable worktree state
+* queue-drain availability uses durable state
+* `reconcileWorktreeCounters()` exists
+* scheduler sets worktree to `executing` durably at claim time
+
+That is real.
+
+But there are still correctness gaps:
+
+### 1. Claim and worktree ownership are split across two writes
+
+`schedule-cycle.mjs` does:
+
+1. `claimIssue(issue, worktreeId)`
+2. `transitionWorktree(worktreeId, "executing", { assignedIssue })`
+
+Those are separate operations.
+
+File:
+
+* `harness/ops/orchestration/symphony-scheduler/schedule-cycle.mjs`
+
+That means:
+
+* crash between them leaves claim without worktree executing
+* or later refactor could regress one side without the other
+
+For a phase that claims durable ownership is authoritative, that split is still too weak.
+
+### 2. Dispatch failure leaks claimed ownership
+
+If `dispatchToExecutor()` fails after successful claim + worktree transition, the code only logs:
+
+```js
+logWarn(`[scheduler] Dispatch failed for ${issue.identifier} after successful claim`);
+```
+
+It does not:
+
+* release the claim
+* clear worktree ownership
+* move issue to cooldown/quarantine/retry
+
+So a failed dispatch can leave the authoritative state saying the work is claimed/executing when it never actually started.
+
+That is a real Phase 4 correctness defect.
+
+### 3. Router still uses transient counters in fallback paths
+
+For scheduler-assigned targets, this is mostly okay. But the code still uses `activeRequests` in non-assigned fallback paths:
+
+* `handle-linear-trigger.mjs`
+* `dispatch-linear-execution.mjs`
+
+That means transient counters are not fully demoted to observation-only everywhere.
+
+So Phase 4 is **partially complete**, not complete.
+
+---
+
+### Phase 5 — Bidirectional ownership and authority normalization
+
+**Status: not complete**
+
+This is the most overstated phase in the proposal.
+
+What is good:
+
+* `listIntegrationCandidates()` is now derived from `finalization.state`
+* `enqueueIntegrationCandidate()` / `dequeueIntegrationCandidate()` are deprecated no-ops
+* `scanForRepairedCandidates()` is now no-op
+* `getWorktreeOwner()` exists
+* `infer-owner-from-branch()` prefers durable ownership first
+
+That is good.
+
+But the central claim of Phase 5 is stronger:
+
+> Durable worktree state is the primary ownership record
+
+That is not fully true yet.
+
+### 1. Worktree ownership is not maintained bidirectionally by core lease operations
+
+Again:
+
+* `claimIssue()` does not update worktree state itself
+* `releaseLease()` does not clear worktree ownership
+
+So the two sides of ownership are not maintained by the same authority layer.
+
+### 2. Reverse scans still exist because durable ownership is not fully trustworthy
+
+`infer-owner-from-branch.mjs` still falls back to:
+
+* git log inference
+* reverse issue scan
+
+That is acceptable for repair, but it also shows the system is not yet confident enough in durable ownership to rely on it exclusively.
+
+### 3. Worktree schema is still not normalized on load
+
+That undercuts the whole “primary ownership record” story.
+
+### 4. The integration queue is only partly cleaned up
+
+The persistent `integrationQueue` still exists in:
+
+* `empty-store.mjs`
+* `load-state.mjs`
+* comments and exports
+
+The no-op helpers are still imported/called in multiple places, even if harmless.
+
+That is not fatal, but it is not what I would call “authority normalization complete”.
+
+So Phase 5 is **not complete**.
+
+---
+
+## Test quality assessment
+
+The tests show effort, but they are not strong enough to justify the developer’s broad claim.
+
+### What the tests do well
+
+* Phase 0 regression is covered
+* Phase 1 helper behavior is covered
+* transition helper behavior is covered
+* derived integration candidacy is covered
+* some lifecycle flow is covered
+
+### What the tests do not prove
+
+1. **No test proves worktree ownership is cleared when lease is released**
+2. **No test proves scheduler dispatch failure rolls back state**
+3. **No test proves `loadState()` normalizes worktree records**
+4. **No test proves transient counters are fully non-authoritative**
+5. **No test proves claim + worktree ownership remain consistent across crash-like partial writes**
+
+That is exactly where the current implementation is still weak.
+
+So the tests are not bad. They are just not proving the hard parts that would justify the phase-5 completion claim.
+
+---
+
+## My critical assessment summary
+
+```text
+The developer has done real Workstream B work.
+They have not completed phases 3, 4, and 5 correctly.
+The proposal overstates both writer migration and ownership normalization.
+```
+
+## The exact blockers I would send back
+
+### 1. Normalize worktree state on load
+
+Fix:
+
+* `harness/ops/core/symphony-state/load-state.mjs`
+
+Do not leave `worktreeStates` raw.
+
+### 2. Finish the writer migration
+
+Migrate these off `patchIssueState()`:
+
+* `set-cooldown.mjs`
+* `clear-cooldown.mjs`
+* `mark-retry-exhausted.mjs`
+* `mark-issue-human-only.mjs`
+* `reset-retry-state.mjs`
+* `record-completion.mjs`
+
+Until that is done, Phase 3 is not complete.
+
+### 3. Make ownership updates atomic
+
+Do not split:
+
+* issue claim
+* worktree executing assignment
+
+across separate writes in `schedule-cycle.mjs`.
+
+You need either:
+
+* a combined transition helper under one state lock
+* or an equivalent atomic state update path
+
+### 4. Clear worktree ownership when lease is released
+
+`releaseLease()` must clear or transition the durable worktree record when it is the authoritative owner.
+
+Right now it only updates the issue side.
+
+### 5. Add rollback on scheduler dispatch failure
+
+If dispatch fails after claim:
+
+* release claim
+* clear worktree ownership
+* or move to an explicit retry/quarantine state
+
+Logging is not enough.
+
+### 6. Add the missing tests
+
+At minimum:
+
+* `loadState()` worktree normalization
+* release clears bidirectional ownership
+* scheduler dispatch failure rollback
+* restart consistency with partially transitioned state
+
+---
+
+## Bottom line
+
+If the developer says:
+
+```text
+Phases 0–5 have been completed correctly
+```
+
+my answer is:
+
+```text
+No.
+Phases 0–2 are mostly there.
+Phases 3–5 are still materially incomplete.
+```
+
+The current branch looks like **good progress into Workstream B**, not correct completion of phases 0–5.
+

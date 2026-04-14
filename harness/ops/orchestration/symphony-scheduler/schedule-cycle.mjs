@@ -1,5 +1,5 @@
 import http from "node:http";
-import { claimIssue, transitionWorktree } from "../../symphony-state.mjs";
+import { claimAndAssignWorktree, releaseLease } from "../../symphony-state.mjs";
 import {
   SCHEDULER_MAX_DISPATCH_PER_CYCLE,
   RECONCILER_DISPATCH_COOLDOWN_MS,
@@ -126,7 +126,8 @@ export async function scheduleCycle() {
       break;
     }
 
-    const claim = claimIssue(issue.identifier, {
+    // Blocker 3: Atomic claim + worktree assignment in one locked transaction.
+    const claim = claimAndAssignWorktree(issue.identifier, {
       worktreeId,
       source: "scheduler",
     });
@@ -137,12 +138,6 @@ export async function scheduleCycle() {
       continue;
     }
 
-    // Phase 4: Set worktree to "executing" durably at claim time.
-    // This closes the race window between claim and executor startup —
-    // the next scheduler cycle will see this worktree as executing in
-    // durable state and not double-assign it.
-    transitionWorktree(worktreeId, "executing", { assignedIssue: issue.identifier });
-
     assignedThisCycle.add(worktreeId);
 
     const ok = await dispatchToExecutor(issue.identifier, null);
@@ -152,7 +147,14 @@ export async function scheduleCycle() {
         `[scheduler] Claimed + dispatched ${issue.identifier} -> ${worktreeId}: ${issue.title}`,
       );
     } else {
-      logWarn(`[scheduler] Dispatch failed for ${issue.identifier} after successful claim`);
+      // Blocker 5: Roll back on dispatch failure — release claim and
+      // clear worktree ownership so the system does not leak a claimed
+      // but never-executing issue+worktree pair.
+      logWarn(
+        `[scheduler] Dispatch failed for ${issue.identifier} — rolling back claim + worktree`,
+      );
+      releaseLease(issue.identifier);
+      assignedThisCycle.delete(worktreeId);
     }
 
     if (RECONCILER_DISPATCH_COOLDOWN_MS > 0 && dispatched < dispatchBudget) {

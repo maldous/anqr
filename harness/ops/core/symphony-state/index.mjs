@@ -60,6 +60,7 @@ export { clearQuarantine } from "./clear-quarantine.mjs";
 export { getFleetSnapshot } from "./get-fleet-snapshot.mjs";
 export { checkLatencyBaseline } from "./check-latency-baseline.mjs";
 export { claimIssue } from "./claim-issue.mjs";
+export { claimAndAssignWorktree } from "./claim-and-assign-worktree.mjs";
 export { ISSUE_PHASES, FINALIZATION_STATE_TO_PHASE, VALID_ISSUE_PHASES } from "./issue-phases.mjs";
 export { WORKTREE_STATES, VALID_WORKTREE_STATES, normalizeWorktreeRecord } from "./worktree-record-schema.mjs";
 export { ISSUE_TRANSITION_MAP, WORKTREE_TRANSITION_MAP, isValidIssueTransition, isValidWorktreeTransition } from "./transition-map.mjs";

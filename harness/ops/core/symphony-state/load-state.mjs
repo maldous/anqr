@@ -4,6 +4,7 @@ import { HOST_ID } from "./host-id.mjs";
 import { emptyStore } from "./empty-store.mjs";
 import { getStateFile } from "./get-state-file.mjs";
 import { normalizeRecord } from "./normalize-record.mjs";
+import { normalizeWorktreeRecord } from "./worktree-record-schema.mjs";
 
 export function loadState() {
   try {
@@ -22,7 +23,10 @@ export function loadState() {
     for (const [key, value] of Object.entries(data.issues || {})) {
       store.issues[key] = normalizeRecord({ ...value, issueIdentifier: key });
     }
-    store.worktreeStates = data.worktreeStates || {};
+    store.worktreeStates = {};
+    for (const [wtId, value] of Object.entries(data.worktreeStates || {})) {
+      store.worktreeStates[wtId] = normalizeWorktreeRecord(wtId, value);
+    }
     return store;
   } catch {
     return emptyStore();
