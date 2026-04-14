@@ -1,7 +1,7 @@
 # Sonar Linear Sync
 
 ## Purpose
-Directory for Linear ingestion, reconciliation, or issue management; immediate files include `apply-promote-and-requeue.mjs`, `build-duplication-linear-description.mjs`, `build-duplication-linear-title.mjs`, `build-hotspot-linear-description.mjs`, and others.
+Sonar Linear Sync contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 26 immediate files
@@ -39,8 +39,8 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 26 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 26 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

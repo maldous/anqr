@@ -1,1 +1,1 @@
-Build selection options assembles request-specific provider-selection constraints before work is routed through the bridge.
+Build selection options assembles per-request provider-routing constraints before a bridge request is sent into the provider selection layer.

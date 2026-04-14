@@ -1,7 +1,7 @@
 # Rag
 
 ## Purpose
-Directory for Linear ingestion, reconciliation, or issue management; immediate files include `build-index-linear.mjs`, `build-index.mjs`, `chunker.mjs`, `embeddings.mjs`, and others, with child directories `build-index/`, `build-index-linear/`, `chunker/`, `embeddings/`, and others.
+Rag contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 6 immediate files
@@ -16,16 +16,16 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - `vector-store.mjs` - JavaScript/TypeScript module used by this directory.
 
 ## Subdirectories
-- `build-index/` - Directory for RAG indexing and retrieval support; immediate files include `build-candidate-list.mjs`, `classify-file.mjs`, `detect-project-root.mjs`, `discover-tracked-files.mjs`, and others.
-- `build-index-linear/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `build-linear-index.mjs`, `detect-project-root.mjs`, `export-path.mjs`, `index-dir.mjs`, and others.
-- `chunker/` - Directory for RAG indexing and retrieval support; immediate files include `build-line-starts.mjs`, `chunk-code.mjs`, `chunk-file.mjs`, `chunk-generic-text.mjs`, and others.
-- `embeddings/` - Directory for RAG indexing and retrieval support; immediate files include `cosine-similarity.mjs`, `embedding-model.mjs`, `embedding-timeout-ms.mjs`, `failure-cooldown-ms.mjs`, and others.
-- `linear-chunker/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `as-comma-list.mjs`, `chunk-linear-issue.mjs`, `chunk-linear-issues.mjs`, `compact-whitespace.mjs`, and others.
-- `vector-store/` - Directory for RAG indexing and retrieval support; immediate files include `atomic-write-json.mjs`, `cleanup-stale-index-files.mjs`, `clear-index.mjs`, `default-extensions.mjs`, and others.
+- `build-index/` - Build Index scope; immediate files include `build-candidate-list.mjs`, `classify-file.mjs`, `detect-project-root.mjs`, `discover-tracked-files.mjs`, and others.
+- `build-index-linear/` - Build Index Linear scope; immediate files include `build-linear-index.mjs`, `detect-project-root.mjs`, `export-path.mjs`, `index-dir.mjs`, and others.
+- `chunker/` - Chunker scope; immediate files include `build-line-starts.mjs`, `chunk-code.mjs`, `chunk-file.mjs`, `chunk-generic-text.mjs`, and others.
+- `embeddings/` - Embeddings scope; immediate files include `cosine-similarity.mjs`, `embedding-model.mjs`, `embedding-timeout-ms.mjs`, `failure-cooldown-ms.mjs`, and others.
+- `linear-chunker/` - Linear Chunker scope; immediate files include `as-comma-list.mjs`, `chunk-linear-issue.mjs`, `chunk-linear-issues.mjs`, `compact-whitespace.mjs`, and others.
+- `vector-store/` - Vector Store scope; immediate files include `atomic-write-json.mjs`, `cleanup-stale-index-files.mjs`, `clear-index.mjs`, `default-extensions.mjs`, and others.
 
 ## Operational Notes
-- Current on-disk inventory: 6 immediate files and 6 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 6 immediate file(s) and 6 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

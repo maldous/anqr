@@ -1,1 +1,1 @@
-Symphony state persists shared queue, lease, integration, and finalization state so concurrent services can coordinate through durable files.
+Symphony state persists shared leases, assignments, retries, finalization, integration candidacy, quarantine, and worktree status so concurrent services can coordinate through durable files.

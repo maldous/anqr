@@ -1,7 +1,7 @@
 # Subagents
 
 ## Purpose
-Directory for OpenClaw gateway/runtime configuration; immediate files include `runs.json`.
+Subagents contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 1 immediate file
@@ -14,8 +14,8 @@ Directory for OpenClaw gateway/runtime configuration; immediate files include `r
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 1 immediate file and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 1 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

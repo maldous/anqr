@@ -1,1 +1,1 @@
-Build index rebuilds the main retrieval corpus so the harness can search current repository knowledge.
+Build Index provides maintained behavior for this directory within the harness architecture.

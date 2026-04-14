@@ -1,7 +1,7 @@
 # Core
 
 ## Purpose
-Directory for Discord ingress, delivery, or notification support; immediate files include `bridge-result.mjs`, `bridge-result.spec.ts`, `discord-source.mjs`, `linear-worktree-health-states.mjs`, and others, with child directories `bridge-result/`, `discord-source/`, `symphony-state/`, `symphony-validation/`, and others.
+Core contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 12 immediate files
@@ -15,24 +15,24 @@ Directory for Discord ingress, delivery, or notification support; immediate file
 - `symphony-config.mjs` - Exports `TARGET_MIN`, a shared constant or state value used by sibling modules.
 - `symphony-config.spec.ts` - JavaScript/TypeScript module used by this directory.
 - `symphony-state.mjs` - JavaScript/TypeScript module used by this directory.
-- `symphony-state.spec.ts` - @ts-ignore - No type declarations for .mjs module
+- `symphony-state.spec.ts` - JavaScript/TypeScript module used by this directory.
 - `symphony-validation.mjs` - JavaScript/TypeScript module used by this directory.
 - `task-evidence.mjs` - Re-export facade that assembles the public surface for this directory.
 - `worktree-config.mjs` - JavaScript/TypeScript module used by this directory.
 - `worktree-health.mjs` - JavaScript/TypeScript module used by this directory.
 
 ## Subdirectories
-- `bridge-result/` - Directory for harness support logic; immediate files include `index.mjs`, `infer-symphony-result-from-completion.mjs`, `normalize-count.mjs`, `normalize-failure-class.mjs`, and others.
-- `discord-source/` - Directory for Discord ingress, delivery, or notification support; immediate files include `detect-and-mark-discord-source.mjs`, `index.mjs`, `is-discord-sourced.mjs`, `mark-discord-source.mjs`.
-- `symphony-state/` - Directory for git worktree management and concurrency support; immediate files include `acquire-integration-lock.mjs`, `acquire-lease.mjs`, `acquire-state-lock.mjs`, `add-external-key.mjs`, and others, with child directories `acquire-state-lock/`.
-- `symphony-validation/` - Directory for harness support logic; immediate files include `filter-changed-files.mjs`, `format-validation-feedback.mjs`, `index.mjs`, `run-ast-density.mjs`, and others.
-- `task-evidence/` - Directory for git worktree management and concurrency support; immediate files include `create-evidence-record.mjs`, `get-evidence-dir.mjs`, `get-evidence-path.mjs`, `index.mjs`, and others.
-- `worktree-config/` - Directory for Discord ingress, delivery, or notification support; immediate files include `dirname.mjs`, `discord-worktree-ids.mjs`, `get-worktree-branch.mjs`, `get-worktree-path.mjs`, and others.
-- `worktree-health/` - Directory for git worktree management and concurrency support; immediate files include `all-worktree-ids.mjs`, `get-current-branch.mjs`, `get-fleet-inventory.mjs`, `get-git-dirty-files.mjs`, and others.
+- `bridge-result/` - Bridge Result scope; immediate files include `index.mjs`, `infer-symphony-result-from-completion.mjs`, `normalize-count.mjs`, `normalize-failure-class.mjs`, and others.
+- `discord-source/` - Discord Source scope; immediate files include `detect-and-mark-discord-source.mjs`, `index.mjs`, `is-discord-sourced.mjs`, `mark-discord-source.mjs`.
+- `symphony-state/` - Symphony State scope; immediate files include `acquire-integration-lock.mjs`, `acquire-lease.mjs`, `acquire-state-lock.mjs`, `add-external-key.mjs`, and others; child directories include `acquire-state-lock/`.
+- `symphony-validation/` - Symphony Validation scope; immediate files include `filter-changed-files.mjs`, `format-validation-feedback.mjs`, `index.mjs`, `run-ast-density.mjs`, and others.
+- `task-evidence/` - Task Evidence scope; immediate files include `create-evidence-record.mjs`, `get-evidence-dir.mjs`, `get-evidence-path.mjs`, `index.mjs`, and others.
+- `worktree-config/` - Worktree Config scope; immediate files include `dirname.mjs`, `discord-worktree-ids.mjs`, `get-worktree-branch.mjs`, `get-worktree-path.mjs`, and others.
+- `worktree-health/` - Worktree Health scope; immediate files include `all-worktree-ids.mjs`, `get-current-branch.mjs`, `get-fleet-inventory.mjs`, `get-git-dirty-files.mjs`, and others.
 
 ## Operational Notes
-- Current on-disk inventory: 12 immediate files and 7 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 12 immediate file(s) and 7 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

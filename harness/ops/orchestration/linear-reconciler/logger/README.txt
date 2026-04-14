@@ -1,1 +1,1 @@
-Linear reconciler logger provides the namespaced logging surface for reconciliation cycles.
+Logger provides Linear-facing behavior for this part of the harness.

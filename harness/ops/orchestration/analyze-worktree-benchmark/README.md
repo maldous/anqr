@@ -1,7 +1,7 @@
 # Analyze Worktree Benchmark
 
 ## Purpose
-Directory for git worktree management and concurrency support; immediate files include `compare-benchmarks.mjs`, `dirname.mjs`, `evidence-dir.mjs`, `extract-benchmark-metrics.mjs`, and others.
+Analyze Worktree Benchmark contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 11 immediate files
@@ -24,8 +24,8 @@ Directory for git worktree management and concurrency support; immediate files i
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 11 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 11 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether ownership, timing, and state transitions in this directory stay consistent with the harness concurrency and integration model.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

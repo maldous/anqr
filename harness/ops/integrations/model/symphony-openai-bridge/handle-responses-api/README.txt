@@ -1,1 +1,1 @@
-Handle responses API adapts OpenAI Responses-style traffic so the bridge can translate between response payloads, chat payloads, and tool execution.
+Handle responses API adapts Responses-style traffic so the bridge can translate between tool execution, streaming behavior, and OpenAI-compatible payload shapes.

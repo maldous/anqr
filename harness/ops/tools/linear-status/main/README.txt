@@ -1,1 +1,1 @@
-Linear status main performs the core status aggregation logic used by the Linear status tool.
+Main provides Linear-facing behavior for this part of the harness.

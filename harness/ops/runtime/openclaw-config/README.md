@@ -1,7 +1,7 @@
 # Openclaw Config
 
 ## Purpose
-Repository copy of the OpenClaw gateway and workspace configuration that the harness expects to sync into `~/.openclaw/` for Discord, voice, approvals, models, and workspace identity.
+Source-controlled OpenClaw configuration tree that supplies gateway auth, model routing, approval, Discord, voice, and workspace settings expected by the live OpenClaw runtime.
 
 ## Contents
 - 7 immediate files
@@ -17,21 +17,21 @@ Repository copy of the OpenClaw gateway and workspace configuration that the har
 - `update-check.json` - JSON configuration/data file with top-level keys `lastCheckedAt`, `lastNotifiedVersion`, `lastNotifiedTag`.
 
 ## Subdirectories
-- `agents/` - Directory for OpenClaw gateway/runtime configuration, with child directories `main/`, `voice/`.
-- `canvas/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `index.html`.
-- `credentials/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `discord-default-allowFrom.json`, `discord-pairing.json`.
-- `cron/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `jobs.json`.
-- `devices/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `paired.json`, `pending.json`.
-- `identity/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `device-auth.json`, `device.json`.
-- `settings/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `tts.json`.
-- `skills/` - Directory for OpenClaw gateway/runtime configuration.
-- `subagents/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `runs.json`.
-- `workspace/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `AGENTS.md`, `HEARTBEAT.md`, `IDENTITY.md`, `plan.md`, and others.
-- `workspace-voice/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `AGENTS.md`, `BOOTSTRAP.md`, `HEARTBEAT.md`, `IDENTITY.md`, and others.
+- `agents/` - Agents scope; child directories include `main/`, `voice/`.
+- `canvas/` - Canvas scope; immediate files include `index.html`.
+- `credentials/` - Credentials scope; immediate files include `discord-default-allowFrom.json`, `discord-pairing.json`.
+- `cron/` - Cron scope; immediate files include `jobs.json`.
+- `devices/` - Devices scope; immediate files include `paired.json`, `pending.json`.
+- `identity/` - Identity scope; immediate files include `device-auth.json`, `device.json`.
+- `settings/` - Settings scope; immediate files include `tts.json`.
+- `skills/` - Skills scope; no tracked content beyond README files.
+- `subagents/` - Subagents scope; immediate files include `runs.json`.
+- `workspace/` - Workspace scope; immediate files include `AGENTS.md`, `HEARTBEAT.md`, `IDENTITY.md`, `plan.md`, and others.
+- `workspace-voice/` - Workspace Voice scope; immediate files include `AGENTS.md`, `BOOTSTRAP.md`, `HEARTBEAT.md`, `IDENTITY.md`, and others.
 
 ## Operational Notes
-- This tree is configuration, not executable orchestration code, but it materially shapes Discord and OpenClaw behavior.
-- The harness depends on operators syncing selected files from this directory into the live OpenClaw config home.
+- Current on-disk inventory: 7 immediate file(s) and 11 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check which files are true source-of-truth config, which are runtime-state placeholders, and how the Discord, voice, and approval settings line up with the systemd service topology.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

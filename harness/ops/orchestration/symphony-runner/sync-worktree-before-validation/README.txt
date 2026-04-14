@@ -1,1 +1,1 @@
-Sync worktree before validation refreshes a worktree against mainline before final validation so late drift is caught before publication.
+Sync Worktree Before Validation provides maintained worktree-related behavior for this part of the harness.

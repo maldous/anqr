@@ -1,1 +1,1 @@
-Devices records the paired and pending device state expected by the OpenClaw runtime.
+Devices provides runtime support for this part of the harness.

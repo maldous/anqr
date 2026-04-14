@@ -1,7 +1,7 @@
 # Durable Kv
 
 ## Purpose
-Directory for harness support logic; immediate files include `create-durable-map.mjs`, `create-durable-queue.mjs`, `create-durable-set.mjs`, `index.mjs`, and others, with child directories `store-helpers/`.
+Durable Kv contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 6 immediate files
@@ -16,11 +16,11 @@ Directory for harness support logic; immediate files include `create-durable-map
 - `with-store-lock.mjs` - Exports `withStoreLock`, the main helper defined in this file.
 
 ## Subdirectories
-- `store-helpers/` - Directory for harness support logic; immediate files include `get-store-dir.mjs`, `get-store-path.mjs`, `index.mjs`, `load-store.mjs`, and others.
+- `store-helpers/` - Store Helpers scope; immediate files include `get-store-dir.mjs`, `get-store-path.mjs`, `index.mjs`, `load-store.mjs`, and others.
 
 ## Operational Notes
-- Current on-disk inventory: 6 immediate files and 1 child directory.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 6 immediate file(s) and 1 child directory.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

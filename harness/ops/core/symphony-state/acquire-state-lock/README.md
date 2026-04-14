@@ -1,7 +1,7 @@
 # Acquire State Lock
 
 ## Purpose
-Directory for harness support logic; immediate files include `acquire-state-lock.mjs`, `index.mjs`, `sleep-sync.mjs`.
+Acquire State Lock contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 3 immediate files
@@ -16,8 +16,8 @@ Directory for harness support logic; immediate files include `acquire-state-lock
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 3 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 3 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

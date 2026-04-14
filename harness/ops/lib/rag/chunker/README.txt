@@ -1,1 +1,1 @@
-Chunker splits source material into retrieval-friendly chunks before indexing.
+Chunker provides maintained behavior for this directory within the harness architecture.

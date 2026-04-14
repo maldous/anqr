@@ -1,1 +1,1 @@
-List AST names inspects source files and extracts top-level declaration names so architecture and standards tooling can reason about the codebase structure.
+List Ast Names provides maintained behavior for this directory within the harness architecture.

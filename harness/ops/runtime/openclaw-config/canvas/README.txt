@@ -1,1 +1,1 @@
-Canvas provides the static browser surface used by the OpenClaw canvas path.
+Canvas provides runtime support for this part of the harness.

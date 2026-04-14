@@ -1,1 +1,1 @@
-Linear status logger provides the namespaced logging surface for the status tool.
+Logger provides Linear-facing behavior for this part of the harness.

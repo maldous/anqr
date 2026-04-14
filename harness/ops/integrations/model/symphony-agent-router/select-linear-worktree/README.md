@@ -1,7 +1,7 @@
 # Select Linear Worktree
 
 ## Purpose
-Directory for Linear ingestion, reconciliation, or issue management; immediate files include `index.mjs`, `normalize-worktree-state.mjs`, `select-linear-worktree.mjs`.
+Worktree-selection helper that chooses a healthy Linear executor slot for non-authoritative or fallback transport decisions based on health and current in-process load.
 
 ## Contents
 - 3 immediate files
@@ -16,8 +16,8 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 3 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 3 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

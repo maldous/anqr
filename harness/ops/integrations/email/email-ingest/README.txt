@@ -1,1 +1,1 @@
-Email ingest pulls approved inbound email into Linear so requests arriving by mail become trackable harness work.
+Email Ingest provides integration behavior for this part of the harness.

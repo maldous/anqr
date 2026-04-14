@@ -1,1 +1,1 @@
-Linear webhook receiver converts Linear webhook events into authenticated harness triggers for issue execution.
+Linear webhook receiver validates webhook deliveries, records ingress evidence, and feeds accepted issue events into the scheduler-aligned execution path.

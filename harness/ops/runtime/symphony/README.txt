@@ -1,1 +1,1 @@
-Runtime Symphony groups the Symphony-facing service surfaces that support routed execution.
+Symphony provides runtime support for this part of the harness.

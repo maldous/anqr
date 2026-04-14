@@ -1,7 +1,7 @@
 # Voice
 
 ## Purpose
-Directory for OpenClaw gateway/runtime configuration, with child directories `agent/`.
+Voice contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 0 immediate files
@@ -11,11 +11,11 @@ Directory for OpenClaw gateway/runtime configuration, with child directories `ag
 - No immediate non-README files in this directory.
 
 ## Subdirectories
-- `agent/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `auth-profiles.json`, `models.json`.
+- `agent/` - Agent scope; immediate files include `auth-profiles.json`, `models.json`.
 
 ## Operational Notes
-- Current on-disk inventory: 0 immediate files and 1 child directory.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 0 immediate file(s) and 1 child directory.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

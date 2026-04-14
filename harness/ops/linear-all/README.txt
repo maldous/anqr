@@ -1,1 +1,1 @@
-Linear all fetches large slices of Linear issue state for export, review, or batch analysis.
+Linear All provides Linear-facing behavior for this part of the harness.

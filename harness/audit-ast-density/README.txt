@@ -1,1 +1,1 @@
-Audit AST density measures declaration density in source files so the project can detect files that violate its one-declaration-per-file discipline.
+Audit Ast Density provides maintained behavior for this directory within the harness architecture.

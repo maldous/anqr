@@ -1,21 +1,21 @@
-# Symphony Anqr.service
+# Symphony Anqr Service
 
 ## Purpose
-Directory for systemd topology and host runtime configuration; immediate files include `override.conf`.
+Symphony Anqr Service contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 1 immediate file
 - 0 child directories
 
 ## Key Files
-- `override.conf` - systemd service/timer unit used by the harness runtime.
+- `override.conf` - systemd unit used by the harness runtime.
 
 ## Subdirectories
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 1 immediate file and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 1 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Confirm that the unit descriptions, dependencies, environment files, and startup targets still match the maintained harness runtime topology.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

@@ -1,7 +1,7 @@
 # Openclaw Discord
 
 ## Purpose
-Directory for OpenClaw gateway/runtime configuration; immediate files include `color-to-emoji.mjs`, `create-discord-thread.mjs`, `discord-stream-buffers.mjs`, `discord-text-channel-id.mjs`, and others, with child directories `discord-thread-cache/`, `send-via-open-claw/`.
+Openclaw Discord contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 19 immediate files
@@ -29,12 +29,12 @@ Directory for OpenClaw gateway/runtime configuration; immediate files include `c
 - `stream-max-length.mjs` - Exports `STREAM_MAX_LENGTH`, a shared constant or state value used by sibling modules.
 
 ## Subdirectories
-- `discord-thread-cache/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `get-thread-channel-id.mjs`, `index.mjs`, `set-thread-channel-id.mjs`, `thread-cache-instance.mjs`.
-- `send-via-open-claw/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `delete-via-open-claw.mjs`, `index.mjs`, `send-via-open-claw.mjs`.
+- `discord-thread-cache/` - Discord Thread Cache scope; immediate files include `get-thread-channel-id.mjs`, `index.mjs`, `set-thread-channel-id.mjs`, `thread-cache-instance.mjs`.
+- `send-via-open-claw/` - Send Via Open Claw scope; immediate files include `delete-via-open-claw.mjs`, `index.mjs`, `send-via-open-claw.mjs`.
 
 ## Operational Notes
-- Current on-disk inventory: 19 immediate files and 2 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 19 immediate file(s) and 2 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

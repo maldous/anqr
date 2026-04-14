@@ -1,7 +1,7 @@
 # Symphony Control
 
 ## Purpose
-Directory for runtime service bootstrap or environment support; immediate files include `disable-all-timers.mjs`, `enable-all-timers.mjs`, `get-enabled-timers.mjs`, `get-timer-status.mjs`, and others.
+Symphony Control contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 9 immediate files
@@ -22,8 +22,8 @@ Directory for runtime service bootstrap or environment support; immediate files 
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 9 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 9 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether ownership, timing, and state transitions in this directory stay consistent with the harness concurrency and integration model.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

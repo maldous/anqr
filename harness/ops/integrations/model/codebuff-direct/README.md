@@ -1,7 +1,7 @@
 # Codebuff Direct
 
 ## Purpose
-Directory for operator tooling and diagnostics; immediate files include `build-prompt.mjs`, `codebuff-max-continuations.mjs`, `codebuff-max-steps.mjs`, `codebuff-model-id.mjs`, and others.
+Codebuff Direct contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 27 immediate files
@@ -40,8 +40,8 @@ Directory for operator tooling and diagnostics; immediate files include `build-p
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 27 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 27 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

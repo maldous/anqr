@@ -1,1 +1,1 @@
-Types stores shared type shims and declarations used by the harness toolchain.
+Types provides maintained behavior for this directory within the harness architecture.

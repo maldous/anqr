@@ -1,1 +1,1 @@
-Runtime Discord provides Discord-facing runtime support for the harness and OpenClaw path.
+Discord provides Discord-facing behavior for this part of the harness.

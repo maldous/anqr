@@ -1,1 +1,1 @@
-Enrich provider context sizes fills in context-window knowledge from catalogs and APIs so provider ranking can account for practical prompt capacity.
+Enrich provider context sizes gathers prompt-capacity information from catalogs and APIs so provider selection can account for practical context limits.

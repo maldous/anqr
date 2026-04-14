@@ -1,1 +1,1 @@
-Worktree health records and reports executor slot health so schedulers and recovery flows can avoid unhealthy worktrees.
+Worktree health records executor-slot health so routers, schedulers, and recovery flows can avoid unhealthy worktrees.

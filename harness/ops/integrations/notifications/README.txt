@@ -1,1 +1,1 @@
-Notification integrations return harness events and progress to external channels.
+Notification integrations return harness progress and outcomes to external channels such as Discord.

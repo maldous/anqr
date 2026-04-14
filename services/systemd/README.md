@@ -1,10 +1,10 @@
 # Services Systemd
 
 ## Purpose
-User-level systemd unit inventory for the harness control plane, executor fleet, ingress surfaces, recovery loops, timers, and supporting gateways.
+User-level systemd unit inventory for the harness control plane, authoritative scheduler, executor fleet, recovery loops, timers, ingress surfaces, and support gateways.
 
 ## Contents
-- 26 immediate files
+- 27 immediate files
 - 4 child directories
 
 ## Key Files
@@ -27,6 +27,7 @@ User-level systemd unit inventory for the harness control plane, executor fleet,
 - `anqr-symphony-executor@.service` - systemd unit for ANQR Symphony executor for worktree wt%i; starts `%h/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=2048 --expose-gc %h/src/anqr/harness/ops/integrations/model/symphony-openai-bridge.mjs`.
 - `anqr-symphony-integrator.service` - systemd unit for ANQR Symphony integrator; starts `%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/orchestration/symphony-integrator.mjs daemon`.
 - `anqr-symphony-router.service` - systemd unit for ANQR Symphony router (control plane / orchestration); starts `%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/integrations/model/symphony-agent-router.mjs`.
+- `anqr-symphony-scheduler.service` - systemd unit for ANQR Symphony Scheduler (ADR-0002 authoritative claim+dispatch); starts `/usr/bin/node harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon`.
 - `anqr-symphony-worktree-recovery.service` - systemd unit for ANQR Symphony Worktree Recovery Daemon; starts `%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/orchestration/symphony-worktree-recovery.mjs daemon`.
 - `anqr-watchdog.service` - systemd unit for ANQR Symphony Router and Executor Watchdog; starts `%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/runtime/watchdog/bridge-watchdog.mjs`.
 - `anqr-worktree-health.service` - systemd unit for ANQR Worktree Fleet Health Check; starts `%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/core/worktree-health.mjs write`.
@@ -36,14 +37,14 @@ User-level systemd unit inventory for the harness control plane, executor fleet,
 - `openclaw-gateway.service` - systemd unit for OpenClaw Gateway (v2026.4.1); starts `/usr/local/bin/openclaw gateway --port 18789`.
 
 ## Subdirectories
-- `clawdbot-gateway.service.d/` - Directory for systemd topology and host runtime configuration; immediate files include `ollama.conf`.
-- `default.target.wants/` - Directory for systemd topology and host runtime configuration; immediate files include `anqr-context7-mcp.service`, `anqr-discord-router.service`, `anqr-linear-webhook.service`, `anqr-symphony-executor@1.service`, and others.
-- `symphony-anqr.service.d/` - Directory for systemd topology and host runtime configuration; immediate files include `override.conf`.
-- `timers.target.wants/` - Directory for systemd topology and host runtime configuration; immediate files include `anqr-email-ingest.timer`, `anqr-linear-export.timer`, `anqr-nightly.timer`, `anqr-rag-rebuild.timer`, and others.
+- `clawdbot-gateway.service.d/` - Clawdbot Gateway Service scope; immediate files include `ollama.conf`.
+- `default.target.wants/` - Default Target scope; immediate files include `anqr-context7-mcp.service`, `anqr-discord-router.service`, `anqr-linear-webhook.service`, `anqr-symphony-executor@1.service`, and others.
+- `symphony-anqr.service.d/` - Symphony Anqr Service scope; immediate files include `override.conf`.
+- `timers.target.wants/` - Timers Target scope; immediate files include `anqr-email-ingest.timer`, `anqr-linear-export.timer`, `anqr-nightly.timer`, `anqr-rag-rebuild.timer`, and others.
 
 ## Operational Notes
-- These units are the runtime deployment surface for the harness on the host machine.
-- They define how the router, executors, integrator, recovery services, OpenClaw, timers, and support proxies actually start and stay running.
+- These units are the deployed host runtime for the harness.
+- The current topology includes a dedicated scheduler service in addition to router, executor, integrator, recovery, watchdog, ingress, and sidecar services.
 
 ## Review Focus
-Verify service boundaries, startup ordering, worktree-to-unit mapping, environment sourcing, timer cadence, and whether the installed topology matches the intended concurrent architecture.
+Verify service boundaries, startup ordering, scheduler inclusion, worktree-to-unit mapping, env sourcing, timer cadence, and whether enabled units match the current architecture.

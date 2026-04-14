@@ -1,1 +1,1 @@
-Symphony adaptive context adjusts request context size in response to provider limits and failures so large prompts degrade instead of hard failing.
+Symphony adaptive context shrinks or reshapes oversized requests so execution can degrade controllably instead of failing outright against provider limits.

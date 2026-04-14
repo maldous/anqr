@@ -1,1 +1,1 @@
-Analyze Canceled Issues provides maintained behavior for this directory within the harness architecture.
+Analyze Canceled Issues provides Linear-facing behavior for this part of the harness.

@@ -1,7 +1,7 @@
 # Build Index
 
 ## Purpose
-Directory for RAG indexing and retrieval support; immediate files include `build-candidate-list.mjs`, `classify-file.mjs`, `detect-project-root.mjs`, `discover-tracked-files.mjs`, and others.
+Build Index contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 29 immediate files
@@ -42,8 +42,8 @@ Directory for RAG indexing and retrieval support; immediate files include `build
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 29 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 29 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

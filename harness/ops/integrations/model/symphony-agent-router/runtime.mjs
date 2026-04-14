@@ -76,7 +76,9 @@ setInterval(() => {
       }
     }
 
-    logInfo(`Processing queued trigger: ${item.identifier} -> ${claimCheck.assignedWorktreeId || "(selection)"}`);
+    logInfo(
+      `Processing queued trigger: ${item.identifier} -> ${claimCheck.assignedWorktreeId || "(selection)"}`,
+    );
     dispatchLinearExecution(item.identifier, item.correlationId || null, target);
   }
 }, QUEUE_POLL_INTERVAL_MS);

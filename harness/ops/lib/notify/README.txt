@@ -1,1 +1,1 @@
-Notify helpers package reusable notification behavior for higher-level orchestration and reporting flows.
+Notify provides maintained behavior for this directory within the harness architecture.

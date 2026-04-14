@@ -1,7 +1,7 @@
 # Integrations
 
 ## Purpose
-Directory for harness support logic, with child directories `email/`, `linear/`, `model/`, `notifications/`, and others.
+External-system adapter layer that connects the harness to Linear, email, Sonar, model providers, Discord, and OpenClaw notification channels.
 
 ## Contents
 - 0 immediate files
@@ -11,15 +11,15 @@ Directory for harness support logic, with child directories `email/`, `linear/`,
 - No immediate non-README files in this directory.
 
 ## Subdirectories
-- `email/` - Directory for harness support logic; immediate files include `email-ingest.mjs`, with child directories `email-ingest/`.
-- `linear/` - Directory for Discord ingress, delivery, or notification support; immediate files include `agent-workflow-create-issue.mjs`, `analyze-canceled-issues.mjs`, `create-ast-audit-issues.mjs`, `create-issue-template.mjs`, and others, with child directories `agent-workflow-create-issue/`, `analyze-canceled-issues/`, `create-issue-template/`, `delete-sonar-issues/`, and others.
-- `model/` - Directory for Discord ingress, delivery, or notification support; immediate files include `codebuff-cwd-isolation.spec.ts`, `codebuff-direct.mjs`, `codebuff-sdk-runner.mjs`, `discord-request-router.mjs`, and others, with child directories `codebuff-direct/`, `discord-request-router/`, `linear-webhook-receiver/`, `ollama-local-audit/`, and others.
-- `notifications/` - Directory for OpenClaw gateway/runtime configuration; immediate files include `openclaw-discord.mjs`, `test-discord.mjs`, with child directories `openclaw-discord/`, `test-discord/`.
-- `sonar/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `sonar-linear-audit.mjs`, `sonar-linear-sync.mjs`, with child directories `sonar-linear-audit/`, `sonar-linear-sync/`.
+- `email/` - Email scope; immediate files include `email-ingest.mjs`; child directories include `email-ingest/`.
+- `linear/` - Linear scope; immediate files include `agent-workflow-create-issue.mjs`, `analyze-canceled-issues.mjs`, `create-ast-audit-issues.mjs`, `create-issue-template.mjs`, and others; child directories include `agent-workflow-create-issue/`, `analyze-canceled-issues/`, `create-issue-template/`, `delete-sonar-issues/`, and others.
+- `model/` - Model scope; immediate files include `codebuff-cwd-isolation.spec.ts`, `codebuff-direct.mjs`, `codebuff-sdk-runner.mjs`, `discord-request-router.mjs`, and others; child directories include `codebuff-direct/`, `discord-request-router/`, `linear-webhook-receiver/`, `ollama-local-audit/`, and others.
+- `notifications/` - Notifications scope; immediate files include `openclaw-discord.mjs`, `test-discord.mjs`; child directories include `openclaw-discord/`, `test-discord/`.
+- `sonar/` - Sonar scope; immediate files include `sonar-linear-audit.mjs`, `sonar-linear-sync.mjs`; child directories include `sonar-linear-audit/`, `sonar-linear-sync/`.
 
 ## Operational Notes
-- Current on-disk inventory: 0 immediate files and 5 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 0 immediate file(s) and 5 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

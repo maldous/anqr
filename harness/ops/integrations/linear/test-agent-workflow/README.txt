@@ -1,1 +1,1 @@
-Test Agent Workflow provides maintained behavior for this directory within the harness architecture.
+Test Agent Workflow provides Linear-facing behavior for this part of the harness.

@@ -1,1 +1,1 @@
-Github Linear Sync Audit provides maintained behavior for this directory within the harness architecture.
+Github Linear Sync Audit provides Linear-facing behavior for this part of the harness.

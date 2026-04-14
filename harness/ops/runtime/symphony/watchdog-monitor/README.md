@@ -1,7 +1,7 @@
 # Watchdog Monitor
 
 ## Purpose
-Directory for fleet recovery, quarantine, and health enforcement; immediate files include `args.mjs`, `bridge-arg.mjs`, `check-bridge-health.mjs`, `codebuff-port.mjs`, and others.
+Watchdog Monitor contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 18 immediate files
@@ -31,8 +31,8 @@ Directory for fleet recovery, quarantine, and health enforcement; immediate file
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 18 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 18 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether runtime bootstrap assumptions and configuration boundaries still match the service topology described in the ADRs and workspace model.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

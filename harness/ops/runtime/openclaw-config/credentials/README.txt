@@ -1,1 +1,1 @@
-Credentials stores source-controlled credential-shape files used to pair Discord and other OpenClaw surfaces without committing live secrets.
+Credentials provides runtime support for this part of the harness.

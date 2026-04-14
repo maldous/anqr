@@ -1,7 +1,7 @@
 # Symphony Queue Control
 
 ## Purpose
-Directory for runtime service bootstrap or environment support; immediate files include `actions.mjs`, `count-enabled-timers.mjs`, `detect-stuck-work.mjs`, `drain-overflow.mjs`, and others.
+Symphony Queue Control contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 16 immediate files
@@ -29,8 +29,8 @@ Directory for runtime service bootstrap or environment support; immediate files 
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 16 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 16 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether ownership, timing, and state transitions in this directory stay consistent with the harness concurrency and integration model.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

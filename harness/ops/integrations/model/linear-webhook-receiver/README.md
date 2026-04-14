@@ -1,7 +1,7 @@
 # Linear Webhook Receiver
 
 ## Purpose
-Directory for Linear ingestion, reconciliation, or issue management; immediate files include `active-issues.mjs`, `dedup-window-ms.mjs`, `handle-health.mjs`, `handle-webhook.mjs`, and others.
+Authenticated Linear ingress surface that validates webhook events, records evidence, and turns accepted events into scheduler-path desired-work signals rather than directly claiming work.
 
 ## Contents
 - 16 immediate files
@@ -29,8 +29,8 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 16 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- This receiver verifies the Linear signature, deduplicates deliveries, records ingress evidence, and then triggers the scheduler-aligned path.
+- Its role after Workstream A is write-side ingress and traceability, not independent dispatch authority.
 
 ## Review Focus
-Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.
+Confirm that webhook handling remains ingress-only and does not recreate an alternate global dispatcher.

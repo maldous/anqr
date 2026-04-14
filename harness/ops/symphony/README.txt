@@ -1,1 +1,1 @@
-Symphony docs holds the workflow notes that describe how the Symphony automation path is expected to run.
+Symphony provides maintained behavior for this directory within the harness architecture.

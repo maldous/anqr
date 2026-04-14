@@ -1,1 +1,1 @@
-Vector store reads and writes the local embedding-backed retrieval store.
+Vector Store provides maintained behavior for this directory within the harness architecture.

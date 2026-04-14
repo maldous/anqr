@@ -1,1 +1,1 @@
-Discord source identifies and tags Discord-originated work so the harness can route it to the correct executor partition.
+Discord Source provides Discord-facing behavior for this part of the harness.

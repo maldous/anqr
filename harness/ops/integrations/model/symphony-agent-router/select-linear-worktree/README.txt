@@ -1,1 +1,1 @@
-Select Linear worktree chooses a healthy Linear executor slot so webhook and reconciler traffic land on an available Linear worktree.
+Select Linear worktree chooses a healthy Linear executor slot when the router needs a transport-side worktree selection helper.

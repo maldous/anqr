@@ -1,1 +1,1 @@
-Symphony runner drives isolated worktree execution by claiming issues, invoking the AI workflow, validating changes, shaping commits, and publishing branches for serial integration.
+Symphony runner executes scheduler-assigned work inside an isolated worktree, validates the result, and publishes a candidate branch for serial integration.

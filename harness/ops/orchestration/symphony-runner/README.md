@@ -1,10 +1,10 @@
 # Symphony Runner
 
 ## Purpose
-Worktree executor loop that claims an issue, runs the AI workflow in its isolated checkout, validates results, commits changes, and pushes the worktree branch for later integration.
+Worktree-local executor that runs already-assigned work inside an isolated checkout, performs validation, commits/pushes worktree results, and prepares candidates for serial integration.
 
 ## Contents
-- 57 immediate files
+- 54 immediate files
 - 1 child directory
 
 ## Key Files
@@ -32,8 +32,6 @@ Worktree executor loop that claims an issue, runs the AI workflow in its isolate
 - `index.mjs` - Re-export facade that assembles the public surface for this directory.
 - `infer-commit-scope.mjs` - Exports `inferCommitScope`, the main helper defined in this file.
 - `is-allowed-dirty-path.mjs` - Exports `isAllowedDirtyPath`, the main helper defined in this file.
-- `is-baseline-repair-issue.mjs` - Exports `isBaselineRepairIssue`, the main helper defined in this file.
-- `is-discord-issue.mjs` - Exports `isDiscordIssue`, the main helper defined in this file.
 - `is-process-alive.mjs` - Exports `isProcessAlive`, the main helper defined in this file.
 - `lease-ttl-ms.mjs` - Exports `LEASE_TTL_MS`, a shared constant or state value used by sibling modules.
 - `lock-file.mjs` - Exports `LOCK_FILE`, a shared constant or state value used by sibling modules.
@@ -43,7 +41,6 @@ Worktree executor loop that claims an issue, runs the AI workflow in its isolate
 - `maybe-run-preflights.mjs` - Exports `maybeRunPreflights`, the main helper defined in this file.
 - `normalize-repo-path.mjs` - Exports `normalizeRepoPath`, the main helper defined in this file.
 - `parse-allowed-dirty-path-env.mjs` - Exports `parseAllowedDirtyPathEnv`, the main helper defined in this file.
-- `pick-issue.mjs` - Exports `pickIssue`, the main helper defined in this file.
 - `release-lock.mjs` - Exports `releaseLock`, the main helper defined in this file.
 - `remove-temp-file.mjs` - Exports `removeTempFile`, the main helper defined in this file.
 - `root-matches-pattern.mjs` - Exports `rootMatchesPattern`, a shared constant or state value used by sibling modules.
@@ -67,11 +64,11 @@ Worktree executor loop that claims an issue, runs the AI workflow in its isolate
 - `write-pre-validation-patch.mjs` - Exports `writePreValidationPatch`, the main helper defined in this file.
 
 ## Subdirectories
-- `sync-worktree-before-validation/` - Directory for worktree execution and publish flow; immediate files include `git.mjs`, `index.mjs`, `sync-worktree-before-validation.mjs`.
+- `sync-worktree-before-validation/` - Sync Worktree Before Validation scope; immediate files include `git.mjs`, `index.mjs`, `sync-worktree-before-validation.mjs`.
 
 ## Operational Notes
-- This directory embodies the worktree execution model described in the ADRs and workspace DSL.
-- Its coupling to bridge execution, validation, and branch publication makes it a primary architecture review target.
+- This directory now reflects the post-Workstream A model where the runner executes assigned work instead of globally self-picking runnable issues.
+- Sticky repair remains a local executor concern, but global admission is expected to come from the scheduler.
 
 ## Review Focus
-Examine lock handling, issue pickup, dirty-tree guards, pre-validation sync, validation timing, commit shaping, and push behavior under concurrent executor pressure.
+Check that the runner behaves as a pure executor of claimed work, with only local repair handling and no global dispatch authority.

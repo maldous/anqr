@@ -1,7 +1,7 @@
 # Search
 
 ## Purpose
-Directory for Linear ingestion, reconciliation, or issue management; immediate files include `hybrid-search.mjs`, `linear-search.mjs`, with child directories `hybrid-search/`, `linear-search/`.
+Search contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 2 immediate files
@@ -12,12 +12,12 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - `linear-search.mjs` - JavaScript/TypeScript module used by this directory.
 
 ## Subdirectories
-- `hybrid-search/` - Directory for runtime service bootstrap or environment support; immediate files include `collect-project-files.mjs`, `compute-fingerprint.mjs`, `cosine-similarity.mjs`, `create-hybrid-search-index.mjs`, and others.
-- `linear-search/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `build-search-entry.mjs`, `compute-lexical-score.mjs`, `compute-recency-bonus.mjs`, `detect-project-root.mjs`, and others.
+- `hybrid-search/` - Hybrid Search scope; immediate files include `collect-project-files.mjs`, `compute-fingerprint.mjs`, `cosine-similarity.mjs`, `create-hybrid-search-index.mjs`, and others.
+- `linear-search/` - Linear Search scope; immediate files include `build-search-entry.mjs`, `compute-lexical-score.mjs`, `compute-recency-bonus.mjs`, `detect-project-root.mjs`, and others.
 
 ## Operational Notes
-- Current on-disk inventory: 2 immediate files and 2 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 2 immediate file(s) and 2 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

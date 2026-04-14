@@ -1,1 +1,1 @@
-Main agent config defines the primary text agent behavior exposed through the OpenClaw runtime.
+Main provides runtime support for this part of the harness.

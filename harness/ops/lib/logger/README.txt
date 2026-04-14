@@ -1,1 +1,1 @@
-Logger provides a consistent logging surface used throughout the harness runtime.
+Logger provides maintained behavior for this directory within the harness architecture.

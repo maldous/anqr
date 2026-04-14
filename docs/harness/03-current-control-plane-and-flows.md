@@ -52,8 +52,7 @@ This means it is not only observing. It is scheduling.
 The runner currently does all of the following:
 
 - syncs the worktree from `origin/main` before lease acquisition
-- fetches issue detail
-- picks Todo issues directly through `pick-issue.mjs`
+- fetches issue detail for an explicitly assigned issue or sticky repair
 - acquires and heartbeats a lease
 - runs AI work
 - validates results
@@ -61,7 +60,7 @@ The runner currently does all of the following:
 - updates Linear state and comments
 - emits completion and retry metadata
 
-This makes the runner both executor and part-time scheduler.
+The runner is now an executor only for global Linear work. It does not self-pick runnable issues from Linear state.
 
 ## Current recovery flow
 
@@ -71,13 +70,11 @@ The worktree recovery daemon currently does all of the following:
 - classifies them
 - releases stale leases
 - sets worktree state
-- retries pushes
-- auto-commits dirty work
-- pushes branches
-- for main repo repair, pushes `main`
-- propagates baseline fixes to other worktrees
+- quarantines or reprovisions unsafe sandboxes
+- performs bounded non-publishing sandbox maintenance for `reset_to_main` on inactive diverged worktrees
+- runs detect-only baseline health checks and reports cspell failures for operator intervention
 
-This is too much authority for a recovery process.
+Recovery no longer auto-commits, pushes, or propagates git state. Its remaining filesystem mutation is limited to non-publishing sandbox reset of inactive worktrees.
 
 ## Current integration flow
 

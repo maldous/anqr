@@ -1,1 +1,1 @@
-Get healthy Linear capacity measures how many Linear work items the healthy executor pool can accept right now.
+Get Healthy Linear Capacity provides Linear-facing behavior for this part of the harness.

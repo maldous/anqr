@@ -41,9 +41,7 @@ export function handleLinearTrigger(req, res) {
     // Router is transport, not claim authority.
     const claimCheck = verifySchedulerClaim(identifier);
     if (!claimCheck.allowed) {
-      logWarn(
-        `[router] Rejected dispatch for ${identifier}: ${claimCheck.reason}`,
-      );
+      logWarn(`[router] Rejected dispatch for ${identifier}: ${claimCheck.reason}`);
       json(res, 409, {
         error: {
           message: `Dispatch rejected: scheduler has not claimed ${identifier}`,

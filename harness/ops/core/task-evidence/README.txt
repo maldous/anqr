@@ -1,1 +1,1 @@
-Task evidence assembles the evidence records that connect issue execution, validation, and integration outcomes.
+Task evidence records the routing, execution, validation, push, integration, and recovery facts that tie a work item to its observable outcomes.

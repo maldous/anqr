@@ -1,1 +1,1 @@
-Build index Linear rebuilds the Linear-specific retrieval corpus so historical issue context stays searchable.
+Build Index Linear provides Linear-facing behavior for this part of the harness.

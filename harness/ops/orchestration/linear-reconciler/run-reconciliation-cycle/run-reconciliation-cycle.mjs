@@ -121,7 +121,9 @@ export async function runReconciliationCycle() {
     if (action.type === "dispatch") {
       // ADR-0002: Reconciler feeds the desired-work queue. The scheduler
       // owns claim and dispatch authority.
-      const fed = await feedDesiredWorkQueue([{ identifier: action.issueIdentifier, title: action.title }]);
+      const fed = await feedDesiredWorkQueue([
+        { identifier: action.issueIdentifier, title: action.title },
+      ]);
       dispatched += fed;
       if (RECONCILER_DISPATCH_COOLDOWN_MS > 0) {
         await new Promise((r) => setTimeout(r, RECONCILER_DISPATCH_COOLDOWN_MS));

@@ -1,1 +1,1 @@
-Linear chunker shapes Linear issue data into retrieval chunks before indexing.
+Linear Chunker provides Linear-facing behavior for this part of the harness.

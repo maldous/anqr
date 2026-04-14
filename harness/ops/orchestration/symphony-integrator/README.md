@@ -1,7 +1,7 @@
 # Symphony Integrator
 
 ## Purpose
-Single-writer integration service that drains queued worktree candidates, admits them into the mainline repository, and publishes evidence back to the issue system.
+Single-writer integration service that drains integration candidates, cherry-picks them onto mainline one at a time, and publishes evidence-backed closeout.
 
 ## Contents
 - 14 immediate files
@@ -24,11 +24,11 @@ Single-writer integration service that drains queued worktree candidates, admits
 - `show-status.mjs` - Exports `showStatus`, the main helper defined in this file.
 
 ## Subdirectories
-- `integrate-candidate/` - Directory for serial integration back into the main repository; immediate files include `build-evidence-comment.mjs`, `index.mjs`, `integrate-candidate.mjs`, `publish-evidence-and-close.mjs`.
+- `integrate-candidate/` - Integrate Candidate scope; immediate files include `build-evidence-comment.mjs`, `index.mjs`, `integrate-candidate.mjs`, `publish-evidence-and-close.mjs`.
 
 ## Operational Notes
-- This directory is the enforcement point for serial repository integration after concurrent worktree execution.
-- Its logic is critical to the stated design principle that one repository may execute many jobs concurrently but integrate one candidate at a time.
+- Current on-disk inventory: 14 immediate file(s) and 1 child directory.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Validate single-writer guarantees, queue handling, evidence publication, repaired-candidate scanning, and whether integration remains the only path back to `main`.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

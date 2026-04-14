@@ -1,1 +1,1 @@
-Test Discord exercises the Discord notification path so operators can verify that outbound messaging still works.
+Test Discord provides Discord-facing behavior for this part of the harness.

@@ -1,7 +1,7 @@
 # Bridge Result
 
 ## Purpose
-Directory for harness support logic; immediate files include `index.mjs`, `infer-symphony-result-from-completion.mjs`, `normalize-count.mjs`, `normalize-failure-class.mjs`, and others.
+Bridge Result contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 6 immediate files
@@ -19,8 +19,8 @@ Directory for harness support logic; immediate files include `index.mjs`, `infer
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 6 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 6 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

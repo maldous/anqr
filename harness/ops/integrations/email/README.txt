@@ -1,1 +1,1 @@
-Email integration turns mailbox activity into structured harness inputs and scheduled processing.
+Email provides integration behavior for this part of the harness.

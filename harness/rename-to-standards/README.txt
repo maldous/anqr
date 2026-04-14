@@ -1,1 +1,1 @@
-Rename to standards plans and applies naming normalizations so files and exported entry points follow the repository naming rules.
+Rename To Standards provides maintained behavior for this directory within the harness architecture.

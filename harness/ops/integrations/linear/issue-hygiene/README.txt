@@ -1,1 +1,1 @@
-Issue Hygiene provides maintained behavior for this directory within the harness architecture.
+Issue Hygiene provides Linear-facing behavior for this part of the harness.

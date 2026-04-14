@@ -1,7 +1,7 @@
 # Email Ingest
 
 ## Purpose
-Directory for runtime service bootstrap or environment support; immediate files include `allowed-senders.mjs`, `dirname.mjs`, `dry-run.mjs`, `ensure-dir.mjs`, and others.
+Email Ingest contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 23 immediate files
@@ -36,8 +36,8 @@ Directory for runtime service bootstrap or environment support; immediate files 
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 23 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 23 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

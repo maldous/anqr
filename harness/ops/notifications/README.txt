@@ -1,1 +1,1 @@
-Notifications groups reusable outbound notification surfaces used by the harness.
+Notifications provides maintained behavior for this directory within the harness architecture.

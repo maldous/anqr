@@ -1,7 +1,7 @@
 # Symphony Adaptive Context
 
 ## Purpose
-Directory for operator tooling and diagnostics; immediate files include `classify-error.mjs`, `context-expand-factor.mjs`, `context-expand-threshold.mjs`, `context-initial-buffer.mjs`, and others.
+Symphony Adaptive Context contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 48 immediate files
@@ -61,8 +61,8 @@ Directory for operator tooling and diagnostics; immediate files include `classif
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 48 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 48 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

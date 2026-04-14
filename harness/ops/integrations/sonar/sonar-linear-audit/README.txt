@@ -1,1 +1,1 @@
-Sonar Linear audit compares Sonar findings with Linear state so stale or missing issue links can be detected.
+Sonar Linear Audit provides Linear-facing behavior for this part of the harness.

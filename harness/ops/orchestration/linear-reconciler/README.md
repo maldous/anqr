@@ -1,7 +1,7 @@
 # Linear Reconciler
 
 ## Purpose
-Level-triggered backlog reconciler that continuously compares Linear state with local execution state, dispatches recoverable work, and restores drifted issues to a processable state.
+Level-triggered backlog reconciler that compares Linear state with local execution state, repairs stale issue progress, and feeds desired-work signals without directly dispatching runnable work.
 
 ## Contents
 - 8 immediate files
@@ -18,14 +18,14 @@ Level-triggered backlog reconciler that continuously compares Linear state with 
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
 
 ## Subdirectories
-- `compute-reconciliation-actions/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `compute-reconciliation-actions.mjs`, `index.mjs`, `is-missing-from-local-execution.mjs`.
-- `get-healthy-linear-capacity/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `get-healthy-linear-capacity.mjs`, `index.mjs`, `normalize-worktree-state.mjs`.
-- `logger/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `index.mjs`, `log-debug.mjs`, `log-error.mjs`, `log-info.mjs`, and others.
-- `run-reconciliation-cycle/` - Directory for Linear ingestion, reconciliation, or issue management; immediate files include `dispatch-issue.mjs`, `index.mjs`, `recover-in-progress-issue.mjs`, `run-reconciliation-cycle.mjs`.
+- `compute-reconciliation-actions/` - Compute Reconciliation Actions scope; immediate files include `compute-reconciliation-actions.mjs`, `index.mjs`, `is-missing-from-local-execution.mjs`.
+- `get-healthy-linear-capacity/` - Get Healthy Linear Capacity scope; immediate files include `get-healthy-linear-capacity.mjs`, `index.mjs`, `normalize-worktree-state.mjs`.
+- `logger/` - Logger scope; immediate files include `index.mjs`, `log-debug.mjs`, `log-error.mjs`, `log-info.mjs`, and others.
+- `run-reconciliation-cycle/` - Run Reconciliation Cycle scope; immediate files include `index.mjs`, `recover-in-progress-issue.mjs`, `run-reconciliation-cycle.mjs`.
 
 ## Operational Notes
-- This daemon is intended to catch missed webhook events and restart-safe backlog drift.
-- It is one of the main places where current runtime behavior can diverge from the desired singular-scheduler architecture.
+- After Workstream A, this daemon acts as a safety-net feeder and repair loop rather than a competing global dispatcher.
+- It still matters for stale in-progress recovery, healthy-capacity inspection, and backlog pressure management.
 
 ## Review Focus
-Check whether reconciliation duplicates dispatch authority, whether stale issue recovery is safe, and whether healthy-capacity checks line up with the worktree fleet design.
+Confirm that reconciliation now supports scheduler authority instead of bypassing it, and that stale issue recovery still lines up with the state model.

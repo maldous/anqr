@@ -1,7 +1,7 @@
 # Get Provider Bootstrap Score
 
 ## Purpose
-Directory for provider selection, probing, and credit-aware routing; immediate files include `compute-context-bootstrap-boost.mjs`, `get-provider-bootstrap-score.mjs`, `index.mjs`.
+Get Provider Bootstrap Score contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 3 immediate files
@@ -16,8 +16,8 @@ Directory for provider selection, probing, and credit-aware routing; immediate f
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 3 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 3 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the external-system contract in this directory still matches live usage and the intended control-plane boundaries.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

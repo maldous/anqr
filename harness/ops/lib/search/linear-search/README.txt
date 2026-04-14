@@ -1,1 +1,1 @@
-Linear search retrieves historical issue context from the Linear-specific retrieval index.
+Linear Search provides Linear-facing behavior for this part of the harness.

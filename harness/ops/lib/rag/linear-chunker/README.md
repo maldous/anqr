@@ -1,7 +1,7 @@
 # Linear Chunker
 
 ## Purpose
-Directory for Linear ingestion, reconciliation, or issue management; immediate files include `as-comma-list.mjs`, `chunk-linear-issue.mjs`, `chunk-linear-issues.mjs`, `compact-whitespace.mjs`, and others.
+Linear Chunker contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
 - 9 immediate files
@@ -22,8 +22,8 @@ Directory for Linear ingestion, reconciliation, or issue management; immediate f
 - No child directories in this directory.
 
 ## Operational Notes
-- Current on-disk inventory: 9 immediate files and 0 child directories.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 9 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

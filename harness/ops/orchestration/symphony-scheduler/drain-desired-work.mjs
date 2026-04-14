@@ -29,7 +29,9 @@ export function drainDesiredWork() {
   }
 
   if (items.length > 0) {
-    logDebug(`[scheduler] Drained ${items.length} desired-work signals: ${[...identifiers].join(", ")}`);
+    logDebug(
+      `[scheduler] Drained ${items.length} desired-work signals: ${[...identifiers].join(", ")}`,
+    );
   }
 
   return { identifiers, items, drained: items.length };

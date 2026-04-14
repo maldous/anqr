@@ -1,1 +1,1 @@
-Notify packages the concrete message-building and delivery path used for operational notifications.
+Notify provides maintained behavior for this directory within the harness architecture.

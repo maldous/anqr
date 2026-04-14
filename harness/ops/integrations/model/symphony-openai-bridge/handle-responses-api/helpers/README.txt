@@ -1,1 +1,1 @@
-Responses API helpers provide the low-level conversions and extraction routines needed to normalize Responses API traffic.
+Responses API helpers provide the low-level conversion and extraction routines needed to normalize Responses-style bridge traffic.

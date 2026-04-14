@@ -1,1 +1,1 @@
-Symphony agent router accepts orchestrated work, chooses an eligible executor worktree, and forwards requests into the correct worktree-local bridge while enforcing queue and concurrency limits.
+Symphony agent router verifies scheduler-owned claims and durable worktree assignment, then forwards already-claimed work into the correct worktree-local bridge.

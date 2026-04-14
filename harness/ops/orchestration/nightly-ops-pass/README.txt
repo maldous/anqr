@@ -1,1 +1,1 @@
-Nightly ops pass runs the scheduled maintenance, hygiene, and reporting sweep that keeps the harness backlog and support systems aligned overnight.
+Nightly Ops Pass provides orchestration behavior for this part of the harness.

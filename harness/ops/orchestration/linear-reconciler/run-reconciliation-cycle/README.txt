@@ -1,1 +1,1 @@
-Run reconciliation cycle executes one end-to-end comparison and repair pass between Linear state and local runtime state.
+Run Reconciliation Cycle provides Linear-facing behavior for this part of the harness.

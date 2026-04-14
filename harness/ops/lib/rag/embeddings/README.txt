@@ -1,1 +1,1 @@
-Embeddings generates vector representations used by the local retrieval indexes.
+Embeddings provides maintained behavior for this directory within the harness architecture.

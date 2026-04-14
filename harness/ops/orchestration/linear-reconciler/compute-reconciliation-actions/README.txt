@@ -1,1 +1,1 @@
-Compute reconciliation actions decides which repairs or dispatches are needed during a Linear reconciliation cycle.
+Compute Reconciliation Actions provides Linear-facing behavior for this part of the harness.

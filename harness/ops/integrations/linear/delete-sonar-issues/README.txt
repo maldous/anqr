@@ -1,1 +1,1 @@
-Delete Sonar Issues provides maintained behavior for this directory within the harness architecture.
+Delete Sonar Issues provides Linear-facing behavior for this part of the harness.

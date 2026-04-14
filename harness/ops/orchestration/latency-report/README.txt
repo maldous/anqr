@@ -1,1 +1,1 @@
-Latency report summarizes timing behavior across the harness so routing and executor delays can be inspected.
+Latency Report provides orchestration behavior for this part of the harness.

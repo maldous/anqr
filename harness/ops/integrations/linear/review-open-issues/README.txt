@@ -1,1 +1,1 @@
-Review Open Issues provides maintained behavior for this directory within the harness architecture.
+Review Open Issues provides Linear-facing behavior for this part of the harness.

@@ -1,1 +1,1 @@
-Agent Workflow Create Issue provides maintained behavior for this directory within the harness architecture.
+Agent Workflow Create Issue provides Linear-facing behavior for this part of the harness.

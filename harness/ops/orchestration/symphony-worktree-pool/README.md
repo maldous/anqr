@@ -1,7 +1,7 @@
 # Symphony Worktree Pool
 
 ## Purpose
-Utility surface for creating, listing, repairing, reprovisioning, and removing the git worktree fleet used by the concurrent executor pool.
+Lifecycle tooling for provisioning, listing, repairing, reprovisioning, and removing the git worktree fleet used by the executor pool.
 
 ## Contents
 - 21 immediate files
@@ -34,8 +34,8 @@ Utility surface for creating, listing, repairing, reprovisioning, and removing t
 - No child directories in this directory.
 
 ## Operational Notes
-- This directory manages the physical executor sandboxes rather than routing or scheduling policy.
-- Its outputs must stay aligned with systemd instance naming and the scheduler's worktree partition assumptions.
+- Current on-disk inventory: 21 immediate file(s) and 0 child directories.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Confirm the pool lifecycle matches the documented worktree topology, branch naming, dependency installation expectations, and repair workflow assumptions.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

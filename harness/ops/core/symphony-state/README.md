@@ -1,10 +1,10 @@
 # Symphony State
 
 ## Purpose
-Directory for git worktree management and concurrency support; immediate files include `acquire-integration-lock.mjs`, `acquire-lease.mjs`, `acquire-state-lock.mjs`, `add-external-key.mjs`, and others, with child directories `acquire-state-lock/`.
+Symphony State contains the code, configuration, or support files that implement this part of the harness architecture.
 
 ## Contents
-- 62 immediate files
+- 63 immediate files
 - 1 child directory
 
 ## Key Files
@@ -16,6 +16,7 @@ Directory for git worktree management and concurrency support; immediate files i
 - `can-execute-issue.mjs` - Exports `canExecuteIssue`, the main helper defined in this file.
 - `can-feed-issue.mjs` - Exports `canFeedIssue`, the main helper defined in this file.
 - `check-latency-baseline.mjs` - Exports `checkLatencyBaseline`, the main helper defined in this file.
+- `claim-issue.mjs` - Exports `claimIssue`, the main helper defined in this file.
 - `clear-cooldown.mjs` - Exports `clearCooldown`, the main helper defined in this file.
 - `clear-quarantine.mjs` - Exports `clearQuarantine`, the main helper defined in this file.
 - `default-lease-ms.mjs` - Exports `DEFAULT_LEASE_MS`, a shared constant or state value used by sibling modules.
@@ -72,11 +73,11 @@ Directory for git worktree management and concurrency support; immediate files i
 - `with-state-lock.mjs` - Exports `withStateLock`, the main helper defined in this file.
 
 ## Subdirectories
-- `acquire-state-lock/` - Directory for harness support logic; immediate files include `acquire-state-lock.mjs`, `index.mjs`, `sleep-sync.mjs`.
+- `acquire-state-lock/` - Acquire State Lock scope; immediate files include `acquire-state-lock.mjs`, `index.mjs`, `sleep-sync.mjs`.
 
 ## Operational Notes
-- Current on-disk inventory: 62 immediate files and 1 child directory.
-- This README was aligned to the current directory contents rather than older architectural intent documents alone.
+- Current on-disk inventory: 63 immediate file(s) and 1 child directory.
+- This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus
-Check whether the directory purpose, immediate files, and child modules still align with the current harness architecture.
+Check that the current implementation in this directory still matches its intended role in the harness architecture.

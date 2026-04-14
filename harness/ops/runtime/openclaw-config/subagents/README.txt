@@ -1,1 +1,1 @@
-Subagents stores runtime records about delegated OpenClaw subagent activity.
+Subagents provides runtime support for this part of the harness.

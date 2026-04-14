@@ -1,1 +1,1 @@
-Skills reserves the OpenClaw skills surface used to extend gateway behavior in this installation.
+Skills provides runtime support for this part of the harness.
