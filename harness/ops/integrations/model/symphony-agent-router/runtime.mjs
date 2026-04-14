@@ -11,8 +11,24 @@ import {
   server,
 } from "./index.mjs";
 
+import { getWorktreeState } from "../../../symphony-state.mjs";
+import { reconcileWorktreeCounters } from "./reconcile-worktree-counters.mjs";
 import { verifySchedulerClaim } from "./verify-scheduler-claim.mjs";
 import { logInfo, logWarn, logDebug } from "./logger.mjs";
+
+// ---------------------------------------------------------------------------
+// Phase 4: Reconstruct transient counters from durable state on startup.
+// This ensures restart safety — if executors are still running after a
+// router restart, counters reflect the durable execution state.
+// ---------------------------------------------------------------------------
+for (const wt of WORKTREES) {
+  if (wt.id < 1 || wt.id > 4) continue;
+  const state = getWorktreeState(`wt${wt.id}`);
+  if (state?.state === "executing") {
+    wt.activeRequests = 1;
+    logInfo(`[startup] wt${wt.id} is executing (durable state) — counter set to 1`);
+  }
+}
 
 setInterval(() => {
   if (linearQueue.length === 0) return;
@@ -39,7 +55,11 @@ setInterval(() => {
   }
 
   const linearWorktrees = WORKTREES.filter((w) => w.id >= 1 && w.id <= 4);
-  const available = linearWorktrees.filter((w) => w.activeRequests < 1);
+  // Phase 4: Use durable state for availability, not transient counters.
+  const available = linearWorktrees.filter((w) => {
+    const state = getWorktreeState(`wt${w.id}`);
+    return !state || state.state !== "executing";
+  });
 
   if (available.length === 0) {
     logDebug(`Queue length: ${linearQueue.length}, no worktrees available`);
@@ -96,3 +116,9 @@ server.listen(PORT, TARGET_HOST, () => {
 process.on("SIGTERM", () => server.close(() => process.exit(0)));
 
 process.on("SIGINT", () => server.close(() => process.exit(0)));
+
+// Phase 4: Periodic reconciliation of transient counters with durable state.
+// Observation-only — durable state is the authority for Linear worktrees.
+setInterval(() => {
+  reconcileWorktreeCounters();
+}, 30_000);

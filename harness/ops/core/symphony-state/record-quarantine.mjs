@@ -1,8 +1,7 @@
-import { setWorktreeState } from "./set-worktree-state.mjs";
+import { transitionWorktree } from "./transition-worktree.mjs";
 
 export function recordQuarantine(worktreeId, details = {}) {
-  return setWorktreeState(worktreeId, {
-    state: "quarantined",
+  return transitionWorktree(worktreeId, "quarantined", {
     reason: details.reason || "unknown",
     quarantinedAt: new Date().toISOString(),
     repairAttempts: details.repairAttempts || 0,

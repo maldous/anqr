@@ -1,9 +1,8 @@
-import { setWorktreeState } from "./set-worktree-state.mjs";
+import { transitionWorktree } from "./transition-worktree.mjs";
 
 export function clearQuarantine(worktreeId) {
-  return setWorktreeState(worktreeId, {
-    state: "available",
-    issueIdentifier: null,
+  return transitionWorktree(worktreeId, "available", {
+    assignedIssue: null,
     reason: null,
     quarantinedAt: null,
     repairAttempts: 0,

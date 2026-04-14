@@ -2,6 +2,7 @@ import { getWorktreePath, PROJECT_ROOT } from "../worktree-config.mjs";
 import { existsSync } from "node:fs";
 import {
   getWorktreeState,
+  getWorktreeOwner,
   loadState,
   leaseIsActive,
   getFinalizationState,
@@ -41,28 +42,26 @@ export function getWorktreeHealthSnapshot(worktreeId) {
   snapshot.branch = getCurrentBranch(path);
   snapshot.headSha = getHeadSha(path);
 
-  // Check stored worktree state
+  // Phase 5: durable worktree state is the primary ownership record.
   const wtState = getWorktreeState(wtId);
-  if (wtState) {
-    snapshot.issueIdentifier = wtState.issueIdentifier || null;
+  const durableOwner = getWorktreeOwner(wtId);
+  if (durableOwner) {
+    snapshot.issueIdentifier = durableOwner;
+    snapshot.finalizationState = getFinalizationState(durableOwner);
   }
 
-  // Check for active issue lease
-  const store = loadState();
-  let activeIssueIdentifier = null;
+  // Validate ownership by checking for active lease (reverse scan is
+  // validation only, not authority — Phase 5 invariant).
   let activeLease = null;
-  for (const [identifier, record] of Object.entries(store.issues)) {
-    if (record.lease && record.finalization?.worktreeId === wtId) {
+  const ownerToCheck = snapshot.issueIdentifier;
+  if (ownerToCheck) {
+    const store = loadState();
+    const record = store.issues[ownerToCheck];
+    if (record?.lease) {
       activeLease = record.lease;
-      activeIssueIdentifier = identifier;
-      break;
     }
   }
   snapshot.leaseState = activeLease;
-  if (activeIssueIdentifier) {
-    snapshot.issueIdentifier = activeIssueIdentifier;
-    snapshot.finalizationState = getFinalizationState(activeIssueIdentifier);
-  }
 
   // If worktree state was explicitly set, prefer it
   if (wtState?.state === "quarantined") {

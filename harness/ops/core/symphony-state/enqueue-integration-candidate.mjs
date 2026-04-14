@@ -1,15 +1,21 @@
-import { loadState } from "./load-state.mjs";
-import { saveState } from "./save-state.mjs";
-import { withStateLock } from "./with-state-lock.mjs";
+/**
+ * @deprecated Phase 5: the integration queue is now derived from
+ * `finalization.state` on each issue record.  Explicit enqueue is a
+ * no-op — setting `finalization.state` to `integration_pending` (via
+ * `transitionIssue`) is what makes an issue an integration candidate.
+ *
+ * Retained for backwards compatibility; will be removed in a future pass.
+ */
 
-export function enqueueIntegrationCandidate(issueIdentifier) {
-  return withStateLock(() => {
-    const store = loadState();
-    if (!Array.isArray(store.global.integrationQueue)) store.global.integrationQueue = [];
-    if (!store.global.integrationQueue.includes(issueIdentifier)) {
-      store.global.integrationQueue.push(issueIdentifier);
-    }
-    saveState(store);
-    return store.global.integrationQueue;
-  });
+let warned = false;
+
+export function enqueueIntegrationCandidate(_issueIdentifier) {
+  if (!warned) {
+    console.warn(
+      "[symphony-state] enqueueIntegrationCandidate is deprecated (Phase 5). " +
+        "Integration candidates are derived from finalization.state.",
+    );
+    warned = true;
+  }
+  return [];
 }

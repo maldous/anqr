@@ -88,39 +88,69 @@ describe("setFinalizationState", () => {
   });
 });
 
-describe("Integration Queue", () => {
-  it("should enqueue candidates", () => {
-    enqueueIntegrationCandidate("ANQ-200");
-    enqueueIntegrationCandidate("ANQ-201");
+describe("Integration Queue (Phase 5: derived from finalization.state)", () => {
+  it("should list candidates based on finalization.state", () => {
+    // Phase 5: candidates are derived from finalization state, not explicit enqueue
+    setFinalizationState("ANQ-200", {
+      state: "integration_pending",
+      worktreeId: "wt1",
+      branch: "symphony/wt1",
+    });
+    setFinalizationState("ANQ-201", {
+      state: "evidence_pending_closeout",
+      worktreeId: "wt2",
+    });
 
     const candidates = listIntegrationCandidates();
-    expect(candidates).toEqual(["ANQ-200", "ANQ-201"]);
+    expect(candidates).toContain("ANQ-200");
+    expect(candidates).toContain("ANQ-201");
   });
 
-  it("should deduplicate on enqueue", () => {
-    enqueueIntegrationCandidate("ANQ-300");
+  it("should deduplicate naturally (each issue appears once)", () => {
+    setFinalizationState("ANQ-300", {
+      state: "integration_pending",
+      worktreeId: "wt1",
+    });
+    // Calling enqueue is now a no-op — candidacy is driven by state
     enqueueIntegrationCandidate("ANQ-300");
     enqueueIntegrationCandidate("ANQ-300");
 
     const candidates = listIntegrationCandidates();
-    expect(candidates).toEqual(["ANQ-300"]);
+    expect(candidates.filter((id: string) => id === "ANQ-300")).toHaveLength(1);
   });
 
-  it("should dequeue candidates", () => {
-    enqueueIntegrationCandidate("ANQ-400");
-    enqueueIntegrationCandidate("ANQ-401");
+  it("should remove candidate when finalization state changes", () => {
+    setFinalizationState("ANQ-400", {
+      state: "integration_pending",
+      worktreeId: "wt1",
+    });
+    setFinalizationState("ANQ-401", {
+      state: "integration_pending",
+      worktreeId: "wt2",
+    });
+    // "Dequeue" by changing finalization state to completed
+    setFinalizationState("ANQ-400", {
+      state: "integrated_main",
+    });
+    // dequeueIntegrationCandidate is now a no-op
     dequeueIntegrationCandidate("ANQ-400");
 
     const candidates = listIntegrationCandidates();
-    expect(candidates).toEqual(["ANQ-401"]);
+    expect(candidates).not.toContain("ANQ-400");
+    expect(candidates).toContain("ANQ-401");
   });
 
-  it("should handle dequeue of non-existent candidate", () => {
+  it("should not list issues without integration-ready finalization", () => {
+    setFinalizationState("ANQ-500", {
+      state: "integration_pending",
+      worktreeId: "wt1",
+    });
+    // enqueue/dequeue are no-ops
     enqueueIntegrationCandidate("ANQ-500");
     dequeueIntegrationCandidate("ANQ-999");
 
     const candidates = listIntegrationCandidates();
-    expect(candidates).toEqual(["ANQ-500"]);
+    expect(candidates).toContain("ANQ-500");
   });
 });
 

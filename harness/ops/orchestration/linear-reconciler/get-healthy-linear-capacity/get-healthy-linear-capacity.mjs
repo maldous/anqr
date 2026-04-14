@@ -26,7 +26,7 @@ export function getHealthyLinearCapacity() {
       rawState: state?.state || "available",
       healthy,
       executing,
-      issueIdentifier: state?.issueIdentifier || null,
+      assignedIssue: state?.assignedIssue || state?.issueIdentifier || null,
       lastError: state?.lastError || null,
       reason: state?.reason || null,
     });

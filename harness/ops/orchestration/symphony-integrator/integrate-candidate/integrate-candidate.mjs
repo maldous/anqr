@@ -1,7 +1,7 @@
 import {
   dequeueIntegrationCandidate,
   getFinalizationState,
-  setFinalizationState,
+  transitionIssue,
   getIssueState,
 } from "../../../symphony-state.mjs";
 import { updateIssue, addComment, STATES } from "../../../linear-client.mjs";
@@ -82,11 +82,14 @@ export async function integrateCandidate(issueIdentifier) {
       }
 
       const attempts = (finalization.attempts || 0) + 1;
-      await setFinalizationState(issueIdentifier, {
-        state: "integration_failed_repairable",
-        lastError: stderr.slice(0, 500),
-        attempts,
-        updatedAt: new Date().toISOString(),
+      transitionIssue(issueIdentifier, "integration_failed", {
+        finalization: {
+          state: "integration_failed_repairable",
+          lastError: stderr.slice(0, 500),
+          attempts,
+          updatedAt: new Date().toISOString(),
+        },
+        reason: "cherry_pick_conflict",
       });
 
       const issueState = getIssueState(issueIdentifier);
@@ -145,13 +148,16 @@ export async function integrateCandidate(issueIdentifier) {
       /* best-effort evidence collection */
     }
 
-    await setFinalizationState(issueIdentifier, {
-      state: "evidence_pending_closeout",
-      integratedMainSha: pushedMainSha,
-      changedFiles,
-      diffStat,
-      updatedAt: new Date().toISOString(),
-      lastError: null,
+    transitionIssue(issueIdentifier, "evidence_pending", {
+      finalization: {
+        state: "evidence_pending_closeout",
+        integratedMainSha: pushedMainSha,
+        changedFiles,
+        diffStat,
+        updatedAt: new Date().toISOString(),
+        lastError: null,
+      },
+      reason: "integration_success",
     });
 
     const closeout = await publishEvidenceAndClose({
@@ -166,13 +172,16 @@ export async function integrateCandidate(issueIdentifier) {
       return closeout;
     }
 
-    await setFinalizationState(issueIdentifier, {
-      state: "integrated_main",
-      integratedMainSha: pushedMainSha,
-      changedFiles,
-      diffStat,
-      updatedAt: new Date().toISOString(),
-      lastError: null,
+    transitionIssue(issueIdentifier, "completed", {
+      finalization: {
+        state: "integrated_main",
+        integratedMainSha: pushedMainSha,
+        changedFiles,
+        diffStat,
+        updatedAt: new Date().toISOString(),
+        lastError: null,
+      },
+      reason: "evidence_published",
     });
 
     dequeueIntegrationCandidate(issueIdentifier);
@@ -187,11 +196,14 @@ export async function integrateCandidate(issueIdentifier) {
     }
 
     const attempts = (finalization.attempts || 0) + 1;
-    await setFinalizationState(issueIdentifier, {
-      state: "integration_failed_repairable",
-      lastError: err.message.slice(0, 500),
-      attempts,
-      updatedAt: new Date().toISOString(),
+    transitionIssue(issueIdentifier, "integration_failed", {
+      finalization: {
+        state: "integration_failed_repairable",
+        lastError: err.message.slice(0, 500),
+        attempts,
+        updatedAt: new Date().toISOString(),
+      },
+      reason: "infra_error",
     });
 
     dequeueIntegrationCandidate(issueIdentifier);

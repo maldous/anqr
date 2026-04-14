@@ -12,10 +12,10 @@ import {
   recordCompletion,
   recordRetryEvent,
   calculateExponentialBackoff,
-  setFinalizationState,
+  transitionIssue,
   getFinalizationState,
   enqueueIntegrationCandidate,
-  setWorktreeState,
+  transitionWorktree,
   getWorktreeState,
 } from "../../symphony-state.mjs";
 import { execFileSync } from "node:child_process";
@@ -170,11 +170,9 @@ export async function executeIssue(issue, dryRun = false) {
         );
         logWarn(`[runner] Quarantining worktree ${WORKTREE_ID} for recovery service...`);
 
-        setWorktreeState(WORKTREE_ID, {
-          state: "quarantined",
+        transitionWorktree(WORKTREE_ID, "quarantined", {
           reason: "sync_failure_threshold",
-          syncFailCount,
-          lastError: err.message,
+          lastError: `syncFailCount: ${syncFailCount}, ${err.message}`,
           quarantinedAt: new Date().toISOString(),
         });
 
@@ -272,21 +270,30 @@ export async function executeIssue(issue, dryRun = false) {
   let startingCommentId = null;
   let heartbeatTimer = null;
   try {
-    // Phase 0: Set worktree state to executing
-    setWorktreeState(WORKTREE_ID, { state: "executing", issueIdentifier: issue.identifier });
+    // Phase 0: Set worktree state to executing.
+    // Phase 4: The scheduler already sets the worktree to "executing" at claim
+    // time. Skip if already in that state to avoid an invalid self-transition.
+    // Still transition for non-executing states (e.g. dirty_owned for sticky repair).
+    const currentWtState = getWorktreeState(WORKTREE_ID);
+    if (!currentWtState || currentWtState.state !== "executing") {
+      transitionWorktree(WORKTREE_ID, "executing", { assignedIssue: issue.identifier });
+    }
 
     // Phase 2: Handle branch_push_failed_repairable — retry push before running agent
     if (isRepairCandidate && currentFinalization.state === "branch_push_failed_repairable") {
       logInfo(`[runner] 🔧 Retrying branch push for ${issue.identifier}...`);
       const retryPush = await gitPushWorktreeBranch();
       if (retryPush.ok) {
-        setFinalizationState(issue.identifier, {
-          state: "integration_pending",
-          branch: retryPush.branch,
-          headSha: retryPush.head,
-          baseMainSha: getRepoHeadSha("origin/main"),
-          attempts: 0,
-          lastError: null,
+        transitionIssue(issue.identifier, "integration_pending", {
+          finalization: {
+            state: "integration_pending",
+            branch: retryPush.branch,
+            headSha: retryPush.head,
+            baseMainSha: getRepoHeadSha("origin/main"),
+            attempts: 0,
+            lastError: null,
+          },
+          reason: "branch_push_retry_success",
         });
         enqueueIntegrationCandidate(issue.identifier);
         await updateIssue(issue.id, { stateId: STATES.inReview });
@@ -1302,14 +1309,17 @@ export async function executeIssue(issue, dryRun = false) {
           /* best effort */
         }
 
-        setFinalizationState(issue.identifier, {
-          state: "validation_failed_repairable",
-          worktreeId: WORKTREE_ID,
-          stickyOwner: WORKTREE_ID,
-          lastError: validationErrors.slice(0, 500),
-          attempts: valRepairAttempts,
+        transitionIssue(issue.identifier, "validation_failed", {
+          finalization: {
+            state: "validation_failed_repairable",
+            worktreeId: WORKTREE_ID,
+            stickyOwner: WORKTREE_ID,
+            lastError: validationErrors.slice(0, 500),
+            attempts: valRepairAttempts,
+          },
+          reason: "validation_failed_repairable",
         });
-        setWorktreeState(WORKTREE_ID, { state: "dirty_owned", issueIdentifier: issue.identifier });
+        transitionWorktree(WORKTREE_ID, "dirty_owned", { assignedIssue: issue.identifier });
         await updateIssue(issue.id, { stateId: STATES.inReview });
         await addComment(
           issue.id,
@@ -1420,13 +1430,16 @@ ${String(r.detail).slice(0, 1000)}\n`,
       const commitAttempts = (priorFinalization?.attempts || 0) + 1;
       if (commitAttempts > 3) {
         gitRevert();
-        await setFinalizationState(issue.identifier, {
-          state: "commit_failed_blocked",
-          worktreeId: WORKTREE_ID,
-          stickyOwner: WORKTREE_ID,
-          lastError: "git commit failed repeatedly",
-          attempts: commitAttempts,
-          updatedAt: new Date().toISOString(),
+        transitionIssue(issue.identifier, "commit_failed", {
+          finalization: {
+            state: "commit_failed_blocked",
+            worktreeId: WORKTREE_ID,
+            stickyOwner: WORKTREE_ID,
+            lastError: "git commit failed repeatedly",
+            attempts: commitAttempts,
+            updatedAt: new Date().toISOString(),
+          },
+          reason: "commit_failed_blocked",
         });
         await updateIssue(issue.id, { stateId: STATES.backlog });
         await addComment(
@@ -1441,15 +1454,18 @@ ${String(r.detail).slice(0, 1000)}\n`,
           runId: RUN_ID,
         });
       } else {
-        await setFinalizationState(issue.identifier, {
-          state: "commit_failed_repairable",
-          worktreeId: WORKTREE_ID,
-          stickyOwner: WORKTREE_ID,
-          branch: currentBranchNameForRunner(),
-          headSha: getRepoHeadSha("HEAD"),
-          lastError: "git commit failed during finalization",
-          attempts: commitAttempts,
-          updatedAt: new Date().toISOString(),
+        transitionIssue(issue.identifier, "commit_failed", {
+          finalization: {
+            state: "commit_failed_repairable",
+            worktreeId: WORKTREE_ID,
+            stickyOwner: WORKTREE_ID,
+            branch: currentBranchNameForRunner(),
+            headSha: getRepoHeadSha("HEAD"),
+            lastError: "git commit failed during finalization",
+            attempts: commitAttempts,
+            updatedAt: new Date().toISOString(),
+          },
+          reason: "commit_failed_repairable",
         });
         await updateIssue(issue.id, { stateId: STATES.inReview });
         await addComment(
@@ -1490,30 +1506,36 @@ ${String(r.detail).slice(0, 1000)}\n`,
         }
       }
       if (branchPush.ok) {
-        await setFinalizationState(issue.identifier, {
-          state: "integration_pending",
-          worktreeId: WORKTREE_ID,
-          branch: branchPush.branch,
-          baseMainSha: getRepoHeadSha("origin/main"),
-          headSha: branchPush.head,
-          attempts: 0,
-          stickyOwner: WORKTREE_ID,
-          lastError: null,
-          correlationId,
-          updatedAt: new Date().toISOString(),
+        transitionIssue(issue.identifier, "integration_pending", {
+          finalization: {
+            state: "integration_pending",
+            worktreeId: WORKTREE_ID,
+            branch: branchPush.branch,
+            baseMainSha: getRepoHeadSha("origin/main"),
+            headSha: branchPush.head,
+            attempts: 0,
+            stickyOwner: WORKTREE_ID,
+            lastError: null,
+            correlationId,
+            updatedAt: new Date().toISOString(),
+          },
+          reason: "branch_push_success",
         });
         await enqueueIntegrationCandidate(issue.identifier);
       } else {
-        await setFinalizationState(issue.identifier, {
-          state: "branch_push_failed_repairable",
-          worktreeId: WORKTREE_ID,
-          stickyOwner: WORKTREE_ID,
-          branch: branchPush.branch,
-          headSha: branchPush.head,
-          lastError: branchPush.error || "push failed",
-          correlationId,
-          attempts: 1,
-          updatedAt: new Date().toISOString(),
+        transitionIssue(issue.identifier, "push_failed", {
+          finalization: {
+            state: "branch_push_failed_repairable",
+            worktreeId: WORKTREE_ID,
+            stickyOwner: WORKTREE_ID,
+            branch: branchPush.branch,
+            headSha: branchPush.head,
+            lastError: branchPush.error || "push failed",
+            correlationId,
+            attempts: 1,
+            updatedAt: new Date().toISOString(),
+          },
+          reason: "branch_push_failed",
         });
       }
     }
@@ -1638,8 +1660,8 @@ ${String(r.detail).slice(0, 1000)}\n`,
     releaseLease(issue.identifier, leaseNonce);
     // Phase 0: Reset worktree state unless marked dirty for repair
     const finalWtState = getWorktreeState(WORKTREE_ID);
-    if (!finalWtState || finalWtState.state === "executing") {
-      setWorktreeState(WORKTREE_ID, { state: "available", issueIdentifier: null });
+    if (finalWtState?.state === "executing") {
+      transitionWorktree(WORKTREE_ID, "available", { assignedIssue: null });
     }
     // Clean up validation sidecar file on successful completion
     const sidecarCleanup = resolve(ROOT, ".git", "SYMPHONY_VALIDATION_ERRORS");

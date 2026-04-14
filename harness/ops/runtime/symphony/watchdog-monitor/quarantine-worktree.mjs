@@ -1,5 +1,5 @@
 import { sendDiscordEmbed } from "../../../integrations/notifications/openclaw-discord.mjs";
-import { setWorktreeState } from "../../../symphony-state.mjs";
+import { transitionWorktree } from "../../../symphony-state.mjs";
 
 import { WATCHDOG_ROLLBACK } from "./watchdog-rollback.mjs";
 import { WATCHDOG_TIMEOUT_MS } from "./watchdog-timeout-ms.mjs";
@@ -41,11 +41,9 @@ export async function quarantineWorktree() {
     threadName: "ANQR",
   }).catch((err) => log(`⚠️ Failed to send Discord notification: ${err.message}`));
 
-  setWorktreeState(WORKTREE_ID, {
-    state: "quarantined",
+  transitionWorktree(WORKTREE_ID, "quarantined", {
     reason: "watchdog_bridge_unhealthy",
-    commit: currentCommit.slice(0, 7),
-    timeout: WATCHDOG_TIMEOUT_MS,
+    lastError: `commit: ${currentCommit.slice(0, 7)}, timeout: ${WATCHDOG_TIMEOUT_MS}ms`,
     quarantinedAt: new Date().toISOString(),
   });
 

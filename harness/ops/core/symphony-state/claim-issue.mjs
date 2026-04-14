@@ -1,11 +1,7 @@
 import { DEFAULT_LEASE_MS } from "./default-lease-ms.mjs";
 import { HOST_ID } from "./host-id.mjs";
-import { leaseIsActive } from "./lease-is-active.mjs";
-import { loadState } from "./load-state.mjs";
-import { normalizeRecord } from "./normalize-record.mjs";
 import { nowIso } from "./now-iso.mjs";
-import { saveState } from "./save-state.mjs";
-import { withStateLock } from "./with-state-lock.mjs";
+import { transitionIssue } from "./transition-issue.mjs";
 
 /**
  * Atomically claim an issue for execution — ADR-0002.
@@ -13,7 +9,7 @@ import { withStateLock } from "./with-state-lock.mjs";
  * This is the ONLY function allowed to transition an issue from
  * `eligible` to `claimed`. It acquires a lease and records the
  * assignment metadata (worktreeId, source, correlation) in a single
- * locked transaction.
+ * locked transaction via `transitionIssue`.
  *
  * @param {string} issueIdentifier
  * @param {object} details
@@ -24,57 +20,47 @@ import { withStateLock } from "./with-state-lock.mjs";
  * @returns {{ ok: boolean, lease?: object, assignment?: object, reason?: string }}
  */
 export function claimIssue(issueIdentifier, details = {}) {
-  return withStateLock(() => {
-    const store = loadState();
-    const current = normalizeRecord(store.issues[issueIdentifier] || { issueIdentifier });
-    const now = Date.now();
+  // ADR-0002: scheduler claims must always include a durable worktree assignment.
+  if (!details.worktreeId) {
+    return { ok: false, reason: "missing_worktree_assignment" };
+  }
 
-    // Reject if already claimed (active lease exists)
-    if (leaseIsActive(current, now)) {
-      return { ok: false, reason: "already_claimed", lease: current.lease };
-    }
+  const now = Date.now();
+  const ttlMs = Number(details.ttlMs || DEFAULT_LEASE_MS);
+  const nonce = `scheduler-${HOST_ID}-${now}`;
 
-    // Reject if blocked, exhausted, or on cooldown
-    if (current.human_only) return { ok: false, reason: "human_only" };
-    if (current.retry_exhausted) return { ok: false, reason: "retry_exhausted" };
-    if (current.blocked_reason) return { ok: false, reason: "blocked" };
-    if (current.cooldown_until && new Date(current.cooldown_until).getTime() > now) {
-      return { ok: false, reason: "cooldown_active" };
-    }
+  const lease = {
+    owner: "scheduler",
+    nonce,
+    run_id: null,
+    acquired_at: new Date(now).toISOString(),
+    heartbeat_at: new Date(now).toISOString(),
+    expires_at: new Date(now + ttlMs).toISOString(),
+  };
 
-    // ADR-0002: scheduler claims must always include a durable worktree assignment.
-    // Claims without assignment are rejected rather than created with a null worktree.
-    if (!details.worktreeId) {
-      return { ok: false, reason: "missing_worktree_assignment" };
-    }
+  const assignment = {
+    worktreeId: details.worktreeId,
+    source: details.source || "scheduler",
+    correlationId: details.correlationId || null,
+    claimedAt: nowIso(),
+    claimedBy: "scheduler",
+  };
 
-    const ttlMs = Number(details.ttlMs || DEFAULT_LEASE_MS);
-    const nonce = `scheduler-${HOST_ID}-${now}`;
-
-    // Create lease
-    const lease = {
-      owner: "scheduler",
-      nonce,
-      run_id: null,
-      acquired_at: new Date(now).toISOString(),
-      heartbeat_at: new Date(now).toISOString(),
-      expires_at: new Date(now + ttlMs).toISOString(),
-    };
-
-    // Create assignment record
-    const assignment = {
-      worktreeId: details.worktreeId,
-      source: details.source || "scheduler",
-      correlationId: details.correlationId || null,
-      claimedAt: nowIso(),
-      claimedBy: "scheduler",
-    };
-
-    current.lease = lease;
-    current.assignment = assignment;
-    store.issues[issueIdentifier] = current;
-    saveState(store);
-
-    return { ok: true, lease, assignment };
+  const result = transitionIssue(issueIdentifier, "claimed", {
+    lease,
+    assignment,
+    reason: "scheduler_claim",
   });
+
+  if (!result.ok) {
+    // Map transition failure reasons to claimIssue's existing return contract
+    if (result.from === "claimed" || result.from === "executing") {
+      return { ok: false, reason: "already_claimed" };
+    }
+    if (result.from === "blocked") return { ok: false, reason: "blocked" };
+    if (result.from === "cooldown") return { ok: false, reason: "cooldown_active" };
+    return { ok: false, reason: result.reason, from: result.from };
+  }
+
+  return { ok: true, lease, assignment };
 }

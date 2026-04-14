@@ -7,13 +7,10 @@ import {
 import { INTEGRATOR_ID } from "./integrator-id.mjs";
 import { LOCK_TTL_MS } from "./lock-ttl-ms.mjs";
 import { integrateCandidate } from "./integrate-candidate.mjs";
-import { scanForRepairedCandidates } from "./scan-for-repaired-candidates.mjs";
 import { logInfo, logWarn, logDebug } from "./logger.mjs";
 
 export async function processQueue() {
-  // Phase 4: Scan for repaired candidates before processing queue
-  scanForRepairedCandidates();
-
+  // Phase 5: candidates are derived from finalization.state — no scan needed.
   const candidates = listIntegrationCandidates();
   if (candidates.length === 0) {
     logDebug(`[integrator] Queue empty`);

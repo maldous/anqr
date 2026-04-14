@@ -1,5 +1,5 @@
 import {
-  setWorktreeState,
+  transitionWorktree,
   getWorktreeState,
   recordQuarantine,
   releaseLease,
@@ -79,7 +79,7 @@ export async function executeRepair(worktreeId, classification) {
         logInfo(`[recovery] Released stale lease for ${inferredOwner} on ${worktreeId}`);
       }
       if (classification.confidence >= RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD && inferredOwner) {
-        setWorktreeState(worktreeId, { state: "dirty_owned", issueIdentifier: inferredOwner });
+        transitionWorktree(worktreeId, "dirty_owned", { assignedIssue: inferredOwner });
         return {
           ok: true,
           action: "reclaim_lease",
@@ -96,7 +96,7 @@ export async function executeRepair(worktreeId, classification) {
     }
 
     case "continue_repair": {
-      setWorktreeState(worktreeId, { state: "dirty_owned", issueIdentifier: inferredOwner });
+      transitionWorktree(worktreeId, "dirty_owned", { assignedIssue: inferredOwner });
       logInfo(`[recovery] Confirmed repair state for ${worktreeId} (issue: ${inferredOwner})`);
       return {
         ok: true,
@@ -214,7 +214,7 @@ export async function executeRepair(worktreeId, classification) {
           stdio: "pipe",
           timeout: 15_000,
         });
-        setWorktreeState(worktreeId, { state: "available", issueIdentifier: null });
+        transitionWorktree(worktreeId, "available", { assignedIssue: null });
         logInfo(`[recovery] Reset ${worktreeId} to origin/main (divergence resolved)`);
 
         sendDiscordEmbed({

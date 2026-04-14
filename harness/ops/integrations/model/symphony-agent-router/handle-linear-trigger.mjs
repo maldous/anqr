@@ -56,10 +56,13 @@ export function handleLinearTrigger(req, res) {
     // selection. The router honours it. If the assigned worktree is not found
     // (removed, reprovisioned), fall back to selection — but log the discrepancy.
     let target;
+    let isSchedulerAssigned = false;
     if (claimCheck.assignedWorktreeId) {
       const assignedId = parseInt(claimCheck.assignedWorktreeId.replace(/^wt/, ""), 10);
       target = !isNaN(assignedId) ? WORKTREES.find((w) => w.id === assignedId) || null : null;
-      if (!target) {
+      if (target) {
+        isSchedulerAssigned = true;
+      } else {
         logWarn(
           `[router] Assigned worktree ${claimCheck.assignedWorktreeId} not found — falling back to selection`,
         );
@@ -75,8 +78,10 @@ export function handleLinearTrigger(req, res) {
       return;
     }
 
-    // If all worktrees are busy, queue the trigger
-    if (target.activeRequests >= 1) {
+    // Phase 4: When the scheduler assigned this worktree, trust the assignment.
+    // The scheduler set the worktree to "executing" durably at claim time and
+    // verified availability. Only check transient busy for fallback selection.
+    if (!isSchedulerAssigned && target.activeRequests >= 1) {
       if (linearQueue.length >= MAX_QUEUE_LENGTH) {
         logWarn(
           `Linear trigger queue full (${MAX_QUEUE_LENGTH}), dropping trigger for ${identifier}`,

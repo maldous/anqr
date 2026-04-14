@@ -15,6 +15,16 @@ export function normalizeRecord(record = {}) {
     last_attempt_at: record.last_attempt_at || null,
     external_keys: Array.isArray(record.external_keys) ? record.external_keys : [],
     lease: record.lease && typeof record.lease === "object" ? record.lease : null,
+    assignment:
+      record.assignment && typeof record.assignment === "object"
+        ? {
+            worktreeId: record.assignment.worktreeId || null,
+            source: record.assignment.source || null,
+            correlationId: record.assignment.correlationId || null,
+            claimedAt: record.assignment.claimedAt || null,
+            claimedBy: record.assignment.claimedBy || null,
+          }
+        : null,
     transitions: pruneHistory(Array.isArray(record.transitions) ? record.transitions : []),
     notes: record.notes || {},
     latency_ms: Number(record.latency_ms) || null,

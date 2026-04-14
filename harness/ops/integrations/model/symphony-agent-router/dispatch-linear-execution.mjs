@@ -12,7 +12,10 @@ import { logInfo, logWarn, logError } from "./logger.mjs";
 export function dispatchLinearExecution(identifier, correlationId, assignedTarget = null) {
   const target = assignedTarget || selectLinearWorktree();
 
-  if (!target || target.activeRequests >= 1) {
+  // Phase 4: When an assignedTarget is from a scheduler claim, trust it —
+  // the scheduler already set the worktree to "executing" durably and verified
+  // availability at claim time. Only check transient busy for fallback selection.
+  if (!target || (!assignedTarget && target.activeRequests >= 1)) {
     if (linearQueue.length >= MAX_QUEUE_LENGTH) {
       logWarn(`Queue full, dropping re-queue for ${identifier}`);
       return;

@@ -645,6 +645,7 @@
     "worklets",
     "worktrees",
     "workstream",
+    "workstreams",
     "worktree",
     "writeback",
     "writerow",
@@ -666,7 +667,10 @@
     "oneshots",
     "redispatch",
     "heartbeating",
-    "unparseable"
+    "unparseable",
+    "worklist",
+    "reconstructable",
+    "inspectable"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
