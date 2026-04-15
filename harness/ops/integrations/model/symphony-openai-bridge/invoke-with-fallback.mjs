@@ -45,6 +45,7 @@ import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
 export async function invokeWithFallback(messages, route, sessionId = null, cwd = null) {
   const triedProviders = [];
+  const fallbackChain = [];
   let lastError = null;
   let attemptNumber = 0;
   let contextBudgetCap = null;
@@ -106,8 +107,9 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
       await sleep(FALLBACK_DELAY_MS);
     }
 
+    const attemptStartMs = Date.now();
     try {
-      const startedAt = Date.now();
+      const startedAt = attemptStartMs;
       logDebug(`[invokeWithFallback] Invoking provider`, {
         providerName: provider.name,
         attemptNumber,
@@ -166,12 +168,20 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
       }
 
       releaseProviderLease(provider);
+      fallbackChain.push({
+        providerName: provider.name,
+        model: provider.model,
+        attemptNumber,
+        outcome: "success",
+        durationMs: Date.now() - attemptStartMs,
+      });
       return {
         text: result.text,
         usage: result.usage,
         providerName: provider.name,
         attempts: attemptNumber,
         triedProviders: [...triedProviders],
+        fallbackChain: [...fallbackChain],
         _symphonyResult: result._symphonyResult || null,
       };
     } catch (err) {
@@ -232,6 +242,15 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
       }
 
       releaseProviderLease(provider);
+      fallbackChain.push({
+        providerName: provider.name,
+        model: provider.model,
+        attemptNumber,
+        outcome: "failure",
+        durationMs: Date.now() - attemptStartMs,
+        errorType: errorType || "unknown",
+        errorMessage: errStr.slice(0, 200),
+      });
       if (sessionId) {
         clearSessionProvider(sessionId);
         logInfo(`🔓 Cleared sticky session after ${provider.name} failure (${errorType})`);

@@ -12,4 +12,5 @@ export {
   recordValidationResult,
   recordPushResult,
   recordIntegrationResult,
+  recordProviderRoutingEvidence,
 } from "./task-evidence/index.mjs";

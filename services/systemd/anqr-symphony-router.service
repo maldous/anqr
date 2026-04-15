@@ -24,8 +24,9 @@ Environment=SYMPHONY_AGENT_PORT=4319
 Environment=SYMPHONY_AGENT_WORKTREES=1,2,3,4,5,6,7,8
 Environment=SYMPHONY_AGENT_MAX_CONCURRENT=8
 
+# E Phase 3: Router requires provider tokens and API keys — fail fast on missing env
+EnvironmentFile=%h/.config/systemd/user/anqr-ops.env
 EnvironmentFile=-%h/.config/symphony/anqr.env
-EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
 ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/integrations/model/symphony-agent-router.mjs
 

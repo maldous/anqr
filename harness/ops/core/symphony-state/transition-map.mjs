@@ -149,4 +149,3 @@ export const WORKTREE_TRANSITION_MAP = Object.freeze({
 
   [WORKTREE_STATES.blocked]: new Set([WORKTREE_STATES.available, WORKTREE_STATES.quarantined]),
 });
-

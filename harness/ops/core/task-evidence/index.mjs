@@ -11,3 +11,4 @@ export { recordExecutionResult } from "./record-execution-result.mjs";
 export { recordValidationResult } from "./record-validation-result.mjs";
 export { recordPushResult } from "./record-push-result.mjs";
 export { recordIntegrationResult } from "./record-integration-result.mjs";
+export { recordProviderRoutingEvidence } from "./record-provider-routing-evidence.mjs";

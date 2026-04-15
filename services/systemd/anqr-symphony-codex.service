@@ -31,9 +31,10 @@ Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bi
 Environment=HOME=%h
 Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 
-# Bridge identification
+# Bridge identification — control-plane mode per ADR-0008
 Environment=ANQR_WORKTREE_ID=codex
 Environment=ANQR_WORKTREE_PATH=%h/src/anqr
+Environment=BRIDGE_MODE=control-plane
 
 # Bridge configuration — dedicated port for Codex
 Environment=SYMPHONY_BRIDGE_PORT=4330

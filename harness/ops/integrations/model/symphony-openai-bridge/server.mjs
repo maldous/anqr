@@ -51,7 +51,10 @@ import { refreshProviderStatus } from "./refresh-provider-status.mjs";
 import { requestIdCounter, setRequestIdCounter } from "./request-id-counter.mjs";
 import { resolveRoute } from "./resolve-route.mjs";
 import { safeLogDebug } from "./safe-log-debug.mjs";
-import { recordProviderSelection } from "../../../core/task-evidence.mjs";
+import {
+  recordProviderSelection,
+  recordProviderRoutingEvidence,
+} from "../../../core/task-evidence.mjs";
 import { sanitizeForDiscordPreview } from "./sanitize-for-discord-preview.mjs";
 import { sendJson } from "./send-json.mjs";
 import { shouldUseToolsForRequest } from "./should-use-tools-for-request.mjs";
@@ -63,6 +66,14 @@ import { verifyWorktreeFreshnessNonBlocking } from "./verify-worktree-freshness-
 import { voiceAnnounce } from "./voice-announce.mjs";
 import { handleResponsesApi } from "./handle-responses-api.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
+import { validateBoundaryInvariants } from "./validate-boundary-invariants.mjs";
+import { validateStartupEnv } from "./validate-startup-env.mjs";
+
+// D Phase 3: Validate boundary invariants at bridge startup (ADR-0008).
+validateBoundaryInvariants();
+
+// E Phase 2: Validate critical startup environment.
+validateStartupEnv();
 
 export const server = http.createServer(async (req, res) => {
   logDebug(`===== REQUEST =====`);
@@ -929,6 +940,22 @@ export const server = http.createServer(async (req, res) => {
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
 
+          // F Phase 1: Emit provider routing evidence (streaming path)
+          if (correlationId) {
+            try {
+              recordProviderRoutingEvidence(correlationId, {
+                routeModelId: route.responseModelId,
+                allowedProviders: route.allowedNames || [],
+                selectedProvider: result.providerName,
+                attempts: result.attempts,
+                triedProviders: result.triedProviders,
+                fallbackChain: result.fallbackChain || [],
+              });
+            } catch {
+              /* best-effort evidence */
+            }
+          }
+
           // Send final chunk (includes structured result for runner/agent consumption)
           const finalChunk = {
             id: completionId,
@@ -1063,6 +1090,22 @@ export const server = http.createServer(async (req, res) => {
         const firstLine = resultText
           ? resultText.split("\n")[0].trim().slice(0, 100)
           : "(no content)";
+
+        // F Phase 1: Emit provider routing evidence (non-streaming path)
+        if (correlationId) {
+          try {
+            recordProviderRoutingEvidence(correlationId, {
+              routeModelId: route.responseModelId,
+              allowedProviders: route.allowedNames || [],
+              selectedProvider: result.providerName,
+              attempts: result.attempts,
+              triedProviders: result.triedProviders,
+              fallbackChain: result.fallbackChain || [],
+            });
+          } catch {
+            /* best-effort evidence */
+          }
+        }
 
         // Clean up request tracking
         activeRequests.delete(requestId);

@@ -35,9 +35,10 @@ Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bi
 Environment=HOME=%h
 Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 
-# Worktree identification
+# Worktree identification — worktree mode per ADR-0003
 Environment=ANQR_WORKTREE_ID=wt%i
 Environment=ANQR_WORKTREE_PATH=%h/src/anqr-wt%i
+Environment=BRIDGE_MODE=worktree
 
 # Bridge configuration — port is 4320 + worktree number
 Environment=SYMPHONY_BRIDGE_PORT=432%i

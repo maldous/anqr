@@ -4,60 +4,69 @@ High-Confidence Automation Readiness Requirements for the ANQR Host-Local Harnes
 
 # Execution Progress
 
-| Workstream                    | Status         | Started    | Completed  | Notes                                                                                                                                                                                                                                                     |
-| ----------------------------- | -------------- | ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A. Authoritative scheduling   | ✅ Complete    | 2026-04-13 | 2026-04-14 | All dispatch paths (trigger + queue drain) verify scheduler claims; scheduler requires worktreeId at claim time; `verifySchedulerClaim` extracted to shared module; ADR-0002/router/scheduler docs aligned                                                |
+| Workstream                    | Status         | Started    | Completed  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------------- | -------------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A. Authoritative scheduling   | ✅ Complete    | 2026-04-13 | 2026-04-14 | All dispatch paths (trigger + queue drain) verify scheduler claims; scheduler requires worktreeId at claim time; `verifySchedulerClaim` extracted to shared module; ADR-0002/router/scheduler docs aligned                                                                                                                                                                                                                                                                                                                                                                               |
 | B. State model normalization  | ✅ Complete    | 2026-04-15 | 2026-04-16 | Phases 0–7 complete (gate-verified). Phase 0: A-integrity hotfix. Phase 1: schema/helpers/transition map. Phase 2: transition APIs + deprecated helpers removed from production surface. Phase 3: all writers migrated. Phase 4: atomic claim+release, all callers verified. Phase 5: integrationQueue removed, ownership fallbacks observable and tested, documentation aligned. Phase 6: no-transient-correctness proof, claim lifecycle tests, stale lease handling tests (36 tests). Phase 7: ADR-0011 execution state model, ADR-0002/symphony-state/router/scheduler docs aligned. |
-| C. Recovery demotion          | ✅ Complete    | 2026-04-13 | 2026-04-14 | All recovery git publication removed (including baseline cspell auto-fix + worktree propagation); `checkBaselineHealth` is detect-only; ADR-0005/ADR-0006/recovery docs aligned                                                                           |
-| D. Boundary hardening         | ⬜ Not Started | —          | —          | Depends on A, B, C                                                                                                                                                                                                                                        |
-| E. Config/lifecycle hardening | ⬜ Not Started | —          | —          | Partially parallel                                                                                                                                                                                                                                        |
-| F. Provider-routing evidence  | ⬜ Not Started | —          | —          | Parallel after A, B                                                                                                                                                                                                                                       |
-| G. Evidence/closure model     | ⬜ Not Started | —          | —          | Depends on A–F                                                                                                                                                                                                                                            |
-| H. Documentation alignment    | ⬜ Not Started | —          | —          | Continuous                                                                                                                                                                                                                                                |
+| C. Recovery demotion          | ✅ Complete    | 2026-04-13 | 2026-04-14 | All recovery git publication removed (including baseline cspell auto-fix + worktree propagation); `checkBaselineHealth` is detect-only; ADR-0005/ADR-0006/recovery docs aligned                                                                                                                                                                                                                                                                                                                                                                                                          |
+| D. Boundary hardening         | ✅ Complete    | 2026-04-16 | 2026-04-16 | Phases 0–5 complete. BRIDGE_MODE formalization, boundary enforcement tests (28+ tests), startup validation, ADR-0008/0003 updated, executor BRIDGE_MODE=worktree, port isolation test, assertMutationContext decision documented.                                                                                                                                                                                                                                                                                                                                                        |
+| E. Config/lifecycle hardening | ✅ Complete    | 2026-04-16 | 2026-04-16 | Phases 0–3 complete. Env drift detection, startup env validation (validate-startup-env.mjs), critical EnvironmentFile= enforcement (router, discord-router, linear-webhook), service dependency documentation.                                                                                                                                                                                                                                                                                                                                                                           |
+| F. Provider-routing evidence  | 🟡 In Progress | 2026-04-16 | —          | Phase 0 gap analysis complete. Phase 1: RoutingDecisionEvidence structured record created, emitted from invokeWithFallback with per-attempt timing/error tracking, tests passing. Phase 2 (context-reduction evidence) remaining.                                                                                                                                                                                                                                                                                                                                                        |
+| G. Evidence/closure model     | ⬜ Not Started | —          | —          | Depends on A–F                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| H. Documentation alignment    | ⬜ Not Started | —          | —          | Continuous                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## Decisions Log
 
-| Date       | Decision                                                                   | Rationale                                                                                                                                                                                                        |
-| ---------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-13 | Use feature flag `SCHEDULER_AUTHORITATIVE` for phased rollout              | Allows shadow-mode testing before cutting over; old paths remain functional until validated                                                                                                                      |
-| 2026-04-13 | Create `symphony-scheduler/` as new orchestration module                   | Cleanest separation of concerns; scheduler is a new first-class actor, not bolted onto existing code                                                                                                             |
-| 2026-04-13 | Scheduler claims via `claimIssue()` with atomic lease + durable assignment | Reuses existing `withStateLock` + `acquireLease` for atomicity; adds assignment metadata                                                                                                                         |
-| 2026-04-13 | Reconciler converted to feed desired-work queue, not dispatch directly     | Preserves level-triggered safety net role while removing scheduling authority                                                                                                                                    |
-| 2026-04-13 | Runner self-pick removed behind feature flag                               | Runner becomes pure executor of already-claimed work; sticky repair preserved as local concern                                                                                                                   |
-| 2026-04-13 | Recovery git mutation removed (Workstream C)                               | `execute-repair.mjs` stripped of `auto_commit_and_push`, `retry_push`, and main-repo push; recovery limited to quarantine/reprovision/state-repair per ADR-0005                                                  |
-| 2026-04-14 | Scheduler consumes desired-work queue (review remediation)                 | Per updated ADR-0002: desired-work is advisory, Linear state is authoritative; scheduler drains queue each cycle for priority boosting                                                                           |
-| 2026-04-14 | Router hardened in authoritative mode (review remediation)                 | Per ADR-0002: router verifies scheduler claim before dispatch; returns 409 for unclaimed issues                                                                                                                  |
-| 2026-04-14 | Recovery evidence emission added (review remediation)                      | Per updated ADR-0006: every recovery action emits structured evidence classifying action class, target, ownership, state-only vs sandbox-reset                                                                   |
-| 2026-04-14 | reset_to_main gets active-sandbox guard (review remediation)               | Defense-in-depth: explicit leaseIsActive check before sandbox reset, falls back to quarantine if active                                                                                                          |
-| 2026-04-14 | Tests rewritten to exercise real modules (review remediation)              | claimIssue tested via real module with mocked fs layer; recovery evidence structure verified against source                                                                                                      |
-| 2026-04-14 | Router verifies scheduler ownership + assignment (2nd review)              | `verifySchedulerClaim` now checks `lease.owner === "scheduler"` and `assignment.worktreeId` exists; returns 409 with specific reason codes                                                                       |
-| 2026-04-14 | Scheduler assigns worktreeId at claim time (2nd review)                    | Scheduler selects from `capacity.worktrees` and passes worktreeId into `claimIssue()`; claim+assignment atomic; router honours assignment                                                                        |
-| 2026-04-14 | Router uses scheduler's durable assignment (2nd review)                    | In authoritative mode, router reads `assignedWorktreeId` from claim state and dispatches to that worktree instead of re-selecting                                                                                |
-| 2026-04-14 | `isNonPublishing` derived from action class (2nd review)                   | Per ADR-0006: `buildEvidence` derives `isNonPublishing` from explicit `NON_PUBLISHING_ACTIONS` set rather than hardcoding                                                                                        |
-| 2026-04-14 | Behavioral recovery tests added (2nd review)                               | `recovery-behavioral.spec.ts` exercises real `executeRepair` with mocked deps; proves runtime demotion, active-lease guard, evidence structure                                                                   |
-| 2026-04-14 | PLAN.md corrected to partially complete (2nd review)                       | Workstreams A and C marked 🟡 Partially Complete with explicit remaining items listed                                                                                                                            |
-| 2026-04-14 | Legacy bypass paths removed (Workstream A completion)                      | `SCHEDULER_AUTHORITATIVE` flag made permanent; all `if (!SCHEDULER_AUTHORITATIVE)` bypass code removed from runner, router, webhook, reconciler                                                                  |
-| 2026-04-14 | Legacy reconciler dispatch helper deleted                                  | `run-reconciliation-cycle/dispatch-issue.mjs` and its exports removed so the reconciler no longer exposes a dormant direct-dispatch helper                                                                       |
-| 2026-04-14 | `reset_to_main` explicitly classified (Workstream C completion)            | ADR-0005 updated with sandbox maintenance exception; execute-repair.mjs documents safety guarantees; recovery README reflects non-publishing contract                                                            |
-| 2026-04-14 | Scheduler README created                                                   | Documents authority boundaries, scheduling cycle flow, claim contract, systemd service, and operational notes                                                                                                    |
-| 2026-04-14 | Legacy path removal tests added                                            | Source-verification tests prove runner/webhook/reconciler no longer contain bypass code                                                                                                                          |
-| 2026-04-14 | Router queue bypass closed (3rd review)                                    | `verifySchedulerClaim` extracted to shared module; `runtime.mjs` queue drain now re-verifies claims before dispatch; items with expired/invalid claims are dropped                                               |
-| 2026-04-14 | Scheduler requires worktreeId (3rd review)                                 | Scheduler stops dispatch loop when no worktrees available rather than claiming with null assignment; router rejects claims missing `assignment.worktreeId`                                                       |
-| 2026-04-14 | Claims without worktree assignment are rejected                            | `claimIssue()` now rejects missing `worktreeId`; null-assignment claims are no longer creatable even by direct callers                                                                                           |
-| 2026-04-14 | Recovery baseline auto-fix removed (3rd review)                            | `attemptCspellAutoFix` and `propagateBaselineFixToCleanWorktrees` deleted; `checkBaselineHealth` rewritten to detect-and-report only; recovery daemon contains zero git publication commands                     |
-| 2026-04-14 | ADRs and READMEs aligned to code (3rd review)                              | ADR-0002, ADR-0005, ADR-0006, scheduler README, router README, recovery README all corrected to match implemented behavior                                                                                       |
-| 2026-04-15 | Phase 0: `normalizeRecord` assignment persistence hotfix (Workstream B)    | `normalizeRecord()` was silently dropping the `assignment` field written by `claimIssue()` — A-integrity bug that B exposed. Fixed by adding `assignment` to normalized schema.                                  |
-| 2026-04-15 | Revised Workstream B plan per external reviewer guidance                   | 7-phase plan: Phase 0 hotfix → Phase 1 schema/helpers → Phase 2 transition APIs → Phase 3 migrate writers → Phase 4 durable ownership in router → Phase 5 bidirectional ownership → Phase 6 tests → Phase 7 docs |
-| 2026-04-15 | `inferExecutionPhase()` over persisted `executionPhase`                    | Reviewer: do not persist `executionPhase` yet — add read-side helper first to avoid creating another truth source before mutating paths are unified                                                              |
-| 2026-04-15 | No store version bump in Phase 1                                           | Reviewer: only bump version when on-disk shape changes materially or old readers/writers would misinterpret state. Adding optional fields does not qualify.                                                      |
-| 2026-04-15 | `transitionIssue()`/`transitionWorktree()` as sole lifecycle write APIs    | Reviewer: old mutation helpers (`patchIssueState`, `setFinalizationState`, `setWorktreeState`) must be deprecated quickly, not left as open-ended alternatives                                                   |
-| 2026-04-15 | Router reconstruction as transitional safety, not final model              | Reviewer: durable ownership is the authority; router counter reconstruction is a guardrail on startup, not the correctness model                                                                                 |
-| 2026-04-15 | `worktreeStates[wtId].assignedIssue` as primary ownership record           | Reviewer: make durable worktree state the primary owner record; reverse scan of issues is validation/repair, not the authority lookup path                                                                       |
-| 2026-04-15 | `finalization.state` authoritative, `integrationQueue` derived             | Reviewer: state belongs with the issue record; queues are easier to rebuild than issue history/state                                                                                                             |
-| 2026-04-15 | Honest B assessment: phases 3–5 are NOT complete per external review       | External reviewer identified 7 blockers: worktree normalization on load, lifecycle helpers still using patchIssueState, non-atomic claim+worktree, releaseLease not bidirectional, no dispatch rollback          |
-| 2026-04-15 | `claimAndAssignWorktree` in symphony-state layer (Blocker 3)               | Atomic helper claims issue and assigns worktree under one lock; schedule-cycle calls this instead of separate claimIssue + transitionWorktree                                                                    |
-| 2026-04-15 | `releaseLease` clears worktree ownership (Blocker 4)                       | After releasing issue-side lease, also transitions worktree to available with null assignedIssue; sequential lock acquisition (safe, conservative direction). *Superseded by Blocker 3b: rewritten as single atomic operation under one `withStateLock` call — no longer sequential.* |
-| 2026-04-15 | `inferExecutionPhase` priority: finalization before completed_at           | Runner sets completed_at before integration runs; old priority let completed_at trump finalization.state=integration_pending, incorrectly returning "completed"                                                  |
+| Date       | Decision                                                                   | Rationale                                                                                                                                                                                                                                                                             |
+| ---------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-13 | Use feature flag `SCHEDULER_AUTHORITATIVE` for phased rollout              | Allows shadow-mode testing before cutting over; old paths remain functional until validated                                                                                                                                                                                           |
+| 2026-04-13 | Create `symphony-scheduler/` as new orchestration module                   | Cleanest separation of concerns; scheduler is a new first-class actor, not bolted onto existing code                                                                                                                                                                                  |
+| 2026-04-13 | Scheduler claims via `claimIssue()` with atomic lease + durable assignment | Reuses existing `withStateLock` + `acquireLease` for atomicity; adds assignment metadata                                                                                                                                                                                              |
+| 2026-04-13 | Reconciler converted to feed desired-work queue, not dispatch directly     | Preserves level-triggered safety net role while removing scheduling authority                                                                                                                                                                                                         |
+| 2026-04-13 | Runner self-pick removed behind feature flag                               | Runner becomes pure executor of already-claimed work; sticky repair preserved as local concern                                                                                                                                                                                        |
+| 2026-04-13 | Recovery git mutation removed (Workstream C)                               | `execute-repair.mjs` stripped of `auto_commit_and_push`, `retry_push`, and main-repo push; recovery limited to quarantine/reprovision/state-repair per ADR-0005                                                                                                                       |
+| 2026-04-14 | Scheduler consumes desired-work queue (review remediation)                 | Per updated ADR-0002: desired-work is advisory, Linear state is authoritative; scheduler drains queue each cycle for priority boosting                                                                                                                                                |
+| 2026-04-14 | Router hardened in authoritative mode (review remediation)                 | Per ADR-0002: router verifies scheduler claim before dispatch; returns 409 for unclaimed issues                                                                                                                                                                                       |
+| 2026-04-14 | Recovery evidence emission added (review remediation)                      | Per updated ADR-0006: every recovery action emits structured evidence classifying action class, target, ownership, state-only vs sandbox-reset                                                                                                                                        |
+| 2026-04-14 | reset_to_main gets active-sandbox guard (review remediation)               | Defense-in-depth: explicit leaseIsActive check before sandbox reset, falls back to quarantine if active                                                                                                                                                                               |
+| 2026-04-14 | Tests rewritten to exercise real modules (review remediation)              | claimIssue tested via real module with mocked fs layer; recovery evidence structure verified against source                                                                                                                                                                           |
+| 2026-04-14 | Router verifies scheduler ownership + assignment (2nd review)              | `verifySchedulerClaim` now checks `lease.owner === "scheduler"` and `assignment.worktreeId` exists; returns 409 with specific reason codes                                                                                                                                            |
+| 2026-04-14 | Scheduler assigns worktreeId at claim time (2nd review)                    | Scheduler selects from `capacity.worktrees` and passes worktreeId into `claimIssue()`; claim+assignment atomic; router honours assignment                                                                                                                                             |
+| 2026-04-14 | Router uses scheduler's durable assignment (2nd review)                    | In authoritative mode, router reads `assignedWorktreeId` from claim state and dispatches to that worktree instead of re-selecting                                                                                                                                                     |
+| 2026-04-14 | `isNonPublishing` derived from action class (2nd review)                   | Per ADR-0006: `buildEvidence` derives `isNonPublishing` from explicit `NON_PUBLISHING_ACTIONS` set rather than hardcoding                                                                                                                                                             |
+| 2026-04-14 | Behavioral recovery tests added (2nd review)                               | `recovery-behavioral.spec.ts` exercises real `executeRepair` with mocked deps; proves runtime demotion, active-lease guard, evidence structure                                                                                                                                        |
+| 2026-04-14 | PLAN.md corrected to partially complete (2nd review)                       | Workstreams A and C marked 🟡 Partially Complete with explicit remaining items listed                                                                                                                                                                                                 |
+| 2026-04-14 | Legacy bypass paths removed (Workstream A completion)                      | `SCHEDULER_AUTHORITATIVE` flag made permanent; all `if (!SCHEDULER_AUTHORITATIVE)` bypass code removed from runner, router, webhook, reconciler                                                                                                                                       |
+| 2026-04-14 | Legacy reconciler dispatch helper deleted                                  | `run-reconciliation-cycle/dispatch-issue.mjs` and its exports removed so the reconciler no longer exposes a dormant direct-dispatch helper                                                                                                                                            |
+| 2026-04-14 | `reset_to_main` explicitly classified (Workstream C completion)            | ADR-0005 updated with sandbox maintenance exception; execute-repair.mjs documents safety guarantees; recovery README reflects non-publishing contract                                                                                                                                 |
+| 2026-04-14 | Scheduler README created                                                   | Documents authority boundaries, scheduling cycle flow, claim contract, systemd service, and operational notes                                                                                                                                                                         |
+| 2026-04-14 | Legacy path removal tests added                                            | Source-verification tests prove runner/webhook/reconciler no longer contain bypass code                                                                                                                                                                                               |
+| 2026-04-14 | Router queue bypass closed (3rd review)                                    | `verifySchedulerClaim` extracted to shared module; `runtime.mjs` queue drain now re-verifies claims before dispatch; items with expired/invalid claims are dropped                                                                                                                    |
+| 2026-04-14 | Scheduler requires worktreeId (3rd review)                                 | Scheduler stops dispatch loop when no worktrees available rather than claiming with null assignment; router rejects claims missing `assignment.worktreeId`                                                                                                                            |
+| 2026-04-14 | Claims without worktree assignment are rejected                            | `claimIssue()` now rejects missing `worktreeId`; null-assignment claims are no longer creatable even by direct callers                                                                                                                                                                |
+| 2026-04-14 | Recovery baseline auto-fix removed (3rd review)                            | `attemptCspellAutoFix` and `propagateBaselineFixToCleanWorktrees` deleted; `checkBaselineHealth` rewritten to detect-and-report only; recovery daemon contains zero git publication commands                                                                                          |
+| 2026-04-14 | ADRs and READMEs aligned to code (3rd review)                              | ADR-0002, ADR-0005, ADR-0006, scheduler README, router README, recovery README all corrected to match implemented behavior                                                                                                                                                            |
+| 2026-04-15 | Phase 0: `normalizeRecord` assignment persistence hotfix (Workstream B)    | `normalizeRecord()` was silently dropping the `assignment` field written by `claimIssue()` — A-integrity bug that B exposed. Fixed by adding `assignment` to normalized schema.                                                                                                       |
+| 2026-04-15 | Revised Workstream B plan per external reviewer guidance                   | 7-phase plan: Phase 0 hotfix → Phase 1 schema/helpers → Phase 2 transition APIs → Phase 3 migrate writers → Phase 4 durable ownership in router → Phase 5 bidirectional ownership → Phase 6 tests → Phase 7 docs                                                                      |
+| 2026-04-15 | `inferExecutionPhase()` over persisted `executionPhase`                    | Reviewer: do not persist `executionPhase` yet — add read-side helper first to avoid creating another truth source before mutating paths are unified                                                                                                                                   |
+| 2026-04-15 | No store version bump in Phase 1                                           | Reviewer: only bump version when on-disk shape changes materially or old readers/writers would misinterpret state. Adding optional fields does not qualify.                                                                                                                           |
+| 2026-04-15 | `transitionIssue()`/`transitionWorktree()` as sole lifecycle write APIs    | Reviewer: old mutation helpers (`patchIssueState`, `setFinalizationState`, `setWorktreeState`) must be deprecated quickly, not left as open-ended alternatives                                                                                                                        |
+| 2026-04-15 | Router reconstruction as transitional safety, not final model              | Reviewer: durable ownership is the authority; router counter reconstruction is a guardrail on startup, not the correctness model                                                                                                                                                      |
+| 2026-04-15 | `worktreeStates[wtId].assignedIssue` as primary ownership record           | Reviewer: make durable worktree state the primary owner record; reverse scan of issues is validation/repair, not the authority lookup path                                                                                                                                            |
+| 2026-04-15 | `finalization.state` authoritative, `integrationQueue` derived             | Reviewer: state belongs with the issue record; queues are easier to rebuild than issue history/state                                                                                                                                                                                  |
+| 2026-04-15 | Honest B assessment: phases 3–5 are NOT complete per external review       | External reviewer identified 7 blockers: worktree normalization on load, lifecycle helpers still using patchIssueState, non-atomic claim+worktree, releaseLease not bidirectional, no dispatch rollback                                                                               |
+| 2026-04-15 | `claimAndAssignWorktree` in symphony-state layer (Blocker 3)               | Atomic helper claims issue and assigns worktree under one lock; schedule-cycle calls this instead of separate claimIssue + transitionWorktree                                                                                                                                         |
+| 2026-04-15 | `releaseLease` clears worktree ownership (Blocker 4)                       | After releasing issue-side lease, also transitions worktree to available with null assignedIssue; sequential lock acquisition (safe, conservative direction). _Superseded by Blocker 3b: rewritten as single atomic operation under one `withStateLock` call — no longer sequential._ |
+| 2026-04-15 | `inferExecutionPhase` priority: finalization before completed_at           | Runner sets completed_at before integration runs; old priority let completed_at trump finalization.state=integration_pending, incorrectly returning "completed"                                                                                                                       |
+| 2026-04-16 | D/E/F opened per strategic priority guidance                               | D primary (boundary hardening), E secondary (config drift detection), F discovery only (provider evidence gap analysis). D first because it is the next correctness-critical workstream after B.                                                                                      |
+| 2026-04-16 | `BRIDGE_MODE` concept added to bridge identity (Workstream D)              | Auto-derived from `BRIDGE_ROOT === CONTROL_REPO_ROOT` comparison. Explicit env var override for service config. Two modes: `worktree` (isolated sandbox) and `control-plane` (main repo exception per ADR-0008).                                                                      |
+| 2026-04-16 | Codex bridge classified as control-plane (Workstream D)                    | `anqr-symphony-codex.service` sets `BRIDGE_MODE=control-plane` explicitly. Startup validation warns about ADR-0008 exception. Must NOT be used for autonomous scheduled execution.                                                                                                    |
+| 2026-04-16 | Env drift detection added to harness-doctor (Workstream E)                 | `check-env-drift.mjs` compares repo template key names against live host env file. Reports missing keys, extra keys, and symphony env symlink status.                                                                                                                                 |
+| 2026-04-16 | D scope locked — assertMutationContext NOT added to bridge tools           | Codex bridge is intentional ADR-0008 exception. Defense-in-depth via port isolation (4330 outside 4321–4328 pool) and BRIDGE_MODE startup validation. Adding assertMutationContext would break intended codex functionality.                                                          |
+| 2026-04-16 | Executor BRIDGE_MODE=worktree made explicit (Workstream D)                 | Symmetry with codex bridge's BRIDGE_MODE=control-plane. Auto-derivation remains as fallback but explicit env var is preferred for production services.                                                                                                                                |
+| 2026-04-16 | Critical services use required EnvironmentFile (Workstream E)              | Router, discord-router, and linear-webhook converted from `EnvironmentFile=-` to `EnvironmentFile=` for `anqr-ops.env`. Services fail fast on missing secrets rather than starting broken. Supplementary `anqr.env` remains optional.                                                 |
+| 2026-04-16 | Startup env validation added to bridge (Workstream E)                      | `validate-startup-env.mjs` checks provider tokens, ANQR_WORKTREE_ID, SYMPHONY_BRIDGE_PORT, and BRIDGE_MODE at startup. Logs warnings but does not throw.                                                                                                                              |
+| 2026-04-16 | Provider routing evidence emitted (Workstream F)                           | `record-provider-routing-evidence.mjs` captures full routing decision chain. `invokeWithFallback` tracks per-attempt fallbackChain with timing and errors. Evidence emitted from server.mjs for both streaming and non-streaming paths.                                               |
 
 ## Workstream A Detailed Progress
 
@@ -206,18 +215,18 @@ Integration candidacy is derived from finalization state. Durable worktree state
 
 All correctness blockers (1, 2, 3a, 3b, 4, 5a, 5b, 7, 8) are resolved with real code changes. Blocker 6 (dead-structure cleanup) is also resolved: `integrationQueue` removed from schema, deprecated no-op modules deleted, all callers cleaned.
 
-| #   | Blocker                                                                                                                           | Phase | Status                                             |
-| --- | --------------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------- |
-| 1   | Normalize worktree state on load in `load-state.mjs`                                                                              | 1     | ✅ DONE                                            |
-| 7   | Verify all `worktreeStates` readers handle normalized records                                                                     | 1     | ✅ DONE                                            |
-| 3a  | Add atomic `claimAndAssignWorktree()` helper (claim side)                                                                         | 4     | ✅ DONE                                            |
-| 3b  | Make `releaseLease()` truly atomic bidirectional (release side) — releases issue lease + clears worktree ownership under one lock | 4/5   | ✅ DONE                                            |
-| 4   | Clear worktree ownership when lease is released                                                                                   | 3/5   | ✅ DONE (now atomic via 3b)                        |
-| 5a  | Dispatch failure calls `releaseLease()`                                                                                           | 4     | ✅ DONE                                            |
-| 5b  | Dispatch rollback uses atomic bidirectional release (depends on 3b)                                                               | 4     | ✅ DONE                                            |
-| 2   | Remove `patchIssueState()` fallbacks from 6 lifecycle helpers — split metadata helpers from lifecycle helpers properly            | 3     | ✅ DONE                                            |
-| 6   | Remove persistent `integrationQueue` artifact from state model; remove deprecated no-op callers                                   | 5     | ✅ DONE                                            |
-| 8   | Strengthen tests: direct module tests, rejection tests, atomic release tests                                                      | 6     | ✅ DONE                                            |
+| #   | Blocker                                                                                                                           | Phase | Status                      |
+| --- | --------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------------------- |
+| 1   | Normalize worktree state on load in `load-state.mjs`                                                                              | 1     | ✅ DONE                     |
+| 7   | Verify all `worktreeStates` readers handle normalized records                                                                     | 1     | ✅ DONE                     |
+| 3a  | Add atomic `claimAndAssignWorktree()` helper (claim side)                                                                         | 4     | ✅ DONE                     |
+| 3b  | Make `releaseLease()` truly atomic bidirectional (release side) — releases issue lease + clears worktree ownership under one lock | 4/5   | ✅ DONE                     |
+| 4   | Clear worktree ownership when lease is released                                                                                   | 3/5   | ✅ DONE (now atomic via 3b) |
+| 5a  | Dispatch failure calls `releaseLease()`                                                                                           | 4     | ✅ DONE                     |
+| 5b  | Dispatch rollback uses atomic bidirectional release (depends on 3b)                                                               | 4     | ✅ DONE                     |
+| 2   | Remove `patchIssueState()` fallbacks from 6 lifecycle helpers — split metadata helpers from lifecycle helpers properly            | 3     | ✅ DONE                     |
+| 6   | Remove persistent `integrationQueue` artifact from state model; remove deprecated no-op callers                                   | 5     | ✅ DONE                     |
+| 8   | Strengthen tests: direct module tests, rejection tests, atomic release tests                                                      | 6     | ✅ DONE                     |
 
 **Remediation order (corrected):**
 
@@ -272,6 +281,155 @@ All correctness blockers (1, 2, 3a, 3b, 4, 5a, 5b, 7, 8) are resolved with real 
 - [x] ADR-0006 updated: entire recovery subsystem follows evidence contract
 - [x] Recovery README.md updated: removed deleted file references, reflects detect-only baseline health
 - [x] Execute-repair README.md updated with complete action classification table
+
+## Workstream D Detailed Progress
+
+### D Phase 0 — Boundary Audit (COMPLETE)
+
+Audit findings from tracing the codex bridge execution path and enumerating all main-repo execution surfaces:
+
+- [x] **Codex bridge is a server-side mutation path.** The bridge has file-mutating tools (`write_file`, `str_replace`, `apply_patch`) that use `fs.writeFileSync()` with paths resolved via `resolveRequestPath()` → `remapRepoPathToBridgeRoot()`. These tools write to `BRIDGE_ROOT` which equals the main repo for the codex bridge.
+- [x] **`assertMutationContext` is NOT in the bridge tool path.** It exists in `run-tool-loop.mjs` (symphony-agent layer), but the bridge's AI SDK tool execution path (`invoke-with-aiinner.mjs`) does not call it. This is acceptable because the codex bridge is a developer tool, not an autonomous execution path.
+- [x] **Identity contradiction identified.** The codex bridge sets `ANQR_WORKTREE_ID=codex` → `IS_WORKTREE_BRIDGE=true`, but `BRIDGE_ROOT === CONTROL_REPO_ROOT` (both `/home/user/src/anqr`). No `BRIDGE_MODE` concept existed to distinguish this.
+- [x] **Codex bridge is a separate service.** Port 4330, outside the executor pool (4321-4328). Router, scheduler, and reconciler never route work to port 4330.
+- [x] **Six defense layers mapped** — config routing, router cwd rebasing, systemd WorkingDirectory, process cwd, Codebuff client isolation, file operations. All enforce isolation for executors; codex bridge is the documented exception.
+- [x] **Runner guard verified.** `symphony-runner/runtime.mjs` refuses main-repo execution.
+- [x] **Discord isolation verified.** `discord-request-router/process-and-proxy.mjs` blocks main-repo cwd.
+
+### D Phase 1 — Bridge Identity Formalization (COMPLETE)
+
+- [x] `bridge-mode.mjs` — derives `BRIDGE_MODE` from `BRIDGE_ROOT === CONTROL_REPO_ROOT`: `"worktree"` (isolated) or `"control-plane"` (main repo exception). Supports explicit env var override.
+- [x] `deriveBridgeMode()` — pure function for testing the derivation logic
+- [x] `isControlPlaneBridge()` — convenience predicate
+- [x] `anqr-symphony-codex.service` — updated to set `BRIDGE_MODE=control-plane` explicitly
+- [x] All new modules exported from `index.mjs`
+
+### D Phase 2 — Boundary Enforcement Tests (COMPLETE)
+
+- [x] `boundary-enforcement.spec.ts` — 28 tests in 6 categories:
+  - Service file audit: executor uses worktree WorkingDirectory, codex uses main repo with control-plane, executor never points to main repo, codex on separate port, runner refuses main repo, Discord router blocks main-repo cwd
+  - Bridge mode derivation: control-plane when roots match, worktree when different, trailing slash handling, all 8 worktree paths
+  - assertMutationContext: blocks main repo, allows worktree, allows read-only, blocks missing worktreeId/leaseId, blocks projectRoot/worktreeRoot mismatch
+  - remapRepoPathToBridgeRoot safety: early return for non-worktree, BRIDGE_ROOT fallback, isPathWithinRoot containment (not startsWith), parent traversal rejection
+  - validate-boundary-invariants: module exists, checks consistency, logs ADR-0008 warning, called at startup
+  - Env drift detection: parseEnvKeys extracts keys, handles missing files, checkEnvDrift returns structured result, harness-doctor integration
+
+### D Phase 3 — Startup Boundary Assertion (COMPLETE)
+
+- [x] `validate-boundary-invariants.mjs` — validates bridge identity consistency at startup:
+  - Logs bridge identity (BRIDGE_MODE, IS_WORKTREE_BRIDGE, BRIDGE_ROOT, CONTROL_REPO_ROOT, ANQR_WORKTREE_ID)
+  - Error if BRIDGE_MODE=worktree but IS_WORKTREE_BRIDGE=false
+  - Error if BRIDGE_MODE=control-plane but BRIDGE_ROOT !== CONTROL_REPO_ROOT
+  - Error if BRIDGE_MODE=worktree but BRIDGE_ROOT === CONTROL_REPO_ROOT
+  - Warning for control-plane bridges (ADR-0008 exception acknowledgment)
+- [x] `server.mjs` — calls `validateBoundaryInvariants()` at module load time (before first request)
+
+### D Phase 4 — ADR and Documentation (COMPLETE)
+
+- [x] ADR-0008 updated: added Enforcement section with BRIDGE_MODE table, defense layers table, startup validation details, key constraint (codex bridge must NOT be used for autonomous execution), test references
+- [x] ADR-0003 updated: added Boundary Enforcement section documenting all six defense layers and their code-level enforcement, cross-references ADR-0008
+
+### D Phase 5 — Completion (COMPLETE)
+
+- [x] `BRIDGE_MODE=worktree` added to `anqr-symphony-executor@.service` — explicit symmetry with codex bridge's `BRIDGE_MODE=control-plane`
+- [x] Port isolation test added to `boundary-enforcement.spec.ts` — proves router WORKTREES pool (ports 4321–4328) structurally excludes codex bridge (port 4330)
+- [x] **`assertMutationContext` decision:** NOT added to bridge tool path. The codex bridge is an intentional ADR-0008 exception for developer tooling. Defense-in-depth is provided by port isolation (router never routes to 4330) and BRIDGE_MODE startup validation. Adding assertMutationContext to bridge tools would break the intended codex bridge functionality.
+
+## Workstream E Detailed Progress
+
+### E Phase 0 — Config Authority Audit (COMPLETE)
+
+Audit findings:
+
+- [x] **Three env file locations mapped:** repo template (`services/systemd/anqr-ops.env`), live host (`~/.config/systemd/user/anqr-ops.env`), symphony env (`~/.config/symphony/anqr.env` → symlink to live host)
+- [x] **ADR-0009/0010 already document** the authority model: repo is authoritative for structure, host is authoritative for secrets
+- [x] **Symlink strategy already in place** for systemd units, OpenClaw config. Env files with secrets are NOT symlinked (correct).
+- [x] **`check-harness-config.mjs` was extremely limited** — only checked 2 files (`.env`, `litellm-config.yaml`)
+- [x] **Most services use `EnvironmentFile=-`** (optional, silently continues on missing) — acceptable for graceful degradation but risks silent failures
+- [x] **No drift detection existed** between repo template key names and live host file key names
+
+### E Phase 1 — Drift Detection (COMPLETE)
+
+- [x] `check-env-drift.mjs` created:
+  - `parseEnvKeys(filePath)` — extracts key names from env files (never reads values/secrets)
+  - `checkEnvDrift()` — compares repo template keys vs live host keys, reports missing keys, extra keys, symphony env symlink status
+- [x] Integrated into `harness-doctor/index.mjs` exports
+- [x] Integrated into `harness-doctor/main.mjs` diagnostic categories as "Env File Drift"
+- [x] Tests in `boundary-enforcement.spec.ts` verify parseEnvKeys, checkEnvDrift, and harness-doctor integration
+
+### E Phase 2 — Startup Environment Validation (COMPLETE)
+
+- [x] `validate-startup-env.mjs` created — checks critical env vars at bridge startup:
+  - At least one provider token present (GROQ_TOKEN, GEMINI_TOKEN, OPENROUTER_TOKEN, etc.)
+  - ANQR_WORKTREE_ID set for worktree bridges
+  - SYMPHONY_BRIDGE_PORT explicitly set (not relying on default)
+  - BRIDGE_MODE explicitly set (not auto-derived)
+- [x] Integrated into `server.mjs` — called at module load time after `validateBoundaryInvariants()`
+- [x] Exported from bridge `index.mjs`
+- [x] Tests in `boundary-enforcement.spec.ts` verify module existence, env var checks, and server.mjs integration
+
+### E Phase 3 — Service Lifecycle Hardening (COMPLETE)
+
+- [x] **Critical EnvironmentFile= enforcement:**
+  - `anqr-symphony-router.service` — `EnvironmentFile=` (required) for `anqr-ops.env` (provider tokens needed)
+  - `anqr-discord-router.service` — `EnvironmentFile=` (required) for `anqr-ops.env` (DISCORD_TOKEN needed)
+  - `anqr-linear-webhook.service` — `EnvironmentFile=` (required) for `anqr-ops.env` (LINEAR_WEBHOOK_SECRET needed)
+  - Supplementary `anqr.env` remains optional (`EnvironmentFile=-`) for all services
+- [x] Tests in `boundary-enforcement.spec.ts` verify required vs optional EnvironmentFile patterns
+- [x] **Service dependency and timer overlap semantics (documented in PLAN.md):**
+  - **Required ordering:** All services depend on `network-online.target` via `After=` and `Wants=`
+  - **No strict inter-service ordering:** Router, executors, webhook, integrator start independently. Executors listen on their own ports; the router discovers them by port convention, not ordering.
+  - **Timer overlap:** `anqr-worktree-health.timer`, `anqr-nightly.timer`, `anqr-linear-export.timer`, `anqr-rag-rebuild.timer` run independently. Overlap is safe because each operates on distinct state surfaces.
+  - **Flock serialization:** Validation (vitest, typecheck) uses `flock` to prevent concurrent heavy processes across worktrees.
+  - **Restart behavior:** All services use `Restart=on-failure` with `RestartSec=5`. Memory limits (`MemoryHigh`, `MemoryMax`) prevent OOM cascades.
+
+## Workstream F Detailed Progress
+
+### F Phase 0 — Provider Evidence Gap Analysis (COMPLETE — discovery only)
+
+Gap analysis findings:
+
+- [x] **Evidence that IS emitted today:**
+  - `selectProvider()` logs candidate ranking, selection, and safety-net activation via `logDebug`/`logInfo`/`logWarn`
+  - `record-provider-selection.mjs` tracks selection counts in per-session stats
+  - `recordProviderSelection()` in `task-evidence` records provider name + model per correlation ID
+  - `build-provider-probe-report.mjs` generates comprehensive probe reports with selector summaries
+  - `symphony-adaptive-context` tracks per-provider token ceilings and throttling
+  - `bridge-metrics` captures request counts, latencies, error rates per provider
+
+- [x] **Evidence gaps identified (NOT yet addressed):**
+  - No structured per-request evidence artifact linking: route → candidates → scores → fallback chain → final selection → context reduction into one reconstructable record
+  - Context reduction decisions (adaptive context ceiling, truncation) not linked to the request evidence
+  - Fallback events (provider failure → next candidate) logged but not structured as evidence artifacts
+  - Safety-net activation (all candidates exhausted) logged but not captured as auditable evidence
+  - No post-hoc query capability: "for request X, why was provider Y chosen?"
+
+- [x] **F Phase 1 scope (COMPLETE):**
+  - `record-provider-routing-evidence.mjs` created in `task-evidence/` — structured per-request evidence
+  - Emitted from `server.mjs` for both streaming and non-streaming paths
+  - `invokeWithFallback` returns `fallbackChain` with per-attempt timing, outcome, error details
+  - Evidence includes: routeModelId, allowedProviders, selectedProvider, attempts, triedProviders, hasFallback, fallbackChain
+  - Tests in `provider-routing-evidence.spec.ts` verify module structure, exports, fallbackChain tracking, and server.mjs integration
+
+### F Phase 1 — Provider Routing Evidence (COMPLETE)
+
+- [x] `record-provider-routing-evidence.mjs` — structured evidence record with:
+  - `routeModelId` — resolved model ID for the request
+  - `allowedProviders` — providers allowed by route policy
+  - `selectedProvider` — final selected provider
+  - `attempts` / `triedProviders` — ordered attempt history
+  - `hasFallback` — boolean indicating fallback occurred
+  - `fallbackChain` — per-attempt records: `{ providerName, model, attemptNumber, outcome, durationMs, errorType, errorMessage }`
+- [x] Exported from `task-evidence/index.mjs`
+- [x] `invokeWithFallback` modified — tracks `fallbackChain` array with per-attempt timing via `attemptStartMs`; pushes success/failure entries; returns chain in result
+- [x] `server.mjs` modified — imports `recordProviderRoutingEvidence`; emits evidence for streaming and non-streaming paths when `correlationId` is present
+- [x] Tests: `provider-routing-evidence.spec.ts` — module existence, export structure, per-attempt fields, invokeWithFallback source verification, server.mjs integration
+
+### F Remaining Work
+
+- [ ] F Phase 2: Context-reduction evidence — emit context shaping decisions (adaptive ceiling, truncation) linked to request evidence
+- [ ] F Phase 2: Safety-net activation evidence — structured record when all candidates exhausted
+- [ ] F Phase 2: Post-hoc query capability: "for request X, why was provider Y chosen?"
 
 # Purpose
 

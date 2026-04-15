@@ -22,10 +22,8 @@ const { ISSUE_PHASES, FINALIZATION_STATE_TO_PHASE, VALID_ISSUE_PHASES } =
 const { WORKTREE_STATES, VALID_WORKTREE_STATES, normalizeWorktreeRecord } =
   await import("../../harness/ops/core/symphony-state/worktree-record-schema.mjs");
 
-const {
-  ISSUE_TRANSITION_MAP,
-  WORKTREE_TRANSITION_MAP,
-} = await import("../../harness/ops/core/symphony-state/transition-map.mjs");
+const { ISSUE_TRANSITION_MAP, WORKTREE_TRANSITION_MAP } =
+  await import("../../harness/ops/core/symphony-state/transition-map.mjs");
 const { isValidIssueTransition } =
   await import("../../harness/ops/core/symphony-state/is-valid-issue-transition.mjs");
 const { isValidWorktreeTransition } =

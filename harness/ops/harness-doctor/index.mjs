@@ -8,5 +8,6 @@ export { checkSystemdServices } from "./check-systemd-services.mjs";
 export { checkQueueState } from "./check-queue-state.mjs";
 export { checkReportsDir } from "./check-reports-dir.mjs";
 export { checkHarnessConfig } from "./check-harness-config.mjs";
+export { checkEnvDrift } from "./check-env-drift.mjs";
 export { main } from "./main.mjs";
 export { isMain } from "./is-main.mjs";

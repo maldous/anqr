@@ -31,12 +31,9 @@ vi.mock("../../harness/ops/symphony-state.mjs", () => ({
   loadState: (...args: unknown[]) => mockLoadState(...args),
 }));
 
-vi.mock(
-  "../../harness/ops/orchestration/symphony-worktree-recovery/logger.mjs",
-  () => ({
-    logWarn: (...args: unknown[]) => mockLogWarn(...args),
-  }),
-);
+vi.mock("../../harness/ops/orchestration/symphony-worktree-recovery/logger.mjs", () => ({
+  logWarn: (...args: unknown[]) => mockLogWarn(...args),
+}));
 
 vi.mock("node:child_process", () => {
   const execFileSync = (...args: unknown[]) => mockExecFileSync(...args);
@@ -64,9 +61,8 @@ describe("inferOwnerFromBranch fallback observability (Phase 5)", () => {
   it("returns durable owner without warnings when durable state exists", async () => {
     mockGetWorktreeOwner.mockReturnValue("ANQ-100");
 
-    const { inferOwnerFromBranch } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs"
-    );
+    const { inferOwnerFromBranch } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs");
     const result = inferOwnerFromBranch(snapshot);
 
     expect(result).toBe("ANQ-100");
@@ -81,13 +77,10 @@ describe("inferOwnerFromBranch fallback observability (Phase 5)", () => {
 
   it("emits warning when git-log heuristic activates (stage 2)", async () => {
     mockGetWorktreeOwner.mockReturnValue(null);
-    mockExecFileSync.mockReturnValue(
-      "fix(ANQ-200): repair validation failure\nchore: cleanup\n",
-    );
+    mockExecFileSync.mockReturnValue("fix(ANQ-200): repair validation failure\nchore: cleanup\n");
 
-    const { inferOwnerFromBranch } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs"
-    );
+    const { inferOwnerFromBranch } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs");
     const result = inferOwnerFromBranch(snapshot);
 
     expect(result).toBe("ANQ-200");
@@ -95,9 +88,7 @@ describe("inferOwnerFromBranch fallback observability (Phase 5)", () => {
     expect(mockLogWarn).toHaveBeenCalledWith(
       expect.stringContaining("durable ownership not found for wt3"),
     );
-    expect(mockLogWarn).toHaveBeenCalledWith(
-      expect.stringContaining("git-log heuristic"),
-    );
+    expect(mockLogWarn).toHaveBeenCalledWith(expect.stringContaining("git-log heuristic"));
   });
 
   // -----------------------------------------------------------------------
@@ -107,9 +98,7 @@ describe("inferOwnerFromBranch fallback observability (Phase 5)", () => {
   it("emits warning when reverse-scan fallback activates (stage 3)", async () => {
     mockGetWorktreeOwner.mockReturnValue(null);
     // git-log returns no ANQ-NNN match
-    mockExecFileSync.mockReturnValue(
-      "chore: unrelated commit\nfeat: other work\n",
-    );
+    mockExecFileSync.mockReturnValue("chore: unrelated commit\nfeat: other work\n");
     mockLoadState.mockReturnValue({
       issues: {
         "ANQ-300": {
@@ -118,9 +107,8 @@ describe("inferOwnerFromBranch fallback observability (Phase 5)", () => {
       },
     });
 
-    const { inferOwnerFromBranch } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs"
-    );
+    const { inferOwnerFromBranch } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs");
     const result = inferOwnerFromBranch(snapshot);
 
     expect(result).toBe("ANQ-300");
@@ -128,9 +116,7 @@ describe("inferOwnerFromBranch fallback observability (Phase 5)", () => {
     expect(mockLogWarn).toHaveBeenCalledWith(
       expect.stringContaining("git-log heuristic miss for wt3"),
     );
-    expect(mockLogWarn).toHaveBeenCalledWith(
-      expect.stringContaining("issue reverse-scan"),
-    );
+    expect(mockLogWarn).toHaveBeenCalledWith(expect.stringContaining("issue reverse-scan"));
   });
 
   // -----------------------------------------------------------------------
@@ -142,9 +128,8 @@ describe("inferOwnerFromBranch fallback observability (Phase 5)", () => {
     mockExecFileSync.mockReturnValue("chore: unrelated commit\n");
     mockLoadState.mockReturnValue({ issues: {} });
 
-    const { inferOwnerFromBranch } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs"
-    );
+    const { inferOwnerFromBranch } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs");
     const result = inferOwnerFromBranch(snapshot);
 
     expect(result).toBeNull();
@@ -171,16 +156,13 @@ describe("inferOwnerFromBranch fallback observability (Phase 5)", () => {
       },
     });
 
-    const { inferOwnerFromBranch } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs"
-    );
+    const { inferOwnerFromBranch } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs");
     const result = inferOwnerFromBranch(snapshot);
 
     expect(result).toBe("ANQ-400");
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
-    expect(mockLogWarn).toHaveBeenCalledWith(
-      expect.stringContaining("issue reverse-scan"),
-    );
+    expect(mockLogWarn).toHaveBeenCalledWith(expect.stringContaining("issue reverse-scan"));
   });
 
   // -----------------------------------------------------------------------
@@ -201,16 +183,13 @@ describe("inferOwnerFromBranch fallback observability (Phase 5)", () => {
       },
     });
 
-    const { inferOwnerFromBranch } = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs"
-    );
+    const { inferOwnerFromBranch } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/infer-owner-from-branch.mjs");
     const result = inferOwnerFromBranch(snapshot);
 
     // Should match wt3, not wt7
     expect(result).toBe("ANQ-501");
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
-    expect(mockLogWarn).toHaveBeenCalledWith(
-      expect.stringContaining("ANQ-501"),
-    );
+    expect(mockLogWarn).toHaveBeenCalledWith(expect.stringContaining("ANQ-501"));
   });
 });

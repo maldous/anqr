@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { ROOT } from "./root.mjs";
 import { checkCreditGate } from "./check-credit-gate.mjs";
 import { checkEnvVars } from "./check-env-vars.mjs";
+import { checkEnvDrift } from "./check-env-drift.mjs";
 import { checkHarnessConfig } from "./check-harness-config.mjs";
 import { checkNodeModules } from "./check-node-modules.mjs";
 import { checkOllama } from "./check-ollama.mjs";
@@ -18,6 +19,7 @@ export async function main() {
     { name: "Environment Variables", fn: checkEnvVars },
     { name: "Node Modules", fn: checkNodeModules },
     { name: "Harness Config Files", fn: checkHarnessConfig },
+    { name: "Env File Drift", fn: checkEnvDrift },
     { name: "Credit Gate Provider", fn: checkCreditGate },
     { name: "Ollama Runtime", fn: checkOllama },
     { name: "Systemd Services", fn: checkSystemdServices },

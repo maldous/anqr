@@ -31,8 +31,8 @@ Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 Environment=LINEAR_WEBHOOK_PORT=18791
 Environment=LINEAR_WORKTREES=1,2,3,4
 
-# Secrets
-EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+# Secrets — E Phase 3: fail fast on missing env (LINEAR_WEBHOOK_SECRET required)
+EnvironmentFile=%h/.config/systemd/user/anqr-ops.env
 EnvironmentFile=-%h/.config/symphony/anqr.env
 
 ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/integrations/model/linear-webhook-receiver.mjs

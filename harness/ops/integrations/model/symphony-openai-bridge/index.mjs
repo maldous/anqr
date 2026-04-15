@@ -1,3 +1,4 @@
+export { BRIDGE_MODE, deriveBridgeMode } from "./bridge-mode.mjs";
 export { CODEX_SANDBOX_MODE } from "./codex-sandbox-mode.mjs";
 export { CONTEXT7_HTTP_BASE } from "./context7-http-base.mjs";
 export { OPENCLAW_GATEWAY_HOST } from "./openclaw-gateway-host.mjs";
@@ -15,6 +16,8 @@ export { isPathWithinRoot } from "./is-path-within-root.mjs";
 export { detectControlRepoRoot } from "./detect-control-repo-root.mjs";
 export { CONTROL_REPO_ROOT } from "./control-repo-root.mjs";
 export { remapRepoPathToBridgeRoot } from "./remap-repo-path-to-bridge-root.mjs";
+export { validateBoundaryInvariants } from "./validate-boundary-invariants.mjs";
+export { validateStartupEnv } from "./validate-startup-env.mjs";
 export { normalizeRequestCwd } from "./normalize-request-cwd.mjs";
 export { withRequestCwd } from "./with-request-cwd.mjs";
 export { getCurrentRequestCwd } from "./get-current-request-cwd.mjs";
