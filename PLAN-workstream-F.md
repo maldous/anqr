@@ -75,9 +75,12 @@ Gap analysis findings:
 - [x] **F4 resolved**: `contextReductions` added to `safetyNetData` in both `invokeWithFallback` and `invokeWithFallbackStream`. `recordContextReductionEvidence` emitted in streaming and non-streaming failure paths.
 - [x] **F6 resolved**: Codebuff transparent relay success path now emits `recordProviderRoutingEvidence` with single-entry fallbackChain (attempts: 1, outcome: success).
 
-### F Remaining Work (deferred — not blocking Workstream G)
+### F Remaining Work (resolved in Workstream G)
 
-Low-severity items identified by completion review.
+Former deferred items now resolved:
+- **F5 (selection rationale)** — ✅ Resolved in G Phase 3: `selectProvider` accepts `selectionLog`, `recordProviderRoutingEvidence` includes `selectionRationale`.
+- **F7 (evidence durability)** — ✅ Resolved in G Phase 1: `withEvidenceLock` (advisory file-level locking), `loadEvidenceRecordWithDiagnostics` (three-state return), `ensureEvidenceRecord` (idempotent creation).
+- **F8 (post-hoc query endpoint)** — Accepted caveat: `queryRoutingEvidence()` is library-level only. CLI/HTTP endpoint is a future enhancement (Low).
 
 ### Documentation Cleanup (COMPLETE)
 
@@ -111,7 +114,7 @@ Poor reproducibility, weak incident analysis, opaque cost behavior, and hard-to-
 
 ## Completion Review Findings (gpt-5-agent deep audit)
 
-**Verdict: Substantially implemented, but not validly complete for dependency by Workstream G. Helper modules exist and work, but actual evidence-emission coverage is incomplete.**
+**Verdict: ✅ Complete. All findings (F1–F7) resolved across F Phase 3 and G Phases 1/3. F8 (query endpoint) accepted as Low-severity caveat.**
 
 ### Findings
 
@@ -131,6 +134,6 @@ Poor reproducibility, weak incident analysis, opaque cost behavior, and hard-to-
 1. ✅ Emit `recordSafetyNetEvidence` for **non-streaming** provider exhaustion (F3) — **resolved in Phase 3**
 2. ✅ Persist `providerRouting` and `contextReduction` evidence for **failure** paths too (F2, F4) — **resolved in Phase 3**
 3. ✅ Cover the transparent Codebuff streaming success path with routing evidence (F6) — **resolved in Phase 3**
-4. Deferred: Add selector rationale to evidence: ranked candidates, scores, exclusions, policy reason (F5)
+4. ✅ Add selector rationale to evidence: ranked candidates, scores, exclusions, policy reason (F5) — **resolved in G Phase 3**
 5. ✅ Add runtime tests that drive evidence functions and assert emitted evidence files (F1) — **resolved in Phase 3**
-6. Deferred: Decide whether evidence persistence is best-effort or required-for-closure, enforce accordingly (F7)
+6. ✅ Decide whether evidence persistence is best-effort or required-for-closure, enforce accordingly (F7) — **resolved in G Phase 1**

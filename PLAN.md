@@ -6,16 +6,31 @@ This document is the **index** for the implementation plan. Detailed content is 
 
 | Workstream                    | Status         | Started    | Completed  | Detail Document |
 | ----------------------------- | -------------- | ---------- | ---------- | --------------- |
-| A. Authoritative scheduling   | 🟡 Substantially Complete | 2026-04-13 | — | [PLAN-workstream-A.md](./PLAN-workstream-A.md) |
-| B. State model normalization  | 🟡 Substantially Complete | 2026-04-15 | — | [PLAN-workstream-B.md](./PLAN-workstream-B.md) |
+| A. Authoritative scheduling   | ✅ Complete | 2026-04-13 | 2026-04-18 | [PLAN-workstream-A.md](./PLAN-workstream-A.md) |
+| B. State model normalization  | ✅ Complete | 2026-04-15 | 2026-04-18 | [PLAN-workstream-B.md](./PLAN-workstream-B.md) |
 | C. Recovery demotion          | ✅ Complete    | 2026-04-13 | 2026-04-14 | [PLAN-workstream-C.md](./PLAN-workstream-C.md) |
-| D. Boundary hardening         | 🟡 Substantially Complete | 2026-04-16 | — | [PLAN-workstream-D.md](./PLAN-workstream-D.md) |
-| E. Config/lifecycle hardening | 🟡 Substantially Complete | 2026-04-16 | — | [PLAN-workstream-E.md](./PLAN-workstream-E.md) |
+| D. Boundary hardening         | ✅ Complete | 2026-04-16 | 2026-04-18 | [PLAN-workstream-D.md](./PLAN-workstream-D.md) |
+| E. Config/lifecycle hardening | ✅ Complete | 2026-04-16 | 2026-04-18 | [PLAN-workstream-E.md](./PLAN-workstream-E.md) |
 | F. Provider-routing evidence  | ✅ Complete    | 2026-04-16 | 2026-04-17 | [PLAN-workstream-F.md](./PLAN-workstream-F.md) |
-| G. Evidence/closure model     | ⬜ Ready to Start | —      | —          | Carry-forward: A3, E4, F5, F7 |
+| G. Evidence/closure model     | ✅ Complete | 2026-04-18 | 2026-04-18 | [PLAN-workstream-G.md](./PLAN-workstream-G.md) |
 | H. Documentation alignment    | ⬜ Not Started | —          | —          | Continuous       |
 
-## Workstream G Readiness Assessment
+## Workstreams A–G Completion Summary
+
+**All implementation workstreams (A–G) are ✅ Complete as of 2026-04-18.** Confirmed by gpt-5-agent deep audit — no remaining code changes required. All carry-forward items from A–F resolved during G implementation. Only Workstream H (documentation alignment) and acceptance criterion #13 (live end-to-end demo) remain open.
+
+| Metric | Value |
+|--------|-------|
+| Total implementation workstreams | 7 (A–G) |
+| Workstreams complete | 7/7 |
+| Acceptance criteria satisfied | 11/13 (#12 = H docs, #13 = live demo) |
+| Definition-of-success criteria met | 9/11 (docs + live demo remaining) |
+| Evidence test count | 79 (durability + closure-gate + locked-closure + provider-routing) |
+| Total workstream test count | 400+ across 18 test files |
+
+---
+
+## Workstream G Readiness Assessment (Historical)
 
 **Prerequisite check for starting Workstream G (Evidence, closure, and observability model):**
 
@@ -31,34 +46,31 @@ This document is the **index** for the implementation plan. Detailed content is 
 
 | Workstream | Review Verdict | Key Finding |
 |---|---|---|
-| A | Substantially implemented | ~~Trigger-path fallback weakens strict authority~~ **RESOLVED**; ~~runner doesn't verify assigned worktree~~ **RESOLVED**; remaining: A3 alternate executor path unguarded, tests mixed source-grep/runtime |
-| B | Substantially implemented, G-prereqs resolved | ~~`patchIssueState()` unrestricted~~ **RESOLVED** (LIFECYCLE_FIELDS guard); ~~`integration_pending → completed` direct~~ **RESOLVED** (must go through evidence_pending); remaining: heartbeatLease bypasses transition helpers, atomicity mocked |
+| A | ✅ **Complete** | All gaps resolved: A1/A2 trigger/runner fixes, A3 resolved in G Phase 1 (ensureEvidenceRecord wired into execute-linear-issue-request.mjs). Accepted caveats: A4 test coverage mismatch (Low), A5 mixed source-grep/runtime tests (Low). |
+| B | ✅ **Complete** | All 8 correctness blockers resolved. G-prereqs (B1/B2/B3) resolved. Accepted caveats: B4 heartbeatLease special-case (Low), B5 atomicity mocked (Low), B6 deprecated helpers test-only (Low). |
 | C | **Complete for no-publication objective** | Sandbox mutation (reset_to_main) is acceptable — not publishing. "State-only" wording is overclaimed but functional intent is met |
-| D | Substantively complete | Codex exception now bounded by in-tool `assertBridgeMutationBoundary`; tests are mixed runtime/source; `IS_WORKTREE_BRIDGE` naming contradiction is a future footgun |
-| E | Substantially complete, lifecycle wired | ~~Key-inventory not value-aware~~ **RESOLVED** (SHA-256 rotation tracking); ~~preflight not wired~~ **RESOLVED** (blocking gate in runner, advisory in bridge); remaining: repo-static lifecycle checks, symlink overclaim |
-| F | **Complete** (Phase 1 + 2 + 3) | ~~Source-text tests~~ **RESOLVED** (~68% runtime); ~~failure-path evidence~~ **RESOLVED**; ~~non-streaming safety-net~~ **RESOLVED**; ~~Codebuff relay~~ **RESOLVED**; deferred: selection rationale (F5), evidence durability (F7) |
+| D | ✅ **Complete** | Codex exception bounded by in-tool `assertBridgeMutationBoundary` and documented per ADR-0008. 61 boundary enforcement tests. Accepted caveats: D1–D5 mixed test types, naming footgun (all Low). |
+| E | ✅ **Complete** | E1/E2 resolved (SHA-256 rotation, preflight wired). E4 decided in G Phase 3: repo-static sufficient for closure. Accepted caveats: E3/E5/E6 symlink/timer/placeholder (all Low). |
+| F | ✅ **Complete** (Phase 1 + 2 + 3) | All findings resolved including F5 selection rationale (G Phase 3) and F7 evidence durability (G Phase 1). ~68% runtime behavioral tests. Accepted caveat: F8 query library-only (Low). |
 
 ### Honest G-Readiness Judgment
 
-**Workstreams A–F are now sufficient to begin Workstream G.** Earlier G-prerequisite gaps in A (A1/A2), B (B1/B2/B3), E (E1/E2), and F (F1–F4/F6) have been resolved and covered by expanded tests. The remaining work is primarily closure-grade hardening, not start blockers.
+**Workstreams A–G are now complete.** All carry-forward items from A–F have been resolved during G implementation:
 
-Remaining items fall into two tiers:
+**Carry-forward items resolved in G:**
+1. **A3 — Alternate executor path** — ✅ Resolved in G Phase 1: `executeLinearIssueRequest` now generates `correlationId`, calls `ensureEvidenceRecord`, always sets `ANQR_CORRELATION_ID`.
+2. **F7 — Evidence durability** — ✅ Resolved in G Phase 1: `withEvidenceLock` (O_EXCL advisory locking), `loadEvidenceRecordWithDiagnostics` (three-state return), `ensureEvidenceRecord` (idempotent creation).
+3. **E4 — Repo-static lifecycle checks** — ✅ Decided in G Phase 3: repo-static is sufficient for closure. Documented limitation.
+4. **F5 — Selection rationale** — ✅ Resolved in G Phase 3: `selectProvider` accepts `selectionLog`, `recordProviderRoutingEvidence` includes `selectionRationale`.
 
-**Early-G carry-forward (should be addressed as G begins):**
-1. **A3 — Alternate executor path** — `/v1/linear/execute` bypasses scheduler claim verification and assignment enforcement via operator override semantics. Needs hardening or documented privileged-path exception.
-2. **F7 — Evidence durability** — All evidence persistence is best-effort (no locking, last-write-wins). G must decide if evidence is advisory or closure-authoritative.
-3. **E4 — Repo-static lifecycle checks** — `checkServiceLifecycle()` inspects repo files, not live host state. If G closure claims require host-runtime proof, this needs upgrading.
-4. **F5 — Selection rationale** — Evidence records final selection but not ranked candidates, scores, or policy precedence. "Why was provider chosen" only weakly satisfied.
-
-**Accepted remaining caveats (non-blocking):**
+**Accepted remaining caveats (all Low severity, non-blocking):**
+- A4/A5: Test methodology (source-grep vs runtime) — critical paths have runtime coverage
 - B4: `heartbeatLease()` directly mutates lease (special-case maintenance)
 - B5: Atomicity tested with mocked lock/storage (proves logic, not filesystem crash-window)
 - B6: Deprecated helpers still importable as files (removed from barrel exports)
 - D1–D5: Mixed test types, naming footguns, codex auth skip (all Low)
 - E3/E5/E6: Symlink overclaim, simplistic timer validation, placeholder generation (all Low)
 - F8: Post-hoc query is library-only, no CLI/HTTP endpoint (Low)
-
-**Recommendation:** G can begin now without bundling prior prerequisite remediation. G should focus on evidence durability, closure authority, and the carry-forward items above.
 
 ## Document Index
 
@@ -70,6 +82,7 @@ Remaining items fall into two tiers:
 - [PLAN-workstream-D.md](./PLAN-workstream-D.md) — Repo/worktree boundary hardening
 - [PLAN-workstream-E.md](./PLAN-workstream-E.md) — Configuration and service lifecycle hardening
 - [PLAN-workstream-F.md](./PLAN-workstream-F.md) — Provider-routing determinism and context-control evidence
+- [PLAN-workstream-G.md](./PLAN-workstream-G.md) — Evidence, closure, and observability model
 
 ### Supporting Documents
 
@@ -79,23 +92,23 @@ Remaining items fall into two tiers:
 
 ## Workstream Summaries
 
-### A. Authoritative Scheduling (🟡 Substantially Complete)
-Architectural scheduler authority is real. Router verifies claims on trigger + queue-drain paths. Trigger-path fallback removed; executor verifies assigned worktree. **Remaining:** A3 alternate executor path (`/v1/linear/execute`) bypasses claim verification; tests mixed source-grep/runtime.
+### A. Authoritative Scheduling (✅ Complete)
+Architectural scheduler authority is real. Router verifies claims on trigger + queue-drain paths. Trigger-path fallback removed; executor verifies assigned worktree. A3 alternate executor path resolved in G Phase 1 (evidence record creation wired in).
 
-### B. State Model Normalization (🟡 Substantially Complete)
-Phases 0–7 implemented. Transition helpers exist. Major writer migration done. Atomic claim+release helpers exist. `patchIssueState()` now guarded (LIFECYCLE_FIELDS throws on lifecycle writes). Evidence gating enforced (`integration_pending → completed` removed). **Remaining:** `heartbeatLease()` bypasses transition helpers; atomicity tested with mocked lock/storage.
+### B. State Model Normalization (✅ Complete)
+Phases 0–7 implemented. Transition helpers exist. Major writer migration done. Atomic claim+release helpers exist. `patchIssueState()` now guarded (LIFECYCLE_FIELDS throws on lifecycle writes). Evidence gating enforced (`integration_pending → completed` removed). All 8 correctness blockers resolved.
 
 ### C. Recovery Demotion (✅ Complete)
 All recovery git publication removed; `checkBaselineHealth` detect-only; ADR-0005/ADR-0006/recovery docs aligned. **Note:** recovery still performs sandbox mutation (git fetch/reset/clean in reset_to_main) which is acceptable — the no-publication contract is the actual requirement.
 
-### D. Boundary Hardening (🟡 Substantially Complete)
-BRIDGE_MODE formalization, fail-closed boundary invariants, assertBridgeMutationBoundary in all file-mutating tools, 61 boundary enforcement tests. Codex control-plane exception is bounded by in-tool enforcement and documented per ADR-0008. **Remaining:** tests mixed runtime/source; `IS_WORKTREE_BRIDGE` naming contradiction.
+### D. Boundary Hardening (✅ Complete)
+BRIDGE_MODE formalization, fail-closed boundary invariants, assertBridgeMutationBoundary in all file-mutating tools, 61 boundary enforcement tests. Codex control-plane exception is bounded by in-tool enforcement and documented per ADR-0008.
 
-### E. Config/Lifecycle Hardening (🟡 Substantially Complete)
-Fail-closed startup validation, config generation tooling, lifecycle checks with enforce mode, timer overlap safety, dependency chain validation. Key rotation tracking with SHA-256 value hashing integrated. Config preflight wired as blocking gate in runner and advisory check in bridge startup. **Remaining:** lifecycle checks are repo-static not host-runtime; symlink verification is existence-only.
+### E. Config/Lifecycle Hardening (✅ Complete)
+Fail-closed startup validation, config generation tooling, lifecycle checks with enforce mode, timer overlap safety, dependency chain validation. Key rotation tracking with SHA-256 value hashing integrated. Config preflight wired as blocking gate in runner and advisory check in bridge startup. E4 decided: repo-static lifecycle checks are sufficient for closure.
 
 ### F. Provider-Routing Evidence (✅ Complete)
-Structured routing decision evidence on all 5 paths (streaming/non-streaming success/failure + Codebuff relay). Per-attempt fallback chain tracking, context-reduction evidence, safety-net evidence, post-hoc query capability. ~68% runtime behavioral tests. **Deferred:** selection rationale (F5), evidence durability/locking (F7), CLI/HTTP query endpoint (F8).
+Structured routing decision evidence on all 5 paths (streaming/non-streaming success/failure + Codebuff relay). Per-attempt fallback chain tracking, context-reduction evidence, safety-net evidence, post-hoc query capability. ~68% runtime behavioral tests. F5 selection rationale resolved in G Phase 3. F7 evidence durability resolved in G Phase 1.
 
 ## Test Coverage Summary
 

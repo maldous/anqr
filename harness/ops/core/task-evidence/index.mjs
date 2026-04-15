@@ -1,8 +1,10 @@
 export { getEvidenceDir } from "./get-evidence-dir.mjs";
 export { getEvidencePath } from "./get-evidence-path.mjs";
 export { loadEvidenceRecord } from "./load-evidence-record.mjs";
+export { loadEvidenceRecordWithDiagnostics } from "./load-evidence-record-with-diagnostics.mjs";
 export { saveEvidence } from "./save-evidence.mjs";
 export { createEvidenceRecord } from "./create-evidence-record.mjs";
+export { ensureEvidenceRecord } from "./ensure-evidence-record.mjs";
 export { updateEvidenceRecord } from "./update-evidence-record.mjs";
 export { recordRoutingDecision } from "./record-routing-decision.mjs";
 export { recordWorktreeSelection } from "./record-worktree-selection.mjs";
@@ -15,3 +17,7 @@ export { recordProviderRoutingEvidence } from "./record-provider-routing-evidenc
 export { recordContextReductionEvidence } from "./record-context-reduction-evidence.mjs";
 export { recordSafetyNetEvidence } from "./record-safety-net-evidence.mjs";
 export { queryRoutingEvidence } from "./query-routing-evidence.mjs";
+export { validateEvidenceCompleteness } from "./validate-evidence-completeness.mjs";
+export { auditEvidenceCompleteness } from "./audit-evidence-completeness.mjs";
+export { findIncompleteEvidence } from "./find-incomplete-evidence.mjs";
+export { MAX_EVIDENCE_RETRIES, EVIDENCE_LEVELS } from "./mandatory-evidence-fields.mjs";

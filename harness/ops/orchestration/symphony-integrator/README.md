@@ -30,9 +30,33 @@ Single-writer integration service that drains integration candidates, cherry-pic
 
 - `integrate-candidate/` - Integrate Candidate scope; immediate files include `build-evidence-comment.mjs`, `index.mjs`, `integrate-candidate.mjs`, `publish-evidence-and-close.mjs`.
 
+## Evidence-Gated Closure (Workstream G)
+
+The integrator enforces **evidence-gated closure** as defined in ADR-0012:
+
+1. After cherry-pick integration, issue transitions to `evidence_pending_closeout`
+2. `publishEvidenceAndClose` validates evidence at `standard` completeness level
+3. If evidence is incomplete, closure is deferred (issue stays in `evidence_pending`)
+4. After 3 failed retries (`MAX_EVIDENCE_RETRIES`), `forceCloseWithIncompleteEvidence` auto-overrides
+5. Override records `evidenceOverride` metadata in the evidence record for audit
+
+### Mandatory evidence for closure (`standard` level)
+
+- `correlationId`, `execution.success`, `execution.completedAt`
+- `integration.success` (must be `true`), `integration.mainSha`
+- `ingress.source`, `ingress.issueIdentifier`
+- `push.success` (must be `true`), `push.branch`
+- `validation.passed`, `validation.typecheckPassed`, `validation.testsPassed` (conditional: when push exists)
+
+### Files
+
+- `publish-evidence-and-close.mjs` — closure gate with `validateEvidenceCompleteness`
+- `force-close-with-incomplete-evidence.mjs` — operator override after retry exhaustion
+- `build-evidence-comment.mjs` — formats evidence record into Linear comment
+
 ## Operational Notes
 
-- Current on-disk inventory: 14 immediate file(s) and 1 child directory.
+- Current on-disk inventory: 15 immediate file(s) and 1 child directory.
 - This README was refreshed against the current source tree rather than older intent docs alone.
 
 ## Review Focus

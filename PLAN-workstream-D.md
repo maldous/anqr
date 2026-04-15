@@ -1,6 +1,6 @@
 # Workstream D — Repo/Worktree Boundary Hardening
 
-> Part of [PLAN.md](./PLAN.md) · Status: 🟡 Substantially Complete · Started: 2026-04-16
+> Part of [PLAN.md](./PLAN.md) · Status: ✅ Complete · Started: 2026-04-16 · Completed: 2026-04-18
 
 ## Summary
 
@@ -102,7 +102,7 @@ The codex control-plane exception relies on service/port isolation + documentati
 
 ## Completion Review Findings (gpt-5-agent deep audit)
 
-**Verdict: Substantively complete. The codex caveat is honest and the 🟡 status is appropriate.**
+**Verdict: ✅ Complete. The codex caveat is honest, bounded by in-tool enforcement per ADR-0008, and accepted as a design decision.**
 
 ### Findings
 

@@ -1,6 +1,8 @@
 # Assessment and Requirements
 
 > Part of [PLAN.md](./PLAN.md) — the original assessment that drove workstreams A–F, preserved here for review context.
+>
+> **Note:** Requirement statuses (R1–R12) and workstream statuses below are updated to reflect current implementation state as of 2026-04-17. The assessment text, headline judgment, and confirmed blocking issues reflect the original pre-implementation review and are preserved intentionally.
 
 ## Purpose
 
@@ -54,7 +56,7 @@ In practical terms, that means the platform is credible as a real local automati
 
 The platform **shall** have exactly one component that owns global issue admission and the transition from eligible to claimed. No runner, reconciler, webhook handler, or router path may independently self-pick or re-dispatch work outside that authority.
 
-→ **Workstream A: 🟡 Substantially Complete** (trigger-path fallback, runner doesn't verify assigned worktree)
+→ **Workstream A: 🟡 Substantially Complete** (~~trigger-path fallback~~ RESOLVED; ~~runner doesn't verify assigned worktree~~ RESOLVED; remaining: A3 alternate executor path)
 
 ### R2. Recovery shall not publish code
 
@@ -66,7 +68,7 @@ Recovery **shall not** perform git add, commit, push, merge, cherry-pick, or any
 
 The platform **shall** define and enforce one authoritative local execution-state model for claims, leases, retries, finalization, integration candidacy, quarantine, and recovery ownership. Linear, local state, and in-memory router counters **shall not** be competing truth domains for execution authority.
 
-→ **Workstream B: 🟡 Substantially Complete** (`patchIssueState` backdoor, closure gating not enforced in state model)
+→ **Workstream B: 🟡 Substantially Complete** (~~`patchIssueState` backdoor~~ RESOLVED via LIFECYCLE_FIELDS guard; ~~closure gating not enforced~~ RESOLVED — `integration_pending → completed` removed; remaining: heartbeatLease bypass, mocked atomicity)
 
 ### R4. Durable and bounded dispatch accounting
 
@@ -84,37 +86,37 @@ All code-changing autonomous execution **shall** occur in explicitly managed wor
 
 The platform **shall not** depend on manual synchronization of critical runtime configuration across repository files, host environment files, and OpenClaw runtime config. Config propagation **shall** be automated, validated, and drift-detectable.
 
-→ **Workstream E: 🟡 Substantially Complete** (tooling exists, not wired into operational lifecycle)
+→ **Workstream E: 🟡 Substantially Complete** (~~tooling exists, not wired into operational lifecycle~~ RESOLVED — blocking gate in runner, advisory in bridge; remaining: repo-static lifecycle checks)
 
 ### R7. Provider routing shall be policy-bounded and observable
 
 Provider selection **shall** have explicit precedence rules, bounded fallback behavior, stable audit output, and operator-verifiable selection evidence. Adaptive routing may remain heuristic, but it **shall** be explainable and reproducible enough for incident analysis.
 
-→ **Workstream F: 🟡 Substantially Complete** (failure-path evidence gaps, tests mostly source-grep)
+→ **Workstream F: ✅ Complete** (~~failure-path evidence gaps~~ RESOLVED; ~~tests mostly source-grep~~ RESOLVED — ~68% runtime behavioral; deferred: F5 selection rationale, F7 evidence durability)
 
 ### R8. Idempotency, retries, and lock ownership shall be explicit
 
 All ingress, scheduling, execution, integration, and recovery flows **shall** have explicit idempotency behavior, retry policy, lock ownership rules, lease expiry handling, and stale-owner resolution rules. These rules **shall** be enforced in code and documented.
 
-→ **Workstream B: 🟡 Substantially Complete** (`patchIssueState` backdoor allows lifecycle bypass)
+→ **Workstream B: 🟡 Substantially Complete** (~~`patchIssueState` backdoor allows lifecycle bypass~~ RESOLVED via LIFECYCLE_FIELDS guard; remaining: heartbeatLease direct mutation)
 
 ### R9. Execution completion and workflow completion shall be distinct
 
 The platform **shall** distinguish clearly between runner completion, integration completion, evidence publication, and workflow closure. No API surface or state transition may imply full workflow completion before integration and evidence closure are actually complete.
 
-→ **Workstreams B + F: 🟡 Substantially Complete** (Workstream G must strengthen this — `integration_pending → completed` still allowed without evidence gate)
+→ **Workstreams B + F: 🟡 Substantially Complete** (~~`integration_pending → completed` still allowed without evidence gate~~ RESOLVED — must go through `evidence_pending`; Workstream G must enforce closure gating)
 
 ### R10. Evidence shall gate closure
 
 Issue closure and final success status **shall** require defined evidence artifacts for scheduling, execution, validation, integration, and recovery outcomes where applicable. Missing evidence **shall** block closure.
 
-→ **Workstream G: ⬜ Not Started** (this is the primary deliverable of G)
+→ **Workstream G: ⬜ Ready to Start** (this is the primary deliverable of G; A–F now sufficient to begin)
 
 ### R11. Service lifecycle behavior shall be deliberate
 
 Systemd units, timers, recovery loops, and startup flows **shall** have explicit dependency, overlap, restart, and ownership semantics. Host supervision must support correctness, not only liveness.
 
-→ **Workstream E: 🟡 Substantially Complete** (timer/dependency validation is simplistic; lifecycle checks are repo-static)
+→ **Workstream E: 🟡 Substantially Complete** (~~timer/dependency validation is simplistic~~ improved — enforcement-grade timer overlap + dependency chain validation; lifecycle checks remain repo-static)
 
 ### R12. Documentation shall describe implemented behavior only
 
@@ -129,6 +131,6 @@ Architecture, operations, recovery, scheduling, state, configuration, and bounda
 3. **Workstream C** — Recovery demotion to state-only safety behavior (✅)
 4. **Workstream D** — Repo/worktree boundary hardening (🟡)
 5. **Workstream E** — Configuration and service lifecycle hardening (🟡)
-6. **Workstream F** — Provider-routing determinism and context-control evidence (🟡)
-7. **Workstream G** — Evidence, closure, and observability model (⬜ — depends on A–F)
+6. **Workstream F** — Provider-routing determinism and context-control evidence (✅)
+7. **Workstream G** — Evidence, closure, and observability model (⬜ Ready to Start — carry-forward: A3, E4, F5, F7)
 8. **Workstream H** — Documentation and reality-alignment closure (⬜ — continuous)

@@ -1,9 +1,10 @@
 import { getFinalizationState, transitionIssue, getIssueState } from "../../../symphony-state.mjs";
 import { updateIssue, addComment, STATES } from "../../../linear-client.mjs";
-import { recordIntegrationResult } from "../../../core/task-evidence.mjs";
+import { recordIntegrationResult, MAX_EVIDENCE_RETRIES } from "../../../core/task-evidence.mjs";
 import { findIssueByIdentifier } from "../find-issue-by-identifier.mjs";
 import { git } from "../git.mjs";
 import { logInfo, logWarn, logError } from "../logger.mjs";
+import { forceCloseWithIncompleteEvidence } from "./force-close-with-incomplete-evidence.mjs";
 import { publishEvidenceAndClose } from "./publish-evidence-and-close.mjs";
 
 export async function integrateCandidate(issueIdentifier) {
@@ -24,6 +25,37 @@ export async function integrateCandidate(issueIdentifier) {
     if (!finalization.integratedMainSha) {
       return { ok: false, reason: "missing_integrated_main_sha" };
     }
+
+    // After MAX_EVIDENCE_RETRIES, force-close with incomplete evidence
+    if ((finalization.evidenceRetries || 0) >= MAX_EVIDENCE_RETRIES) {
+      logWarn(
+        `[integrator] ${issueIdentifier}: evidence retries exhausted (${finalization.evidenceRetries}), forcing closure`,
+      );
+      const forced = await forceCloseWithIncompleteEvidence({
+        issueIdentifier,
+        finalization,
+        pushedMainSha: finalization.integratedMainSha,
+        changedFiles: finalization.changedFiles || [],
+        diffStat: finalization.diffStat || "(cached)",
+        operatorReason: `Auto-override after ${MAX_EVIDENCE_RETRIES} failed evidence collection attempts`,
+      });
+      if (forced.ok) {
+        transitionIssue(issueIdentifier, "completed", {
+          finalization: {
+            state: "integrated_main",
+            integratedMainSha: finalization.integratedMainSha,
+            changedFiles: finalization.changedFiles || [],
+            diffStat: finalization.diffStat || "(cached)",
+            evidenceOverride: true,
+            updatedAt: new Date().toISOString(),
+            lastError: null,
+          },
+          reason: "evidence_override",
+        });
+      }
+      return forced;
+    }
+
     const closeout = await publishEvidenceAndClose({
       issueIdentifier,
       finalization,

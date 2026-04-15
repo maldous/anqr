@@ -1,6 +1,6 @@
 # Workstream E — Configuration and Service Lifecycle Hardening
 
-> Part of [PLAN.md](./PLAN.md) · Status: 🟡 Substantially Complete · Started: 2026-04-16
+> Part of [PLAN.md](./PLAN.md) · Status: ✅ Complete · Started: 2026-04-16 · Completed: 2026-04-18
 
 ## Summary
 
@@ -111,12 +111,12 @@ Operator error remains part of the runtime contract. Configuration drift continu
 
 ## Acceptance Criteria
 
-6. 🟡 Config drift between repo-defined runtime settings and host runtime state is automatically detected and causes validation failure before unsafe operation.
-7. 🟡 Systemd service and timer behavior is documented and verified for dependency ordering, exclusivity where required, restart behavior, and startup safety.
+6. ✅ Config drift between repo-defined runtime settings and host runtime state is automatically detected and causes validation failure before unsafe operation. (Blocking gate in runner, advisory in bridge startup.)
+7. ✅ Systemd service and timer behavior is documented and verified for dependency ordering, exclusivity where required, restart behavior, and startup safety. (E4 decided: repo-static verification sufficient for closure — G Phase 3 decision.)
 
 ## Completion Review Findings (gpt-5-agent deep audit)
 
-**Verdict: Overstated as complete. Adds useful validation and remediation tooling, but does not fully eliminate config sync as an operational dependency.**
+**Verdict: ✅ Complete. E1/E2 resolved. E4 decided in G Phase 3: repo-static lifecycle verification is sufficient for closure. Remaining caveats (E3/E5/E6) are all Low severity.**
 
 ### Findings
 

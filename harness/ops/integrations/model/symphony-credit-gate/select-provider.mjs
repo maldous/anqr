@@ -14,6 +14,7 @@ import { logDebug, logInfo, logWarn } from "./logger.mjs";
 export async function selectProvider(options = {}) {
   ensureStateDir();
   const allowSafetyNetOverride = options.allowSafetyNetOverride === true;
+  const selectionLog = options.selectionLog || null;
   const allowedNames =
     Array.isArray(options.allowedNames) && options.allowedNames.length > 0
       ? new Set(options.allowedNames)
@@ -39,25 +40,33 @@ export async function selectProvider(options = {}) {
 
   for (const providerName of orderedNames) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
-    if (
-      !provider ||
-      !matchesAllowedNames(provider, allowedNames) ||
-      matchesExcludedNames(provider, excludedNames)
-    ) {
+    if (!provider) {
+      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "not_found" });
+      continue;
+    }
+    if (!matchesAllowedNames(provider, allowedNames)) {
+      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "not_in_allowed" });
+      continue;
+    }
+    if (matchesExcludedNames(provider, excludedNames)) {
+      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "excluded" });
       continue;
     }
     const health = getProviderHealthState(provider.name);
     if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED) {
+      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: health.state });
       continue;
     }
     const selected = await tryProvider(provider);
     if (selected) {
+      if (selectionLog) selectionLog.push({ name: selected.name, status: "selected", tier: selected.tier });
       logInfo(`[selectProvider] Selected ranked provider`, {
         providerName: selected.name,
         tier: selected.tier,
       });
       return selected;
     }
+    if (selectionLog) selectionLog.push({ name: providerName, status: "failed", reason: "try_failed" });
   }
 
   if (!allowSafetyNetOverride) {
@@ -82,6 +91,7 @@ export async function selectProvider(options = {}) {
     clearProviderFailure(provider.name);
     const selected = await tryProvider(provider);
     if (selected) {
+      if (selectionLog) selectionLog.push({ name: selected.name, status: "safety_net_selected", tier: selected.tier });
       logWarn(
         `[selectProvider] P0 SAFETY NET activated: ${selected.name} (all ranked candidates exhausted)`,
         {

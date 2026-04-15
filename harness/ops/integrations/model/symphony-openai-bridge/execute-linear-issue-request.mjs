@@ -1,6 +1,8 @@
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 
+import { ensureEvidenceRecord } from "../../../core/task-evidence.mjs";
 import { sendJson } from "./send-json.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
@@ -31,7 +33,7 @@ export async function executeLinearIssueRequest(req, res) {
   }
 
   const identifier = String(body?.identifier || req.headers["x-linear-identifier"] || "").trim();
-  const correlationId = req.headers["x-anqr-correlation-id"] || null;
+  const correlationId = req.headers["x-anqr-correlation-id"] || randomUUID();
   if (!identifier) {
     return sendJson(res, 400, {
       error: { message: "Missing Linear issue identifier", type: "invalid_request_error" },
@@ -45,13 +47,23 @@ export async function executeLinearIssueRequest(req, res) {
   }
 
   try {
-    logInfo(`[linear-execute] Starting execution for ${identifier}`);
+    logInfo(`[linear-execute] Starting execution for ${identifier} (correlation=${correlationId})`);
+
+    try {
+      ensureEvidenceRecord(correlationId, {
+        source: "direct-execute",
+        issueIdentifier: identifier,
+      });
+    } catch {
+      /* best-effort — evidence dir may not exist in all environments */
+    }
+
     const { stdout, stderr } = await execFileAsync(
       process.execPath,
       [RUNNER_ENTRY, "--issue", identifier],
       {
         cwd: process.cwd(),
-        env: { ...process.env, ...(correlationId ? { ANQR_CORRELATION_ID: correlationId } : {}) },
+        env: { ...process.env, ANQR_CORRELATION_ID: correlationId },
         timeout: RUNNER_TIMEOUT_MS,
         maxBuffer: 10 * 1024 * 1024,
       },
@@ -66,8 +78,9 @@ export async function executeLinearIssueRequest(req, res) {
 
     logInfo(`[linear-execute] Completed ${identifier}`);
     return sendJson(res, 202, {
-      status: "completed",
+      status: "execution_complete",
       identifier,
+      correlationId,
     });
   } catch (err) {
     const stderr = typeof err?.stderr === "string" ? err.stderr.trim() : "";
