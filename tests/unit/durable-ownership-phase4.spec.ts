@@ -77,6 +77,49 @@ vi.mock("../../harness/ops/core/symphony-state/default-lease-ms.mjs", () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Router-layer mocks (needed by reconcileWorktreeCounters + capacity tests)
+// ---------------------------------------------------------------------------
+
+const mockWorktrees = [
+  { id: 1, path: "/wt1", port: 4321, activeRequests: 0, failures: 0 },
+  { id: 2, path: "/wt2", port: 4322, activeRequests: 0, failures: 0 },
+  { id: 3, path: "/wt3", port: 4323, activeRequests: 0, failures: 0 },
+  { id: 4, path: "/wt4", port: 4324, activeRequests: 0, failures: 0 },
+  { id: 5, path: "/wt5", port: 4325, activeRequests: 0, failures: 0 },
+];
+
+vi.mock("../../harness/ops/integrations/model/symphony-agent-router/worktrees.mjs", () => ({
+  WORKTREES: mockWorktrees,
+}));
+
+vi.mock("../../harness/ops/integrations/model/symphony-agent-router/logger.mjs", () => ({
+  logInfo: () => {},
+  logWarn: () => {},
+  logError: () => {},
+  logDebug: () => {},
+}));
+
+// The reconciler uses ../../../symphony-state.mjs relative to its location
+vi.mock("../../harness/ops/symphony-state.mjs", async () => {
+  const actual = (await vi.importActual(
+    "../../harness/ops/core/symphony-state/index.mjs",
+  )) as Record<string, unknown>;
+  return actual;
+});
+
+vi.mock("../../harness/ops/core/linear-worktree-health-states.mjs", () => ({
+  LINEAR_WORKTREE_HEALTH_STATES: {
+    AVAILABLE: "available",
+    EXECUTING: "executing",
+    DIRTY_REPAIRABLE: "dirty_repairable",
+    QUARANTINED: "quarantined",
+    DIVERGED: "diverged",
+    INTEGRATION_BLOCKED: "integration_blocked",
+    UNAVAILABLE: "unavailable",
+  },
+}));
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -208,36 +251,6 @@ describe("execute-issue executing guard (Phase 4)", () => {
 // ---------------------------------------------------------------------------
 
 describe("reconcileWorktreeCounters (Phase 4)", () => {
-  // We need to mock the router's WORKTREES and logger for this test
-  const { mockWorktrees } = vi.hoisted(() => ({
-    mockWorktrees: [
-      { id: 1, path: "/wt1", port: 4321, activeRequests: 0, failures: 0 },
-      { id: 2, path: "/wt2", port: 4322, activeRequests: 0, failures: 0 },
-      { id: 3, path: "/wt3", port: 4323, activeRequests: 0, failures: 0 },
-      { id: 4, path: "/wt4", port: 4324, activeRequests: 0, failures: 0 },
-      { id: 5, path: "/wt5", port: 4325, activeRequests: 0, failures: 0 },
-    ],
-  }));
-
-  vi.mock("../../harness/ops/integrations/model/symphony-agent-router/worktrees.mjs", () => ({
-    WORKTREES: mockWorktrees,
-  }));
-  vi.mock("../../harness/ops/integrations/model/symphony-agent-router/logger.mjs", () => ({
-    logInfo: () => {},
-    logWarn: () => {},
-    logError: () => {},
-    logDebug: () => {},
-  }));
-
-  // Also mock the symphony-state import path used by the reconciler
-  // The reconciler uses ../../../symphony-state.mjs relative to its location
-  vi.mock("../../harness/ops/symphony-state.mjs", async () => {
-    const actual = (await vi.importActual(
-      "../../harness/ops/core/symphony-state/index.mjs",
-    )) as Record<string, unknown>;
-    return actual;
-  });
-
   beforeEach(() => {
     rawStateOnDisk = emptyStore();
     // Reset counters
@@ -322,19 +335,6 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
 // ---------------------------------------------------------------------------
 
 describe("getHealthyLinearCapacity assignedIssue field (Phase 4)", () => {
-  // Mock the health states and normalize function
-  vi.mock("../../harness/ops/core/linear-worktree-health-states.mjs", () => ({
-    LINEAR_WORKTREE_HEALTH_STATES: {
-      AVAILABLE: "available",
-      EXECUTING: "executing",
-      DIRTY_REPAIRABLE: "dirty_repairable",
-      QUARANTINED: "quarantined",
-      DIVERGED: "diverged",
-      INTEGRATION_BLOCKED: "integration_blocked",
-      UNAVAILABLE: "unavailable",
-    },
-  }));
-
   beforeEach(() => {
     rawStateOnDisk = emptyStore();
   });

@@ -48,6 +48,18 @@ The migration flag `SCHEDULER_AUTHORITATIVE` is retained as a permanent `true` c
 
 The scheduler always assigns a `worktreeId` at claim time. Claims without worktree assignment are not created — the scheduler skips an issue if no worktree is available. The router rejects dispatch for claims missing `assignment.worktreeId`.
 
+## Durable Execution Ownership (Workstream B)
+
+Workstream B extended the claim model with durable execution state that survives process restart:
+
+- `claimAndAssignWorktree()` atomically sets both issue ownership (lease + assignment) and worktree ownership (`assignedIssue`) under one lock
+- `releaseLease()` atomically clears both sides under one lock
+- The router reconstructs transient counters from durable worktree state on startup and reconciles periodically — but counters are observation only, not correctness inputs
+- `selectLinearWorktree()` uses durable worktree state for availability, not transient counters
+- Integration candidacy is derived from `finalization.state`, not a separate persistent queue
+
+See ADR-0011 for the full execution state model.
+
 ## Consequences
 
 - webhook receiver no longer grants ownership
@@ -57,3 +69,4 @@ The scheduler always assigns a `worktreeId` at claim time. Claims without worktr
 - desired-work queue semantics must be documented and tested as advisory ingress, not independent truth
 - router verifies scheduler claims on all dispatch paths (trigger endpoint and queue drain) — no bypass mode exists
 - the flag is permanent
+- all execution ownership decisions survive process restart and are derived from durable state (see ADR-0011)

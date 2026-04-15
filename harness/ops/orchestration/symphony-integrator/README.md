@@ -23,7 +23,7 @@ Single-writer integration service that drains integration candidates, cherry-pic
 - `process-queue.mjs` - Exports `processQueue`, the main helper defined in this file.
 - `run-daemon.mjs` - Exports `runDaemon`, the main helper defined in this file.
 - `runtime.mjs` - Executable runtime bootstrap for this directory.
-- `scan-for-repaired-candidates.mjs` - Exports `scanForRepairedCandidates`, the main helper defined in this file.
+- `scan-for-repaired-candidates.mjs` - **Retained no-op.** Exports `scanForRepairedCandidates` which does nothing; integration candidates are now derived from `finalization.state` via `listIntegrationCandidates()` (Phase 5).
 - `show-status.mjs` - Exports `showStatus`, the main helper defined in this file.
 
 ## Subdirectories

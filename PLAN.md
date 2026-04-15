@@ -7,7 +7,7 @@ High-Confidence Automation Readiness Requirements for the ANQR Host-Local Harnes
 | Workstream                    | Status         | Started    | Completed  | Notes                                                                                                                                                                                                                                                     |
 | ----------------------------- | -------------- | ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A. Authoritative scheduling   | ✅ Complete    | 2026-04-13 | 2026-04-14 | All dispatch paths (trigger + queue drain) verify scheduler claims; scheduler requires worktreeId at claim time; `verifySchedulerClaim` extracted to shared module; ADR-0002/router/scheduler docs aligned                                                |
-| B. State model normalization  | 🟡 In Progress | 2026-04-15 | —          | Phases 0–5 complete. Phase 0: A-integrity hotfix. Phase 1: schema/helpers/transition map. Phase 2: transition APIs + deprecated helpers removed from production surface. Phase 3: all writers migrated. Phase 4: atomic claim+release, all callers verified. Phase 5: integrationQueue removed, ownership fallbacks observable. Phases 6–7 remaining. |
+| B. State model normalization  | ✅ Complete    | 2026-04-15 | 2026-04-16 | Phases 0–7 complete (gate-verified). Phase 0: A-integrity hotfix. Phase 1: schema/helpers/transition map. Phase 2: transition APIs + deprecated helpers removed from production surface. Phase 3: all writers migrated. Phase 4: atomic claim+release, all callers verified. Phase 5: integrationQueue removed, ownership fallbacks observable and tested, documentation aligned. Phase 6: no-transient-correctness proof, claim lifecycle tests, stale lease handling tests (36 tests). Phase 7: ADR-0011 execution state model, ADR-0002/symphony-state/router/scheduler docs aligned. |
 | C. Recovery demotion          | ✅ Complete    | 2026-04-13 | 2026-04-14 | All recovery git publication removed (including baseline cspell auto-fix + worktree propagation); `checkBaselineHealth` is detect-only; ADR-0005/ADR-0006/recovery docs aligned                                                                           |
 | D. Boundary hardening         | ⬜ Not Started | —          | —          | Depends on A, B, C                                                                                                                                                                                                                                        |
 | E. Config/lifecycle hardening | ⬜ Not Started | —          | —          | Partially parallel                                                                                                                                                                                                                                        |
@@ -199,6 +199,8 @@ Integration candidacy is derived from finalization state. Durable worktree state
 - [x] `releaseLease()` is now atomic (resolved via Blocker 3b)
 - [x] `infer-owner-from-branch.mjs` fallbacks made observable — logs warnings when git-log or reverse-scan heuristics activate, with clear JSDoc documenting the three-tier authority hierarchy (fallbacks retained for repair context only)
 - [x] Tests strengthened: direct `normalizeWorktreeRecord` tests (real module), rejection tests proving lifecycle helpers return null (not silently mutate), atomic release tests
+- [x] Fallback observability proven by test: `infer-owner-fallback-observability.spec.ts` — 6 tests exercising real `infer-owner-from-branch.mjs` module, proving stage 2 (git-log) and stage 3 (reverse-scan) `logWarn` emission, no-warning happy path, graceful fallthrough on git error, and correct worktreeId matching
+- [x] Documentation alignment (gate-review remediation): `harness/ops/README.md` merge conflict resolved and stale export references removed; `harness/ops/core/symphony-state/README.md` inventory corrected (63→71 files, deleted integration-candidate files removed, deprecated helpers marked, missing Phase 1/2/4 files added); `harness/ops/orchestration/symphony-integrator/README.md` `scan-for-repaired-candidates.mjs` marked as retained no-op
 
 ### Remediation Blockers (ordered by correctness priority)
 
@@ -228,21 +230,24 @@ All correctness blockers (1, 2, 3a, 3b, 4, 5a, 5b, 7, 8) are resolved with real 
 7. Run validation
 8. Review and fix follow-up issues
 
-### Phase 6 — Tests (NOT STARTED)
+### Phase 6 — Tests (COMPLETE)
 
-- [ ] `assignment-roundtrip.spec.ts` — (already complete from Phase 0)
-- [ ] Claim/lease/assignment lifecycle tests through transition helpers
-- [ ] Restart reconstruction tests: zeroed counters → durable state → correct view
-- [ ] Stale lease handling, orphaned assignment clearing
-- [ ] Bidirectional ownership consistency through full lifecycle
-- [ ] `no-transient-correctness.spec.ts` — proves router startup with zeroed counters still respects durable ownership
-- [ ] Integration candidacy ownership tests
+- [x] `assignment-roundtrip.spec.ts` — (already complete from Phase 0)
+- [x] `no-transient-correctness.spec.ts` — 10 tests proving router startup with zeroed transient counters still respects durable ownership: restart reconstruction, durable-state availability filtering, stale counter correction, counter-independent dispatch safety, full 4-worktree restart scenario, claim-then-restart cycle
+- [x] `claim-lifecycle-phase6.spec.ts` — 14 tests exercising complete lifecycle through transition helpers: claimAndAssignWorktree atomicity (both sides set or neither on failure), acquireLease claimed→executing, releaseLease bidirectional atomicity, full lifecycle claim→execute→push→integration→evidence→complete, parallel claims on different worktrees, dispatch failure rollback, integration candidacy persistence after worktree release, multiple candidates from different worktrees
+- [x] `stale-lease-phase6.spec.ts` — 12 tests covering stale lease handling and orphaned assignments: findExpiredLeases identification of expired/active/lease-less, boundary testing with custom timestamps, releaseLease on expired lease (direct cleanup, bidirectional), nonce mismatch rejection, orphaned assignment clearing, finalization worktreeId fallback for orphan clearing, crash scenario (expired lease + executing worktree → both cleaned)
+- [x] Bidirectional ownership consistency through full lifecycle (covered in claim-lifecycle-phase6.spec.ts)
+- [x] Integration candidacy ownership tests (covered in claim-lifecycle-phase6.spec.ts)
+- [x] Phase 4 brittle mock placement resolved — `durable-ownership-phase4.spec.ts` nested `vi.mock`/`vi.hoisted` calls moved to module top level, eliminating all 5 Vitest warnings
 
-### Phase 7 — Documentation (NOT STARTED)
+### Phase 7 — Documentation (COMPLETE)
 
-- [ ] ADR-0011: execution state model — explicitly states: Linear = desired work truth, durable local state = execution ownership truth, router memory = observation only
-- [ ] Update ADR-0002, symphony-state README, router README
-- [ ] Update PLAN.md as phases land
+- [x] ADR-0011: execution state model created — explicitly states: Linear = desired work truth, durable local state = execution ownership truth, router memory = observation only. Documents the three truth domains, authority hierarchy, key invariants (atomic claim/release, startup reconstruction, counter independence), and consequences.
+- [x] ADR-0002 updated: added "Durable Execution Ownership (Workstream B)" section documenting atomic claim+release, startup reconstruction, counter independence, and integration candidacy derivation; cross-references ADR-0011
+- [x] Symphony-state README updated: reflects Phase 1–6 architecture with lifecycle APIs, transition helpers, ownership model, key invariants, and deprecated helper status
+- [x] Router README updated: added "Durable State Authority" section documenting startup reconstruction, periodic reconciliation, and counter independence; cross-references ADR-0002 and ADR-0011
+- [x] Scheduler README updated: resolved merge conflict markers; updated claim flow to reference `claimAndAssignWorktree()` (atomic bidirectional); added dispatch failure rollback; cross-references ADR-0011
+- [x] PLAN.md updated: Workstream B marked complete
 
 ### B Finish Line
 

@@ -4,6 +4,31 @@
 
 Router control plane that accepts scheduler-issued triggers, verifies scheduler-owned claims and durable worktree assignment, and forwards work into the assigned worktree-local bridge.
 
+The router is transport and load-shedding logic only — it does not originate claims, select worktrees for unclaimed work, or make scheduling decisions. See ADR-0002 and ADR-0011.
+
+## Durable State Authority (Workstream B Phase 4–6)
+
+After Workstream B, the router no longer relies on transient memory for correctness:
+
+### Startup Reconstruction
+
+On startup (`runtime.mjs`), transient `activeRequests` counters are initialized from durable worktree state. Worktrees in `"executing"` state get their counter set to 1. This ensures the router has an accurate view immediately after restart.
+
+### Periodic Reconciliation
+
+`reconcileWorktreeCounters()` periodically syncs transient counters with durable state for Linear worktrees (wt1–4). If durable state says executing but counter is 0, the counter is corrected up. If durable state says not executing but counter is >0, the counter is corrected down. Discord worktrees (wt5–8) are not reconciled because they use transient HTTP proxy routing without durable claims.
+
+### Counter Independence
+
+Even with zeroed counters (fresh restart before reconciliation runs), the router makes correct decisions because:
+
+- `selectLinearWorktree()` filters out worktrees in `"executing"` durable state
+- `handleLinearTrigger()` trusts the scheduler's durable assignment — skips counter-based busy checks when target is from scheduler's claim
+- `dispatchLinearExecution()` trusts scheduler assignment — skips counter-based busy checks when `assignedTarget` is provided
+- Queue drain in `runtime.mjs` uses durable state for available-slot counting
+
+Counters remain useful for the `/status` health endpoint and Discord load-shedding, but they are observation aids, not correctness inputs for Linear scheduling.
+
 ## Contents
 
 - 26 immediate files
@@ -45,8 +70,10 @@ Router control plane that accepts scheduler-issued triggers, verifies scheduler-
 ## Operational Notes
 
 - After Workstream A, the router is transport and load-shedding logic, not a claim originator.
-- Both immediate trigger handling and queued trigger draining are expected to re-verify scheduler-owned claims before dispatch.
+- Both immediate trigger handling and queued trigger draining re-verify scheduler-owned claims before dispatch via `verifySchedulerClaim()`.
+- `reconcileWorktreeCounters()` runs on a periodic interval (configured in `runtime.mjs`) to keep transient counters aligned with durable state.
+- Startup reconstruction reads durable `worktreeStates` and initializes `activeRequests` counters before the HTTP server starts.
 
 ## Review Focus
 
-Check that the router honours durable assignment and no longer re-selects worktrees or dispatches unclaimed work.
+Verify that the router honours durable assignment and never re-selects worktrees or dispatches unclaimed work. Confirm that no scheduling decision depends on transient counter accuracy alone.
