@@ -1,5 +1,6 @@
 import fs from "node:fs";
 
+import { assertBridgeMutationBoundary } from "./assert-bridge-mutation-boundary.mjs";
 import { getCurrentRequestId } from "./get-current-request-id.mjs";
 import { resolveRequestPath } from "./resolve-request-path.mjs";
 import { trackFileChange } from "./track-file-change.mjs";
@@ -7,7 +8,9 @@ import { logError } from "./logger.mjs";
 
 export async function writeFileTool({ path: filePath, content }) {
   try {
-    fs.writeFileSync(resolveRequestPath(filePath), content, "utf-8");
+    const resolved = resolveRequestPath(filePath);
+    assertBridgeMutationBoundary(resolved);
+    fs.writeFileSync(resolved, content, "utf-8");
 
     // Track file change for current request
     const reqId = getCurrentRequestId();

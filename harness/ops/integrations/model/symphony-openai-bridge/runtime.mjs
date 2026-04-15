@@ -9,7 +9,7 @@ import {
   server,
 } from "./index.mjs";
 
-import { logDebug, logInfo } from "./logger.mjs";
+import { logDebug, logInfo, logWarn } from "./logger.mjs";
 import { setupProcessHandlers } from "./setup-process-handlers.mjs";
 import { runRetrievalWarmup } from "./startup-retrieval-warmup.mjs";
 import { logStartupBanner } from "./startup-banner.mjs";
@@ -39,6 +39,21 @@ server.listen(PORT, "127.0.0.1", async () => {
 
   const warmupResult = await runRetrievalWarmup();
   await logStartupBanner(warmupResult);
+
+  // E Phase 4: Advisory config preflight at bridge startup.
+  // Logs warnings for config drift but does NOT block the bridge — validateStartupEnv
+  // (in server.mjs) already catches fatal env misconfigurations. Config surface drift
+  // is an operational concern worth logging, not worth killing the bridge.
+  try {
+    const { enforceConfigPreflight } = await import(
+      "../../../harness-doctor/enforce-config-preflight.mjs"
+    );
+    await enforceConfigPreflight();
+    logInfo("[startup] ✅ Config preflight passed");
+  } catch (err) {
+    logWarn(`[startup] ⚠️ Config preflight advisory: ${err.message}`);
+  }
+
   await runStartupSelfTests();
   await sendStartupDiscordNotification();
   initializeProbes();

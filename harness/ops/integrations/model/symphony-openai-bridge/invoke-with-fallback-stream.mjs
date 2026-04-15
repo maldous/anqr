@@ -56,6 +56,8 @@ export async function invokeWithFallbackStream(
   initialProvider = null,
 ) {
   const triedProviders = [...initialExcluded];
+  const fallbackChain = [];
+  const contextReductions = [];
   let lastError = null;
   let attemptNumber = 0;
   let contextBudgetCap = null;
@@ -80,7 +82,16 @@ export async function invokeWithFallbackStream(
       } else {
         errorMsg = `No providers available for ${route.responseModelId} - check env vars and provider failures`;
       }
-      throw new Error(errorMsg);
+      const exhaustionError = new Error(errorMsg);
+      exhaustionError.safetyNetData = {
+        triedProviders: [...triedProviders],
+        routeModelId: route.responseModelId,
+        lastError,
+        contextBudgetCap,
+        fallbackChain: [...fallbackChain],
+        contextReductions: [...contextReductions],
+      };
+      throw exhaustionError;
     }
     logInfo(
       `${attemptNumber === 1 ? "🎯 PROVIDER SELECTED" : "🔄 FALLBACK ATTEMPT"}: ${provider.name} (${provider.model}) - attempt ${attemptNumber}`,
@@ -174,11 +185,20 @@ export async function invokeWithFallbackStream(
       }
 
       releaseProviderLease(provider);
+      fallbackChain.push({
+        providerName: provider.name,
+        model: provider.model,
+        attemptNumber,
+        outcome: "success",
+        durationMs: Date.now() - startedAt,
+      });
       return {
         text: result.text,
         providerName: provider.name,
         attempts: attemptNumber,
         triedProviders: [...triedProviders],
+        fallbackChain: [...fallbackChain],
+        contextReductions: [...contextReductions],
         _symphonyResult: result._symphonyResult || null,
       };
     } catch (err) {
@@ -213,17 +233,33 @@ export async function invokeWithFallbackStream(
         // instead of repeating the same oversized request.
         const limit = details.reportedLimit;
         if (limit) {
+          const previousCap = contextBudgetCap;
           contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, limit) : limit;
           logInfo(
             `📉 Context budget cap: ${contextBudgetCap} tokens (from ${provider.name} limit=${limit})`,
           );
+          contextReductions.push({
+            providerName: provider.name,
+            previousCap,
+            newCap: contextBudgetCap,
+            reason: "reported_limit",
+            reportedLimit: limit,
+          });
         } else if (details.requestedTokens) {
           // No explicit limit reported — estimate conservatively at 60% of what was requested
+          const previousCap = contextBudgetCap;
           const estimated = Math.floor(details.requestedTokens * 0.6);
           contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, estimated) : estimated;
           logInfo(
             `📉 Context budget cap (estimated): ${contextBudgetCap} tokens (from ${provider.name} requested=${details.requestedTokens})`,
           );
+          contextReductions.push({
+            providerName: provider.name,
+            previousCap,
+            newCap: contextBudgetCap,
+            reason: "estimated_from_request",
+            requestedTokens: details.requestedTokens,
+          });
         }
       } else if (errorType === ERROR_TYPES.RATE_LIMITED) {
         const rlInfo = parseRateLimitInfo(err);
@@ -231,6 +267,15 @@ export async function invokeWithFallbackStream(
       }
 
       releaseProviderLease(provider);
+      fallbackChain.push({
+        providerName: provider.name,
+        model: provider.model,
+        attemptNumber,
+        outcome: "failure",
+        durationMs: Date.now() - startedAt,
+        errorType: errorType || "unknown",
+        errorMessage: errStr.slice(0, 200),
+      });
       if (sessionId) {
         clearSessionProvider(sessionId);
         logInfo(

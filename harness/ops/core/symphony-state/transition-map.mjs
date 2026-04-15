@@ -85,11 +85,11 @@ export const ISSUE_TRANSITION_MAP = Object.freeze({
   [ISSUE_PHASES.integration_pending]: new Set([
     ISSUE_PHASES.evidence_pending,
     ISSUE_PHASES.integration_failed,
-    ISSUE_PHASES.completed, // direct completion (no evidence needed)
   ]),
 
   [ISSUE_PHASES.evidence_pending]: new Set([
     ISSUE_PHASES.completed,
+    ISSUE_PHASES.evidence_pending, // metadata annotation during retry
     ISSUE_PHASES.integration_pending, // retry evidence publication
     ISSUE_PHASES.integration_failed, // error during closeout
   ]),

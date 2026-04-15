@@ -106,8 +106,6 @@ export async function main() {
 
       patchIssueState(issue.identifier, {
         source: "email",
-        human_only: true,
-        blocked_reason: "human_only",
         external_keys: [externalKey],
       });
       addExternalKey(issue.identifier, externalKey);

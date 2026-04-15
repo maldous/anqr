@@ -16,13 +16,9 @@ import {
 import { logWarn, logError, logDebug } from "./logger.mjs";
 import { detectWorktree } from "./detect-worktree.mjs";
 import { setWorktreeId } from "./worktree-id.mjs";
-import { setAutoDetectedWorktreeId } from "./auto-detected-worktree-id.mjs";
 import { setSyncFailCount } from "./sync-fail-count.mjs";
 
 const detectedId = detectWorktree(cwd, gitPath);
-if (detectedId) {
-  setAutoDetectedWorktreeId(detectedId);
-}
 
 logDebug(
   `[worktree-debug] ANQR_WORKTREE_ID env var: ${process.env.ANQR_WORKTREE_ID || "(not set)"}`,

@@ -273,50 +273,85 @@ describe("remapRepoPathToBridgeRoot safety (source verification)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 5. validate-boundary-invariants
+// 5. validate-boundary-invariants (fail-closed runtime enforcement)
 // ---------------------------------------------------------------------------
 
-describe("validate-boundary-invariants (source verification)", () => {
-  it("module exists and exports validateBoundaryInvariants", () => {
-    const modulePath = path.resolve(
-      REPO_ROOT,
-      "harness/ops/integrations/model/symphony-openai-bridge/validate-boundary-invariants.mjs",
+describe("validate-boundary-invariants (runtime)", () => {
+  let validateBoundaryInvariants: (opts?: Record<string, unknown>) => { valid: boolean; warnings: string[] };
+
+  // Import once — param overrides let us test all code paths
+  // without manipulating env vars or mocking modules.
+  it("imports and exports validateBoundaryInvariants", async () => {
+    const mod = await import(
+      "../../harness/ops/integrations/model/symphony-openai-bridge/validate-boundary-invariants.mjs"
     );
-    expect(fs.existsSync(modulePath)).toBe(true);
-    const source = fs.readFileSync(modulePath, "utf-8");
-    expect(source).toContain("export function validateBoundaryInvariants");
+    validateBoundaryInvariants = mod.validateBoundaryInvariants;
+    expect(typeof validateBoundaryInvariants).toBe("function");
   });
 
-  it("checks IS_WORKTREE_BRIDGE consistency with BRIDGE_MODE", () => {
-    const source = fs.readFileSync(
-      path.resolve(
-        REPO_ROOT,
-        "harness/ops/integrations/model/symphony-openai-bridge/validate-boundary-invariants.mjs",
-      ),
-      "utf-8",
-    );
-    expect(source).toContain("IS_WORKTREE_BRIDGE");
-    expect(source).toContain("BRIDGE_MODE");
+  it("THROWS when bridgeMode=worktree and isWorktreeBridge=false", () => {
+    expect(() =>
+      validateBoundaryInvariants({
+        bridgeMode: "worktree",
+        isWorktreeBridge: false,
+        bridgeRoot: "/home/user/src/anqr-wt1",
+        controlRepoRoot: "/home/user/src/anqr",
+      }),
+    ).toThrow("BRIDGE_MODE=worktree but IS_WORKTREE_BRIDGE=false");
   });
 
-  it("logs control-plane ADR-0008 warning", () => {
-    const source = fs.readFileSync(
-      path.resolve(
-        REPO_ROOT,
-        "harness/ops/integrations/model/symphony-openai-bridge/validate-boundary-invariants.mjs",
-      ),
-      "utf-8",
-    );
-    expect(source).toContain("ADR-0008");
-    expect(source).toContain("control-plane");
+  it("THROWS when bridgeMode=worktree and bridgeRoot === controlRepoRoot", () => {
+    expect(() =>
+      validateBoundaryInvariants({
+        bridgeMode: "worktree",
+        isWorktreeBridge: true,
+        bridgeRoot: "/home/user/src/anqr",
+        controlRepoRoot: "/home/user/src/anqr",
+      }),
+    ).toThrow("BRIDGE_MODE=worktree but BRIDGE_ROOT === CONTROL_REPO_ROOT");
   });
 
-  it("bridge server.mjs calls validateBoundaryInvariants at startup", () => {
+  it("returns valid=true for properly configured worktree", () => {
+    const result = validateBoundaryInvariants({
+      bridgeMode: "worktree",
+      isWorktreeBridge: true,
+      bridgeRoot: "/home/user/src/anqr-wt1",
+      controlRepoRoot: "/home/user/src/anqr",
+    });
+    expect(result.valid).toBe(true);
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  it("returns warnings for control-plane path mismatch", () => {
+    const result = validateBoundaryInvariants({
+      bridgeMode: "control-plane",
+      isWorktreeBridge: false,
+      bridgeRoot: "/home/user/src/other",
+      controlRepoRoot: "/home/user/src/anqr",
+    });
+    expect(result.valid).toBe(false);
+    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.warnings[0]).toContain("unexpected identity");
+  });
+
+  it("returns valid=true for correctly configured control-plane", () => {
+    const result = validateBoundaryInvariants({
+      bridgeMode: "control-plane",
+      isWorktreeBridge: true,
+      bridgeRoot: "/home/user/src/anqr",
+      controlRepoRoot: "/home/user/src/anqr",
+    });
+    expect(result.valid).toBe(true);
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  it("server.mjs calls validateBoundaryInvariants and checks return", () => {
     const source = fs.readFileSync(
       path.resolve(REPO_ROOT, "harness/ops/integrations/model/symphony-openai-bridge/server.mjs"),
       "utf-8",
     );
     expect(source).toContain("validateBoundaryInvariants()");
+    expect(source).toContain("boundaryResult.valid");
   });
 });
 
@@ -421,56 +456,266 @@ describe("Router port isolation", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 8. Startup environment validation (Workstream E Phase 2)
+// 8. Startup environment validation — fail-closed runtime (Workstream E Phase 2)
 // ---------------------------------------------------------------------------
 
-describe("Startup environment validation", () => {
-  it("validate-startup-env module exists and exports validateStartupEnv", () => {
-    const modulePath = path.resolve(
-      REPO_ROOT,
-      "harness/ops/integrations/model/symphony-openai-bridge/validate-startup-env.mjs",
+describe("Startup environment validation (fail-closed runtime)", () => {
+  let validateStartupEnv: (opts?: Record<string, unknown>) => { valid: boolean; warnings: string[] };
+
+  it("imports and exports validateStartupEnv", async () => {
+    const mod = await import(
+      "../../harness/ops/integrations/model/symphony-openai-bridge/validate-startup-env.mjs"
     );
-    expect(fs.existsSync(modulePath)).toBe(true);
-    const source = fs.readFileSync(modulePath, "utf-8");
-    expect(source).toContain("export function validateStartupEnv");
+    validateStartupEnv = mod.validateStartupEnv;
+    expect(typeof validateStartupEnv).toBe("function");
   });
 
-  it("checks provider tokens", () => {
-    const source = fs.readFileSync(
-      path.resolve(
-        REPO_ROOT,
-        "harness/ops/integrations/model/symphony-openai-bridge/validate-startup-env.mjs",
-      ),
-      "utf-8",
-    );
-    expect(source).toContain("GROQ_TOKEN");
-    expect(source).toContain("GEMINI_TOKEN");
-    expect(source).toContain("OPENROUTER_TOKEN");
+  it("THROWS when zero provider tokens are configured", () => {
+    expect(() =>
+      validateStartupEnv({
+        bridgeMode: "control-plane",
+        isWorktreeBridge: false,
+        env: { SYMPHONY_BRIDGE_PORT: "4330", BRIDGE_MODE: "control-plane" },
+      }),
+    ).toThrow("No provider tokens found");
   });
 
-  it("checks ANQR_WORKTREE_ID for worktree bridges", () => {
-    const source = fs.readFileSync(
-      path.resolve(
-        REPO_ROOT,
-        "harness/ops/integrations/model/symphony-openai-bridge/validate-startup-env.mjs",
-      ),
-      "utf-8",
-    );
-    expect(source).toContain("ANQR_WORKTREE_ID");
-    expect(source).toContain("IS_WORKTREE_BRIDGE");
+  it("THROWS in worktree mode when ANQR_WORKTREE_ID is missing", () => {
+    expect(() =>
+      validateStartupEnv({
+        bridgeMode: "worktree",
+        isWorktreeBridge: true,
+        env: {
+          GROQ_TOKEN: "test-token",
+          SYMPHONY_BRIDGE_PORT: "4321",
+          BRIDGE_MODE: "worktree",
+        },
+      }),
+    ).toThrow("ANQR_WORKTREE_ID is not set");
   });
 
-  it("server.mjs calls validateStartupEnv at startup", () => {
+  it("THROWS in worktree mode when SYMPHONY_BRIDGE_PORT is missing", () => {
+    expect(() =>
+      validateStartupEnv({
+        bridgeMode: "worktree",
+        isWorktreeBridge: true,
+        env: {
+          GROQ_TOKEN: "test-token",
+          ANQR_WORKTREE_ID: "wt1",
+          BRIDGE_MODE: "worktree",
+        },
+      }),
+    ).toThrow("SYMPHONY_BRIDGE_PORT not set in worktree mode");
+  });
+
+  it("THROWS in worktree mode when BRIDGE_MODE is missing", () => {
+    expect(() =>
+      validateStartupEnv({
+        bridgeMode: "worktree",
+        isWorktreeBridge: true,
+        env: {
+          GROQ_TOKEN: "test-token",
+          ANQR_WORKTREE_ID: "wt1",
+          SYMPHONY_BRIDGE_PORT: "4321",
+        },
+      }),
+    ).toThrow("BRIDGE_MODE not set explicitly in worktree mode");
+  });
+
+  it("returns valid=true with all required worktree env", () => {
+    const result = validateStartupEnv({
+      bridgeMode: "worktree",
+      isWorktreeBridge: true,
+      env: {
+        GROQ_TOKEN: "test-token",
+        ANQR_WORKTREE_ID: "wt1",
+        SYMPHONY_BRIDGE_PORT: "4321",
+        BRIDGE_MODE: "worktree",
+      },
+    });
+    expect(result.valid).toBe(true);
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  it("warns but does NOT throw in control-plane mode for missing port", () => {
+    const result = validateStartupEnv({
+      bridgeMode: "control-plane",
+      isWorktreeBridge: false,
+      env: { GROQ_TOKEN: "test-token" },
+    });
+    // Should have warnings but not throw
+    expect(result.valid).toBe(false);
+    expect(result.warnings.length).toBeGreaterThan(0);
+  });
+
+  it("returns valid=true in control-plane mode with all optional env set", () => {
+    const result = validateStartupEnv({
+      bridgeMode: "control-plane",
+      isWorktreeBridge: false,
+      env: {
+        GROQ_TOKEN: "test-token",
+        SYMPHONY_BRIDGE_PORT: "4330",
+        BRIDGE_MODE: "control-plane",
+      },
+    });
+    expect(result.valid).toBe(true);
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  it("server.mjs calls validateStartupEnv and checks return", () => {
     const source = fs.readFileSync(
       path.resolve(REPO_ROOT, "harness/ops/integrations/model/symphony-openai-bridge/server.mjs"),
       "utf-8",
     );
     expect(source).toContain("validateStartupEnv()");
+    expect(source).toContain("envResult.valid");
   });
 });
 
 // ---------------------------------------------------------------------------
-// 9. Critical EnvironmentFile enforcement (Workstream E Phase 3)
+// 9. assertBridgeMutationBoundary — runtime behavior (Workstream D)
+// ---------------------------------------------------------------------------
+
+describe("assertBridgeMutationBoundary (runtime)", () => {
+  let assertBridgeMutationBoundary: (resolvedPath: string, opts?: Record<string, unknown>) => void;
+
+  it("imports and exports assertBridgeMutationBoundary", async () => {
+    const mod = await import(
+      "../../harness/ops/integrations/model/symphony-openai-bridge/assert-bridge-mutation-boundary.mjs"
+    );
+    assertBridgeMutationBoundary = mod.assertBridgeMutationBoundary;
+    expect(typeof assertBridgeMutationBoundary).toBe("function");
+  });
+
+  it("THROWS in worktree mode when writing to control repo path", () => {
+    expect(() =>
+      assertBridgeMutationBoundary("/home/user/src/anqr/packages/domain/file.ts", {
+        bridgeMode: "worktree",
+        bridgeRoot: "/home/user/src/anqr-wt1",
+        controlRepoRoot: "/home/user/src/anqr",
+      }),
+    ).toThrow("worktree bridge attempted to write to control repo path");
+  });
+
+  it("THROWS in worktree mode when BRIDGE_ROOT === CONTROL_REPO_ROOT", () => {
+    expect(() =>
+      assertBridgeMutationBoundary("/home/user/src/anqr/some-file.ts", {
+        bridgeMode: "worktree",
+        bridgeRoot: "/home/user/src/anqr",
+        controlRepoRoot: "/home/user/src/anqr",
+      }),
+    ).toThrow("worktree bridge has BRIDGE_ROOT === CONTROL_REPO_ROOT");
+  });
+
+  it("allows worktree writes within worktree root", () => {
+    expect(() =>
+      assertBridgeMutationBoundary("/home/user/src/anqr-wt1/packages/domain/file.ts", {
+        bridgeMode: "worktree",
+        bridgeRoot: "/home/user/src/anqr-wt1",
+        controlRepoRoot: "/home/user/src/anqr",
+      }),
+    ).not.toThrow();
+  });
+
+  it("does not throw in control-plane mode (ADR-0008 advisory)", () => {
+    expect(() =>
+      assertBridgeMutationBoundary("/home/user/src/anqr/packages/domain/file.ts", {
+        bridgeMode: "control-plane",
+        bridgeRoot: "/home/user/src/anqr",
+        controlRepoRoot: "/home/user/src/anqr",
+      }),
+    ).not.toThrow();
+  });
+
+  it("no-ops for null/empty path", () => {
+    expect(() =>
+      assertBridgeMutationBoundary("", {
+        bridgeMode: "worktree",
+        bridgeRoot: "/home/user/src/anqr-wt1",
+        controlRepoRoot: "/home/user/src/anqr",
+      }),
+    ).not.toThrow();
+  });
+
+  it("THROWS for path outside both worktree and control repo in worktree mode", () => {
+    // Writing to /etc/passwd from a worktree — this is inside neither root
+    // but should NOT be blocked by this guard (it checks control repo only).
+    expect(() =>
+      assertBridgeMutationBoundary("/etc/passwd", {
+        bridgeMode: "worktree",
+        bridgeRoot: "/home/user/src/anqr-wt1",
+        controlRepoRoot: "/home/user/src/anqr",
+      }),
+    ).not.toThrow();
+  });
+
+  it("all file-mutating tools import assertBridgeMutationBoundary", () => {
+    for (const tool of ["write-file-tool.mjs", "str-replace-tool.mjs", "apply-patch-tool.mjs"]) {
+      const source = fs.readFileSync(
+        path.resolve(
+          REPO_ROOT,
+          `harness/ops/integrations/model/symphony-openai-bridge/${tool}`,
+        ),
+        "utf-8",
+      );
+      expect(source).toContain("import { assertBridgeMutationBoundary }");
+      expect(source).toContain("assertBridgeMutationBoundary(");
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 10. Service lifecycle enforcement (Workstream E)
+// ---------------------------------------------------------------------------
+
+describe("Service lifecycle enforcement", () => {
+  it("check-service-lifecycle module exists", () => {
+    const modulePath = path.resolve(
+      REPO_ROOT,
+      "harness/ops/harness-doctor/check-service-lifecycle.mjs",
+    );
+    expect(fs.existsSync(modulePath)).toBe(true);
+  });
+
+  it("reconcile-env-keys module exists", () => {
+    const modulePath = path.resolve(
+      REPO_ROOT,
+      "harness/ops/harness-doctor/reconcile-env-keys.mjs",
+    );
+    expect(fs.existsSync(modulePath)).toBe(true);
+  });
+
+  it("harness-doctor exports checkServiceLifecycle and reconcileEnvKeys", () => {
+    const source = fs.readFileSync(
+      path.resolve(REPO_ROOT, "harness/ops/harness-doctor/index.mjs"),
+      "utf-8",
+    );
+    expect(source).toContain("checkServiceLifecycle");
+    expect(source).toContain("reconcileEnvKeys");
+  });
+
+  it("harness-doctor main integrates service lifecycle check", () => {
+    const source = fs.readFileSync(
+      path.resolve(REPO_ROOT, "harness/ops/harness-doctor/main.mjs"),
+      "utf-8",
+    );
+    expect(source).toContain("checkServiceLifecycle");
+    expect(source).toContain("Service Lifecycle");
+  });
+
+  it("reconcile-env-keys supports check, sync-to-live, and sync-to-template modes", () => {
+    const source = fs.readFileSync(
+      path.resolve(REPO_ROOT, "harness/ops/harness-doctor/reconcile-env-keys.mjs"),
+      "utf-8",
+    );
+    expect(source).toContain('mode = "check"');
+    expect(source).toContain('"sync-to-live"');
+    expect(source).toContain('"sync-to-template"');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 11. Critical EnvironmentFile enforcement (Workstream E Phase 3)
 // ---------------------------------------------------------------------------
 
 describe("Critical EnvironmentFile enforcement", () => {

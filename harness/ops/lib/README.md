@@ -9,9 +9,6 @@ Lib contains the code, configuration, or support files that implement this part 
 - 8 immediate files
 - 6 child directories
 
-<<<<<<< ours — heading `Key Files` (F, confidence: medium)
-// hint: Logic changed on both sides. Requires understanding intent of each change.
-
 ## Key Files
 
 - `correlation-id.mjs` - Re-export facade that assembles the public surface for this directory.
@@ -22,21 +19,6 @@ Lib contains the code, configuration, or support files that implement this part 
 - `sonar-linear-sync.mjs` - JavaScript/TypeScript module used by this directory.
 - `structured-log.mjs` - Exports `createStructuredLogger`, the main helper defined in this file.
 - `update-memory.mjs` - Exports `updateMemory`, the main helper defined in this file.
-
-=======
-
-## Key Files
-
-- `correlation-id.mjs` - Re-export facade that assembles the public surface for this directory.
-- `durable-kv.mjs` - Re-export facade that assembles the public surface for this directory.
-- `logger.mjs` - JavaScript/TypeScript module used by this directory.
-- `logger.spec.ts` - \*
-- `notify.mjs` - JavaScript/TypeScript module used by this directory.
-- `sonar-linear-sync.mjs` - JavaScript/TypeScript module used by this directory.
-- `structured-log.mjs` - Exports `createStructuredLogger`, the main helper defined in this file.
-- `update-memory.mjs` - Exports `updateMemory`, the main helper defined in this file.
-
-> > > > > > > theirs — heading `Key Files` (F, confidence: medium)
 
 ## Subdirectories
 

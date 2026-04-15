@@ -46,6 +46,7 @@ import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 export async function invokeWithFallback(messages, route, sessionId = null, cwd = null) {
   const triedProviders = [];
   const fallbackChain = [];
+  const contextReductions = [];
   let lastError = null;
   let attemptNumber = 0;
   let contextBudgetCap = null;
@@ -89,7 +90,17 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         routeModelId: route.responseModelId,
         lastError: lastError ? lastError.slice(0, 200) : null,
       });
-      throw new Error(errorMsg);
+      const exhaustionError = new Error(errorMsg);
+      // Attach safety-net data for evidence emission by the caller
+      exhaustionError.safetyNetData = {
+        triedProviders: [...triedProviders],
+        routeModelId: route.responseModelId,
+        lastError,
+        contextBudgetCap,
+        fallbackChain: [...fallbackChain],
+        contextReductions: [...contextReductions],
+      };
+      throw exhaustionError;
     }
 
     const isCodebuffProvider =
@@ -182,6 +193,7 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         attempts: attemptNumber,
         triedProviders: [...triedProviders],
         fallbackChain: [...fallbackChain],
+        contextReductions: [...contextReductions],
         _symphonyResult: result._symphonyResult || null,
       };
     } catch (err) {
@@ -225,16 +237,32 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         // instead of repeating the same oversized request.
         const limit = details.reportedLimit;
         if (limit) {
+          const previousCap = contextBudgetCap;
           contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, limit) : limit;
           logInfo(
             `📉 Context budget cap: ${contextBudgetCap} tokens (from ${provider.name} limit=${limit})`,
           );
+          contextReductions.push({
+            providerName: provider.name,
+            previousCap,
+            newCap: contextBudgetCap,
+            reason: "reported_limit",
+            reportedLimit: limit,
+          });
         } else if (details.requestedTokens) {
+          const previousCap = contextBudgetCap;
           const estimated = Math.floor(details.requestedTokens * 0.6);
           contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, estimated) : estimated;
           logInfo(
             `📉 Context budget cap (estimated): ${contextBudgetCap} tokens (from ${provider.name} requested=${details.requestedTokens})`,
           );
+          contextReductions.push({
+            providerName: provider.name,
+            previousCap,
+            newCap: contextBudgetCap,
+            reason: "estimated_from_request",
+            requestedTokens: details.requestedTokens,
+          });
         }
       } else if (errorType === ERROR_TYPES.RATE_LIMITED) {
         const rlInfo = parseRateLimitInfo(err);

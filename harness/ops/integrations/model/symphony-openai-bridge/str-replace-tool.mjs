@@ -1,5 +1,6 @@
 import fs from "node:fs";
 
+import { assertBridgeMutationBoundary } from "./assert-bridge-mutation-boundary.mjs";
 import { getCurrentRequestId } from "./get-current-request-id.mjs";
 import { resolveRequestPath } from "./resolve-request-path.mjs";
 import { trackFileChange } from "./track-file-change.mjs";
@@ -7,7 +8,9 @@ import { logError } from "./logger.mjs";
 
 export async function strReplaceTool({ path: filePath, replacements }) {
   try {
-    let content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
+    const resolved = resolveRequestPath(filePath);
+    assertBridgeMutationBoundary(resolved);
+    let content = fs.readFileSync(resolved, "utf-8");
 
     // Defensive normalization (workaround for SDK bug sending string instead of array)
     const replacementsList = Array.isArray(replacements) ? replacements : [replacements];
@@ -30,7 +33,7 @@ export async function strReplaceTool({ path: filePath, replacements }) {
       }
     }
 
-    fs.writeFileSync(resolveRequestPath(filePath), content, "utf-8");
+    fs.writeFileSync(resolved, content, "utf-8");
 
     // Track file change for current request
     const reqId = getCurrentRequestId();

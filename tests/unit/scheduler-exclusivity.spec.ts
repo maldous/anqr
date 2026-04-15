@@ -110,7 +110,7 @@ describe("Scheduler exclusivity — ADR-0002 (real claimIssue module)", () => {
     };
     const result = claimIssue("ANQ-300", { worktreeId: "wt1" });
     expect(result.ok).toBe(false);
-    expect(result.reason).toBe("human_only");
+    expect(result.reason).toBe("blocked");
   });
 
   it("should reject claim for retry-exhausted issue", async () => {
@@ -120,7 +120,7 @@ describe("Scheduler exclusivity — ADR-0002 (real claimIssue module)", () => {
     };
     const result = claimIssue("ANQ-400", { worktreeId: "wt1" });
     expect(result.ok).toBe(false);
-    expect(result.reason).toBe("retry_exhausted");
+    expect(result.reason).toBe("blocked");
   });
 
   it("should reject claim for blocked issue", async () => {
@@ -341,18 +341,20 @@ describe("Desired-work queue consumption — ADR-0002", () => {
       "harness/ops/orchestration/symphony-scheduler/drain-desired-work.mjs",
       "utf-8",
     );
-    const webhook = fs.readFileSync(
-      "harness/ops/integrations/model/linear-webhook-receiver/trigger-issue-execution.mjs",
+    // Webhook delegates to enqueue-desired-work.mjs which holds the queue name
+    const webhookEnqueue = fs.readFileSync(
+      "harness/ops/integrations/model/linear-webhook-receiver/enqueue-desired-work.mjs",
       "utf-8",
     );
-    const reconciler = fs.readFileSync(
-      "harness/ops/orchestration/linear-reconciler/run-reconciliation-cycle/run-reconciliation-cycle.mjs",
+    // Reconciler delegates to feed-desired-work-queue.mjs which holds the queue name
+    const reconcilerFeed = fs.readFileSync(
+      "harness/ops/orchestration/linear-reconciler/run-reconciliation-cycle/feed-desired-work-queue.mjs",
       "utf-8",
     );
     // All three must use the same queue name
     expect(scheduler).toContain('"symphony-desired-work"');
-    expect(webhook).toContain('"symphony-desired-work"');
-    expect(reconciler).toContain('"symphony-desired-work"');
+    expect(webhookEnqueue).toContain('"symphony-desired-work"');
+    expect(reconcilerFeed).toContain('"symphony-desired-work"');
   });
 });
 
@@ -456,9 +458,9 @@ describe("Scheduler worktree assignment at claim time — ADR-0002", () => {
     expect(source).toContain("capacity.worktrees");
     expect(source).toContain("healthy");
     expect(source).toContain("executing");
-    // Must pass worktreeId into claimIssue
+    // Must pass worktreeId into claimAndAssignWorktree (atomic claim + worktree assignment)
     expect(source).toContain("worktreeId");
-    expect(source).toContain("claimIssue(issue.identifier");
+    expect(source).toContain("claimAndAssignWorktree(issue.identifier");
   });
 
   it("should verify scheduler tracks assignments within a cycle to avoid double-assignment", () => {
@@ -480,9 +482,9 @@ describe("Scheduler worktree assignment at claim time — ADR-0002", () => {
     // When pool is exhausted, scheduler must break — not claim with null worktreeId
     expect(source).toContain("if (!worktreeId)");
     expect(source).toContain("break");
-    // The break must come before claimIssue — scheduler must not claim without assignment
+    // The break must come before claimAndAssignWorktree — scheduler must not claim without assignment
     const noWorktreeGuard = source.indexOf("if (!worktreeId)");
-    const claimCall = source.indexOf("claimIssue(issue.identifier", noWorktreeGuard);
+    const claimCall = source.indexOf("claimAndAssignWorktree(issue.identifier", noWorktreeGuard);
     const breakStmt = source.indexOf("break", noWorktreeGuard);
     expect(breakStmt).toBeLessThan(claimCall);
   });
@@ -504,6 +506,119 @@ describe("Systemd topology — ADR-0002", () => {
   });
 });
 
+describe("Strict scheduler assignment — no fallback selection (A1 gap fix)", () => {
+  it("trigger path does NOT import selectLinearWorktree (no fallback)", () => {
+    const source = fs.readFileSync(
+      "harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs",
+      "utf-8",
+    );
+    // Must NOT import selectLinearWorktree — strict scheduler authority
+    expect(source).not.toContain("selectLinearWorktree");
+  });
+
+  it("trigger path rejects when assigned worktree is not found (503, not fallback)", () => {
+    const source = fs.readFileSync(
+      "harness/ops/integrations/model/symphony-agent-router/handle-linear-trigger.mjs",
+      "utf-8",
+    );
+    // Must return 503 when assigned worktree is missing from pool
+    expect(source).toContain("assigned_worktree_missing");
+    expect(source).toContain("503");
+    // Must NOT fall through to dispatch when worktree is missing
+    expect(source).toContain("rejecting dispatch");
+  });
+
+  it("dispatch path does NOT import selectLinearWorktree (no fallback)", () => {
+    const source = fs.readFileSync(
+      "harness/ops/integrations/model/symphony-agent-router/dispatch-linear-execution.mjs",
+      "utf-8",
+    );
+    // Must NOT import selectLinearWorktree — strict scheduler authority
+    expect(source).not.toContain("selectLinearWorktree");
+  });
+
+  it("dispatch requires assignedTarget (no default null fallback)", () => {
+    const source = fs.readFileSync(
+      "harness/ops/integrations/model/symphony-agent-router/dispatch-linear-execution.mjs",
+      "utf-8",
+    );
+    // Must check for missing assignedTarget and return early
+    expect(source).toContain("if (!assignedTarget)");
+    // Must NOT have assignedTarget = null default
+    expect(source).not.toMatch(/assignedTarget\s*=\s*null/);
+  });
+
+  it("queue drain rejects (drops) items when assigned worktree is not found", () => {
+    const source = fs.readFileSync(
+      "harness/ops/integrations/model/symphony-agent-router/runtime.mjs",
+      "utf-8",
+    );
+    // Queue drain path must drop items when worktree not found (no fallback)
+    expect(source).toContain("Dropping queued item");
+    expect(source).toContain("not found in pool");
+    expect(source).toContain("continue");
+  });
+});
+
+describe("Executor-side worktree assignment verification (A2 gap fix)", () => {
+  it("execute-issue.mjs verifies assignment.worktreeId against WORKTREE_ID", () => {
+    const source = fs.readFileSync(
+      "harness/ops/orchestration/symphony-runner/execute-issue.mjs",
+      "utf-8",
+    );
+    // Must check assignment.worktreeId matches WORKTREE_ID
+    expect(source).toContain("assignment.worktreeId");
+    expect(source).toContain("WORKTREE_ID");
+    expect(source).toContain("Assignment mismatch");
+    // Must return "skip" on mismatch
+    expect(source).toContain('return "skip"');
+  });
+
+  it("execute-issue.mjs skips verification for repair candidates", () => {
+    const source = fs.readFileSync(
+      "harness/ops/orchestration/symphony-runner/execute-issue.mjs",
+      "utf-8",
+    );
+    // Verification must be gated on !isRepairCandidate
+    expect(source).toContain("!isRepairCandidate");
+    // Comment must explain the skip reason
+    expect(source).toContain("validated at pick time");
+  });
+
+  it("execute-issue.mjs skips verification for operator overrides", () => {
+    const source = fs.readFileSync(
+      "harness/ops/orchestration/symphony-runner/execute-issue.mjs",
+      "utf-8",
+    );
+    // Verification must be gated on !operatorOverride
+    expect(source).toContain("!operatorOverride");
+    expect(source).toContain("operatorOverride");
+  });
+
+  it("main.mjs passes operatorOverride for --issue targets", () => {
+    const source = fs.readFileSync(
+      "harness/ops/orchestration/symphony-runner/main.mjs",
+      "utf-8",
+    );
+    // Must pass operatorOverride when targetIssue is set
+    expect(source).toContain("operatorOverride");
+    expect(source).toContain("targetIssue");
+  });
+
+  it("verification happens before lease acquisition", () => {
+    const source = fs.readFileSync(
+      "harness/ops/orchestration/symphony-runner/execute-issue.mjs",
+      "utf-8",
+    );
+    // Assignment check must appear before acquireLease
+    const assignmentCheck = source.indexOf("Assignment mismatch");
+    const leaseAcquisition = source.indexOf("acquireLease(issue.identifier");
+    expect(assignmentCheck).toBeGreaterThan(-1);
+    expect(leaseAcquisition).toBeGreaterThan(-1);
+    expect(assignmentCheck).toBeLessThan(leaseAcquisition);
+  });
+});
+
 describe("Legacy path removal verification — ADR-0002 completion", () => {
   it("runner should not self-pick global work", () => {
     const source = fs.readFileSync("harness/ops/orchestration/symphony-runner/main.mjs", "utf-8");
@@ -522,9 +637,14 @@ describe("Legacy path removal verification — ADR-0002 completion", () => {
     expect(source).not.toContain("triggerViaRouter");
     // Must not import SCHEDULER_AUTHORITATIVE
     expect(source).not.toContain("SCHEDULER_AUTHORITATIVE");
-    // Must always enqueue to desired-work
+    // Must always delegate to enqueueDesiredWork
     expect(source).toContain("enqueueDesiredWork");
-    expect(source).toContain('"symphony-desired-work"');
+    // The queue name lives in the enqueue module (verify it matches)
+    const enqueueSource = fs.readFileSync(
+      "harness/ops/integrations/model/linear-webhook-receiver/enqueue-desired-work.mjs",
+      "utf-8",
+    );
+    expect(enqueueSource).toContain('"symphony-desired-work"');
   });
 
   it("reconciler should always feed desired-work queue, never dispatch directly", () => {

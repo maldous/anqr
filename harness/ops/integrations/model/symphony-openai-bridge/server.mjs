@@ -54,6 +54,8 @@ import { safeLogDebug } from "./safe-log-debug.mjs";
 import {
   recordProviderSelection,
   recordProviderRoutingEvidence,
+  recordContextReductionEvidence,
+  recordSafetyNetEvidence,
 } from "../../../core/task-evidence.mjs";
 import { sanitizeForDiscordPreview } from "./sanitize-for-discord-preview.mjs";
 import { sendJson } from "./send-json.mjs";
@@ -70,10 +72,24 @@ import { validateBoundaryInvariants } from "./validate-boundary-invariants.mjs";
 import { validateStartupEnv } from "./validate-startup-env.mjs";
 
 // D Phase 3: Validate boundary invariants at bridge startup (ADR-0008).
-validateBoundaryInvariants();
+// Both validators throw on critical misconfigurations (fail-closed).
+// Advisory warnings are logged here for operator visibility.
+const boundaryResult = validateBoundaryInvariants();
+if (!boundaryResult.valid) {
+  logWarn(
+    `[startup] Boundary invariant warnings (${boundaryResult.warnings.length}): ` +
+      boundaryResult.warnings.join("; "),
+  );
+}
 
 // E Phase 2: Validate critical startup environment.
-validateStartupEnv();
+const envResult = validateStartupEnv();
+if (!envResult.valid) {
+  logWarn(
+    `[startup] Startup env warnings (${envResult.warnings.length}): ` +
+      envResult.warnings.join("; "),
+  );
+}
 
 export const server = http.createServer(async (req, res) => {
   logDebug(`===== REQUEST =====`);
@@ -877,6 +893,30 @@ export const server = http.createServer(async (req, res) => {
             recordProviderSuccess(result.providerName);
             recordSuccessfulMetrics(result.providerName, startTime);
 
+            // F Phase 3: Emit routing evidence for Codebuff transparent relay (F6)
+            if (correlationId) {
+              try {
+                recordProviderRoutingEvidence(correlationId, {
+                  routeModelId: route.responseModelId,
+                  allowedProviders: route.allowedNames || [],
+                  selectedProvider: result.providerName,
+                  attempts: 1,
+                  triedProviders: [result.providerName],
+                  fallbackChain: [
+                    {
+                      providerName: result.providerName,
+                      model: selectedProvider?.model || "codebuff/base",
+                      attemptNumber: 1,
+                      outcome: "success",
+                      durationMs: Date.now() - startTime,
+                    },
+                  ],
+                });
+              } catch {
+                /* best-effort evidence */
+              }
+            }
+
             // Update session state for codebuff
             if (sessionId) {
               // Detect mode from response or errors
@@ -951,6 +991,14 @@ export const server = http.createServer(async (req, res) => {
                 triedProviders: result.triedProviders,
                 fallbackChain: result.fallbackChain || [],
               });
+            } catch {
+              /* best-effort evidence */
+            }
+            // F Phase 2: Emit context-reduction evidence (streaming path)
+            try {
+              if (result.contextReductions?.length > 0) {
+                recordContextReductionEvidence(correlationId, result.contextReductions);
+              }
             } catch {
               /* best-effort evidence */
             }
@@ -1037,6 +1085,38 @@ export const server = http.createServer(async (req, res) => {
             `Streaming error after ${formatElapsed(Date.now() - startTime)}: ${streamError.message}`,
           );
 
+          // F Phase 3: Emit failure-path evidence when providers exhausted (streaming)
+          // Covers F2 (routing on failure), F3 (safety-net), F4 (context-reduction on failure)
+          if (correlationId && streamError.safetyNetData) {
+            try {
+              recordProviderRoutingEvidence(correlationId, {
+                routeModelId: route.responseModelId,
+                allowedProviders: route.allowedNames || [],
+                selectedProvider: null,
+                attempts: streamError.safetyNetData.triedProviders?.length || 0,
+                triedProviders: streamError.safetyNetData.triedProviders || [],
+                fallbackChain: streamError.safetyNetData.fallbackChain || [],
+              });
+            } catch {
+              /* best-effort evidence */
+            }
+            try {
+              recordSafetyNetEvidence(correlationId, streamError.safetyNetData);
+            } catch {
+              /* best-effort evidence */
+            }
+            try {
+              if (streamError.safetyNetData.contextReductions?.length > 0) {
+                recordContextReductionEvidence(
+                  correlationId,
+                  streamError.safetyNetData.contextReductions,
+                );
+              }
+            } catch {
+              /* best-effort evidence */
+            }
+          }
+
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
             provider: "unknown",
@@ -1081,6 +1161,38 @@ export const server = http.createServer(async (req, res) => {
         let result;
         try {
           result = await invokeWithFallback(messages, route, sessionId, requestCwd);
+        } catch (nonStreamError) {
+          // F Phase 3: Emit failure-path evidence for non-streaming exhaustion (F2, F3, F4)
+          if (correlationId && nonStreamError.safetyNetData) {
+            try {
+              recordProviderRoutingEvidence(correlationId, {
+                routeModelId: route.responseModelId,
+                allowedProviders: route.allowedNames || [],
+                selectedProvider: null,
+                attempts: nonStreamError.safetyNetData.triedProviders?.length || 0,
+                triedProviders: nonStreamError.safetyNetData.triedProviders || [],
+                fallbackChain: nonStreamError.safetyNetData.fallbackChain || [],
+              });
+            } catch {
+              /* best-effort evidence */
+            }
+            try {
+              recordSafetyNetEvidence(correlationId, nonStreamError.safetyNetData);
+            } catch {
+              /* best-effort evidence */
+            }
+            try {
+              if (nonStreamError.safetyNetData.contextReductions?.length > 0) {
+                recordContextReductionEvidence(
+                  correlationId,
+                  nonStreamError.safetyNetData.contextReductions,
+                );
+              }
+            } catch {
+              /* best-effort evidence */
+            }
+          }
+          throw nonStreamError;
         } finally {
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
@@ -1102,6 +1214,14 @@ export const server = http.createServer(async (req, res) => {
               triedProviders: result.triedProviders,
               fallbackChain: result.fallbackChain || [],
             });
+          } catch {
+            /* best-effort evidence */
+          }
+          // F Phase 2: Emit context-reduction evidence (non-streaming path)
+          try {
+            if (result.contextReductions?.length > 0) {
+              recordContextReductionEvidence(correlationId, result.contextReductions);
+            }
           } catch {
             /* best-effort evidence */
           }

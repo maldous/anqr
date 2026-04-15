@@ -13,4 +13,7 @@ export {
   recordPushResult,
   recordIntegrationResult,
   recordProviderRoutingEvidence,
+  recordContextReductionEvidence,
+  recordSafetyNetEvidence,
+  queryRoutingEvidence,
 } from "./task-evidence/index.mjs";

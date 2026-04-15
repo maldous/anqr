@@ -12,3 +12,6 @@ export { recordValidationResult } from "./record-validation-result.mjs";
 export { recordPushResult } from "./record-push-result.mjs";
 export { recordIntegrationResult } from "./record-integration-result.mjs";
 export { recordProviderRoutingEvidence } from "./record-provider-routing-evidence.mjs";
+export { recordContextReductionEvidence } from "./record-context-reduction-evidence.mjs";
+export { recordSafetyNetEvidence } from "./record-safety-net-evidence.mjs";
+export { queryRoutingEvidence } from "./query-routing-evidence.mjs";

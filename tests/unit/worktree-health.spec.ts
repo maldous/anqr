@@ -47,7 +47,8 @@ describe("Worktree state CRUD", () => {
     setWorktreeState("wt2", { state: "dirty_owned" });
     const state = getWorktreeState("wt2");
     expect(state!.state).toBe("dirty_owned");
-    expect(state!.issueIdentifier).toBe("ANQ-100");
+    // normalizeWorktreeRecord migrates issueIdentifier → assignedIssue on load
+    expect(state!.assignedIssue).toBe("ANQ-100");
   });
 
   it("should list worktrees by state", () => {
@@ -134,6 +135,7 @@ describe("State migration", () => {
 
     const loaded = loadState();
     expect(loaded.worktreeStates.wt5.state).toBe("executing");
-    expect(loaded.worktreeStates.wt5.issueIdentifier).toBe("ANQ-500");
+    // normalizeWorktreeRecord migrates issueIdentifier → assignedIssue on load
+    expect(loaded.worktreeStates.wt5.assignedIssue).toBe("ANQ-500");
   });
 });

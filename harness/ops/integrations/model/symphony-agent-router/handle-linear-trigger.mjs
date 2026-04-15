@@ -1,10 +1,7 @@
 import { extractCorrelationId } from "../../../lib/correlation-id.mjs";
 
-import { MAX_QUEUE_LENGTH } from "./max-queue-length.mjs";
 import { dispatchLinearExecution } from "./dispatch-linear-execution.mjs";
 import { json } from "./json.mjs";
-import { linearQueue } from "./linear-queue.mjs";
-import { selectLinearWorktree } from "./select-linear-worktree.mjs";
 import { verifySchedulerClaim } from "./verify-scheduler-claim.mjs";
 import { WORKTREES } from "./worktrees.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
@@ -51,54 +48,38 @@ export function handleLinearTrigger(req, res) {
       return;
     }
 
-    // Select target worktree.
-    // ADR-0002: The scheduler's durable assignment is the authoritative worktree
-    // selection. The router honours it. If the assigned worktree is not found
-    // (removed, reprovisioned), fall back to selection — but log the discrepancy.
+    // ADR-0002: Strict scheduler authority — the scheduler's durable assignment
+    // is the sole worktree selection path. No fallback to local selection.
     let target;
-    let isSchedulerAssigned = false;
     if (claimCheck.assignedWorktreeId) {
       const assignedId = parseInt(claimCheck.assignedWorktreeId.replace(/^wt/, ""), 10);
       target = !isNaN(assignedId) ? WORKTREES.find((w) => w.id === assignedId) || null : null;
-      if (target) {
-        isSchedulerAssigned = true;
-      } else {
+      if (!target) {
         logWarn(
-          `[router] Assigned worktree ${claimCheck.assignedWorktreeId} not found — falling back to selection`,
+          `[router] Assigned worktree ${claimCheck.assignedWorktreeId} not found in pool — rejecting dispatch`,
         );
-        target = selectLinearWorktree();
-      }
-    } else {
-      target = selectLinearWorktree();
-    }
-
-    if (!target) {
-      logError("No Linear worktrees available for trigger");
-      json(res, 503, { error: { message: "No worktrees available" } });
-      return;
-    }
-
-    // Phase 4: When the scheduler assigned this worktree, trust the assignment.
-    // The scheduler set the worktree to "executing" durably at claim time and
-    // verified availability. Only check transient busy for fallback selection.
-    if (!isSchedulerAssigned && target.activeRequests >= 1) {
-      if (linearQueue.length >= MAX_QUEUE_LENGTH) {
-        logWarn(
-          `Linear trigger queue full (${MAX_QUEUE_LENGTH}), dropping trigger for ${identifier}`,
-        );
-        json(res, 503, { error: { message: "Queue full, try again later" } });
+        json(res, 503, {
+          error: {
+            message: `Assigned worktree ${claimCheck.assignedWorktreeId} not found`,
+            reason: "assigned_worktree_missing",
+          },
+        });
         return;
       }
-      logInfo(
-        `All Linear worktrees busy, queuing ${identifier} (queue length: ${linearQueue.length + 1})`,
-      );
-      linearQueue.enqueue({ identifier, correlationId, queuedAt: new Date().toISOString() });
-      json(res, 202, { status: "queued", queueLength: linearQueue.length });
+    } else {
+      // verifySchedulerClaim already requires assignment.worktreeId — this branch
+      // is unreachable but guarded for defense-in-depth.
+      logWarn(`[router] No worktree assignment in scheduler claim for ${identifier} — rejecting`);
+      json(res, 409, {
+        error: {
+          message: `No worktree assignment for ${identifier}`,
+          reason: "no_worktree_assignment",
+        },
+      });
       return;
     }
 
-    // Dispatch to the selected worktree executor HTTP surface.
-    // Pass the resolved target so dispatch doesn't re-select.
+    // Dispatch to the assigned worktree executor HTTP surface.
     json(res, 202, { status: "accepted" });
     dispatchLinearExecution(identifier, correlationId, target);
   });

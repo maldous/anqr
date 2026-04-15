@@ -11,6 +11,21 @@ import {
   setGlobalValue,
   getGlobalValue,
 } from "./symphony-state.mjs";
+// @ts-ignore - No type declarations for .mjs module
+import { setFinalizationState } from "./symphony-state/set-finalization-state.mjs";
+
+/**
+ * Put an issue into evidence_pending phase so that
+ * recordCompletion can validly transition it to completed.
+ * Without this, a fresh issue is in "eligible" phase and
+ * the transition to "completed" is rejected by the transition map.
+ *
+ * Uses setFinalizationState (bypasses patchIssueState lifecycle guard)
+ * because this is test setup, not a production lifecycle transition.
+ */
+function setupForCompletion(issueId: string) {
+  setFinalizationState(issueId, { state: "evidence_pending_closeout" });
+}
 
 const TEST_STATE_DIR = resolve(process.cwd(), "reports", "symphony-test");
 
@@ -36,6 +51,7 @@ describe("symphony-state.mjs latency tracking", () => {
       const issueId = "ANQ-123";
       const latencyMs = 600000; // 10 minutes
 
+      setupForCompletion(issueId);
       recordCompletion(issueId, { latencyMs });
 
       const state = getIssueState(issueId);
@@ -47,6 +63,7 @@ describe("symphony-state.mjs latency tracking", () => {
       const issueId = "ANQ-124";
       const customTimestamp = "2026-03-27T12:00:00.000Z";
 
+      setupForCompletion(issueId);
       recordCompletion(issueId, {
         latencyMs: 300000,
         completedAt: customTimestamp,
@@ -68,6 +85,7 @@ describe("symphony-state.mjs latency tracking", () => {
     });
 
     it("should calculate average latency correctly", () => {
+      for (const id of ["ANQ-101", "ANQ-102", "ANQ-103"]) setupForCompletion(id);
       recordCompletion("ANQ-101", { latencyMs: 600000 }); // 10 min
       recordCompletion("ANQ-102", { latencyMs: 1200000 }); // 20 min
       recordCompletion("ANQ-103", { latencyMs: 900000 }); // 15 min
@@ -81,6 +99,7 @@ describe("symphony-state.mjs latency tracking", () => {
     });
 
     it("should calculate median correctly with odd count", () => {
+      for (const id of ["ANQ-201", "ANQ-202", "ANQ-203"]) setupForCompletion(id);
       recordCompletion("ANQ-201", { latencyMs: 300000 }); // 5 min
       recordCompletion("ANQ-202", { latencyMs: 600000 }); // 10 min
       recordCompletion("ANQ-203", { latencyMs: 900000 }); // 15 min
@@ -93,6 +112,7 @@ describe("symphony-state.mjs latency tracking", () => {
     it("should calculate p95 correctly", () => {
       // Create 100 tasks with latencies from 1-100 minutes
       for (let i = 1; i <= 100; i++) {
+        setupForCompletion(`ANQ-${i}`);
         recordCompletion(`ANQ-${i}`, { latencyMs: i * 60000 });
       }
 
@@ -103,6 +123,7 @@ describe("symphony-state.mjs latency tracking", () => {
     });
 
     it("should ignore incomplete tasks", () => {
+      setupForCompletion("ANQ-301");
       recordCompletion("ANQ-301", { latencyMs: 600000 });
       patchIssueState("ANQ-302", { latency_ms: 900000 }); // No completed_at
 

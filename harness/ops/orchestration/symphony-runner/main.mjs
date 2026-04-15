@@ -213,7 +213,7 @@ export async function main() {
         // work assigned via --issue flag or sticky repair for this worktree.
       }
       if (!issue) break;
-      const status = await executeIssue(issue, dryRun);
+      const status = await executeIssue(issue, dryRun, { operatorOverride: !!targetIssue });
       if (status === "skip") {
         excludeIds.add(issue.id);
         continue;

@@ -18,41 +18,67 @@ const PROVIDER_TOKEN_VARS = [
 /**
  * Validate critical startup environment variables.
  *
- * Checks:
- * 1. At least one provider token is set (bridge can serve requests)
- * 2. ANQR_WORKTREE_ID is set for worktree bridges
- * 3. SYMPHONY_BRIDGE_PORT is set (explicit port assignment)
+ * Fail-closed enforcement:
+ * - CRITICAL: zero provider tokens → THROW (bridge cannot serve any requests)
+ * - CRITICAL (worktree mode): missing ANQR_WORKTREE_ID → THROW (no worktree identity)
+ * - CRITICAL (worktree mode): missing SYMPHONY_BRIDGE_PORT → THROW (port collision risk)
+ * - CRITICAL (worktree mode): missing BRIDGE_MODE → THROW (must be explicit for executors)
+ * - Advisory (control-plane mode): missing port, mode → log warning
  *
- * Logs warnings/errors for missing variables but does not throw — the bridge
- * can still start, but operators should investigate.
+ * Accepts optional param overrides for testability. When called without
+ * arguments, uses the module-level constants resolved from env/filesystem.
  *
+ * @param {object} [overrides]
+ * @param {string} [overrides.bridgeMode]
+ * @param {boolean} [overrides.isWorktreeBridge]
+ * @param {Record<string, string|undefined>} [overrides.env]
  * @returns {{ valid: boolean, warnings: string[] }}
+ * @throws {Error} When critical env is missing (fail-closed)
  */
-export function validateStartupEnv() {
+export function validateStartupEnv({
+  bridgeMode = BRIDGE_MODE,
+  isWorktreeBridge = IS_WORKTREE_BRIDGE,
+  env = process.env,
+} = {}) {
   const warnings = [];
 
-  // Check 1: At least one provider token
-  const hasProvider = PROVIDER_TOKEN_VARS.some((v) => !!process.env[v]);
+  // CRITICAL: At least one provider token must be present.
+  // Without any provider tokens, the bridge cannot serve a single request.
+  // This is a fatal misconfiguration — fail-closed.
+  const hasProvider = PROVIDER_TOKEN_VARS.some((v) => !!env[v]);
   if (!hasProvider) {
     const msg =
-      "No provider tokens found in environment — bridge cannot serve requests. " +
-      `Checked: ${PROVIDER_TOKEN_VARS.join(", ")}`;
+      "FATAL: No provider tokens found in environment — bridge cannot serve any requests. " +
+      `Checked: ${PROVIDER_TOKEN_VARS.join(", ")}. Bridge startup refused.`;
     logError(`[startup-env] ${msg}`);
-    warnings.push(msg);
+    throw new Error(msg);
   } else {
-    const present = PROVIDER_TOKEN_VARS.filter((v) => !!process.env[v]);
+    const present = PROVIDER_TOKEN_VARS.filter((v) => !!env[v]);
     logInfo(`[startup-env] Provider tokens: ${present.join(", ")}`);
   }
 
-  // Check 2: ANQR_WORKTREE_ID for worktree/executor bridges
-  if (IS_WORKTREE_BRIDGE && !process.env.ANQR_WORKTREE_ID) {
-    const msg = "IS_WORKTREE_BRIDGE=true but ANQR_WORKTREE_ID is not set";
-    logWarn(`[startup-env] ${msg}`);
-    warnings.push(msg);
+  // Check 2: ANQR_WORKTREE_ID for worktree/executor bridges.
+  // In worktree mode, this is CRITICAL — the executor has no identity without it.
+  // In control-plane mode, this is advisory.
+  if (isWorktreeBridge && !env.ANQR_WORKTREE_ID) {
+    const msg =
+      "FATAL: IS_WORKTREE_BRIDGE=true but ANQR_WORKTREE_ID is not set — " +
+      "worktree executor has no identity. Bridge startup refused.";
+    logError(`[startup-env] ${msg}`);
+    throw new Error(msg);
   }
 
-  // Check 3: Explicit port assignment
-  if (!process.env.SYMPHONY_BRIDGE_PORT) {
+  // Check 3: Explicit port assignment.
+  // In worktree mode, this is CRITICAL — default port risks collisions with other executors.
+  // In control-plane mode, this is advisory.
+  if (!env.SYMPHONY_BRIDGE_PORT) {
+    if (isWorktreeBridge) {
+      const msg =
+        "FATAL: SYMPHONY_BRIDGE_PORT not set in worktree mode — " +
+        "default port 4319 risks collision with other executors. Bridge startup refused.";
+      logError(`[startup-env] ${msg}`);
+      throw new Error(msg);
+    }
     const msg =
       "SYMPHONY_BRIDGE_PORT not set — using default 4319. " +
       "Set explicitly in systemd unit for production.";
@@ -60,10 +86,20 @@ export function validateStartupEnv() {
     warnings.push(msg);
   }
 
-  // Check 4: BRIDGE_MODE is explicitly set (not auto-derived)
-  if (!process.env.BRIDGE_MODE) {
+  // Check 4: BRIDGE_MODE is explicitly set (not auto-derived).
+  // In worktree mode, this is CRITICAL — auto-derivation may be incorrect.
+  // In control-plane mode, this is advisory.
+  if (!env.BRIDGE_MODE) {
+    if (isWorktreeBridge) {
+      const msg =
+        "FATAL: BRIDGE_MODE not set explicitly in worktree mode — " +
+        `auto-derived as "${bridgeMode}", but executors must set BRIDGE_MODE explicitly. ` +
+        "Bridge startup refused.";
+      logError(`[startup-env] ${msg}`);
+      throw new Error(msg);
+    }
     const msg =
-      `BRIDGE_MODE not set explicitly — auto-derived as "${BRIDGE_MODE}". ` +
+      `BRIDGE_MODE not set explicitly — auto-derived as "${bridgeMode}". ` +
       "Set BRIDGE_MODE in systemd unit for production.";
     logWarn(`[startup-env] ${msg}`);
     warnings.push(msg);
@@ -73,7 +109,7 @@ export function validateStartupEnv() {
   if (valid) {
     logInfo(
       `[startup-env] All startup environment checks passed ` +
-        `(port=${process.env.SYMPHONY_BRIDGE_PORT}, mode=${BRIDGE_MODE})`,
+        `(port=${env.SYMPHONY_BRIDGE_PORT}, mode=${bridgeMode})`,
     );
   }
 

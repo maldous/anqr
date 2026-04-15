@@ -16,7 +16,7 @@
  * @module transition-issue
  */
 
-import { VALID_ISSUE_PHASES } from "./issue-phases.mjs";
+import { VALID_ISSUE_PHASES, ISSUE_PHASES } from "./issue-phases.mjs";
 import { inferExecutionPhase } from "./infer-execution-phase.mjs";
 import { isValidIssueTransition } from "./is-valid-issue-transition.mjs";
 import { normalizeRecord } from "./normalize-record.mjs";
@@ -53,6 +53,15 @@ export function transitionIssue(issueIdentifier, targetPhase, metadata = {}) {
 
     // Extract `reason` for transition history; everything else is a state patch
     const { reason, ...patch } = metadata;
+
+    // Auto-clear blocking fields when leaving the blocked phase.
+    // This replaces scattered stale-state cleanup in callers and ensures
+    // the blocking condition is always fully resolved on unblock.
+    if (from === ISSUE_PHASES.blocked && targetPhase === ISSUE_PHASES.eligible) {
+      patch.blocked_reason = null;
+      patch.human_only = false;
+      patch.retry_exhausted = false;
+    }
 
     // Deep-merge finalization to match setFinalizationState's merge semantics.
     // Callers can pass partial finalization objects and they get merged with existing.

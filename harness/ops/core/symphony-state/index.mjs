@@ -19,7 +19,7 @@ export { loadState } from "./load-state.mjs";
 export { saveState } from "./save-state.mjs";
 export { mutateState } from "./mutate-state.mjs";
 export { getIssueState } from "./get-issue-state.mjs";
-export { patchIssueState } from "./patch-issue-state.mjs";
+export { patchIssueState, LIFECYCLE_FIELDS } from "./patch-issue-state.mjs";
 export { addExternalKey } from "./add-external-key.mjs";
 export { setGlobalValue } from "./set-global-value.mjs";
 export { getGlobalValue } from "./get-global-value.mjs";

@@ -2,40 +2,20 @@ import http from "node:http";
 
 import { recordRoutingDecision, recordWorktreeSelection } from "../../../core/task-evidence.mjs";
 
-import { MAX_QUEUE_LENGTH } from "./max-queue-length.mjs";
 import { TARGET_HOST } from "./target-host.mjs";
 import { globalActiveRequests, setGlobalActiveRequests } from "./global-active-requests.mjs";
-import { linearQueue } from "./linear-queue.mjs";
-import { selectLinearWorktree } from "./select-linear-worktree.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
-export function dispatchLinearExecution(identifier, correlationId, assignedTarget = null) {
-  const target = assignedTarget || selectLinearWorktree();
-
-  // Phase 4: When an assignedTarget is from a scheduler claim, trust it —
-  // the scheduler already set the worktree to "executing" durably and verified
-  // availability at claim time. Only check transient busy for fallback selection.
-  if (!target || (!assignedTarget && target.activeRequests >= 1)) {
-    if (linearQueue.length >= MAX_QUEUE_LENGTH) {
-      logWarn(`Queue full, dropping re-queue for ${identifier}`);
-      return;
-    }
-    logWarn(`No available worktree for ${identifier}, re-queuing`);
-    linearQueue.enqueue({ identifier, correlationId, queuedAt: new Date().toISOString() });
-
-    if (correlationId) {
-      try {
-        recordRoutingDecision(correlationId, {
-          targetWorktreePool: "linear-wt1-4",
-          routingStrategy: "queued",
-          queuePosition: linearQueue.length,
-        });
-      } catch {
-        /* best-effort evidence */
-      }
-    }
+export function dispatchLinearExecution(identifier, correlationId, assignedTarget) {
+  // ADR-0002: Strict scheduler authority — the scheduler must provide the
+  // target worktree via assignedTarget. No fallback to local selection.
+  if (!assignedTarget) {
+    logWarn(
+      `[dispatch] No assigned target for ${identifier} — scheduler must provide worktree assignment`,
+    );
     return;
   }
+  const target = assignedTarget;
 
   if (correlationId) {
     try {

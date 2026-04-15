@@ -1,4 +1,4 @@
-import { patchIssueState, getFinalizationState } from "../../../symphony-state.mjs";
+import { transitionIssue, getFinalizationState } from "../../../symphony-state.mjs";
 import { updateIssue, addComment, STATES } from "../../../linear-client.mjs";
 import { loadEvidenceRecord } from "../../../core/task-evidence.mjs";
 import { findIssueByIdentifier } from "../find-issue-by-identifier.mjs";
@@ -13,11 +13,11 @@ export async function publishEvidenceAndClose({
 }) {
   const detail = await findIssueByIdentifier(issueIdentifier);
   if (!detail) {
-    // Metadata-only update — the issue is already in evidence_pending phase.
-    // Use patchIssueState (not transitionIssue) because this is not a lifecycle
-    // change — it's just annotating the error for retry.
+    // Issue is in evidence_pending phase — self-transition to annotate error.
+    // Uses transitionIssue so finalization (lifecycle field) is written through
+    // the validated transition path with history recording.
     const currentFin = getFinalizationState(issueIdentifier) || {};
-    patchIssueState(issueIdentifier, {
+    transitionIssue(issueIdentifier, "evidence_pending", {
       finalization: {
         ...currentFin,
         state: "evidence_pending_closeout",
@@ -27,6 +27,7 @@ export async function publishEvidenceAndClose({
         lastError: "Linear issue detail unavailable during closeout",
         updatedAt: new Date().toISOString(),
       },
+      reason: "missing_linear_detail",
     });
     return { ok: false, reason: "missing_linear_detail" };
   }

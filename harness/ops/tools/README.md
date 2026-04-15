@@ -9,26 +9,12 @@ Tools contains the code, configuration, or support files that implement this par
 - 4 immediate files
 - 4 child directories
 
-<<<<<<< ours — heading `Key Files` (F, confidence: medium)
-// hint: Logic changed on both sides. Requires understanding intent of each change.
-
 ## Key Files
 
 - `recover-stale-in-progress.mjs` - JavaScript/TypeScript module used by this directory.
 - `reset-retry-exhausted.mjs` - JavaScript/TypeScript module used by this directory.
 - `startup-recovery.mjs` - JavaScript/TypeScript module used by this directory.
 - `verify-webhook-system.mjs` - JavaScript/TypeScript module used by this directory.
-
-=======
-
-## Key Files
-
-- `recover-stale-in-progress.mjs` - JavaScript/TypeScript module used by this directory.
-- `reset-retry-exhausted.mjs` - \*
-- `startup-recovery.mjs` - JavaScript/TypeScript module used by this directory.
-- `verify-webhook-system.mjs` - JavaScript/TypeScript module used by this directory.
-
-> > > > > > > theirs — heading `Key Files` (F, confidence: medium)
 
 ## Subdirectories
 

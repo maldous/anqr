@@ -1,3 +1,4 @@
+export { assertBridgeMutationBoundary } from "./assert-bridge-mutation-boundary.mjs";
 export { BRIDGE_MODE, deriveBridgeMode } from "./bridge-mode.mjs";
 export { CODEX_SANDBOX_MODE } from "./codex-sandbox-mode.mjs";
 export { CONTEXT7_HTTP_BASE } from "./context7-http-base.mjs";

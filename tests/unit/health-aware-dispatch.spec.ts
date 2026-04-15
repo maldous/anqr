@@ -31,28 +31,3 @@ describe("getHealthyLinearCapacity", () => {
     expect(source).toContain("UNAVAILABLE");
   });
 });
-
-describe("selectLinearWorktree health-aware dispatch", () => {
-  const source = readFileSync(
-    resolve(
-      "harness/ops/integrations/model/symphony-agent-router/select-linear-worktree/select-linear-worktree.mjs",
-    ),
-    "utf-8",
-  );
-
-  it("filters out quarantined worktrees", () => {
-    expect(source).toContain("QUARANTINED");
-  });
-
-  it("filters out diverged worktrees", () => {
-    expect(source).toContain("DIVERGED");
-  });
-
-  it("filters out integration blocked worktrees", () => {
-    expect(source).toContain("INTEGRATION_BLOCKED");
-  });
-
-  it("filters out unavailable worktrees", () => {
-    expect(source).toContain("UNAVAILABLE");
-  });
-});

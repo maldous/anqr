@@ -1,5 +1,6 @@
 import fs from "node:fs";
 
+import { assertBridgeMutationBoundary } from "./assert-bridge-mutation-boundary.mjs";
 import { getCurrentRequestId } from "./get-current-request-id.mjs";
 import { resolveRequestPath } from "./resolve-request-path.mjs";
 import { trackFileChange } from "./track-file-change.mjs";
@@ -16,7 +17,9 @@ export async function applyPatchTool({ operation }) {
         .filter((l) => l.startsWith("+"))
         .map((l) => l.slice(1));
       const content = lines.join("\n");
-      fs.writeFileSync(resolveRequestPath(filePath), content, "utf-8");
+      const resolved = resolveRequestPath(filePath);
+      assertBridgeMutationBoundary(resolved);
+      fs.writeFileSync(resolved, content, "utf-8");
 
       const reqId = getCurrentRequestId();
       if (reqId) trackFileChange(reqId);
@@ -30,14 +33,18 @@ export async function applyPatchTool({ operation }) {
         .filter((l) => l.startsWith("+"))
         .map((l) => l.slice(1));
       const content = lines.join("\n");
-      fs.writeFileSync(resolveRequestPath(filePath), content, "utf-8");
+      const resolvedUpdate = resolveRequestPath(filePath);
+      assertBridgeMutationBoundary(resolvedUpdate);
+      fs.writeFileSync(resolvedUpdate, content, "utf-8");
 
       const reqId = getCurrentRequestId();
       if (reqId) trackFileChange(reqId);
 
       return { success: true, operation: "update", path: filePath };
     } else if (type === "delete_file") {
-      fs.unlinkSync(resolveRequestPath(filePath));
+      const resolvedDelete = resolveRequestPath(filePath);
+      assertBridgeMutationBoundary(resolvedDelete);
+      fs.unlinkSync(resolvedDelete);
       return { success: true, operation: "delete", path: filePath };
     }
 

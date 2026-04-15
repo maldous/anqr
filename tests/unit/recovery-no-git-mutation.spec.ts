@@ -177,8 +177,9 @@ describe("Recovery shall not publish code — ADR-0005", () => {
 describe("Recovery evidence contract — ADR-0006", () => {
   describe("evidence structure validation (source code)", () => {
     it("should define all required evidence fields per ADR-0006", () => {
+      // Evidence fields are defined in build-evidence.mjs, which execute-repair.mjs imports
       const content = fs.readFileSync(
-        "harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs",
+        "harness/ops/orchestration/symphony-worktree-recovery/execute-repair/build-evidence.mjs",
         "utf-8",
       );
       // ADR-0006 required fields
@@ -209,8 +210,9 @@ describe("Recovery evidence contract — ADR-0006", () => {
     });
 
     it("should derive isNonPublishing from explicit action class set", () => {
+      // Evidence building logic is in build-evidence.mjs, which execute-repair.mjs imports
       const content = fs.readFileSync(
-        "harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs",
+        "harness/ops/orchestration/symphony-worktree-recovery/execute-repair/build-evidence.mjs",
         "utf-8",
       );
       // ADR-0006: isNonPublishing must be derived from an explicit set,

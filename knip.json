@@ -119,8 +119,6 @@
     "harness/export-linear-all/main.mjs": ["exports"],
     "harness/rename-to-standards/main.mjs": ["exports"],
 
-    "harness/ops/linear-all/query.mjs": ["exports"],
-    "harness/ops/orchestration/symphony-runner/auto-detected-worktree-id.mjs": ["exports"],
     "harness/ops/core/symphony-config.mjs": ["exports"]
   },
 

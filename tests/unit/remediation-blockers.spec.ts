@@ -527,11 +527,13 @@ describe("Blocker 2: lifecycle helpers use transitionIssue", () => {
   });
 
   describe("recordCompletion", () => {
-    it("should transition integration_pending issue to completed", async () => {
+    it("should only set latency when integration_pending (must go through evidence_pending first)", async () => {
       const { recordCompletion } =
         await import("../../harness/ops/core/symphony-state/record-completion.mjs");
 
-      // Issue in integration_pending → completed IS valid
+      // integration_pending → completed is no longer valid;
+      // must go through evidence_pending first.
+      // recordCompletion falls back to latency-only metadata.
       setIssue("ANQ-RC1", {
         finalization: { state: "integration_pending" },
       });
@@ -542,7 +544,9 @@ describe("Blocker 2: lifecycle helpers use transitionIssue", () => {
       });
 
       const issue = getIssue("ANQ-RC1");
-      expect(issue?.completed_at).toBe("2026-01-01T00:00:00Z");
+      // completed_at is NOT set (transition rejected — must go through evidence_pending)
+      expect(issue?.completed_at).toBeNull();
+      // latency_ms IS set (pure observation metadata)
       expect(issue?.latency_ms).toBe(120000);
     });
 

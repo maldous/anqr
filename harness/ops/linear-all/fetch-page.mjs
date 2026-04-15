@@ -1,4 +1,5 @@
 import { API_KEY } from "./api-key.mjs";
+import { query } from "./query.mjs";
 import { TEAM_ID } from "./team-id.mjs";
 
 export async function fetchPage(after = null) {

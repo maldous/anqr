@@ -83,7 +83,7 @@ import { syncFailCount, setSyncFailCount } from "./sync-fail-count.mjs";
 import { syncWorktreeBeforeValidation } from "./sync-worktree-before-validation.mjs";
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
 
-export async function executeIssue(issue, dryRun = false) {
+export async function executeIssue(issue, dryRun = false, { operatorOverride = false } = {}) {
   const correlationId = process.env.ANQR_CORRELATION_ID || null;
 
   // Phase 2: Detect repair candidate to skip sync and provide repair context
@@ -101,6 +101,24 @@ export async function executeIssue(issue, dryRun = false) {
     logInfo(
       `[runner] 🔧 Repair candidate detected: ${issue.identifier} (${currentFinalization.state})`,
     );
+  }
+
+  // ADR-0002: Verify worktree assignment — refuse execution if the scheduler
+  // assigned this issue to a different worktree. This is the executor-side
+  // enforcement of scheduler authority (end-to-end assignment verification).
+  // Skipped for: repair candidates (validated at pick time by
+  // getNextRepairableIssueForWorktree), operator overrides (--issue flag).
+  if (!isRepairCandidate && !operatorOverride) {
+    const preLeaseState = getIssueState(issue.identifier);
+    if (
+      preLeaseState?.assignment?.worktreeId &&
+      preLeaseState.assignment.worktreeId !== WORKTREE_ID
+    ) {
+      logWarn(
+        `[runner] ⛔ Assignment mismatch: ${issue.identifier} assigned to ${preLeaseState.assignment.worktreeId} but running on ${WORKTREE_ID} — refusing execution`,
+      );
+      return "skip";
+    }
   }
 
   // Worktree sync: ensure worktree is synced with main before starting
