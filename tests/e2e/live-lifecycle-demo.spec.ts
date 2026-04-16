@@ -18,6 +18,15 @@
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import {
+  mkdtempSync,
+  writeFileSync,
+  mkdirSync,
+  rmSync,
+  readFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import {
   LINEAR_WEBHOOK_URL,
   SYMPHONY_ROUTER_URL,
   findEvidenceByIssue,
@@ -251,7 +260,195 @@ describe("Scenario 6: Duplicate-trigger suppression", () => {
 // Remaining scenarios — to be implemented in Phase 1–3 order
 // ---------------------------------------------------------------------------
 
-describe.todo("Scenario 5: Config drift detection blocking execution");
+// ---------------------------------------------------------------------------
+// Scenario 5: Config drift detection blocking execution (Phase 1 — medium risk)
+//
+// Proves:
+// - Config drift is detected before unsafe operation (Workstream E, criterion #6)
+// - Execution is blocked when preflight fails
+// - Config preflight is wired as a blocking gate in the runner
+// - Corrected config restores green state
+//
+// Uses temporary test fixtures with enforceConfigPreflight() param overrides
+// to avoid touching live env files — zero blast radius to running services.
+// ---------------------------------------------------------------------------
+
+describe("Scenario 5: Config drift detection blocking execution", () => {
+  let tmpDir: string;
+  let enforceConfigPreflight: (
+    opts?: Record<string, unknown>,
+  ) => Promise<{ pass: boolean; detail: string }>;
+
+  beforeAll(async () => {
+    tmpDir = mkdtempSync(join(tmpdir(), "anqr-e2e-drift-"));
+    const mod = await import(
+      "../../harness/ops/harness-doctor/enforce-config-preflight.mjs"
+    );
+    enforceConfigPreflight = mod.enforceConfigPreflight;
+  });
+
+  afterAll(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("baseline: live system config preflight passes", { timeout: 30_000 }, async () => {
+    // Call with no overrides — exercises the real system's config surfaces
+    // and service lifecycle topology. This proves the current state is clean
+    // before we introduce deliberate drift.
+    const result = await enforceConfigPreflight();
+    expect(result.pass).toBe(true);
+    expect(result.detail).toContain("Config preflight passed");
+  });
+
+  it("blocks execution when env config surfaces are drifted", { timeout: 30_000 }, async () => {
+    // Create a template with 5 keys — the authoritative source of truth
+    const template = join(tmpDir, "template-drift.env");
+    writeFileSync(
+      template,
+      "GROQ_TOKEN=\nGEMINI_TOKEN=\nMISTRAL_TOKEN=\nOPENCLAW_GATEWAY_TOKEN=\nLINEAR_WEBHOOK_SECRET=\n",
+    );
+
+    // Create a surface missing 2 keys — simulates real drift where an
+    // operator forgot to add new keys after a template update
+    const surface = join(tmpDir, "drifted-surface.env");
+    writeFileSync(
+      surface,
+      "GROQ_TOKEN=gsk_test\nGEMINI_TOKEN=gem_test\nMISTRAL_TOKEN=mis_test\n",
+    );
+
+    // enforceConfigPreflight must throw — config drift detected, unsafe
+    // operation blocked. The error message must contain actionable detail
+    // including both the failure reason and the drift-specific language.
+    await expect(
+      enforceConfigPreflight({
+        templatePath: template,
+        surfaces: [{ name: "test-surface", path: surface }],
+      }),
+    ).rejects.toThrow(/Config preflight failed[\s\S]*Config surface drift/);
+  });
+
+  it("blocks execution when service lifecycle has critical violations", { timeout: 30_000 }, async () => {
+    // Create a temp services directory with a critical violation:
+    // a critical service using optional EnvironmentFile (dash prefix)
+    // instead of required (no dash). This is a real violation that
+    // would silently swallow missing env files at startup.
+    const svcDir = join(tmpDir, "services");
+    const wantsDir = join(tmpDir, "wants");
+    mkdirSync(svcDir, { recursive: true });
+    mkdirSync(wantsDir, { recursive: true });
+
+    // Provide aligned template + surface so config-surface check passes —
+    // we want to isolate the lifecycle violation, not conflate it with drift.
+    const template = join(tmpDir, "template-lifecycle.env");
+    writeFileSync(template, "KEY_A=\n");
+    const surface = join(tmpDir, "surface-lifecycle.env");
+    writeFileSync(surface, "KEY_A=val\n");
+
+    // Critical service with WRONG EnvironmentFile format (dash = optional)
+    writeFileSync(
+      join(svcDir, "anqr-symphony-router.service"),
+      [
+        "[Unit]",
+        "Description=ANQR Symphony Router",
+        "",
+        "[Service]",
+        "Type=simple",
+        "EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env",
+        "ExecStart=/usr/bin/node router.mjs",
+        "Restart=on-failure",
+        "",
+        "[Install]",
+        "WantedBy=default.target",
+      ].join("\n"),
+    );
+
+    // Executor template with correct BRIDGE_MODE (won't trigger)
+    writeFileSync(
+      join(svcDir, "anqr-symphony-executor@.service"),
+      [
+        "[Unit]",
+        "Description=ANQR Executor",
+        "",
+        "[Service]",
+        "Type=simple",
+        "Environment=BRIDGE_MODE=worktree",
+        "ExecStart=/usr/bin/node executor.mjs",
+        "Restart=on-failure",
+        "",
+        "[Install]",
+        "WantedBy=default.target",
+      ].join("\n"),
+    );
+
+    // Codex with correct BRIDGE_MODE
+    writeFileSync(
+      join(svcDir, "anqr-symphony-codex.service"),
+      [
+        "[Unit]",
+        "Description=ANQR Codex",
+        "",
+        "[Service]",
+        "Type=simple",
+        "Environment=BRIDGE_MODE=control-plane",
+        "ExecStart=/usr/bin/node codex.mjs",
+        "Restart=on-failure",
+        "",
+        "[Install]",
+        "WantedBy=default.target",
+      ].join("\n"),
+    );
+
+    // The EnvironmentFile dash-prefix is a critical violation — must block.
+    // Fully isolated: both config surface AND lifecycle checked against test fixtures.
+    await expect(
+      enforceConfigPreflight({
+        templatePath: template,
+        surfaces: [{ name: "test-surface", path: surface }],
+        servicesDir: svcDir,
+        wantsDir,
+      }),
+    ).rejects.toThrow(/Config preflight failed[\s\S]*Service lifecycle/);
+  });
+
+  it("corrected config restores green state", { timeout: 30_000 }, async () => {
+    // Create perfectly aligned template + surface — zero drift
+    const template = join(tmpDir, "template-ok.env");
+    writeFileSync(template, "KEY_A=\nKEY_B=\nKEY_C=\n");
+
+    const surface = join(tmpDir, "surface-ok.env");
+    writeFileSync(surface, "KEY_A=val1\nKEY_B=val2\nKEY_C=val3\n");
+
+    // This must pass — no drift, proving that correcting the config
+    // restores the system to a green state.
+    const result = await enforceConfigPreflight({
+      templatePath: template,
+      surfaces: [{ name: "test-surface", path: surface }],
+    });
+    expect(result.pass).toBe(true);
+    expect(result.detail).toContain("Config preflight passed");
+  });
+
+  it("runner maybeRunPreflights is wired to call enforceConfigPreflight", () => {
+    // Source verification: prove the runner integration path exists.
+    // This is the critical wiring that makes config drift block execution
+    // at the runner level — not just at the doctor/preflight level.
+    const runnerPath = resolve(
+      import.meta.dirname,
+      "../../harness/ops/orchestration/symphony-runner/maybe-run-preflights.mjs",
+    );
+    const source = readFileSync(runnerPath, "utf-8");
+
+    // Runner imports and calls enforceConfigPreflight
+    expect(source).toContain("enforceConfigPreflight");
+    // Runner caches preflight results
+    expect(source).toContain("configPreflight.pass");
+    // Runner propagates failures as blocking
+    expect(source).toContain("Config preflight failed");
+    // Config drift check is time-based (not just git-HEAD based)
+    expect(source).toContain("CONFIG_PREFLIGHT_INTERVAL_MS");
+  });
+});
+
 describe.todo("Scenario 3: Recovery quarantine without git mutation");
 describe.todo("Scenario 4: Restart-safe resumption from durable state");
 describe.todo("Scenario 2: Provider fallback with recorded evidence");
