@@ -166,13 +166,23 @@ export function initializeProbes() {
       logInfo(`Ready to accept requests`);
       logInfo(`========================================`);
 
-      // Save final probe results to shared cache for other executors
-      saveProbeCache({
-        configured: providerStatusCache.configured,
-        probeResults: providerStatusCache.probeResults,
-        lastProbeAt: providerStatusCache.lastProbeAt,
-        probing: false,
-      });
+      // Save final probe results to shared cache for other executors.
+      // Guard: only save if a probe actually ran (lastProbeAt is set).
+      // When refreshProviderStatus() couldn't acquire the lock it returns
+      // without probing, leaving lastProbeAt === null.  Saving that would
+      // poison the shared cache with 0/N results and block other executors.
+      if (providerStatusCache.lastProbeAt) {
+        saveProbeCache({
+          configured: providerStatusCache.configured,
+          probeResults: providerStatusCache.probeResults,
+          lastProbeAt: providerStatusCache.lastProbeAt,
+          probing: false,
+        });
+      } else {
+        logWarn(
+          `⚠️ Startup probe did not complete (lock contention) — skipping cache save to avoid poisoning shared state`,
+        );
+      }
 
       // SKIP: Don't send Discord notifications during startup probe
       // Sending probe results to Discord creates bridge requests that trigger more probes

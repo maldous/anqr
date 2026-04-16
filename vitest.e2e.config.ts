@@ -13,6 +13,7 @@ export default defineConfig({
       "tests/e2e/linear-flow.spec.ts",
       "tests/e2e/discord-flow.spec.ts",
       "tests/e2e/integration-promotion.spec.ts",
+      "tests/e2e/live-lifecycle-demo.spec.ts",
     ],
     exclude: ["node_modules", "dist"],
     fileParallelism: false,

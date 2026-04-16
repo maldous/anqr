@@ -8,7 +8,11 @@ export function getServiceActiveTime(serviceName) {
     );
     const timestamp = output.trim();
     if (!timestamp || timestamp === "0") return null;
-    return new Date(timestamp);
+    const date = new Date(timestamp);
+    // systemd timestamps (e.g. "Thu 2026-04-16 21:40:25 AEST") are not
+    // reliably parsed by the JS Date constructor — return null if invalid.
+    if (Number.isNaN(date.getTime())) return null;
+    return date;
   } catch {
     return null;
   }

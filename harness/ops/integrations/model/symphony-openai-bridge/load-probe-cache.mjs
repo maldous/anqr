@@ -10,7 +10,14 @@ export function loadProbeCache() {
   try {
     if (!fs.existsSync(PROBE_CACHE_FILE)) return null;
     const data = JSON.parse(fs.readFileSync(PROBE_CACHE_FILE, "utf-8"));
-    const age = Date.now() - new Date(data.lastProbeAt).getTime();
+    // Reject cache with missing or invalid lastProbeAt — prevents a poisoned
+    // cache (e.g. null from a failed startup probe) from being treated as fresh.
+    const probeTime = new Date(data.lastProbeAt).getTime();
+    if (Number.isNaN(probeTime)) {
+      logDebug(`Probe cache has invalid lastProbeAt: ${data.lastProbeAt}`);
+      return null;
+    }
+    const age = Date.now() - probeTime;
     if (age > PROBE_CACHE_TTL_MS) {
       if (!globalThis[EXPIRED_CACHE_LOG_KEY]) {
         logDebug(`Probe cache expired (${Math.round(age / 1000)}s old)`);

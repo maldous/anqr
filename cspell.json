@@ -670,7 +670,11 @@
     "unparseable",
     "worklist",
     "reconstructable",
-    "inspectable"
+    "inspectable",
+    "AEST",
+    "DLVDUP",
+    "ISSDUP",
+    "NOEVID"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

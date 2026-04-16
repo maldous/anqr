@@ -73,6 +73,15 @@ export function findEvidenceByIssue(identifier: string): EvidenceRecord | null {
   return null;
 }
 
+export function findAllEvidenceByIssue(identifier: string): EvidenceRecord[] {
+  const results: EvidenceRecord[] = [];
+  for (const file of listEvidenceFiles()) {
+    const record = loadEvidence(file);
+    if (record?.ingress?.issueIdentifier === identifier) results.push(record);
+  }
+  return results;
+}
+
 export function findEvidenceBySource(source: string, afterIso: string): EvidenceRecord | null {
   const candidates: EvidenceRecord[] = [];
   for (const file of listEvidenceFiles()) {
@@ -92,6 +101,35 @@ export function deleteEvidence(correlationId: string): void {
   } catch {
     /* already gone */
   }
+}
+
+export async function pollForEvidence(
+  issueId: string,
+  timeoutMs: number,
+  intervalMs = 500,
+): Promise<EvidenceRecord> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const record = findEvidenceByIssue(issueId);
+    if (record) return record;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  throw new Error(`pollForEvidence: no evidence for ${issueId} within ${timeoutMs}ms`);
+}
+
+export async function pollForEvidenceField(
+  issueId: string,
+  field: keyof EvidenceRecord,
+  timeoutMs: number,
+  intervalMs = 500,
+): Promise<EvidenceRecord> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const record = findEvidenceByIssue(issueId);
+    if (record && record[field] != null) return record;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  throw new Error(`pollForEvidenceField: field "${field}" not populated for ${issueId} within ${timeoutMs}ms`);
 }
 
 export async function assertServiceHealthy(url: string): Promise<Record<string, unknown>> {
