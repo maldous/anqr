@@ -390,7 +390,7 @@ describe("Timer overlap detection", () => {
 
   beforeAll(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), "anqr-timer-overlap-"));
-    const mod = await import("../../harness/ops/harness-doctor/check-service-lifecycle.mjs");
+    const mod = await import("../../harness/ops/harness-doctor/validate-timer-schedules.mjs");
     validateTimerSchedules = mod.validateTimerSchedules;
   });
 
@@ -488,7 +488,7 @@ describe("Dependency chain validation", () => {
 
   beforeAll(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), "anqr-dep-chain-"));
-    const mod = await import("../../harness/ops/harness-doctor/check-service-lifecycle.mjs");
+    const mod = await import("../../harness/ops/harness-doctor/validate-dependency-chains.mjs");
     validateDependencyChains = mod.validateDependencyChains;
   });
 
@@ -691,16 +691,15 @@ describe("Real repo config validation", () => {
 
   it("real timer schedules have safe minimum gaps", async () => {
     const { validateTimerSchedules } = await import(
-      "../../harness/ops/harness-doctor/check-service-lifecycle.mjs"
+      "../../harness/ops/harness-doctor/validate-timer-schedules.mjs"
     );
-
     const issues = validateTimerSchedules(resolve(REPO_ROOT, "services/systemd"));
     expect(issues).toHaveLength(0);
   });
 
   it("real dependency chains are all valid", async () => {
     const { validateDependencyChains } = await import(
-      "../../harness/ops/harness-doctor/check-service-lifecycle.mjs"
+      "../../harness/ops/harness-doctor/validate-dependency-chains.mjs"
     );
 
     const issues = validateDependencyChains(resolve(REPO_ROOT, "services/systemd"));
@@ -785,7 +784,7 @@ describe("parseEnvEntries", () => {
 
   beforeAll(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), "anqr-env-entries-"));
-    const mod = await import("../../harness/ops/harness-doctor/check-key-rotation.mjs");
+    const mod = await import("../../harness/ops/harness-doctor/parse-env-entries.mjs");
     parseEnvEntries = mod.parseEnvEntries;
   });
 

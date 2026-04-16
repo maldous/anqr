@@ -1,27 +1,8 @@
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { homedir } from "node:os";
 
-/**
- * Parse env file key names from a file. Skips comments and blank lines.
- * Returns an array of key names (not values — we never read secrets).
- *
- * @param {string} filePath
- * @returns {string[]}
- */
-export function parseEnvKeys(filePath) {
-  if (!existsSync(filePath)) return [];
-  const content = readFileSync(filePath, "utf-8");
-  return content
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("#"))
-    .map((line) => {
-      const eqIdx = line.indexOf("=");
-      return eqIdx > 0 ? line.slice(0, eqIdx).trim() : null;
-    })
-    .filter(Boolean);
-}
+import { parseEnvKeys } from "./parse-env-keys.mjs";
 
 /**
  * Check for drift between the repo env template and the live host env file.
@@ -31,7 +12,7 @@ export function parseEnvKeys(filePath) {
  * - Extra keys: in live file but not in template
  * - Symphony env symlink status
  *
- * Does NOT read secret values — only compares key names.
+ * Does NOT read secret values — only compares key names (not values — we never read secrets).
  */
 export async function checkEnvDrift() {
   // Lazy-resolve paths so parseEnvKeys can be imported without triggering

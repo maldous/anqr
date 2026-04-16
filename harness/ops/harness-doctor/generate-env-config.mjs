@@ -1,21 +1,8 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
-import { homedir } from "node:os";
 
-import { parseEnvKeys } from "./check-env-drift.mjs";
-
-/**
- * Default env surfaces derived from the repo template.
- * Each surface is a host-local env file that must stay aligned
- * with the authoritative key inventory in the repo template.
- */
-function defaultSurfaces() {
-  return [
-    { name: "systemd", path: resolve(homedir(), ".config/systemd/user/anqr-ops.env") },
-    { name: "symphony", path: resolve(homedir(), ".config/symphony/anqr.env") },
-    { name: "openclaw", path: resolve(homedir(), ".openclaw/.env") },
-  ];
-}
+import { parseEnvKeys } from "./parse-env-keys.mjs";
+import { defaultSurfaces } from "./default-surfaces.mjs";
 
 /**
  * Single-authoritative-source config generation and validation.

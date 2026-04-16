@@ -4,6 +4,8 @@ import {
   LEVEL_CHECKS,
   CONDITIONAL_CHECKS,
 } from "./mandatory-evidence-fields.mjs";
+import { checkField } from "./check-field.mjs";
+import { shouldApplyConditional } from "./should-apply-conditional.mjs";
 
 /**
  * Validate evidence completeness for a correlation ID.
@@ -72,41 +74,4 @@ export function validateEvidenceCompleteness(correlationId, requiredLevel = "sta
     missing,
     status: "ok",
   };
-}
-
-/** Resolve a dot-path to a nested value. */
-function getNestedValue(obj, dotPath) {
-  let current = obj;
-  for (const part of dotPath.split(".")) {
-    if (current == null) return undefined;
-    current = current[part];
-  }
-  return current;
-}
-
-/** Check a single field against its rule. */
-function checkField(record, check) {
-  const value = getNestedValue(record, check.path);
-  switch (check.rule) {
-    case "truthy":
-      return value != null && value !== "" && value !== false;
-    case "boolean":
-      return typeof value === "boolean";
-    case "equals":
-      return value === check.value;
-    default:
-      return value != null;
-  }
-}
-
-/** Determine whether a conditional check applies to this record. */
-function shouldApplyConditional(record, condition) {
-  switch (condition) {
-    case "execution_success_with_push":
-      return record.execution?.success === true && record.push != null;
-    case "validation_ran":
-      return record.validation != null;
-    default:
-      return false;
-  }
 }

@@ -1,76 +1,9 @@
-import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { homedir } from "node:os";
 
-/**
- * Placeholder patterns — values that indicate a key has not been properly
- * populated with a real secret. Checked case-insensitively.
- */
-const PLACEHOLDER_PATTERNS = [
-  /^REPLACE/i,
-  /^changeme$/i,
-  /^TODO$/i,
-  /^x{3,}$/i,
-  /^your[_-]?.*here$/i,
-  /^REPLACE_WITH_REAL/i,
-  /^<.*>$/,
-];
-
-/**
- * Hash a value with SHA-256. Returns a hex digest.
- * Used for change-detection without ever storing or logging the raw value.
- *
- * @param {string} value
- * @returns {string}
- */
-function hashValue(value) {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-/**
- * Parse env file entries with value awareness.
- * Returns key names, value hashes, and empty/placeholder flags.
- * **Never returns raw secret values.**
- *
- * @param {string} filePath
- * @returns {Array<{ key: string, valueHash: string, isEmpty: boolean, isPlaceholder: boolean }>}
- */
-export function parseEnvEntries(filePath) {
-  if (!existsSync(filePath)) return [];
-  const content = readFileSync(filePath, "utf-8");
-  return content
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("#"))
-    .map((line) => {
-      const eqIdx = line.indexOf("=");
-      if (eqIdx <= 0) return null;
-      const key = line.slice(0, eqIdx).trim();
-      const value = line.slice(eqIdx + 1).trim();
-      const isEmpty = value === "";
-      const isPlaceholder = !isEmpty && PLACEHOLDER_PATTERNS.some((re) => re.test(value));
-      return { key, valueHash: hashValue(value), isEmpty, isPlaceholder };
-    })
-    .filter(Boolean);
-}
-
-/**
- * Load the rotation ledger from disk, or return a fresh empty ledger.
- *
- * @param {string} ledgerPath
- * @returns {{ version: number, keys: Record<string, { hash: string, lastRotatedAt: string, lastCheckedAt: string }> }}
- */
-function loadLedger(ledgerPath) {
-  if (!existsSync(ledgerPath)) {
-    return { version: 1, keys: {} };
-  }
-  try {
-    return JSON.parse(readFileSync(ledgerPath, "utf-8"));
-  } catch {
-    return { version: 1, keys: {} };
-  }
-}
+import { parseEnvEntries } from "./parse-env-entries.mjs";
+import { loadLedger } from "./load-ledger.mjs";
 
 /**
  * Check key rotation status for an env file.

@@ -361,7 +361,7 @@ describe("validate-boundary-invariants (runtime)", () => {
 
 describe("Env drift detection", () => {
   it("parseEnvKeys extracts key names correctly", async () => {
-    const { parseEnvKeys } = await import("../../harness/ops/harness-doctor/check-env-drift.mjs");
+    const { parseEnvKeys } = await import("../../harness/ops/harness-doctor/parse-env-keys.mjs");
     // Use the repo template as a known-good input
     const templatePath = path.resolve(REPO_ROOT, "services/systemd/anqr-ops.env");
     const keys = parseEnvKeys(templatePath);
@@ -377,7 +377,7 @@ describe("Env drift detection", () => {
   });
 
   it("parseEnvKeys returns empty array for missing file", async () => {
-    const { parseEnvKeys } = await import("../../harness/ops/harness-doctor/check-env-drift.mjs");
+    const { parseEnvKeys } = await import("../../harness/ops/harness-doctor/parse-env-keys.mjs");
     const keys = parseEnvKeys("/nonexistent/path/to/env");
     expect(keys).toEqual([]);
   });

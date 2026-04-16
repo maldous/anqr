@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { homedir } from "node:os";
 
-import { parseEnvKeys } from "./check-env-drift.mjs";
+import { parseEnvKeys } from "./parse-env-keys.mjs";
 
 /**
  * Reconcile env key inventory between the repo template and live env files.

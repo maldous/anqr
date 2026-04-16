@@ -47,7 +47,7 @@ describe("Evidence durability — architecture guard", () => {
 
   it("withEvidenceLock uses O_EXCL for atomic lock acquisition", () => {
     const source = fs.readFileSync(
-      path.resolve(REPO_ROOT, "harness/ops/core/task-evidence/with-evidence-lock.mjs"),
+      path.resolve(REPO_ROOT, "harness/ops/core/task-evidence/try-acquire-lock.mjs"),
       "utf-8",
     );
     expect(source).toContain("O_EXCL");
