@@ -58,7 +58,7 @@ This document is the **index** for the implementation plan. Detailed content is 
 
 ### A–G Completion Judgment
 
-**Workstreams A–G are complete and accepted.** All carry-forward items from A–F have been resolved during G implementation. Confirmed by executive review on 2026-04-19. Workstream H (documentation alignment) is now in progress.
+**Workstreams A–G are complete and accepted.** All carry-forward items from A–F have been resolved during G implementation. Confirmed by executive review on 2026-04-19. Workstream H (documentation alignment) completed 2026-04-19.
 
 **Carry-forward items resolved in G:**
 1. **A3 — Alternate executor path** — ✅ Resolved in G Phase 1: `executeLinearIssueRequest` now generates `correlationId`, calls `ensureEvidenceRecord`, always sets `ANQR_CORRELATION_ID`.
@@ -93,6 +93,7 @@ This document is the **index** for the implementation plan. Detailed content is 
 - [PLAN-decisions.md](./PLAN-decisions.md) — Full chronological decisions log (all workstreams)
 - [PLAN-assessment.md](./PLAN-assessment.md) — Original assessment, headline judgment, confirmed blocking issues, requirements R1–R12
 - [PLAN-deliverables.md](./PLAN-deliverables.md) — Deliverables, acceptance criteria, documentation requirements, delivery sequence, final definition of success
+- [PLAN-criterion-13.md](./PLAN-criterion-13.md) — Live end-to-end demonstration plan (acceptance criterion #13)
 
 ## Workstream Summaries
 
@@ -117,8 +118,8 @@ Structured routing decision evidence on all 5 paths (streaming/non-streaming suc
 ### G. Evidence/Closure Model (✅ Complete)
 Evidence-gated closure: no issue transitions to `completed` without validated evidence artifacts. Evidence durability improvements (O_EXCL file locking, corruption detection, idempotent record creation). Closure gate in `publishEvidenceAndClose` with `forceCloseWithIncompleteEvidence` after MAX_EVIDENCE_RETRIES. A3 path fixed, F5 selection rationale wired, E4 repo-static decision documented. ADR-0012 created. All carry-forward items from A–F resolved. Acceptance criterion #13 (live end-to-end demo) remains open and is treated separately from G completion.
 
-### H. Documentation Alignment (🟡 In Progress)
-Doc-to-code alignment pass across the plan-set, ADRs, subsystem READMEs, and operational runbooks. The goal: a reviewer can move from docs to code and observe no material contradiction. Task 1 (plan-set normalization) is in progress. Tasks 2–5 (README sweep, historical labeling, ADR audit, contradiction sweep) are queued.
+### H. Documentation Alignment (✅ Complete)
+Doc-to-code alignment pass across the plan-set, ADRs, subsystem READMEs, and operational runbooks. The goal: a reviewer can move from docs to code and observe no material contradiction. All 5 tasks complete: plan-set normalization, README/architecture sweep, historical labeling, ADR status audit, contradiction sweep.
 
 ## Test Coverage Summary
 

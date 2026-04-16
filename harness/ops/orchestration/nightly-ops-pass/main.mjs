@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { archiveReport } from "./archive-report.mjs";
 import { dryRun } from "./dry-run.mjs";
 import { dryRunFlag } from "./dry-run-flag.mjs";
@@ -7,10 +10,20 @@ import { skipSonar } from "./skip-sonar.mjs";
 import { skipTests } from "./skip-tests.mjs";
 import { steps } from "./steps.mjs";
 import { logInfo } from "./logger.mjs";
+import { ROOT } from "./root.mjs";
 import { setGlobalValue } from "../../symphony-state.mjs";
 
 export async function main() {
   logInfo(`[nightly]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
+
+  // Sonar requires coverage/lcov.info — auto-skip when tests are skipped and no
+  // pre-existing coverage file is available, since sonar-scan would hard-fail.
+  const hasCoverage = existsSync(resolve(ROOT, "coverage/lcov.info"));
+  const sonarEnabled = Boolean(process.env.SONAR_TOKEN) && !skipSonar && (hasCoverage || !skipTests);
+  if (process.env.SONAR_TOKEN && !skipSonar && !sonarEnabled) {
+    logInfo("[nightly] ⚠️ Sonar steps skipped: --skip-tests is set and coverage/lcov.info is missing");
+  }
+
   const plan = [
     {
       name: "worktree-prune",
@@ -43,7 +56,7 @@ export async function main() {
             timeout: 400_000,
           },
         ]),
-    ...(process.env.SONAR_TOKEN && !skipSonar
+    ...(sonarEnabled
       ? [
           {
             name: "sonar-cleanup",
@@ -115,7 +128,7 @@ export async function main() {
     }
   }
 
-  if (process.env.SONAR_TOKEN && !skipSonar) {
+  if (sonarEnabled) {
     try {
       setGlobalValue("lastNightlySonarRun", {
         timestamp: new Date().toISOString(),

@@ -401,7 +401,7 @@ Comprehensive testing, end-to-end demonstration package, and documentation.
   - findIncompleteEvidence: batch scan finds records missing mandatory fields
   - Phase 4 guards: API response is "execution_complete", runner never sets STATES.done
   - Phase 3 F5 guards: selectProvider supports selectionLog, recordProviderRoutingEvidence includes selectionRationale
-- ⬜ **End-to-end lifecycle demonstration** (acceptance criterion #13) — **out of G completion scope**; requires live system verification:
+- ⬜ **End-to-end lifecycle demonstration** (acceptance criterion #13) — **out of G completion scope**; requires live system verification. Full plan: [PLAN-criterion-13.md](./PLAN-criterion-13.md)
   - Successful: scheduling → execution → validation → push → integration → evidence publication → closure
   - Failure: provider exhaustion → safety-net → evidence captured → issue stays open
   - Recovery: quarantine → repair → no git mutation → evidence of recovery action
@@ -447,7 +447,7 @@ Silent evidence loss, closure without proof of validation or integration, weak i
 
 10. ✅ Workflow completion is not signaled until integration and required evidence publication are complete.
 11. ✅ Closure fails when mandatory evidence is missing.
-13. ⬜ A full end-to-end demonstration exists for: successful authoritative scheduling through integration and closure; duplicate-trigger suppression; recovery quarantine without git mutation; restart-safe resumption; config drift detection; provider fallback with recorded evidence. (Requires live system verification)
+13. ⬜ A full end-to-end demonstration exists for: successful authoritative scheduling through integration and closure; duplicate-trigger suppression; recovery quarantine without git mutation; restart-safe resumption; config drift detection; provider fallback with recorded evidence. (Requires live system verification — see [PLAN-criterion-13.md](./PLAN-criterion-13.md))
 
 ## Dependencies
 

@@ -51,7 +51,7 @@
    - audit tests proving closure fails when evidence is incomplete
    - **Carry-forward from A–F resolved:** A3 alternate executor path (G Phase 1), E4 repo-static decision (G Phase 3), F5 selection rationale (G Phase 3), F7 evidence durability (G Phase 1)
 
-8. **Documentation alignment package** (Workstream H — ⬜)
+8. **Documentation alignment package** (Workstream H — ✅)
    - updated architecture docs
    - updated README files for affected subsystems
    - updated ADR status or replacement ADRs where current behavior changes
@@ -124,8 +124,8 @@
 7. ✅ Tighten service lifecycle and timer safety.
 8. ✅ Add provider-routing and context-control evidence.
 9. ✅ Enforce closure gating and lifecycle-state precision. (Workstream G)
-10. ⬜ Update all affected architecture, operations, and subsystem documents. (Workstream H)
-11. ⬜ Run full end-to-end verification and produce the completion evidence package. (Workstream G — requires live system)
+10. ✅ Update all affected architecture, operations, and subsystem documents. (Workstream H)
+11. ⬜ Run full end-to-end verification and produce the completion evidence package. (Workstream G — requires live system; see [PLAN-criterion-13.md](./PLAN-criterion-13.md))
 
 ## Final Definition of Success
 
@@ -142,5 +142,5 @@ The platform deserves **high-confidence fit-for-purpose status as a host-local a
 | Lifecycle status is precise from dispatch through closure | ✅ — G Phases 0–5 complete |
 | Evidence gates closure | ✅ — G Phase 2 closure gate + Phase 4 API alignment |
 | Service lifecycle behavior supports correctness, not only liveness | ✅ |
-| Documentation matches implemented reality | ⬜ (H) |
+| Documentation matches implemented reality | ✅ — H complete (plan-set normalization, README sweep, historical labeling, ADR audit, contradiction sweep) |
 | End-to-end tests and evidence prove the above under normal, retry, restart, drift, and failure scenarios | ⬜ — live system verification pending (acceptance criterion #13) |
