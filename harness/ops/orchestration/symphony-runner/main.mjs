@@ -54,10 +54,13 @@ export async function main() {
   logDebug(`[worktree-verify] WORKTREE_ID: ${WORKTREE_ID}`);
   logDebug(`[worktree-verify] ROOT === process.cwd(): ${ROOT === process.cwd()}`);
 
-  // Inline test: Verify they're different for worktrees
+  // Inline test: Verify they're different for worktrees.
+  // NOTE: ROOT === cwd() is expected when the executor's WorkingDirectory
+  // matches the worktree path (systemd sets cwd before exec). Only log at
+  // debug level — this is informational, not a warning.
   if (WORKTREE_ID !== "main" && ROOT === process.cwd()) {
-    logWarn(
-      `[worktree-verify] ⚠️ WARNING: ROOT equals process.cwd() - worktree separation may not be working!`,
+    logDebug(
+      `[worktree-verify] ROOT equals process.cwd() — expected when systemd WorkingDirectory matches worktree`,
     );
   } else if (WORKTREE_ID !== "main") {
     logDebug(`[worktree-verify] ✓ ROOT differs from process.cwd() - worktree separation active`);

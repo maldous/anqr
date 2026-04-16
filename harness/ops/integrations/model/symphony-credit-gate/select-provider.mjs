@@ -2,10 +2,10 @@ import { getProviderHealthState, HEALTH_STATES } from "../symphony-provider-heal
 
 import { PROVIDERS } from "./providers.mjs";
 import { TIER_LOCAL_SAFETY_NET } from "./tier-local-safety-net.mjs";
-import { buildProviderSelectionCandidateNames } from "./build-provider-selection-candidate-names.mjs";
 import { clearProviderFailure } from "./clear-provider-failure.mjs";
 import { ensureStateDir } from "./ensure-state-dir.mjs";
 import { getProviderTier } from "./get-provider-tier.mjs";
+import { getRankedProviders } from "./get-ranked-providers.mjs";
 import { matchesAllowedNames } from "./matches-allowed-names.mjs";
 import { matchesExcludedNames } from "./matches-excluded-names.mjs";
 import { tryProvider } from "./try-provider.mjs";
@@ -31,7 +31,19 @@ export async function selectProvider(options = {}) {
     excludedNames: excludedNames ? Array.from(excludedNames) : null,
   });
 
-  const orderedNames = buildProviderSelectionCandidateNames({ excludeNames: excludedNames });
+  // Single getRankedProviders call provides both candidate ordering and
+  // score/rank metrics for selectionLog entries — avoids a duplicate call
+  // through buildProviderSelectionCandidateNames.
+  const rankedEntries = getRankedProviders({ includeAvailable: true, excludeNames: excludedNames });
+  const orderedNames = [];
+  const scoreByName = new Map();
+  const seen = new Set();
+  for (const entry of rankedEntries) {
+    if (!entry?.name || seen.has(entry.name)) continue;
+    seen.add(entry.name);
+    orderedNames.push(entry.name);
+    scoreByName.set(entry.name, { score: entry.score, rank: entry.rank, selections: entry.selections, toolConfirmed: entry.toolConfirmed });
+  }
 
   logInfo(`[selectProvider] Candidate order (ranked)`, {
     candidateCount: orderedNames.length,
@@ -40,33 +52,34 @@ export async function selectProvider(options = {}) {
 
   for (const providerName of orderedNames) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
+    const metrics = scoreByName.get(providerName) || null;
     if (!provider) {
-      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "not_found" });
+      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "not_found", ...metrics });
       continue;
     }
     if (!matchesAllowedNames(provider, allowedNames)) {
-      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "not_in_allowed" });
+      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "not_in_allowed", ...metrics });
       continue;
     }
     if (matchesExcludedNames(provider, excludedNames)) {
-      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "excluded" });
+      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "excluded", ...metrics });
       continue;
     }
     const health = getProviderHealthState(provider.name);
     if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED) {
-      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: health.state });
+      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: health.state, ...metrics });
       continue;
     }
     const selected = await tryProvider(provider);
     if (selected) {
-      if (selectionLog) selectionLog.push({ name: selected.name, status: "selected", tier: selected.tier });
+      if (selectionLog) selectionLog.push({ name: selected.name, status: "selected", tier: selected.tier, ...metrics });
       logInfo(`[selectProvider] Selected ranked provider`, {
         providerName: selected.name,
         tier: selected.tier,
       });
       return selected;
     }
-    if (selectionLog) selectionLog.push({ name: providerName, status: "failed", reason: "try_failed" });
+    if (selectionLog) selectionLog.push({ name: providerName, status: "failed", reason: "try_failed", ...metrics });
   }
 
   if (!allowSafetyNetOverride) {
@@ -91,7 +104,7 @@ export async function selectProvider(options = {}) {
     clearProviderFailure(provider.name);
     const selected = await tryProvider(provider);
     if (selected) {
-      if (selectionLog) selectionLog.push({ name: selected.name, status: "safety_net_selected", tier: selected.tier });
+      if (selectionLog) selectionLog.push({ name: selected.name, status: "safety_net_selected", tier: selected.tier, score: "safety_net", rank: null });
       logWarn(
         `[selectProvider] P0 SAFETY NET activated: ${selected.name} (all ranked candidates exhausted)`,
         {

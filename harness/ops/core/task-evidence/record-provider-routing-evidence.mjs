@@ -17,7 +17,7 @@ import { updateEvidenceRecord } from "./update-evidence-record.mjs";
  * @param {number} evidence.attempts — total attempt count
  * @param {string[]} evidence.triedProviders — ordered list of providers tried
  * @param {Array<{providerName: string, model?: string, attemptNumber: number, outcome: string, durationMs: number, errorType?: string, errorMessage?: string}>} evidence.fallbackChain — per-attempt structured records
- * @param {Array<{name: string, status: string, reason?: string, tier?: string}>} [evidence.selectionRationale] — F5: ranked selection log from selectProvider
+ * @param {Array<{name: string, status: string, reason?: string, tier?: string, score?: number|string, rank?: number|null, selections?: number, toolConfirmed?: boolean}>} [evidence.selectionRationale] — F5: ranked selection log from selectProvider with candidate scores and ranking factors
  */
 export function recordProviderRoutingEvidence(correlationId, evidence) {
   return updateEvidenceRecord(correlationId, {

@@ -56,12 +56,13 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
     throw new Error(`Provider ${provider.name} not supported with AI SDK`);
   }
 
+  // Use strict tool-capability check: only providers confirmed via probe
+  // or in the KNOWN_TOOL_CAPABLE allowlist get tools.  Unprobed+unknown
+  // providers are rejected to prevent tool-call failures during demos.
   let useTools =
     options.useTools === false
       ? false
-      : options.useTools === true
-        ? providerSupportsTools(provider.name)
-        : providerSupportsTools(provider.name);
+      : providerSupportsTools(provider.name, { strict: true });
   logInfo(
     `Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? "" : " [no-tools]"}`,
   );
