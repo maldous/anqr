@@ -1,5 +1,7 @@
 # State Machines
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. The state model has been formalized in ADR-0011 with explicit transition maps, `transitionIssue()`/`transitionWorktree()` as sole lifecycle APIs, and durable execution ownership. See `harness/ops/core/symphony-state/README.md`.
+
 ## Why state machines matter
 
 The harness currently has state, but the transitions are not strict enough.

@@ -1,5 +1,7 @@
 # Scope, Status, And Truth Model
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. The truth model described here was formalized in ADR-0001 and ADR-0011. For current scope and status, see [PLAN.md](../../PLAN.md).
+
 ## Scope
 
 The harness is the repository-local automation platform for ANQR. It currently covers:

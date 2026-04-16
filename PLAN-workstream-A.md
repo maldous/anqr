@@ -84,7 +84,7 @@ The architectural changes are real and meaningful — scheduler authority exists
 | A4 | Tests focus on `claimIssue` not `claimAndAssignWorktree` | Low | Headline behavioral tests exercise `claimIssue()` but production scheduler uses `claimAndAssignWorktree()`. Coverage mismatch, not fatal. |
 | A5 | Tests mostly source-grep | Medium | ~20 of 30 tests are `fs.readFileSync` + `expect(source).toContain(...)` source verification, not runtime exclusivity proof. |
 
-### Impact on Workstream G
+### Impact on Workstream G (historical — G is now ✅ Complete)
 
 - **G can proceed** — scheduler authority is architecturally real
 - ~~G should note that strict end-to-end assignment enforcement is not proven~~ **RESOLVED**

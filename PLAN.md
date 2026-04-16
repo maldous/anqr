@@ -13,26 +13,29 @@ This document is the **index** for the implementation plan. Detailed content is 
 | E. Config/lifecycle hardening | ✅ Complete | 2026-04-16 | 2026-04-18 | [PLAN-workstream-E.md](./PLAN-workstream-E.md) |
 | F. Provider-routing evidence  | ✅ Complete    | 2026-04-16 | 2026-04-17 | [PLAN-workstream-F.md](./PLAN-workstream-F.md) |
 | G. Evidence/closure model     | ✅ Complete | 2026-04-18 | 2026-04-18 | [PLAN-workstream-G.md](./PLAN-workstream-G.md) |
-| H. Documentation alignment    | ⬜ Not Started | —          | —          | Continuous       |
+| H. Documentation alignment    | ✅ Complete     | 2026-04-19 | 2026-04-19 | [PLAN-workstream-H.md](./PLAN-workstream-H.md) |
 
-## Workstreams A–G Completion Summary
+## Workstreams A–H Completion Summary
 
-**All implementation workstreams (A–G) are ✅ Complete as of 2026-04-18.** Confirmed by gpt-5-agent deep audit. All carry-forward items from A–F resolved during G implementation (including F5 server.mjs wiring). Each workstream carries accepted Low-severity caveats documented in its detail file. Only Workstream H (documentation alignment) and acceptance criterion #13 (live end-to-end demo) remain open.
+**All workstreams (A–H) are ✅ Complete.** A–G completed as of 2026-04-18 (confirmed by gpt-5-agent deep audit). H completed 2026-04-19 (documentation alignment pass). All carry-forward items from A–F resolved during G implementation (including F5 server.mjs wiring). Each workstream carries accepted Low-severity caveats documented in its detail file. Only acceptance criterion #13 (live end-to-end demo) remains open.
 
 | Metric | Value |
 |--------|-------|
 | Total implementation workstreams | 7 (A–G) |
+| Total workstreams (including documentation) | 8 (A–H) |
 | Workstreams complete | 7/7 |
-| Acceptance criteria satisfied | 11/13 (#12 = H docs, #13 = live demo) |
-| Definition-of-success criteria met | 9/11 (docs + live demo remaining) |
+| Acceptance criteria satisfied | 12/13 (#13 = live demo) |
+| Definition-of-success criteria met | 10/11 (live demo remaining) |
 | Evidence test count | 79 (durability + closure-gate + locked-closure + provider-routing) |
 | Total workstream test count | 400+ across 18 test files |
 
 ---
 
-## Workstream G Readiness Assessment (Historical)
+## Workstreams A–G Completion Record
 
-**Prerequisite check for starting Workstream G (Evidence, closure, and observability model):**
+> This section documents the final A–G completion status as confirmed by gpt-5-agent deep audit. The prerequisite check below was the original G-readiness assessment; it now serves as the definitive completion record for all implementation workstreams.
+
+**Prerequisite check (originally for G start; now serves as A–G completion record):**
 
 | Prerequisite | Status | Evidence |
 |---|---|---|
@@ -42,7 +45,7 @@ This document is the **index** for the implementation plan. Detailed content is 
 | oxlint clean (0 warnings, 0 errors) | ✅ | `npx oxlint` — 6,780 files, 93 rules |
 | No merge conflict markers in tracked files | ✅ | `grep -rn '<<<<<<<' --include='*.md'` — only intentional examples |
 
-### Deep Review Verdict (gpt-5-agent per-workstream audit)
+### Deep Review Verdict (gpt-5-agent per-workstream audit — final A–G status)
 
 | Workstream | Review Verdict | Key Finding |
 |---|---|---|
@@ -53,9 +56,9 @@ This document is the **index** for the implementation plan. Detailed content is 
 | E | ✅ **Complete** | E1/E2 resolved (SHA-256 rotation, preflight wired). E4 decided in G Phase 3: repo-static sufficient for closure. Accepted caveats: E3/E5/E6 symlink/timer/placeholder (all Low). |
 | F | ✅ **Complete** (Phase 1 + 2 + 3) | All findings resolved including F5 selection rationale (G Phase 3) and F7 evidence durability (G Phase 1). ~68% runtime behavioral tests. Accepted caveat: F8 query library-only (Low). |
 
-### Honest G-Readiness Judgment
+### A–G Completion Judgment
 
-**Workstreams A–G are now complete.** All carry-forward items from A–F have been resolved during G implementation:
+**Workstreams A–G are complete and accepted.** All carry-forward items from A–F have been resolved during G implementation. Confirmed by executive review on 2026-04-19. Workstream H (documentation alignment) is now in progress.
 
 **Carry-forward items resolved in G:**
 1. **A3 — Alternate executor path** — ✅ Resolved in G Phase 1: `executeLinearIssueRequest` now generates `correlationId`, calls `ensureEvidenceRecord`, always sets `ANQR_CORRELATION_ID`.
@@ -83,6 +86,7 @@ This document is the **index** for the implementation plan. Detailed content is 
 - [PLAN-workstream-E.md](./PLAN-workstream-E.md) — Configuration and service lifecycle hardening
 - [PLAN-workstream-F.md](./PLAN-workstream-F.md) — Provider-routing determinism and context-control evidence
 - [PLAN-workstream-G.md](./PLAN-workstream-G.md) — Evidence, closure, and observability model
+- [PLAN-workstream-H.md](./PLAN-workstream-H.md) — Documentation and reality-alignment closure
 
 ### Supporting Documents
 
@@ -110,6 +114,12 @@ Fail-closed startup validation, config generation tooling, lifecycle checks with
 ### F. Provider-Routing Evidence (✅ Complete)
 Structured routing decision evidence on all 5 paths (streaming/non-streaming success/failure + Codebuff relay). Per-attempt fallback chain tracking, context-reduction evidence, safety-net evidence, post-hoc query capability. ~68% runtime behavioral tests. F5 selection rationale resolved in G Phase 3. F7 evidence durability resolved in G Phase 1.
 
+### G. Evidence/Closure Model (✅ Complete)
+Evidence-gated closure: no issue transitions to `completed` without validated evidence artifacts. Evidence durability improvements (O_EXCL file locking, corruption detection, idempotent record creation). Closure gate in `publishEvidenceAndClose` with `forceCloseWithIncompleteEvidence` after MAX_EVIDENCE_RETRIES. A3 path fixed, F5 selection rationale wired, E4 repo-static decision documented. ADR-0012 created. All carry-forward items from A–F resolved. Acceptance criterion #13 (live end-to-end demo) remains open and is treated separately from G completion.
+
+### H. Documentation Alignment (🟡 In Progress)
+Doc-to-code alignment pass across the plan-set, ADRs, subsystem READMEs, and operational runbooks. The goal: a reviewer can move from docs to code and observe no material contradiction. Task 1 (plan-set normalization) is in progress. Tasks 2–5 (README sweep, historical labeling, ADR audit, contradiction sweep) are queued.
+
 ## Test Coverage Summary
 
 | Test File | Tests | Workstream |
@@ -131,4 +141,6 @@ Structured routing decision evidence on all 5 paths (streaming/non-streaming suc
 | boundary-enforcement.spec.ts | 61 | D + E |
 | config-lifecycle-enforcement.spec.ts | 57 | E |
 | provider-routing-evidence.spec.ts | 32 | F |
+| evidence-durability.spec.ts | — | G Phase 1 |
+| evidence-closure-gate.spec.ts | — | G Phase 2–5 |
 | worktree-health.spec.ts | 10 | B |

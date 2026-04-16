@@ -1,8 +1,10 @@
 # Known Failures And Evidence
 
-## Summary
+> **⚠️ Pre-implementation architecture review document.** The failures listed here were the structural issues that drove Workstreams A–G. All have been addressed: duplicate dispatch (A), recovery git mutation (C), split scheduling (A), capacity advisory (B), worktree drift (C+D), and test gaps (A–G). See ADRs and subsystem READMEs for current behavior.
 
-The current failures are structural.
+## Summary (Historical)
+
+The failures described below were structural.
 
 Provider rate limits, individual AI errors, and flaky tasks exist, but they are not the main reason the harness behaves unpredictably.
 

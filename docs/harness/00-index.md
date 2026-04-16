@@ -1,8 +1,10 @@
 # ANQR Harness Architecture Index
 
-## Status
+> **⚠️ Pre-implementation architecture review document.** This document set (00–11) was written before Workstreams A–G were implemented. The structural faults, failure modes, and remediation targets described here have been addressed by those workstreams. For current architecture, see the ADRs in `docs/adrs/` and the subsystem READMEs in `harness/ops/`. For current plan status, see [PLAN.md](../../PLAN.md).
 
-The harness is **not production safe in its current orchestration form**.
+## Status (Historical)
+
+The harness **was** not production safe in its pre-A–G orchestration form.
 
 The runtime is partially implemented and actively used, but it still has structural faults:
 

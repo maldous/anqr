@@ -74,7 +74,7 @@ Unintended code publication, silent corruption of active work, race conditions w
 | C3 | Legacy action names remain | Low | `classify-worktree.mjs` still emits `retry_push` as an action name (which `executeRepair` demotes to quarantine). Not a functional bug, but shows the implementation is demoted legacy behavior, not a clean-slate model. |
 | C4 | Reprovision path not tested | Low | `reprovisionWorktree()` is called from recovery but not constrained by these tests. Transitive risk is low since reprovision is explicitly an intended recovery action. |
 
-### Impact on Workstream G
+### Impact on Workstream G (historical — G is now ✅ Complete)
 
 - **C is not blocking for G** — the no-publication contract is the real requirement and it is met
 - **Clarification for G:** recovery is "non-publishing" not "state-only" — G should not assume recovery can't mutate worktree sandboxes

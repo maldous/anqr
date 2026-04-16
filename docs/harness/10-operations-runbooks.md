@@ -1,5 +1,7 @@
 # Operations Runbooks
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. Operational procedures may reference pre-implementation behavior. For current service topology and operations, see `services/systemd/README.md` and subsystem READMEs.
+
 ## Principle
 
 Operational safety comes before throughput.

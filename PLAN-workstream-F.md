@@ -1,6 +1,6 @@
 # Workstream F — Provider-Routing Determinism and Context-Control Evidence
 
-> Part of [PLAN.md](./PLAN.md) · Status: ✅ Complete (Phase 1 + Phase 2 + Phase 3) · Started: 2026-04-16
+> Part of [PLAN.md](./PLAN.md) · Status: ✅ Complete (Phase 1 + Phase 2 + Phase 3) · Started: 2026-04-16 · Completed: 2026-04-17
 
 ## Summary
 
@@ -129,7 +129,7 @@ Poor reproducibility, weak incident analysis, opaque cost behavior, and hard-to-
 | F7 | Evidence persistence is best-effort | Low for F, **High for G** | All server-side evidence calls are wrapped as best-effort. Helpers return null if record doesn't exist. `updateEvidenceRecord()` has no locking — last-write-wins races possible. |
 | F8 | Post-hoc query is library function only | Low | `queryRoutingEvidence()` works but is just a file reader + formatter. No CLI wrapper or HTTP endpoint. Not an operator-grade facility. |
 
-### Minimum Fixes Before Workstream G (historical — all resolved)
+### Minimum Fixes Before Workstream G (historical — all resolved; G is now ✅ Complete)
 
 1. ✅ Emit `recordSafetyNetEvidence` for **non-streaming** provider exhaustion (F3) — **resolved in Phase 3**
 2. ✅ Persist `providerRouting` and `contextReduction` evidence for **failure** paths too (F2, F4) — **resolved in Phase 3**

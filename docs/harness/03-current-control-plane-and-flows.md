@@ -1,5 +1,7 @@
 # Current Control Plane And Flows
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. Control-plane authority has been restructured: the scheduler is now the sole claim authority (ADR-0002), the router is transport-only, recovery is non-publishing (ADR-0005), and state ownership is formalized (ADR-0011). For current flows, see subsystem READMEs.
+
 ## Current control-plane actors
 
 The current platform has these control-plane actors:

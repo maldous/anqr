@@ -1,5 +1,7 @@
 # Current Runtime And Service Topology
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. The service topology described here has been updated — notably the addition of the authoritative scheduler (Workstream A) and evidence-gated integrator (Workstream G). For current topology, see `services/systemd/README.md` and subsystem READMEs.
+
 ## Repository runtime roots
 
 The current runtime roots are:

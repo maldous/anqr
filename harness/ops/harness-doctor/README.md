@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Harness Doctor contains the code, configuration, or support files that implement this part of the harness architecture.
+Operational health-check tool that validates the harness runtime environment: environment variables, systemd services, credit gate, Ollama availability, node_modules, queue state, reports directory, and harness configuration. Supports both advisory (default) and enforcement (`--enforce`) modes.
+
+In enforcement mode, harness-doctor combines config surface alignment (`generate-env-config.mjs validate`) and lifecycle enforcement (`check-service-lifecycle.mjs enforce`) as a fail-closed preflight gate via `enforce-config-preflight.mjs`. See Workstream E for the config/lifecycle hardening context.
 
 ## Contents
 
@@ -11,31 +13,42 @@ Harness Doctor contains the code, configuration, or support files that implement
 
 ## Key Files
 
-- `check-credit-gate.mjs` - Exports `checkCreditGate`, the main helper defined in this file.
-- `check-env-vars.mjs` - Exports `checkEnvVars`, the main helper defined in this file.
-- `check-harness-config.mjs` - Exports `checkHarnessConfig`, the main helper defined in this file.
-- `check-node-modules.mjs` - Exports `checkNodeModules`, the main helper defined in this file.
-- `check-ollama.mjs` - Exports `checkOllama`, the main helper defined in this file.
-- `check-queue-state.mjs` - Exports `checkQueueState`, the main helper defined in this file.
-- `check-reports-dir.mjs` - Exports `checkReportsDir`, the main helper defined in this file.
-- `check-systemd-services.mjs` - Exports `checkSystemdServices`, the main helper defined in this file.
-- `dirname.mjs` - Exports `__dirname`, a shared constant or state value used by sibling modules.
-- `index.mjs` - Re-export facade that assembles the public surface for this directory.
-- `is-main.mjs` - Exports `isMain`, a shared constant or state value used by sibling modules.
-- `logger.mjs` - Re-export facade that assembles the public surface for this directory.
-- `main.mjs` - Exports `main`, the main helper defined in this file.
-- `root.mjs` - Exports `ROOT`, a shared constant or state value used by sibling modules.
-- `runtime.mjs` - Executable runtime bootstrap for this directory.
+- `check-credit-gate.mjs` — Verifies the credit gate is correctly configured and accessible.
+- `check-env-vars.mjs` — Validates required environment variables are set for the current bridge mode.
+- `check-harness-config.mjs` — Checks harness configuration integrity (symphony-config, worktree config).
+- `check-node-modules.mjs` — Verifies node_modules exists and is not stale.
+- `check-ollama.mjs` — Probes Ollama local inference endpoint for availability.
+- `check-queue-state.mjs` — Inspects the desired-work queue and integration candidate state.
+- `check-reports-dir.mjs` — Ensures the reports output directory exists and is writable.
+- `check-systemd-services.mjs` — Validates systemd service unit status, enabled state, and dependency chains.
+- `dirname.mjs` — Exports `__dirname` for ESM compatibility.
+- `index.mjs` — Re-export facade that assembles the public surface for this directory.
+- `is-main.mjs` — Detects whether the module is the main entry point.
+- `logger.mjs` — Shared logging helper.
+- `main.mjs` — Primary orchestration: runs all checks, collects results, prints summary.
+- `root.mjs` — Exports `ROOT`, the repository root path.
+- `runtime.mjs` — Executable runtime bootstrap.
 
 ## Subdirectories
 
 - No child directories in this directory.
 
+## Usage
+
+```bash
+# Advisory mode (default) — reports issues without failing
+node harness/ops/harness-doctor/runtime.mjs
+
+# Enforcement mode — fails on critical violations
+node harness/ops/harness-doctor/runtime.mjs --enforce
+```
+
 ## Operational Notes
 
-- Current on-disk inventory: 15 immediate file(s) and 0 child directories.
-- This README was refreshed against the current source tree rather than older intent docs alone.
+- Current on-disk inventory: 15 immediate files and 0 child directories.
+- The `--enforce` flag triggers `enforce-config-preflight.mjs` which throws on critical violations (missing required EnvironmentFile, wrong BRIDGE_MODE, broken Requires= chains, timer overlap).
+- Advisory mode is safe to run at any time and does not modify state.
 
 ## Review Focus
 
-Check that the current implementation in this directory still matches its intended role in the harness architecture.
+Verify that all check modules cover the current service topology and that enforcement mode catches the critical configuration violations identified in Workstream E.

@@ -1,5 +1,7 @@
 # Quality Gates And Post-AI Processing
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. Quality gates and evidence-gated closure are now enforced — see ADR-0007 (quality gates), ADR-0012 (evidence-gated closure), and `harness/ops/core/task-evidence/README.md`.
+
 ## Purpose
 
 Post-AI processing is mandatory for any mutating task.

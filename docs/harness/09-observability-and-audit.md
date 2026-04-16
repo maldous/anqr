@@ -1,5 +1,7 @@
 # Observability And Audit
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. The observability model has been extended with structured evidence records (ADR-0006), provider routing evidence (Workstream F), and evidence-gated closure (ADR-0012). See `harness/ops/core/task-evidence/README.md`.
+
 ## Current strength
 
 The current runtime already logs a lot of useful detail:

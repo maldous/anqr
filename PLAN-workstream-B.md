@@ -203,7 +203,7 @@ State drift, stale-owner confusion, scheduler disagreement, false health signals
 | B5 | Atomicity tested with mocked lock/storage | Medium | Tests mock `loadState`, `saveState`, `withStateLock`. Proves function bodies update both sides, but not real filesystem persistence, lock behavior, or crash-window safety. |
 | B6 | Deprecated helpers still exist as importable modules | Low | `setFinalizationState.mjs` and `setWorktreeState.mjs` remain as files. Removed from barrel exports and no production callers found, but still importable as backdoors. |
 
-### Impact on Workstream G
+### Impact on Workstream G (historical — G is now ✅ Complete)
 
 - ~~B1+B2 are blocking for G~~ **RESOLVED** — `patchIssueState()` now enforces metadata-only boundary at runtime
 - ~~B3 is blocking for G~~ **RESOLVED** — transition map requires evidence gating before completion

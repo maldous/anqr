@@ -1,5 +1,7 @@
 # Worktree And Git Governance
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. Worktree isolation is now enforced by six defense layers (ADR-0003, ADR-0008), recovery is non-publishing (ADR-0005), and worktree assignment is atomic and durable (ADR-0011). See `harness/ops/orchestration/symphony-worktree-recovery/README.md`.
+
 ## Current worktree policy
 
 The current fleet uses eight long-lived worktrees:

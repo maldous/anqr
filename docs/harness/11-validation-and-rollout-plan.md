@@ -1,5 +1,7 @@
 # Validation And Rollout Plan
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. The validation strategy described here was executed across the workstreams. For current test coverage, see [PLAN.md](../../PLAN.md) test coverage summary.
+
 ## Goal
 
 Prove the architecture is correct before trusting it with unattended mutating work.

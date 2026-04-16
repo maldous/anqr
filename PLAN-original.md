@@ -1,5 +1,11 @@
 # Title
 
+> **⚠️ Historical snapshot — do not use for current status.**
+>
+> This file preserves the original execution plan and decisions log as they existed mid-implementation (circa 2026-04-16). Workstream statuses here (e.g. D "Substantially Complete", G/H "Not Started") are **outdated**.
+>
+> For current status, see [PLAN.md](./PLAN.md) and individual workstream files (PLAN-workstream-A.md through PLAN-workstream-H.md).
+
 High-Confidence Automation Readiness Requirements for the ANQR Host-Local Harness
 
 # Execution Progress

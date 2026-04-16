@@ -129,7 +129,7 @@ Operator error remains part of the runtime contract. Configuration drift continu
 | E5 | Timer/dependency validation is intentionally simplistic | Low | Timer validation handles only `*-*-* HH:MM:SS` patterns. Dependency validation only checks `Requires=`, ignores `After=`, `Wants=`, drop-ins. Useful linting, not complete lifecycle validation. |
 | E6 | `generate` mode creates placeholder empties | Low | Writes `KEY=` placeholders which helps inventory consistency but can produce a false sense of completion. |
 
-### Impact on Workstream G
+### Impact on Workstream G (historical — G is now ✅ Complete)
 
 - **E1+E2 are the main concerns** — config sync gap is narrowed but not eliminated
 - **G should consider:** wiring `enforceConfigPreflight` into `ExecStartPre=` for critical services, or treating config validation as a G-scope operational hardening item

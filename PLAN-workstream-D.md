@@ -114,7 +114,7 @@ The codex control-plane exception is a deliberate main-repo mutation exception. 
 | D4 | Codex `/v1/responses` skips auth | Low for D, noted for G | May be intentional for CLI local usage, but if network exposure assumptions change, it's a concern. |
 | D5 | `CODEX_SANDBOX_MODE=danger-full-access` | Informational | Both executor and codex services set this. Even if the file/path layer provides containment, the setting is a red flag for any future tighter sandboxing claim. |
 
-### Impact on Workstream G
+### Impact on Workstream G (historical — G is now ✅ Complete)
 
 - **D is acceptable for G** if G explicitly excludes codex from autonomous/scheduled mutation paths
 - **G should note:** the exception is policy/envelope based, not capability based — if something routes traffic to codex incorrectly, it can mutate the main repo by design

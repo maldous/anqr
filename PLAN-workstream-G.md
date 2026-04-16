@@ -1,6 +1,8 @@
 # Workstream G — Evidence, Closure, and Observability Model
 
 > Part of [PLAN.md](./PLAN.md) · Status: ✅ Complete · Started: 2026-04-18 · Completed: 2026-04-18
+>
+> **Note:** Acceptance criterion #13 (live end-to-end demonstration) is out of scope for G completion. It requires a live system verification and is tracked separately.
 
 ## Summary
 
@@ -399,7 +401,7 @@ Comprehensive testing, end-to-end demonstration package, and documentation.
   - findIncompleteEvidence: batch scan finds records missing mandatory fields
   - Phase 4 guards: API response is "execution_complete", runner never sets STATES.done
   - Phase 3 F5 guards: selectProvider supports selectionLog, recordProviderRoutingEvidence includes selectionRationale
-- [ ] **End-to-end lifecycle demonstration** (acceptance criterion #13) — requires live system verification:
+- ⬜ **End-to-end lifecycle demonstration** (acceptance criterion #13) — **out of G completion scope**; requires live system verification:
   - Successful: scheduling → execution → validation → push → integration → evidence publication → closure
   - Failure: provider exhaustion → safety-net → evidence captured → issue stays open
   - Recovery: quarantine → repair → no git mutation → evidence of recovery action

@@ -80,7 +80,7 @@
 | 9  | Context reduction is visible in evidence and does not silently masquerade as an unmodified request. | ✅ | F — ~~success-path only, failure-path loses evidence~~ **RESOLVED** (context-reduction evidence emitted on both success and failure paths) |
 | 10 | Workflow completion is not signaled until integration and required evidence publication are complete. | ✅ | G — `publishEvidenceAndClose` gates on `validateEvidenceCompleteness("standard")` before marking Done. API response changed to `"execution_complete"`. Runner never sets `STATES.done`. |
 | 11 | Closure fails when mandatory evidence is missing. | ✅ | G — `validateEvidenceCompleteness` blocks closure on incomplete evidence. After `MAX_EVIDENCE_RETRIES` (3), `forceCloseWithIncompleteEvidence` auto-overrides with auditable `evidenceOverride` metadata. |
-| 12 | Updated documentation matches implemented behavior for scheduler ownership, recovery limits, state ownership, repo/worktree boundaries, config flow, and lifecycle semantics. | ⬜ | H |
+| 12 | Updated documentation matches implemented behavior for scheduler ownership, recovery limits, state ownership, repo/worktree boundaries, config flow, and lifecycle semantics. | ✅ | H |
 | 13 | A full end-to-end demonstration exists for: successful authoritative scheduling through integration and closure; duplicate-trigger suppression; recovery quarantine without git mutation; restart-safe resumption; config drift detection; provider fallback with recorded evidence. | ⬜ | G |
 
 ## Documentation and Reality Alignment Requirements

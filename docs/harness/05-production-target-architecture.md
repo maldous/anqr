@@ -1,5 +1,7 @@
 # Production Target Architecture
 
+> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. The target architecture described here has largely been implemented. For current architecture decisions, see the ADRs in `docs/adrs/`.
+
 ## Design objective
 
 The target design must allow:
