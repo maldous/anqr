@@ -3,9 +3,10 @@
  *
  * Integration tests verifying that:
  * 1. Lease-loss during validation emits Abandoned (not Done)
- * 2. No-file-change with tool calls moves to In Review (not Done)
- * 3. No-file-change without tool calls moves to Todo (not Done)
- * 4. Success notification is sent AFTER Linear writeback completes
+ * 2. No-file-change with native tool calls moves to Done (tool calls ARE the work product)
+ * 3. No-file-change with completionPromoted tool calls moves to In Review (human verification)
+ * 4. No-file-change without tool calls moves to Todo (not Done)
+ * 5. Success notification is sent AFTER Linear writeback completes
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -57,6 +58,8 @@ vi.mock("../../harness/ops/symphony-state.mjs", () => ({
   calculateExponentialBackoff: vi.fn(),
   getFinalizationState: vi.fn(),
   getWorktreeState: vi.fn(),
+  transitionWorktree: vi.fn(() => ({ ok: true })),
+  transitionIssue: vi.fn(() => ({ ok: true })),
 }));
 
 vi.mock("../../harness/ops/linear-client.mjs", () => ({
@@ -446,10 +449,12 @@ describe("Lease-loss during execution", () => {
 
 describe("No-file-change completion hardening", () => {
   it(
-    "moves to In Review (not Done) when agent completes with tool calls but no file changes",
+    "marks Done when agent natively completes with tool calls but no file changes",
     { timeout: 30_000 },
     async () => {
-      // Agent reports completion with tool calls but no file changes
+      // Agent reports native completion with tool calls but no file changes.
+      // Per execute-issue.mjs line 868: "tool calls ARE the work product" → Done.
+      // (The In Review path is only for completionPromoted cases.)
       vi.mocked(runAgent).mockResolvedValue({
         ...fixtures.agentSuccessResult,
         toolCalls: 5,
@@ -460,20 +465,69 @@ describe("No-file-change completion hardening", () => {
       const result = await executeIssue(fixtures.mockIssue);
       expect(result).toBe("done");
 
-      // Issue moved to In Review, NOT Done
+      // Issue moved to Done — tool calls are the work product
+      const updateCalls = vi.mocked(updateIssue).mock.calls;
+      const lastUpdate = updateCalls[updateCalls.length - 1]!;
+      expect(lastUpdate[1]).toEqual({ stateId: STATES.done });
+
+      // Comment explains the completion
+      const commentCalls = vi.mocked(addComment).mock.calls;
+      const lastComment = commentCalls[commentCalls.length - 1]!;
+      expect(lastComment[1]).toContain("no file changes");
+    },
+  );
+
+  it(
+    "moves to In Review when completionPromoted agent has tool calls but no file changes",
+    { timeout: 30_000 },
+    async () => {
+      // Agent returns completed=false but made tool calls. classifyProviderFailure
+      // returns "other" (default mock), so execute-issue promotes to completed=true
+      // with completionPromoted=true. With no file changes, the code takes the
+      // In Review path (execute-issue.mjs ~line 896) instead of Done.
+      vi.mocked(runAgent).mockResolvedValue({
+        ...fixtures.agentSuccessResult,
+        completed: false,
+        toolCalls: 5,
+        filesChanged: [],
+      } as never);
+      vi.mocked(gitDiffNames).mockReturnValue([] as never);
+
+      const result = await executeIssue(fixtures.mockIssue);
+      expect(result).toBe("done");
+
+      // Issue moved to In Review — partial progress needs human verification
       const updateCalls = vi.mocked(updateIssue).mock.calls;
       const lastUpdate = updateCalls[updateCalls.length - 1]!;
       expect(lastUpdate[1]).toEqual({ stateId: STATES.inReview });
 
+      // Done was never used
       const anyDone = updateCalls.some(
         (c) => (c[1] as Record<string, unknown>).stateId === STATES.done,
       );
       expect(anyDone).toBe(false);
 
-      // Comment explains why
+      // Comment explains the In Review decision
       const commentCalls = vi.mocked(addComment).mock.calls;
       const lastComment = commentCalls[commentCalls.length - 1]!;
-      expect(lastComment[1]).toContain("no file changes");
+      expect(lastComment[1]).toContain("In Review");
+      expect(lastComment[1]).toContain("human verification");
+
+      // Transition recorded with the correct reason
+      const transitionCalls = vi.mocked(recordTransition).mock.calls;
+      const lastTransition = transitionCalls[transitionCalls.length - 1]![1] as Record<
+        string,
+        unknown
+      >;
+      expect(lastTransition.reason).toBe("agent_partial_no_changes_review");
+      expect(lastTransition.from).toBe("In Progress");
+      expect(lastTransition.to).toBe("In Review");
+
+      // Completion recorded as failure (not true completion)
+      expect(recordLinearCompletion).toHaveBeenCalledWith(
+        "test-provider",
+        expect.objectContaining({ completed: false }),
+      );
     },
   );
 

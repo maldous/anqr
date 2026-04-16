@@ -484,4 +484,22 @@ describe("Phase 3 F5 — selection rationale infrastructure", () => {
     );
     expect(source).toContain("selectionRationale");
   });
+
+  it("server.mjs wires selectionLog into selectProvider and propagates selectionRationale", () => {
+    const source = fs.readFileSync(
+      path.resolve(
+        REPO_ROOT,
+        "harness/ops/integrations/model/symphony-openai-bridge/server.mjs",
+      ),
+      "utf-8",
+    );
+    // server.mjs creates selectionLog array and passes it to selectProvider
+    expect(source).toContain("const selectionLog = [];");
+    expect(source).toContain("selectionLog }");
+    // All recordProviderRoutingEvidence calls include selectionRationale
+    const routingCallCount = (source.match(/recordProviderRoutingEvidence\(/g) || []).length;
+    const rationaleCount = (source.match(/selectionRationale:/g) || []).length;
+    expect(routingCallCount).toBeGreaterThanOrEqual(5);
+    expect(rationaleCount).toBeGreaterThanOrEqual(routingCallCount);
+  });
 });

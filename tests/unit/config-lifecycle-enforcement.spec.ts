@@ -15,12 +15,38 @@ import fs from "node:fs";
 const REPO_ROOT = path.resolve(import.meta.dirname, "../..");
 
 // ---------------------------------------------------------------------------
+// Result shapes for harness-doctor modules (JS sources — typed here for tests)
+// ---------------------------------------------------------------------------
+
+interface EnvConfigValidateResult {
+  pass: boolean;
+  templateKeyCount: number;
+  surfaces: Array<{ missingKeys: string[]; exists: boolean; extraKeys?: string[] }>;
+  detail?: string;
+}
+
+interface EnvConfigGenerateResult {
+  actions: string[];
+}
+
+interface ServiceLifecycleResult {
+  criticalIssues: string[];
+  advisoryIssues: string[];
+  issues: string[];
+}
+
+interface PreflightResult {
+  pass: boolean;
+  detail: string;
+}
+
+// ---------------------------------------------------------------------------
 // 1. generateEnvConfig — validate mode (runtime behavior)
 // ---------------------------------------------------------------------------
 
 describe("generateEnvConfig — validate mode", () => {
   let tmpDir: string;
-  let generateEnvConfig: (opts?: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  let generateEnvConfig: (opts?: Record<string, unknown>) => Promise<EnvConfigValidateResult>;
 
   beforeAll(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), "anqr-env-config-validate-"));
@@ -143,7 +169,7 @@ describe("generateEnvConfig — validate mode", () => {
 
 describe("generateEnvConfig — generate mode", () => {
   let tmpDir: string;
-  let generateEnvConfig: (opts?: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  let generateEnvConfig: (opts?: Record<string, unknown>) => Promise<EnvConfigGenerateResult>;
 
   beforeAll(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), "anqr-env-config-generate-"));
@@ -225,7 +251,7 @@ describe("checkServiceLifecycle — enforce mode", () => {
   let tmpDir: string;
   let checkServiceLifecycle: (
     opts?: Record<string, unknown>,
-  ) => Promise<Record<string, unknown>>;
+  ) => Promise<ServiceLifecycleResult>;
 
   beforeAll(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), "anqr-lifecycle-enforce-"));
@@ -535,7 +561,7 @@ describe("Dependency chain validation", () => {
 
 describe("enforceConfigPreflight", () => {
   let tmpDir: string;
-  let enforceConfigPreflight: (opts?: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  let enforceConfigPreflight: (opts?: Record<string, unknown>) => Promise<PreflightResult>;
 
   beforeAll(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), "anqr-preflight-"));

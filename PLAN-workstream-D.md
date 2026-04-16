@@ -4,7 +4,7 @@
 
 ## Summary
 
-BRIDGE_MODE formalization, fail-closed validate-boundary-invariants (throws on critical worktree misconfigs), assertBridgeMutationBoundary in tool path, 61 boundary enforcement tests (runtime behavior, not just source verification), ADR-0008/0003 updated. **Remaining caveat:** codex control-plane exception relies on service/port isolation + documentation rather than hard in-tool mutation enforcement (accepted design choice per ADR-0008).
+BRIDGE_MODE formalization, fail-closed validate-boundary-invariants (throws on critical worktree misconfigs), assertBridgeMutationBoundary in tool path, 61 boundary enforcement tests (runtime behavior, not just source verification), ADR-0008/0003 updated. **Remaining caveat:** codex control-plane exception is a deliberate main-repo mutation exception. Worktree executors are protected by in-tool `assertBridgeMutationBoundary`; the codex bridge in control-plane mode relies on explicit `BRIDGE_MODE`, service/port isolation, and ADR-0008 policy because codex is intentionally allowed to mutate the control repo.
 
 ## Requirements Addressed
 
@@ -98,7 +98,7 @@ Weakened isolation, accidental main-repo mutation, hidden coupling between contr
 
 ## Remaining Caveat
 
-The codex control-plane exception relies on service/port isolation + documentation rather than hard in-tool mutation enforcement. This is an accepted design choice per ADR-0008 — the codex bridge is a developer tool, not part of the autonomous execution fleet.
+The codex control-plane exception is a deliberate main-repo mutation exception. Worktree executors are protected by in-tool `assertBridgeMutationBoundary` (blocks writes to `CONTROL_REPO_ROOT` in worktree mode). The codex bridge in control-plane mode relies on explicit `BRIDGE_MODE=control-plane`, service/port isolation (port 4330 outside executor pool), and ADR-0008 policy — codex is intentionally allowed to mutate the control repo as a developer tool, not part of the autonomous execution fleet.
 
 ## Completion Review Findings (gpt-5-agent deep audit)
 

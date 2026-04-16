@@ -179,6 +179,7 @@ describe("claimAndAssignWorktree atomicity (Phase 6)", () => {
     const { claimAndAssignWorktree } =
       await import("../../harness/ops/core/symphony-state/claim-and-assign-worktree.mjs");
 
+    // @ts-expect-error -- intentionally passing invalid input to test runtime validation of missing worktreeId
     const result = claimAndAssignWorktree("ANQ-ATOM-4", {});
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("missing_worktree_assignment");

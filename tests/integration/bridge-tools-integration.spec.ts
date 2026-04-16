@@ -219,17 +219,21 @@ describe("Bridge Tools Integration - Error Handling", () => {
     expect(result).toBeDefined();
   });
 
-  it("should handle command timeout in exec tool", async () => {
-    const { execTool } =
-      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
+  it(
+    "should handle command timeout in exec tool",
+    async () => {
+      const { execTool } =
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
-    const result = await execTool({
-      command: "sleep 120", // Will be killed by 60s timeout
-      cwd: undefined,
-    });
+      const result = await execTool({
+        command: "sleep 120", // Will be killed by 60s timeout
+        cwd: undefined,
+      });
 
-    expect(result.error || result.exitCode !== 0).toBeTruthy();
-  });
+      expect(result.error || result.exitCode !== 0).toBeTruthy();
+    },
+    120_000,
+  );
 });
 
 describe("Bridge Tools Integration - Proposal Tools Safety", () => {
@@ -356,21 +360,25 @@ describe("Bridge Tools Integration - Memory Operations", () => {
 });
 
 describe("Bridge Tools Integration - Execution Safety", () => {
-  it("should enforce timeout on long-running commands", async () => {
-    const { execTool } =
-      await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
+  it(
+    "should enforce timeout on long-running commands",
+    async () => {
+      const { execTool } =
+        await import("../../harness/ops/integrations/model/symphony-openai-bridge.mjs");
 
-    const startTime = Date.now();
-    const result = await execTool({
-      command: "sleep 120",
-      cwd: undefined,
-    });
-    const duration = Date.now() - startTime;
+      const startTime = Date.now();
+      const result = await execTool({
+        command: "sleep 120",
+        cwd: undefined,
+      });
+      const duration = Date.now() - startTime;
 
-    // Should timeout well before 120 seconds
-    expect(duration).toBeLessThan(65000); // 65s with buffer
-    expect(result.error || result.exitCode !== 0).toBeTruthy();
-  });
+      // Should timeout well before 120 seconds
+      expect(duration).toBeLessThan(65000); // 65s with buffer
+      expect(result.error || result.exitCode !== 0).toBeTruthy();
+    },
+    120_000,
+  );
 
   it("should limit output buffer size", async () => {
     const { execTool } =

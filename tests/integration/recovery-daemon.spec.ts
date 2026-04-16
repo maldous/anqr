@@ -43,6 +43,16 @@ describe("executeRepair", () => {
     // Wait for expiry
     await new Promise((r) => setTimeout(r, 10));
 
+    // Pre-initialize worktree to "executing" so the transition to "dirty_owned" is valid
+    mutateState((store) => {
+      store.worktreeStates["wt1"] = {
+        state: "executing",
+        assignedIssue: "ANQ-100",
+        updatedAt: new Date().toISOString(),
+      };
+      return store;
+    });
+
     const result = await executeRepair("wt1", {
       classification: "stale_lease",
       confidence: 0.9,
@@ -55,7 +65,7 @@ describe("executeRepair", () => {
 
     const wtState = getWorktreeState("wt1");
     expect(wtState!.state).toBe("dirty_owned");
-    expect(wtState!.issueIdentifier).toBe("ANQ-100");
+    expect(wtState!.assignedIssue).toBe("ANQ-100");
   });
 
   it("should quarantine stale lease with low confidence", async () => {
@@ -73,6 +83,16 @@ describe("executeRepair", () => {
   });
 
   it("should set dirty_owned for continue_repair", async () => {
+    // Pre-initialize worktree to "executing" so the transition to "dirty_owned" is valid
+    mutateState((store) => {
+      store.worktreeStates["wt2"] = {
+        state: "executing",
+        assignedIssue: "ANQ-200",
+        updatedAt: new Date().toISOString(),
+      };
+      return store;
+    });
+
     const result = await executeRepair("wt2", {
       classification: "dirty_owned",
       confidence: 1.0,
@@ -85,7 +105,7 @@ describe("executeRepair", () => {
 
     const wtState = getWorktreeState("wt2");
     expect(wtState!.state).toBe("dirty_owned");
-    expect(wtState!.issueIdentifier).toBe("ANQ-200");
+    expect(wtState!.assignedIssue).toBe("ANQ-200");
   });
 
   it("should quarantine dirty orphaned worktrees", async () => {
@@ -126,11 +146,12 @@ describe("Recovery state transitions", () => {
       lastError: "typecheck failed",
       attempts: 1,
     });
-    setWorktreeState("wt1", { state: "dirty_owned", issueIdentifier: "ANQ-300" });
+    // Use assignedIssue (canonical field name after normalizeWorktreeRecord)
+    setWorktreeState("wt1", { state: "dirty_owned", assignedIssue: "ANQ-300" });
 
     const wtState = getWorktreeState("wt1");
     expect(wtState!.state).toBe("dirty_owned");
-    expect(wtState!.issueIdentifier).toBe("ANQ-300");
+    expect(wtState!.assignedIssue).toBe("ANQ-300");
 
     const fin = getFinalizationState("ANQ-300");
     expect(fin!.state).toBe("validation_failed_repairable");
@@ -156,7 +177,7 @@ describe("Recovery state transitions", () => {
   it("repeated failed repair transitions to quarantined", async () => {
     setWorktreeState("wt3", {
       state: "dirty_owned",
-      issueIdentifier: "ANQ-500",
+      assignedIssue: "ANQ-500",
       repairAttempts: 4,
     });
 
@@ -174,7 +195,8 @@ describe("Recovery state transitions", () => {
 
   it("clean repaired worktree returns to available", () => {
     // Simulate repair success: clear finalization and reset worktree
-    setWorktreeState("wt4", { state: "dirty_owned", issueIdentifier: "ANQ-600" });
+    // Use assignedIssue (canonical field name after normalizeWorktreeRecord)
+    setWorktreeState("wt4", { state: "dirty_owned", assignedIssue: "ANQ-600" });
     setFinalizationState("ANQ-600", {
       state: "integration_pending",
       stickyOwner: "wt4",
@@ -182,10 +204,10 @@ describe("Recovery state transitions", () => {
     });
 
     // After successful push + integration, worktree returns to available
-    setWorktreeState("wt4", { state: "available", issueIdentifier: null });
+    setWorktreeState("wt4", { state: "available", assignedIssue: null });
 
     const wtState = getWorktreeState("wt4");
     expect(wtState!.state).toBe("available");
-    expect(wtState!.issueIdentifier).toBeNull();
+    expect(wtState!.assignedIssue).toBeNull();
   });
 });

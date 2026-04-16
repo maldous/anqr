@@ -11,7 +11,7 @@ Workstream G enforces evidence-gated closure: no issue may transition to `comple
 - **R9. Execution completion and workflow completion shall be distinct** — The platform shall distinguish clearly between runner completion, integration completion, evidence publication, and workflow closure.
 - **R10. Evidence shall gate closure** — Issue closure and final success status shall require defined evidence artifacts for scheduling, execution, validation, integration, and recovery outcomes where applicable. Missing evidence shall block closure.
 
-## Carry-Forward Items
+## Carry-Forward Items (historical at G start; all resolved below)
 
 | # | Item | Source | Severity for G | Description |
 |---|------|--------|----------------|-------------|
@@ -53,7 +53,7 @@ Workstream G enforces evidence-gated closure: no issue may transition to `comple
 5. Call `publishEvidenceAndClose()` — loads evidence, builds comment, posts to Linear, marks Done
 6. Transition to `completed` (finalization: `integrated_main`)
 
-### What's missing (the G work)
+### What was missing at G Phase 0 (all resolved)
 
 1. **No evidence completeness validation** — `publishEvidenceAndClose` posts whatever evidence exists but never validates that mandatory fields are present
 2. **No closure gate** — the `evidence_pending → completed` transition has no evidence validation; any caller can transition without evidence
@@ -224,7 +224,7 @@ quarantine-and-restart.mjs → writeEvidenceRecord(serviceName, shortName, reaso
 |---|-----|----------|--------|-------|
 | G0-7 | **Discord chat: no `routing` field** | 🟡 Medium | `recordRoutingDecision` not called in `process-and-proxy.mjs`. Acceptable for chat (no router dispatch), but means evidence schema varies by path with no explicit documentation. | G Phase 0 (documented, accepted) |
 | G0-8 | **Recovery evidence unlinked** | 🟡 Medium | Recovery daemon uses separate `buildEvidence()` system writing to different directory (`anqr-watchdog-evidence/`). No correlationId linkage to task-evidence. Limits cross-referencing during incident reconstruction. | G Phase 3 or later |
-| G0-9 | **No selection rationale (F5)** | 🟡 Medium | Evidence records final provider selection but not ranked candidates, scores, or exclusion reasons. "Why was this provider chosen" is not answerable. | G Phase 3 |
+| G0-9 | ~~**No selection rationale (F5)**~~ | ~~🟡 Medium~~ | **RESOLVED in G Phase 3.** `selectProvider` now accepts `selectionLog`; `server.mjs` wired on all 5 evidence paths. | G Phase 3 ✅ |
 
 #### Low Gaps
 
@@ -266,7 +266,7 @@ Based on the audit, the following **mandatory evidence fields for issue closure*
 | `minimal` | `correlationId` + `execution` (success/completedAt) + `integration` (success/mainSha) | Bare minimum to prove execution happened and code reached main. Sufficient for operator-override closure. |
 | `standard` | `minimal` + `ingress` + `push` + `validation` (if applicable) + `routing` or `worktreeSelection` | Expected for all normal-path completions. Proves the full lifecycle chain from ingress through integration. |
 | `full` | `standard` + `providerRouting` + `providerSelection` | Complete evidence including provider routing decisions. Required for incident-grade reconstruction. |
-| `enriched` | `full` + any of: `contextReduction`, `safetyNet`, `selectionRationale` (F5, future) | Maximum evidence including conditional provider behavior. Not required for closure. |
+| `enriched` | `full` + any of: `contextReduction`, `safetyNet`, `selectionRationale` (F5) | Maximum evidence including conditional provider behavior. Not required for closure. |
 
 ### Closure Threshold Decision (Phase 0 Decision)
 
@@ -367,7 +367,7 @@ Address remaining carry-forward items that affect evidence quality and closure c
   - Statuses: `"selected"`, `"skipped"` (with reason: `not_found`, `not_in_allowed`, `excluded`, health state), `"failed"`, `"safety_net_selected"`
   - `recordProviderRoutingEvidence()` includes `selectionRationale` field for the log
   - Backward-compatible: `selectionLog` is optional; callers that don't provide it see no change
-  - Note: server.mjs wiring to pass `selectionLog` to `selectProvider` is deferred — infrastructure is ready for incremental adoption
+  - `server.mjs` wired: creates `selectionLog` array, passes to `selectProvider`, propagates as `selectionRationale` to all 5 `recordProviderRoutingEvidence` call sites
 - [x] **Tests:** selection rationale infrastructure verified (selectProvider supports selectionLog, recordProviderRoutingEvidence includes selectionRationale)
 
 ### G Phase 4 — Notification & API Alignment (R9) — ✅ Complete

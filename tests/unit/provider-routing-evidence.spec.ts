@@ -209,6 +209,7 @@ describe("recordProviderRoutingEvidence — runtime", () => {
     );
     const result = recordProviderRoutingEvidence(corrId, {
       routeModelId: "gpt-4o",
+      allowedProviders: ["gemini"],
       selectedProvider: "gemini",
       attempts: 1,
       triedProviders: ["gemini"],
@@ -223,6 +224,8 @@ describe("recordProviderRoutingEvidence — runtime", () => {
     );
     const result = recordProviderRoutingEvidence(corrId, {
       routeModelId: "gpt-4o",
+      allowedProviders: ["groq", "gemini", "openrouter"],
+      // @ts-expect-error -- null is valid for failure-path evidence; JSDoc types as string
       selectedProvider: null,
       attempts: 3,
       triedProviders: ["groq", "gemini", "openrouter"],
@@ -243,6 +246,7 @@ describe("recordProviderRoutingEvidence — runtime", () => {
     );
     const result = recordProviderRoutingEvidence("nonexistent-id-abc123", {
       routeModelId: "test",
+      allowedProviders: ["test"],
       selectedProvider: "test",
       attempts: 1,
       triedProviders: ["test"],
@@ -378,7 +382,9 @@ describe("recordSafetyNetEvidence — runtime", () => {
     const longError = "x".repeat(1000);
     const result = recordSafetyNetEvidence(corrId, {
       triedProviders: ["test"],
+      routeModelId: "test-model",
       lastError: longError,
+      contextBudgetCap: null,
       fallbackChain: [],
     });
     expect(result.safetyNet.lastError.length).toBeLessThanOrEqual(500);
@@ -390,6 +396,9 @@ describe("recordSafetyNetEvidence — runtime", () => {
     );
     const result = recordSafetyNetEvidence("nonexistent-id-xyz987", {
       triedProviders: ["groq"],
+      routeModelId: "test-model",
+      lastError: null,
+      contextBudgetCap: null,
       fallbackChain: [],
     });
     expect(result).toBeNull();
@@ -399,7 +408,13 @@ describe("recordSafetyNetEvidence — runtime", () => {
     const { recordSafetyNetEvidence } = await import(
       "../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs"
     );
-    const result = recordSafetyNetEvidence("", { triedProviders: [] });
+    const result = recordSafetyNetEvidence("", {
+      triedProviders: [],
+      routeModelId: "test",
+      lastError: null,
+      contextBudgetCap: null,
+      fallbackChain: [],
+    });
     expect(result).toBeUndefined();
   });
 });
@@ -526,6 +541,7 @@ describe("Full evidence lifecycle — failure/exhaustion path", () => {
     recordProviderRoutingEvidence(corrId, {
       routeModelId: "gpt-4o",
       allowedProviders: ["groq", "gemini", "openrouter"],
+      // @ts-expect-error -- null is valid for failure-path evidence; JSDoc types as string
       selectedProvider: null,
       attempts: 3,
       triedProviders: ["groq", "gemini", "openrouter"],
@@ -668,6 +684,8 @@ describe("Evidence edge cases", () => {
       // First update: routing
       recordProviderRoutingEvidence(corrId, {
         routeModelId: "test",
+        allowedProviders: ["test"],
+        // @ts-expect-error -- null is valid for failure-path evidence; JSDoc types as string
         selectedProvider: null,
         attempts: 1,
         triedProviders: ["test"],
@@ -677,7 +695,9 @@ describe("Evidence edge cases", () => {
       // Second update: safety-net (should merge, not overwrite routing)
       recordSafetyNetEvidence(corrId, {
         triedProviders: ["test"],
+        routeModelId: "test",
         lastError: "failed",
+        contextBudgetCap: null,
         fallbackChain: [],
       });
 

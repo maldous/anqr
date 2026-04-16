@@ -1,8 +1,10 @@
 # Assessment and Requirements
 
+> **⚠️ Historical review-context snapshot. Do not use for current workstream status.**
+>
 > Part of [PLAN.md](./PLAN.md) — the original assessment that drove workstreams A–F, preserved here for review context.
 >
-> **Note:** Requirement statuses (R1–R12) and workstream statuses below are updated to reflect current implementation state as of 2026-04-17. The assessment text, headline judgment, and confirmed blocking issues reflect the original pre-implementation review and are preserved intentionally.
+> Requirement statuses (R1–R12) and workstream statuses below reflect the state as of **2026-04-17** (pre-G completion). For current status, see [PLAN.md](./PLAN.md) and individual workstream files. The assessment text, headline judgment, and confirmed blocking issues reflect the original pre-implementation review and are preserved intentionally.
 
 ## Purpose
 
@@ -92,7 +94,7 @@ The platform **shall not** depend on manual synchronization of critical runtime 
 
 Provider selection **shall** have explicit precedence rules, bounded fallback behavior, stable audit output, and operator-verifiable selection evidence. Adaptive routing may remain heuristic, but it **shall** be explainable and reproducible enough for incident analysis.
 
-→ **Workstream F: ✅ Complete** (~~failure-path evidence gaps~~ RESOLVED; ~~tests mostly source-grep~~ RESOLVED — ~68% runtime behavioral; deferred: F5 selection rationale, F7 evidence durability)
+→ **Workstream F: ✅ Complete** (~~failure-path evidence gaps~~ RESOLVED; ~~tests mostly source-grep~~ RESOLVED — ~68% runtime behavioral; deferred at snapshot time: F5 selection rationale, F7 evidence durability — both later resolved in Workstream G; see PLAN.md)
 
 ### R8. Idempotency, retries, and lock ownership shall be explicit
 

@@ -17,7 +17,7 @@ This document is the **index** for the implementation plan. Detailed content is 
 
 ## Workstreams A–G Completion Summary
 
-**All implementation workstreams (A–G) are ✅ Complete as of 2026-04-18.** Confirmed by gpt-5-agent deep audit — no remaining code changes required. All carry-forward items from A–F resolved during G implementation. Only Workstream H (documentation alignment) and acceptance criterion #13 (live end-to-end demo) remain open.
+**All implementation workstreams (A–G) are ✅ Complete as of 2026-04-18.** Confirmed by gpt-5-agent deep audit. All carry-forward items from A–F resolved during G implementation (including F5 server.mjs wiring). Each workstream carries accepted Low-severity caveats documented in its detail file. Only Workstream H (documentation alignment) and acceptance criterion #13 (live end-to-end demo) remain open.
 
 | Metric | Value |
 |--------|-------|

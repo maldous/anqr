@@ -768,7 +768,9 @@ export const server = http.createServer(async (req, res) => {
         // Only use if Codebuff is SELECTED by credit-gate (not just allowed)
 
         // First, let credit-gate select the best provider (with session awareness)
-        const selectedProvider = await selectProvider(buildSelectionOptions(route, [], sessionId));
+        // F5: Capture ranked selection rationale for evidence
+        const selectionLog = [];
+        const selectedProvider = await selectProvider({ ...buildSelectionOptions(route, [], sessionId), selectionLog });
 
         logInfo(
           `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
@@ -911,6 +913,7 @@ export const server = http.createServer(async (req, res) => {
                       durationMs: Date.now() - startTime,
                     },
                   ],
+                  selectionRationale: selectionLog.length > 0 ? selectionLog : null,
                 });
               } catch {
                 /* best-effort evidence */
@@ -990,6 +993,7 @@ export const server = http.createServer(async (req, res) => {
                 attempts: result.attempts,
                 triedProviders: result.triedProviders,
                 fallbackChain: result.fallbackChain || [],
+                selectionRationale: selectionLog.length > 0 ? selectionLog : null,
               });
             } catch {
               /* best-effort evidence */
@@ -1096,6 +1100,7 @@ export const server = http.createServer(async (req, res) => {
                 attempts: streamError.safetyNetData.triedProviders?.length || 0,
                 triedProviders: streamError.safetyNetData.triedProviders || [],
                 fallbackChain: streamError.safetyNetData.fallbackChain || [],
+                selectionRationale: selectionLog.length > 0 ? selectionLog : null,
               });
             } catch {
               /* best-effort evidence */
@@ -1172,6 +1177,7 @@ export const server = http.createServer(async (req, res) => {
                 attempts: nonStreamError.safetyNetData.triedProviders?.length || 0,
                 triedProviders: nonStreamError.safetyNetData.triedProviders || [],
                 fallbackChain: nonStreamError.safetyNetData.fallbackChain || [],
+                selectionRationale: selectionLog.length > 0 ? selectionLog : null,
               });
             } catch {
               /* best-effort evidence */
@@ -1213,6 +1219,7 @@ export const server = http.createServer(async (req, res) => {
               attempts: result.attempts,
               triedProviders: result.triedProviders,
               fallbackChain: result.fallbackChain || [],
+              selectionRationale: selectionLog.length > 0 ? selectionLog : null,
             });
           } catch {
             /* best-effort evidence */
