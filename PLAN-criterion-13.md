@@ -28,76 +28,78 @@ Rationale:
 
 ## Current Operational State
 
-> **Last updated: 2026-04-16 21:06 AEST.** Most ANQR services remain inactive/dead. The live system is not currently capable of proving criterion #13. This section documents what must change before the demo can proceed.
+> **Last updated: 2026-04-16 21:41 AEST.** All core ANQR services are now **active and running**. The live system has passed the pre-demo systemd gate. Harness-doctor `--enforce` passed with exit 0.
 >
-> **Progress since initial assessment:** Failed units (`anqr-nightly`, `anqr-rag-rebuild`) have been fixed and their timers restarted. The `anqr-linear-export` timer is now active. Zero failed systemd units remain.
+> **Bring-up history:**
+> - 2026-04-16 21:06 — Initial assessment: all services inactive/dead, 2 failed units (nightly, rag-rebuild)
+> - 2026-04-16 21:06 — Fixed `anqr-nightly.service` (sonar auto-skip when `--skip-tests` + no coverage) and `anqr-rag-rebuild.service` (graceful Linear index skip). Timers restarted.
+> - 2026-04-16 21:15 — Started `anqr-linear-export.timer`, triggered immediate export (38 issues)
+> - 2026-04-16 21:37 — Fixed `anqr-symphony-scheduler.service` (203/EXEC: `/usr/bin/node` → nvm-managed node path). Enabled with auto-start in `default.target.wants`.
+> - 2026-04-16 21:40 — Full controlled runtime bring-up: all core services, all 8 executors, safety/recovery, Discord/OpenClaw. Pre-demo gate passed. Zero failed units.
 
-**Services that must be brought up before any demo attempt:**
+### Core authoritative scheduling path — ✅ ALL ACTIVE
 
-### Core authoritative scheduling path (MUST be active)
+| Service | Port | State | Notes |
+|---------|------|-------|-------|
+| `anqr-symphony-scheduler.service` | — | ✅ **active (running)** | Enabled in `default.target.wants`. Immediately dispatched ANQ-1552 on startup. |
+| `anqr-linear-webhook.service` | 18791 | ✅ **active (running)** | Listening on 127.0.0.1:18791 |
+| `anqr-symphony-router.service` | 4319 | ✅ **active (running)** | Routing to all 8 worktrees |
+| `anqr-symphony-executor@{1..4}.service` | 4321-4324 | ✅ **active (running)** | Linear pool — all 4 active |
+| `anqr-symphony-executor@{5..8}.service` | 4325-4328 | ✅ **active (running)** | Discord pool — all 4 active |
+| `anqr-symphony-integrator.service` | — | ✅ **active (running)** | Branch → main promotion |
 
-| Service | Port | Current State | Required Action |
-|---------|------|---------------|----------------|
-| `anqr-symphony-scheduler.service` | — | inactive (loaded, symlinked, **not** in `default.target.wants`) | `systemctl --user enable --now` |
-| `anqr-linear-webhook.service` | 18791 | inactive (enabled in `default.target.wants`) | `systemctl --user start` |
-| `anqr-symphony-router.service` | 4319 | inactive (enabled in `default.target.wants`) | `systemctl --user start` |
-| `anqr-symphony-executor@{1..4}.service` | 4321-4324 | inactive (enabled in `default.target.wants`) | `systemctl --user start` (Linear pool) |
-| `anqr-symphony-integrator.service` | — | inactive (enabled in `default.target.wants`) | `systemctl --user start` |
+### Safety / recovery / health path — ✅ ALL ACTIVE
 
-### Safety / recovery / health path (MUST be active)
+| Service | State | Notes |
+|---------|-------|-------|
+| `anqr-symphony-worktree-recovery.service` | ✅ **active (running)** | Quarantine + repair daemon |
+| `anqr-watchdog.service` | ✅ **active (running)** | Service health monitor |
+| `anqr-worktree-health.timer` | ✅ **active** | Periodic health checks |
 
-| Service | Current State | Required Action |
-|---------|---------------|----------------|
-| `anqr-symphony-worktree-recovery.service` | inactive (enabled in `default.target.wants`) | `systemctl --user start` |
-| `anqr-watchdog.service` | inactive (enabled in `default.target.wants`) | `systemctl --user start` |
-| `anqr-worktree-health.timer` | inactive | `systemctl --user start` |
+### Discord / OpenClaw path — ✅ ALL ACTIVE
 
-### Discord / OpenClaw path (MUST be active for Scenario 2)
+| Service | Port | State | Notes |
+|---------|------|-------|-------|
+| `anqr-discord-router.service` | 18790 | ✅ **active (running)** | Listening on 127.0.0.1:18790 |
+| `openclaw-gateway.service` | 18789 | ✅ **active (running)** | OpenClaw Gateway v2026.4.1 with LCM plugin |
 
-| Service | Port | Current State | Required Action |
-|---------|------|---------------|----------------|
-| `anqr-discord-router.service` | 18790 | inactive (enabled in `default.target.wants`) | `systemctl --user start` |
-| `anqr-symphony-executor@{5..8}.service` | 4325-4328 | inactive (enabled in `default.target.wants`) | `systemctl --user start` (Discord pool) |
-| `openclaw-gateway.service` | — | inactive (enabled in `default.target.wants`) | `systemctl --user start` |
+### Timers — ✅ ALL ACTIVE
 
-### Timers
+| Timer | State | Schedule |
+|-------|-------|----------|
+| `anqr-nightly.timer` | ✅ active | 02:00 daily |
+| `anqr-linear-export.timer` | ✅ active | 02:30 daily |
+| `anqr-rag-rebuild.timer` | ✅ active | 03:00 daily |
+| `anqr-worktree-health.timer` | ✅ active | periodic |
 
-| Timer | Current State | Schedule | Next Fire |
-|-------|---------------|----------|----------|
-| `anqr-nightly.timer` | ✅ active | 02:00 daily | Fri 2026-04-17 02:00 AEST |
-| `anqr-linear-export.timer` | ✅ active | 02:30 daily (30 min before RAG) | Fri 2026-04-17 02:32 AEST |
-| `anqr-rag-rebuild.timer` | ✅ active | 03:00 daily | Fri 2026-04-17 03:00 AEST |
-| `anqr-worktree-health.timer` | ❌ inactive | periodic | `systemctl --user start` |
-| `anqr-email-ingest.timer` | ❌ inactive | every 5 min | `systemctl --user start` |
+### Support services — ✅ ALL ACTIVE
 
-### Support services (already running)
+| Service | State | Notes |
+|---------|-------|-------|
+| `litellm-proxy.service` | ✅ **active (running)** | Ollama tool-call translator |
+| `model-injector-proxy.service` | ✅ **active (running)** | Codex CLI model fix |
 
-| Service | Current State | Notes |
-|---------|---------------|-------|
-| `litellm-proxy.service` | ✅ **active (running)** | Ollama tool-call translator for Codex CLI |
-| `model-injector-proxy.service` | ✅ **active (running)** | Fixes Codex CLI model=None bug |
+### Supplementary services (not required for demo)
 
-### Supplementary services (not required for demo, but available)
+| Service | State | Notes |
+|---------|-------|-------|
+| `anqr-linear-reconciler.service` | inactive | Available on demand |
+| `anqr-context7-mcp.service` | inactive | Available on demand |
+| `anqr-symphony-codex.service` | inactive | Available on demand |
+| `anqr-email-ingest.timer` | inactive | Available on demand |
 
-| Service | Current State | Notes |
-|---------|---------------|-------|
-| `anqr-linear-reconciler.service` | inactive (enabled in `default.target.wants`) | Level-triggered backlog pickup |
-| `anqr-context7-mcp.service` | inactive (enabled in `default.target.wants`) | Context7 MCP documentation service |
-| `anqr-symphony-codex.service` | inactive (enabled in `default.target.wants`) | Codex CLI bridge for main repo |
-| `anqr-email-ingest.service` | inactive | Email → Linear issue ingestion |
+### Failed units — ✅ ZERO
 
-### Failed units
+```text
+0 loaded units listed.
+```
 
-| Service | Current State | Notes |
-|---------|---------------|-------|
-| *(none)* | ✅ Zero failed units | Previously `anqr-nightly` and `anqr-rag-rebuild` were failed — root causes fixed, timers restarted |
+Previously `anqr-nightly` and `anqr-rag-rebuild` were failed — root causes fixed, services verified.
 
-### Pre-demo systemd gate
-
-Before running any criterion #13 demo, this must pass:
+### Pre-demo systemd gate — ✅ PASSED
 
 ```bash
-# All core services must be active
+# All returned "active" on 2026-04-16 21:41 AEST:
 systemctl --user is-active \
   anqr-symphony-scheduler.service \
   anqr-linear-webhook.service \
@@ -106,25 +108,29 @@ systemctl --user is-active \
   anqr-symphony-worktree-recovery.service \
   anqr-watchdog.service \
   anqr-discord-router.service \
-  openclaw-gateway.service
+  openclaw-gateway.service \
+  anqr-symphony-executor@{1..4}.service
 
-# At least the Linear executor pool must be active
-systemctl --user is-active anqr-symphony-executor@{1..4}.service
+# All 8 executors active:
+systemctl --user is-active anqr-symphony-executor@{1..8}.service
 
-# No demo-relevant failed units
-systemctl --user --failed  # should be empty or free of ANQR failures
+# Zero failed units:
+systemctl --user --failed  # 0 loaded units listed
+
+# Harness-doctor --enforce: exit 0 (all preflight checks passed)
+node harness/ops/harness-doctor/runtime.mjs --enforce
 ```
 
-### Startup sequence
+### Re-startup sequence (if services need to be restarted)
 
 ```bash
-# 1. Clear any failed state (currently none, but good practice)
+# 1. Clear any failed state
 systemctl --user reset-failed
 
-# 2. Enable + start scheduler (not yet in default.target.wants)
-systemctl --user enable --now anqr-symphony-scheduler.service
+# 2. Scheduler (enabled, auto-starts on boot)
+systemctl --user start anqr-symphony-scheduler.service
 
-# 3. Start core path
+# 3. Core path
 systemctl --user start \
   anqr-linear-webhook.service \
   anqr-symphony-router.service \
@@ -132,24 +138,18 @@ systemctl --user start \
   anqr-symphony-worktree-recovery.service \
   anqr-watchdog.service
 
-# 4. Start executor pools
+# 4. All 8 executors
 systemctl --user start anqr-symphony-executor@{1..8}.service
 
-# 5. Start Discord/OpenClaw path
+# 5. Discord/OpenClaw
 systemctl --user start \
   anqr-discord-router.service \
   openclaw-gateway.service
 
-# 6. Start remaining timers (nightly, linear-export, rag-rebuild already active)
-systemctl --user start \
-  anqr-worktree-health.timer
+# 6. Timers (nightly, linear-export, rag-rebuild already persistent)
+systemctl --user start anqr-worktree-health.timer
 
-# 7. Optionally start supplementary services
-systemctl --user start \
-  anqr-linear-reconciler.service \
-  anqr-email-ingest.timer
-
-# 8. Verify
+# 7. Verify
 systemctl --user --failed
 systemctl --user is-active \
   anqr-symphony-scheduler.service \

@@ -1,0 +1,3 @@
+# Runtime session state — not tracked in git
+*.jsonl
+sessions.json
