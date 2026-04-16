@@ -498,11 +498,15 @@ describe("Systemd topology — ADR-0002", () => {
       "utf-8",
     );
     expect(service).toContain(
-      "ExecStart=/usr/bin/node harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon",
+      "harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon",
     );
     expect(enabledUnit).toContain(
-      "ExecStart=/usr/bin/node harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon",
+      "harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon",
     );
+    // Both files must have matching ExecStart lines
+    const serviceExec = service.split("\n").find((l) => l.startsWith("ExecStart="));
+    const enabledExec = enabledUnit.split("\n").find((l) => l.startsWith("ExecStart="));
+    expect(serviceExec).toBe(enabledExec);
   });
 });
 

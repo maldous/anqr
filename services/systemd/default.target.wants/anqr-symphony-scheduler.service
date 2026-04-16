@@ -1,20 +1,31 @@
 [Unit]
 Description=ANQR Symphony Scheduler (ADR-0002 authoritative claim+dispatch)
-After=network.target anqr-symphony-router.service
-Wants=anqr-symphony-router.service
+After=network-online.target anqr-symphony-router.service
+Wants=network-online.target anqr-symphony-router.service
 
 [Service]
 Type=simple
-EnvironmentFile=%h/.config/systemd/user/anqr-ops.env
 WorkingDirectory=%h/src/anqr
-ExecStart=/usr/bin/node harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon
-Restart=on-failure
-RestartSec=10
+
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
+
+EnvironmentFile=%h/.config/systemd/user/anqr-ops.env
+EnvironmentFile=-%h/.config/symphony/anqr.env
+
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon
+
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=anqr-symphony-scheduler
 
-# Resource limits
+Restart=on-failure
+RestartSec=10
+
+TimeoutStartSec=30
+MemoryHigh=512M
+MemoryMax=1G
 LimitNOFILE=4096
 
 [Install]
