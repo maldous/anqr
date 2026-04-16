@@ -1,4 +1,5 @@
 import { getWorktreeHealthSnapshot, writeFleetHealthFile } from "../../core/worktree-health.mjs";
+import { getWorktreeState, transitionWorktree } from "../../symphony-state.mjs";
 
 import { ALL_WORKTREE_IDS } from "./all-worktree-ids.mjs";
 import { classifyWorktree } from "./classify-worktree.mjs";
@@ -23,6 +24,20 @@ export async function runRecoveryCycle() {
       );
 
       if (classification.repairAction === "skip") {
+        // A clean worktree that was previously quarantined should be
+        // transitioned back to available.  Without this, recovery
+        // correctly classifies the worktree as "clean" but the skip
+        // action leaves the quarantined state untouched, starving the
+        // scheduler of healthy worktrees.
+        if (classification.classification === "clean") {
+          const wtState = getWorktreeState(wtId);
+          if (wtState?.state === "quarantined") {
+            transitionWorktree(wtId, "available", { assignedIssue: null });
+            logInfo(`[recovery] Cleared quarantine for ${wtId} (now clean)`);
+            stats.repaired++;
+            continue;
+          }
+        }
         stats.skipped++;
         continue;
       }
