@@ -5,13 +5,14 @@ import {
   getProviderTurnLimit,
 } from "../../symphony-session-state.mjs";
 
+import { BRIDGE_PROVIDER_BLOCKLIST } from "../bridge-provider-blocklist.mjs";
 import { nonToolCapableProviders } from "../non-tool-capable-providers.mjs";
 import { safeLogDebug } from "../safe-log-debug.mjs";
 import { isProviderHealthy } from "./is-provider-healthy.mjs";
 
 export function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
   const throttled = getThrottledProviders();
-  const excludeSet = new Set([...excludedNames, ...nonToolCapableProviders, ...throttled]);
+  const excludeSet = new Set([...excludedNames, ...nonToolCapableProviders, ...BRIDGE_PROVIDER_BLOCKLIST, ...throttled]);
 
   // Check session state for sticky provider
   if (sessionId) {
