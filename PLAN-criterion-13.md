@@ -1,6 +1,6 @@
 # Acceptance Criterion #13 — Live End-to-End Demonstration Plan
 
-> Part of [PLAN.md](./PLAN.md) · Status: ⬜ Not Started · Linked from [PLAN-workstream-G.md](./PLAN-workstream-G.md) Phase 5
+> Part of [PLAN.md](./PLAN.md) · Status: 🟡 In Progress — Scenarios 1–6 implemented and passing (unit); green soak + full live E2E + private rehearsal outstanding · Linked from [PLAN-workstream-G.md](./PLAN-workstream-G.md) Phase 5
 >
 > This document plans the live system verification that proves the platform's correctness properties under normal, retry, restart, drift, and failure scenarios.
 

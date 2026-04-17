@@ -134,14 +134,15 @@ export async function probeToolCapabilityForProvider(providerDef) {
             {
               role: "user",
               content:
-                "Use the add tool to add 2 and 2. Reply with only the numeric answer after the tool result.",
+                "You MUST call the add tool to compute 2 + 2. Do not answer directly — you must use the tool. Reply with only the numeric answer after the tool result.",
             },
           ],
           tools: probeTools,
-          toolChoice:
-            name === "github-models" || name.startsWith("github-models-")
-              ? "auto"
-              : { type: "tool", toolName: "add" },
+          // Use "auto" tool choice — matches the runtime path (invoke-with-aiinner.mjs)
+          // so the probe tests the exact capability the live system requires.
+          // Providers that only support forced tool choice but not auto will be
+          // correctly classified as non-capable at probe time.
+          toolChoice: "auto",
           maxTokens: 100,
           maxSteps: 2,
         }),

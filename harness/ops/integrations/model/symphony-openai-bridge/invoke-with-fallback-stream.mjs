@@ -44,6 +44,7 @@ import { requestCount, setRequestCount } from "./request-count.mjs";
 import { runContinuousProviderProbe } from "./run-continuous-provider-probe.mjs";
 import { sleep } from "./sleep.mjs";
 import { unwrapAIError } from "./unwrap-aierror.mjs";
+import { classifyToolProbeErrorOutcome } from "./classify-tool-probe-error-outcome.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
 export async function invokeWithFallbackStream(
@@ -103,8 +104,8 @@ export async function invokeWithFallbackStream(
       await sleep(FALLBACK_DELAY_MS);
     }
 
+    const startedAt = Date.now();
     try {
-      const startedAt = Date.now();
       const isCodebuffProvider =
         provider.driver === "codebuff-sdk" ||
         provider.name === "codebuff" ||
@@ -264,6 +265,21 @@ export async function invokeWithFallbackStream(
       } else if (errorType === ERROR_TYPES.RATE_LIMITED) {
         const rlInfo = parseRateLimitInfo(err);
         recordRateLimit(provider.name, rlInfo);
+      }
+
+      // Dynamic tool-capability learning: if this error indicates the provider
+      // cannot satisfy the runtime's tool-choice contract (e.g. auto tool choice,
+      // tool-call parser), exclude it from tool paths for this process lifetime.
+      // This is dynamic — works for any provider/model, not hardcoded.
+      const toolErrOutcome = classifyToolProbeErrorOutcome(errStr);
+      if (
+        toolErrOutcome.status === "non-capable-rejected" ||
+        toolErrOutcome.status === "failed-function-call"
+      ) {
+        nonToolCapableProviders.add(provider.name);
+        logWarn(
+          `🔧 ${provider.name} dynamically excluded from tool paths (${toolErrOutcome.status})`,
+        );
       }
 
       releaseProviderLease(provider);

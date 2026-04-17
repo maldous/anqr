@@ -23,6 +23,28 @@ export async function runRecoveryCycle() {
         `[recovery] ${wtId}: ${classification.classification} → ${classification.repairAction} (confidence: ${classification.confidence})`,
       );
 
+      // Main is the control repo, not an executor worktree. Dirty files
+      // are expected (runtime artifacts: reports/, state.json, etc.).
+      // Never quarantine or repair main — only clear stale quarantine state.
+      if (wtId === "main") {
+        if (classification.classification === "clean") {
+          const wtState = getWorktreeState(wtId);
+          if (wtState?.state === "quarantined") {
+            transitionWorktree(wtId, "available", { assignedIssue: null });
+            logInfo(`[recovery] Cleared quarantine for main (now clean)`);
+            stats.repaired++;
+          } else {
+            stats.skipped++;
+          }
+        } else {
+          logDebug(
+            `[recovery] main: ${classification.classification} — skipping (control repo, not an executor)`,
+          );
+          stats.skipped++;
+        }
+        continue;
+      }
+
       if (classification.repairAction === "skip") {
         // A clean worktree that was previously quarantined should be
         // transitioned back to available.  Without this, recovery

@@ -22,6 +22,7 @@ import { invokeWithCodex } from "./invoke-with-codex.mjs";
 import { isInvalidModelAnswerText } from "./is-invalid-model-answer-text.mjs";
 import { isRetryableErrorDeep } from "./is-retryable-error-deep.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
+import { classifyToolProbeErrorOutcome } from "./classify-tool-probe-error-outcome.mjs";
 import { providerSupportsTools } from "./provider-supports-tools.mjs";
 import { sleep } from "./sleep.mjs";
 import { selectToolsForProvider } from "./select-tools-for-provider.mjs";
@@ -518,6 +519,21 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
         const rootError = unwrapAIError(streamError);
         const errorMsg = errorToString(rootError);
         streamErrorDetail = streamErrorDetail || errorMsg;
+
+        // Dynamic tool-capability learning from stream errors: if the error
+        // indicates the provider cannot satisfy the runtime's tool-choice
+        // contract, exclude it from tool paths for this process lifetime.
+        const toolErrOutcome = classifyToolProbeErrorOutcome(errorMsg);
+        if (
+          toolErrOutcome.status === "non-capable-rejected" ||
+          toolErrOutcome.status === "failed-function-call"
+        ) {
+          nonToolCapableProviders.add(provider.name);
+          logWarn(
+            `🔧 ${provider.name} dynamically excluded from tool paths (stream: ${toolErrOutcome.status})`,
+          );
+        }
+
         // Log server-side only - internal provider errors are handled by auto-fallback
         const streamErrType = classifyError(rootError);
         const streamIsRetryable =
