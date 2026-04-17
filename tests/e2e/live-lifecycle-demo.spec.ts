@@ -826,6 +826,19 @@ describe("Scenario 4: Restart-safe resumption from durable state", () => {
     const finState = getFinalizationState(TEST_ISSUE) as Record<string, unknown>;
     expect(finState.state).toBe("evidence_pending");
     expect(finState.stickyOwner).toBe("wt8");
+
+    // Verify the repair candidate has ALL fields the runner's main.mjs
+    // needs to invoke executeIssue (not just the issue identifier).
+    // The runner at line ~212 does:
+    //   const repairCandidate = getNextRepairableIssueForWorktree(WORKTREE_ID)
+    //   findOpenIssuesByIdentifier(repairCandidate.issueIdentifier)
+    //   executeIssue(issue, { isRepairCandidate: true, ... })
+    // This proves the full repair path is exercisable — not just
+    // that the file persists, but that the runner can act on it.
+    expect(repairCandidate!.issueIdentifier).toMatch(/^E2E-RESTART-SAFE-/);
+    expect(finState.branch).toBe("symphony/wt8");
+    expect(finState.headSha).toBeTruthy();
+    expect(finState.worktreeId).toBe("wt8");
   });
 });
 
@@ -1035,10 +1048,26 @@ describe("Scenario 2: Provider fallback with recorded evidence", () => {
     expect(typeof selectedEntry!.selections).toBe("number");
     expect(typeof selectedEntry!.toolConfirmed).toBe("boolean");
 
-    // NOTE: A full runtime fallback test (provider tried → failed → retry)
-    // requires controlling live provider behavior, which is not feasible in
-    // E2E.  The fallbackChain structure is verified via source verification
-    // above.  This test proves the scored selectionLog pipeline is correct.
+    // Verify score breakdown is present (explains "why A beat B")
+    expect(selectedEntry!.scoreBreakdown).toBeDefined();
+    const breakdown = selectedEntry!.scoreBreakdown as Record<string, unknown>;
+    expect(breakdown.baseScore).toBeDefined();
+    expect(typeof breakdown.healthPenalty).toBe("number");
+    expect(typeof breakdown.cachePenalty).toBe("number");
+    expect(typeof breakdown.preferenceBoost).toBe("number");
+    expect(typeof breakdown.recentSuccessBoost).toBe("number");
+
+    // Verify the excluded provider appears in the log with reason "excluded"
+    const excludedEntry = selectionLog.find(
+      (e) => e.name === topProvider && e.reason === "excluded",
+    );
+    // Top provider may not appear as "excluded" if it was filtered by
+    // getRankedProviders before reaching the selection loop, but the
+    // selected provider's rank must be > 1 (proving a higher-ranked
+    // provider was bypassed).
+    if (!excludedEntry) {
+      expect(selectedEntry!.rank).toBeGreaterThan(1);
+    }
   });
 });
 
@@ -1055,11 +1084,12 @@ describe("Scenario 2: Provider fallback with recorded evidence", () => {
 // Strategy: Inject a test issue via the Linear webhook endpoint with a
 // trivially simple instruction. Poll evidence record through each lifecycle
 // stage. The test FAILS if the pipeline does not reach at least the
-// execution stage (routing + worktreeSelection + execution are required).
+// integration stage (routing + worktreeSelection + execution + push +
+// integration are all required for full lifecycle proof).
 //
 // NOTE: This test depends on an actual agent execution cycle which is
-// non-deterministic. It uses generous timeouts but enforces minimum stage
-// depth — ingress-only is NOT sufficient proof for criterion #13.
+// non-deterministic. It uses generous timeouts but enforces full lifecycle
+// depth — anything less than integration is NOT sufficient for criterion #13.
 // ---------------------------------------------------------------------------
 
 describe("Scenario 1: Successful authoritative scheduling through integration and closure", () => {
@@ -1210,10 +1240,11 @@ describe("Scenario 1: Successful authoritative scheduling through integration an
       `Lifecycle pipeline reached stages: ${stages.join(" → ")}`,
     );
 
-    // MINIMUM REQUIRED: routing + worktreeSelection + execution.
-    // The test FAILS if the pipeline did not reach at least execution.
-    // This ensures the demo proves full lifecycle, not just ingress.
-    const MINIMUM_REQUIRED_STAGES = ["ingress", "routing", "worktreeSelection", "execution"];
+    // MINIMUM REQUIRED: full lifecycle through integration.
+    // The test FAILS if the pipeline did not reach at least integration.
+    // This ensures the demo proves full authoritative scheduling through
+    // closure — anything less is insufficient for criterion #13.
+    const MINIMUM_REQUIRED_STAGES = ["ingress", "routing", "worktreeSelection", "execution", "push", "integration"];
     for (const required of MINIMUM_REQUIRED_STAGES) {
       expect(
         stages,
@@ -1221,14 +1252,12 @@ describe("Scenario 1: Successful authoritative scheduling through integration an
       ).toContain(required);
     }
 
-    // If we reached integration, verify the full chain
-    if (stages.includes("integration")) {
-      const finalEvidence = findEvidenceByIssue(LIFECYCLE_ISSUE_ID)!;
-      expect(finalEvidence.routing).not.toBeNull();
-      expect(finalEvidence.worktreeSelection).not.toBeNull();
-      expect(finalEvidence.execution).not.toBeNull();
-      expect(finalEvidence.push).not.toBeNull();
-      expect(finalEvidence.integration).not.toBeNull();
-    }
+    // Verify the full evidence chain is populated
+    const finalEvidence = findEvidenceByIssue(LIFECYCLE_ISSUE_ID)!;
+    expect(finalEvidence.routing).not.toBeNull();
+    expect(finalEvidence.worktreeSelection).not.toBeNull();
+    expect(finalEvidence.execution).not.toBeNull();
+    expect(finalEvidence.push).not.toBeNull();
+    expect(finalEvidence.integration).not.toBeNull();
   });
 });

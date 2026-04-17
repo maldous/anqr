@@ -54,28 +54,36 @@ export async function main() {
   logDebug(`[worktree-verify] WORKTREE_ID: ${WORKTREE_ID}`);
   logDebug(`[worktree-verify] ROOT === process.cwd(): ${ROOT === process.cwd()}`);
 
-  // Inline test: Verify they're different for worktrees.
-  // NOTE: ROOT === cwd() is expected when the executor's WorkingDirectory
-  // matches the worktree path (systemd sets cwd before exec). Only log at
-  // debug level — this is informational, not a warning.
-  if (WORKTREE_ID !== "main" && ROOT === process.cwd()) {
-    logDebug(
-      `[worktree-verify] ROOT equals process.cwd() — expected when systemd WorkingDirectory matches worktree`,
-    );
-  } else if (WORKTREE_ID !== "main") {
-    logDebug(`[worktree-verify] ✓ ROOT differs from process.cwd() - worktree separation active`);
-  }
-
-  // Test: Verify working directory
+  // Real worktree isolation invariant check:
+  // 1. git rev-parse --show-toplevel must equal ROOT
+  // 2. For non-main worktrees, ROOT must NOT equal the control repo root
+  //    (the control repo root is /home/user/src/anqr for the main checkout)
   try {
     const gitTopLevel = execFileSync("git", ["rev-parse", "--show-toplevel"], {
       cwd: ROOT,
       encoding: "utf-8",
     }).trim();
-    logDebug(`[worktree-verify] Git top-level directory: ${gitTopLevel}`);
-    logDebug(`[worktree-verify] gitTopLevel === ROOT: ${gitTopLevel === ROOT}`);
+    logDebug(`[worktree-verify] Git top-level: ${gitTopLevel}`);
+
+    if (gitTopLevel !== ROOT) {
+      logWarn(
+        `[worktree-verify] ⚠️ INVARIANT VIOLATION: git top-level (${gitTopLevel}) !== ROOT (${ROOT})`,
+      );
+    } else {
+      logDebug(`[worktree-verify] ✓ git top-level matches ROOT`);
+    }
+
+    // For non-main worktrees, verify we are NOT running inside the control repo
+    const CONTROL_REPO = "/home/user/src/anqr";
+    if (WORKTREE_ID !== "main" && gitTopLevel === CONTROL_REPO) {
+      logError(
+        `[worktree-verify] ❌ CRITICAL: Worktree ${WORKTREE_ID} resolved to control repo ${CONTROL_REPO} — isolation broken!`,
+      );
+    } else if (WORKTREE_ID !== "main") {
+      logDebug(`[worktree-verify] ✓ Worktree ${WORKTREE_ID} is NOT the control repo — isolation confirmed`);
+    }
   } catch (err) {
-    logError(`[worktree-verify] Failed to get git top-level: ${err.message}`);
+    logError(`[worktree-verify] Failed to verify worktree invariant: ${err.message}`);
   }
 
   // Test: List actual worktrees

@@ -545,6 +545,7 @@ export const server = http.createServer(async (req, res) => {
       }
 
       const startTime = Date.now();
+      req._startTime = startTime; // Defensive: attach to req for catch blocks
       setRequestIdCounter(requestIdCounter + 1);
       const requestId = `req-${requestIdCounter}`;
 
@@ -1085,8 +1086,10 @@ export const server = http.createServer(async (req, res) => {
           clearInterval(heartbeat);
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
+          // Defensive: use startTime from closure, fall back to req._startTime
+          const _elapsed = Date.now() - (startTime ?? req._startTime ?? Date.now());
           logError(
-            `Streaming error after ${formatElapsed(Date.now() - startTime)}: ${streamError.message}`,
+            `Streaming error after ${formatElapsed(_elapsed)}: ${streamError.message}`,
           );
 
           // F Phase 3: Emit failure-path evidence when providers exhausted (streaming)

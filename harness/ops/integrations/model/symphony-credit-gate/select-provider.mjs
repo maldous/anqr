@@ -42,7 +42,7 @@ export async function selectProvider(options = {}) {
     if (!entry?.name || seen.has(entry.name)) continue;
     seen.add(entry.name);
     orderedNames.push(entry.name);
-    scoreByName.set(entry.name, { score: entry.score, rank: entry.rank, selections: entry.selections, toolConfirmed: entry.toolConfirmed });
+    scoreByName.set(entry.name, { score: entry.score, rank: entry.rank, selections: entry.selections, toolConfirmed: entry.toolConfirmed, scoreBreakdown: entry.scoreBreakdown || null });
   }
 
   logInfo(`[selectProvider] Candidate order (ranked)`, {

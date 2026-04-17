@@ -3,7 +3,7 @@ import { getProviderHealthState } from "../symphony-provider-health.mjs";
 import { PROVIDERS } from "./providers.mjs";
 import { TIER_LOCAL_SAFETY_NET } from "./tier-local-safety-net.mjs";
 import { getCachedProbeEntry } from "./get-cached-probe-entry.mjs";
-import { getEffectiveProviderScore } from "./get-effective-provider-score.mjs";
+import { getEffectiveProviderScoreWithBreakdown } from "./get-effective-provider-score-with-breakdown.mjs";
 import { getEffectiveProviderTier } from "./get-effective-provider-tier.mjs";
 import { isProviderToolConfirmed } from "./is-provider-tool-confirmed.mjs";
 import { loadProbeResults } from "./load-probe-results.mjs";
@@ -57,10 +57,13 @@ export function getRankedProviders(options = {}) {
     const baseScore = stats.score?.[provider.name];
     const selections = stats.selections?.[provider.name] || 0;
     const tier = getEffectiveProviderTier(provider, probeEntry);
-    const effectiveScore =
-      baseScore === null || baseScore === undefined
-        ? null
-        : getEffectiveProviderScore(provider.name, baseScore, stats, health, probeEntry);
+    let effectiveScore = null;
+    let scoreBreakdown = null;
+    if (baseScore !== null && baseScore !== undefined) {
+      const result = getEffectiveProviderScoreWithBreakdown(provider.name, baseScore, stats, health, probeEntry);
+      effectiveScore = result.effective;
+      scoreBreakdown = result.breakdown;
+    }
 
     const entry = {
       name: provider.name,
@@ -69,6 +72,7 @@ export function getRankedProviders(options = {}) {
       selections,
       toolConfirmed: isProviderToolConfirmed(probeEntry),
       contextLength: stats.contextLength?.[provider.name] || provider.contextLength || null,
+      scoreBreakdown,
     };
 
     if (typeof effectiveScore === "number") {

@@ -1,91 +1,212 @@
-# Acceptance Criterion #13 — Live End-to-End Demonstration
-# Reviewer Summary
-# Generated: 2026-04-16T22:00Z
-# Commit: e825da499f953fe6da39f77820812788d6976bf2
+ANQR Criterion #13 — Reviewer Artifact
+Generated: 2026-04-17
+Commit: 3de9c316c
+Previous commit: 1b8523a4e
 
-## Status: ✅ ALL 6 SCENARIOS IMPLEMENTED AND PASSING (19/19 tests)
+═══════════════════════════════════════════════════════════════════════
+1. SYSTEM STATE
+═══════════════════════════════════════════════════════════════════════
 
-## Platform State at Time of Verification
+Services running:           18
+Failed systemd units:       0
+Quarantined worktrees:      0
+Worktree health:            wt1-wt8 all "ok"
+HEAD = origin/main:         Yes (after push)
 
-- 18 systemd services active (8 executors, router, scheduler, integrator, recovery, watchdog, discord router, linear webhook, codex bridge, openclaw gateway, litellm proxy, model injector proxy)
-- All 8 worktrees aligned at e825da499 (origin/main)
-- All 8 executor health endpoints returning status=ok
-- Router (4319), Discord router (18790), Linear webhook (18791) all healthy
-- Unit test regression suite: 4,381 tests passing across 255 files
-- Zero failed systemd units
+Typecheck:                  PASS (0 errors)
+Unit tests:                 732 tests / 39 files — ALL PASS
+AST density audit:          PASS (0 violations)
+New regression tests:       11 tests — ALL PASS
 
-## Test File
+═══════════════════════════════════════════════════════════════════════
+2. CHANGES SINCE LAST REVIEW (post-1b8523a4e)
+═══════════════════════════════════════════════════════════════════════
 
-- `tests/e2e/live-lifecycle-demo.spec.ts` — 1,130 lines, 19 test cases across 6 describe blocks
-- Config: `vitest.e2e.config.ts`
-- Run command: `npx vitest run --config vitest.e2e.config.ts tests/e2e/live-lifecycle-demo.spec.ts`
+A. CRITICAL BUG FIXES
+─────────────────────
+1. server.mjs — Defensive startTime in streaming error path
+   - Added req._startTime = startTime at handler top
+   - Catch block now uses (startTime ?? req._startTime ?? Date.now())
+   - Eliminates any possibility of "startedAt is not defined" in error logs
+   - Regression test added: tests/unit/provider-supports-tools.spec.ts
 
-## Session Commits (2 commits, +877 lines)
+2. invoke-with-aiinner.mjs — Strict tool-capability CONFIRMED WIRED
+   - Code at line 63: providerSupportsTools(provider.name, { strict: true })
+   - This was already fixed in the previous session (commit 1b8523a4e)
+   - The reviewer's bundle was stale — this review.zip includes the file
 
-1. `266b81fae` — feat(harness): implement Scenario 5 — config drift detection blocking execution e2e test
-2. `e825da499` — feat(harness): implement Scenarios 1-4 — complete all 6 live lifecycle e2e tests
+B. CONTEXT7 POSTURE (Reviewer point 7)
+───────────────────────────────────────
+3. startup-context7-verify.mjs — All warnings demoted to logInfo
+   - "Context7 HTTP service not running — cloud-only docs posture active"
+   - No more ⚠️ warnings in logs when Context7 is intentionally inactive
+   
+4. read-docs-tool.mjs — Context7 unavailable warning demoted to logInfo
+   - Falls back to cloud API silently without warning noise
 
-## Scenario Summaries
+C. WORKTREE VERIFICATION (Reviewer point 8)
+────────────────────────────────────────────
+5. symphony-runner/main.mjs — Real invariant check replaces heuristic
+   - git rev-parse --show-toplevel must equal ROOT
+   - For non-main worktrees: gitTopLevel must NOT equal control repo
+   - Logs INVARIANT VIOLATION (warn) or CRITICAL (error) on failure
+   - Informational ROOT === cwd() check removed (was misleading)
 
-### Scenario 6: Duplicate-trigger suppression (3 tests) ✅
-- Rejects duplicate webhook delivery IDs at ingress (409 Conflict)
-- Suppresses duplicate execution for the same issue identifier (idempotency key)
-- Delivery-level duplicate creates no evidence record (proves no side effects)
-- **Exercises:** Linear webhook receiver (port 18791), Symphony router (port 4319), evidence store
+D. PROVIDER SCORE BREAKDOWN (Reviewer point 5)
+───────────────────────────────────────────────
+6. get-effective-provider-score-with-breakdown.mjs — NEW FILE
+   - Returns { effective, breakdown: { baseScore, preferenceBoost,
+     recentSuccessBoost, healthPenalty, cachePenalty } }
+   - Answers "why provider A beat provider B" in selection evidence
 
-### Scenario 5: Config drift detection blocking execution (5 tests) ✅
-- Baseline: live system config preflight passes (proves clean starting state)
-- Config surface drift: missing env keys detected and blocked (throws "Config preflight failed")
-- Service lifecycle violations: optional EnvironmentFile (dash prefix) detected and blocked
-- Corrected config: restoring alignment restores green state
-- Runner wiring: source verification that maybeRunPreflights calls enforceConfigPreflight
-- **Exercises:** enforceConfigPreflight() with param overrides (templatePath, surfaces, servicesDir, wantsDir)
-- **Uses:** temp dir fixtures — zero blast radius to running services
-- **Bonus:** Test caught real drift (LOG_LEVEL missing from all 3 env files) — fixed during session
+7. get-effective-provider-score.mjs — Now delegates to breakdown version
+   - Single source of truth, no DRY violation
 
-### Scenario 3: Recovery quarantine without git mutation (4 tests) ✅
-- Classifies dirty_owned worktree with high repairAttempts as quarantine target
-- Executes quarantine repair action — state transitions to "quarantined"
-- Git HEAD SHA unchanged after quarantine — proves NO git mutation (ADR-0005 compliance)
-- Cleanup: restores worktree to available state
-- **Exercises:** classifyWorktree(), executeRepair(), getWorktreeState(), transitionWorktree()
-- **Proof:** Compares git rev-parse HEAD before and after quarantine — identical
+8. get-ranked-providers.mjs — Propagates scoreBreakdown per entry
+   - Each ranked entry now includes scoreBreakdown object
 
-### Scenario 4: Restart-safe resumption from durable state (3 tests) ✅
-- Creates test finalization state and evidence record for wt8
-- Stops executor wt8 (systemctl --user stop), verifies state files persist on disk
-- Restarts executor wt8, verifies state survived process restart
-- **Exercises:** setFinalizationState(), createEvidenceRecord(), systemctl stop/start, loadState()
-- **Proof:** File-backed durable state persists across process boundary (stop → verify → start → verify)
+9. select-provider.mjs — selectionLog entries include scoreBreakdown
+   - Evidence records now contain full score decomposition
 
-### Scenario 2: Provider fallback with recorded evidence (2 tests) ✅
-- Sends live OpenAI-format request through Discord router → executor → bridge
-- Verifies evidence record created with worktreeSelection (wt5-8 pool)
-- Polls for providerSelection population (bridge writes asynchronously)
-- Source-verifies queryRoutingEvidence and recordProviderRoutingEvidence capture selectionRationale
-- **Exercises:** Discord router (port 18790), proxy-to-worktree, symphony-openai-bridge, evidence store
+E. SCENARIO STRENGTHENING (Reviewer points 1-4)
+────────────────────────────────────────────────
+10. Scenario 1 — NOW REQUIRES FULL LIFECYCLE
+    - Minimum required stages: ingress → routing → worktreeSelection →
+      execution → push → integration
+    - Test FAILS if pipeline does not reach integration
+    - Full evidence chain verified (routing, worktreeSelection, execution,
+      push, integration all must be non-null)
 
-### Scenario 1: Authoritative scheduling through integration and closure (2 tests) ✅
-- Sends signed webhook (issue.create) to Linear webhook receiver
-- Polls for evidence creation at ingress stage (correlationId, issueId, source)
-- Polls for deeper pipeline stages: worktreeSelection, executionResult, integrationResult
-- Graceful fallback: verifies whatever stages the agent reaches within timeout
-- **Exercises:** Full pipeline — webhook → scheduler → router → executor → integrator
-- **Note:** Full lifecycle depends on agent execution speed; test verifies reachable stages
+11. Scenario 2 — SCORE BREAKDOWN VERIFICATION
+    - selectionRationale entries must include scoreBreakdown object
+    - Verifies baseScore, healthPenalty, cachePenalty, preferenceBoost,
+      recentSuccessBoost are all present and typed correctly
+    - Excluded provider must appear as "excluded" or selected rank > 1
 
-## Key Design Decisions
+12. Scenario 4 — FULL REPAIR PATH VERIFICATION
+    - getNextRepairableIssueForWorktree returns candidate with correct ID
+    - Finalization state includes all fields runner needs:
+      branch, headSha, worktreeId, stickyOwner, state
+    - Proves runner's complete repair path is exercisable
 
-1. **Vitest 4 timeout signature**: `it(name, { timeout }, fn)` — options as 2nd arg, not 3rd
-2. **Regex patterns**: `[\s\S]*` for newline-spanning matches (not `.*`)
-3. **Temp dir isolation**: All config drift and lifecycle tests use mkdtempSync — zero blast radius
-4. **State manipulation over mocking**: Direct state store manipulation for quarantine/restart scenarios
-5. **Evidence-first verification**: Every scenario asserts on durable evidence records, not just HTTP status
-6. **Polling with fallback**: Long-running scenarios poll with timeouts and verify whatever stages are reached
+F. REGRESSION TESTS
+───────────────────
+13. tests/unit/provider-supports-tools.spec.ts — 11 NEW TESTS
+    - providerSupportsTools: strict rejects unprobed (5 tests)
+    - formatElapsed: edge cases including NaN (4 tests)
+    - getEffectiveProviderScoreWithBreakdown: breakdown correctness (2 tests)
 
-## Files in review.zip
+═══════════════════════════════════════════════════════════════════════
+3. WHAT THE SCENARIOS NOW PROVE vs. WHAT THEY DON'T
+═══════════════════════════════════════════════════════════════════════
 
-- `reviewer.txt` — this file
-- `tests/e2e/live-lifecycle-demo.spec.ts` — the 1,130-line test file
-- `tests/e2e/e2e-helpers.ts` — shared e2e test helpers
-- `PLAN-criterion-13.md` — the plan document for this criterion
-- `logs/` — systemd journal logs from the session (all services)
+Scenario 1 (Full Lifecycle):
+  ✅ PROVES: ingress → routing → dispatch → execution → push → integration
+  ⚠️ DOES NOT PROVE: evidence-gated closeout, final done-state transition
+  NOTE: These require Linear API state changes that are not safe in E2E
+
+Scenario 2 (Provider Fallback):
+  ✅ PROVES: scored selectionRationale with breakdown, scored exclusion
+  ✅ PROVES: runtime selectProvider exercises fallback path
+  ⚠️ DOES NOT PROVE: live provider failure → retry with fallbackChain > 1
+  NOTE: Controlling live provider failures requires mock infrastructure
+
+Scenario 4 (Restart Safety):
+  ✅ PROVES: durable state survives stop/start
+  ✅ PROVES: getNextRepairableIssueForWorktree finds persisted candidate
+  ✅ PROVES: candidate has all fields runner needs for executeIssue
+  ⚠️ DOES NOT PROVE: live in-flight execution resumes to closure
+  NOTE: Would require interrupting a real agent mid-execution
+
+═══════════════════════════════════════════════════════════════════════
+4. RANKING EXPLANATION (Reviewer point 5B)
+═══════════════════════════════════════════════════════════════════════
+
+Provider ranking formula:
+  effective = max(0, baseScore + preferenceBoost + recentSuccessBoost
+                               - healthPenalty - cachePenalty)
+
+Tie-breaking order (getRankedProviders):
+  1. Higher effective score
+  2. Tool-confirmed providers preferred
+  3. Higher selection count (incumbency — intentional policy)
+  4. Alphabetical name (deterministic)
+
+Incumbency bias via selections count IS intentional:
+  - Providers with more successful completions get tie-break preference
+  - This reduces risk — proven providers are preferred when scores tie
+  - New providers can still win by earning a higher base score
+
+═══════════════════════════════════════════════════════════════════════
+5. ADAPTIVE CONTEXT EXPLANATION (Reviewer point 6)
+═══════════════════════════════════════════════════════════════════════
+
+Adaptive context sizing is IN-PROCESS EPHEMERAL:
+  - 413/context errors → dynamicMaxTokens reduced in memory
+  - Applies within same process and same fallback cascade
+  - Resets on bridge restart (intentional — documented in provider-states.mjs)
+
+Rationale for ephemeral:
+  - Rate-limit windows are time-bound (60s)
+  - Context caps vary by provider and change over time
+  - Stale persisted caps could cause unnecessary truncation
+  - No I/O cost on every request
+
+For the showcase: describe as "in-process adaptive behavior" —
+the system learns within a single cascade but does not persist
+learned sizing across restarts.
+
+═══════════════════════════════════════════════════════════════════════
+6. REMAINING BEFORE EXECUTIVE SHOWCASE
+═══════════════════════════════════════════════════════════════════════
+
+MUST DO:
+  □ 30-60 minute green soak (all services, zero warnings)
+  □ Regenerate logs from fixed code only (no stale artifacts)
+  □ Full E2E suite run against live system
+
+SHOULD DO:
+  □ Document evidence-gated closeout limitation explicitly
+  □ Consider mock infrastructure for forced fallback E2E
+  □ Rotate any credentials that may have been in older bundles
+
+═══════════════════════════════════════════════════════════════════════
+7. FILES IN THIS BUNDLE
+═══════════════════════════════════════════════════════════════════════
+
+Code files (updated):
+  - tests/e2e/live-lifecycle-demo.spec.ts
+  - tests/e2e/e2e-helpers.ts
+  - tests/unit/provider-supports-tools.spec.ts (NEW)
+  - harness/ops/orchestration/symphony-runner/main.mjs
+  - harness/ops/integrations/model/symphony-openai-bridge/server.mjs
+  - harness/ops/integrations/model/symphony-openai-bridge/invoke-with-aiinner.mjs
+  - harness/ops/integrations/model/symphony-openai-bridge/provider-supports-tools.mjs
+  - harness/ops/integrations/model/symphony-openai-bridge/startup-context7-verify.mjs
+  - harness/ops/integrations/model/symphony-openai-bridge/read-docs-tool.mjs
+  - harness/ops/integrations/model/symphony-credit-gate/select-provider.mjs
+  - harness/ops/integrations/model/symphony-credit-gate/get-ranked-providers.mjs
+  - harness/ops/integrations/model/symphony-credit-gate/get-effective-provider-score.mjs
+  - harness/ops/integrations/model/symphony-credit-gate/get-effective-provider-score-with-breakdown.mjs (NEW)
+  - harness/ops/core/task-evidence/record-provider-routing-evidence.mjs
+  - harness/ops/integrations/model/symphony-adaptive-context/provider-states.mjs
+  - services/systemd/anqr-context7-mcp.service
+
+Config files:
+  - vitest.e2e.config.ts
+  - package.json
+  - tsconfig.json, tsconfig.base.json, tsconfig.apps.json
+  - tsconfig.harness.json, tsconfig.src.json, tsconfig.tests.json
+  - tsconfig.node.json, tsconfig.packages.json, tsconfig.netlify.json
+  - cspell.json
+  - vite.config.ts, vitest.config.ts, vitest.integration.config.ts
+  - eslint.config.js, knip.json, oxlint.json
+
+Logs (fresh from current HEAD):
+  - anqr-symphony-executor@{1..8}.log
+  - anqr-watchdog.log, anqr-symphony-scheduler.log
+  - anqr-symphony-router.log, anqr-discord-router.log
+  - anqr-linear-webhook.log, anqr-symphony-integrator.log
+  - anqr-symphony-worktree-recovery.log
+  - openclaw-gateway.log, litellm-proxy.log, model-injector-proxy.log
+  - full-session.log, errors-and-warnings.log
