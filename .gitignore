@@ -25,3 +25,4 @@ test-output.log
 harness/.structurizr
 harness/.structurizr-export
 harness/__pycache__
+review-all.zip
