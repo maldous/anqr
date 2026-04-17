@@ -1,9 +1,10 @@
 import { MIN_SELECTIONS_FOR_RANKING } from "../min-selections-for-ranking.mjs";
 import { LOCAL_SAFETY_NET_PROVIDER_NAMES } from "../local-safety-net-provider-names.mjs";
+import { PROVIDERS } from "../providers.mjs";
 import { SAFETY_NET_SCORE_CEILING } from "../safety-net-score-ceiling.mjs";
 import { SCORE_WEIGHTS } from "../score-weights.mjs";
+import { TIER_PAID } from "../tier-paid.mjs";
 import { getProviderBootstrapScore } from "../get-provider-bootstrap-score.mjs";
-import { getProviderPreferenceBoost } from "../get-provider-preference-boost.mjs";
 import { hasHistoricalProviderCapability } from "../has-historical-provider-capability.mjs";
 import { getProbeUsageReliability } from "../record-probe-usage-reliability.mjs";
 import { computeContextLengthScore } from "./compute-context-length-score.mjs";
@@ -13,7 +14,11 @@ export function calculateProviderScore(providerName, stats) {
   const probeEvidence = stats.probeSelections[providerName] || 0;
 
   if (selections + probeEvidence < MIN_SELECTIONS_FOR_RANKING) {
-    if (!hasHistoricalProviderCapability(providerName, stats)) {
+    const provider = PROVIDERS.find((p) => p.name === providerName);
+    const isPaid = provider?.tier === TIER_PAID;
+    // Paid providers get a bootstrap score even without usage history
+    // so they rank in the "ranked" array instead of "pending"
+    if (!hasHistoricalProviderCapability(providerName, stats) && !isPaid) {
       return null;
     }
     return getProviderBootstrapScore(providerName, stats);
@@ -80,8 +85,9 @@ export function calculateProviderScore(providerName, stats) {
     lowPrioritySuccessRate * SCORE_WEIGHTS.linearSimpleSuccess +
     largeIssueSuccessRate * SCORE_WEIGHTS.estimateSuccessRate +
     estimateEfficiency * SCORE_WEIGHTS.estimateEfficiency +
-    estimateThroughput * SCORE_WEIGHTS.estimateThroughput +
-    getProviderPreferenceBoost(providerName);
+    estimateThroughput * SCORE_WEIGHTS.estimateThroughput;
+  // NOTE: getProviderPreferenceBoost is NOT added here to avoid double-counting
+  // — it's applied in getEffectiveProviderScoreWithBreakdown instead
   const rounded = Math.round(Math.min(0.99, score) * 100) / 100;
   if (LOCAL_SAFETY_NET_PROVIDER_NAMES.has(providerName)) {
     return Math.min(rounded, SAFETY_NET_SCORE_CEILING);

@@ -2,6 +2,8 @@ import { getProviderHealthState } from "../symphony-provider-health.mjs";
 
 import { PROVIDERS } from "./providers.mjs";
 import { TIER_LOCAL_SAFETY_NET } from "./tier-local-safety-net.mjs";
+import { TIER_PAID } from "./tier-paid.mjs";
+import { getProviderBootstrapScore } from "./get-provider-bootstrap-score.mjs";
 import { getCachedProbeEntry } from "./get-cached-probe-entry.mjs";
 import { getEffectiveProviderScoreWithBreakdown } from "./get-effective-provider-score-with-breakdown.mjs";
 import { getEffectiveProviderTier } from "./get-effective-provider-tier.mjs";
@@ -54,9 +56,15 @@ export function getRankedProviders(options = {}) {
     }
 
     const health = getProviderHealthState(provider.name);
-    const baseScore = stats.score?.[provider.name];
+    let baseScore = stats.score?.[provider.name];
     const selections = stats.selections?.[provider.name] || 0;
     const tier = getEffectiveProviderTier(provider, probeEntry);
+
+    // Paid providers without a persisted score get a bootstrap fallback
+    // so they land in the "ranked" array instead of "pending"
+    if ((baseScore === null || baseScore === undefined) && tier === TIER_PAID) {
+      baseScore = getProviderBootstrapScore(provider.name, stats);
+    }
     let effectiveScore = null;
     let scoreBreakdown = null;
     if (baseScore !== null && baseScore !== undefined) {

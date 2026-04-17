@@ -20,7 +20,7 @@ export async function probeCodexSdk(model) {
   const probeStart = Date.now();
   try {
     const codex = new Codex({ env: process.env });
-    const thread = codex.startThread({
+    const thread = await codex.startThread({
       model: model || undefined,
       workingDirectory: PROJECT_ROOT,
       sandboxMode: CODEX_SANDBOX_MODE,
