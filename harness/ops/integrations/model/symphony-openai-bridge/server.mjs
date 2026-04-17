@@ -21,6 +21,7 @@ import { updateSessionProvider, setSessionMessages } from "../symphony-session-s
 import { ADVERTISED_MODELS } from "./advertised-models.mjs";
 import { BRIDGE_METRICS } from "./bridge-metrics.mjs";
 import { PROBE_CACHE_FILE } from "./probe-cache-file.mjs";
+import { DISCOVERED_PER_REQUEST_LIMITS_FILE } from "../symphony-bridge-truncation.mjs";
 import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";
 import { BRIDGE_PROVIDER_BLOCKLIST_REASONS } from "./bridge-provider-blocklist-reasons.mjs";
 import { MAX_CONCURRENT_REQUESTS } from "./max-concurrent-requests.mjs";
@@ -246,6 +247,14 @@ export const server = http.createServer(async (req, res) => {
         }
       } catch (err) {
         logWarn(`Failed to delete probe cache: ${err.message}`);
+      }
+      try {
+        if (fs.existsSync(DISCOVERED_PER_REQUEST_LIMITS_FILE)) {
+          fs.unlinkSync(DISCOVERED_PER_REQUEST_LIMITS_FILE);
+          logInfo(`🔄 Discovered per-request limits cache deleted`);
+        }
+      } catch (err) {
+        logWarn(`Failed to delete discovered limits cache: ${err.message}`);
       }
       return sendJson(res, 200, {
         status: "reset",
@@ -1088,9 +1097,14 @@ export const server = http.createServer(async (req, res) => {
           clearTimeout(requestTimeoutHandle);
           // Defensive: use startTime from closure, fall back to req._startTime
           const _elapsed = Date.now() - (startTime ?? req._startTime ?? Date.now());
+          // 🔍 Production diagnostics: Log full stack trace for streaming errors
           logError(
             `Streaming error after ${formatElapsed(_elapsed)}: ${streamError.message}`,
           );
+          if (streamError.stack) {
+            logError(`[DIAG] Streaming error STACK: ${streamError.stack}`);
+          }
+          if (process.env.SYMPHONY_DEBUG) console.error(`[DIAG] Streaming error detail:`, streamError);
 
           // F Phase 3: Emit failure-path evidence when providers exhausted (streaming)
           // Covers F2 (routing on failure), F3 (safety-net), F4 (context-reduction on failure)

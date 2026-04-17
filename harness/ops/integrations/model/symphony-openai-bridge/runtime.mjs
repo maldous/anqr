@@ -18,6 +18,7 @@ import { sendStartupDiscordNotification } from "./startup-discord-notify.mjs";
 import { initializeProbes } from "./startup-probe-init.mjs";
 import { verifyContext7Health } from "./startup-context7-verify.mjs";
 import { installConsoleOutputGuard } from "./install-console-output-guard.mjs";
+import { logStartupContextCaps } from "./log-startup-context-caps.mjs";
 
 if (VALID_TOKENS.size > 1) {
   logDebug(`Auth: accepting ${VALID_TOKENS.size} tokens`);
@@ -57,6 +58,7 @@ server.listen(PORT, "127.0.0.1", async () => {
   await runStartupSelfTests();
   await sendStartupDiscordNotification();
   initializeProbes();
+  logStartupContextCaps();
   verifyContext7Health();
 
   // Discord monitoring removed - OpenClaw handles Discord interaction directly
