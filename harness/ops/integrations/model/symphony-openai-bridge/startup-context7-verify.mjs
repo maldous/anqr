@@ -17,11 +17,11 @@ export function verifyContext7Health() {
         );
         return;
       }
-      logInfo(`ℹ️ Context7 HTTP service returned ${status} — cloud-only docs posture active`);
+      logWarn(`⚠️ Context7 HTTP service returned ${status} — local docs degraded, falling back to cloud`);
     })
     .catch((err) => {
-      logInfo(
-        `ℹ️ Context7 HTTP service not running — cloud-only docs posture active (${err?.message || "request failed"})`,
+      logWarn(
+        `⚠️ Context7 HTTP service not reachable at ${CONTEXT7_HTTP_BASE} — local docs unavailable (${err?.message || "request failed"})`,
       );
     });
 }

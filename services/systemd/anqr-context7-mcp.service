@@ -1,13 +1,13 @@
 # anqr-context7-mcp.service — Context7 MCP documentation service
 #
-# STATUS: INTENTIONALLY INACTIVE — local docs are not required for the
-# current demo posture.  The platform uses cloud-only documentation
-# sources (web researchers, docs researchers).  This service may be
-# enabled in the future when local RAG + MCP documentation is needed.
+# STATUS: ACTIVE — provides local RAG documentation to AI agents/skills
+# via the Context7 MCP protocol over HTTP.  All Symphony Bridge instances
+# and executor worktrees use this service for efficient local code/library
+# documentation lookups before falling back to cloud APIs.
 #
-# If enabled, runs the Context7 MCP server as an HTTP service so other
-# ANQR services (Symphony Bridge, etc.) can fetch library documentation
-# locally without spawning their own MCP child processes.
+# Runs the Context7 MCP server as an HTTP service so other ANQR services
+# (Symphony Bridge, etc.) can fetch library documentation locally without
+# spawning their own MCP child processes.
 #
 # Endpoints:
 #   POST /v1/resolve-docs  — Resolve library documentation

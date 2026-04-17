@@ -1,16 +1,18 @@
 ANQR Criterion #13 — Reviewer Artifact
 Generated: 2026-04-17
-Commit: 3de9c316c
-Previous commit: 1b8523a4e
+Commit: c0e14ff5e
+Previous commit: 891059b7b
 
 ═══════════════════════════════════════════════════════════════════════
 1. SYSTEM STATE
 ═══════════════════════════════════════════════════════════════════════
 
-Services running:           18
+Services running:           19 (18 + Context7 MCP)
 Failed systemd units:       0
 Quarantined worktrees:      0
 Worktree health:            wt1-wt8 all "ok"
+Context7 MCP service:       ACTIVE — health=ok, serverReady=true
+Context7 docs source:       LOCAL (resolve-docs returns source="local")
 HEAD = origin/main:         Yes (after push)
 
 Typecheck:                  PASS (0 errors)
@@ -35,14 +37,21 @@ A. CRITICAL BUG FIXES
    - This was already fixed in the previous session (commit 1b8523a4e)
    - The reviewer's bundle was stale — this review.zip includes the file
 
-B. CONTEXT7 POSTURE (Reviewer point 7)
-───────────────────────────────────────
-3. startup-context7-verify.mjs — All warnings demoted to logInfo
-   - "Context7 HTTP service not running — cloud-only docs posture active"
-   - No more ⚠️ warnings in logs when Context7 is intentionally inactive
+B. CONTEXT7 LOCAL RAG — NOW ACTIVE (Reviewer point 7)
+──────────────────────────────────────────────────────
+3. anqr-context7-mcp.service — ENABLED AND RUNNING
+   - Service status changed from "INTENTIONALLY INACTIVE" to "ACTIVE"
+   - Health endpoint: http://127.0.0.1:4320/health → {status: ok, serverReady: true}
+   - POST /v1/resolve-docs returns source="local" documentation
+   - AI agents/skills now use local RAG for efficient code/library searching
+   - Cloud API is fallback only (not primary)
+
+4. startup-context7-verify.mjs — Warnings RESTORED (logWarn)
+   - Context7 is now a required service → warn if unavailable
+   - "Context7 HTTP service not reachable — local docs unavailable"
    
-4. read-docs-tool.mjs — Context7 unavailable warning demoted to logInfo
-   - Falls back to cloud API silently without warning noise
+5. read-docs-tool.mjs — Warnings RESTORED (logWarn)
+   - "Context7 HTTP service not reachable — falling back to cloud docs"
 
 C. WORKTREE VERIFICATION (Reviewer point 8)
 ────────────────────────────────────────────
@@ -161,7 +170,7 @@ learned sizing across restarts.
 ═══════════════════════════════════════════════════════════════════════
 
 MUST DO:
-  □ 30-60 minute green soak (all services, zero warnings)
+  □ 30-60 minute green soak (all 19 services, zero warnings)
   □ Regenerate logs from fixed code only (no stale artifacts)
   □ Full E2E suite run against live system
 
@@ -169,6 +178,12 @@ SHOULD DO:
   □ Document evidence-gated closeout limitation explicitly
   □ Consider mock infrastructure for forced fallback E2E
   □ Rotate any credentials that may have been in older bundles
+
+COMPLETED THIS ROUND:
+  ✅ Context7 MCP service enabled and verified healthy
+  ✅ Local RAG documentation serving (source="local")
+  ✅ Log levels corrected — warn when Context7 is down (required service)
+  ✅ Service file comments updated to reflect ACTIVE status
 
 ═══════════════════════════════════════════════════════════════════════
 7. FILES IN THIS BUNDLE
