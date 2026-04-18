@@ -1,5 +1,6 @@
-import { resolve } from "node:path";
+import { getBridgeStateDir } from "../../../core/symphony-shared-state/get-bridge-state-dir.mjs";
 
-import { PROJECT_ROOT } from "./project-root.mjs";
-
-export const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
+// CRITICAL: Use the shared bridge state directory (not worktree-local PROJECT_ROOT)
+// so that credit-gate state (stats, failures, leases) is visible across
+// all worktree bridge instances.
+export const STATE_DIR = getBridgeStateDir();

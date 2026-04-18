@@ -1,13 +1,12 @@
-import { ensureStateDir } from "../symphony-credit-gate.mjs";
-import fs from "node:fs";
+import { saveBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 
-import { PROBE_CACHE_FILE } from "./probe-cache-file.mjs";
 import { logDebug, logError } from "./logger.mjs";
+
+const FILE_NAME = "provider-probe-cache.json";
 
 export function saveProbeCache(cache) {
   try {
-    ensureStateDir();
-    fs.writeFileSync(PROBE_CACHE_FILE, JSON.stringify(cache, null, 2));
+    saveBridgeFile(FILE_NAME, cache, { withLock: true });
     logDebug(`Saved probe cache (${cache.probeResults.length} results)`);
   } catch (err) {
     logError(`Failed to save probe cache: ${err.message}`);

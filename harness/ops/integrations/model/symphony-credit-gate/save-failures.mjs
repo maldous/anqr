@@ -1,9 +1,7 @@
-import { writeFileSync } from "node:fs";
+import { saveBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 
-import { FAILURE_STATE_FILE } from "./failure-state-file.mjs";
-import { ensureStateDir } from "./ensure-state-dir.mjs";
+const FILE_NAME = "provider-failures.json";
 
 export function saveFailures(failures) {
-  ensureStateDir();
-  writeFileSync(FAILURE_STATE_FILE, JSON.stringify(failures, null, 2));
+  saveBridgeFile(FILE_NAME, failures, { withLock: true });
 }

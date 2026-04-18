@@ -1,12 +1,7 @@
-import { readFileSync, existsSync } from "node:fs";
+import { loadBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 
-import { PROBE_RESULTS_FILE } from "./probe-results-file.mjs";
+const FILE_NAME = "provider-probe-results.json";
 
 export function loadProbeResults() {
-  try {
-    if (existsSync(PROBE_RESULTS_FILE)) {
-      return JSON.parse(readFileSync(PROBE_RESULTS_FILE, "utf-8"));
-    }
-  } catch {}
-  return {};
+  return loadBridgeFile(FILE_NAME);
 }

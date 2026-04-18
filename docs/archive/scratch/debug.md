@@ -272,12 +272,14 @@ When testing the Responses API directly with `tools` parameter and `input_text` 
 **Root cause:** The jiti compiler cache directory `/tmp/jiti/` lives on tmpfs and is lost on reboot. When missing, jiti ENOENT errors crash the Discord debounce flush pipeline (`monitor-preflight-audio.*.mjs`), preventing ALL text channel messages from being processed. Voice channel (speakText) bypassed this pipeline entirely and continued working, making the bug hard to notice.
 
 **Symptoms:**
+
 - Bot receives Discord text messages but never replies in the text channel
 - Voice channel (speakText/TTS) works fine
 - `journalctl` shows: `[discord] debounce flush failed — ENOENT: no such file or directory, open '/tmp/jiti/monitor-preflight-audio.56619229.mjs'`
 - ALL debounce flushes fail (no successful flushes in logs)
 
 **Fix:**
+
 1. Added `ExecStartPre=/usr/bin/mkdir -p /tmp/jiti` to `openclaw-gateway.service` (ensures dir exists before gateway starts)
 2. Added `/etc/tmpfiles.d/jiti.conf` with rule `d /tmp/jiti 0775 - - -` for reboot persistence
 3. Committed as `d65c6fee4` (fix(harness): ensure /tmp/jiti/ exists before gateway starts)
@@ -305,6 +307,7 @@ When testing the Responses API directly with `tools` parameter and `input_text` 
 **Root cause:** The 8 worktree bridge processes were started before the preference boost commit (`887635b59`, Apr 18 00:19). Node.js caches loaded modules in memory, so the running bridges still use the old `get-provider-preference-boost.mjs` that returns `0` for all providers. On disk the code returns `0.35` for paid-tier, but in-memory the old code is used.
 
 **Symptoms:**
+
 - `make show-metrics` shows `codebuff-paid` at rank #15 with `preferenceBoost=0`
 - `[selectProvider]` log shows `codebuff-paid` at rank #1 (from a process with updated code)
 - `preferenceBoost` should be `0.35` for paid-tier providers but shows `0` in `/v1/stats`
@@ -324,12 +327,12 @@ When testing the Responses API directly with `tools` parameter and `input_text` 
 **Observed variance:**
 
 | Worktree | Ranked Providers |
-|----------|-----------------|
-| wt1      | 651             |
-| wt5      | 636             |
-| wt6      | 656             |
-| wt7      | 654             |
-| wt8      | 615             |
+| -------- | ---------------- |
+| wt1      | 651              |
+| wt5      | 636              |
+| wt6      | 656              |
+| wt7      | 654              |
+| wt8      | 615              |
 
 This is expected — providers come online/offline between probe cycles — but `make show-metrics` only shows one worktree's view.
 
@@ -387,9 +390,9 @@ Production diagnostics (permanent, not temporary):
 
 ## Changelog
 
-| Date       | Change                                                                                                                                                                                                                                                         |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-17 | Created — initial state capture, identified Bug #1-5                                                                                                                                                                                                           |
-| 2026-04-17 | Sweep #2 — exhaustive Codex testing, fixed Bug #6 (per-request limits), Bug #7 (generic providers), added diagnostic tracing, verified all tool execution paths work                                                                                           |
-| 2026-04-17 | Sweep #3 — made per-request limits fully dynamic (413 → persist → proactive), added provider prefix defaults for new models, added startup cap logging, made diagnostics permanent, cleared caches on /v1/stats/reset, all 7 Codex tests pass with 0% fallback |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                 |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-17 | Created — initial state capture, identified Bug #1-5                                                                                                                                                                                                                                                                                   |
+| 2026-04-17 | Sweep #2 — exhaustive Codex testing, fixed Bug #6 (per-request limits), Bug #7 (generic providers), added diagnostic tracing, verified all tool execution paths work                                                                                                                                                                   |
+| 2026-04-17 | Sweep #3 — made per-request limits fully dynamic (413 → persist → proactive), added provider prefix defaults for new models, added startup cap logging, made diagnostics permanent, cleared caches on /v1/stats/reset, all 7 Codex tests pass with 0% fallback                                                                         |
 | 2026-04-18 | Sweep #4 — fixed Discord bot not replying in text channel (Bug #10: jiti ENOENT, Bug #11: TTS auto=always suppresses text), emptied static blocklists for dynamic provider exclusion (commit `18470fa08`), documented stale module cache (Bug #12), per-worktree probe count variance (Bug #13), Discord intent limitation (Issue #14) |

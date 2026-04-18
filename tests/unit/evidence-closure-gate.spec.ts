@@ -455,7 +455,7 @@ describe("Phase 3 F5 — selection rationale infrastructure", () => {
     );
     // server.mjs creates selectionLog array and passes it to selectProvider
     expect(source).toContain("const selectionLog = [];");
-    expect(source).toContain("selectionLog }");
+    expect(source).toContain("selectionLog,");
     // All recordProviderRoutingEvidence calls include selectionRationale
     const routingCallCount = (source.match(/recordProviderRoutingEvidence\(/g) || []).length;
     const rationaleCount = (source.match(/selectionRationale:/g) || []).length;

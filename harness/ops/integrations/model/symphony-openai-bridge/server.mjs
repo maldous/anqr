@@ -16,7 +16,12 @@ import {
   sendDiscordEmbed,
   finalizeDiscordStream,
 } from "../../notifications/openclaw-discord.mjs";
-import { updateSessionProvider, setSessionMessages } from "../symphony-session-state.mjs";
+import {
+  updateSessionProvider,
+  setSessionMessages,
+  resolveSessionKey,
+  setSessionSource,
+} from "../symphony-session-state.mjs";
 
 import { ADVERTISED_MODELS } from "./advertised-models.mjs";
 import { BRIDGE_METRICS } from "./bridge-metrics.mjs";
@@ -61,6 +66,7 @@ import {
 import { sanitizeForDiscordPreview } from "./sanitize-for-discord-preview.mjs";
 import { sendJson } from "./send-json.mjs";
 import { shouldUseToolsForRequest } from "./should-use-tools-for-request.mjs";
+import { requestContextStorage } from "./request-context-storage.mjs";
 import { setCurrentRequestId } from "./set-current-request-id.mjs";
 import { toolCapableProviders } from "./tool-capable-providers.mjs";
 import { tools } from "./tools.mjs";
@@ -530,6 +536,40 @@ export const server = http.createServer(async (req, res) => {
         logInfo(`🚀 Request: ${issueContext.identifier} — ${issueContext.title}`);
       }
 
+      // Resolve canonical session key from source identity (Discord guild/channel, Linear issue).
+      // Placed after issueContext extraction so Linear keys can use the issue identifier.
+      // Falls back to the header-provided session key if no source identity headers are present.
+      const canonicalSessionKey = resolveSessionKey({
+        discordGuildId: req.headers["x-discord-guild-id"] || null,
+        discordChannelId: req.headers["x-discord-channel-id"] || null,
+        linearIssueIdentifier: issueContext?.identifier || null,
+        headerSessionKey: sessionId,
+      });
+      // Effective session key: canonical key if resolved, otherwise header-provided sessionId.
+      // When falling back to raw sessionId (no canonical resolution), the key won't have a
+      // prefix like "discord:" or "linear:", but this is intentional — it preserves backward
+      // compatibility with existing session records that used raw header values as keys.
+      const effectiveSessionKey = canonicalSessionKey || sessionId;
+
+      if (canonicalSessionKey && canonicalSessionKey !== sessionId) {
+        logDebug(`Session key remapped: ${sessionId} → ${canonicalSessionKey}`);
+      }
+
+      // Stamp source identity on the session record for durable ownership tracking.
+      if (effectiveSessionKey) {
+        const sourceType = canonicalSessionKey?.startsWith("discord:")
+          ? "discord"
+          : canonicalSessionKey?.startsWith("linear:")
+            ? "linear"
+            : "header";
+        setSessionSource(effectiveSessionKey, {
+          type: sourceType,
+          discordGuildId: req.headers["x-discord-guild-id"] || undefined,
+          discordChannelId: req.headers["x-discord-channel-id"] || undefined,
+          linearIssueIdentifier: issueContext?.identifier || undefined,
+        });
+      }
+
       logInfo(
         `Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}, useTools=${route.useTools}`,
       );
@@ -558,7 +598,9 @@ export const server = http.createServer(async (req, res) => {
       setRequestIdCounter(requestIdCounter + 1);
       const requestId = `req-${requestIdCounter}`;
 
-      // Set current request ID for file change tracking
+      // Set concurrency-safe async-local context (used by getCurrentRequestId() / getRequestContext()).
+      // Also set the deprecated module-global for backward compat with code not yet migrated
+      // to use the async-local getters — under concurrency, only the async-local value is reliable.
       setCurrentRequestId(requestId);
 
       // Track this request
@@ -567,6 +609,19 @@ export const server = http.createServer(async (req, res) => {
           error: { message: "Too many concurrent requests. Please try again later." },
         });
       }
+
+      // Enter concurrency-safe async-local context for this request.
+      // enterWith() propagates to all async descendants of this call,
+      // so getCurrentRequestId() / getRequestContext() return the correct
+      // values for THIS request even under concurrent execution.
+      //
+      // NOTE: enterWith() does NOT auto-restore (unlike run()). This is safe
+      // here because each HTTP handler invocation is a top-level async flow
+      // that runs to completion before the next request on this call stack.
+      // If this handler is ever refactored into a separate function, prefer
+      // requestContextStorage.run() for bounded scoping instead.
+      requestContextStorage.enterWith({ requestId, sessionKey: effectiveSessionKey, worktreeId });
+
       const safeRequestLabel =
         issueContext?.identifier ||
         (contentStr ? `request (${contentStr.length} chars)` : "(system task)");
@@ -781,7 +836,7 @@ export const server = http.createServer(async (req, res) => {
         // F5: Capture ranked selection rationale for evidence
         const selectionLog = [];
         const selectedProvider = await selectProvider({
-          ...buildSelectionOptions(route, [], sessionId),
+          ...buildSelectionOptions(route, [], effectiveSessionKey),
           selectionLog,
         });
 
@@ -854,7 +909,6 @@ export const server = http.createServer(async (req, res) => {
 
             // Clean up request tracking
             activeRequests.delete(requestId);
-            setCurrentRequestId(null);
 
             logInfo(
               `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName}, ${result.text.length} chars)`,
@@ -933,17 +987,17 @@ export const server = http.createServer(async (req, res) => {
               }
             }
 
-            // Update session state for codebuff
-            if (sessionId) {
+            // Update session state for codebuff (use canonical session key)
+            if (effectiveSessionKey) {
               // Detect mode from response or errors
               const mode = result.mode || "unknown";
-              updateSessionProvider(sessionId, {
+              updateSessionProvider(effectiveSessionKey, {
                 name: result.providerName,
                 mode,
                 tier: selectedProvider?.tier || "paid",
               });
               // Store server-side message history for context verification on provider switches
-              setSessionMessages(sessionId, messages);
+              setSessionMessages(effectiveSessionKey, messages);
             }
             maybeGC();
             return;
@@ -987,7 +1041,7 @@ export const server = http.createServer(async (req, res) => {
               }
             },
             excludeAfterCodebuff,
-            sessionId,
+            effectiveSessionKey,
             requestCwd,
             isSelectedCodebuff ? null : selectedProvider,
           );
@@ -1036,7 +1090,6 @@ export const server = http.createServer(async (req, res) => {
 
           // Clean up request tracking
           activeRequests.delete(requestId);
-          setCurrentRequestId(null);
 
           logInfo(
             `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName})`,
@@ -1093,7 +1146,6 @@ export const server = http.createServer(async (req, res) => {
 
           // Clean up request tracking
           activeRequests.delete(requestId);
-          setCurrentRequestId(null);
 
           clearInterval(heartbeat);
           clearInterval(progressInterval);
@@ -1184,7 +1236,7 @@ export const server = http.createServer(async (req, res) => {
         // Non-streaming
         let result;
         try {
-          result = await invokeWithFallback(messages, route, sessionId, requestCwd);
+          result = await invokeWithFallback(messages, route, effectiveSessionKey, requestCwd);
         } catch (nonStreamError) {
           // F Phase 3: Emit failure-path evidence for non-streaming exhaustion (F2, F3, F4)
           if (correlationId && nonStreamError.safetyNetData) {
@@ -1255,7 +1307,6 @@ export const server = http.createServer(async (req, res) => {
 
         // Clean up request tracking
         activeRequests.delete(requestId);
-        setCurrentRequestId(null);
 
         logInfo(`✅ Finished: ${issueContext?.identifier || "Request"} — ${firstLine}`);
 
@@ -1350,7 +1401,6 @@ export const server = http.createServer(async (req, res) => {
     // Clean up request tracking on error (only if requestId was defined)
     if (typeof requestId !== "undefined") {
       activeRequests.delete(requestId);
-      setCurrentRequestId(null);
       finalizeDiscordStream({ requestId }).catch(() => {});
     }
 

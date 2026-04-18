@@ -1,9 +1,7 @@
-import { writeFileSync } from "node:fs";
+import { saveBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 
-import { STATS_FILE } from "./stats-file.mjs";
-import { ensureStateDir } from "./ensure-state-dir.mjs";
+const FILE_NAME = "provider-stats.json";
 
 export function saveStats(stats) {
-  ensureStateDir();
-  writeFileSync(STATS_FILE, JSON.stringify(stats, null, 2));
+  saveBridgeFile(FILE_NAME, stats, { withLock: true });
 }

@@ -9,6 +9,14 @@ export { TIER_LOCAL } from "./tier-local.mjs";
 export { SESSION_TTL_MS } from "./session-ttl-ms.mjs";
 export { DEFAULT_ADAPTIVE_PARAMS } from "./default-adaptive-params.mjs";
 export { ensureStateDir } from "./ensure-state-dir.mjs";
+export {
+  resolveSessionKey,
+  isDiscordSessionKey,
+  isLinearSessionKey,
+  getLinearIssueId,
+  getDiscordChannelId,
+} from "./resolve-session-key.mjs";
+export { setSessionSource } from "./set-session-source.mjs";
 export { loadSessionState } from "./load-session-state.mjs";
 export { saveSessionState } from "./save-session-state.mjs";
 export { loadAdaptiveParams } from "./load-adaptive-params.mjs";

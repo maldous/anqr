@@ -1,9 +1,7 @@
-import { writeFileSync } from "node:fs";
+import { saveBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 
-import { ensureStateDir } from "./ensure-state-dir.mjs";
-import { PROVIDER_LEASE_FILE } from "./provider-lease-file.mjs";
+const FILE_NAME = "provider-leases.json";
 
 export function saveProviderLeases(leases) {
-  ensureStateDir();
-  writeFileSync(PROVIDER_LEASE_FILE, JSON.stringify({ leases }, null, 2));
+  saveBridgeFile(FILE_NAME, { leases }, { withLock: true });
 }

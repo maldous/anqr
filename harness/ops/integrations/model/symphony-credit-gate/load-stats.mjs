@@ -1,15 +1,12 @@
-import { readFileSync, existsSync } from "node:fs";
-
+import { loadBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 import { PROVIDER_STATS } from "./provider-stats.mjs";
-import { STATS_FILE } from "./stats-file.mjs";
+
+const FILE_NAME = "provider-stats.json";
 
 export function loadStats() {
-  try {
-    if (existsSync(STATS_FILE)) {
-      const data = JSON.parse(readFileSync(STATS_FILE, "utf-8"));
-      // Merge with defaults to handle new fields
-      return { ...PROVIDER_STATS, ...data };
-    }
-  } catch {}
+  const data = loadBridgeFile(FILE_NAME, null);
+  if (data) {
+    return { ...PROVIDER_STATS, ...data };
+  }
   return { ...PROVIDER_STATS };
 }

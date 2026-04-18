@@ -15,6 +15,13 @@ vi.mock("node:fs", async (importOriginal) => {
     writeFileSync: vi.fn((p: string, d: string) => {
       _fsStore.set(p, String(d));
     }),
+    renameSync: vi.fn((oldP: string, newP: string) => {
+      const data = _fsStore.get(oldP);
+      if (data !== undefined) {
+        _fsStore.set(newP, data);
+        _fsStore.delete(oldP);
+      }
+    }),
     existsSync: vi.fn((p: string) => _fsStore.has(p)),
     mkdirSync: vi.fn(),
   };

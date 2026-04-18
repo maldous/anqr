@@ -15,7 +15,7 @@ import { MAX_TOOL_ITERATIONS } from "./max-tool-iterations.mjs";
 import { RAW_TOOL_JSON_RE } from "./raw-tool-json-re.mjs";
 import { convertMessages } from "./convert-messages.mjs";
 import { createProviderModel } from "./create-provider-model.mjs";
-import { currentRequestId } from "./current-request-id.mjs";
+import { getCurrentRequestId } from "./get-current-request-id.mjs";
 import { errorToString } from "./error-to-string.mjs";
 import { estimateToolOverheadTokens } from "./estimate-tool-overhead-tokens.mjs";
 import { invokeWithCodex } from "./invoke-with-codex.mjs";
@@ -227,7 +227,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
               executionMetrics.mutationCount++;
               const filePath = input?.path || input?.operation?.path;
               if (filePath) executionMetrics.changedFiles.add(filePath);
-              if (currentRequestId) trackFileChange(currentRequestId);
+              if (getCurrentRequestId()) trackFileChange(getCurrentRequestId());
             }
 
             // Track validation tool usage

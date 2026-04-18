@@ -14,12 +14,14 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../../../");
-const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
-const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
-const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
-const HEALTH_STATE_FILE = resolve(STATE_DIR, "provider-health.json");
-const PROBE_CACHE_FILE = resolve(STATE_DIR, "provider-probe-cache.json");
-const PROBE_RESULTS_FILE = resolve(STATE_DIR, "provider-probe-results.json");
+
+// Use the shared bridge state dir (set via env var for test isolation)
+const TEST_STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony-test-credit-gate");
+const FAILURE_STATE_FILE = resolve(TEST_STATE_DIR, "provider-failures.json");
+const STATS_FILE = resolve(TEST_STATE_DIR, "provider-stats.json");
+const HEALTH_STATE_FILE = resolve(TEST_STATE_DIR, "provider-health.json");
+const PROBE_CACHE_FILE = resolve(TEST_STATE_DIR, "provider-probe-cache.json");
+const PROBE_RESULTS_FILE = resolve(TEST_STATE_DIR, "provider-probe-results.json");
 
 // Dynamic import for the .mjs module (ESM-compatible)
 const creditGate = await import("./symphony-credit-gate.mjs");
@@ -42,6 +44,7 @@ const {
 
 describe("Symphony Credit Gate - Provider Selection", () => {
   beforeEach(() => {
+    process.env.ANQR_BRIDGE_STATE_DIR = TEST_STATE_DIR;
     try {
       for (const f of [
         FAILURE_STATE_FILE,
@@ -72,6 +75,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     } catch {
       // Ignore errors
     }
+    delete process.env.ANQR_BRIDGE_STATE_DIR;
   });
 
   describe("selectProvider", () => {

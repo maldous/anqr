@@ -1,13 +1,11 @@
-import { readFileSync, existsSync } from "node:fs";
-
-import { HEALTH_STATE_FILE } from "./health-state-file.mjs";
+import { loadBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 import { logWarn } from "./logger.mjs";
+
+const FILE_NAME = "provider-health.json";
 
 export function loadHealthState() {
   try {
-    if (existsSync(HEALTH_STATE_FILE)) {
-      return JSON.parse(readFileSync(HEALTH_STATE_FILE, "utf-8"));
-    }
+    return loadBridgeFile(FILE_NAME);
   } catch (err) {
     logWarn(`Failed to load health state: ${err.message}`);
   }

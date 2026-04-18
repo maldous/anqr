@@ -1,11 +1,7 @@
-import { readFileSync } from "node:fs";
+import { loadBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 
-import { FAILURE_STATE_FILE } from "./failure-state-file.mjs";
+const FILE_NAME = "provider-failures.json";
 
 export function loadFailures() {
-  try {
-    return JSON.parse(readFileSync(FAILURE_STATE_FILE, "utf-8"));
-  } catch {
-    return {};
-  }
+  return loadBridgeFile(FILE_NAME);
 }

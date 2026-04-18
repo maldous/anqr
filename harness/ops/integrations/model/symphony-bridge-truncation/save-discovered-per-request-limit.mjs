@@ -1,7 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { DISCOVERED_PER_REQUEST_LIMITS_FILE } from "./discovered-per-request-limits-cache-file.mjs";
-import { loadDiscoveredPerRequestLimits } from "./load-discovered-per-request-limits.mjs";
 
 /**
  * Persist a per-request limit discovered from a 413 error.

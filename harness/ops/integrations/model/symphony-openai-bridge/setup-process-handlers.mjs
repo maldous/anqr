@@ -39,7 +39,7 @@ export function setupProcessHandlers() {
   // noise in normal operation. Per Node.js docs, uncaught exceptions leave the
   // process in an undefined state — we set process.exitCode = 1 so it exits
   // after the current request completes.
-  process.on("unhandledRejection", (reason, promise) => {
+  process.on("unhandledRejection", (reason) => {
     const stack = reason instanceof Error ? reason.stack : String(reason);
     logError(`🚨 UNHANDLED REJECTION: ${stack}`);
     if (process.env.SYMPHONY_DEBUG) console.error(`[DIAG] UNHANDLED REJECTION at:`, stack);

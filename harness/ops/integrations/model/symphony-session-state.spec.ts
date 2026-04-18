@@ -17,9 +17,11 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../../../");
-const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
-const SESSION_STATE_FILE = resolve(STATE_DIR, "session-state.json");
-const ADAPTIVE_PARAMS_FILE = resolve(STATE_DIR, "adaptive-params.json");
+
+// Use the shared bridge state dir (set via env var for test isolation)
+const TEST_STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony-test-session-state");
+const SESSION_STATE_FILE = resolve(TEST_STATE_DIR, "session-state.json");
+const ADAPTIVE_PARAMS_FILE = resolve(TEST_STATE_DIR, "adaptive-params.json");
 
 interface AdaptiveParams {
   freeTurnLimit: {
@@ -58,6 +60,7 @@ const {
 
 describe("symphony-session-state.mjs", () => {
   beforeEach(() => {
+    process.env.ANQR_BRIDGE_STATE_DIR = TEST_STATE_DIR;
     // Clean up state files before each test
     try {
       if (existsSync(SESSION_STATE_FILE)) {
@@ -84,6 +87,7 @@ describe("symphony-session-state.mjs", () => {
     } catch {
       // Ignore errors
     }
+    delete process.env.ANQR_BRIDGE_STATE_DIR;
   });
 
   describe("Session provider tracking", () => {

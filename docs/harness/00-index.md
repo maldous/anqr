@@ -21,9 +21,10 @@ The harness is the repo-local automation system that coordinates:
 5. `docs/adrs/0006-observability-audit-and-evidence-contract.md`
 6. `docs/adrs/0011-execution-state-model.md`
 7. `docs/adrs/0012-evidence-gated-closure.md`
-8. `harness/README.md`
-9. `harness/ops/README.md`
-10. `services/systemd/README.md`
+8. `docs/adrs/0013-shared-bridge-state-and-canonical-session-keys.md`
+9. `harness/README.md`
+10. `harness/ops/README.md`
+11. `services/systemd/README.md`
 
 ## Current model at a glance
 

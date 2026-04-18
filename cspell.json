@@ -676,7 +676,17 @@
     "ISSDUP",
     "NOEVID",
     "unprobed",
-    "Unprobed"
+    "Unprobed",
+    "tmpfs",
+    "sess",
+    "backcompat",
+    "idempotent",
+    "mtime",
+    "remapped",
+    "allam",
+    "blocklists",
+    "tmpfiles",
+    "writeups"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

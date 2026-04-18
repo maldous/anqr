@@ -1,9 +1,7 @@
-import { writeFileSync } from "node:fs";
+import { saveBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 
-import { ADAPTIVE_PARAMS_FILE } from "./adaptive-params-file.mjs";
-import { ensureStateDir } from "./ensure-state-dir.mjs";
+const FILE_NAME = "adaptive-params.json";
 
 export function saveAdaptiveParams(params) {
-  ensureStateDir();
-  writeFileSync(ADAPTIVE_PARAMS_FILE, JSON.stringify(params, null, 2));
+  saveBridgeFile(FILE_NAME, params, { withLock: true });
 }

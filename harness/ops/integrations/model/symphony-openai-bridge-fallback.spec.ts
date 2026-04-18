@@ -16,17 +16,20 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../../../");
-const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
-const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
-const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
+
+// Use the shared bridge state dir (set via env var for test isolation)
+const TEST_STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony-test-fallback");
+const FAILURE_STATE_FILE = resolve(TEST_STATE_DIR, "provider-failures.json");
+const STATS_FILE = resolve(TEST_STATE_DIR, "provider-stats.json");
 
 // Ensure state directory exists
 
 describe("Symphony Bridge Fallback Logic", () => {
   // Helper functions scoped inside describe to reduce top-level heavy nodes
   function ensureStateDir() {
-    if (!existsSync(STATE_DIR)) {
-      mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 });
+    process.env.ANQR_BRIDGE_STATE_DIR = TEST_STATE_DIR;
+    if (!existsSync(TEST_STATE_DIR)) {
+      mkdirSync(TEST_STATE_DIR, { recursive: true, mode: 0o700 });
     }
   }
 
@@ -49,6 +52,7 @@ describe("Symphony Bridge Fallback Logic", () => {
 
   afterEach(() => {
     clearState();
+    delete process.env.ANQR_BRIDGE_STATE_DIR;
   });
 
   describe("Error Detection", () => {

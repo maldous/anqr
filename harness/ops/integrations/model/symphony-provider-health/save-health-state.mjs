@@ -1,11 +1,11 @@
-import { writeFileSync } from "node:fs";
-
-import { HEALTH_STATE_FILE } from "./health-state-file.mjs";
+import { saveBridgeFile } from "../../../core/symphony-shared-state/bridge-file-helpers.mjs";
 import { logWarn } from "./logger.mjs";
+
+const FILE_NAME = "provider-health.json";
 
 export function saveHealthState(state) {
   try {
-    writeFileSync(HEALTH_STATE_FILE, JSON.stringify(state, null, 2));
+    saveBridgeFile(FILE_NAME, state, { withLock: true });
   } catch (err) {
     logWarn(`Failed to save health state: ${err.message}`);
   }
