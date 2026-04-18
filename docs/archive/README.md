@@ -1,17 +1,17 @@
 # Archive
 
-This directory is for preserved historical context.
+This directory holds preserved historical material.
 
-Use it for:
+Archive content is kept for traceability, comparison, and audit history.
 
-- superseded planning notes
-- historical migration context that still explains current decisions
-- preserved legacy knowledge worth keeping
+It is not part of the default reading path for new work.
 
-Do not use it for live doctrine.
+## Typical archive content
 
-Current live doctrine is rooted in:
+- completed plans
+- migration notes
+- superseded reviews
+- known-issue writeups tied to earlier states
+- scratch or temporary investigation notes
 
-- [README.md](/home/user/src/anqr/README.md)
-- [AGENTS.md](/home/user/src/anqr/AGENTS.md)
-- [docs/README.md](/home/user/src/anqr/docs/README.md)
+If you need current behavior, return to active docs.

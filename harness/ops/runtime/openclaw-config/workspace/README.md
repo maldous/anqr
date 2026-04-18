@@ -1,33 +1,22 @@
-# Workspace
+# Workspace template
 
-## Purpose
+This directory holds the direct personal workspace template for the main OpenClaw workspace.
 
-Workspace contains the code, configuration, or support files that implement this part of the harness architecture.
+## Scope
 
-## Contents
+This material is session-local. It exists to shape how the runtime behaves for the direct workspace session.
 
-- 7 immediate files
-- 0 child directories
+It does not define repo-wide architecture or repository engineering rules.
 
-## Key Files
+## Read order inside this workspace
 
-- `AGENTS.md` - Markdown documentation file headed by "# AGENTS.md - Your Workspace".
-- `HEARTBEAT.md` - Markdown documentation file headed by "# HEARTBEAT.md".
-- `IDENTITY.md` - Markdown documentation file headed by "# IDENTITY.md - Who Am I?".
-- `plan.md` - Markdown documentation file headed by "# Production Readiness Plan (Draft)".
-- `SOUL.md` - Markdown documentation file headed by "# SOUL.md - Who You Are".
-- `TOOLS.md` - Markdown documentation file headed by "# TOOLS.md - Local Notes".
-- `USER.md` - Markdown documentation file headed by "# USER.md - About Your Human".
+1. repo-wide docs from root: `AGENTS.md`, `README.md`, `docs/README.md`
+2. this directory's `AGENTS.md`
+3. `IDENTITY.md`, `SOUL.md`, `USER.md`
+4. any current session memory material that this workspace uses
 
-## Subdirectories
+## Rules
 
-- No child directories in this directory.
-
-## Operational Notes
-
-- Current on-disk inventory: 7 immediate file(s) and 0 child directories.
-- This README was refreshed against the current source tree rather than older intent docs alone.
-
-## Review Focus
-
-Check that the current implementation in this directory still matches its intended role in the harness architecture.
+- Keep personal or operator-specific context here, not at repo root.
+- Do not promote workspace-local guidance into repo-wide doctrine by accident.
+- Update repo docs separately when a runtime-local change also changes repository behavior.

@@ -1,57 +1,36 @@
-# Docs Index
+# Docs
 
-`docs/` is the canonical doctrine surface for ANQR 1.0 foundation work.
+This directory holds the active documentation set.
 
-## Read order
+## Active sections
 
-1. [README.md](/home/user/src/anqr/README.md) for bootstrap truth and current scope.
-2. [AGENTS.md](/home/user/src/anqr/AGENTS.md) for agent execution rules.
-3. [docs/program/01-anqr-1.0-definition.md](/home/user/src/anqr/docs/program/01-anqr-1.0-definition.md) for the single launch-scope definition.
-4. [docs/harness/00-index.md](/home/user/src/anqr/docs/harness/00-index.md) for harness doctrine.
-5. The relevant standard, workflow, or archive document for the task.
+- `program/` product scope, charter, functions, and policy
+- `adrs/` architectural decisions
+- `standards/` stable engineering rules
+- `workflows/` operational task flows
+- `harness/` active harness entry and current guidance
+- `reference/` quick reference material
+- `archive/` historical material kept for traceability
 
-## Ownership
+## Reading order
 
-- `docs/program/*`
-  - product definition, scope, and program policy
-- `docs/harness/*`
-  - harness operating model, runtime, governance, gates, and evidence rules
-  - includes concurrent execution with git worktrees (12-concurrent-execution-with-worktrees.md)
-- `docs/standards/*`
-  - durable engineering standards
-- `docs/workflows/*`
-  - operator workflows that are still live
-- `docs/archive/*`
-  - preserved historical context only
-- `docs/generated/*`
-  - generated artifacts and their ownership rules
-- `docs/api/*`
-  - generated API artifacts, not doctrine
+Start with:
 
-## Archive rule
+1. `../README.md`
+2. `../AGENTS.md`
+3. `program/01-anqr-1.0-definition.md`
 
-`migration/*` is archive-only historical context. New operational truth must live in `README.md`, `AGENTS.md`, or `docs/*`.
+Then choose the smallest relevant surface:
 
-## Current doctrine set
+- architecture decision: `adrs/`
+- stable repo rule: `standards/`
+- operational flow: `workflows/`
+- harness work: `harness/00-index.md`
+- runtime lookup: `reference/`
 
-- [docs/program/01-anqr-1.0-definition.md](/home/user/src/anqr/docs/program/01-anqr-1.0-definition.md)
-- [docs/harness/00-index.md](/home/user/src/anqr/docs/harness/00-index.md)
-- [docs/harness/01-operating-model.md](/home/user/src/anqr/docs/harness/01-operating-model.md)
-- [docs/harness/02-runtime-and-services.md](/home/user/src/anqr/docs/harness/02-runtime-and-services.md)
-- [docs/harness/03-workspace-governance.md](/home/user/src/anqr/docs/harness/03-workspace-governance.md)
-- [docs/harness/04-provider-routing.md](/home/user/src/anqr/docs/harness/04-provider-routing.md)
-- [docs/harness/04-control-flow.md](/home/user/src/anqr/docs/harness/04-control-flow.md)
-- [docs/harness/05-quality-gates.md](/home/user/src/anqr/docs/harness/05-quality-gates.md)
-- [docs/harness/06-evidence-and-reporting.md](/home/user/src/anqr/docs/harness/06-evidence-and-reporting.md)
-- [docs/harness/07-secrets-redaction-and-operator-access.md](/home/user/src/anqr/docs/harness/07-secrets-redaction-and-operator-access.md)
-- [docs/harness/08-runbooks.md](/home/user/src/anqr/docs/harness/08-runbooks.md)
-- [docs/harness/09-archive-policy.md](/home/user/src/anqr/docs/harness/09-archive-policy.md)
-- [docs/harness/10-audit-reference.md](/home/user/src/anqr/docs/harness/10-audit-reference.md)
-- [docs/harness/11-adaptive-context.md](/home/user/src/anqr/docs/harness/11-adaptive-context.md)
-- [docs/harness/12-concurrent-execution-with-worktrees.md](/home/user/src/anqr/docs/harness/12-concurrent-execution-with-worktrees.md)
-- [docs/harness/WORKTREE-QUICKSTART.md](/home/user/src/anqr/docs/harness/WORKTREE-QUICKSTART.md)
-- [docs/harness/05-runtime-contract.md](/home/user/src/anqr/docs/harness/05-runtime-contract.md)
-- [docs/workflows/symphony-execution.md](/home/user/src/anqr/docs/workflows/symphony-execution.md)
-- [docs/standards/testing-strategy-anqr-1.0.md](/home/user/src/anqr/docs/standards/testing-strategy-anqr-1.0.md)
-- [docs/archive/README.md](/home/user/src/anqr/docs/archive/README.md)
-- [docs/generated/README.md](/home/user/src/anqr/docs/generated/README.md)
+## Placement rules
+
+- Current behavior belongs in active sections.
+- Historical reviews, migration notes, and completed plans belong in `archive/`.
+- Root docs stay minimal and point here.
+- Directory-local implementation detail belongs beside the code it describes.

@@ -1,55 +1,38 @@
-# ANQR Harness Architecture Index
+# Harness index
 
-> **⚠️ Pre-implementation architecture review document.** This document set (00–11) was written before Workstreams A–G were implemented. The structural faults, failure modes, and remediation targets described here have been addressed by those workstreams. For current architecture, see the ADRs in `docs/adrs/` and the subsystem READMEs in `harness/ops/`. For current plan status, see [PLAN.md](../../PLAN.md).
+This is the active entry point for harness work.
 
-## Status (Historical)
+## What the harness is
 
-The harness **was** not production safe in its pre-A–G orchestration form.
+The harness is the repo-local automation system that coordinates:
 
-The runtime is partially implemented and actively used, but it still has structural faults:
+- ingress from external systems
+- isolated work execution in worktrees
+- routing and scheduling
+- evidence, validation, and integration
+- host runtime through committed systemd units
 
-- duplicated dispatch authority
-- late lease acquisition
-- long-lived mutable worktrees acting as execution sandboxes and durable task owners at the same time
-- recovery logic that mutates git state
-- repo integration that is serialized too late
-- audit trails that are useful for inference but still weak for proof
+## Read this when you work on harness code
 
-This documentation set is written to replace mixed doctrine and partial remediation notes with one clear reference set.
+1. `docs/program/01-anqr-1.0-definition.md`
+2. `docs/adrs/0002-authoritative-claim-and-dispatch.md`
+3. `docs/adrs/0003-executor-pool-and-worktree-boundaries.md`
+4. `docs/adrs/0005-state-only-recovery-and-divergence-policy.md`
+5. `docs/adrs/0006-observability-audit-and-evidence-contract.md`
+6. `docs/adrs/0011-execution-state-model.md`
+7. `docs/adrs/0012-evidence-gated-closure.md`
+8. `harness/README.md`
+9. `harness/ops/README.md`
+10. `services/systemd/README.md`
 
-## Read this set in order
+## Current model at a glance
 
-1. [01-scope-status-and-truth-model.md](01-scope-status-and-truth-model.md)
-2. [02-current-runtime-and-service-topology.md](02-current-runtime-and-service-topology.md)
-3. [03-current-control-plane-and-flows.md](03-current-control-plane-and-flows.md)
-4. [04-known-failures-and-evidence.md](04-known-failures-and-evidence.md)
-5. [05-production-target-architecture.md](05-production-target-architecture.md)
-6. [06-state-machines.md](06-state-machines.md)
-7. [07-worktree-and-git-governance.md](07-worktree-and-git-governance.md)
-8. [08-quality-gates-and-post-ai-processing.md](08-quality-gates-and-post-ai-processing.md)
-9. [09-observability-and-audit.md](09-observability-and-audit.md)
-10. [10-operations-runbooks.md](10-operations-runbooks.md)
-11. [11-validation-and-rollout-plan.md](11-validation-and-rollout-plan.md)
-12. [workspace/README.md](workspace/README.md)
+- systemd units are the committed host runtime entrypoints
+- orchestration lives under `harness/ops/orchestration/`
+- integrations live under `harness/ops/integrations/`
+- runtime configuration lives under `harness/ops/runtime/openclaw-config/`
+- repo-local tooling and helpers live under `harness/ops/tools/` and `harness/ops/lib/`
 
-## What this set governs
+## Important boundary
 
-This set governs:
-
-- `harness/ops/*`
-- `services/systemd/*`
-- `workspace.dsl`
-- the worktree pool used by the executor fleet
-- the control-plane contract for Discord and Linear sourced work
-- post-AI validation, evidence, and merge admission
-
-This set does not redefine the ANQR product architecture outside the harness.
-
-## Key decisions captured here
-
-- one repository may execute many jobs concurrently
-- one repository must integrate one candidate at a time
-- scheduler authority must be singular per repository
-- leases are execution guards, not ingress dedupe
-- worktrees are sandboxes, not the durable source of task truth
-- recovery must repair state before it repairs git, and it must not mutate active execution baselines
+Older review-heavy harness narratives and migration writeups are historical. Keep them in `docs/archive/`. Do not use them as first-read operating doctrine for current harness work.

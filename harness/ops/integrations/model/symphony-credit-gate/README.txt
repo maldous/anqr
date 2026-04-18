@@ -1,1 +1,0 @@
-Symphony credit gate ranks and selects AI providers by combining credit-awareness, health signals, probe results, leases, and context-size enrichment so the harness routes work toward stable capacity.
