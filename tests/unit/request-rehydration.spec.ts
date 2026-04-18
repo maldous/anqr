@@ -59,22 +59,23 @@ describe("request-rehydration", () => {
       });
       const record = getInflightRequest("req-1");
       expect(record).not.toBeNull();
-      expect(record.sessionKey).toBe("discord:g:c");
-      expect(record.worktreeId).toBe("wt1");
-      expect(record.providerName).toBe("openai");
-      expect(record.startedAt).toBeDefined();
+      expect(record!.sessionKey).toBe("discord:g:c");
+      expect(record!.worktreeId).toBe("wt1");
+      expect(record!.providerName).toBe("openai");
+      expect(record!.startedAt).toBeDefined();
     });
 
     it("uses provided startedAt if given", () => {
       const ts = Date.now() - 1000;
       persistInflightRequest("req-2", { sessionKey: "linear:ANQ-1", startedAt: ts });
       const record = getInflightRequest("req-2");
-      expect(record.startedAt).toBe(ts);
+      expect(record).not.toBeNull();
+      expect(record!.startedAt).toBe(ts);
     });
 
     it("does nothing for null/empty requestId", () => {
       persistInflightRequest("", { sessionKey: "test" });
-      persistInflightRequest(null, { sessionKey: "test" });
+      persistInflightRequest(null as unknown as string, { sessionKey: "test" });
     });
   });
 
@@ -91,7 +92,7 @@ describe("request-rehydration", () => {
 
     it("does nothing for null/empty requestId", () => {
       completeInflightRequest("");
-      completeInflightRequest(null);
+      completeInflightRequest(null as unknown as string);
     });
   });
 
@@ -101,7 +102,7 @@ describe("request-rehydration", () => {
     });
 
     it("returns null for null requestId", () => {
-      expect(getInflightRequest(null)).toBeNull();
+      expect(getInflightRequest(null as unknown as string)).toBeNull();
     });
   });
 

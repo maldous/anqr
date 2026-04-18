@@ -121,9 +121,13 @@
 
     "harness/ops/core/symphony-config.mjs": ["exports"],
 
-    "harness/ops/integrations/model/symphony-credit-gate/build-provider-selection-candidate-names.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-credit-gate/build-provider-selection-candidate-names.mjs": [
+      "exports"
+    ],
     "harness/ops/integrations/model/symphony-credit-gate/failure-state-file.mjs": ["exports"],
-    "harness/ops/integrations/model/symphony-credit-gate/get-effective-provider-score.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-credit-gate/get-effective-provider-score.mjs": [
+      "exports"
+    ],
     "harness/ops/integrations/model/symphony-credit-gate/probe-results-file.mjs": ["exports"],
     "harness/ops/integrations/model/symphony-credit-gate/provider-lease-file.mjs": ["exports"],
     "harness/ops/integrations/model/symphony-credit-gate/stats-file.mjs": ["exports"],

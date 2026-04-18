@@ -58,21 +58,22 @@ describe("active-job-ownership", () => {
       });
       const record = getJobOwnership("discord:guild1:channel1");
       expect(record).not.toBeNull();
-      expect(record.worktreeId).toBe("wt1");
-      expect(record.correlationId).toBe("corr-1");
-      expect(record.startedAt).toBeDefined();
+      expect(record!.worktreeId).toBe("wt1");
+      expect(record!.correlationId).toBe("corr-1");
+      expect(record!.startedAt).toBeDefined();
     });
 
     it("overwrites existing ownership", () => {
       acquireJobOwnership("discord:g:c", { worktreeId: "wt1" });
       acquireJobOwnership("discord:g:c", { worktreeId: "wt2" });
       const record = getJobOwnership("discord:g:c");
-      expect(record.worktreeId).toBe("wt2");
+      expect(record).not.toBeNull();
+      expect(record!.worktreeId).toBe("wt2");
     });
 
     it("does nothing for null/empty session key", () => {
       acquireJobOwnership("", { worktreeId: "wt1" });
-      acquireJobOwnership(null, { worktreeId: "wt1" });
+      acquireJobOwnership(null as unknown as string, { worktreeId: "wt1" });
       // No crash = pass
     });
   });
@@ -91,7 +92,7 @@ describe("active-job-ownership", () => {
 
     it("does nothing for null/empty session key", () => {
       releaseJobOwnership("");
-      releaseJobOwnership(null);
+      releaseJobOwnership(null as unknown as string);
     });
   });
 
@@ -112,7 +113,7 @@ describe("active-job-ownership", () => {
     });
 
     it("returns null for null session key", () => {
-      expect(getJobOwnership(null)).toBeNull();
+      expect(getJobOwnership(null as unknown as string)).toBeNull();
     });
 
     it("includes all stored details", () => {
@@ -124,11 +125,12 @@ describe("active-job-ownership", () => {
         guildId: "guild-abc",
       });
       const record = getJobOwnership("discord:g:c");
-      expect(record.worktreeId).toBe("wt3");
-      expect(record.requestId).toBe("req-99");
-      expect(record.correlationId).toBe("corr-abc");
-      expect(record.channelId).toBe("channel-xyz");
-      expect(record.guildId).toBe("guild-abc");
+      expect(record).not.toBeNull();
+      expect(record!.worktreeId).toBe("wt3");
+      expect(record!.requestId).toBe("req-99");
+      expect(record!.correlationId).toBe("corr-abc");
+      expect(record!.channelId).toBe("channel-xyz");
+      expect(record!.guildId).toBe("guild-abc");
     });
   });
 
