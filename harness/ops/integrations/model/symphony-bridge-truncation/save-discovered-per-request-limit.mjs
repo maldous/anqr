@@ -26,15 +26,15 @@ export function saveDiscoveredPerRequestLimit(providerName, limit, source) {
         discoveredAt: Date.now(),
         source: source || "413_error",
       };
-      return fs.writeFile(
-        DISCOVERED_PER_REQUEST_LIMITS_FILE,
-        JSON.stringify(existing, null, 2),
-      );
+      return fs.writeFile(DISCOVERED_PER_REQUEST_LIMITS_FILE, JSON.stringify(existing, null, 2));
     })
     .catch((err) => {
       // Best-effort persistence — don't let cache write failures break anything
       if (process.env.SYMPHONY_DEBUG) {
-        console.error(`[DIAG] Failed to persist discovered limit for ${providerName}:`, err.message);
+        console.error(
+          `[DIAG] Failed to persist discovered limit for ${providerName}:`,
+          err.message,
+        );
       }
     });
 }

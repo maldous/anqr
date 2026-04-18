@@ -497,9 +497,7 @@ describe("Systemd topology — ADR-0002", () => {
       "services/systemd/default.target.wants/anqr-symphony-scheduler.service",
       "utf-8",
     );
-    expect(service).toContain(
-      "harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon",
-    );
+    expect(service).toContain("harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon");
     expect(enabledUnit).toContain(
       "harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon",
     );
@@ -600,10 +598,7 @@ describe("Executor-side worktree assignment verification (A2 gap fix)", () => {
   });
 
   it("main.mjs passes operatorOverride for --issue targets", () => {
-    const source = fs.readFileSync(
-      "harness/ops/orchestration/symphony-runner/main.mjs",
-      "utf-8",
-    );
+    const source = fs.readFileSync("harness/ops/orchestration/symphony-runner/main.mjs", "utf-8");
     // Must pass operatorOverride when targetIssue is set
     expect(source).toContain("operatorOverride");
     expect(source).toContain("targetIssue");

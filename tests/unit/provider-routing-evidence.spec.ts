@@ -67,7 +67,8 @@ describe("Architecture guard — wiring verification", () => {
 
   it("server.mjs emits context-reduction evidence on success and failure paths", () => {
     const source = fs.readFileSync(serverPath, "utf-8");
-    const reductionCalls = source.match(/recordContextReductionEvidence\(\s*correlationId/g) ||
+    const reductionCalls =
+      source.match(/recordContextReductionEvidence\(\s*correlationId/g) ||
       source.match(/recordContextReductionEvidence\(correlationId/g);
     // 4 call sites: streaming success, streaming failure, non-streaming success,
     // non-streaming failure
@@ -151,12 +152,9 @@ describe("recordProviderRoutingEvidence — runtime", () => {
   let evidencePath: string;
 
   beforeAll(async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
     saveEvidence(corrId, { createdAt: new Date().toISOString(), correlationId: corrId });
   });
@@ -166,9 +164,8 @@ describe("recordProviderRoutingEvidence — runtime", () => {
   });
 
   it("records success routing with correct shape", async () => {
-    const { recordProviderRoutingEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs"
-    );
+    const { recordProviderRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
     const result = recordProviderRoutingEvidence(corrId, {
       routeModelId: "gpt-4o",
       allowedProviders: ["groq", "gemini", "openrouter"],
@@ -176,8 +173,22 @@ describe("recordProviderRoutingEvidence — runtime", () => {
       attempts: 2,
       triedProviders: ["groq", "gemini"],
       fallbackChain: [
-        { providerName: "groq", model: "llama-3", attemptNumber: 1, outcome: "failure", durationMs: 1200, errorType: "rate_limit", errorMessage: "429 Too Many Requests" },
-        { providerName: "gemini", model: "gemini-2.5-pro", attemptNumber: 2, outcome: "success", durationMs: 3400 },
+        {
+          providerName: "groq",
+          model: "llama-3",
+          attemptNumber: 1,
+          outcome: "failure",
+          durationMs: 1200,
+          errorType: "rate_limit",
+          errorMessage: "429 Too Many Requests",
+        },
+        {
+          providerName: "gemini",
+          model: "gemini-2.5-pro",
+          attemptNumber: 2,
+          outcome: "success",
+          durationMs: 3400,
+        },
       ],
     });
 
@@ -204,24 +215,24 @@ describe("recordProviderRoutingEvidence — runtime", () => {
   });
 
   it("hasFallback is false when attempts === 1", async () => {
-    const { recordProviderRoutingEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs"
-    );
+    const { recordProviderRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
     const result = recordProviderRoutingEvidence(corrId, {
       routeModelId: "gpt-4o",
       allowedProviders: ["gemini"],
       selectedProvider: "gemini",
       attempts: 1,
       triedProviders: ["gemini"],
-      fallbackChain: [{ providerName: "gemini", attemptNumber: 1, outcome: "success", durationMs: 500 }],
+      fallbackChain: [
+        { providerName: "gemini", attemptNumber: 1, outcome: "success", durationMs: 500 },
+      ],
     });
     expect(result.providerRouting.hasFallback).toBe(false);
   });
 
   it("records failure routing with selectedProvider: null", async () => {
-    const { recordProviderRoutingEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs"
-    );
+    const { recordProviderRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
     const result = recordProviderRoutingEvidence(corrId, {
       routeModelId: "gpt-4o",
       allowedProviders: ["groq", "gemini", "openrouter"],
@@ -230,20 +241,44 @@ describe("recordProviderRoutingEvidence — runtime", () => {
       attempts: 3,
       triedProviders: ["groq", "gemini", "openrouter"],
       fallbackChain: [
-        { providerName: "groq", attemptNumber: 1, outcome: "failure", durationMs: 100, errorType: "rate_limit", errorMessage: "429" },
-        { providerName: "gemini", attemptNumber: 2, outcome: "failure", durationMs: 200, errorType: "context_too_large", errorMessage: "too large" },
-        { providerName: "openrouter", attemptNumber: 3, outcome: "failure", durationMs: 300, errorType: "server_error", errorMessage: "500" },
+        {
+          providerName: "groq",
+          attemptNumber: 1,
+          outcome: "failure",
+          durationMs: 100,
+          errorType: "rate_limit",
+          errorMessage: "429",
+        },
+        {
+          providerName: "gemini",
+          attemptNumber: 2,
+          outcome: "failure",
+          durationMs: 200,
+          errorType: "context_too_large",
+          errorMessage: "too large",
+        },
+        {
+          providerName: "openrouter",
+          attemptNumber: 3,
+          outcome: "failure",
+          durationMs: 300,
+          errorType: "server_error",
+          errorMessage: "500",
+        },
       ],
     });
     expect(result.providerRouting.selectedProvider).toBeNull();
     expect(result.providerRouting.hasFallback).toBe(true);
-    expect(result.providerRouting.fallbackChain.every((e: { outcome: string }) => e.outcome === "failure")).toBe(true);
+    expect(
+      result.providerRouting.fallbackChain.every(
+        (e: { outcome: string }) => e.outcome === "failure",
+      ),
+    ).toBe(true);
   });
 
   it("returns null for unknown correlationId", async () => {
-    const { recordProviderRoutingEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs"
-    );
+    const { recordProviderRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
     const result = recordProviderRoutingEvidence("nonexistent-id-abc123", {
       routeModelId: "test",
       allowedProviders: ["test"],
@@ -265,12 +300,9 @@ describe("recordContextReductionEvidence — runtime", () => {
   let evidencePath: string;
 
   beforeAll(async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
     saveEvidence(corrId, { createdAt: new Date().toISOString() });
   });
@@ -280,11 +312,16 @@ describe("recordContextReductionEvidence — runtime", () => {
   });
 
   it("records single reduction with correct shape", async () => {
-    const { recordContextReductionEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs"
-    );
+    const { recordContextReductionEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs");
     const result = recordContextReductionEvidence(corrId, [
-      { providerName: "groq", previousCap: null, newCap: 8192, reason: "reported_limit", reportedLimit: 8192 },
+      {
+        providerName: "groq",
+        previousCap: null,
+        newCap: 8192,
+        reason: "reported_limit",
+        reportedLimit: 8192,
+      },
     ]);
     expect(result).not.toBeNull();
     expect(result.contextReduction.recordedAt).toBeTruthy();
@@ -296,12 +333,23 @@ describe("recordContextReductionEvidence — runtime", () => {
   });
 
   it("records multiple reductions and tracks finalCap from last entry", async () => {
-    const { recordContextReductionEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs"
-    );
+    const { recordContextReductionEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs");
     const result = recordContextReductionEvidence(corrId, [
-      { providerName: "groq", previousCap: null, newCap: 8192, reason: "reported_limit", reportedLimit: 8192 },
-      { providerName: "gemini", previousCap: 8192, newCap: 4096, reason: "estimated_from_request", requestedTokens: 6800 },
+      {
+        providerName: "groq",
+        previousCap: null,
+        newCap: 8192,
+        reason: "reported_limit",
+        reportedLimit: 8192,
+      },
+      {
+        providerName: "gemini",
+        previousCap: 8192,
+        newCap: 4096,
+        reason: "estimated_from_request",
+        requestedTokens: 6800,
+      },
     ]);
     expect(result.contextReduction.reductionCount).toBe(2);
     expect(result.contextReduction.finalCap).toBe(4096);
@@ -310,18 +358,18 @@ describe("recordContextReductionEvidence — runtime", () => {
   });
 
   it("returns undefined for empty reductions array", async () => {
-    const { recordContextReductionEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs"
-    );
+    const { recordContextReductionEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs");
     const result = recordContextReductionEvidence(corrId, []);
     expect(result).toBeUndefined();
   });
 
   it("returns undefined for null/missing correlationId", async () => {
-    const { recordContextReductionEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs"
-    );
-    const result = recordContextReductionEvidence("", [{ providerName: "a", previousCap: null, newCap: 1000, reason: "reported_limit" }]);
+    const { recordContextReductionEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs");
+    const result = recordContextReductionEvidence("", [
+      { providerName: "a", previousCap: null, newCap: 1000, reason: "reported_limit" },
+    ]);
     expect(result).toBeUndefined();
   });
 });
@@ -335,12 +383,9 @@ describe("recordSafetyNetEvidence — runtime", () => {
   let evidencePath: string;
 
   beforeAll(async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
     saveEvidence(corrId, { createdAt: new Date().toISOString() });
   });
@@ -350,9 +395,8 @@ describe("recordSafetyNetEvidence — runtime", () => {
   });
 
   it("records exhaustion state with correct shape", async () => {
-    const { recordSafetyNetEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs"
-    );
+    const { recordSafetyNetEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs");
     const result = recordSafetyNetEvidence(corrId, {
       triedProviders: ["groq", "gemini", "openrouter"],
       routeModelId: "gpt-4o",
@@ -376,9 +420,8 @@ describe("recordSafetyNetEvidence — runtime", () => {
   });
 
   it("truncates lastError to 500 chars", async () => {
-    const { recordSafetyNetEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs"
-    );
+    const { recordSafetyNetEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs");
     const longError = "x".repeat(1000);
     const result = recordSafetyNetEvidence(corrId, {
       triedProviders: ["test"],
@@ -391,9 +434,8 @@ describe("recordSafetyNetEvidence — runtime", () => {
   });
 
   it("returns null for unknown correlationId", async () => {
-    const { recordSafetyNetEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs"
-    );
+    const { recordSafetyNetEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs");
     const result = recordSafetyNetEvidence("nonexistent-id-xyz987", {
       triedProviders: ["groq"],
       routeModelId: "test-model",
@@ -405,9 +447,8 @@ describe("recordSafetyNetEvidence — runtime", () => {
   });
 
   it("returns early for empty correlationId", async () => {
-    const { recordSafetyNetEvidence } = await import(
-      "../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs"
-    );
+    const { recordSafetyNetEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs");
     const result = recordSafetyNetEvidence("", {
       triedProviders: [],
       routeModelId: "test",
@@ -425,9 +466,8 @@ describe("recordSafetyNetEvidence — runtime", () => {
 
 describe("queryRoutingEvidence — runtime", () => {
   it("returns { found: false } for unknown correlationId", async () => {
-    const { queryRoutingEvidence } = await import(
-      "../../harness/ops/core/task-evidence/query-routing-evidence.mjs"
-    );
+    const { queryRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/query-routing-evidence.mjs");
     const result = queryRoutingEvidence("completely-unknown-id-999");
     expect(result.found).toBe(false);
     expect(result.summary).toBeNull();
@@ -448,11 +488,16 @@ describe("Full evidence lifecycle — success path", () => {
 
   it("create → record routing → record reductions → query reconstructs full decision", async () => {
     const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
-    const { getEvidencePath } = await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
-    const { recordProviderRoutingEvidence } = await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
-    const { recordContextReductionEvidence } = await import("../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs");
-    const { recordProviderSelection } = await import("../../harness/ops/core/task-evidence/record-provider-selection.mjs");
-    const { queryRoutingEvidence } = await import("../../harness/ops/core/task-evidence/query-routing-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
+    const { recordProviderRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
+    const { recordContextReductionEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs");
+    const { recordProviderSelection } =
+      await import("../../harness/ops/core/task-evidence/record-provider-selection.mjs");
+    const { queryRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/query-routing-evidence.mjs");
 
     evidencePath = getEvidencePath(corrId);
 
@@ -470,14 +515,27 @@ describe("Full evidence lifecycle — success path", () => {
       attempts: 2,
       triedProviders: ["groq", "gemini"],
       fallbackChain: [
-        { providerName: "groq", attemptNumber: 1, outcome: "failure", durationMs: 800, errorType: "rate_limit", errorMessage: "429" },
+        {
+          providerName: "groq",
+          attemptNumber: 1,
+          outcome: "failure",
+          durationMs: 800,
+          errorType: "rate_limit",
+          errorMessage: "429",
+        },
         { providerName: "gemini", attemptNumber: 2, outcome: "success", durationMs: 2500 },
       ],
     });
 
     // Step 4: Record context reduction (groq's limit caused a budget cap)
     recordContextReductionEvidence(corrId, [
-      { providerName: "groq", previousCap: null, newCap: 8192, reason: "reported_limit", reportedLimit: 8192 },
+      {
+        providerName: "groq",
+        previousCap: null,
+        newCap: 8192,
+        reason: "reported_limit",
+        reportedLimit: 8192,
+      },
     ]);
 
     // Step 5: Query and verify full reconstruction
@@ -521,11 +579,16 @@ describe("Full evidence lifecycle — failure/exhaustion path", () => {
 
   it("create → record failure routing → record safety-net → record reductions → query shows exhaustion", async () => {
     const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
-    const { getEvidencePath } = await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
-    const { recordProviderRoutingEvidence } = await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
-    const { recordContextReductionEvidence } = await import("../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs");
-    const { recordSafetyNetEvidence } = await import("../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs");
-    const { queryRoutingEvidence } = await import("../../harness/ops/core/task-evidence/query-routing-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
+    const { recordProviderRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
+    const { recordContextReductionEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-context-reduction-evidence.mjs");
+    const { recordSafetyNetEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs");
+    const { queryRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/query-routing-evidence.mjs");
 
     evidencePath = getEvidencePath(corrId);
 
@@ -534,9 +597,30 @@ describe("Full evidence lifecycle — failure/exhaustion path", () => {
 
     // Step 2: Record failure routing evidence (F2 — selectedProvider: null)
     const failureChain = [
-      { providerName: "groq", attemptNumber: 1, outcome: "failure", durationMs: 100, errorType: "context_too_large", errorMessage: "context too large" },
-      { providerName: "gemini", attemptNumber: 2, outcome: "failure", durationMs: 200, errorType: "rate_limit", errorMessage: "429" },
-      { providerName: "openrouter", attemptNumber: 3, outcome: "failure", durationMs: 300, errorType: "server_error", errorMessage: "502 Bad Gateway" },
+      {
+        providerName: "groq",
+        attemptNumber: 1,
+        outcome: "failure",
+        durationMs: 100,
+        errorType: "context_too_large",
+        errorMessage: "context too large",
+      },
+      {
+        providerName: "gemini",
+        attemptNumber: 2,
+        outcome: "failure",
+        durationMs: 200,
+        errorType: "rate_limit",
+        errorMessage: "429",
+      },
+      {
+        providerName: "openrouter",
+        attemptNumber: 3,
+        outcome: "failure",
+        durationMs: 300,
+        errorType: "server_error",
+        errorMessage: "502 Bad Gateway",
+      },
     ];
     recordProviderRoutingEvidence(corrId, {
       routeModelId: "gpt-4o",
@@ -559,8 +643,20 @@ describe("Full evidence lifecycle — failure/exhaustion path", () => {
 
     // Step 4: Record context reduction that happened during cascade (F4)
     recordContextReductionEvidence(corrId, [
-      { providerName: "groq", previousCap: null, newCap: 8192, reason: "reported_limit", reportedLimit: 8192 },
-      { providerName: "gemini", previousCap: 8192, newCap: 4096, reason: "estimated_from_request", requestedTokens: 6800 },
+      {
+        providerName: "groq",
+        previousCap: null,
+        newCap: 8192,
+        reason: "reported_limit",
+        reportedLimit: 8192,
+      },
+      {
+        providerName: "gemini",
+        previousCap: 8192,
+        newCap: 4096,
+        reason: "estimated_from_request",
+        requestedTokens: 6800,
+      },
     ]);
 
     // Step 5: Query and verify full reconstruction
@@ -571,9 +667,11 @@ describe("Full evidence lifecycle — failure/exhaustion path", () => {
     expect(query.summary.routing.selectedProvider).toBeNull();
     expect(query.summary.routing.hasFallback).toBe(true);
     expect(query.summary.routing.attempts).toBe(3);
-    expect(query.summary.routing.fallbackChain.every(
-      (e: { outcome: string }) => e.outcome === "failure",
-    )).toBe(true);
+    expect(
+      query.summary.routing.fallbackChain.every(
+        (e: { outcome: string }) => e.outcome === "failure",
+      ),
+    ).toBe(true);
 
     // Safety net shows exhaustion
     expect(query.summary.safetyNet).not.toBeNull();
@@ -604,9 +702,12 @@ describe("Codebuff relay evidence path", () => {
 
   it("single-attempt Codebuff relay produces correct routing evidence shape", async () => {
     const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
-    const { getEvidencePath } = await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
-    const { recordProviderRoutingEvidence } = await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
-    const { queryRoutingEvidence } = await import("../../harness/ops/core/task-evidence/query-routing-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
+    const { recordProviderRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
+    const { queryRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/query-routing-evidence.mjs");
 
     evidencePath = getEvidencePath(corrId);
     saveEvidence(corrId, { createdAt: new Date().toISOString(), correlationId: corrId });
@@ -619,7 +720,13 @@ describe("Codebuff relay evidence path", () => {
       attempts: 1,
       triedProviders: ["codebuff-paid"],
       fallbackChain: [
-        { providerName: "codebuff-paid", model: "codebuff/base", attemptNumber: 1, outcome: "success", durationMs: 5200 },
+        {
+          providerName: "codebuff-paid",
+          model: "codebuff/base",
+          attemptNumber: 1,
+          outcome: "success",
+          durationMs: 5200,
+        },
       ],
     });
 
@@ -648,7 +755,8 @@ describe("Codebuff relay evidence path", () => {
 describe("Evidence edge cases", () => {
   it("saveEvidence creates a JSON file on disk", async () => {
     const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
-    const { getEvidencePath } = await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
 
     const corrId = `test-edge-${Date.now()}`;
     const ePath = getEvidencePath(corrId);
@@ -663,18 +771,20 @@ describe("Evidence edge cases", () => {
   });
 
   it("updateEvidenceRecord returns null for missing record", async () => {
-    const { updateEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/update-evidence-record.mjs"
-    );
+    const { updateEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/update-evidence-record.mjs");
     const result = updateEvidenceRecord("does-not-exist-123", { foo: "bar" });
     expect(result).toBeNull();
   });
 
   it("subsequent evidence updates merge correctly without overwriting earlier sections", async () => {
     const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
-    const { getEvidencePath } = await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
-    const { recordProviderRoutingEvidence } = await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
-    const { recordSafetyNetEvidence } = await import("../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
+    const { recordProviderRoutingEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs");
+    const { recordSafetyNetEvidence } =
+      await import("../../harness/ops/core/task-evidence/record-safety-net-evidence.mjs");
 
     const corrId = `test-merge-${Date.now()}`;
     const ePath = getEvidencePath(corrId);
@@ -689,7 +799,9 @@ describe("Evidence edge cases", () => {
         selectedProvider: null,
         attempts: 1,
         triedProviders: ["test"],
-        fallbackChain: [{ providerName: "test", attemptNumber: 1, outcome: "failure", durationMs: 100 }],
+        fallbackChain: [
+          { providerName: "test", attemptNumber: 1, outcome: "failure", durationMs: 100 },
+        ],
       });
 
       // Second update: safety-net (should merge, not overwrite routing)
@@ -714,14 +826,19 @@ describe("Evidence edge cases", () => {
 
   it("recordProviderSelection records selection data", async () => {
     const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
-    const { getEvidencePath } = await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
-    const { recordProviderSelection } = await import("../../harness/ops/core/task-evidence/record-provider-selection.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
+    const { recordProviderSelection } =
+      await import("../../harness/ops/core/task-evidence/record-provider-selection.mjs");
 
     const corrId = `test-selection-${Date.now()}`;
     const ePath = getEvidencePath(corrId);
     try {
       saveEvidence(corrId, { createdAt: new Date().toISOString() });
-      const result = recordProviderSelection(corrId, { providerName: "gemini", model: "gemini-2.5-pro" });
+      const result = recordProviderSelection(corrId, {
+        providerName: "gemini",
+        model: "gemini-2.5-pro",
+      });
       expect(result).not.toBeNull();
       expect(result.providerSelection.providerName).toBe("gemini");
       expect(result.providerSelection.model).toBe("gemini-2.5-pro");

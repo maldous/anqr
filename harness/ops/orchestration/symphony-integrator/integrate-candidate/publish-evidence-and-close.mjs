@@ -1,9 +1,6 @@
 import { transitionIssue, getFinalizationState } from "../../../symphony-state.mjs";
 import { updateIssue, addComment, STATES } from "../../../linear-client.mjs";
-import {
-  loadEvidenceRecord,
-  validateEvidenceCompleteness,
-} from "../../../core/task-evidence.mjs";
+import { loadEvidenceRecord, validateEvidenceCompleteness } from "../../../core/task-evidence.mjs";
 import { findIssueByIdentifier } from "../find-issue-by-identifier.mjs";
 import { buildEvidenceComment } from "./build-evidence-comment.mjs";
 
@@ -37,10 +34,7 @@ export async function publishEvidenceAndClose({
 
   // Evidence completeness gate — R10: closure requires validated evidence
   if (finalization.correlationId) {
-    const completeness = validateEvidenceCompleteness(
-      finalization.correlationId,
-      "standard",
-    );
+    const completeness = validateEvidenceCompleteness(finalization.correlationId, "standard");
     if (!completeness.complete) {
       const currentFin = getFinalizationState(issueIdentifier) || {};
       transitionIssue(issueIdentifier, "evidence_pending", {

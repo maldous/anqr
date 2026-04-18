@@ -17,14 +17,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import {
-  mkdtempSync,
-  writeFileSync,
-  mkdirSync,
-  rmSync,
-  readFileSync,
-  existsSync,
-} from "node:fs";
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { execSync } from "node:child_process";
@@ -287,9 +280,7 @@ describe("Scenario 5: Config drift detection blocking execution", () => {
 
   beforeAll(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), "anqr-e2e-drift-"));
-    const mod = await import(
-      "../../harness/ops/harness-doctor/enforce-config-preflight.mjs"
-    );
+    const mod = await import("../../harness/ops/harness-doctor/enforce-config-preflight.mjs");
     enforceConfigPreflight = mod.enforceConfigPreflight;
   });
 
@@ -317,10 +308,7 @@ describe("Scenario 5: Config drift detection blocking execution", () => {
     // Create a surface missing 2 keys — simulates real drift where an
     // operator forgot to add new keys after a template update
     const surface = join(tmpDir, "drifted-surface.env");
-    writeFileSync(
-      surface,
-      "GROQ_TOKEN=gsk_test\nGEMINI_TOKEN=gem_test\nMISTRAL_TOKEN=mis_test\n",
-    );
+    writeFileSync(surface, "GROQ_TOKEN=gsk_test\nGEMINI_TOKEN=gem_test\nMISTRAL_TOKEN=mis_test\n");
 
     // enforceConfigPreflight must throw — config drift detected, unsafe
     // operation blocked. The error message must contain actionable detail
@@ -333,88 +321,92 @@ describe("Scenario 5: Config drift detection blocking execution", () => {
     ).rejects.toThrow(/Config preflight failed[\s\S]*Config surface drift/);
   });
 
-  it("blocks execution when service lifecycle has critical violations", { timeout: 30_000 }, async () => {
-    // Create a temp services directory with a critical violation:
-    // a critical service using optional EnvironmentFile (dash prefix)
-    // instead of required (no dash). This is a real violation that
-    // would silently swallow missing env files at startup.
-    const svcDir = join(tmpDir, "services");
-    const wantsDir = join(tmpDir, "wants");
-    mkdirSync(svcDir, { recursive: true });
-    mkdirSync(wantsDir, { recursive: true });
+  it(
+    "blocks execution when service lifecycle has critical violations",
+    { timeout: 30_000 },
+    async () => {
+      // Create a temp services directory with a critical violation:
+      // a critical service using optional EnvironmentFile (dash prefix)
+      // instead of required (no dash). This is a real violation that
+      // would silently swallow missing env files at startup.
+      const svcDir = join(tmpDir, "services");
+      const wantsDir = join(tmpDir, "wants");
+      mkdirSync(svcDir, { recursive: true });
+      mkdirSync(wantsDir, { recursive: true });
 
-    // Provide aligned template + surface so config-surface check passes —
-    // we want to isolate the lifecycle violation, not conflate it with drift.
-    const template = join(tmpDir, "template-lifecycle.env");
-    writeFileSync(template, "KEY_A=\n");
-    const surface = join(tmpDir, "surface-lifecycle.env");
-    writeFileSync(surface, "KEY_A=val\n");
+      // Provide aligned template + surface so config-surface check passes —
+      // we want to isolate the lifecycle violation, not conflate it with drift.
+      const template = join(tmpDir, "template-lifecycle.env");
+      writeFileSync(template, "KEY_A=\n");
+      const surface = join(tmpDir, "surface-lifecycle.env");
+      writeFileSync(surface, "KEY_A=val\n");
 
-    // Critical service with WRONG EnvironmentFile format (dash = optional)
-    writeFileSync(
-      join(svcDir, "anqr-symphony-router.service"),
-      [
-        "[Unit]",
-        "Description=ANQR Symphony Router",
-        "",
-        "[Service]",
-        "Type=simple",
-        "EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env",
-        "ExecStart=/usr/bin/node router.mjs",
-        "Restart=on-failure",
-        "",
-        "[Install]",
-        "WantedBy=default.target",
-      ].join("\n"),
-    );
+      // Critical service with WRONG EnvironmentFile format (dash = optional)
+      writeFileSync(
+        join(svcDir, "anqr-symphony-router.service"),
+        [
+          "[Unit]",
+          "Description=ANQR Symphony Router",
+          "",
+          "[Service]",
+          "Type=simple",
+          "EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env",
+          "ExecStart=/usr/bin/node router.mjs",
+          "Restart=on-failure",
+          "",
+          "[Install]",
+          "WantedBy=default.target",
+        ].join("\n"),
+      );
 
-    // Executor template with correct BRIDGE_MODE (won't trigger)
-    writeFileSync(
-      join(svcDir, "anqr-symphony-executor@.service"),
-      [
-        "[Unit]",
-        "Description=ANQR Executor",
-        "",
-        "[Service]",
-        "Type=simple",
-        "Environment=BRIDGE_MODE=worktree",
-        "ExecStart=/usr/bin/node executor.mjs",
-        "Restart=on-failure",
-        "",
-        "[Install]",
-        "WantedBy=default.target",
-      ].join("\n"),
-    );
+      // Executor template with correct BRIDGE_MODE (won't trigger)
+      writeFileSync(
+        join(svcDir, "anqr-symphony-executor@.service"),
+        [
+          "[Unit]",
+          "Description=ANQR Executor",
+          "",
+          "[Service]",
+          "Type=simple",
+          "Environment=BRIDGE_MODE=worktree",
+          "ExecStart=/usr/bin/node executor.mjs",
+          "Restart=on-failure",
+          "",
+          "[Install]",
+          "WantedBy=default.target",
+        ].join("\n"),
+      );
 
-    // Codex with correct BRIDGE_MODE
-    writeFileSync(
-      join(svcDir, "anqr-symphony-codex.service"),
-      [
-        "[Unit]",
-        "Description=ANQR Codex",
-        "",
-        "[Service]",
-        "Type=simple",
-        "Environment=BRIDGE_MODE=control-plane",
-        "ExecStart=/usr/bin/node codex.mjs",
-        "Restart=on-failure",
-        "",
-        "[Install]",
-        "WantedBy=default.target",
-      ].join("\n"),
-    );
+      // Codex with correct BRIDGE_MODE
+      writeFileSync(
+        join(svcDir, "anqr-symphony-codex.service"),
+        [
+          "[Unit]",
+          "Description=ANQR Codex",
+          "",
+          "[Service]",
+          "Type=simple",
+          "Environment=BRIDGE_MODE=control-plane",
+          "ExecStart=/usr/bin/node codex.mjs",
+          "Restart=on-failure",
+          "",
+          "[Install]",
+          "WantedBy=default.target",
+        ].join("\n"),
+      );
 
-    // The EnvironmentFile dash-prefix is a critical violation — must block.
-    // Fully isolated: both config surface AND lifecycle checked against test fixtures.
-    await expect(
-      enforceConfigPreflight({
-        templatePath: template,
-        surfaces: [{ name: "test-surface", path: surface }],
-        servicesDir: svcDir,
-        wantsDir,
-      }),
-    ).rejects.toThrow(/Config preflight failed[\s\S]*Service lifecycle/);
-  });
+      // The EnvironmentFile dash-prefix is a critical violation — must block.
+      // Fully isolated: both config surface AND lifecycle checked against test fixtures.
+      await expect(
+        enforceConfigPreflight({
+          templatePath: template,
+          surfaces: [{ name: "test-surface", path: surface }],
+          servicesDir: svcDir,
+          wantsDir,
+        }),
+      ).rejects.toThrow(/Config preflight failed[\s\S]*Service lifecycle/);
+    },
+  );
 
   it("corrected config restores green state", { timeout: 30_000 }, async () => {
     // Create perfectly aligned template + surface — zero drift
@@ -484,18 +476,13 @@ describe("Scenario 3: Recovery quarantine without git mutation", () => {
   let clearQuarantine: (wtId: string) => void;
 
   beforeAll(async () => {
-    const stateMod = await import(
-      "../../harness/ops/core/symphony-state.mjs"
-    );
-    const stateSetMod = await import(
-      "../../harness/ops/core/symphony-state/set-worktree-state.mjs"
-    );
-    const recoveryMod = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery.mjs"
-    );
-    const repairMod = await import(
-      "../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs"
-    );
+    const stateMod = await import("../../harness/ops/core/symphony-state.mjs");
+    const stateSetMod =
+      await import("../../harness/ops/core/symphony-state/set-worktree-state.mjs");
+    const recoveryMod =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery.mjs");
+    const repairMod =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
 
     classifyWorktree = recoveryMod.classifyWorktree;
     executeRepair = repairMod.executeRepair;
@@ -521,43 +508,47 @@ describe("Scenario 3: Recovery quarantine without git mutation", () => {
     }
   });
 
-  it("classifies dirty_owned with high repairAttempts as quarantine", { timeout: 30_000 }, async () => {
-    // Step 1: Set worktree to dirty_owned with high repair attempts
-    // (exceeding RECOVERY_MAX_REPAIR_ATTEMPTS = 5)
-    setWorktreeState(RECOVERY_WT_ID, {
-      state: "dirty_owned",
-      issueIdentifier: "E2E-RECOVERY-TEST",
-      repairAttempts: 10,
-    });
+  it(
+    "classifies dirty_owned with high repairAttempts as quarantine",
+    { timeout: 30_000 },
+    async () => {
+      // Step 1: Set worktree to dirty_owned with high repair attempts
+      // (exceeding RECOVERY_MAX_REPAIR_ATTEMPTS = 5)
+      setWorktreeState(RECOVERY_WT_ID, {
+        state: "dirty_owned",
+        issueIdentifier: "E2E-RECOVERY-TEST",
+        repairAttempts: 10,
+      });
 
-    const wtState = getWorktreeState(RECOVERY_WT_ID);
-    expect(wtState).not.toBeNull();
-    expect(wtState!.state).toBe("dirty_owned");
+      const wtState = getWorktreeState(RECOVERY_WT_ID);
+      expect(wtState).not.toBeNull();
+      expect(wtState!.state).toBe("dirty_owned");
 
-    // Step 2: Build a snapshot mimicking what the recovery daemon would see
-    const snapshot = {
-      id: RECOVERY_WT_ID,
-      path: RECOVERY_WT_PATH,
-      exists: true,
-      gitDirtyFiles: ["M src/e2e-test-artifact.ts"], // simulated dirty file
-      branch: `symphony/${RECOVERY_WT_ID}`,
-      headSha: beforeSha,
-      finalizationState: null, // no active finalization — orphaned dirty
-      leaseState: null, // no active lease
-      classification: "dirty_owned",
-      issueIdentifier: "E2E-RECOVERY-TEST",
-      updatedAt: new Date().toISOString(),
-    };
+      // Step 2: Build a snapshot mimicking what the recovery daemon would see
+      const snapshot = {
+        id: RECOVERY_WT_ID,
+        path: RECOVERY_WT_PATH,
+        exists: true,
+        gitDirtyFiles: ["M src/e2e-test-artifact.ts"], // simulated dirty file
+        branch: `symphony/${RECOVERY_WT_ID}`,
+        headSha: beforeSha,
+        finalizationState: null, // no active finalization — orphaned dirty
+        leaseState: null, // no active lease
+        classification: "dirty_owned",
+        issueIdentifier: "E2E-RECOVERY-TEST",
+        updatedAt: new Date().toISOString(),
+      };
 
-    // Step 3: Classify — should recommend quarantine.
-    // The durable state has issueIdentifier set, so inferOwnerFromBranch
-    // returns an owner → classification is dirty_owned with confidence 0.6.
-    // Since 0.6 < RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD (0.7), the
-    // repair action is quarantine (not continue_repair).
-    const classification = classifyWorktree(snapshot);
-    expect(["dirty_owned", "dirty_orphaned"]).toContain(classification.classification);
-    expect(classification.repairAction).toBe("quarantine");
-  });
+      // Step 3: Classify — should recommend quarantine.
+      // The durable state has issueIdentifier set, so inferOwnerFromBranch
+      // returns an owner → classification is dirty_owned with confidence 0.6.
+      // Since 0.6 < RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD (0.7), the
+      // repair action is quarantine (not continue_repair).
+      const classification = classifyWorktree(snapshot);
+      expect(["dirty_owned", "dirty_orphaned"]).toContain(classification.classification);
+      expect(classification.repairAction).toBe("quarantine");
+    },
+  );
 
   it("quarantine executes without git mutation", { timeout: 30_000 }, async () => {
     // Step 4: Execute the quarantine repair action.
@@ -653,21 +644,12 @@ describe("Scenario 4: Restart-safe resumption from durable state", () => {
   let skipped = false;
 
   beforeAll(async () => {
-    const finMod = await import(
-      "../../harness/ops/core/symphony-state/set-finalization-state.mjs"
-    );
-    const stateMod = await import(
-      "../../harness/ops/core/symphony-state.mjs"
-    );
-    const evidenceMod = await import(
-      "../../harness/ops/core/task-evidence.mjs"
-    );
-    const stateFileMod = await import(
-      "../../harness/ops/core/symphony-state/get-state-file.mjs"
-    );
-    const evidencePathMod = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const finMod = await import("../../harness/ops/core/symphony-state/set-finalization-state.mjs");
+    const stateMod = await import("../../harness/ops/core/symphony-state.mjs");
+    const evidenceMod = await import("../../harness/ops/core/task-evidence.mjs");
+    const stateFileMod = await import("../../harness/ops/core/symphony-state/get-state-file.mjs");
+    const evidencePathMod =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
 
     setFinalizationState = finMod.setFinalizationState;
     getFinalizationState = stateMod.getFinalizationState;
@@ -702,9 +684,7 @@ describe("Scenario 4: Restart-safe resumption from durable state", () => {
     deleteEvidence(TEST_CORRELATION_ID);
     // Clean up test finalization state
     try {
-      const { mutateState } = await import(
-        "../../harness/ops/core/symphony-state.mjs"
-      );
+      const { mutateState } = await import("../../harness/ops/core/symphony-state.mjs");
       mutateState((store: Record<string, Record<string, unknown>>) => {
         delete store.issues[TEST_ISSUE];
         return store;
@@ -748,7 +728,9 @@ describe("Scenario 4: Restart-safe resumption from durable state", () => {
 
     const evidence = loadEvidenceRecord(TEST_CORRELATION_ID) as Record<string, unknown> | null;
     expect(evidence).not.toBeNull();
-    expect((evidence as Record<string, Record<string, unknown>>).ingress.issueIdentifier).toBe(TEST_ISSUE);
+    expect((evidence as Record<string, Record<string, unknown>>).ingress.issueIdentifier).toBe(
+      TEST_ISSUE,
+    );
   });
 
   it("state files persist on disk after executor stop", { timeout: 60_000 }, () => {
@@ -778,94 +760,105 @@ describe("Scenario 4: Restart-safe resumption from durable state", () => {
     // Verify evidence record is still readable
     const evidence = loadEvidenceRecord(TEST_CORRELATION_ID) as Record<string, unknown> | null;
     expect(evidence).not.toBeNull();
-    expect((evidence as Record<string, Record<string, unknown>>).ingress.issueIdentifier).toBe(TEST_ISSUE);
-  });
-
-  it("state survives executor restart and is recognized as repair candidate", { timeout: 60_000 }, async () => {
-    if (skipped) return;
-
-    // Restart executor wt8
-    execSync(`systemctl --user start ${EXECUTOR_SERVICE}`, {
-      timeout: 15_000,
-    });
-
-    // Poll for executor to become healthy again
-    const deadline = Date.now() + 45_000;
-    let healthy = false;
-    while (Date.now() < deadline) {
-      try {
-        const res = await fetch(`http://127.0.0.1:${EXECUTOR_PORT}/health`);
-        const data = (await res.json()) as Record<string, unknown>;
-        if (data.status === "ok") {
-          healthy = true;
-          break;
-        }
-      } catch {
-        /* not ready yet */
-      }
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-    expect(healthy).toBe(true);
-
-    // Verify finalization state survived restart
-    const finState = getFinalizationState(TEST_ISSUE) as Record<string, unknown> | null;
-    expect(finState).not.toBeNull();
-    expect(finState!.state).toBe("branch_push_failed_repairable");
-
-    // Verify evidence record survived restart
-    const evidence = loadEvidenceRecord(TEST_CORRELATION_ID) as Record<string, unknown> | null;
-    expect(evidence).not.toBeNull();
-    expect((evidence as Record<string, unknown>).correlationId).toBe(TEST_CORRELATION_ID);
-    expect((evidence as Record<string, Record<string, unknown>>).ingress.issueIdentifier).toBe(TEST_ISSUE);
-  });
-
-  it("restarted executor recognizes persisted state as actionable repair candidate", { timeout: 30_000 }, async () => {
-    if (skipped) return;
-
-    // This is the key proof of in-flight resumption: the persisted
-    // finalization state at "branch_push_failed_repairable" with
-    // stickyOwner="wt8" must be recognized by the runner's
-    // repair-candidate lookup. Without this, restart-safety is
-    // merely file persistence, not actual work resumption.
-    //
-    // IMPORTANT: The state MUST be in REPAIRABLE_FINALIZATION_STATES
-    // (branch_push_failed_repairable IS). Using evidence_pending
-    // would cause getNextRepairableIssueForWorktree to return null.
-    const { getNextRepairableIssueForWorktree } = await import(
-      "../../harness/ops/core/symphony-state.mjs"
+    expect((evidence as Record<string, Record<string, unknown>>).ingress.issueIdentifier).toBe(
+      TEST_ISSUE,
     );
-
-    const repairCandidate = getNextRepairableIssueForWorktree("wt8");
-    expect(repairCandidate).not.toBeNull();
-    expect(repairCandidate!.issueIdentifier).toBe(TEST_ISSUE);
-
-    // The finalization state indicates the issue needs repair at the
-    // branch_push_failed_repairable stage — proving the executor would
-    // resume this work on its next cycle by retrying the push.
-    const finState = getFinalizationState(TEST_ISSUE) as Record<string, unknown>;
-    expect(finState.state).toBe("branch_push_failed_repairable");
-    expect(finState.stickyOwner).toBe("wt8");
-
-    // Verify the repair candidate has ALL fields the runner needs:
-    //
-    // runner/main.mjs at line ~212:
-    //   const repairCandidate = getNextRepairableIssueForWorktree(WORKTREE_ID)
-    //   findOpenIssuesByIdentifier(repairCandidate.issueIdentifier)
-    //   executeIssue(issue, { isRepairCandidate: true, ... })
-    //
-    // execute-issue.mjs at line ~300 (for branch_push_failed_repairable):
-    //   Retries gitPushWorktreeBranch()
-    //   On success: transitions to integration_pending
-    //   Integrator then: cherry-picks → evidence_pending_closeout → completed
-    //
-    // This proves the full repair-to-closure path is exercisable.
-    expect(repairCandidate!.issueIdentifier).toMatch(/^E2E-RESTART-SAFE-/);
-    expect(finState.branch).toBe("symphony/wt8");
-    expect(finState.headSha).toBeTruthy();
-    expect(finState.worktreeId).toBe("wt8");
-    expect(finState.lastError).toBeTruthy();
-    expect(typeof finState.attempts).toBe("number");
   });
+
+  it(
+    "state survives executor restart and is recognized as repair candidate",
+    { timeout: 60_000 },
+    async () => {
+      if (skipped) return;
+
+      // Restart executor wt8
+      execSync(`systemctl --user start ${EXECUTOR_SERVICE}`, {
+        timeout: 15_000,
+      });
+
+      // Poll for executor to become healthy again
+      const deadline = Date.now() + 45_000;
+      let healthy = false;
+      while (Date.now() < deadline) {
+        try {
+          const res = await fetch(`http://127.0.0.1:${EXECUTOR_PORT}/health`);
+          const data = (await res.json()) as Record<string, unknown>;
+          if (data.status === "ok") {
+            healthy = true;
+            break;
+          }
+        } catch {
+          /* not ready yet */
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+      expect(healthy).toBe(true);
+
+      // Verify finalization state survived restart
+      const finState = getFinalizationState(TEST_ISSUE) as Record<string, unknown> | null;
+      expect(finState).not.toBeNull();
+      expect(finState!.state).toBe("branch_push_failed_repairable");
+
+      // Verify evidence record survived restart
+      const evidence = loadEvidenceRecord(TEST_CORRELATION_ID) as Record<string, unknown> | null;
+      expect(evidence).not.toBeNull();
+      expect((evidence as Record<string, unknown>).correlationId).toBe(TEST_CORRELATION_ID);
+      expect((evidence as Record<string, Record<string, unknown>>).ingress.issueIdentifier).toBe(
+        TEST_ISSUE,
+      );
+    },
+  );
+
+  it(
+    "restarted executor recognizes persisted state as actionable repair candidate",
+    { timeout: 30_000 },
+    async () => {
+      if (skipped) return;
+
+      // This is the key proof of in-flight resumption: the persisted
+      // finalization state at "branch_push_failed_repairable" with
+      // stickyOwner="wt8" must be recognized by the runner's
+      // repair-candidate lookup. Without this, restart-safety is
+      // merely file persistence, not actual work resumption.
+      //
+      // IMPORTANT: The state MUST be in REPAIRABLE_FINALIZATION_STATES
+      // (branch_push_failed_repairable IS). Using evidence_pending
+      // would cause getNextRepairableIssueForWorktree to return null.
+      const { getNextRepairableIssueForWorktree } =
+        await import("../../harness/ops/core/symphony-state.mjs");
+
+      const repairCandidate = getNextRepairableIssueForWorktree("wt8");
+      expect(repairCandidate).not.toBeNull();
+      expect(repairCandidate!.issueIdentifier).toBe(TEST_ISSUE);
+
+      // The finalization state indicates the issue needs repair at the
+      // branch_push_failed_repairable stage — proving the executor would
+      // resume this work on its next cycle by retrying the push.
+      const finState = getFinalizationState(TEST_ISSUE) as Record<string, unknown>;
+      expect(finState.state).toBe("branch_push_failed_repairable");
+      expect(finState.stickyOwner).toBe("wt8");
+
+      // Verify the repair candidate has ALL fields the runner needs:
+      //
+      // runner/main.mjs at line ~212:
+      //   const repairCandidate = getNextRepairableIssueForWorktree(WORKTREE_ID)
+      //   findOpenIssuesByIdentifier(repairCandidate.issueIdentifier)
+      //   executeIssue(issue, { isRepairCandidate: true, ... })
+      //
+      // execute-issue.mjs at line ~300 (for branch_push_failed_repairable):
+      //   Retries gitPushWorktreeBranch()
+      //   On success: transitions to integration_pending
+      //   Integrator then: cherry-picks → evidence_pending_closeout → completed
+      //
+      // This proves the full repair-to-closure path is exercisable.
+      expect(repairCandidate!.issueIdentifier).toMatch(/^E2E-RESTART-SAFE-/);
+      expect(finState.branch).toBe("symphony/wt8");
+      expect(finState.headSha).toBeTruthy();
+      expect(finState.worktreeId).toBe("wt8");
+      expect(finState.lastError).toBeTruthy();
+      expect(typeof finState.attempts).toBe("number");
+    },
+  );
 
   it("source-verifies the complete repair-to-closure code path", () => {
     // Source verification: prove the runner's main loop picks up repair
@@ -939,333 +932,349 @@ describe("Scenario 2: Provider fallback with recorded evidence", () => {
     }
   });
 
-  it("Discord router sends request and creates evidence with provider routing", { timeout: 60_000 }, async () => {
-    if (!discordHealthy) {
-      console.warn("Discord router not healthy — skipping");
-      return;
-    }
-
-    const beforeIso = new Date().toISOString();
-
-    // Send a simple chat completion through the Discord router.
-    // The router proxies to a worktree bridge which records evidence.
-    const res = await fetch(`${DISCORD_ROUTER_URL}/v1/chat/completions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "symphony/main",
-        messages: [
-          {
-            role: "user",
-            content: "Respond with exactly: E2E_PROVIDER_TEST_OK",
-          },
-        ],
-        stream: false,
-        max_tokens: 50,
-      }),
-    });
-
-    // Request should succeed (200) or at least reach the bridge
-    expect(res.status).toBeLessThan(500);
-
-    // Wait briefly for evidence to be written
-    await new Promise((r) => setTimeout(r, 3000));
-
-    // Find the evidence record by source "discord-router" after our timestamp
-    const evidence = findEvidenceBySource("discord-router", beforeIso);
-    expect(evidence).not.toBeNull();
-
-    // Evidence must have ingress from Discord router
-    expect(evidence!.ingress.source).toBe("discord-router");
-
-    // Evidence must have worktree selection (Discord router records this)
-    expect(evidence!.worktreeSelection).not.toBeNull();
-    expect(evidence!.worktreeSelection!.worktreeId).toMatch(/^wt[5-8]$/);
-    expect(evidence!.worktreeSelection!.reason).toBe("least-loaded-discord");
-
-    // If the request completed successfully, poll for provider evidence.
-    // The bridge writes providerSelection and providerRouting asynchronously
-    // after the response is proxied, so we need to poll.
-    if (res.status === 200) {
-      // Poll for providerSelection to be populated (bridge writes after response)
-      let updatedEvidence = evidence;
-      const evDeadline = Date.now() + 15_000;
-      while (Date.now() < evDeadline) {
-        updatedEvidence = findEvidenceBySource("discord-router", beforeIso);
-        if (updatedEvidence?.providerSelection) break;
-        await new Promise((r) => setTimeout(r, 1000));
+  it(
+    "Discord router sends request and creates evidence with provider routing",
+    { timeout: 60_000 },
+    async () => {
+      if (!discordHealthy) {
+        console.warn("Discord router not healthy — skipping");
+        return;
       }
 
-      // Provider selection should be populated on successful requests
-      if (updatedEvidence?.providerSelection) {
-        expect(updatedEvidence.providerSelection).not.toBeNull();
-      }
+      const beforeIso = new Date().toISOString();
 
-      // providerRouting includes the full routing decision chain
-      const routing = updatedEvidence as unknown as Record<string, unknown>;
-      const providerRouting = routing.providerRouting as Record<string, unknown> | null;
-      if (providerRouting) {
-        expect(providerRouting.selectedProvider).toBeTruthy();
-        expect(providerRouting.attempts).toBeGreaterThanOrEqual(1);
+      // Send a simple chat completion through the Discord router.
+      // The router proxies to a worktree bridge which records evidence.
+      const res = await fetch(`${DISCORD_ROUTER_URL}/v1/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "symphony/main",
+          messages: [
+            {
+              role: "user",
+              content: "Respond with exactly: E2E_PROVIDER_TEST_OK",
+            },
+          ],
+          stream: false,
+          max_tokens: 50,
+        }),
+      });
 
-        // Verify selectionRationale includes candidate scores and ranking
-        // factors (not just names/status — the reviewer requires scored evidence)
-        const rationale = providerRouting.selectionRationale as Array<Record<string, unknown>> | null;
-        if (rationale && rationale.length > 0) {
-          const selected = rationale.find((r) => r.status === "selected");
-          expect(selected).toBeTruthy();
-          // Must include score and rank (added in Phase 3a hardening)
-          expect(selected!.score).toBeDefined();
-          expect(selected!.rank).toBeDefined();
+      // Request should succeed (200) or at least reach the bridge
+      expect(res.status).toBeLessThan(500);
+
+      // Wait briefly for evidence to be written
+      await new Promise((r) => setTimeout(r, 3000));
+
+      // Find the evidence record by source "discord-router" after our timestamp
+      const evidence = findEvidenceBySource("discord-router", beforeIso);
+      expect(evidence).not.toBeNull();
+
+      // Evidence must have ingress from Discord router
+      expect(evidence!.ingress.source).toBe("discord-router");
+
+      // Evidence must have worktree selection (Discord router records this)
+      expect(evidence!.worktreeSelection).not.toBeNull();
+      expect(evidence!.worktreeSelection!.worktreeId).toMatch(/^wt[5-8]$/);
+      expect(evidence!.worktreeSelection!.reason).toBe("least-loaded-discord");
+
+      // If the request completed successfully, poll for provider evidence.
+      // The bridge writes providerSelection and providerRouting asynchronously
+      // after the response is proxied, so we need to poll.
+      if (res.status === 200) {
+        // Poll for providerSelection to be populated (bridge writes after response)
+        let updatedEvidence = evidence;
+        const evDeadline = Date.now() + 15_000;
+        while (Date.now() < evDeadline) {
+          updatedEvidence = findEvidenceBySource("discord-router", beforeIso);
+          if (updatedEvidence?.providerSelection) break;
+          await new Promise((r) => setTimeout(r, 1000));
         }
 
-        // Verify fallbackChain structure when fallback occurred
-        if ((providerRouting.attempts as number) > 1) {
-          expect(providerRouting.hasFallback).toBe(true);
-          const chain = providerRouting.fallbackChain as Array<Record<string, unknown>>;
-          expect(chain.length).toBeGreaterThan(1);
-          // Each chain entry must have structured fields
-          for (const entry of chain) {
-            expect(entry.providerName).toBeTruthy();
-            expect(entry.attemptNumber).toBeGreaterThanOrEqual(1);
-            expect(entry.outcome).toBeTruthy();
+        // Provider selection should be populated on successful requests
+        if (updatedEvidence?.providerSelection) {
+          expect(updatedEvidence.providerSelection).not.toBeNull();
+        }
+
+        // providerRouting includes the full routing decision chain
+        const routing = updatedEvidence as unknown as Record<string, unknown>;
+        const providerRouting = routing.providerRouting as Record<string, unknown> | null;
+        if (providerRouting) {
+          expect(providerRouting.selectedProvider).toBeTruthy();
+          expect(providerRouting.attempts).toBeGreaterThanOrEqual(1);
+
+          // Verify selectionRationale includes candidate scores and ranking
+          // factors (not just names/status — the reviewer requires scored evidence)
+          const rationale = providerRouting.selectionRationale as Array<
+            Record<string, unknown>
+          > | null;
+          if (rationale && rationale.length > 0) {
+            const selected = rationale.find((r) => r.status === "selected");
+            expect(selected).toBeTruthy();
+            // Must include score and rank (added in Phase 3a hardening)
+            expect(selected!.score).toBeDefined();
+            expect(selected!.rank).toBeDefined();
+          }
+
+          // Verify fallbackChain structure when fallback occurred
+          if ((providerRouting.attempts as number) > 1) {
+            expect(providerRouting.hasFallback).toBe(true);
+            const chain = providerRouting.fallbackChain as Array<Record<string, unknown>>;
+            expect(chain.length).toBeGreaterThan(1);
+            // Each chain entry must have structured fields
+            for (const entry of chain) {
+              expect(entry.providerName).toBeTruthy();
+              expect(entry.attemptNumber).toBeGreaterThanOrEqual(1);
+              expect(entry.outcome).toBeTruthy();
+            }
           }
         }
       }
-    }
 
-    // Cleanup
-    createdEvidenceIds.push(evidence!.correlationId);
-  });
+      // Cleanup
+      createdEvidenceIds.push(evidence!.correlationId);
+    },
+  );
 
-  it("provider routing evidence includes scored rationale and reconstructs decision path", { timeout: 30_000 }, async () => {
-    if (!discordHealthy) {
-      console.warn("Discord router not healthy — skipping");
-      return;
-    }
-
-    // Source verification: queryRoutingEvidence exists and returns structured data
-    const evidencePath = resolve(
-      import.meta.dirname,
-      "../../harness/ops/core/task-evidence/query-routing-evidence.mjs",
-    );
-    const source = readFileSync(evidencePath, "utf-8");
-
-    // queryRoutingEvidence must reconstruct the full routing decision
-    expect(source).toContain("providerSelection");
-    expect(source).toContain("providerRouting");
-    expect(source).toContain("contextReduction");
-    expect(source).toContain("safetyNet");
-    expect(source).toContain("buildExplanation");
-
-    // F5 resolution: selection rationale with scored evidence
-    const recordPath = resolve(
-      import.meta.dirname,
-      "../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs",
-    );
-    const recordSource = readFileSync(recordPath, "utf-8");
-    expect(recordSource).toContain("selectionRationale");
-    // Verify JSDoc documents scored fields (rank, score, selections, toolConfirmed)
-    expect(recordSource).toContain("score");
-    expect(recordSource).toContain("rank");
-    expect(recordSource).toContain("ranking factors");
-
-    // Source verification: selectProvider includes score/rank in selectionLog
-    const selectPath = resolve(
-      import.meta.dirname,
-      "../../harness/ops/integrations/model/symphony-credit-gate/select-provider.mjs",
-    );
-    const selectSource = readFileSync(selectPath, "utf-8");
-    expect(selectSource).toContain("scoreByName");
-    expect(selectSource).toContain("getRankedProviders");
-  });
-
-  it("fallback machinery produces correct evidence structure when provider is excluded", { timeout: 30_000 }, async () => {
-    // Runtime verification: exercise the fallback path at module level.
-    // We call selectProvider with the first-ranked provider excluded,
-    // forcing a fallback to the second-ranked provider. The selectionLog
-    // must record scored skip + scored selection entries.
-    const { selectProvider, getRankedProviders } = await import(
-      "../../harness/ops/integrations/model/symphony-credit-gate.mjs"
-    );
-
-    const ranked = getRankedProviders();
-    if (ranked.length < 2) {
-      console.warn("Fewer than 2 ranked providers — cannot test fallback");
-      return;
-    }
-
-    // Exclude the top-ranked provider to force selection of a lower-ranked one
-    const topProvider = ranked[0].name;
-    const selectionLog: Array<Record<string, unknown>> = [];
-    const selected = await selectProvider({
-      allowSafetyNetOverride: true,
-      excludeNames: [topProvider],
-      selectionLog,
-    });
-
-    // A provider should be selected (just not the excluded one)
-    expect(selected).not.toBeNull();
-    expect(selected!.name).not.toBe(topProvider);
-
-    // selectionLog must have entries with scored fields
-    expect(selectionLog.length).toBeGreaterThan(0);
-    const selectedEntry = selectionLog.find((e) => e.status === "selected");
-    expect(selectedEntry).toBeTruthy();
-    // Verify scored fields are present (Phase 3a hardening)
-    expect(selectedEntry!.score).toBeDefined();
-    expect(selectedEntry!.rank).toBeDefined();
-    expect(typeof selectedEntry!.selections).toBe("number");
-    expect(typeof selectedEntry!.toolConfirmed).toBe("boolean");
-
-    // Verify score breakdown is present (explains "why A beat B")
-    expect(selectedEntry!.scoreBreakdown).toBeDefined();
-    const breakdown = selectedEntry!.scoreBreakdown as Record<string, unknown>;
-    expect(breakdown.baseScore).toBeDefined();
-    expect(typeof breakdown.healthPenalty).toBe("number");
-    expect(typeof breakdown.cachePenalty).toBe("number");
-    expect(typeof breakdown.preferenceBoost).toBe("number");
-    expect(typeof breakdown.recentSuccessBoost).toBe("number");
-
-    // The excluded provider either appears in the selection log with reason
-    // "excluded" or was filtered by getRankedProviders before the selection
-    // loop. Either way, the selected provider is NOT the excluded one
-    // (asserted above: selected.name !== topProvider).
-  });
-
-  it("forces real provider failure and verifies runtime fallback chain > 1", { timeout: 120_000 }, async () => {
-    // No discordHealthy guard needed — this test calls invokeWithFallback
-    // directly, not via the Discord router HTTP proxy.
-    //
-    // This test proves the RUNTIME fallback path — not just selector-level
-    // exclusion. It poisons a real provider's API key so the provider passes
-    // selection (cached probe says "available") but fails during the actual
-    // API call (401/403 from invalid key). The fallback loop then selects
-    // the next provider, which succeeds.
-    //
-    // This produces a fallbackChain with > 1 entries:
-    //   [{ providerName: poisoned, outcome: "failure" },
-    //    { providerName: real, outcome: "success" }]
-
-    let invokeWithFallback: (
-      messages: Array<Record<string, unknown>>,
-      route: Record<string, unknown>,
-    ) => Promise<Record<string, unknown>>;
-    let saveProbeResult: (name: string, available: boolean, meta?: Record<string, unknown>) => void;
-    let clearProviderFailure: (name: string) => void;
-    let getRankedProviders: () => Array<Record<string, unknown>>;
-    let PROVIDERS: Array<Record<string, unknown>>;
-
-    try {
-      const fallbackMod = await import(
-        "../../harness/ops/integrations/model/symphony-openai-bridge/invoke-with-fallback.mjs"
-      );
-      invokeWithFallback = fallbackMod.invokeWithFallback;
-      const creditGate = await import(
-        "../../harness/ops/integrations/model/symphony-credit-gate.mjs"
-      );
-      clearProviderFailure = creditGate.clearProviderFailure;
-      getRankedProviders = creditGate.getRankedProviders;
-      const probeMod = await import(
-        "../../harness/ops/integrations/model/symphony-credit-gate/save-probe-result.mjs"
-      );
-      saveProbeResult = probeMod.saveProbeResult;
-      const providersMod = await import(
-        "../../harness/ops/integrations/model/symphony-credit-gate/providers.mjs"
-      );
-      PROVIDERS = providersMod.PROVIDERS;
-    } catch (importErr) {
-      console.warn(
-        `Cannot import fallback modules — skipping live fallback test: ${(importErr as Error).message}`,
-      );
-      return;
-    }
-
-    const ranked = getRankedProviders();
-    if (ranked.length < 2) {
-      console.warn("Fewer than 2 ranked providers — cannot test live fallback");
-      return;
-    }
-
-    // Find a provider with an envVar (API key) to poison
-    let poisonTarget: { name: string; envVar: string } | null = null;
-    for (const entry of ranked) {
-      const provDef = PROVIDERS.find(
-        (p: Record<string, unknown>) => p.name === entry.name,
-      );
-      if (provDef?.envVar && typeof provDef.envVar === "string" && process.env[provDef.envVar]) {
-        poisonTarget = { name: entry.name as string, envVar: provDef.envVar as string };
-        break;
+  it(
+    "provider routing evidence includes scored rationale and reconstructs decision path",
+    { timeout: 30_000 },
+    async () => {
+      if (!discordHealthy) {
+        console.warn("Discord router not healthy — skipping");
+        return;
       }
-    }
-    if (!poisonTarget) {
-      console.warn("No ranked provider with an available API key env var — skipping");
-      return;
-    }
 
-    const realKey = process.env[poisonTarget.envVar];
-    const candidateNames = ranked.slice(0, 6).map((r) => r.name);
+      // Source verification: queryRoutingEvidence exists and returns structured data
+      const evidencePath = resolve(
+        import.meta.dirname,
+        "../../harness/ops/core/task-evidence/query-routing-evidence.mjs",
+      );
+      const source = readFileSync(evidencePath, "utf-8");
 
-    try {
-      // Poison: set invalid key + force probe cache to say "available"
-      process.env[poisonTarget.envVar] = "invalid-e2e-fallback-test-key";
-      saveProbeResult(poisonTarget.name, true, {
-        status: "available",
-        reason: "e2e-test-cache",
+      // queryRoutingEvidence must reconstruct the full routing decision
+      expect(source).toContain("providerSelection");
+      expect(source).toContain("providerRouting");
+      expect(source).toContain("contextReduction");
+      expect(source).toContain("safetyNet");
+      expect(source).toContain("buildExplanation");
+
+      // F5 resolution: selection rationale with scored evidence
+      const recordPath = resolve(
+        import.meta.dirname,
+        "../../harness/ops/core/task-evidence/record-provider-routing-evidence.mjs",
+      );
+      const recordSource = readFileSync(recordPath, "utf-8");
+      expect(recordSource).toContain("selectionRationale");
+      // Verify JSDoc documents scored fields (rank, score, selections, toolConfirmed)
+      expect(recordSource).toContain("score");
+      expect(recordSource).toContain("rank");
+      expect(recordSource).toContain("ranking factors");
+
+      // Source verification: selectProvider includes score/rank in selectionLog
+      const selectPath = resolve(
+        import.meta.dirname,
+        "../../harness/ops/integrations/model/symphony-credit-gate/select-provider.mjs",
+      );
+      const selectSource = readFileSync(selectPath, "utf-8");
+      expect(selectSource).toContain("scoreByName");
+      expect(selectSource).toContain("getRankedProviders");
+    },
+  );
+
+  it(
+    "fallback machinery produces correct evidence structure when provider is excluded",
+    { timeout: 30_000 },
+    async () => {
+      // Runtime verification: exercise the fallback path at module level.
+      // We call selectProvider with the first-ranked provider excluded,
+      // forcing a fallback to the second-ranked provider. The selectionLog
+      // must record scored skip + scored selection entries.
+      const { selectProvider, getRankedProviders } =
+        await import("../../harness/ops/integrations/model/symphony-credit-gate.mjs");
+
+      const ranked = getRankedProviders();
+      if (ranked.length < 2) {
+        console.warn("Fewer than 2 ranked providers — cannot test fallback");
+        return;
+      }
+
+      // Exclude the top-ranked provider to force selection of a lower-ranked one
+      const topProvider = ranked[0].name;
+      const selectionLog: Array<Record<string, unknown>> = [];
+      const selected = await selectProvider({
+        allowSafetyNetOverride: true,
+        excludeNames: [topProvider],
+        selectionLog,
       });
 
-      const result = await invokeWithFallback(
-        [{ role: "user", content: "Reply with exactly one word: OK" }],
-        {
-          responseModelId: "symphony/main",
-          allowedNames: candidateNames,
-          useTools: false,
-        },
-      );
+      // A provider should be selected (just not the excluded one)
+      expect(selected).not.toBeNull();
+      expect(selected!.name).not.toBe(topProvider);
 
-      const chain = result.fallbackChain as Array<Record<string, unknown>>;
-      const attempts = result.attempts as number;
+      // selectionLog must have entries with scored fields
+      expect(selectionLog.length).toBeGreaterThan(0);
+      const selectedEntry = selectionLog.find((e) => e.status === "selected");
+      expect(selectedEntry).toBeTruthy();
+      // Verify scored fields are present (Phase 3a hardening)
+      expect(selectedEntry!.score).toBeDefined();
+      expect(selectedEntry!.rank).toBeDefined();
+      expect(typeof selectedEntry!.selections).toBe("number");
+      expect(typeof selectedEntry!.toolConfirmed).toBe("boolean");
 
-      // CORE ASSERTION: fallbackChain must have > 1 entries proving
-      // a real runtime failure occurred and was recovered from.
-      expect(chain.length).toBeGreaterThan(1);
-      expect(attempts).toBeGreaterThan(1);
+      // Verify score breakdown is present (explains "why A beat B")
+      expect(selectedEntry!.scoreBreakdown).toBeDefined();
+      const breakdown = selectedEntry!.scoreBreakdown as Record<string, unknown>;
+      expect(breakdown.baseScore).toBeDefined();
+      expect(typeof breakdown.healthPenalty).toBe("number");
+      expect(typeof breakdown.cachePenalty).toBe("number");
+      expect(typeof breakdown.preferenceBoost).toBe("number");
+      expect(typeof breakdown.recentSuccessBoost).toBe("number");
 
-      // The poisoned provider must appear somewhere in the chain with
-      // a failure outcome. It may not be first because dynamic ranking
-      // (health state, recent success boosts) can reorder providers
-      // between test runs.
-      const poisonedEntry = chain.find(
-        (e) => e.providerName === poisonTarget.name,
-      );
-      expect(poisonedEntry, `poisoned provider ${poisonTarget.name} should appear in fallback chain`).toBeTruthy();
-      expect(poisonedEntry!.outcome).toBe("failure");
+      // The excluded provider either appears in the selection log with reason
+      // "excluded" or was filtered by getRankedProviders before the selection
+      // loop. Either way, the selected provider is NOT the excluded one
+      // (asserted above: selected.name !== topProvider).
+    },
+  );
 
-      // Last entry should be a successful provider (different from poisoned)
-      const lastEntry = chain[chain.length - 1];
-      expect(lastEntry.outcome).toBe("success");
-      expect(lastEntry.providerName).not.toBe(poisonTarget.name);
+  it(
+    "forces real provider failure and verifies runtime fallback chain > 1",
+    { timeout: 120_000 },
+    async () => {
+      // No discordHealthy guard needed — this test calls invokeWithFallback
+      // directly, not via the Discord router HTTP proxy.
+      //
+      // This test proves the RUNTIME fallback path — not just selector-level
+      // exclusion. It poisons a real provider's API key so the provider passes
+      // selection (cached probe says "available") but fails during the actual
+      // API call (401/403 from invalid key). The fallback loop then selects
+      // the next provider, which succeeds.
+      //
+      // This produces a fallbackChain with > 1 entries:
+      //   [{ providerName: poisoned, outcome: "failure" },
+      //    { providerName: real, outcome: "success" }]
 
-      // Response text must be present (the fallback succeeded)
-      expect(result.text).toBeTruthy();
+      let invokeWithFallback: (
+        messages: Array<Record<string, unknown>>,
+        route: Record<string, unknown>,
+      ) => Promise<Record<string, unknown>>;
+      let saveProbeResult: (
+        name: string,
+        available: boolean,
+        meta?: Record<string, unknown>,
+      ) => void;
+      let clearProviderFailure: (name: string) => void;
+      let getRankedProviders: () => Array<Record<string, unknown>>;
+      let PROVIDERS: Array<Record<string, unknown>>;
 
-      console.info(
-        `Live fallback chain: ${chain.map((e) => `${e.providerName}(${e.outcome})`).join(" → ")}`,
-      );
-    } finally {
-      // Restore real API key and probe cache
-      if (realKey) {
-        process.env[poisonTarget.envVar] = realKey;
-      } else {
-        delete process.env[poisonTarget.envVar];
+      try {
+        const fallbackMod =
+          await import("../../harness/ops/integrations/model/symphony-openai-bridge/invoke-with-fallback.mjs");
+        invokeWithFallback = fallbackMod.invokeWithFallback;
+        const creditGate =
+          await import("../../harness/ops/integrations/model/symphony-credit-gate.mjs");
+        clearProviderFailure = creditGate.clearProviderFailure;
+        getRankedProviders = creditGate.getRankedProviders;
+        const probeMod =
+          await import("../../harness/ops/integrations/model/symphony-credit-gate/save-probe-result.mjs");
+        saveProbeResult = probeMod.saveProbeResult;
+        const providersMod =
+          await import("../../harness/ops/integrations/model/symphony-credit-gate/providers.mjs");
+        PROVIDERS = providersMod.PROVIDERS;
+      } catch (importErr) {
+        console.warn(
+          `Cannot import fallback modules — skipping live fallback test: ${(importErr as Error).message}`,
+        );
+        return;
       }
-      clearProviderFailure(poisonTarget.name);
-      saveProbeResult(poisonTarget.name, true, {
-        status: "available",
-        reason: "e2e-restore",
-      });
-    }
-  });
+
+      const ranked = getRankedProviders();
+      if (ranked.length < 2) {
+        console.warn("Fewer than 2 ranked providers — cannot test live fallback");
+        return;
+      }
+
+      // Find a provider with an envVar (API key) to poison
+      let poisonTarget: { name: string; envVar: string } | null = null;
+      for (const entry of ranked) {
+        const provDef = PROVIDERS.find((p: Record<string, unknown>) => p.name === entry.name);
+        if (provDef?.envVar && typeof provDef.envVar === "string" && process.env[provDef.envVar]) {
+          poisonTarget = { name: entry.name as string, envVar: provDef.envVar as string };
+          break;
+        }
+      }
+      if (!poisonTarget) {
+        console.warn("No ranked provider with an available API key env var — skipping");
+        return;
+      }
+
+      const realKey = process.env[poisonTarget.envVar];
+      const candidateNames = ranked.slice(0, 6).map((r) => r.name);
+
+      try {
+        // Poison: set invalid key + force probe cache to say "available"
+        process.env[poisonTarget.envVar] = "invalid-e2e-fallback-test-key";
+        saveProbeResult(poisonTarget.name, true, {
+          status: "available",
+          reason: "e2e-test-cache",
+        });
+
+        const result = await invokeWithFallback(
+          [{ role: "user", content: "Reply with exactly one word: OK" }],
+          {
+            responseModelId: "symphony/main",
+            allowedNames: candidateNames,
+            useTools: false,
+          },
+        );
+
+        const chain = result.fallbackChain as Array<Record<string, unknown>>;
+        const attempts = result.attempts as number;
+
+        // CORE ASSERTION: fallbackChain must have > 1 entries proving
+        // a real runtime failure occurred and was recovered from.
+        expect(chain.length).toBeGreaterThan(1);
+        expect(attempts).toBeGreaterThan(1);
+
+        // The poisoned provider must appear somewhere in the chain with
+        // a failure outcome. It may not be first because dynamic ranking
+        // (health state, recent success boosts) can reorder providers
+        // between test runs.
+        const poisonedEntry = chain.find((e) => e.providerName === poisonTarget.name);
+        expect(
+          poisonedEntry,
+          `poisoned provider ${poisonTarget.name} should appear in fallback chain`,
+        ).toBeTruthy();
+        expect(poisonedEntry!.outcome).toBe("failure");
+
+        // Last entry should be a successful provider (different from poisoned)
+        const lastEntry = chain[chain.length - 1];
+        expect(lastEntry.outcome).toBe("success");
+        expect(lastEntry.providerName).not.toBe(poisonTarget.name);
+
+        // Response text must be present (the fallback succeeded)
+        expect(result.text).toBeTruthy();
+
+        console.info(
+          `Live fallback chain: ${chain.map((e) => `${e.providerName}(${e.outcome})`).join(" → ")}`,
+        );
+      } finally {
+        // Restore real API key and probe cache
+        if (realKey) {
+          process.env[poisonTarget.envVar] = realKey;
+        } else {
+          delete process.env[poisonTarget.envVar];
+        }
+        clearProviderFailure(poisonTarget.name);
+        saveProbeResult(poisonTarget.name, true, {
+          status: "available",
+          reason: "e2e-restore",
+        });
+      }
+    },
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -1338,12 +1347,7 @@ describe("Scenario 1: Successful authoritative scheduling through integration an
     // Step 3: Wait for routing to populate (proves scheduler dispatched)
     // The scheduler runs on a cycle, so this may take up to 90s
     try {
-      const routed = await pollForEvidenceField(
-        LIFECYCLE_ISSUE_ID,
-        "routing",
-        90_000,
-        2000,
-      );
+      const routed = await pollForEvidenceField(LIFECYCLE_ISSUE_ID, "routing", 90_000, 2000);
       expect(routed.routing).not.toBeNull();
     } catch {
       // Routing may not populate if scheduler hasn't claimed yet —
@@ -1357,64 +1361,79 @@ describe("Scenario 1: Successful authoritative scheduling through integration an
     }
   });
 
-  it("evidence pipeline progresses and full wiring is source-verified", { timeout: 120_000 }, async () => {
-    // This test verifies the live pipeline reaches at least ingress (proven
-    // by the previous test) and attempts deeper stages. Since test-injected
-    // issues don't exist in Linear, the scheduler's findOpenIssuesByIdentifier
-    // returns null — so routing/execution/closure can't be reached via
-    // synthetic webhook alone. We verify the full pipeline wiring via source
-    // analysis (same pattern as Scenario 4's source-verifies test).
-    //
-    // If the system DOES route the issue (e.g., a real Linear issue is
-    // being processed), deeper stages are reported as bonus evidence.
+  it(
+    "evidence pipeline progresses and full wiring is source-verified",
+    { timeout: 120_000 },
+    async () => {
+      // This test verifies the live pipeline reaches at least ingress (proven
+      // by the previous test) and attempts deeper stages. Since test-injected
+      // issues don't exist in Linear, the scheduler's findOpenIssuesByIdentifier
+      // returns null — so routing/execution/closure can't be reached via
+      // synthetic webhook alone. We verify the full pipeline wiring via source
+      // analysis (same pattern as Scenario 4's source-verifies test).
+      //
+      // If the system DOES route the issue (e.g., a real Linear issue is
+      // being processed), deeper stages are reported as bonus evidence.
 
-    const evidence = findEvidenceByIssue(LIFECYCLE_ISSUE_ID);
-    expect(evidence).not.toBeNull();
+      const evidence = findEvidenceByIssue(LIFECYCLE_ISSUE_ID);
+      expect(evidence).not.toBeNull();
 
-    // Track the deepest stage reached via live polling
-    const stages: string[] = ["ingress"];
+      // Track the deepest stage reached via live polling
+      const stages: string[] = ["ingress"];
 
-    // Attempt deeper stages with short timeouts (bonus, not required)
-    try {
-      const routed = await pollForEvidenceField(LIFECYCLE_ISSUE_ID, "routing", 15_000, 2000);
-      if (routed.routing) stages.push("routing");
-    } catch { /* test issue not in Linear — expected */ }
+      // Attempt deeper stages with short timeouts (bonus, not required)
+      try {
+        const routed = await pollForEvidenceField(LIFECYCLE_ISSUE_ID, "routing", 15_000, 2000);
+        if (routed.routing) stages.push("routing");
+      } catch {
+        /* test issue not in Linear — expected */
+      }
 
-    try {
-      const dispatched = await pollForEvidenceField(LIFECYCLE_ISSUE_ID, "worktreeSelection", 10_000, 2000);
-      if (dispatched.worktreeSelection) stages.push("worktreeSelection");
-    } catch { /* expected for synthetic issues */ }
+      try {
+        const dispatched = await pollForEvidenceField(
+          LIFECYCLE_ISSUE_ID,
+          "worktreeSelection",
+          10_000,
+          2000,
+        );
+        if (dispatched.worktreeSelection) stages.push("worktreeSelection");
+      } catch {
+        /* expected for synthetic issues */
+      }
 
-    try {
-      const executed = await pollForEvidenceField(LIFECYCLE_ISSUE_ID, "execution", 10_000, 3000);
-      if (executed.execution) stages.push("execution");
-    } catch { /* expected for synthetic issues */ }
+      try {
+        const executed = await pollForEvidenceField(LIFECYCLE_ISSUE_ID, "execution", 10_000, 3000);
+        if (executed.execution) stages.push("execution");
+      } catch {
+        /* expected for synthetic issues */
+      }
 
-    console.info(`Live pipeline reached stages: ${stages.join(" → ")}`);
+      console.info(`Live pipeline reached stages: ${stages.join(" → ")}`);
 
-    // HARD REQUIREMENT: ingress must be reached (already proven)
-    expect(stages).toContain("ingress");
+      // HARD REQUIREMENT: ingress must be reached (already proven)
+      expect(stages).toContain("ingress");
 
-    // Verify ingress evidence is structurally complete
-    expect(evidence!.ingress.source).toBe("linear-webhook");
-    expect(evidence!.ingress.issueIdentifier).toBe(LIFECYCLE_ISSUE_ID);
-    expect(evidence!.ingress.webhookDeliveryId).toBeTruthy();
-    expect(evidence!.ingress.receivedAt).toBeTruthy();
-    expect(evidence!.correlationId).toBeTruthy();
-    expect(evidence!.createdAt).toBeTruthy();
+      // Verify ingress evidence is structurally complete
+      expect(evidence!.ingress.source).toBe("linear-webhook");
+      expect(evidence!.ingress.issueIdentifier).toBe(LIFECYCLE_ISSUE_ID);
+      expect(evidence!.ingress.webhookDeliveryId).toBeTruthy();
+      expect(evidence!.ingress.receivedAt).toBeTruthy();
+      expect(evidence!.correlationId).toBeTruthy();
+      expect(evidence!.createdAt).toBeTruthy();
 
-    // If deeper stages were reached, verify their evidence fields
-    if (stages.includes("routing")) {
-      const updated = findEvidenceByIssue(LIFECYCLE_ISSUE_ID)!;
-      expect(updated.routing).not.toBeNull();
-      expect(updated.routing!.decidedAt).toBeTruthy();
-    }
-    if (stages.includes("worktreeSelection")) {
-      const updated = findEvidenceByIssue(LIFECYCLE_ISSUE_ID)!;
-      expect(updated.worktreeSelection).not.toBeNull();
-      expect(updated.worktreeSelection!.worktreeId).toMatch(/^wt[1-8]$/);
-    }
-  });
+      // If deeper stages were reached, verify their evidence fields
+      if (stages.includes("routing")) {
+        const updated = findEvidenceByIssue(LIFECYCLE_ISSUE_ID)!;
+        expect(updated.routing).not.toBeNull();
+        expect(updated.routing!.decidedAt).toBeTruthy();
+      }
+      if (stages.includes("worktreeSelection")) {
+        const updated = findEvidenceByIssue(LIFECYCLE_ISSUE_ID)!;
+        expect(updated.worktreeSelection).not.toBeNull();
+        expect(updated.worktreeSelection!.worktreeId).toMatch(/^wt[1-8]$/);
+      }
+    },
+  );
 
   it("source-verifies the complete authoritative scheduling pipeline", () => {
     // Source verification: prove the full pipeline from webhook ingress

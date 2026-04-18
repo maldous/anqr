@@ -27,10 +27,7 @@ export async function forceCloseWithIncompleteEvidence({
 }) {
   if (finalization.correlationId) {
     try {
-      const completeness = validateEvidenceCompleteness(
-        finalization.correlationId,
-        "standard",
-      );
+      const completeness = validateEvidenceCompleteness(finalization.correlationId, "standard");
       updateEvidenceRecord(finalization.correlationId, {
         evidenceOverride: {
           forced: true,

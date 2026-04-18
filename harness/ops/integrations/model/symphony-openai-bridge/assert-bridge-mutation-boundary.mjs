@@ -26,11 +26,10 @@ import { logWarn } from "./logger.mjs";
  * @param {string} [overrides.controlRepoRoot]
  * @throws {Error} If the mutation would violate the boundary invariant
  */
-export function assertBridgeMutationBoundary(resolvedPath, {
-  bridgeMode = BRIDGE_MODE,
-  bridgeRoot = BRIDGE_ROOT,
-  controlRepoRoot = CONTROL_REPO_ROOT,
-} = {}) {
+export function assertBridgeMutationBoundary(
+  resolvedPath,
+  { bridgeMode = BRIDGE_MODE, bridgeRoot = BRIDGE_ROOT, controlRepoRoot = CONTROL_REPO_ROOT } = {},
+) {
   if (!resolvedPath || typeof resolvedPath !== "string") return;
 
   const normalizedPath = path.resolve(resolvedPath);

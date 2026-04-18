@@ -43,9 +43,7 @@ describe("Evidence closure gate — architecture guard", () => {
     );
     const gateIndex = source.indexOf("validateEvidenceCompleteness");
     const commentIndex = source.indexOf("await addComment(detail.id, evidenceComment)");
-    const doneIndex = source.indexOf(
-      "await updateIssue(detail.id, { stateId: STATES.done })",
-    );
+    const doneIndex = source.indexOf("await updateIssue(detail.id, { stateId: STATES.done })");
     expect(gateIndex).toBeGreaterThan(-1);
     expect(commentIndex).toBeGreaterThan(-1);
     expect(doneIndex).toBeGreaterThan(-1);
@@ -68,10 +66,7 @@ describe("Evidence closure gate — architecture guard", () => {
 
   it("mandatory-evidence-fields defines all four levels", () => {
     const source = fs.readFileSync(
-      path.resolve(
-        REPO_ROOT,
-        "harness/ops/core/task-evidence/mandatory-evidence-fields.mjs",
-      ),
+      path.resolve(REPO_ROOT, "harness/ops/core/task-evidence/mandatory-evidence-fields.mjs"),
       "utf-8",
     );
     expect(source).toContain('"minimal"');
@@ -125,9 +120,8 @@ describe("validateEvidenceCompleteness — runtime", () => {
   let evidencePath: string;
 
   beforeAll(async () => {
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
   });
 
@@ -138,9 +132,8 @@ describe("validateEvidenceCompleteness — runtime", () => {
   });
 
   it("returns { status: 'missing' } for non-existent record", async () => {
-    const { validateEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs"
-    );
+    const { validateEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs");
     const result = validateEvidenceCompleteness(`nonexistent-${Date.now()}`, "minimal");
     expect(result.complete).toBe(false);
     expect(result.status).toBe("missing");
@@ -148,12 +141,10 @@ describe("validateEvidenceCompleteness — runtime", () => {
   });
 
   it("returns { status: 'corrupted' } for corrupted record", async () => {
-    const { validateEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { validateEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     const corruptId = `test-corrupt-validate-${Date.now()}`;
     const corruptPath = getEvidencePath(corruptId);
     try {
@@ -167,12 +158,9 @@ describe("validateEvidenceCompleteness — runtime", () => {
   });
 
   it("minimal: complete with execution + integration", async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { validateEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { validateEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs");
 
     saveEvidence(corrId, {
       correlationId: corrId,
@@ -187,16 +175,12 @@ describe("validateEvidenceCompleteness — runtime", () => {
   });
 
   it("minimal: incomplete when integration.success is false", async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { validateEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { validateEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs");
     const failId = `test-validate-fail-${Date.now()}`;
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     const failPath = getEvidencePath(failId);
 
     try {
@@ -214,9 +198,8 @@ describe("validateEvidenceCompleteness — runtime", () => {
   });
 
   it("standard: requires ingress + push on top of minimal", async () => {
-    const { validateEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs"
-    );
+    const { validateEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs");
     // corrId has minimal-only evidence
     const result = validateEvidenceCompleteness(corrId, "standard");
     expect(result.complete).toBe(false);
@@ -225,12 +208,9 @@ describe("validateEvidenceCompleteness — runtime", () => {
   });
 
   it("standard: complete with full lifecycle evidence", async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { validateEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { validateEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs");
 
     saveEvidence(corrId, {
       correlationId: corrId,
@@ -256,9 +236,8 @@ describe("validateEvidenceCompleteness — runtime", () => {
   });
 
   it("full: requires providerRouting + providerSelection", async () => {
-    const { validateEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs"
-    );
+    const { validateEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs");
     const result = validateEvidenceCompleteness(corrId, "full");
     expect(result.complete).toBe(false);
     expect(result.missing).toContain("providerRouting");
@@ -266,16 +245,12 @@ describe("validateEvidenceCompleteness — runtime", () => {
   });
 
   it("conditional: validation fields required when push exists", async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { validateEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { validateEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/validate-evidence-completeness.mjs");
     const condId = `test-validate-cond-${Date.now()}`;
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     const condPath = getEvidencePath(condId);
 
     try {
@@ -305,12 +280,9 @@ describe("auditEvidenceCompleteness — runtime", () => {
   let evidencePath: string;
 
   beforeAll(async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
 
     saveEvidence(corrId, {
@@ -328,9 +300,8 @@ describe("auditEvidenceCompleteness — runtime", () => {
   });
 
   it("returns structured report with all levels", async () => {
-    const { auditEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/audit-evidence-completeness.mjs"
-    );
+    const { auditEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/audit-evidence-completeness.mjs");
     const report = auditEvidenceCompleteness(corrId);
 
     expect(report.status).toBe("ok");
@@ -342,9 +313,8 @@ describe("auditEvidenceCompleteness — runtime", () => {
   });
 
   it("returns missing status for non-existent record", async () => {
-    const { auditEvidenceCompleteness } = await import(
-      "../../harness/ops/core/task-evidence/audit-evidence-completeness.mjs"
-    );
+    const { auditEvidenceCompleteness } =
+      await import("../../harness/ops/core/task-evidence/audit-evidence-completeness.mjs");
     const report = auditEvidenceCompleteness(`nonexistent-${Date.now()}`);
     expect(report.status).toBe("missing");
   });
@@ -359,12 +329,9 @@ describe("findIncompleteEvidence — runtime", () => {
   let evidencePath: string;
 
   beforeAll(async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
 
     // Create a deliberately incomplete record
@@ -380,9 +347,8 @@ describe("findIncompleteEvidence — runtime", () => {
   });
 
   it("finds records missing mandatory fields", async () => {
-    const { findIncompleteEvidence } = await import(
-      "../../harness/ops/core/task-evidence/find-incomplete-evidence.mjs"
-    );
+    const { findIncompleteEvidence } =
+      await import("../../harness/ops/core/task-evidence/find-incomplete-evidence.mjs");
     const incomplete = findIncompleteEvidence("minimal");
     const match = incomplete.find((r) => r.correlationId === corrId);
     expect(match).toBeTruthy();
@@ -430,10 +396,7 @@ describe("Phase 4 — no premature completion signals", () => {
     // external completion) which bypass integration. The normal code-change
     // path uses inReview and relies on the integrator for Done.
     const runnerSource = fs.readFileSync(
-      path.resolve(
-        REPO_ROOT,
-        "harness/ops/orchestration/symphony-runner/execute-issue.mjs",
-      ),
+      path.resolve(REPO_ROOT, "harness/ops/orchestration/symphony-runner/execute-issue.mjs"),
       "utf-8",
     );
     const doneMatches = [...runnerSource.matchAll(/stateId:\s*STATES\.done/g)];
@@ -487,10 +450,7 @@ describe("Phase 3 F5 — selection rationale infrastructure", () => {
 
   it("server.mjs wires selectionLog into selectProvider and propagates selectionRationale", () => {
     const source = fs.readFileSync(
-      path.resolve(
-        REPO_ROOT,
-        "harness/ops/integrations/model/symphony-openai-bridge/server.mjs",
-      ),
+      path.resolve(REPO_ROOT, "harness/ops/integrations/model/symphony-openai-bridge/server.mjs"),
       "utf-8",
     );
     // server.mjs creates selectionLog array and passes it to selectProvider

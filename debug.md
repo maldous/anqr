@@ -1,7 +1,7 @@
 # Debug — Getting Codex CLI Reliable Against the Harness
 
 > **Living document.** Updated as issues are discovered and resolved.
-> Last updated: 2026-04-17 (sweep #3)
+> Last updated: 2026-04-18 (sweep #4)
 
 ## Goal
 
@@ -43,38 +43,38 @@ Selected provider → AI SDK (streamText/generateText) → tool execution in mai
 
 ### Changes Made
 
-| Change | Files | Purpose |
-|---|---|---|
-| Fully dynamic per-request limits | NEW: `discovered-per-request-limits-cache-file.mjs`, `load-discovered-per-request-limits.mjs`, `save-discovered-per-request-limit.mjs` | 413 errors now persist discovered limits to cache, applied proactively on future startups |
-| Provider prefix defaults | MOD: `static-per-request-limits.mjs` (added `PROVIDER_PREFIX_DEFAULTS`) | New models from known providers (groq-*, cerebras-*, etc.) get conservative caps automatically |
-| Startup cap logging | NEW: `log-startup-context-caps.mjs`, MOD: `runtime.mjs` | Operators can verify effective per-request caps without reading code |
-| Dynamic limit integration | MOD: `build-provider-max-input-tokens.mjs` | 3-layer merge: static seed → discovered cache → prefix defaults |
-| Persistent discovery on 413 | MOD: `record-context-error.mjs` | `saveDiscoveredPerRequestLimit()` + `baseMaxTokens` update when 413 reports limit |
-| Cache reset on /v1/stats/reset | MOD: `server.mjs` | Discovered limits cache cleared alongside probe/health caches |
-| Permanent diagnostics | MOD: `setup-process-handlers.mjs`, `server.mjs` | Removed TODO markers, kept SYMPHONY_DEBUG guards as production feature |
-| Module exports | MOD: `symphony-bridge-truncation/index.mjs` | Exported new modules |
+| Change                           | Files                                                                                                                                  | Purpose                                                                                        |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Fully dynamic per-request limits | NEW: `discovered-per-request-limits-cache-file.mjs`, `load-discovered-per-request-limits.mjs`, `save-discovered-per-request-limit.mjs` | 413 errors now persist discovered limits to cache, applied proactively on future startups      |
+| Provider prefix defaults         | MOD: `static-per-request-limits.mjs` (added `PROVIDER_PREFIX_DEFAULTS`)                                                                | New models from known providers (groq-_, cerebras-_, etc.) get conservative caps automatically |
+| Startup cap logging              | NEW: `log-startup-context-caps.mjs`, MOD: `runtime.mjs`                                                                                | Operators can verify effective per-request caps without reading code                           |
+| Dynamic limit integration        | MOD: `build-provider-max-input-tokens.mjs`                                                                                             | 3-layer merge: static seed → discovered cache → prefix defaults                                |
+| Persistent discovery on 413      | MOD: `record-context-error.mjs`                                                                                                        | `saveDiscoveredPerRequestLimit()` + `baseMaxTokens` update when 413 reports limit              |
+| Cache reset on /v1/stats/reset   | MOD: `server.mjs`                                                                                                                      | Discovered limits cache cleared alongside probe/health caches                                  |
+| Permanent diagnostics            | MOD: `setup-process-handlers.mjs`, `server.mjs`                                                                                        | Removed TODO markers, kept SYMPHONY_DEBUG guards as production feature                         |
+| Module exports                   | MOD: `symphony-bridge-truncation/index.mjs`                                                                                            | Exported new modules                                                                           |
 
 ### Codex CLI Tests Performed (Sweep #3)
 
-| Test | Command | Result | Notes |
-|---|---|---|---|
-| File read | `codex exec "Read package.json"` | ✅ | Tool execution works with dynamic limits |
-| Multi-tool (code_search+read) | `codex exec "Find selectProvider and summarize"` | ✅ | Sequential tool calls work |
-| Provider route: symphony/groq | `codex -c model='"symphony/groq"' exec "Read debug.md"` | ✅ | Groq route handles tools with prefix caps |
-| File write + verify | `codex exec "Write /tmp/test.txt and read it back"` | ✅ | Write + read round-trip works |
-| Provider route: symphony/cerebras | `codex -c model='"symphony/cerebras"' exec "2+2?"` | ✅ | Cerebras route works with caps |
-| 3 concurrent requests | Three `codex exec` in parallel | ✅ | All succeed independently |
-| Read dynamic limit code | `codex exec "Read build-provider-max-input-tokens.mjs"` | ✅ | Larger context handled correctly |
+| Test                              | Command                                                 | Result | Notes                                     |
+| --------------------------------- | ------------------------------------------------------- | ------ | ----------------------------------------- |
+| File read                         | `codex exec "Read package.json"`                        | ✅     | Tool execution works with dynamic limits  |
+| Multi-tool (code_search+read)     | `codex exec "Find selectProvider and summarize"`        | ✅     | Sequential tool calls work                |
+| Provider route: symphony/groq     | `codex -c model='"symphony/groq"' exec "Read debug.md"` | ✅     | Groq route handles tools with prefix caps |
+| File write + verify               | `codex exec "Write /tmp/test.txt and read it back"`     | ✅     | Write + read round-trip works             |
+| Provider route: symphony/cerebras | `codex -c model='"symphony/cerebras"' exec "2+2?"`      | ✅     | Cerebras route works with caps            |
+| 3 concurrent requests             | Three `codex exec` in parallel                          | ✅     | All succeed independently                 |
+| Read dynamic limit code           | `codex exec "Read build-provider-max-input-tokens.mjs"` | ✅     | Larger context handled correctly          |
 
 ### Bridge Metrics (After All Fixes)
 
-| Metric | Sweep #1 | Sweep #2 | Sweep #3 |
-|---|---|---|---|
-| Error rate | 60% | 0% | 0% |
-| Fallback rate | 60% | 0% | 0% |
-| Avg response time | 14,674ms | 2,560ms | 3,183ms |
-| 413 errors | 3 | 0 | 0 |
-| Tests passed | 2/5 | 8/8 | 7/7 |
+| Metric            | Sweep #1 | Sweep #2 | Sweep #3 |
+| ----------------- | -------- | -------- | -------- |
+| Error rate        | 60%      | 0%       | 0%       |
+| Fallback rate     | 60%      | 0%       | 0%       |
+| Avg response time | 14,674ms | 2,560ms  | 3,183ms  |
+| 413 errors        | 3        | 0        | 0        |
+| Tests passed      | 2/5      | 8/8      | 7/7      |
 
 ### Startup Cap Logging Output
 
@@ -132,17 +132,18 @@ Selected provider → AI SDK (streamText/generateText) → tool execution in mai
 
 ### Provider Prefix Defaults
 
-| Prefix | Default Limit | Rationale |
-|---|---|---|
-| `groq-` | 12,000 | Groq free-tier: 6K-12K per model |
-| `cerebras-` | 7,000 | Cerebras free-tier: ~7K per model |
-| `github-models-` | 8,000 | GitHub Models free-tier: ~8K |
-| `sambanova-` | 16,000 | SambaNova: moderate free-tier |
-| `huggingface-` | 8,000 | HuggingFace: conservative default |
+| Prefix           | Default Limit | Rationale                         |
+| ---------------- | ------------- | --------------------------------- |
+| `groq-`          | 12,000        | Groq free-tier: 6K-12K per model  |
+| `cerebras-`      | 7,000         | Cerebras free-tier: ~7K per model |
+| `github-models-` | 8,000         | GitHub Models free-tier: ~8K      |
+| `sambanova-`     | 16,000        | SambaNova: moderate free-tier     |
+| `huggingface-`   | 8,000         | HuggingFace: conservative default |
 
 ### Startup Visibility
 
 `logStartupContextCaps()` runs after provider probes at bridge startup and logs:
+
 - 📖 Static seed caps (from `STATIC_PER_REQUEST_LIMITS`)
 - 🔧 Dynamically discovered caps (from cache, with age)
 - 🏷️ Prefix-default caps (from `PROVIDER_PREFIX_DEFAULTS`)
@@ -180,20 +181,21 @@ The codex bridge had 3 `startedAt is not defined` errors in bridge metrics (from
 **Root cause:** `buildDynamicCatalogLimits()` only uses `contextLength` from provider `/v1/models` APIs to calculate input budgets. Groq free-tier has 131K context window but enforces 6K-12K per-request TPM limits. The bridge calculated 78K input budget (60% of 131K) and sent oversized requests that got 413'd.
 
 **Fix evolution:**
+
 - Sweep #2: Static `STATIC_PER_REQUEST_LIMITS` table caps budgets → 0% fallback
 - Sweep #3: Made fully dynamic — 413 errors persist limits to cache, prefix defaults cover new models
 
 **Known limits:**
 
-| Provider | Context Window | Per-Request Limit |
-|---|---|---|
-| groq-llama-3-1-8b-instant | 131K | 6,000 |
-| groq-llama-3-3-70b-versatile | 131K | 12,000 |
-| groq-openai-gpt-oss-120b | 131K | 12,000 |
-| groq-openai-gpt-oss-20b | 131K | 12,000 |
-| groq-qwen-qwen3-32b | 131K | 12,000 |
-| cerebras-llama3-1-8b | 8K | 7,000 |
-| github-models-llama-4-maverick | 1M | 8,000 |
+| Provider                       | Context Window | Per-Request Limit |
+| ------------------------------ | -------------- | ----------------- |
+| groq-llama-3-1-8b-instant      | 131K           | 6,000             |
+| groq-llama-3-3-70b-versatile   | 131K           | 12,000            |
+| groq-openai-gpt-oss-120b       | 131K           | 12,000            |
+| groq-openai-gpt-oss-20b        | 131K           | 12,000            |
+| groq-qwen-qwen3-32b            | 131K           | 12,000            |
+| cerebras-llama3-1-8b           | 8K             | 7,000             |
+| github-models-llama-4-maverick | 1M             | 8,000             |
 
 ---
 
@@ -261,6 +263,88 @@ When testing the Responses API directly with `tools` parameter and `input_text` 
 
 ---
 
+### 🔴 Bug #10: `/tmp/jiti/` missing after reboot → Discord text pipeline crashes — FIXED
+
+**Discovered:** 2026-04-18 (sweep #4)
+**Severity:** Critical — ALL Discord text channel messages silently dropped
+**Status:** ✅ Fixed
+
+**Root cause:** The jiti compiler cache directory `/tmp/jiti/` lives on tmpfs and is lost on reboot. When missing, jiti ENOENT errors crash the Discord debounce flush pipeline (`monitor-preflight-audio.*.mjs`), preventing ALL text channel messages from being processed. Voice channel (speakText) bypassed this pipeline entirely and continued working, making the bug hard to notice.
+
+**Symptoms:**
+- Bot receives Discord text messages but never replies in the text channel
+- Voice channel (speakText/TTS) works fine
+- `journalctl` shows: `[discord] debounce flush failed — ENOENT: no such file or directory, open '/tmp/jiti/monitor-preflight-audio.56619229.mjs'`
+- ALL debounce flushes fail (no successful flushes in logs)
+
+**Fix:**
+1. Added `ExecStartPre=/usr/bin/mkdir -p /tmp/jiti` to `openclaw-gateway.service` (ensures dir exists before gateway starts)
+2. Added `/etc/tmpfiles.d/jiti.conf` with rule `d /tmp/jiti 0775 - - -` for reboot persistence
+3. Committed as `d65c6fee4` (fix(harness): ensure /tmp/jiti/ exists before gateway starts)
+
+---
+
+### 🔴 Bug #11: TTS `auto: "always"` suppresses text channel replies — FIXED
+
+**Discovered:** 2026-04-18 (sweep #4)
+**Severity:** Critical — Discord bot replies only via voice, never in text channel
+**Status:** ✅ Fixed
+
+**Root cause:** `channels.discord.voice.tts.auto = "always"` in `~/.openclaw/openclaw.json` causes OpenClaw to create `ttsOnlyPayload` (audio-only, no text) for all replies. This means every bot response is delivered as voice audio only, with no text channel message. The "always" setting applies TTS to both inbound voice and inbound text, suppressing the text reply path entirely.
+
+**Fix:** Changed `tts.auto` from `"always"` to `"inbound"` in `~/.openclaw/openclaw.json`. TTS now only triggers for inbound voice audio, and text channel replies are always sent.
+
+---
+
+### 🟡 Bug #12: Stale Node.js module cache — preferenceBoost=0 in running bridges
+
+**Discovered:** 2026-04-18 (sweep #4)
+**Severity:** Medium — `make show-metrics` shows incorrect rankings
+**Status:** ⚠️ Fix available, pending restart (`systemctl --user restart anqr-symphony-executor@{1..8}.service`)
+
+**Root cause:** The 8 worktree bridge processes were started before the preference boost commit (`887635b59`, Apr 18 00:19). Node.js caches loaded modules in memory, so the running bridges still use the old `get-provider-preference-boost.mjs` that returns `0` for all providers. On disk the code returns `0.35` for paid-tier, but in-memory the old code is used.
+
+**Symptoms:**
+- `make show-metrics` shows `codebuff-paid` at rank #15 with `preferenceBoost=0`
+- `[selectProvider]` log shows `codebuff-paid` at rank #1 (from a process with updated code)
+- `preferenceBoost` should be `0.35` for paid-tier providers but shows `0` in `/v1/stats`
+
+**Fix:** Restart worktree executor services to reload updated module code.
+
+---
+
+### 🟡 Bug #13: `make show-metrics` queries only wt1 — per-worktree provider count variance
+
+**Discovered:** 2026-04-18 (sweep #4)
+**Severity:** Medium — operators see inconsistent metrics depending on which worktree responds
+**Status:** ⚠️ Known
+
+**Root cause:** `make show-metrics` calls `python3 harness/show-metrics.py` which fetches `/v1/stats` from a single worktree (default wt1, port 4321). Each worktree runs its own independent probe cycle at different times, discovering different sets of available providers.
+
+**Observed variance:**
+
+| Worktree | Ranked Providers |
+|----------|-----------------|
+| wt1      | 651             |
+| wt5      | 636             |
+| wt6      | 656             |
+| wt7      | 654             |
+| wt8      | 615             |
+
+This is expected — providers come online/offline between probe cycles — but `make show-metrics` only shows one worktree's view.
+
+---
+
+### 🟢 Issue #14: Discord Message Content Intent is "limited" — works under 100 servers
+
+**Discovered:** 2026-04-18 (sweep #4)
+**Severity:** Low — current bot operates under the threshold
+**Status:** 🟢 Noted
+
+**Root cause:** Discord's Message Content Intent is classified as "limited" for the bot. This means the bot can read message content only in guilds where it has been explicitly granted the intent. The intent works correctly for servers under 100 members, but would break for larger servers without Discord approval.
+
+---
+
 ## Diagnostic Code
 
 Production diagnostics (permanent, not temporary):
@@ -277,15 +361,15 @@ Production diagnostics (permanent, not temporary):
 
 ### Parameters
 
-| Parameter | Value | Purpose |
-|---|---|---|
-| CONTEXT_INITIAL_BUFFER | 0.8 | Start at 80% of base budget |
-| CONTEXT_SHRINK_FACTOR | 0.75 | Shrink by 25% on generic context error |
-| CONTEXT_SHRINK_BUFFER | 0.9 | Additional 10% buffer when reported limit known |
-| CONTEXT_EXPAND_FACTOR | 1.05 | Grow by 5% after consecutive successes |
-| CONTEXT_EXPAND_THRESHOLD | 3 | Need 3 consecutive successes to expand |
-| TPM_PROACTIVE_THRESHOLD | 0.85 | Reduce context if TPM > 85% of limit |
-| MIN_MESSAGE_BUDGET_TOKENS | 1,000 | Absolute floor for context budget |
+| Parameter                 | Value | Purpose                                         |
+| ------------------------- | ----- | ----------------------------------------------- |
+| CONTEXT_INITIAL_BUFFER    | 0.8   | Start at 80% of base budget                     |
+| CONTEXT_SHRINK_FACTOR     | 0.75  | Shrink by 25% on generic context error          |
+| CONTEXT_SHRINK_BUFFER     | 0.9   | Additional 10% buffer when reported limit known |
+| CONTEXT_EXPAND_FACTOR     | 1.05  | Grow by 5% after consecutive successes          |
+| CONTEXT_EXPAND_THRESHOLD  | 3     | Need 3 consecutive successes to expand          |
+| TPM_PROACTIVE_THRESHOLD   | 0.85  | Reduce context if TPM > 85% of limit            |
+| MIN_MESSAGE_BUDGET_TOKENS | 1,000 | Absolute floor for context budget               |
 
 ### Flow
 
@@ -303,8 +387,9 @@ Production diagnostics (permanent, not temporary):
 
 ## Changelog
 
-| Date | Change |
-|---|---|
-| 2026-04-17 | Created — initial state capture, identified Bug #1-5 |
-| 2026-04-17 | Sweep #2 — exhaustive Codex testing, fixed Bug #6 (per-request limits), Bug #7 (generic providers), added diagnostic tracing, verified all tool execution paths work |
+| Date       | Change                                                                                                                                                                                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-17 | Created — initial state capture, identified Bug #1-5                                                                                                                                                                                                           |
+| 2026-04-17 | Sweep #2 — exhaustive Codex testing, fixed Bug #6 (per-request limits), Bug #7 (generic providers), added diagnostic tracing, verified all tool execution paths work                                                                                           |
 | 2026-04-17 | Sweep #3 — made per-request limits fully dynamic (413 → persist → proactive), added provider prefix defaults for new models, added startup cap logging, made diagnostics permanent, cleared caches on /v1/stats/reset, all 7 Codex tests pass with 0% fallback |
+| 2026-04-18 | Sweep #4 — fixed Discord bot not replying in text channel (Bug #10: jiti ENOENT, Bug #11: TTS auto=always suppresses text), emptied static blocklists for dynamic provider exclusion (commit `18470fa08`), documented stale module cache (Bug #12), per-worktree probe count variance (Bug #13), Discord intent limitation (Issue #14) |

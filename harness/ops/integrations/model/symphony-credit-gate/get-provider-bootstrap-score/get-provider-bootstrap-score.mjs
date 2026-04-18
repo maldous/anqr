@@ -11,10 +11,6 @@ export function getProviderBootstrapScore(providerName, stats) {
   const contextBoost = computeContextBootstrapBoost(contextLength);
   // NOTE: getProviderPreferenceBoost is NOT added here to avoid double-counting
   // — it's applied in getEffectiveProviderScoreWithBreakdown instead
-  const bootstrap =
-    0.45 +
-    probeRate * 0.2 +
-    recency * 0.15 +
-    contextBoost;
+  const bootstrap = 0.45 + probeRate * 0.2 + recency * 0.15 + contextBoost;
   return Math.round(Math.min(0.95, bootstrap) * 100) / 100;
 }

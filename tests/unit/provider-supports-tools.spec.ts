@@ -15,19 +15,16 @@ describe("providerSupportsTools", () => {
   let toolCapableProviders: Set<string>;
 
   beforeEach(async () => {
-    const mod = await import(
-      "../../harness/ops/integrations/model/symphony-openai-bridge/provider-supports-tools.mjs"
-    );
+    const mod =
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge/provider-supports-tools.mjs");
     providerSupportsTools = mod.providerSupportsTools;
 
-    const nonToolMod = await import(
-      "../../harness/ops/integrations/model/symphony-openai-bridge/non-tool-capable-providers.mjs"
-    );
+    const nonToolMod =
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge/non-tool-capable-providers.mjs");
     nonToolCapableProviders = nonToolMod.nonToolCapableProviders;
 
-    const toolMod = await import(
-      "../../harness/ops/integrations/model/symphony-openai-bridge/tool-capable-providers.mjs"
-    );
+    const toolMod =
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge/tool-capable-providers.mjs");
     toolCapableProviders = toolMod.toolCapableProviders;
   });
 
@@ -74,9 +71,8 @@ describe("formatElapsed", () => {
   let formatElapsed: (ms: number) => string;
 
   beforeEach(async () => {
-    const mod = await import(
-      "../../harness/ops/integrations/model/symphony-openai-bridge/format-elapsed.mjs"
-    );
+    const mod =
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge/format-elapsed.mjs");
     formatElapsed = mod.formatElapsed;
   });
 
@@ -113,20 +109,13 @@ describe("getEffectiveProviderScoreWithBreakdown", () => {
   ) => { effective: number; breakdown: Record<string, number> };
 
   beforeEach(async () => {
-    const mod = await import(
-      "../../harness/ops/integrations/model/symphony-credit-gate/get-effective-provider-score-with-breakdown.mjs"
-    );
+    const mod =
+      await import("../../harness/ops/integrations/model/symphony-credit-gate/get-effective-provider-score-with-breakdown.mjs");
     getEffectiveProviderScoreWithBreakdown = mod.getEffectiveProviderScoreWithBreakdown;
   });
 
   it("returns effective score and breakdown components", () => {
-    const result = getEffectiveProviderScoreWithBreakdown(
-      "test-provider",
-      0.8,
-      {},
-      null,
-      null,
-    );
+    const result = getEffectiveProviderScoreWithBreakdown("test-provider", 0.8, {}, null, null);
     expect(result.effective).toBeGreaterThanOrEqual(0);
     expect(result.breakdown).toBeDefined();
     expect(typeof result.breakdown.baseScore).toBe("number");
@@ -138,13 +127,7 @@ describe("getEffectiveProviderScoreWithBreakdown", () => {
   });
 
   it("breakdown components sum correctly to effective score", () => {
-    const result = getEffectiveProviderScoreWithBreakdown(
-      "test-provider",
-      0.5,
-      {},
-      null,
-      null,
-    );
+    const result = getEffectiveProviderScoreWithBreakdown("test-provider", 0.5, {}, null, null);
     const { baseScore, preferenceBoost, recentSuccessBoost, healthPenalty, cachePenalty } =
       result.breakdown;
     const expected = Math.max(

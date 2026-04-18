@@ -25,12 +25,12 @@ The `evidence_pending → completed` transition requires validated evidence at t
 
 ### Four completeness levels
 
-| Level | Description | Use |
-|-------|-------------|-----|
-| `minimal` | correlationId + execution result + integration result | Operator-override threshold |
-| `standard` | minimal + ingress + push + validation (if applicable) | Normal closure threshold |
-| `full` | standard + providerRouting + providerSelection | Incident reconstruction |
-| `enriched` | full + contextReduction + safetyNet (conditional) | Advisory only |
+| Level      | Description                                           | Use                         |
+| ---------- | ----------------------------------------------------- | --------------------------- |
+| `minimal`  | correlationId + execution result + integration result | Operator-override threshold |
+| `standard` | minimal + ingress + push + validation (if applicable) | Normal closure threshold    |
+| `full`     | standard + providerRouting + providerSelection        | Incident reconstruction     |
+| `enriched` | full + contextReduction + safetyNet (conditional)     | Advisory only               |
 
 ### Closure gate location
 
@@ -54,6 +54,7 @@ The override is permanent and auditable — the evidence record retains the over
 ### Evidence durability (prerequisite)
 
 G Phase 1 added:
+
 - **File-level advisory locking** (`withEvidenceLock`) using O_EXCL + PID + stale-detection
 - **Three-state diagnostics** (`loadEvidenceRecordWithDiagnostics`) distinguishing ok/missing/corrupted
 - **Idempotent record creation** (`ensureEvidenceRecord`) for paths that previously lacked `createEvidenceRecord`
@@ -61,6 +62,7 @@ G Phase 1 added:
 ### A3 path fix
 
 `executeLinearIssueRequest` now:
+
 - Generates a `correlationId` via `randomUUID()` if not provided in headers
 - Calls `ensureEvidenceRecord` before spawning the runner child process
 - Always sets `ANQR_CORRELATION_ID` environment variable

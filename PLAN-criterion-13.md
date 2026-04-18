@@ -13,6 +13,7 @@
 Create a single comprehensive e2e test file (`tests/e2e/live-lifecycle-demo.spec.ts`) that serves as both the automated demonstration and the evidence package. Each of the 6 required scenarios gets its own `describe` block with fine-grained assertions against evidence artifacts on disk, state store records, and service HTTP responses.
 
 **Design philosophy:**
+
 - **Evidence-first verification** — every scenario asserts on durable evidence records written to disk, not just HTTP status codes. This proves the correlation-ID and evidence-recording layers work end-to-end.
 - **Observational over injected** — observe what the live system does rather than mocking layers. Use state manipulation only when a scenario is impossible to trigger naturally (restart, config drift).
 - **Cleanup after each scenario** — every test creates identifiable artifacts (prefixed `E2E-DEMO-`) and cleans them up in `afterAll`.
@@ -21,6 +22,7 @@ Create a single comprehensive e2e test file (`tests/e2e/live-lifecycle-demo.spec
 **Test framework: Vitest** (not Playwright, not raw scripts).
 
 Rationale:
+
 - All existing service-to-service e2e tests use Vitest + `e2e-helpers.ts`. Consistency matters.
 - Vitest's `describe/it/expect` gives structured assertion output that directly serves as the evidence report.
 - Process control (`systemctl`, file manipulation) is handled via `execSync` from within Vitest tests.
@@ -31,6 +33,7 @@ Rationale:
 > **Last updated: 2026-04-16 21:41 AEST.** All core ANQR services are now **active and running**. The live system has passed the pre-demo systemd gate. Harness-doctor `--enforce` passed with exit 0.
 >
 > **Bring-up history:**
+>
 > - 2026-04-16 21:06 — Initial assessment: all services inactive/dead, 2 failed units (nightly, rag-rebuild)
 > - 2026-04-16 21:06 — Fixed `anqr-nightly.service` (sonar auto-skip when `--skip-tests` + no coverage) and `anqr-rag-rebuild.service` (graceful Linear index skip). Timers restarted.
 > - 2026-04-16 21:15 — Started `anqr-linear-export.timer`, triggered immediate export (38 issues)
@@ -39,54 +42,54 @@ Rationale:
 
 ### Core authoritative scheduling path — ✅ ALL ACTIVE
 
-| Service | Port | State | Notes |
-|---------|------|-------|-------|
-| `anqr-symphony-scheduler.service` | — | ✅ **active (running)** | Enabled in `default.target.wants`. Immediately dispatched ANQ-1552 on startup. |
-| `anqr-linear-webhook.service` | 18791 | ✅ **active (running)** | Listening on 127.0.0.1:18791 |
-| `anqr-symphony-router.service` | 4319 | ✅ **active (running)** | Routing to all 8 worktrees |
-| `anqr-symphony-executor@{1..4}.service` | 4321-4324 | ✅ **active (running)** | Linear pool — all 4 active |
-| `anqr-symphony-executor@{5..8}.service` | 4325-4328 | ✅ **active (running)** | Discord pool — all 4 active |
-| `anqr-symphony-integrator.service` | — | ✅ **active (running)** | Branch → main promotion |
+| Service                                 | Port      | State                   | Notes                                                                          |
+| --------------------------------------- | --------- | ----------------------- | ------------------------------------------------------------------------------ |
+| `anqr-symphony-scheduler.service`       | —         | ✅ **active (running)** | Enabled in `default.target.wants`. Immediately dispatched ANQ-1552 on startup. |
+| `anqr-linear-webhook.service`           | 18791     | ✅ **active (running)** | Listening on 127.0.0.1:18791                                                   |
+| `anqr-symphony-router.service`          | 4319      | ✅ **active (running)** | Routing to all 8 worktrees                                                     |
+| `anqr-symphony-executor@{1..4}.service` | 4321-4324 | ✅ **active (running)** | Linear pool — all 4 active                                                     |
+| `anqr-symphony-executor@{5..8}.service` | 4325-4328 | ✅ **active (running)** | Discord pool — all 4 active                                                    |
+| `anqr-symphony-integrator.service`      | —         | ✅ **active (running)** | Branch → main promotion                                                        |
 
 ### Safety / recovery / health path — ✅ ALL ACTIVE
 
-| Service | State | Notes |
-|---------|-------|-------|
+| Service                                   | State                   | Notes                      |
+| ----------------------------------------- | ----------------------- | -------------------------- |
 | `anqr-symphony-worktree-recovery.service` | ✅ **active (running)** | Quarantine + repair daemon |
-| `anqr-watchdog.service` | ✅ **active (running)** | Service health monitor |
-| `anqr-worktree-health.timer` | ✅ **active** | Periodic health checks |
+| `anqr-watchdog.service`                   | ✅ **active (running)** | Service health monitor     |
+| `anqr-worktree-health.timer`              | ✅ **active**           | Periodic health checks     |
 
 ### Discord / OpenClaw path — ✅ ALL ACTIVE
 
-| Service | Port | State | Notes |
-|---------|------|-------|-------|
-| `anqr-discord-router.service` | 18790 | ✅ **active (running)** | Listening on 127.0.0.1:18790 |
-| `openclaw-gateway.service` | 18789 | ✅ **active (running)** | OpenClaw Gateway v2026.4.1 with LCM plugin |
+| Service                       | Port  | State                   | Notes                                      |
+| ----------------------------- | ----- | ----------------------- | ------------------------------------------ |
+| `anqr-discord-router.service` | 18790 | ✅ **active (running)** | Listening on 127.0.0.1:18790               |
+| `openclaw-gateway.service`    | 18789 | ✅ **active (running)** | OpenClaw Gateway v2026.4.1 with LCM plugin |
 
 ### Timers — ✅ ALL ACTIVE
 
-| Timer | State | Schedule |
-|-------|-------|----------|
-| `anqr-nightly.timer` | ✅ active | 02:00 daily |
-| `anqr-linear-export.timer` | ✅ active | 02:30 daily |
-| `anqr-rag-rebuild.timer` | ✅ active | 03:00 daily |
-| `anqr-worktree-health.timer` | ✅ active | periodic |
+| Timer                        | State     | Schedule    |
+| ---------------------------- | --------- | ----------- |
+| `anqr-nightly.timer`         | ✅ active | 02:00 daily |
+| `anqr-linear-export.timer`   | ✅ active | 02:30 daily |
+| `anqr-rag-rebuild.timer`     | ✅ active | 03:00 daily |
+| `anqr-worktree-health.timer` | ✅ active | periodic    |
 
 ### Support services — ✅ ALL ACTIVE
 
-| Service | State | Notes |
-|---------|-------|-------|
-| `litellm-proxy.service` | ✅ **active (running)** | Ollama tool-call translator |
-| `model-injector-proxy.service` | ✅ **active (running)** | Codex CLI model fix |
+| Service                        | State                   | Notes                       |
+| ------------------------------ | ----------------------- | --------------------------- |
+| `litellm-proxy.service`        | ✅ **active (running)** | Ollama tool-call translator |
+| `model-injector-proxy.service` | ✅ **active (running)** | Codex CLI model fix         |
 
 ### Supplementary services (not required for demo)
 
-| Service | State | Notes |
-|---------|-------|-------|
+| Service                          | State    | Notes               |
+| -------------------------------- | -------- | ------------------- |
 | `anqr-linear-reconciler.service` | inactive | Available on demand |
-| `anqr-context7-mcp.service` | inactive | Available on demand |
-| `anqr-symphony-codex.service` | inactive | Available on demand |
-| `anqr-email-ingest.timer` | inactive | Available on demand |
+| `anqr-context7-mcp.service`      | inactive | Available on demand |
+| `anqr-symphony-codex.service`    | inactive | Available on demand |
+| `anqr-email-ingest.timer`        | inactive | Available on demand |
 
 ### Failed units — ✅ ZERO
 
@@ -196,6 +199,7 @@ A `beforeAll` block probes all service health endpoints and runs the pre-demo sy
 **Complexity: 🔴 High** — Requires a full agent execution cycle that produces real file changes.
 
 **What it proves:**
+
 - Authoritative scheduling owns claim and dispatch (A)
 - Durable state tracks execution through every phase (B)
 - Evidence is recorded at every lifecycle stage (G)
@@ -205,6 +209,7 @@ A `beforeAll` block probes all service health endpoints and runs the pre-demo sy
 **Strategy:** Inject a test issue via the Linear webhook endpoint. The issue title includes a machine-parseable instruction (e.g., `E2E-DEMO: touch tests/scenarios/e2e-canary-{timestamp}.txt`). Wait for the full lifecycle by polling the evidence record and finalization state.
 
 **Steps:**
+
 1. `sendSignedWebhook` with a Todo issue (`E2E-DEMO-LIFE-{ts}`) — use a trivially simple instruction that creates a file in a `.gitignore`-d location or modifies a test-only file
 2. Poll `findEvidenceByIssue` for the evidence record to appear (proves ingress)
 3. Poll for `evidence.routing` to populate (proves scheduler dispatched)
@@ -218,6 +223,7 @@ A `beforeAll` block probes all service health endpoints and runs the pre-demo sy
 11. **Cleanup:** If a canary file was committed, create a follow-up revert commit to remove test artifacts from main
 
 **Key assertions:**
+
 ```typescript
 expect(evidence.ingress.source).toBe("linear-webhook");
 expect(evidence.routing).not.toBeNull();
@@ -238,6 +244,7 @@ expect(evidence.integration.integratedMainSha).toBeTruthy();
 **Complexity: 🟡 Medium** — Needs to observe provider selection and evidence recording.
 
 **What it proves:**
+
 - Provider routing decisions are logged with structured evidence (F)
 - Selection rationale includes why a provider was chosen over alternatives (F5)
 - Evidence survives through the full request lifecycle (G)
@@ -245,6 +252,7 @@ expect(evidence.integration.integratedMainSha).toBeTruthy();
 **Strategy:** Send a Discord chat completion request through the Discord router (port 18790), which proxies to a worktree executor bridge. The bridge's `invoke-with-fallback.mjs` automatically tries providers in order. Verify the evidence record includes `providerSelection` and `providerRouting` with the selection rationale.
 
 **Steps:**
+
 1. Record `beforeIso = new Date().toISOString()`
 2. Send a chat completion via Discord router `/v1/chat/completions`
 3. Find the evidence record by source `"discord-router"` after `beforeIso`
@@ -253,6 +261,7 @@ expect(evidence.integration.integratedMainSha).toBeTruthy();
 6. If fallback occurred, verify `fallbackChain` array is populated
 
 **Key assertions:**
+
 ```typescript
 expect(evidence.providerSelection).not.toBeNull();
 expect(evidence.providerSelection.providerName).toBeTruthy();
@@ -273,6 +282,7 @@ expect(evidence.providerRouting.selectionRationale.length).toBeGreaterThan(0);
 **Complexity: 🟡 Medium** — Needs state manipulation + recovery daemon observation.
 
 **What it proves:**
+
 - Recovery cannot commit, push, or mutate main (C)
 - Quarantine isolates unhealthy worktrees from the pool (B)
 - Recovery evidence is generated for quarantine actions (C)
@@ -280,6 +290,7 @@ expect(evidence.providerRouting.selectionRationale.length).toBeGreaterThan(0);
 **Strategy:** Use the symphony-state module to set a worktree to `dirty_owned` with high `repairAttempts` (exceeding threshold), then wait for the recovery daemon's next cycle to quarantine it. Verify NO git mutation by comparing HEAD SHA before and after.
 
 **Steps:**
+
 1. Pick a currently-available worktree (query router health endpoint)
 2. Record its current git HEAD SHA (`git rev-parse HEAD` in the worktree dir)
 3. Record its current `git log --oneline -1` for comparison
@@ -292,6 +303,7 @@ expect(evidence.providerRouting.selectionRationale.length).toBeGreaterThan(0);
 10. **Cleanup:** Reset worktree to `available`, clear quarantine record
 
 **Key assertions:**
+
 ```typescript
 const beforeSha = execSync(`git -C ${wtPath} rev-parse HEAD`).toString().trim();
 // ... wait for recovery daemon ...
@@ -311,6 +323,7 @@ expect(getWorktreeState(wtId).state).toBe("quarantined");
 **Complexity: 🔴 High** — Requires stopping and restarting a live service.
 
 **What it proves:**
+
 - Scheduling decisions survive process restart (A, B criterion #3)
 - Durable state is file-backed and persists across restarts (B)
 - Evidence records survive process restart (G)
@@ -318,6 +331,7 @@ expect(getWorktreeState(wtId).state).toBe("quarantined");
 **Strategy:** Set an issue's finalization state to `evidence_pending` with a known correlation ID. Write a test evidence record to disk. Stop an executor service, verify state persists, restart it, and verify state survived.
 
 **Steps:**
+
 1. Create a test finalization record at `evidence_pending` state with known correlation ID
 2. Write a test evidence record to disk via `createEvidenceRecord`
 3. Verify both exist via state API and filesystem
@@ -333,6 +347,7 @@ expect(getWorktreeState(wtId).state).toBe("quarantined");
 13. **Cleanup:** Remove test records, ensure executor is healthy
 
 **Key assertions:**
+
 ```typescript
 // Before restart
 expect(getFinalizationState(testIssue).state).toBe("evidence_pending");
@@ -354,6 +369,7 @@ expect(findEvidenceByIssue(testIssue).correlationId).toBe(testCorrelationId);
 **Complexity: 🟡 Medium** — Needs temporary config corruption and restoration.
 
 **What it proves:**
+
 - Config drift is detected before unsafe operation (E, criterion #6)
 - Execution is blocked when preflight fails (E)
 - Config preflight is wired as a blocking gate in the runner (E)
@@ -361,6 +377,7 @@ expect(findEvidenceByIssue(testIssue).correlationId).toBe(testCorrelationId);
 **Strategy:** Temporarily corrupt a required env var in the config preflight's checked path. Clear the preflight cache. Call `enforceConfigPreflight()` directly. Verify it fails and blocks execution. Restore the env var. Verify preflight passes again.
 
 **Steps:**
+
 1. Read the current env file content (`~/.config/symphony/anqr.env`) into memory as backup
 2. Clear the config preflight cache (`setGlobalValue("configPreflight.checkedAt", null)`)
 3. Temporarily modify env file — comment out a required key (e.g., prepend `#DISABLED_` to `GROQ_TOKEN=`)
@@ -373,6 +390,7 @@ expect(findEvidenceByIssue(testIssue).correlationId).toBe(testCorrelationId);
 **⚠️ Blast radius note:** `~/.config/symphony/anqr.env` is shared by all 8 executors and both routers. If any executor runs a config preflight during the corruption window (typically seconds), it will fail its current issue. **Recommendation:** Run this scenario only when the system is quiesced (no active executions), or consider calling `enforceConfigPreflight()` with a test-specific env path override if the function supports it.
 
 **Key assertions:**
+
 ```typescript
 // With corrupted config
 await expect(enforceConfigPreflight()).rejects.toThrow();
@@ -391,12 +409,14 @@ await expect(enforceConfigPreflight()).resolves.not.toThrow();
 **Complexity: 🟢 Low** — Extends existing `linear-flow.spec.ts` pattern.
 
 **What it proves:**
+
 - Duplicate webhook deliveries are rejected (B, criterion #3)
 - Scheduler-level dedup prevents double execution of the same issue (A)
 
 **Strategy:** Send two webhook triggers with the same delivery ID. Verify the second is rejected as `"duplicate"`. Also verify scheduler-level dedup: send two triggers for the same issue identifier with different delivery IDs within the dedup window and verify only one execution is dispatched.
 
 **Steps:**
+
 1. Send signed webhook with unique delivery ID `e2e-demo-dup-{ts}`
 2. Assert first response `status: "processed"`
 3. Send second webhook with **same** delivery ID
@@ -407,6 +427,7 @@ await expect(enforceConfigPreflight()).resolves.not.toThrow();
 8. Verify at most one evidence record exists for that issue (scheduler dedup)
 
 **Key assertions:**
+
 ```typescript
 expect(firstBody.status).toBe("processed");
 expect(secondBody.status).toBe("duplicate");
@@ -425,19 +446,19 @@ expect(evidence).not.toBeNull();
 
 ### New files
 
-| File | Purpose |
-|------|---------|
+| File                                    | Purpose                       |
+| --------------------------------------- | ----------------------------- |
 | `tests/e2e/live-lifecycle-demo.spec.ts` | The 6 demonstration scenarios |
 
 ### Modified files
 
-| File | Change |
-|------|---------|
+| File                       | Change                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------- |
 | `tests/e2e/e2e-helpers.ts` | Add `pollForEvidence`, `pollForEvidenceField`, `findAllEvidenceByIssue` helpers |
-| `vitest.e2e.config.ts` | Add `live-lifecycle-demo.spec.ts` to `include` array |
-| `PLAN-workstream-G.md` | Check off #13, reference this plan document |
-| `PLAN-deliverables.md` | Mark #13 ✅ |
-| `PLAN.md` | Update metrics to 13/13 and 11/11 |
+| `vitest.e2e.config.ts`     | Add `live-lifecycle-demo.spec.ts` to `include` array                            |
+| `PLAN-workstream-G.md`     | Check off #13, reference this plan document                                     |
+| `PLAN-deliverables.md`     | Mark #13 ✅                                                                     |
+| `PLAN.md`                  | Update metrics to 13/13 and 11/11                                               |
 
 ### Helper functions needed in `e2e-helpers.ts`
 
@@ -482,25 +503,25 @@ Evidence collection run:
 
 ## Risk Summary
 
-| Scenario | Risk | Mitigation |
-|----------|------|-----------|
-| 1. Full lifecycle | Agent may fail non-deterministically | Accept partial completion; add fallback assertion path |
-| 2. Provider fallback | May not observe actual fallback | Verify evidence recording exists even without fallback |
-| 3. Recovery quarantine | Recovery daemon timing | Polling with generous timeout; health probe first |
-| 4. Restart-safe | Service downtime during test | Use least-busy executor (wt8); try/finally restore |
-| 5. Config drift | Corrupted config affects all services | try/finally with in-memory backup; quiesce system or keep corruption window < 1s |
-| 6. Duplicate trigger | Very low risk | Already proven pattern |
+| Scenario               | Risk                                  | Mitigation                                                                       |
+| ---------------------- | ------------------------------------- | -------------------------------------------------------------------------------- |
+| 1. Full lifecycle      | Agent may fail non-deterministically  | Accept partial completion; add fallback assertion path                           |
+| 2. Provider fallback   | May not observe actual fallback       | Verify evidence recording exists even without fallback                           |
+| 3. Recovery quarantine | Recovery daemon timing                | Polling with generous timeout; health probe first                                |
+| 4. Restart-safe        | Service downtime during test          | Use least-busy executor (wt8); try/finally restore                               |
+| 5. Config drift        | Corrupted config affects all services | try/finally with in-memory backup; quiesce system or keep corruption window < 1s |
+| 6. Duplicate trigger   | Very low risk                         | Already proven pattern                                                           |
 
 ## What Already Exists (reusable)
 
-| Existing Asset | Reusable For |
-|----------------|--------------|
-| `tests/e2e/e2e-helpers.ts` | Evidence reading, webhook signing, health checks |
-| `tests/e2e/linear-flow.spec.ts` | Pattern for Scenario 6 (duplicate delivery) and Scenario 1 (webhook pipeline) |
-| `tests/e2e/discord-flow.spec.ts` | Pattern for Scenario 2 (Discord router → evidence) |
-| `tests/e2e/integration-promotion.spec.ts` | Pattern for service health probing |
-| `tests/e2e/autonomy-simulation.spec.ts` | Pattern for state machine manipulation (Scenarios 3, 4) |
-| `vitest.e2e.config.ts` | Test runner configuration |
+| Existing Asset                            | Reusable For                                                                  |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `tests/e2e/e2e-helpers.ts`                | Evidence reading, webhook signing, health checks                              |
+| `tests/e2e/linear-flow.spec.ts`           | Pattern for Scenario 6 (duplicate delivery) and Scenario 1 (webhook pipeline) |
+| `tests/e2e/discord-flow.spec.ts`          | Pattern for Scenario 2 (Discord router → evidence)                            |
+| `tests/e2e/integration-promotion.spec.ts` | Pattern for service health probing                                            |
+| `tests/e2e/autonomy-simulation.spec.ts`   | Pattern for state machine manipulation (Scenarios 3, 4)                       |
+| `vitest.e2e.config.ts`                    | Test runner configuration                                                     |
 
 ## Relationship to Existing Tests
 
@@ -513,6 +534,7 @@ This test file does **not** duplicate existing e2e tests. Existing tests verify 
 ## Definition of Done
 
 Criterion #13 is satisfied when:
+
 1. All 6 scenarios pass in a single `vitest run` against the live system
 2. The verbose test output is saved as the evidence package
 3. Each scenario includes at least one assertion against a durable evidence artifact on disk

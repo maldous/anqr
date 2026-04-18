@@ -277,14 +277,16 @@ describe("remapRepoPathToBridgeRoot safety (source verification)", () => {
 // ---------------------------------------------------------------------------
 
 describe("validate-boundary-invariants (runtime)", () => {
-  let validateBoundaryInvariants: (opts?: Record<string, unknown>) => { valid: boolean; warnings: string[] };
+  let validateBoundaryInvariants: (opts?: Record<string, unknown>) => {
+    valid: boolean;
+    warnings: string[];
+  };
 
   // Import once — param overrides let us test all code paths
   // without manipulating env vars or mocking modules.
   it("imports and exports validateBoundaryInvariants", async () => {
-    const mod = await import(
-      "../../harness/ops/integrations/model/symphony-openai-bridge/validate-boundary-invariants.mjs"
-    );
+    const mod =
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge/validate-boundary-invariants.mjs");
     validateBoundaryInvariants = mod.validateBoundaryInvariants;
     expect(typeof validateBoundaryInvariants).toBe("function");
   });
@@ -460,12 +462,14 @@ describe("Router port isolation", () => {
 // ---------------------------------------------------------------------------
 
 describe("Startup environment validation (fail-closed runtime)", () => {
-  let validateStartupEnv: (opts?: Record<string, unknown>) => { valid: boolean; warnings: string[] };
+  let validateStartupEnv: (opts?: Record<string, unknown>) => {
+    valid: boolean;
+    warnings: string[];
+  };
 
   it("imports and exports validateStartupEnv", async () => {
-    const mod = await import(
-      "../../harness/ops/integrations/model/symphony-openai-bridge/validate-startup-env.mjs"
-    );
+    const mod =
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge/validate-startup-env.mjs");
     validateStartupEnv = mod.validateStartupEnv;
     expect(typeof validateStartupEnv).toBe("function");
   });
@@ -580,9 +584,8 @@ describe("assertBridgeMutationBoundary (runtime)", () => {
   let assertBridgeMutationBoundary: (resolvedPath: string, opts?: Record<string, unknown>) => void;
 
   it("imports and exports assertBridgeMutationBoundary", async () => {
-    const mod = await import(
-      "../../harness/ops/integrations/model/symphony-openai-bridge/assert-bridge-mutation-boundary.mjs"
-    );
+    const mod =
+      await import("../../harness/ops/integrations/model/symphony-openai-bridge/assert-bridge-mutation-boundary.mjs");
     assertBridgeMutationBoundary = mod.assertBridgeMutationBoundary;
     expect(typeof assertBridgeMutationBoundary).toBe("function");
   });
@@ -652,10 +655,7 @@ describe("assertBridgeMutationBoundary (runtime)", () => {
   it("all file-mutating tools import assertBridgeMutationBoundary", () => {
     for (const tool of ["write-file-tool.mjs", "str-replace-tool.mjs", "apply-patch-tool.mjs"]) {
       const source = fs.readFileSync(
-        path.resolve(
-          REPO_ROOT,
-          `harness/ops/integrations/model/symphony-openai-bridge/${tool}`,
-        ),
+        path.resolve(REPO_ROOT, `harness/ops/integrations/model/symphony-openai-bridge/${tool}`),
         "utf-8",
       );
       expect(source).toContain("import { assertBridgeMutationBoundary }");
@@ -678,10 +678,7 @@ describe("Service lifecycle enforcement", () => {
   });
 
   it("reconcile-env-keys module exists", () => {
-    const modulePath = path.resolve(
-      REPO_ROOT,
-      "harness/ops/harness-doctor/reconcile-env-keys.mjs",
-    );
+    const modulePath = path.resolve(REPO_ROOT, "harness/ops/harness-doctor/reconcile-env-keys.mjs");
     expect(fs.existsSync(modulePath)).toBe(true);
   });
 

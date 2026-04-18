@@ -17,7 +17,9 @@ export function verifyContext7Health() {
         );
         return;
       }
-      logWarn(`⚠️ Context7 HTTP service returned ${status} — local docs degraded, falling back to cloud`);
+      logWarn(
+        `⚠️ Context7 HTTP service returned ${status} — local docs degraded, falling back to cloud`,
+      );
     })
     .catch((err) => {
       logWarn(

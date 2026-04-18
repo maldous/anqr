@@ -68,7 +68,13 @@ export function getRankedProviders(options = {}) {
     let effectiveScore = null;
     let scoreBreakdown = null;
     if (baseScore !== null && baseScore !== undefined) {
-      const result = getEffectiveProviderScoreWithBreakdown(provider.name, baseScore, stats, health, probeEntry);
+      const result = getEffectiveProviderScoreWithBreakdown(
+        provider.name,
+        baseScore,
+        stats,
+        health,
+        probeEntry,
+      );
       effectiveScore = result.effective;
       scoreBreakdown = result.breakdown;
     }

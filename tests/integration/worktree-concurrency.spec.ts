@@ -293,7 +293,9 @@ describe("Worktree Concurrency Tests", () => {
         path = createWorktree(tempId);
       } catch {
         // createWorktree may fail (e.g. npm install unavailable) — best-effort cleanup and skip
-        try { removeWorktree(tempId); } catch {}
+        try {
+          removeWorktree(tempId);
+        } catch {}
         console.warn("⚠️  Skipped: createWorktree(903) failed (npm install unavailable)");
         return;
       }

@@ -42,45 +42,45 @@ describe("B prerequisite: patchIssueState lifecycle guard", () => {
   });
 
   it("throws when writing 'finalization'", () => {
-    expect(() =>
-      patchIssueState("ANQ-LG-1", { finalization: { state: "x" } }),
-    ).toThrow(/lifecycle fields.*finalization.*transitionIssue/);
+    expect(() => patchIssueState("ANQ-LG-1", { finalization: { state: "x" } })).toThrow(
+      /lifecycle fields.*finalization.*transitionIssue/,
+    );
   });
 
   it("throws when writing 'completed_at'", () => {
-    expect(() =>
-      patchIssueState("ANQ-LG-2", { completed_at: new Date().toISOString() }),
-    ).toThrow(/lifecycle fields.*completed_at.*transitionIssue/);
+    expect(() => patchIssueState("ANQ-LG-2", { completed_at: new Date().toISOString() })).toThrow(
+      /lifecycle fields.*completed_at.*transitionIssue/,
+    );
   });
 
   it("throws when writing 'lease'", () => {
-    expect(() =>
-      patchIssueState("ANQ-LG-3", { lease: { owner: "test" } }),
-    ).toThrow(/lifecycle fields.*lease.*transitionIssue/);
+    expect(() => patchIssueState("ANQ-LG-3", { lease: { owner: "test" } })).toThrow(
+      /lifecycle fields.*lease.*transitionIssue/,
+    );
   });
 
   it("throws when writing 'human_only'", () => {
-    expect(() =>
-      patchIssueState("ANQ-LG-4", { human_only: true }),
-    ).toThrow(/lifecycle fields.*human_only.*transitionIssue/);
+    expect(() => patchIssueState("ANQ-LG-4", { human_only: true })).toThrow(
+      /lifecycle fields.*human_only.*transitionIssue/,
+    );
   });
 
   it("throws when writing 'retry_exhausted'", () => {
-    expect(() =>
-      patchIssueState("ANQ-LG-5", { retry_exhausted: true }),
-    ).toThrow(/lifecycle fields.*retry_exhausted.*transitionIssue/);
+    expect(() => patchIssueState("ANQ-LG-5", { retry_exhausted: true })).toThrow(
+      /lifecycle fields.*retry_exhausted.*transitionIssue/,
+    );
   });
 
   it("throws when writing 'blocked_reason'", () => {
-    expect(() =>
-      patchIssueState("ANQ-LG-6", { blocked_reason: "test" }),
-    ).toThrow(/lifecycle fields.*blocked_reason.*transitionIssue/);
+    expect(() => patchIssueState("ANQ-LG-6", { blocked_reason: "test" })).toThrow(
+      /lifecycle fields.*blocked_reason.*transitionIssue/,
+    );
   });
 
   it("throws when writing 'cooldown_until'", () => {
-    expect(() =>
-      patchIssueState("ANQ-LG-7", { cooldown_until: new Date().toISOString() }),
-    ).toThrow(/lifecycle fields.*cooldown_until.*transitionIssue/);
+    expect(() => patchIssueState("ANQ-LG-7", { cooldown_until: new Date().toISOString() })).toThrow(
+      /lifecycle fields.*cooldown_until.*transitionIssue/,
+    );
   });
 
   it("lists all violating fields in the error message", () => {

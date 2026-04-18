@@ -33,6 +33,7 @@ Ensure PLAN.md, PLAN-deliverables.md, workstream docs, and decisions log all tel
 Update READMEs for key subsystems to match current implemented behavior.
 
 Priority subsystems (all verified or updated):
+
 1. Scheduler (`harness/ops/orchestration/symphony-scheduler/`) — already accurate ✅
 2. Router (`harness/ops/integrations/model/symphony-agent-router/`) — already accurate ✅
 3. Symphony-state (`harness/ops/core/symphony-state/`) — already accurate ✅

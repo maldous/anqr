@@ -1,12 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import {
-  mkdtempSync,
-  writeFileSync,
-  mkdirSync,
-  rmSync,
-  existsSync,
-  readFileSync,
-} from "node:fs";
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import path from "node:path";
@@ -249,9 +242,7 @@ describe("generateEnvConfig — generate mode", () => {
 
 describe("checkServiceLifecycle — enforce mode", () => {
   let tmpDir: string;
-  let checkServiceLifecycle: (
-    opts?: Record<string, unknown>,
-  ) => Promise<ServiceLifecycleResult>;
+  let checkServiceLifecycle: (opts?: Record<string, unknown>) => Promise<ServiceLifecycleResult>;
 
   beforeAll(async () => {
     tmpDir = mkdtempSync(join(tmpdir(), "anqr-lifecycle-enforce-"));
@@ -313,8 +304,7 @@ describe("checkServiceLifecycle — enforce mode", () => {
 
   it("THROWS in enforce mode when BRIDGE_MODE is wrong", async () => {
     const dir = createServicesDir("bad-bridge", {
-      "anqr-symphony-executor@.service":
-        "[Service]\nEnvironment=BRIDGE_MODE=control-plane\n",
+      "anqr-symphony-executor@.service": "[Service]\nEnvironment=BRIDGE_MODE=control-plane\n",
     });
 
     await expect(
@@ -401,18 +391,9 @@ describe("Timer overlap detection", () => {
   it("no issues for well-spaced timers", () => {
     const dir = join(tmpDir, "good-timers");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(
-      join(dir, "nightly.timer"),
-      "[Timer]\nOnCalendar=*-*-* 02:00:00\n",
-    );
-    writeFileSync(
-      join(dir, "export.timer"),
-      "[Timer]\nOnCalendar=*-*-* 02:30:00\n",
-    );
-    writeFileSync(
-      join(dir, "rebuild.timer"),
-      "[Timer]\nOnCalendar=*-*-* 03:00:00\n",
-    );
+    writeFileSync(join(dir, "nightly.timer"), "[Timer]\nOnCalendar=*-*-* 02:00:00\n");
+    writeFileSync(join(dir, "export.timer"), "[Timer]\nOnCalendar=*-*-* 02:30:00\n");
+    writeFileSync(join(dir, "rebuild.timer"), "[Timer]\nOnCalendar=*-*-* 03:00:00\n");
 
     const issues = validateTimerSchedules(dir);
     expect(issues).toHaveLength(0);
@@ -421,14 +402,8 @@ describe("Timer overlap detection", () => {
   it("detects overlap when timers are too close", () => {
     const dir = join(tmpDir, "close-timers");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(
-      join(dir, "first.timer"),
-      "[Timer]\nOnCalendar=*-*-* 02:00:00\n",
-    );
-    writeFileSync(
-      join(dir, "second.timer"),
-      "[Timer]\nOnCalendar=*-*-* 02:05:00\n",
-    );
+    writeFileSync(join(dir, "first.timer"), "[Timer]\nOnCalendar=*-*-* 02:00:00\n");
+    writeFileSync(join(dir, "second.timer"), "[Timer]\nOnCalendar=*-*-* 02:05:00\n");
 
     const issues = validateTimerSchedules(dir);
     expect(issues).toHaveLength(1);
@@ -439,10 +414,7 @@ describe("Timer overlap detection", () => {
   it("ignores interval-based timers (OnUnitActiveSec)", () => {
     const dir = join(tmpDir, "interval-timers");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(
-      join(dir, "health.timer"),
-      "[Timer]\nOnBootSec=60\nOnUnitActiveSec=300\n",
-    );
+    writeFileSync(join(dir, "health.timer"), "[Timer]\nOnBootSec=60\nOnUnitActiveSec=300\n");
 
     const issues = validateTimerSchedules(dir);
     expect(issues).toHaveLength(0);
@@ -451,10 +423,7 @@ describe("Timer overlap detection", () => {
   it("handles single calendar timer without issues", () => {
     const dir = join(tmpDir, "single-timer");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(
-      join(dir, "only.timer"),
-      "[Timer]\nOnCalendar=*-*-* 04:00:00\n",
-    );
+    writeFileSync(join(dir, "only.timer"), "[Timer]\nOnCalendar=*-*-* 04:00:00\n");
 
     const issues = validateTimerSchedules(dir);
     expect(issues).toHaveLength(0);
@@ -463,14 +432,8 @@ describe("Timer overlap detection", () => {
   it("detects zero-gap (same time) timers", () => {
     const dir = join(tmpDir, "same-time");
     mkdirSync(dir, { recursive: true });
-    writeFileSync(
-      join(dir, "alpha.timer"),
-      "[Timer]\nOnCalendar=*-*-* 01:00:00\n",
-    );
-    writeFileSync(
-      join(dir, "beta.timer"),
-      "[Timer]\nOnCalendar=*-*-* 01:00:00\n",
-    );
+    writeFileSync(join(dir, "alpha.timer"), "[Timer]\nOnCalendar=*-*-* 01:00:00\n");
+    writeFileSync(join(dir, "beta.timer"), "[Timer]\nOnCalendar=*-*-* 01:00:00\n");
 
     const issues = validateTimerSchedules(dir);
     expect(issues).toHaveLength(1);
@@ -503,10 +466,7 @@ describe("Dependency chain validation", () => {
       join(dir, "reconciler.service"),
       "[Unit]\nRequires=router.service\n[Service]\nExecStart=/bin/true\n",
     );
-    writeFileSync(
-      join(dir, "router.service"),
-      "[Service]\nExecStart=/bin/true\n",
-    );
+    writeFileSync(join(dir, "router.service"), "[Service]\nExecStart=/bin/true\n");
 
     const issues = validateDependencyChains(dir);
     expect(issues).toHaveLength(0);
@@ -545,10 +505,7 @@ describe("Dependency chain validation", () => {
       join(dir, "depends-on-executor.service"),
       "[Unit]\nRequires=executor@1.service\n[Service]\nExecStart=/bin/true\n",
     );
-    writeFileSync(
-      join(dir, "executor@.service"),
-      "[Service]\nExecStart=/bin/true\n",
-    );
+    writeFileSync(join(dir, "executor@.service"), "[Service]\nExecStart=/bin/true\n");
 
     const issues = validateDependencyChains(dir);
     expect(issues).toHaveLength(0);
@@ -660,9 +617,8 @@ describe("enforceConfigPreflight", () => {
 
 describe("Real repo config validation", () => {
   it("generateEnvConfig validates real template exists", async () => {
-    const { generateEnvConfig } = await import(
-      "../../harness/ops/harness-doctor/generate-env-config.mjs"
-    );
+    const { generateEnvConfig } =
+      await import("../../harness/ops/harness-doctor/generate-env-config.mjs");
     const templatePath = resolve(REPO_ROOT, "services/systemd/anqr-ops.env");
 
     const result = await generateEnvConfig({
@@ -676,9 +632,8 @@ describe("Real repo config validation", () => {
   });
 
   it("checkServiceLifecycle passes for real repo services", async () => {
-    const { checkServiceLifecycle } = await import(
-      "../../harness/ops/harness-doctor/check-service-lifecycle.mjs"
-    );
+    const { checkServiceLifecycle } =
+      await import("../../harness/ops/harness-doctor/check-service-lifecycle.mjs");
 
     const result = await checkServiceLifecycle({
       enforce: false,
@@ -690,17 +645,15 @@ describe("Real repo config validation", () => {
   });
 
   it("real timer schedules have safe minimum gaps", async () => {
-    const { validateTimerSchedules } = await import(
-      "../../harness/ops/harness-doctor/validate-timer-schedules.mjs"
-    );
+    const { validateTimerSchedules } =
+      await import("../../harness/ops/harness-doctor/validate-timer-schedules.mjs");
     const issues = validateTimerSchedules(resolve(REPO_ROOT, "services/systemd"));
     expect(issues).toHaveLength(0);
   });
 
   it("real dependency chains are all valid", async () => {
-    const { validateDependencyChains } = await import(
-      "../../harness/ops/harness-doctor/validate-dependency-chains.mjs"
-    );
+    const { validateDependencyChains } =
+      await import("../../harness/ops/harness-doctor/validate-dependency-chains.mjs");
 
     const issues = validateDependencyChains(resolve(REPO_ROOT, "services/systemd"));
     expect(issues).toHaveLength(0);

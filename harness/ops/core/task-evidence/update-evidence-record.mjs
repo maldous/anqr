@@ -7,9 +7,7 @@ export function updateEvidenceRecord(correlationId, patch) {
     const diag = loadEvidenceRecordWithDiagnostics(correlationId);
     if (diag.status === "missing") return null;
     if (diag.status === "corrupted") {
-      process.stderr.write(
-        `[task-evidence] Corrupted record ${correlationId}: ${diag.error}\n`,
-      );
+      process.stderr.write(`[task-evidence] Corrupted record ${correlationId}: ${diag.error}\n`);
       return null;
     }
     const updated = { ...diag.record, ...patch, updatedAt: new Date().toISOString() };

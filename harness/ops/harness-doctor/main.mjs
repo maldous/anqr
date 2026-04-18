@@ -18,9 +18,7 @@ import { logInfo } from "./logger.mjs";
 
 export async function main() {
   const enforce = process.argv.includes("--enforce");
-  logInfo(
-    `[harness-doctor] Running harness diagnostics${enforce ? " (ENFORCE mode)" : ""}...\n`,
-  );
+  logInfo(`[harness-doctor] Running harness diagnostics${enforce ? " (ENFORCE mode)" : ""}...\n`);
 
   const categories = [
     { name: "Environment Variables", fn: checkEnvVars },

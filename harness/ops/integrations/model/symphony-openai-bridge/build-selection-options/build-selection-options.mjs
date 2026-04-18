@@ -12,7 +12,12 @@ import { isProviderHealthy } from "./is-provider-healthy.mjs";
 
 export function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
   const throttled = getThrottledProviders();
-  const excludeSet = new Set([...excludedNames, ...nonToolCapableProviders, ...BRIDGE_PROVIDER_BLOCKLIST, ...throttled]);
+  const excludeSet = new Set([
+    ...excludedNames,
+    ...nonToolCapableProviders,
+    ...BRIDGE_PROVIDER_BLOCKLIST,
+    ...throttled,
+  ]);
 
   // Check session state for sticky provider
   if (sessionId) {

@@ -1,7 +1,10 @@
 import { buildDynamicCatalogLimits } from "./build-dynamic-catalog-limits.mjs";
 import { STATIC_CONTEXT_WINDOWS } from "./static-context-windows.mjs";
 import { STATIC_INPUT_BUDGETS } from "./static-input-budgets.mjs";
-import { STATIC_PER_REQUEST_LIMITS, PROVIDER_PREFIX_DEFAULTS } from "./static-per-request-limits.mjs";
+import {
+  STATIC_PER_REQUEST_LIMITS,
+  PROVIDER_PREFIX_DEFAULTS,
+} from "./static-per-request-limits.mjs";
 import { loadDiscoveredPerRequestLimits } from "./load-discovered-per-request-limits.mjs";
 import { toInputBudget } from "./to-input-budget.mjs";
 

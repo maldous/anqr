@@ -75,9 +75,8 @@ describe("loadEvidenceRecordWithDiagnostics — runtime", () => {
   let evidencePath: string;
 
   beforeAll(async () => {
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
   });
 
@@ -86,9 +85,8 @@ describe("loadEvidenceRecordWithDiagnostics — runtime", () => {
   });
 
   it("returns { status: 'missing' } for non-existent record", async () => {
-    const { loadEvidenceRecordWithDiagnostics } = await import(
-      "../../harness/ops/core/task-evidence/load-evidence-record-with-diagnostics.mjs"
-    );
+    const { loadEvidenceRecordWithDiagnostics } =
+      await import("../../harness/ops/core/task-evidence/load-evidence-record-with-diagnostics.mjs");
     const result = loadEvidenceRecordWithDiagnostics(`nonexistent-${Date.now()}`);
     expect(result.status).toBe("missing");
     expect(result).not.toHaveProperty("record");
@@ -96,23 +94,21 @@ describe("loadEvidenceRecordWithDiagnostics — runtime", () => {
   });
 
   it("returns { status: 'ok', record } for valid record", async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { loadEvidenceRecordWithDiagnostics } = await import(
-      "../../harness/ops/core/task-evidence/load-evidence-record-with-diagnostics.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { loadEvidenceRecordWithDiagnostics } =
+      await import("../../harness/ops/core/task-evidence/load-evidence-record-with-diagnostics.mjs");
     saveEvidence(corrId, { correlationId: corrId, test: true });
 
     const result = loadEvidenceRecordWithDiagnostics(corrId);
     expect(result.status).toBe("ok");
-    expect((result as { status: "ok"; record: { correlationId: string } }).record.correlationId).toBe(corrId);
+    expect(
+      (result as { status: "ok"; record: { correlationId: string } }).record.correlationId,
+    ).toBe(corrId);
   });
 
   it("returns { status: 'corrupted', error } for invalid JSON", async () => {
-    const { loadEvidenceRecordWithDiagnostics } = await import(
-      "../../harness/ops/core/task-evidence/load-evidence-record-with-diagnostics.mjs"
-    );
+    const { loadEvidenceRecordWithDiagnostics } =
+      await import("../../harness/ops/core/task-evidence/load-evidence-record-with-diagnostics.mjs");
     // Write garbage to the evidence file
     fs.writeFileSync(evidencePath, "this is not valid json {{{");
 
@@ -131,9 +127,8 @@ describe("ensureEvidenceRecord — runtime", () => {
   let evidencePath: string;
 
   beforeAll(async () => {
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
   });
 
@@ -142,9 +137,8 @@ describe("ensureEvidenceRecord — runtime", () => {
   });
 
   it("creates a new record when none exists", async () => {
-    const { ensureEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/ensure-evidence-record.mjs"
-    );
+    const { ensureEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/ensure-evidence-record.mjs");
     const result = ensureEvidenceRecord(corrId, {
       source: "test",
       issueIdentifier: "ANQ-TEST-1",
@@ -159,12 +153,10 @@ describe("ensureEvidenceRecord — runtime", () => {
   });
 
   it("returns existing record without overwriting", async () => {
-    const { ensureEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/ensure-evidence-record.mjs"
-    );
-    const { updateEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/update-evidence-record.mjs"
-    );
+    const { ensureEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/ensure-evidence-record.mjs");
+    const { updateEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/update-evidence-record.mjs");
 
     // Add data to the existing record
     updateEvidenceRecord(corrId, {
@@ -183,12 +175,10 @@ describe("ensureEvidenceRecord — runtime", () => {
   });
 
   it("defaults source to 'unknown' when not provided", async () => {
-    const { ensureEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/ensure-evidence-record.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { ensureEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/ensure-evidence-record.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
 
     const unknownCorrId = `test-ensure-unknown-${Date.now()}`;
     const unknownPath = getEvidencePath(unknownCorrId);
@@ -210,12 +200,9 @@ describe("updateEvidenceRecord with locking — runtime", () => {
   let evidencePath: string;
 
   beforeAll(async () => {
-    const { saveEvidence } = await import(
-      "../../harness/ops/core/task-evidence/save-evidence.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { saveEvidence } = await import("../../harness/ops/core/task-evidence/save-evidence.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
     saveEvidence(corrId, {
       correlationId: corrId,
@@ -232,17 +219,15 @@ describe("updateEvidenceRecord with locking — runtime", () => {
   });
 
   it("still returns null for missing records", async () => {
-    const { updateEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/update-evidence-record.mjs"
-    );
+    const { updateEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/update-evidence-record.mjs");
     const result = updateEvidenceRecord("completely-missing-id", { foo: "bar" });
     expect(result).toBeNull();
   });
 
   it("merges patches correctly under lock", async () => {
-    const { updateEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/update-evidence-record.mjs"
-    );
+    const { updateEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/update-evidence-record.mjs");
 
     // First update
     const result1 = updateEvidenceRecord(corrId, {
@@ -261,12 +246,10 @@ describe("updateEvidenceRecord with locking — runtime", () => {
   });
 
   it("returns null for corrupted records without crashing", async () => {
-    const { updateEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/update-evidence-record.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { updateEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/update-evidence-record.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
 
     const corruptId = `test-corrupt-${Date.now()}`;
     const corruptPath = getEvidencePath(corruptId);
@@ -282,9 +265,8 @@ describe("updateEvidenceRecord with locking — runtime", () => {
   });
 
   it("no lock file remains after successful update", async () => {
-    const { updateEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/update-evidence-record.mjs"
-    );
+    const { updateEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/update-evidence-record.mjs");
     updateEvidenceRecord(corrId, { lockTest: true });
     const lockPath = evidencePath + ".lock";
     expect(fs.existsSync(lockPath)).toBe(false);
@@ -297,12 +279,10 @@ describe("updateEvidenceRecord with locking — runtime", () => {
 
 describe("withEvidenceLock — runtime", () => {
   it("acquires and releases lock around fn execution", async () => {
-    const { withEvidenceLock } = await import(
-      "../../harness/ops/core/task-evidence/with-evidence-lock.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { withEvidenceLock } =
+      await import("../../harness/ops/core/task-evidence/with-evidence-lock.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
 
     const lockCorrId = `test-lock-${Date.now()}`;
     const lockPath = getEvidencePath(lockCorrId) + ".lock";
@@ -319,12 +299,10 @@ describe("withEvidenceLock — runtime", () => {
   });
 
   it("releases lock even when fn throws", async () => {
-    const { withEvidenceLock } = await import(
-      "../../harness/ops/core/task-evidence/with-evidence-lock.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { withEvidenceLock } =
+      await import("../../harness/ops/core/task-evidence/with-evidence-lock.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
 
     const lockCorrId = `test-lock-throw-${Date.now()}`;
     const lockPath = getEvidencePath(lockCorrId) + ".lock";
@@ -341,15 +319,12 @@ describe("withEvidenceLock — runtime", () => {
   });
 
   it("proceeds unlocked when stale lock exists and is broken", async () => {
-    const { withEvidenceLock } = await import(
-      "../../harness/ops/core/task-evidence/with-evidence-lock.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
-    const { getEvidenceDir } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-dir.mjs"
-    );
+    const { withEvidenceLock } =
+      await import("../../harness/ops/core/task-evidence/with-evidence-lock.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
+    const { getEvidenceDir } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-dir.mjs");
 
     // Ensure evidence directory exists
     getEvidenceDir();
@@ -383,9 +358,8 @@ describe("Sequential evidence updates preserve all fields", () => {
   let evidencePath: string;
 
   afterAll(async () => {
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
     evidencePath = getEvidencePath(corrId);
     if (evidencePath && fs.existsSync(evidencePath)) fs.unlinkSync(evidencePath);
     const lockPath = evidencePath + ".lock";
@@ -393,38 +367,38 @@ describe("Sequential evidence updates preserve all fields", () => {
   });
 
   it("create → routing → execution → validation → push → integration all preserved", async () => {
-    const { createEvidenceRecord } = await import(
-      "../../harness/ops/core/task-evidence/create-evidence-record.mjs"
-    );
-    const { recordRoutingDecision } = await import(
-      "../../harness/ops/core/task-evidence/record-routing-decision.mjs"
-    );
-    const { recordWorktreeSelection } = await import(
-      "../../harness/ops/core/task-evidence/record-worktree-selection.mjs"
-    );
-    const { recordExecutionResult } = await import(
-      "../../harness/ops/core/task-evidence/record-execution-result.mjs"
-    );
-    const { recordValidationResult } = await import(
-      "../../harness/ops/core/task-evidence/record-validation-result.mjs"
-    );
-    const { recordPushResult } = await import(
-      "../../harness/ops/core/task-evidence/record-push-result.mjs"
-    );
-    const { recordIntegrationResult } = await import(
-      "../../harness/ops/core/task-evidence/record-integration-result.mjs"
-    );
-    const { getEvidencePath } = await import(
-      "../../harness/ops/core/task-evidence/get-evidence-path.mjs"
-    );
+    const { createEvidenceRecord } =
+      await import("../../harness/ops/core/task-evidence/create-evidence-record.mjs");
+    const { recordRoutingDecision } =
+      await import("../../harness/ops/core/task-evidence/record-routing-decision.mjs");
+    const { recordWorktreeSelection } =
+      await import("../../harness/ops/core/task-evidence/record-worktree-selection.mjs");
+    const { recordExecutionResult } =
+      await import("../../harness/ops/core/task-evidence/record-execution-result.mjs");
+    const { recordValidationResult } =
+      await import("../../harness/ops/core/task-evidence/record-validation-result.mjs");
+    const { recordPushResult } =
+      await import("../../harness/ops/core/task-evidence/record-push-result.mjs");
+    const { recordIntegrationResult } =
+      await import("../../harness/ops/core/task-evidence/record-integration-result.mjs");
+    const { getEvidencePath } =
+      await import("../../harness/ops/core/task-evidence/get-evidence-path.mjs");
 
     evidencePath = getEvidencePath(corrId);
 
     // Full lifecycle under locking
     createEvidenceRecord(corrId, { source: "linear", issueIdentifier: "ANQ-LOCK-1" });
-    recordRoutingDecision(corrId, { targetWorktreePool: "linear-wt1-4", routingStrategy: "least-loaded" });
+    recordRoutingDecision(corrId, {
+      targetWorktreePool: "linear-wt1-4",
+      routingStrategy: "least-loaded",
+    });
     recordWorktreeSelection(corrId, { worktreeId: "wt3", reason: "least-loaded" });
-    recordExecutionResult(corrId, { success: true, completedAt: new Date().toISOString(), durationMs: 45000, filesChanged: ["src/main.tsx"] });
+    recordExecutionResult(corrId, {
+      success: true,
+      completedAt: new Date().toISOString(),
+      durationMs: 45000,
+      filesChanged: ["src/main.tsx"],
+    });
     recordValidationResult(corrId, { passed: true, typecheckPassed: true, testsPassed: true });
     recordPushResult(corrId, { branch: "symphony/wt3", sha: "abc123", success: true });
     recordIntegrationResult(corrId, { success: true, mainSha: "def456", method: "cherry-pick" });

@@ -46,9 +46,8 @@ server.listen(PORT, "127.0.0.1", async () => {
   // (in server.mjs) already catches fatal env misconfigurations. Config surface drift
   // is an operational concern worth logging, not worth killing the bridge.
   try {
-    const { enforceConfigPreflight } = await import(
-      "../../../harness-doctor/enforce-config-preflight.mjs"
-    );
+    const { enforceConfigPreflight } =
+      await import("../../../harness-doctor/enforce-config-preflight.mjs");
     await enforceConfigPreflight();
     logInfo("[startup] ✅ Config preflight passed");
   } catch (err) {

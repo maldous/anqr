@@ -129,7 +129,9 @@ export async function pollForEvidenceField(
     if (record && record[field] != null) return record;
     await new Promise((r) => setTimeout(r, intervalMs));
   }
-  throw new Error(`pollForEvidenceField: field "${field}" not populated for ${issueId} within ${timeoutMs}ms`);
+  throw new Error(
+    `pollForEvidenceField: field "${field}" not populated for ${issueId} within ${timeoutMs}ms`,
+  );
 }
 
 export async function assertServiceHealthy(url: string): Promise<Record<string, unknown>> {

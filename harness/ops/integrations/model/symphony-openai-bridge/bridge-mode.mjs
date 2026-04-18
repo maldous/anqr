@@ -36,4 +36,3 @@ export const BRIDGE_MODE =
   process.env.BRIDGE_MODE === "control-plane" || process.env.BRIDGE_MODE === "worktree"
     ? process.env.BRIDGE_MODE
     : deriveBridgeMode(BRIDGE_ROOT, CONTROL_REPO_ROOT);
-

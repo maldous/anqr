@@ -80,7 +80,9 @@ export async function main() {
         `[worktree-verify] ❌ CRITICAL: Worktree ${WORKTREE_ID} resolved to control repo ${CONTROL_REPO} — isolation broken!`,
       );
     } else if (WORKTREE_ID !== "main") {
-      logDebug(`[worktree-verify] ✓ Worktree ${WORKTREE_ID} is NOT the control repo — isolation confirmed`);
+      logDebug(
+        `[worktree-verify] ✓ Worktree ${WORKTREE_ID} is NOT the control repo — isolation confirmed`,
+      );
     }
   } catch (err) {
     logError(`[worktree-verify] Failed to verify worktree invariant: ${err.message}`);

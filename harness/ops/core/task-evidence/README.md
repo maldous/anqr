@@ -14,12 +14,12 @@ The integrator's `publishEvidenceAndClose` calls `validateEvidenceCompleteness(c
 
 ### Four completeness levels
 
-| Level | Description | Use |
-|-------|-------------|-----|
-| `minimal` | correlationId + execution + integration result | Operator-override threshold |
-| `standard` | minimal + ingress + push + validation | Normal closure threshold |
-| `full` | standard + providerRouting + providerSelection | Incident reconstruction |
-| `enriched` | full + contextReduction + safetyNet | Advisory only |
+| Level      | Description                                    | Use                         |
+| ---------- | ---------------------------------------------- | --------------------------- |
+| `minimal`  | correlationId + execution + integration result | Operator-override threshold |
+| `standard` | minimal + ingress + push + validation          | Normal closure threshold    |
+| `full`     | standard + providerRouting + providerSelection | Incident reconstruction     |
+| `enriched` | full + contextReduction + safetyNet            | Advisory only               |
 
 ## Contents
 
@@ -29,6 +29,7 @@ The integrator's `publishEvidenceAndClose` calls `validateEvidenceCompleteness(c
 ## Key Files
 
 ### Core record management
+
 - `create-evidence-record.mjs` — Creates a new evidence record for a correlationId.
 - `ensure-evidence-record.mjs` — Idempotent record creation (used by paths that previously lacked `createEvidenceRecord`, including the A3 `/v1/linear/execute` path).
 - `load-evidence-record.mjs` — Loads an evidence record by correlationId.
@@ -41,6 +42,7 @@ The integrator's `publishEvidenceAndClose` calls `validateEvidenceCompleteness(c
 - `index.mjs` — Re-export facade that assembles the public surface for this directory.
 
 ### Evidence recording (per lifecycle stage)
+
 - `record-execution-result.mjs` — Records execution outcome (success, toolCalls, filesChanged, etc.).
 - `record-integration-result.mjs` — Records integration outcome (mainSha, cherryPickSuccess, etc.).
 - `record-push-result.mjs` — Records push outcome (branch, success, sha).
@@ -53,6 +55,7 @@ The integrator's `publishEvidenceAndClose` calls `validateEvidenceCompleteness(c
 - `record-safety-net-evidence.mjs` — Records safety-net activation evidence (Workstream F Phase 2).
 
 ### Validation, audit, and query
+
 - `validate-evidence-completeness.mjs` — Validates evidence at a given completeness level; used by `publishEvidenceAndClose` as the closure gate.
 - `mandatory-evidence-fields.mjs` — Defines mandatory field sets per completeness level.
 - `audit-evidence-completeness.mjs` — Batch audit of evidence directory for completeness.

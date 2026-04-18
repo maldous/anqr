@@ -67,12 +67,12 @@ Unintended code publication, silent corruption of active work, race conditions w
 
 ### Findings
 
-| # | Finding | Severity | Detail |
-|---|---------|----------|--------|
-| C1 | "State-only" wording is overclaimed | Low | Recovery still performs sandbox mutation via `reset_to_main` (git fetch/reset/clean) and reprovision workflows. These are non-publishing repair operations, not state-only. The accurate description is: "recovery no longer publishes code; recovery still performs sandbox maintenance mutation." |
-| C2 | Tests are mostly source verification | Low | 17 tests are primarily `fs.readFileSync` + string checks. They prove absence of obvious bad code, not runtime behavioral guarantees. Acceptable for the no-publication claim since the deleted modules are truly gone. |
-| C3 | Legacy action names remain | Low | `classify-worktree.mjs` still emits `retry_push` as an action name (which `executeRepair` demotes to quarantine). Not a functional bug, but shows the implementation is demoted legacy behavior, not a clean-slate model. |
-| C4 | Reprovision path not tested | Low | `reprovisionWorktree()` is called from recovery but not constrained by these tests. Transitive risk is low since reprovision is explicitly an intended recovery action. |
+| #   | Finding                              | Severity | Detail                                                                                                                                                                                                                                                                                              |
+| --- | ------------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1  | "State-only" wording is overclaimed  | Low      | Recovery still performs sandbox mutation via `reset_to_main` (git fetch/reset/clean) and reprovision workflows. These are non-publishing repair operations, not state-only. The accurate description is: "recovery no longer publishes code; recovery still performs sandbox maintenance mutation." |
+| C2  | Tests are mostly source verification | Low      | 17 tests are primarily `fs.readFileSync` + string checks. They prove absence of obvious bad code, not runtime behavioral guarantees. Acceptable for the no-publication claim since the deleted modules are truly gone.                                                                              |
+| C3  | Legacy action names remain           | Low      | `classify-worktree.mjs` still emits `retry_push` as an action name (which `executeRepair` demotes to quarantine). Not a functional bug, but shows the implementation is demoted legacy behavior, not a clean-slate model.                                                                           |
+| C4  | Reprovision path not tested          | Low      | `reprovisionWorktree()` is called from recovery but not constrained by these tests. Transitive risk is low since reprovision is explicitly an intended recovery action.                                                                                                                             |
 
 ### Impact on Workstream G (historical — G is now ✅ Complete)
 

@@ -78,7 +78,9 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
         logWarn(`Context7 HTTP service retryable failure: ${local.reason}`);
       }
     } catch (err) {
-      logWarn(`⚠️ Context7 HTTP service not reachable — falling back to cloud docs (${err.message})`);
+      logWarn(
+        `⚠️ Context7 HTTP service not reachable — falling back to cloud docs (${err.message})`,
+      );
     }
 
     const apiKey = process.env.CONTEXT7_API_KEY || process.env.DOCS_API_KEY;

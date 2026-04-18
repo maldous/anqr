@@ -1,5 +1,8 @@
 import { PROVIDER_MAX_INPUT_TOKENS } from "../symphony-bridge-truncation.mjs";
-import { STATIC_PER_REQUEST_LIMITS, PROVIDER_PREFIX_DEFAULTS } from "../symphony-bridge-truncation/static-per-request-limits.mjs";
+import {
+  STATIC_PER_REQUEST_LIMITS,
+  PROVIDER_PREFIX_DEFAULTS,
+} from "../symphony-bridge-truncation/static-per-request-limits.mjs";
 import { loadDiscoveredPerRequestLimits } from "../symphony-bridge-truncation/load-discovered-per-request-limits.mjs";
 import { logInfo } from "./logger.mjs";
 
@@ -42,11 +45,15 @@ export function logStartupContextCaps() {
   }
 
   if (caps.length === 0 && prefixCaps.length === 0) {
-    logInfo(`[startup] No per-request token caps active — all providers use context window budgets`);
+    logInfo(
+      `[startup] No per-request token caps active — all providers use context window budgets`,
+    );
     return;
   }
 
-  logInfo(`[startup] 📊 Per-request token caps active (${caps.length + prefixCaps.length} providers):`);
+  logInfo(
+    `[startup] 📊 Per-request token caps active (${caps.length + prefixCaps.length} providers):`,
+  );
 
   for (const cap of caps.sort((a, b) => a.name.localeCompare(b.name))) {
     const sourceTag = cap.source === "discovered" ? "🔧" : "📖";

@@ -7,7 +7,13 @@ import { getProviderRecentSuccessBoost } from "./get-provider-recent-success-boo
  * Returns the effective score AND its component breakdown.
  * Used by selectionLog to explain "why provider A beat provider B".
  */
-export function getEffectiveProviderScoreWithBreakdown(providerName, baseScore, stats, health, cachedProbe) {
+export function getEffectiveProviderScoreWithBreakdown(
+  providerName,
+  baseScore,
+  stats,
+  health,
+  cachedProbe,
+) {
   const preferenceBoost = getProviderPreferenceBoost(providerName, cachedProbe);
   const recentSuccessBoost = getProviderRecentSuccessBoost(stats, providerName);
   const healthPenalty = getProviderHealthPenalty(health);

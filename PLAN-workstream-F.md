@@ -78,6 +78,7 @@ Gap analysis findings:
 ### F Remaining Work (resolved in Workstream G)
 
 Former deferred items now resolved:
+
 - **F5 (selection rationale)** — ✅ Resolved in G Phase 3: `selectProvider` accepts `selectionLog`, `recordProviderRoutingEvidence` includes `selectionRationale`, `server.mjs` wired to pass `selectionLog` on all 5 evidence paths.
 - **F7 (evidence durability)** — ✅ Resolved in G Phase 1: `withEvidenceLock` (advisory file-level locking), `loadEvidenceRecordWithDiagnostics` (three-state return), `ensureEvidenceRecord` (idempotent creation).
 - **F8 (post-hoc query endpoint)** — Accepted caveat: `queryRoutingEvidence()` is library-level only. CLI/HTTP endpoint is a future enhancement (Low).
@@ -118,16 +119,16 @@ Poor reproducibility, weak incident analysis, opaque cost behavior, and hard-to-
 
 ### Findings
 
-| # | Finding | Severity | Detail |
-|---|---------|----------|--------|
-| F1 | ~43/52 tests are source-text checks | **High** | Most tests use `fs.readFileSync` + `expect(source).toContain(...)`. Only ~9 are runtime helper tests. No end-to-end test drives `server.mjs` or `invokeWithFallback` and asserts emitted evidence files. |
-| F2 | Failure-path evidence incomplete | **High** | `recordProviderRoutingEvidence` emitted only on success in `server.mjs`. Failed requests lose the main routing record. |
-| F3 | Non-streaming exhaustion missing safety-net | **High** | `recordSafetyNetEvidence` is called only in the streaming catch path. Non-streaming provider exhaustion has no equivalent safety-net evidence emission. |
-| F4 | Context-reduction evidence only on success | Medium | `recordContextReductionEvidence` called only when a result exists. If request reduces context then exhausts providers, reduction history is not persisted. |
-| F5 | ~~No provider selection rationale~~ | ~~Medium~~ | **RESOLVED in G Phase 3.** ~~Evidence records `allowedProviders` and final chain, but not ranked candidates, scores, policy precedence, or why provider A beat provider B.~~ `selectProvider` now accepts `selectionLog`; `server.mjs` wired on all 5 evidence paths. |
-| F6 | Transparent Codebuff streaming skips evidence | Medium | `isSelectedCodebuff` streaming fast-path returns early after `invokeCodebuffDirectStreamToSSE()` without emitting `recordProviderRoutingEvidence` or `recordContextReductionEvidence`. |
-| F7 | Evidence persistence is best-effort | Low for F, **High for G** | All server-side evidence calls are wrapped as best-effort. Helpers return null if record doesn't exist. `updateEvidenceRecord()` has no locking — last-write-wins races possible. |
-| F8 | Post-hoc query is library function only | Low | `queryRoutingEvidence()` works but is just a file reader + formatter. No CLI wrapper or HTTP endpoint. Not an operator-grade facility. |
+| #   | Finding                                       | Severity                  | Detail                                                                                                                                                                                                                                                                |
+| --- | --------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1  | ~43/52 tests are source-text checks           | **High**                  | Most tests use `fs.readFileSync` + `expect(source).toContain(...)`. Only ~9 are runtime helper tests. No end-to-end test drives `server.mjs` or `invokeWithFallback` and asserts emitted evidence files.                                                              |
+| F2  | Failure-path evidence incomplete              | **High**                  | `recordProviderRoutingEvidence` emitted only on success in `server.mjs`. Failed requests lose the main routing record.                                                                                                                                                |
+| F3  | Non-streaming exhaustion missing safety-net   | **High**                  | `recordSafetyNetEvidence` is called only in the streaming catch path. Non-streaming provider exhaustion has no equivalent safety-net evidence emission.                                                                                                               |
+| F4  | Context-reduction evidence only on success    | Medium                    | `recordContextReductionEvidence` called only when a result exists. If request reduces context then exhausts providers, reduction history is not persisted.                                                                                                            |
+| F5  | ~~No provider selection rationale~~           | ~~Medium~~                | **RESOLVED in G Phase 3.** ~~Evidence records `allowedProviders` and final chain, but not ranked candidates, scores, policy precedence, or why provider A beat provider B.~~ `selectProvider` now accepts `selectionLog`; `server.mjs` wired on all 5 evidence paths. |
+| F6  | Transparent Codebuff streaming skips evidence | Medium                    | `isSelectedCodebuff` streaming fast-path returns early after `invokeCodebuffDirectStreamToSSE()` without emitting `recordProviderRoutingEvidence` or `recordContextReductionEvidence`.                                                                                |
+| F7  | Evidence persistence is best-effort           | Low for F, **High for G** | All server-side evidence calls are wrapped as best-effort. Helpers return null if record doesn't exist. `updateEvidenceRecord()` has no locking — last-write-wins races possible.                                                                                     |
+| F8  | Post-hoc query is library function only       | Low                       | `queryRoutingEvidence()` works but is just a file reader + formatter. No CLI wrapper or HTTP endpoint. Not an operator-grade facility.                                                                                                                                |
 
 ### Minimum Fixes Before Workstream G (historical — all resolved; G is now ✅ Complete)
 

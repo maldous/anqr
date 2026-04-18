@@ -1,9 +1,5 @@
 import { loadEvidenceRecordWithDiagnostics } from "./load-evidence-record-with-diagnostics.mjs";
-import {
-  EVIDENCE_LEVELS,
-  LEVEL_CHECKS,
-  CONDITIONAL_CHECKS,
-} from "./mandatory-evidence-fields.mjs";
+import { EVIDENCE_LEVELS, LEVEL_CHECKS, CONDITIONAL_CHECKS } from "./mandatory-evidence-fields.mjs";
 import { checkField } from "./check-field.mjs";
 import { shouldApplyConditional } from "./should-apply-conditional.mjs";
 

@@ -19,9 +19,12 @@ export async function main() {
   // Sonar requires coverage/lcov.info — auto-skip when tests are skipped and no
   // pre-existing coverage file is available, since sonar-scan would hard-fail.
   const hasCoverage = existsSync(resolve(ROOT, "coverage/lcov.info"));
-  const sonarEnabled = Boolean(process.env.SONAR_TOKEN) && !skipSonar && (hasCoverage || !skipTests);
+  const sonarEnabled =
+    Boolean(process.env.SONAR_TOKEN) && !skipSonar && (hasCoverage || !skipTests);
   if (process.env.SONAR_TOKEN && !skipSonar && !sonarEnabled) {
-    logInfo("[nightly] ⚠️ Sonar steps skipped: --skip-tests is set and coverage/lcov.info is missing");
+    logInfo(
+      "[nightly] ⚠️ Sonar steps skipped: --skip-tests is set and coverage/lcov.info is missing",
+    );
   }
 
   const plan = [

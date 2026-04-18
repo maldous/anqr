@@ -121,18 +121,18 @@ Integration candidacy is derived from finalization state. Durable worktree state
 
 All correctness blockers (1, 2, 3a, 3b, 4, 5a, 5b, 7, 8) are resolved with real code changes. Blocker 6 (dead-structure cleanup) is also resolved.
 
-| #   | Blocker                                                                                                                           | Phase | Status                      |
-| --- | --------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------------------- |
-| 1   | Normalize worktree state on load in `load-state.mjs`                                                                              | 1     | ✅ DONE                     |
-| 7   | Verify all `worktreeStates` readers handle normalized records                                                                     | 1     | ✅ DONE                     |
-| 3a  | Add atomic `claimAndAssignWorktree()` helper (claim side)                                                                         | 4     | ✅ DONE                     |
-| 3b  | Make `releaseLease()` truly atomic bidirectional (release side)                                                                    | 4/5   | ✅ DONE                     |
-| 4   | Clear worktree ownership when lease is released                                                                                   | 3/5   | ✅ DONE (now atomic via 3b) |
-| 5a  | Dispatch failure calls `releaseLease()`                                                                                           | 4     | ✅ DONE                     |
-| 5b  | Dispatch rollback uses atomic bidirectional release (depends on 3b)                                                               | 4     | ✅ DONE                     |
-| 2   | Remove `patchIssueState()` fallbacks from 6 lifecycle helpers                                                                     | 3     | ✅ DONE                     |
-| 6   | Remove persistent `integrationQueue` artifact from state model                                                                    | 5     | ✅ DONE                     |
-| 8   | Strengthen tests: direct module tests, rejection tests, atomic release tests                                                      | 6     | ✅ DONE                     |
+| #   | Blocker                                                                      | Phase | Status                      |
+| --- | ---------------------------------------------------------------------------- | ----- | --------------------------- |
+| 1   | Normalize worktree state on load in `load-state.mjs`                         | 1     | ✅ DONE                     |
+| 7   | Verify all `worktreeStates` readers handle normalized records                | 1     | ✅ DONE                     |
+| 3a  | Add atomic `claimAndAssignWorktree()` helper (claim side)                    | 4     | ✅ DONE                     |
+| 3b  | Make `releaseLease()` truly atomic bidirectional (release side)              | 4/5   | ✅ DONE                     |
+| 4   | Clear worktree ownership when lease is released                              | 3/5   | ✅ DONE (now atomic via 3b) |
+| 5a  | Dispatch failure calls `releaseLease()`                                      | 4     | ✅ DONE                     |
+| 5b  | Dispatch rollback uses atomic bidirectional release (depends on 3b)          | 4     | ✅ DONE                     |
+| 2   | Remove `patchIssueState()` fallbacks from 6 lifecycle helpers                | 3     | ✅ DONE                     |
+| 6   | Remove persistent `integrationQueue` artifact from state model               | 5     | ✅ DONE                     |
+| 8   | Strengthen tests: direct module tests, rejection tests, atomic release tests | 6     | ✅ DONE                     |
 
 ### Phase 6 — Tests (COMPLETE)
 
@@ -194,14 +194,14 @@ State drift, stale-owner confusion, scheduler disagreement, false health signals
 
 ### Critical Findings
 
-| # | Finding | Severity | Detail |
-|---|---------|----------|--------|
-| B1 | ~~`patchIssueState()` is unrestricted~~ | ~~High~~ | **RESOLVED (G prerequisite).** `LIFECYCLE_FIELDS` guard added — `patchIssueState()` now throws on lifecycle-determining fields (`lease`, `finalization`, `completed_at`, `human_only`, `retry_exhausted`, `blocked_reason`, `cooldown_until`). Callers (`noteAttemptStart`, `email-ingest`) cleaned of lifecycle field writes. |
-| B2 | ~~`publish-evidence-and-close.mjs` uses `patchIssueState()`~~ | ~~High~~ | **RESOLVED (G prerequisite).** Migrated to `transitionIssue("evidence_pending", {...})` self-transition with `reason: "missing_linear_detail"`. |
-| B3 | ~~`integration_pending → completed` allowed directly~~ | ~~High for G~~ | **RESOLVED (G prerequisite).** Removed from transition map. Must now go `integration_pending → evidence_pending → completed`. `evidence_pending` self-transition added for metadata annotation. |
-| B4 | `heartbeatLease()` directly mutates lease | Medium | Bypasses transition helpers entirely. Arguably special-case maintenance, but still means transitionIssue is not the sole lifecycle write path. |
-| B5 | Atomicity tested with mocked lock/storage | Medium | Tests mock `loadState`, `saveState`, `withStateLock`. Proves function bodies update both sides, but not real filesystem persistence, lock behavior, or crash-window safety. |
-| B6 | Deprecated helpers still exist as importable modules | Low | `setFinalizationState.mjs` and `setWorktreeState.mjs` remain as files. Removed from barrel exports and no production callers found, but still importable as backdoors. |
+| #   | Finding                                                       | Severity       | Detail                                                                                                                                                                                                                                                                                                                         |
+| --- | ------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| B1  | ~~`patchIssueState()` is unrestricted~~                       | ~~High~~       | **RESOLVED (G prerequisite).** `LIFECYCLE_FIELDS` guard added — `patchIssueState()` now throws on lifecycle-determining fields (`lease`, `finalization`, `completed_at`, `human_only`, `retry_exhausted`, `blocked_reason`, `cooldown_until`). Callers (`noteAttemptStart`, `email-ingest`) cleaned of lifecycle field writes. |
+| B2  | ~~`publish-evidence-and-close.mjs` uses `patchIssueState()`~~ | ~~High~~       | **RESOLVED (G prerequisite).** Migrated to `transitionIssue("evidence_pending", {...})` self-transition with `reason: "missing_linear_detail"`.                                                                                                                                                                                |
+| B3  | ~~`integration_pending → completed` allowed directly~~        | ~~High for G~~ | **RESOLVED (G prerequisite).** Removed from transition map. Must now go `integration_pending → evidence_pending → completed`. `evidence_pending` self-transition added for metadata annotation.                                                                                                                                |
+| B4  | `heartbeatLease()` directly mutates lease                     | Medium         | Bypasses transition helpers entirely. Arguably special-case maintenance, but still means transitionIssue is not the sole lifecycle write path.                                                                                                                                                                                 |
+| B5  | Atomicity tested with mocked lock/storage                     | Medium         | Tests mock `loadState`, `saveState`, `withStateLock`. Proves function bodies update both sides, but not real filesystem persistence, lock behavior, or crash-window safety.                                                                                                                                                    |
+| B6  | Deprecated helpers still exist as importable modules          | Low            | `setFinalizationState.mjs` and `setWorktreeState.mjs` remain as files. Removed from barrel exports and no production callers found, but still importable as backdoors.                                                                                                                                                         |
 
 ### Impact on Workstream G (historical — G is now ✅ Complete)
 

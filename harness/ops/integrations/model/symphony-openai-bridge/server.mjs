@@ -780,7 +780,10 @@ export const server = http.createServer(async (req, res) => {
         // First, let credit-gate select the best provider (with session awareness)
         // F5: Capture ranked selection rationale for evidence
         const selectionLog = [];
-        const selectedProvider = await selectProvider({ ...buildSelectionOptions(route, [], sessionId), selectionLog });
+        const selectedProvider = await selectProvider({
+          ...buildSelectionOptions(route, [], sessionId),
+          selectionLog,
+        });
 
         logInfo(
           `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
@@ -1098,13 +1101,12 @@ export const server = http.createServer(async (req, res) => {
           // Defensive: use startTime from closure, fall back to req._startTime
           const _elapsed = Date.now() - (startTime ?? req._startTime ?? Date.now());
           // 🔍 Production diagnostics: Log full stack trace for streaming errors
-          logError(
-            `Streaming error after ${formatElapsed(_elapsed)}: ${streamError.message}`,
-          );
+          logError(`Streaming error after ${formatElapsed(_elapsed)}: ${streamError.message}`);
           if (streamError.stack) {
             logError(`[DIAG] Streaming error STACK: ${streamError.stack}`);
           }
-          if (process.env.SYMPHONY_DEBUG) console.error(`[DIAG] Streaming error detail:`, streamError);
+          if (process.env.SYMPHONY_DEBUG)
+            console.error(`[DIAG] Streaming error detail:`, streamError);
 
           // F Phase 3: Emit failure-path evidence when providers exhausted (streaming)
           // Covers F2 (routing on failure), F3 (safety-net), F4 (context-reduction on failure)

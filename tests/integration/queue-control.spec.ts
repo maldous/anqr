@@ -39,13 +39,10 @@ describe("Queue Control Scripts", () => {
     it("should support --dry-run flag", () => {
       let exitCode = 0;
       try {
-        execSync(
-          "node harness/ops/symphony-queue-control.mjs --all --dry-run 2>&1",
-          {
-            stdio: "pipe",
-            timeout: 10_000,
-          },
-        );
+        execSync("node harness/ops/symphony-queue-control.mjs --all --dry-run 2>&1", {
+          stdio: "pipe",
+          timeout: 10_000,
+        });
       } catch (e) {
         // May fail for various reasons but interface should exist
         exitCode = (e as { status?: number }).status ?? 1;

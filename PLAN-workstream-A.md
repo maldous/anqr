@@ -66,7 +66,7 @@ Duplicate work, inconsistent claim timing, hard-to-debug retries, queue drift, a
 ## Acceptance Criteria
 
 1. ✅ There is one and only one scheduler-authoritative code path for global issue admission and claim. No runner, reconciler, or webhook flow can bypass it. (A3 resolved in G Phase 1 — `/v1/linear/execute` is a documented operator-privilege path with evidence record creation.)
-3. ✅ All scheduling decisions that affect correctness survive process restart and are derived from durable state, not transient counters alone.
+2. ✅ All scheduling decisions that affect correctness survive process restart and are derived from durable state, not transient counters alone.
 
 ## Completion Review Findings (gpt-5-agent deep audit)
 
@@ -76,13 +76,13 @@ The architectural changes are real and meaningful — scheduler authority exists
 
 ### Gaps Identified
 
-| # | Gap | Severity | Detail |
-|---|-----|----------|--------|
-| A1 | ~~Trigger path fallback~~ | ~~Medium~~ | **RESOLVED (G prerequisite).** Removed `selectLinearWorktree()` fallback from `handle-linear-trigger.mjs` and `dispatch-linear-execution.mjs`. Trigger path now rejects with 503 when assigned worktree is missing (consistent with queue-drain path). `selectLinearWorktree` import removed from both files. |
-| A2 | ~~Runner doesn't verify assigned worktree~~ | ~~Medium~~ | **RESOLVED (G prerequisite).** `execute-issue.mjs` now verifies `assignment.worktreeId === WORKTREE_ID` before lease acquisition. Skipped for repair candidates (validated at pick time) and operator overrides (`--issue` flag via `operatorOverride` option). |
-| A3 | ~~Direct executor path unguarded~~ | ~~Low~~ | **RESOLVED (G Phase 1).** `execute-linear-issue-request.mjs` now generates `correlationId` via `randomUUID()`, calls `ensureEvidenceRecord()`, always sets `ANQR_CORRELATION_ID` env var. Response changed to `"execution_complete"`. This is a documented operator-privilege path, not a scheduler-bypass. |
-| A4 | Tests focus on `claimIssue` not `claimAndAssignWorktree` | Low | Headline behavioral tests exercise `claimIssue()` but production scheduler uses `claimAndAssignWorktree()`. Coverage mismatch, not fatal. |
-| A5 | Tests mostly source-grep | Medium | ~20 of 30 tests are `fs.readFileSync` + `expect(source).toContain(...)` source verification, not runtime exclusivity proof. |
+| #   | Gap                                                      | Severity   | Detail                                                                                                                                                                                                                                                                                                        |
+| --- | -------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | ~~Trigger path fallback~~                                | ~~Medium~~ | **RESOLVED (G prerequisite).** Removed `selectLinearWorktree()` fallback from `handle-linear-trigger.mjs` and `dispatch-linear-execution.mjs`. Trigger path now rejects with 503 when assigned worktree is missing (consistent with queue-drain path). `selectLinearWorktree` import removed from both files. |
+| A2  | ~~Runner doesn't verify assigned worktree~~              | ~~Medium~~ | **RESOLVED (G prerequisite).** `execute-issue.mjs` now verifies `assignment.worktreeId === WORKTREE_ID` before lease acquisition. Skipped for repair candidates (validated at pick time) and operator overrides (`--issue` flag via `operatorOverride` option).                                               |
+| A3  | ~~Direct executor path unguarded~~                       | ~~Low~~    | **RESOLVED (G Phase 1).** `execute-linear-issue-request.mjs` now generates `correlationId` via `randomUUID()`, calls `ensureEvidenceRecord()`, always sets `ANQR_CORRELATION_ID` env var. Response changed to `"execution_complete"`. This is a documented operator-privilege path, not a scheduler-bypass.   |
+| A4  | Tests focus on `claimIssue` not `claimAndAssignWorktree` | Low        | Headline behavioral tests exercise `claimIssue()` but production scheduler uses `claimAndAssignWorktree()`. Coverage mismatch, not fatal.                                                                                                                                                                     |
+| A5  | Tests mostly source-grep                                 | Medium     | ~20 of 30 tests are `fs.readFileSync` + `expect(source).toContain(...)` source verification, not runtime exclusivity proof.                                                                                                                                                                                   |
 
 ### Impact on Workstream G (historical — G is now ✅ Complete)
 

@@ -61,9 +61,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
   // or in the KNOWN_TOOL_CAPABLE allowlist get tools.  Unprobed+unknown
   // providers are rejected to prevent tool-call failures during demos.
   let useTools =
-    options.useTools === false
-      ? false
-      : providerSupportsTools(provider.name, { strict: true });
+    options.useTools === false ? false : providerSupportsTools(provider.name, { strict: true });
   logInfo(
     `Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? "" : " [no-tools]"}`,
   );

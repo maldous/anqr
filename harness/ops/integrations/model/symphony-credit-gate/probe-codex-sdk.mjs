@@ -42,7 +42,9 @@ export async function probeCodexSdk(model) {
     if (!thread) {
       // null without a model means quota exhausted or account issue — classify
       // dynamically so the system can recover when quota resets.
-      const quotaErr = new Error("Codex SDK startThread returned null — quota exhausted or temporarily unavailable");
+      const quotaErr = new Error(
+        "Codex SDK startThread returned null — quota exhausted or temporarily unavailable",
+      );
       quotaErr.code = "QUOTA_EXHAUSTED";
       throw quotaErr;
     }

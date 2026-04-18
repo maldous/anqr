@@ -15,18 +15,19 @@ Workstream G enforces evidence-gated closure: no issue may transition to `comple
 
 ## Carry-Forward Items (historical at G start; all resolved below)
 
-| # | Item | Source | Severity for G | Description |
-|---|------|--------|----------------|-------------|
-| A3 | Alternate executor path | Workstream A | **Critical** (upgraded from Medium after Phase 0 audit) | `/v1/linear/execute` bypasses `verifySchedulerClaim`. Phase 0 audit confirmed: **ALL evidence is silently lost** on this path — no `createEvidenceRecord` call, every `updateEvidenceRecord` returns null silently. Must wire evidence creation before G Phase 2 closure gate. |
-| E4 | Repo-static lifecycle checks | Workstream E | Low–Medium | `checkServiceLifecycle()` inspects repo files, not live host state. G must decide whether closure evidence requires host-runtime proof or repo-static is sufficient. |
-| F5 | Selection rationale | Workstream F | Medium | Evidence records final provider selection but not ranked candidates, scores, or policy precedence. Incident-grade reconstruction requires "why was provider A chosen over B." |
-| F7 | Evidence durability | Workstream F | **High** | All evidence writes are best-effort (`try/catch` with `/* best-effort evidence */`). `updateEvidenceRecord()` has no locking — last-write-wins races possible. G must make evidence reliable enough to gate closure on it. |
+| #   | Item                         | Source       | Severity for G                                          | Description                                                                                                                                                                                                                                                                    |
+| --- | ---------------------------- | ------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A3  | Alternate executor path      | Workstream A | **Critical** (upgraded from Medium after Phase 0 audit) | `/v1/linear/execute` bypasses `verifySchedulerClaim`. Phase 0 audit confirmed: **ALL evidence is silently lost** on this path — no `createEvidenceRecord` call, every `updateEvidenceRecord` returns null silently. Must wire evidence creation before G Phase 2 closure gate. |
+| E4  | Repo-static lifecycle checks | Workstream E | Low–Medium                                              | `checkServiceLifecycle()` inspects repo files, not live host state. G must decide whether closure evidence requires host-runtime proof or repo-static is sufficient.                                                                                                           |
+| F5  | Selection rationale          | Workstream F | Medium                                                  | Evidence records final provider selection but not ranked candidates, scores, or policy precedence. Incident-grade reconstruction requires "why was provider A chosen over B."                                                                                                  |
+| F7  | Evidence durability          | Workstream F | **High**                                                | All evidence writes are best-effort (`try/catch` with `/* best-effort evidence */`). `updateEvidenceRecord()` has no locking — last-write-wins races possible. G must make evidence reliable enough to gate closure on it.                                                     |
 
 ## Current Evidence Infrastructure
 
 ### What exists (built in prior workstreams)
 
 **Evidence record lifecycle:**
+
 1. **Created** at ingress — `createEvidenceRecord(correlationId, metadata)` in webhook receiver and discord router
 2. **Populated** during execution — routing decision, worktree selection, provider selection, execution result, validation result, push result
 3. **Augmented** by bridge — provider routing evidence, context-reduction evidence, safety-net evidence (F)
@@ -34,6 +35,7 @@ Workstream G enforces evidence-gated closure: no issue may transition to `comple
 5. **Published** to Linear — `buildEvidenceComment()` formats evidence into structured comment
 
 **Evidence modules (17 exports from `task-evidence/index.mjs`):**
+
 - `createEvidenceRecord`, `loadEvidenceRecord`, `saveEvidence`, `updateEvidenceRecord`
 - `recordRoutingDecision`, `recordWorktreeSelection`, `recordProviderSelection`
 - `recordExecutionResult`, `recordValidationResult`, `recordPushResult`, `recordIntegrationResult`
@@ -42,12 +44,14 @@ Workstream G enforces evidence-gated closure: no issue may transition to `comple
 - `getEvidenceDir`, `getEvidencePath`
 
 **State model support:**
+
 - `evidence_pending` phase in `ISSUE_PHASES` (B Phase 1)
 - `evidence_pending_closeout` finalization state maps to `evidence_pending` phase
 - Transition: `integration_pending → evidence_pending → completed` (direct `integration_pending → completed` removed in B)
 - Self-transition `evidence_pending → evidence_pending` allowed for metadata annotation during retry
 
 **Integrator closure flow (`integrate-candidate.mjs`):**
+
 1. Cherry-pick commit to `symphony/integration` branch
 2. Push to `origin/main`
 3. Record integration result evidence
@@ -79,29 +83,29 @@ Evidence records are JSON files stored in `$ANQR_EVIDENCE_DIR` (default: `$XDG_R
 
 **Metadata fields (5):**
 
-| Field | Type | Set By | Description |
-|-------|------|--------|-------------|
-| `correlationId` | string | `createEvidenceRecord()` | Primary key linking evidence to issue execution |
-| `createdAt` | ISO string | `createEvidenceRecord()` | Record creation timestamp |
-| `updatedAt` | ISO string | every `updateEvidenceRecord()` | Last modification timestamp |
-| `watchdog` | array | initialized empty | Reserved for watchdog events |
-| `events` | array | initialized empty | Reserved for lifecycle events |
+| Field           | Type       | Set By                         | Description                                     |
+| --------------- | ---------- | ------------------------------ | ----------------------------------------------- |
+| `correlationId` | string     | `createEvidenceRecord()`       | Primary key linking evidence to issue execution |
+| `createdAt`     | ISO string | `createEvidenceRecord()`       | Record creation timestamp                       |
+| `updatedAt`     | ISO string | every `updateEvidenceRecord()` | Last modification timestamp                     |
+| `watchdog`      | array      | initialized empty              | Reserved for watchdog events                    |
+| `events`        | array      | initialized empty              | Reserved for lifecycle events                   |
 
 **Evidence fields (11):**
 
-| # | Field | Subfields | Set By | Lifecycle Stage |
-|---|-------|-----------|--------|-----------------|
-| 1 | `ingress` | `source`, `receivedAt`, `issueIdentifier`, `requestIdentifier`, `webhookDeliveryId`, `discordThreadId` | `createEvidenceRecord()` | Ingress |
-| 2 | `routing` | `decidedAt`, `targetWorktreePool`, `routingStrategy`, `queuePosition` | `recordRoutingDecision()` | Dispatch |
-| 3 | `worktreeSelection` | `selectedAt`, `worktreeId`, `reason` | `recordWorktreeSelection()` | Dispatch |
-| 4 | `providerSelection` | `selectedAt`, `providerName`, `model`, `isFallback`, `fallbackReason` | `recordProviderSelection()` | Bridge (pre-LLM) |
-| 5 | `execution` | `startedAt`, `completedAt`, `durationMs`, `success`, `error`, `filesChanged` | `recordExecutionResult()` | Runner |
-| 6 | `validation` | `ranAt`, `passed`, `typecheckPassed`, `testsPassed`, `lintPassed`, `errors` | `recordValidationResult()` | Runner (post-execution) |
-| 7 | `push` | `pushedAt`, `branch`, `sha`, `success`, `error` | `recordPushResult()` | Runner (post-validation) |
-| 8 | `integration` | `integratedAt`, `mainSha`, `success`, `method`, `error` | `recordIntegrationResult()` | Integrator |
-| 9 | `providerRouting` | `decidedAt`, `routeModelId`, `allowedProviders`, `selectedProvider`, `attempts`, `triedProviders`, `hasFallback`, `fallbackChain[]` | `recordProviderRoutingEvidence()` | Bridge (post-LLM) |
-| 10 | `contextReduction` | `recordedAt`, `reductionCount`, `reductions[]`, `finalCap` | `recordContextReductionEvidence()` | Bridge (during fallback) |
-| 11 | `safetyNet` | `activatedAt`, `exhausted`, `triedProviders`, `totalAttempts`, `routeModelId`, `lastError`, `finalContextBudgetCap`, `fallbackChain[]` | `recordSafetyNetEvidence()` | Bridge (provider exhaustion) |
+| #   | Field               | Subfields                                                                                                                              | Set By                             | Lifecycle Stage              |
+| --- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------- |
+| 1   | `ingress`           | `source`, `receivedAt`, `issueIdentifier`, `requestIdentifier`, `webhookDeliveryId`, `discordThreadId`                                 | `createEvidenceRecord()`           | Ingress                      |
+| 2   | `routing`           | `decidedAt`, `targetWorktreePool`, `routingStrategy`, `queuePosition`                                                                  | `recordRoutingDecision()`          | Dispatch                     |
+| 3   | `worktreeSelection` | `selectedAt`, `worktreeId`, `reason`                                                                                                   | `recordWorktreeSelection()`        | Dispatch                     |
+| 4   | `providerSelection` | `selectedAt`, `providerName`, `model`, `isFallback`, `fallbackReason`                                                                  | `recordProviderSelection()`        | Bridge (pre-LLM)             |
+| 5   | `execution`         | `startedAt`, `completedAt`, `durationMs`, `success`, `error`, `filesChanged`                                                           | `recordExecutionResult()`          | Runner                       |
+| 6   | `validation`        | `ranAt`, `passed`, `typecheckPassed`, `testsPassed`, `lintPassed`, `errors`                                                            | `recordValidationResult()`         | Runner (post-execution)      |
+| 7   | `push`              | `pushedAt`, `branch`, `sha`, `success`, `error`                                                                                        | `recordPushResult()`               | Runner (post-validation)     |
+| 8   | `integration`       | `integratedAt`, `mainSha`, `success`, `method`, `error`                                                                                | `recordIntegrationResult()`        | Integrator                   |
+| 9   | `providerRouting`   | `decidedAt`, `routeModelId`, `allowedProviders`, `selectedProvider`, `attempts`, `triedProviders`, `hasFallback`, `fallbackChain[]`    | `recordProviderRoutingEvidence()`  | Bridge (post-LLM)            |
+| 10  | `contextReduction`  | `recordedAt`, `reductionCount`, `reductions[]`, `finalCap`                                                                             | `recordContextReductionEvidence()` | Bridge (during fallback)     |
+| 11  | `safetyNet`         | `activatedAt`, `exhausted`, `triedProviders`, `totalAttempts`, `routeModelId`, `lastError`, `finalContextBudgetCap`, `fallbackChain[]` | `recordSafetyNetEvidence()`        | Bridge (provider exhaustion) |
 
 ### Evidence Path Traces
 
@@ -178,21 +182,22 @@ quarantine-and-restart.mjs → writeEvidenceRecord(serviceName, shortName, reaso
 
 ### Field Coverage Matrix
 
-| Evidence Field | Standard Linear | Discord Chat | Direct /v1/linear/execute (A3) | Recovery |
-|----------------|:-:|:-:|:-:|:-:|
-| `ingress` | ✅ Always | ✅ Always | ❌ **MISSING**⁸ | N/A (separate system) |
-| `routing` | ✅ Guarded¹ | ❌ Missing² | ❌ **MISSING** | N/A |
-| `worktreeSelection` | ✅ Guarded¹ | ✅ Always | ❌ **MISSING** | N/A |
-| `providerSelection` | ✅ Guarded¹ | ✅ Guarded¹ | ⚠️ Silently lost³ | N/A |
-| `execution` | ✅ Guarded¹ | N/A (no runner) | ⚠️ Silently lost³ | N/A |
-| `validation` | ⚠️ Conditional⁴ | N/A | ⚠️ Silently lost³ | N/A |
-| `push` | ⚠️ Conditional⁵ | N/A | ⚠️ Silently lost³ | N/A |
-| `integration` | ✅ Guarded¹ | N/A | ⚠️ Silently lost³ | N/A |
-| `providerRouting` | ✅ Guarded¹ | ✅ Guarded¹ | ⚠️ Silently lost³ | N/A |
-| `contextReduction` | ⚠️ Conditional⁶ | ⚠️ Conditional⁶ | ⚠️ Silently lost³ | N/A |
-| `safetyNet` | ⚠️ Conditional⁷ | ⚠️ Conditional⁷ | ⚠️ Silently lost³ | N/A |
+| Evidence Field      | Standard Linear |  Discord Chat   | Direct /v1/linear/execute (A3) |       Recovery        |
+| ------------------- | :-------------: | :-------------: | :----------------------------: | :-------------------: |
+| `ingress`           |    ✅ Always    |    ✅ Always    |        ❌ **MISSING**⁸         | N/A (separate system) |
+| `routing`           |   ✅ Guarded¹   |   ❌ Missing²   |         ❌ **MISSING**         |          N/A          |
+| `worktreeSelection` |   ✅ Guarded¹   |    ✅ Always    |         ❌ **MISSING**         |          N/A          |
+| `providerSelection` |   ✅ Guarded¹   |   ✅ Guarded¹   |       ⚠️ Silently lost³        |          N/A          |
+| `execution`         |   ✅ Guarded¹   | N/A (no runner) |       ⚠️ Silently lost³        |          N/A          |
+| `validation`        | ⚠️ Conditional⁴ |       N/A       |       ⚠️ Silently lost³        |          N/A          |
+| `push`              | ⚠️ Conditional⁵ |       N/A       |       ⚠️ Silently lost³        |          N/A          |
+| `integration`       |   ✅ Guarded¹   |       N/A       |       ⚠️ Silently lost³        |          N/A          |
+| `providerRouting`   |   ✅ Guarded¹   |   ✅ Guarded¹   |       ⚠️ Silently lost³        |          N/A          |
+| `contextReduction`  | ⚠️ Conditional⁶ | ⚠️ Conditional⁶ |       ⚠️ Silently lost³        |          N/A          |
+| `safetyNet`         | ⚠️ Conditional⁷ | ⚠️ Conditional⁷ |       ⚠️ Silently lost³        |          N/A          |
 
 **Legend:**
+
 1. ¹ Guarded by `if (correlationId)` — populated when correlationId is present (always true on standard path)
 2. ² Discord chat path does not call `recordRoutingDecision()` — acceptable because there is no router dispatch for chat
 3. ³ `updateEvidenceRecord()` calls `loadEvidenceRecord()` which returns null (no file) → returns null silently — **evidence silently discarded**
@@ -206,34 +211,34 @@ quarantine-and-restart.mjs → writeEvidenceRecord(serviceName, shortName, reaso
 
 #### Critical Gaps
 
-| # | Gap | Severity | Impact | Phase |
-|---|-----|----------|--------|-------|
-| G0-1 | **A3: No evidence record creation on direct `/v1/linear/execute`** | 🔴 Critical | ALL evidence silently lost for operator-initiated executions. `updateEvidenceRecord` returns null on every call because no file exists. No logging of this failure. | G Phase 1 |
-| G0-2 | **No evidence completeness validation** | 🔴 Critical | `publishEvidenceAndClose` posts whatever evidence exists (even null/empty) without checking mandatory fields. Closure succeeds regardless. | G Phase 2 |
-| G0-3 | **No closure gate on transition** | 🔴 Critical | `evidence_pending → completed` transition has no evidence validation. Structurally depends on `publishEvidenceAndClose` returning `{ok: true}` but this only checks Linear API success, not evidence completeness. | G Phase 2 |
+| #    | Gap                                                                | Severity    | Impact                                                                                                                                                                                                             | Phase     |
+| ---- | ------------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| G0-1 | **A3: No evidence record creation on direct `/v1/linear/execute`** | 🔴 Critical | ALL evidence silently lost for operator-initiated executions. `updateEvidenceRecord` returns null on every call because no file exists. No logging of this failure.                                                | G Phase 1 |
+| G0-2 | **No evidence completeness validation**                            | 🔴 Critical | `publishEvidenceAndClose` posts whatever evidence exists (even null/empty) without checking mandatory fields. Closure succeeds regardless.                                                                         | G Phase 2 |
+| G0-3 | **No closure gate on transition**                                  | 🔴 Critical | `evidence_pending → completed` transition has no evidence validation. Structurally depends on `publishEvidenceAndClose` returning `{ok: true}` but this only checks Linear API success, not evidence completeness. | G Phase 2 |
 
 #### High Gaps
 
-| # | Gap | Severity | Impact | Phase |
-|---|-----|----------|--------|-------|
-| G0-4 | **Evidence durability: no file locking** | 🟠 High | Concurrent bridge requests updating same correlationId risk last-write-wins data loss. `saveEvidence` atomic write protects against corruption but not against lost updates. | G Phase 1 |
-| G0-5 | **`updateEvidenceRecord` silent null return** | 🟠 High | When record doesn't exist, returns null without logging. Callers wrap in `try/catch` with `/* best-effort evidence */` so failure is invisible even in logs. | G Phase 1 |
-| G0-6 | **`loadEvidenceRecord` cannot distinguish missing from corrupted** | 🟠 High | Returns null for both "file not found" and "JSON parse error". Closure gate cannot differentiate "no evidence" from "corrupted evidence". | G Phase 1 |
+| #    | Gap                                                                | Severity | Impact                                                                                                                                                                       | Phase     |
+| ---- | ------------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| G0-4 | **Evidence durability: no file locking**                           | 🟠 High  | Concurrent bridge requests updating same correlationId risk last-write-wins data loss. `saveEvidence` atomic write protects against corruption but not against lost updates. | G Phase 1 |
+| G0-5 | **`updateEvidenceRecord` silent null return**                      | 🟠 High  | When record doesn't exist, returns null without logging. Callers wrap in `try/catch` with `/* best-effort evidence */` so failure is invisible even in logs.                 | G Phase 1 |
+| G0-6 | **`loadEvidenceRecord` cannot distinguish missing from corrupted** | 🟠 High  | Returns null for both "file not found" and "JSON parse error". Closure gate cannot differentiate "no evidence" from "corrupted evidence".                                    | G Phase 1 |
 
 #### Medium Gaps
 
-| # | Gap | Severity | Impact | Phase |
-|---|-----|----------|--------|-------|
-| G0-7 | **Discord chat: no `routing` field** | 🟡 Medium | `recordRoutingDecision` not called in `process-and-proxy.mjs`. Acceptable for chat (no router dispatch), but means evidence schema varies by path with no explicit documentation. | G Phase 0 (documented, accepted) |
-| G0-8 | **Recovery evidence unlinked** | 🟡 Medium | Recovery daemon uses separate `buildEvidence()` system writing to different directory (`anqr-watchdog-evidence/`). No correlationId linkage to task-evidence. Limits cross-referencing during incident reconstruction. | G Phase 3 or later |
-| G0-9 | ~~**No selection rationale (F5)**~~ | ~~🟡 Medium~~ | **RESOLVED in G Phase 3.** `selectProvider` now accepts `selectionLog`; `server.mjs` wired on all 5 evidence paths. | G Phase 3 ✅ |
+| #    | Gap                                  | Severity      | Impact                                                                                                                                                                                                                 | Phase                            |
+| ---- | ------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| G0-7 | **Discord chat: no `routing` field** | 🟡 Medium     | `recordRoutingDecision` not called in `process-and-proxy.mjs`. Acceptable for chat (no router dispatch), but means evidence schema varies by path with no explicit documentation.                                      | G Phase 0 (documented, accepted) |
+| G0-8 | **Recovery evidence unlinked**       | 🟡 Medium     | Recovery daemon uses separate `buildEvidence()` system writing to different directory (`anqr-watchdog-evidence/`). No correlationId linkage to task-evidence. Limits cross-referencing during incident reconstruction. | G Phase 3 or later               |
+| G0-9 | ~~**No selection rationale (F5)**~~  | ~~🟡 Medium~~ | **RESOLVED in G Phase 3.** `selectProvider` now accepts `selectionLog`; `server.mjs` wired on all 5 evidence paths.                                                                                                    | G Phase 3 ✅                     |
 
 #### Low Gaps
 
-| # | Gap | Severity | Impact | Phase |
-|---|-----|----------|--------|-------|
-| G0-10 | **`watchdog` and `events` arrays always empty** | 🟢 Low | Reserved fields in schema but never populated. No immediate harm but schema carries dead weight. | Future |
-| G0-11 | **Conditional fields (validation, push, contextReduction, safetyNet) not distinguishable** | 🟢 Low | null means both "didn't happen" and "happened but wasn't recorded". No sentinel value for "intentionally skipped". | G Phase 2 (completeness levels) |
+| #     | Gap                                                                                        | Severity | Impact                                                                                                             | Phase                           |
+| ----- | ------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------- |
+| G0-10 | **`watchdog` and `events` arrays always empty**                                            | 🟢 Low   | Reserved fields in schema but never populated. No immediate harm but schema carries dead weight.                   | Future                          |
+| G0-11 | **Conditional fields (validation, push, contextReduction, safetyNet) not distinguishable** | 🟢 Low   | null means both "didn't happen" and "happened but wasn't recorded". No sentinel value for "intentionally skipped". | G Phase 2 (completeness levels) |
 
 ### Mandatory Evidence Schema (Phase 0 Decision)
 
@@ -241,40 +246,41 @@ Based on the audit, the following **mandatory evidence fields for issue closure*
 
 **`MANDATORY_EVIDENCE_FIELDS` for closure:**
 
-| Field Path | Required Value | Rationale |
-|------------|---------------|----------|
-| `correlationId` | non-null string | Links evidence to issue; primary key |
-| `ingress.source` | non-null string | Proves how the issue entered the system |
+| Field Path                | Required Value  | Rationale                                       |
+| ------------------------- | --------------- | ----------------------------------------------- |
+| `correlationId`           | non-null string | Links evidence to issue; primary key            |
+| `ingress.source`          | non-null string | Proves how the issue entered the system         |
 | `ingress.issueIdentifier` | non-null string | Identifies which issue this evidence belongs to |
-| `execution.success` | boolean | Proves execution completed |
-| `execution.completedAt` | ISO string | Proves execution timing |
-| `push.success` | `true` | Proves code was pushed to worktree branch |
-| `push.branch` | non-null string | Identifies which branch received the code |
-| `integration.success` | `true` | Proves code was integrated to main |
-| `integration.mainSha` | non-null string | Links to the specific main commit |
+| `execution.success`       | boolean         | Proves execution completed                      |
+| `execution.completedAt`   | ISO string      | Proves execution timing                         |
+| `push.success`            | `true`          | Proves code was pushed to worktree branch       |
+| `push.branch`             | non-null string | Identifies which branch received the code       |
+| `integration.success`     | `true`          | Proves code was integrated to main              |
+| `integration.mainSha`     | non-null string | Links to the specific main commit               |
 
 **Conditionally mandatory (required if execution succeeded):**
 
-| Field Path | Condition | Rationale |
-|------------|-----------|----------|
-| `validation.passed` | if execution.success=true and files changed | Proves code quality gates ran |
-| `validation.typecheckPassed` | if validation ran | Typecheck is always expected |
-| `validation.testsPassed` | if validation ran | Tests are always expected |
+| Field Path                   | Condition                                   | Rationale                     |
+| ---------------------------- | ------------------------------------------- | ----------------------------- |
+| `validation.passed`          | if execution.success=true and files changed | Proves code quality gates ran |
+| `validation.typecheckPassed` | if validation ran                           | Typecheck is always expected  |
+| `validation.testsPassed`     | if validation ran                           | Tests are always expected     |
 
 ### Evidence Completeness Levels (Phase 0 Decision)
 
-| Level | Fields Required | Use Case |
-|-------|----------------|----------|
-| `minimal` | `correlationId` + `execution` (success/completedAt) + `integration` (success/mainSha) | Bare minimum to prove execution happened and code reached main. Sufficient for operator-override closure. |
+| Level      | Fields Required                                                                                  | Use Case                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `minimal`  | `correlationId` + `execution` (success/completedAt) + `integration` (success/mainSha)            | Bare minimum to prove execution happened and code reached main. Sufficient for operator-override closure.   |
 | `standard` | `minimal` + `ingress` + `push` + `validation` (if applicable) + `routing` or `worktreeSelection` | Expected for all normal-path completions. Proves the full lifecycle chain from ingress through integration. |
-| `full` | `standard` + `providerRouting` + `providerSelection` | Complete evidence including provider routing decisions. Required for incident-grade reconstruction. |
-| `enriched` | `full` + any of: `contextReduction`, `safetyNet`, `selectionRationale` (F5) | Maximum evidence including conditional provider behavior. Not required for closure. |
+| `full`     | `standard` + `providerRouting` + `providerSelection`                                             | Complete evidence including provider routing decisions. Required for incident-grade reconstruction.         |
+| `enriched` | `full` + any of: `contextReduction`, `safetyNet`, `selectionRationale` (F5)                      | Maximum evidence including conditional provider behavior. Not required for closure.                         |
 
 ### Closure Threshold Decision (Phase 0 Decision)
 
 **Decision: `standard` level gates closure. `minimal` level gates operator-override closure.**
 
 Rationale:
+
 - `minimal` alone is insufficient because it doesn't prove the issue was legitimately scheduled (no ingress) or that code was validated (no validation). But it's enough for operator-override when evidence was lost due to infrastructure issues.
 - `standard` proves the complete lifecycle chain and is achievable on every normal-path execution. The only conditional fields (`validation`, `contextReduction`, `safetyNet`) have legitimate skip conditions that the completeness validator can check.
 - `full` and `enriched` are advisory — useful for incident reconstruction but not required for closure.
@@ -283,11 +289,11 @@ This decision will be implemented in G Phase 2 via `validateEvidenceCompleteness
 
 ### Separate Evidence Systems Inventory
 
-| System | Storage Location | Schema | Linked to task-evidence? | Closure-relevant? |
-|--------|-----------------|--------|:---:|:---:|
-| **Task evidence** | `$XDG_RUNTIME_DIR/anqr-task-evidence/{correlationId}.json` | 11 evidence fields + 5 metadata | — | ✅ Yes |
-| **Recovery evidence** | In-memory (returned from `buildEvidence()`) | `{actionClass, target, reason, ownershipBasis, isStateOnly, isNonPublishing, timestamp}` | ❌ No | ❌ No (recovery doesn't close) |
-| **Watchdog evidence** | `$XDG_RUNTIME_DIR/anqr-watchdog-evidence/{timestamp}-{shortName}.json` | `{timestamp, service, shortName, reason, commit, worktreeId, action, pid}` | ❌ No | ❌ No (watchdog doesn't close) |
+| System                | Storage Location                                                       | Schema                                                                                   | Linked to task-evidence? |       Closure-relevant?        |
+| --------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | :----------------------: | :----------------------------: |
+| **Task evidence**     | `$XDG_RUNTIME_DIR/anqr-task-evidence/{correlationId}.json`             | 11 evidence fields + 5 metadata                                                          |            —             |             ✅ Yes             |
+| **Recovery evidence** | In-memory (returned from `buildEvidence()`)                            | `{actionClass, target, reason, ownershipBasis, isStateOnly, isNonPublishing, timestamp}` |          ❌ No           | ❌ No (recovery doesn't close) |
+| **Watchdog evidence** | `$XDG_RUNTIME_DIR/anqr-watchdog-evidence/{timestamp}-{shortName}.json` | `{timestamp, service, shortName, reason, commit, worktreeId, action, pid}`               |          ❌ No           | ❌ No (watchdog doesn't close) |
 
 **Decision:** Recovery and watchdog evidence systems remain separate. They serve different purposes (infrastructure health vs task lifecycle) and have no closure path. Cross-linking is a future enhancement, not a G requirement.
 
@@ -447,7 +453,7 @@ Silent evidence loss, closure without proof of validation or integration, weak i
 
 10. ✅ Workflow completion is not signaled until integration and required evidence publication are complete.
 11. ✅ Closure fails when mandatory evidence is missing.
-13. ⬜ A full end-to-end demonstration exists for: successful authoritative scheduling through integration and closure; duplicate-trigger suppression; recovery quarantine without git mutation; restart-safe resumption; config drift detection; provider fallback with recorded evidence. (Requires live system verification — see [PLAN-criterion-13.md](./PLAN-criterion-13.md))
+12. ⬜ A full end-to-end demonstration exists for: successful authoritative scheduling through integration and closure; duplicate-trigger suppression; recovery quarantine without git mutation; restart-safe resumption; config drift detection; provider fallback with recorded evidence. (Requires live system verification — see [PLAN-criterion-13.md](./PLAN-criterion-13.md))
 
 ## Dependencies
 

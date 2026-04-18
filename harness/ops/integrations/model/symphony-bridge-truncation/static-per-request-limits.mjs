@@ -24,7 +24,7 @@ export const STATIC_PER_REQUEST_LIMITS = {
   // ── Groq free-tier per-request limits ──
   // Context window is 131K but free tier enforces these per-request caps.
   // See: 413 "tokens_limit_reached" errors with TPM limits in Groq API responses.
-  "groq": 12_000,  // generic entry → llama-3.3-70b-versatile
+  groq: 12_000, // generic entry → llama-3.3-70b-versatile
   "groq-llama-3-1-8b-instant": 6_000,
   "groq-llama-3-3-70b-versatile": 12_000,
   "groq-openai-gpt-oss-120b": 12_000,
@@ -39,7 +39,7 @@ export const STATIC_PER_REQUEST_LIMITS = {
 
   // ── Cerebras free-tier per-request limits ──
   // Context window is 8K, free tier matches closely but with overhead.
-  "cerebras": 7_000,  // generic entry → llama3.1-8b
+  cerebras: 7_000, // generic entry → llama3.1-8b
   "cerebras-llama3-1-8b": 7_000,
   "cerebras-qwen-3-235b-a22b-instruct-2507": 7_000,
   "cerebras-gpt-oss-120b": 7_000,

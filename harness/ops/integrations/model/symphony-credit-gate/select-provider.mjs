@@ -42,7 +42,13 @@ export async function selectProvider(options = {}) {
     if (!entry?.name || seen.has(entry.name)) continue;
     seen.add(entry.name);
     orderedNames.push(entry.name);
-    scoreByName.set(entry.name, { score: entry.score, rank: entry.rank, selections: entry.selections, toolConfirmed: entry.toolConfirmed, scoreBreakdown: entry.scoreBreakdown || null });
+    scoreByName.set(entry.name, {
+      score: entry.score,
+      rank: entry.rank,
+      selections: entry.selections,
+      toolConfirmed: entry.toolConfirmed,
+      scoreBreakdown: entry.scoreBreakdown || null,
+    });
   }
 
   logInfo(`[selectProvider] Candidate order (ranked)`, {
@@ -54,32 +60,63 @@ export async function selectProvider(options = {}) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
     const metrics = scoreByName.get(providerName) || null;
     if (!provider) {
-      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "not_found", ...metrics });
+      if (selectionLog)
+        selectionLog.push({
+          name: providerName,
+          status: "skipped",
+          reason: "not_found",
+          ...metrics,
+        });
       continue;
     }
     if (!matchesAllowedNames(provider, allowedNames)) {
-      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "not_in_allowed", ...metrics });
+      if (selectionLog)
+        selectionLog.push({
+          name: providerName,
+          status: "skipped",
+          reason: "not_in_allowed",
+          ...metrics,
+        });
       continue;
     }
     if (matchesExcludedNames(provider, excludedNames)) {
-      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: "excluded", ...metrics });
+      if (selectionLog)
+        selectionLog.push({
+          name: providerName,
+          status: "skipped",
+          reason: "excluded",
+          ...metrics,
+        });
       continue;
     }
     const health = getProviderHealthState(provider.name);
     if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED) {
-      if (selectionLog) selectionLog.push({ name: providerName, status: "skipped", reason: health.state, ...metrics });
+      if (selectionLog)
+        selectionLog.push({
+          name: providerName,
+          status: "skipped",
+          reason: health.state,
+          ...metrics,
+        });
       continue;
     }
     const selected = await tryProvider(provider);
     if (selected) {
-      if (selectionLog) selectionLog.push({ name: selected.name, status: "selected", tier: selected.tier, ...metrics });
+      if (selectionLog)
+        selectionLog.push({
+          name: selected.name,
+          status: "selected",
+          tier: selected.tier,
+          ...metrics,
+        });
       logInfo(`[selectProvider] Selected ranked provider`, {
         providerName: selected.name,
         tier: selected.tier,
       });
       return selected;
     }
-    if (selectionLog) selectionLog.push({ name: providerName, status: "failed", reason: "try_failed", ...metrics });
+    if (selectionLog)
+      selectionLog.push({ name: providerName, status: "failed", reason: "try_failed", ...metrics });
   }
 
   if (!allowSafetyNetOverride) {
@@ -104,7 +141,14 @@ export async function selectProvider(options = {}) {
     clearProviderFailure(provider.name);
     const selected = await tryProvider(provider);
     if (selected) {
-      if (selectionLog) selectionLog.push({ name: selected.name, status: "safety_net_selected", tier: selected.tier, score: "safety_net", rank: null });
+      if (selectionLog)
+        selectionLog.push({
+          name: selected.name,
+          status: "safety_net_selected",
+          tier: selected.tier,
+          score: "safety_net",
+          rank: null,
+        });
       logWarn(
         `[selectProvider] P0 SAFETY NET activated: ${selected.name} (all ranked candidates exhausted)`,
         {

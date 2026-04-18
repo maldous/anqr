@@ -46,7 +46,9 @@ export async function reconcileEnvKeys(mode = "check") {
       .join("\n");
     const newContent = liveContent.trimEnd() + "\n\n" + additions + "\n";
     writeFileSync(LIVE_HOST_FILE, newContent, "utf-8");
-    actions.push(`Added ${missingFromLive.length} missing keys to live file: ${missingFromLive.join(", ")}`);
+    actions.push(
+      `Added ${missingFromLive.length} missing keys to live file: ${missingFromLive.join(", ")}`,
+    );
 
     // Also sync to symphony env if it exists
     if (existsSync(SYMPHONY_ENV)) {
@@ -81,9 +83,7 @@ export async function reconcileEnvKeys(mode = "check") {
   const pass = missingFromLive.length === 0 && extraInLive.length === 0;
   return {
     pass,
-    detail: pass
-      ? `Env keys aligned (${templateKeys.size} keys)`
-      : actions.join("; "),
+    detail: pass ? `Env keys aligned (${templateKeys.size} keys)` : actions.join("; "),
     actions,
     missingFromLive,
     extraInLive,

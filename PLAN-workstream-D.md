@@ -106,13 +106,13 @@ The codex control-plane exception is a deliberate main-repo mutation exception. 
 
 ### Findings
 
-| # | Finding | Severity | Detail |
-|---|---------|----------|--------|
-| D1 | Tests are mixed runtime/source | Medium | A "large fraction" of boundary-enforcement.spec.ts is source inspection (service file audit, server integration checks). Runtime tests exist for pure helpers (deriveBridgeMode, assertMutationContext, etc.) but end-to-end bridge startup proof is missing. |
-| D2 | `IS_WORKTREE_BRIDGE` naming contradiction | Low | Codex sets `ANQR_WORKTREE_ID=codex` so `IS_WORKTREE_BRIDGE=true`, but it is not a real worktree bridge. `BRIDGE_MODE` fixes the decision logic but the naming is a future footgun. |
-| D3 | `assertBridgeMutationBoundary` scope is narrow | Low | In worktree mode, blocks writes to `CONTROL_REPO_ROOT`. Does not itself enforce "all writes must remain inside BRIDGE_ROOT" — that containment depends on `resolveRequestPath()` + `remapRepoPathToBridgeRoot()`. Safety model is split across helpers. |
-| D4 | Codex `/v1/responses` skips auth | Low for D, noted for G | May be intentional for CLI local usage, but if network exposure assumptions change, it's a concern. |
-| D5 | `CODEX_SANDBOX_MODE=danger-full-access` | Informational | Both executor and codex services set this. Even if the file/path layer provides containment, the setting is a red flag for any future tighter sandboxing claim. |
+| #   | Finding                                        | Severity               | Detail                                                                                                                                                                                                                                                        |
+| --- | ---------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Tests are mixed runtime/source                 | Medium                 | A "large fraction" of boundary-enforcement.spec.ts is source inspection (service file audit, server integration checks). Runtime tests exist for pure helpers (deriveBridgeMode, assertMutationContext, etc.) but end-to-end bridge startup proof is missing. |
+| D2  | `IS_WORKTREE_BRIDGE` naming contradiction      | Low                    | Codex sets `ANQR_WORKTREE_ID=codex` so `IS_WORKTREE_BRIDGE=true`, but it is not a real worktree bridge. `BRIDGE_MODE` fixes the decision logic but the naming is a future footgun.                                                                            |
+| D3  | `assertBridgeMutationBoundary` scope is narrow | Low                    | In worktree mode, blocks writes to `CONTROL_REPO_ROOT`. Does not itself enforce "all writes must remain inside BRIDGE_ROOT" — that containment depends on `resolveRequestPath()` + `remapRepoPathToBridgeRoot()`. Safety model is split across helpers.       |
+| D4  | Codex `/v1/responses` skips auth               | Low for D, noted for G | May be intentional for CLI local usage, but if network exposure assumptions change, it's a concern.                                                                                                                                                           |
+| D5  | `CODEX_SANDBOX_MODE=danger-full-access`        | Informational          | Both executor and codex services set this. Even if the file/path layer provides containment, the setting is a red flag for any future tighter sandboxing claim.                                                                                               |
 
 ### Impact on Workstream G (historical — G is now ✅ Complete)
 
