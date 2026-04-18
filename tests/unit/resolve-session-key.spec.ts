@@ -5,7 +5,7 @@ import {
   isLinearSessionKey,
   getLinearIssueId,
   getDiscordChannelId,
-} from "../../harness/ops/integrations/model/symphony-session-state/resolve-session-key.mjs";
+} from "../../harness/ops/integrations/model/symphony-session-state/index.mjs";
 
 describe("resolveSessionKey", () => {
   it("resolves Discord guild + channel to discord:guildId:channelId", () => {

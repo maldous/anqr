@@ -132,6 +132,7 @@
     "harness/ops/integrations/model/symphony-credit-gate/provider-lease-file.mjs": ["exports"],
     "harness/ops/integrations/model/symphony-credit-gate/stats-file.mjs": ["exports"],
     "harness/ops/integrations/model/symphony-openai-bridge/current-request-id.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-openai-bridge/get-request-context.mjs": ["exports"],
     "harness/ops/integrations/model/symphony-openai-bridge/with-request-context.mjs": ["exports"],
     "harness/ops/integrations/model/symphony-provider-health/health-state-file.mjs": ["exports"],
     "harness/ops/integrations/model/symphony-provider-health/project-root.mjs": ["exports"],

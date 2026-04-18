@@ -31,7 +31,7 @@ export { trackFileChange } from "./track-file-change.mjs";
 export { currentRequestId } from "./current-request-id.mjs";
 export { setCurrentRequestId } from "./set-current-request-id.mjs";
 export { getCurrentRequestId } from "./get-current-request-id.mjs";
-export { getRequestContext } from "./current-request-id.mjs";
+export { getRequestContext } from "./get-request-context.mjs";
 export { requestContextStorage } from "./request-context-storage.mjs";
 export { withRequestContext } from "./with-request-context.mjs";
 export { coerceStringArrayInput } from "./coerce-string-array-input.mjs";

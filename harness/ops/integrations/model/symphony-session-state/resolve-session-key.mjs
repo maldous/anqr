@@ -13,9 +13,7 @@
  * - Fallback: header:<x-openclaw-session-value>
  */
 
-const DISCORD_PREFIX = "discord:";
-const LINEAR_PREFIX = "linear:";
-const HEADER_PREFIX = "header:";
+import { DISCORD_PREFIX, LINEAR_PREFIX, HEADER_PREFIX } from "./session-key-prefixes.mjs";
 
 /**
  * Resolve a canonical session key from request context.
@@ -46,38 +44,4 @@ export function resolveSessionKey(source) {
     return `${HEADER_PREFIX}${source.headerSessionKey}`;
   }
   return null;
-}
-
-/**
- * Check if a session key is from a Discord source.
- */
-export function isDiscordSessionKey(key) {
-  return key?.startsWith(DISCORD_PREFIX) ?? false;
-}
-
-/**
- * Check if a session key is from a Linear source.
- */
-export function isLinearSessionKey(key) {
-  return key?.startsWith(LINEAR_PREFIX) ?? false;
-}
-
-/**
- * Extract the Linear issue identifier from a Linear session key.
- * Returns null if the key is not a Linear key.
- */
-export function getLinearIssueId(key) {
-  if (!isLinearSessionKey(key)) return null;
-  return key.slice(LINEAR_PREFIX.length);
-}
-
-/**
- * Extract the Discord channel ID from a Discord session key.
- * Returns null if the key is not a Discord key.
- */
-export function getDiscordChannelId(key) {
-  if (!isDiscordSessionKey(key)) return null;
-  const parts = key.slice(DISCORD_PREFIX.length).split(":");
-  // Last segment is always the channel ID (guild:channel or just channel)
-  return parts[parts.length - 1];
 }

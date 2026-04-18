@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { getBridgeStateDir } from "./get-bridge-state-dir.mjs";
+import { getBridgeStateDir } from "./get-bridge-state-dir-impl.mjs";
 
 const LOCK_MAX_ATTEMPTS = 60;
 const LOCK_BASE_WAIT_MS = 5;

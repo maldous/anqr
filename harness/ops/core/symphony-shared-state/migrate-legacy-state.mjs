@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ensureBridgeStateDir } from "./get-bridge-state-dir.mjs";
+import { ensureBridgeStateDir } from "./ensure-bridge-state-dir.mjs";
 
 /**
  * One-time migration of bridge state files from the legacy worktree-local
