@@ -26,6 +26,7 @@
     "sonar-report.json",
     ".git/**",
     "reports/**",
+    "docs/archive/**",
     "**/*.tsbuildinfo",
     "**/build/**",
     "apps/**/i18n/**"
@@ -682,11 +683,7 @@
     "backcompat",
     "idempotent",
     "mtime",
-    "remapped",
-    "allam",
-    "blocklists",
-    "tmpfiles",
-    "writeups"
+    "remapped"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

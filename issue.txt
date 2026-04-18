@@ -1,0 +1,313 @@
+Title
+
+Shared AI session context and worktree-safe execution for Discord and Linear
+
+Summary
+
+Follow-up requests can land on a different worktree and lose effective context. Routing stickiness exists, but the actual conversational and provider state is not reliably shared or rehydrated across worktrees. Discord work is also not durably claimed like Linear work, and tool/result attribution has concurrency risks.
+
+This work item introduces a shared, model-agnostic session context layer, durable active-job ownership, and stronger worktree binding for tool execution.
+
+Problem
+
+Current behavior allows this failure mode:
+
+- initial Discord request is handled by one worktree
+- follow-up request is routed to another worktree, or the original worktree has no usable restored state
+- the new worktree does not know the prior conversation, tool outputs, or current job state
+- provider metrics and health may drift between worktrees
+- tool execution is usually request-local, but follow-up continuity is not reliable
+
+This breaks the intended operating model:
+
+- wt1 to wt4 handle Linear work
+- wt5 to wt8 handle Discord work
+- each worktree should focus on its assigned task
+- providers may change during a task
+- shared provider metrics should help all worktrees
+- tasks should not need the full live context of every other active task
+
+Objective
+
+Create a shared context and job-ownership design that:
+
+- preserves per-session and per-job context across worktrees
+- allows model changes without losing task continuity
+- keeps provider metrics globally shared
+- keeps active task context isolated from unrelated tasks
+- ensures tools execute against the correct job and worktree
+- prevents active conversational jobs from drifting between worktrees
+
+Scope
+
+In scope
+
+- Discord session context
+- Linear issue context
+- shared provider metrics and health
+- active job ownership and worktree assignment
+- request rehydration from shared context
+- stronger request/job/worktree binding for tool execution
+- concurrency-safe request attribution
+
+Out of scope
+
+- sharing full raw history for every active job with every other job
+- creating one global Discord memory blob
+- changing the high-level wt1 to wt4 Linear and wt5 to wt8 Discord split
+- redesigning provider ranking logic beyond state-sharing and handoff support
+
+Proposed design
+
+1. Separate state into three layers
+
+Global shared state
+- provider metrics
+- provider health
+- provider leases
+
+Session context
+- one context record per Discord session or thread
+- one context record per Linear issue
+
+Active job state
+- one record per currently executing job
+- assigned worktree
+- selected provider
+- cwd
+- status
+- timestamps
+- artifact references
+
+2. Use a shared state directory outside the worktree
+
+Introduce a single explicit shared path, for example:
+- `ANQR_SHARED_AI_STATE_DIR=/run/user/<uid>/anqr-ai-state`
+
+Move session and provider state out of per-worktree repo-local `reports/...` paths.
+
+3. Use strict context keys
+
+Examples:
+- `discord:<guild>:<channel>:<thread-or-root-message>`
+- `linear:<issue-id>`
+- `job:<uuid>`
+
+This prevents unrelated jobs from seeing each other.
+
+4. Persist a model-agnostic handoff packet
+
+Each session context should contain:
+- summary
+- recent turns
+- current subgoals
+- active artifacts
+- selected provider
+- assigned worktree
+- active job id
+- last update time
+
+Do not rely on provider-private memory as the source of truth.
+
+5. Rehydrate context on request entry
+
+On each request:
+- resolve session key
+- load shared session context
+- load active job if present
+- reconstruct prompt context from summary, recent turns, and relevant artifacts
+- continue on assigned worktree when the session has an active job
+
+6. Add durable Discord active-job ownership
+
+Discord should have lighter-weight durable claims similar to Linear:
+- active session gets one active job id
+- active job gets one assigned worktree
+- follow-ups for that session stay on that worktree until completion or timeout
+
+7. Strengthen tool execution binding
+
+Bind these values through request-local async context:
+- request id
+- job id
+- worktree id
+- cwd
+
+Every mutating tool should validate:
+- current job matches assigned worktree
+- cwd is inside that worktree
+- request/job token is valid
+
+Replace any module-global request attribution used for concurrent requests.
+
+Actions required
+
+1. Audit current state storage
+- identify all session, provider, health, and lease state locations
+- classify them as global, session, or job state
+
+2. Introduce shared state abstraction
+- add one shared state root
+- move session context storage there
+- move provider metric and health storage there
+- keep compatibility migration for existing local state if needed
+
+3. Implement session context store
+- get, set, merge, expire
+- keyed by strict session key
+- support Discord and Linear independently
+
+4. Implement active job store
+- create job
+- assign worktree
+- update status
+- complete job
+- recover stale job
+- link job to session
+
+5. Rehydrate context at request entry
+- load session record
+- load active job record
+- rebuild context packet for the selected model
+- ensure recent assistant turns and relevant tool results are represented
+
+6. Persist complete turn history summary
+- store assistant reply summaries, not only inbound user messages
+- store artifact references for tool outputs
+- store current open subgoals
+
+7. Enforce Discord worktree affinity for active jobs
+- new Discord session chooses least-loaded Discord worktree
+- active Discord session remains pinned to assigned worktree
+- do not silently reroute active sessions to another worktree unless recovered by explicit stale-job logic
+
+8. Make provider metrics truly shared
+- ensure all worktrees read and write one shared provider metric and health store
+- keep provider selection per job, but metrics global
+
+9. Fix concurrency attribution
+- remove module-global current-request tracking
+- move attribution to async request-local state
+
+10. Add recovery rules
+- recover sessions whose assigned worktree died
+- reclaim stale Discord active jobs
+- keep Linear recovery compatible with current ownership model
+
+Acceptance criteria
+
+- A Discord follow-up after an initial turn continues with correct context even if processed on a restarted process
+- An active Discord session remains pinned to the same assigned worktree until job completion or recovery timeout
+- A Linear issue can be resumed with its context from any healthy executor without relying on worktree-local files
+- Provider metrics and health are shared across all worktrees
+- Model changes during a job do not require replaying all raw task history
+- Tool execution is rejected if request/job/worktree binding is invalid
+- Concurrent requests on the same worktree do not corrupt file-change attribution
+- Unrelated active jobs do not receive each other’s context
+
+Tests required
+
+Unit tests
+
+Session context store
+- create, update, merge, expire
+- strict key separation between Discord and Linear
+- recent-turn and summary retention
+- artifact reference storage
+
+Active job store
+- create and assign worktree
+- transition states
+- stale-job detection
+- recovery and reassignment rules
+
+Provider shared state
+- all readers resolve the same shared path
+- concurrent updates do not corrupt state
+- health and metrics survive process restart
+
+Request rehydration
+- reconstruct prompt packet from session summary + recent turns + artifacts
+- ensure assistant output is represented, not only user input
+
+Request-local execution context
+- async-local request/job/worktree binding works under concurrency
+- no cross-request leakage
+
+Integration tests
+
+Discord continuity
+- first message on wt5
+- follow-up with same session key
+- verify same active job and same worktree reused
+- verify context available without replaying raw full history
+
+Discord recovery
+- start active session on wt6
+- simulate wt6 death
+- recover stale job
+- continue on wt7 with correct shared context
+
+Linear continuity
+- start issue on wt2
+- simulate executor restart
+- resume with shared session/job state
+- verify issue context and artifacts preserved
+
+Provider sharing
+- one worktree records provider failure or cooldown
+- another worktree sees updated shared metric state
+- verify selection logic reads shared state
+
+Tool binding
+- valid request mutates only within assigned worktree
+- invalid job/worktree token is rejected
+- follow-up on wrong worktree without recovery path is rejected or rerouted correctly
+
+Concurrency
+- multiple concurrent requests on same bridge
+- verify no current-request attribution bleed
+- verify artifact ownership stays correct
+
+Regression tests
+
+- least-loaded selection still works for new Discord sessions
+- Discord/Linear worktree pools remain separated
+- existing Linear durable-claim behavior still works
+- provider fallback still functions after shared-state migration
+
+Operational checks
+
+- inspect shared state files during live execution
+- verify session and job records are human-debuggable
+- confirm expiry and cleanup do not remove active sessions
+- confirm logs include session key, job id, worktree id, provider, and recovery reason
+
+Risks and gotchas
+
+- do not create one global Discord memory store
+- do not key context only by user id
+- do not store unbounded raw tool output in prompt context
+- do not silently move active sessions between worktrees
+- do not mix provider-global metrics with job-private context
+- do not rely on provider memory as canonical state
+- be careful with stale sticky routes pointing at dead worktrees
+
+Suggested deliverables
+
+- shared state abstraction module
+- session context store
+- active job store
+- request rehydration path
+- Discord active-job ownership path
+- async-local request/job/worktree binding fix
+- migration notes
+- automated test coverage for continuity, recovery, and concurrency
+
+Priority
+
+High
+
+Definition of done
+
+The system preserves per-task context across worktrees and model changes without sharing unrelated in-flight job state, and tool execution remains bound to the correct job and worktree under concurrency and recovery scenarios.
