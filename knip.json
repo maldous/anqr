@@ -119,7 +119,21 @@
     "harness/export-linear-all/main.mjs": ["exports"],
     "harness/rename-to-standards/main.mjs": ["exports"],
 
-    "harness/ops/core/symphony-config.mjs": ["exports"]
+    "harness/ops/core/symphony-config.mjs": ["exports"],
+
+    "harness/ops/integrations/model/symphony-credit-gate/build-provider-selection-candidate-names.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-credit-gate/failure-state-file.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-credit-gate/get-effective-provider-score.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-credit-gate/probe-results-file.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-credit-gate/provider-lease-file.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-credit-gate/stats-file.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-openai-bridge/current-request-id.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-openai-bridge/with-request-context.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-provider-health/health-state-file.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-provider-health/project-root.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-session-state/ensure-state-dir.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-session-state/project-root.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-session-state/session-state-file.mjs": ["exports"]
   },
 
   "workspaces": {
