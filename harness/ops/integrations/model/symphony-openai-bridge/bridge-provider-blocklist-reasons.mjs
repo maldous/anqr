@@ -1,4 +1,5 @@
-export const BRIDGE_PROVIDER_BLOCKLIST_REASONS = {
-  "cerebras-gpt-oss-120b": "model_does_not_exist_404",
-  "cerebras-zai-glm-4-7": "model_does_not_exist_404",
-};
+/**
+ * Reasons for blocklist entries — kept in sync with BRIDGE_PROVIDER_BLOCKLIST.
+ * Only populated for operator-controlled hard-exclusions.
+ */
+export const BRIDGE_PROVIDER_BLOCKLIST_REASONS = {};

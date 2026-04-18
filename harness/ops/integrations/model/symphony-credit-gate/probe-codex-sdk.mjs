@@ -20,14 +20,33 @@ export async function probeCodexSdk(model) {
   const probeStart = Date.now();
   try {
     const codex = new Codex({ env: process.env });
-    const thread = await codex.startThread({
-      model: model || undefined,
+
+    // Try with the specified model first, fall back to SDK default if null
+    const threadOpts = {
       workingDirectory: PROJECT_ROOT,
       sandboxMode: CODEX_SANDBOX_MODE,
       approvalPolicy: "never",
       webSearchEnabled: false,
       networkAccessEnabled: false,
-    });
+    };
+    let thread = await codex.startThread({ model: model || undefined, ...threadOpts });
+
+    // startThread returns null when model is unsupported or quota exhausted.
+    // Retry without a model so the SDK picks its default — this allows the
+    // provider to become available dynamically when the model issue clears.
+    if (!thread && model) {
+      logWarn(`codex: startThread returned null with model=${model}, retrying without model`);
+      thread = await codex.startThread({ model: undefined, ...threadOpts });
+    }
+
+    if (!thread) {
+      // null without a model means quota exhausted or account issue — classify
+      // dynamically so the system can recover when quota resets.
+      const quotaErr = new Error("Codex SDK startThread returned null — quota exhausted or temporarily unavailable");
+      quotaErr.code = "QUOTA_EXHAUSTED";
+      throw quotaErr;
+    }
+
     const probe = thread.run("Reply with exactly: ok");
     const result = await Promise.race([
       probe,
@@ -49,23 +68,34 @@ export async function probeCodexSdk(model) {
     return success;
   } catch (err) {
     const message = String(err?.message || err);
-    recordProbeResult("codex", { success: false, durationMs: Date.now() - probeStart });
-    saveProbeResult("codex", false, {
-      status: "provider_error",
-      reason: message,
-      message,
-      detail: message,
-    });
-    if (message.toLowerCase().includes("usage limit") || message.toLowerCase().includes("quota")) {
-      logWarn(`codex: unavailable (quota exhausted)`);
+    const code = err?.code || "";
+    // Classify dynamically — quota_exhausted and timeout are recoverable states
+    // that the probe cycle can clear on the next pass; provider_error is generic.
+    let errorStatus = "provider_error";
+    if (
+      code === "QUOTA_EXHAUSTED" ||
+      message.toLowerCase().includes("usage limit") ||
+      message.toLowerCase().includes("quota") ||
+      message.toLowerCase().includes("quota exhausted")
+    ) {
+      errorStatus = "quota_exhausted";
+      logWarn(`codex: unavailable (quota exhausted — will retry on next probe cycle)`);
       recordProviderFailure("codex", "quota_exhausted");
     } else if (message.toLowerCase().includes("timeout")) {
+      errorStatus = "timeout";
       logWarn(`codex: unavailable (timeout)`);
       recordProviderFailure("codex", "timeout");
     } else {
       logWarn(`codex: unavailable (${message})`);
       recordProviderFailure("codex", "provider_error");
     }
+    recordProbeResult("codex", { success: false, durationMs: Date.now() - probeStart });
+    saveProbeResult("codex", false, {
+      status: errorStatus,
+      reason: message,
+      message,
+      detail: message,
+    });
     return false;
   }
 }

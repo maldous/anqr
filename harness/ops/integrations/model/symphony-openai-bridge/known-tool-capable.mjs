@@ -8,7 +8,7 @@ export const KNOWN_TOOL_CAPABLE = new Set([
   "gemini-lite",
   "github-models",
   "fireworks",
-  // cerebras removed: emits raw JSON tool calls (see non-tool-capable-providers.mjs)
+  "cerebras", // dynamic: may be excluded at runtime by RAW_TOOL_JSON_TEXT detection
   "sambanova",
   "together",
 ]);
