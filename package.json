@@ -24,7 +24,7 @@
     "lint:fix": "oxlint --fix .",
     "lint:boundaries": "eslint src/",
     "format": "oxfmt --write .",
-    "format:reports": "oxfmt --write $(find reports/ -type f | grep -v rag)",
+    "format:reports": "oxfmt --write ",
     "format:check": "oxfmt --check .",
     "depcruise": "npm run depcruise:architecture && npm run depcruise:contracts",
     "cspell": "cspell --config cspell.json --no-progress",

@@ -1,6 +1,6 @@
 import { MIN_SELECTIONS_FOR_RANKING } from "../min-selections-for-ranking.mjs";
 import { LOCAL_SAFETY_NET_PROVIDER_NAMES } from "../local-safety-net-provider-names.mjs";
-import { PROVIDERS } from "../providers.mjs";
+import { PROVIDERS } from "../provider-registry-holder.mjs";
 import { SAFETY_NET_SCORE_CEILING } from "../safety-net-score-ceiling.mjs";
 import { SCORE_WEIGHTS } from "../score-weights.mjs";
 import { TIER_PAID } from "../tier-paid.mjs";
