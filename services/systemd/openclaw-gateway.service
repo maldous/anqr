@@ -4,6 +4,8 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
+# Ensure jiti cache dir exists on tmpfs (lost on reboot) — ENOENT crashes Discord text pipeline
+ExecStartPre=/usr/bin/mkdir -p /tmp/jiti
 ExecStart=/usr/local/bin/openclaw gateway --port 18789
 Restart=always
 RestartSec=5
