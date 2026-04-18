@@ -683,7 +683,9 @@
     "backcompat",
     "idempotent",
     "mtime",
-    "remapped"
+    "remapped",
+    "allam",
+    "writeups"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
