@@ -8,6 +8,11 @@ import { getSessionThreadName } from "./get-session-thread-name.mjs";
 import { globalActiveRequests, setGlobalActiveRequests } from "./global-active-requests.mjs";
 import { rebaseCwdToWorktree } from "./rebase-cwd-to-worktree.mjs";
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { resolveSessionKey } from "../symphony-session-state/resolve-session-key.mjs";
+import {
+  acquireJobOwnership,
+  releaseJobOwnership,
+} from "../../../core/symphony-shared-state/active-job-ownership.mjs";
 
 export function processAndProxy(worktree, req, res, rawBody) {
   worktree.activeRequests++;
@@ -103,12 +108,37 @@ export function processAndProxy(worktree, req, res, rawBody) {
     proxyReq.destroy(new Error("Proxy timeout"));
   });
 
+  // Acquire durable job ownership so other routers/worktrees can see this session is active
+  const sessionId =
+    req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
+  const discordGuildId = req.headers["x-discord-guild-id"] || null;
+  const discordChannelId = req.headers["x-discord-channel-id"] || null;
+  const canonicalSessionKey = resolveSessionKey({
+    discordGuildId,
+    discordChannelId,
+    headerSessionKey: sessionId,
+  });
+  const effectiveSessionKey = canonicalSessionKey || sessionId;
+
+  if (effectiveSessionKey) {
+    acquireJobOwnership(effectiveSessionKey, {
+      worktreeId: `wt${worktree.id}`,
+      correlationId,
+      channelId: discordChannelId,
+      guildId: discordGuildId,
+    });
+  }
+
   let completed = false;
   const cleanup = () => {
     if (completed) return;
     completed = true;
     worktree.activeRequests--;
     setGlobalActiveRequests(globalActiveRequests - 1);
+    // Release durable job ownership on completion
+    if (effectiveSessionKey) {
+      releaseJobOwnership(effectiveSessionKey);
+    }
     logDebug(
       `✅ Request complete (wt${worktree.id}, remaining: ${worktree.activeRequests}, global: ${globalActiveRequests})`,
     );

@@ -77,6 +77,11 @@ import { handleResponsesApi } from "./handle-responses-api.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 import { validateBoundaryInvariants } from "./validate-boundary-invariants.mjs";
 import { validateStartupEnv } from "./validate-startup-env.mjs";
+import {
+  persistInflightRequest,
+  completeInflightRequest,
+  scanStaleInflightRequests,
+} from "../../../core/symphony-shared-state/request-rehydration.mjs";
 
 // D Phase 3: Validate boundary invariants at bridge startup (ADR-0008).
 // Both validators throw on critical misconfigurations (fail-closed).
@@ -95,6 +100,22 @@ if (!envResult.valid) {
   logWarn(
     `[startup] Startup env warnings (${envResult.warnings.length}): ` +
       envResult.warnings.join("; "),
+  );
+}
+
+// Phase 7: Scan for stale in-flight requests from a previous crash.
+// These are requests that were persisted but never completed — likely the
+// process died mid-request. Log them for diagnostics and clean them up.
+const staleRequests = scanStaleInflightRequests();
+if (staleRequests.length > 0) {
+  logWarn(
+    `[startup] Cleaned ${staleRequests.length} stale in-flight request(s) from previous run: ` +
+      staleRequests
+        .map(
+          (r) =>
+            `${r.requestId} (session=${r.sessionKey || "?"}, age=${Math.round((Date.now() - r.startedAt) / 1000)}s)`,
+        )
+        .join(", "),
   );
 }
 
@@ -636,6 +657,15 @@ export const server = http.createServer(async (req, res) => {
         worktreeId: worktreeId || null,
       });
 
+      // Phase 7: Persist in-flight request for crash recovery / rehydration.
+      // providerName is unknown until credit-gate selects — updated below after selection.
+      persistInflightRequest(requestId, {
+        sessionKey: effectiveSessionKey,
+        worktreeId: worktreeId || null,
+        model: route.responseModelId,
+        startedAt: startTime,
+      });
+
       // Fire-and-forget Discord notification (non-blocking)
       const concurrentCount = activeRequests.size - 1; // Exclude current request
       const concurrentRequests = Array.from(activeRequests.values()).filter(
@@ -748,6 +778,7 @@ export const server = http.createServer(async (req, res) => {
         logError(`⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`);
         logMemory("request-timeout");
         activeRequests.delete(requestId);
+        completeInflightRequest(requestId);
         clearInterval(progressInterval);
         try {
           if (stream && !res.writableEnded) {
@@ -840,6 +871,17 @@ export const server = http.createServer(async (req, res) => {
           selectionLog,
         });
 
+        // Phase 7: Update in-flight record with selected provider name.
+        if (selectedProvider?.name) {
+          persistInflightRequest(requestId, {
+            sessionKey: effectiveSessionKey,
+            worktreeId: worktreeId || null,
+            providerName: selectedProvider.name,
+            model: route.responseModelId,
+            startedAt: startTime,
+          });
+        }
+
         logInfo(
           `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
         );
@@ -909,6 +951,7 @@ export const server = http.createServer(async (req, res) => {
 
             // Clean up request tracking
             activeRequests.delete(requestId);
+            completeInflightRequest(requestId);
 
             logInfo(
               `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName}, ${result.text.length} chars)`,
@@ -1090,6 +1133,7 @@ export const server = http.createServer(async (req, res) => {
 
           // Clean up request tracking
           activeRequests.delete(requestId);
+          completeInflightRequest(requestId);
 
           logInfo(
             `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName})`,
@@ -1146,6 +1190,7 @@ export const server = http.createServer(async (req, res) => {
 
           // Clean up request tracking
           activeRequests.delete(requestId);
+          completeInflightRequest(requestId);
 
           clearInterval(heartbeat);
           clearInterval(progressInterval);
@@ -1307,6 +1352,7 @@ export const server = http.createServer(async (req, res) => {
 
         // Clean up request tracking
         activeRequests.delete(requestId);
+        completeInflightRequest(requestId);
 
         logInfo(`✅ Finished: ${issueContext?.identifier || "Request"} — ${firstLine}`);
 
@@ -1401,6 +1447,7 @@ export const server = http.createServer(async (req, res) => {
     // Clean up request tracking on error (only if requestId was defined)
     if (typeof requestId !== "undefined") {
       activeRequests.delete(requestId);
+      completeInflightRequest(requestId);
       finalizeDiscordStream({ requestId }).catch(() => {});
     }
 
