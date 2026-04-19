@@ -8,6 +8,7 @@ export function classifyProviderFailure(message = "") {
     msg.includes("quota") ||
     msg.includes("insufficient_quota") ||
     msg.includes("rate_limit") ||
+    msg.includes("Too Many Requests") ||
     msg.includes("RESOURCE_EXHAUSTED") ||
     msg.includes("accounts exhausted") ||
     msg.includes("All codebuff")

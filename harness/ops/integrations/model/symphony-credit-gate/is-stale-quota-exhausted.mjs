@@ -1,6 +1,6 @@
 import { loadProbeResults } from "./load-probe-results.mjs";
 
-const STALE_QUOTA_SECS = 24 * 60 * 60; // 24 hours
+export const STALE_QUOTA_SECS = 2 * 60 * 60; // 2 hours — OpenRouter free-tier quotas reset much sooner than 24h
 
 export function isStaleQuotaExhausted(providerName) {
   const results = loadProbeResults();

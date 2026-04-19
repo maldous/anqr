@@ -685,7 +685,8 @@
     "mtime",
     "remapped",
     "allam",
-    "writeups"
+    "writeups",
+    "sysexits"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

@@ -69,6 +69,7 @@ import { SYNC_FAIL_COUNT_FILE } from "./sync-fail-count-file.mjs";
 import { WORKFLOW_PATH } from "./workflow-path.mjs";
 import { WORKTREE_ID } from "./worktree-id.mjs";
 import { classifyProviderFailure } from "./classify-provider-failure.mjs";
+import { safetyCap } from "../../lib/safety-cap.mjs";
 import { currentBranchNameForRunner } from "./current-branch-name-for-runner.mjs";
 import { getRepoHeadSha } from "./get-repo-head-sha.mjs";
 import { getRunnerProvider } from "./get-runner-provider.mjs";
@@ -551,12 +552,12 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           provider: metricsProviderName,
           reason: "local_busy",
           cooldown_ms: cooldownMs,
-          error: failureMsg.slice(0, 200),
+          error: failureMsg,
         });
 
         await addComment(
           issue.id,
-          `⏳ **Local model busy** — returned to Todo with short cooldown.\n\nError: ${failureMsg.slice(0, 500)}`,
+          safetyCap(`⏳ **Local model busy** — returned to Todo with short cooldown.\n\nError: ${failureMsg}`),
         );
         recordTransition(issue.identifier, {
           actor: "runner",
@@ -584,7 +585,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         // Bridge handles all retries - just record the failure and let it propagate
         await addComment(
           issue.id,
-          `⚠️ **Bridge failure** - all providers exhausted or bridge error: ${failureMsg.slice(0, 500)}`,
+          safetyCap(`⚠️ **Bridge failure** - all providers exhausted or bridge error: ${failureMsg}`),
         );
         recordLinearCompletion(metricsProviderName, {
           completed: false,
@@ -614,12 +615,12 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           provider: metricsProviderName,
           reason: "quota_exhausted",
           cooldown_ms: cooldownMs,
-          error: failureMsg.slice(0, 200),
+          error: failureMsg,
         });
 
         await addComment(
           issue.id,
-          `🚫 **Quota exhausted** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
+          safetyCap(`🚫 **Quota exhausted** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg}`),
         );
         recordTransition(issue.identifier, {
           actor: "runner",
@@ -650,12 +651,12 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           provider: metricsProviderName,
           reason: "other_failure",
           cooldown_ms: cooldownMs,
-          error: failureMsg.slice(0, 200),
+          error: failureMsg,
         });
 
         await addComment(
           issue.id,
-          `⚠️ **Execution failed** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg.slice(0, 500)}`,
+          safetyCap(`⚠️ **Execution failed** — returned to Todo with exponential backoff (${Math.round(cooldownMs / 60000)}min).\n\nAttempt: ${attempt}/${RUNNER_MAX_RETRIES}\nError: ${failureMsg}`),
         );
         recordTransition(issue.identifier, {
           actor: "runner",
@@ -855,7 +856,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
 
       // Document external completion in a log file for audit trail
       const externalLogPath = resolve(ROOT, "reports", "symphony", "external-completions.log");
-      const externalLogEntry = `[${new Date().toISOString()}] ${issue.identifier}: ${issue.title}\n  Agent: ${agentResult.summary?.slice(0, 200)}\n  Externally completed: ${isExternallyCompleted}\n  Agent completed: ${agentResult.completed}\n`;
+      const externalLogEntry = `[${new Date().toISOString()}] ${issue.identifier}: ${issue.title}\n  Agent: ${agentResult.summary}\n  Externally completed: ${isExternallyCompleted}\n  Agent completed: ${agentResult.completed}\n`;
       try {
         const dir = resolve(ROOT, "reports", "symphony");
         if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -873,7 +874,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           await updateIssue(issue.id, { stateId: STATES.done });
           await addComment(
             issue.id,
-            `✅ **Agent completed via tool calls** — no file changes needed.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`,
+            safetyCap(`✅ **Agent completed via tool calls** — no file changes needed.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
@@ -899,7 +900,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           await updateIssue(issue.id, { stateId: STATES.inReview });
           await addComment(
             issue.id,
-            `ℹ️ **Agent made progress with no file changes** — moved to In Review for human verification.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`,
+            safetyCap(`ℹ️ **Agent made progress with no file changes** — moved to In Review for human verification.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
@@ -923,7 +924,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           await updateIssue(issue.id, { stateId: STATES.todo });
           await addComment(
             issue.id,
-            `⚠️ **Agent reported completion with no file changes and no tool calls** — returned to Todo. Likely inferred false positive.\n\nAgent summary: ${agentResult.summary}`,
+            safetyCap(`⚠️ **Agent reported completion with no file changes and no tool calls** — returned to Todo. Likely inferred false positive.\n\nAgent summary: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
@@ -982,7 +983,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         // No messages available for continuation - return to Todo
         await addComment(
           issue.id,
-          `🔄 **Agent continuing work** — active subgoals detected (no prior messages available for continuation).\n\n${agentResult.summary}`,
+          safetyCap(`🔄 **Agent continuing work** — active subgoals detected (no prior messages available for continuation).\n\n${agentResult.summary}`),
         );
         clearCooldown(issue.identifier);
         await updateIssue(issue.id, { stateId: STATES.todo });
@@ -1018,7 +1019,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           });
           await addComment(
             issue.id,
-            `🚫 **No file changes produced (repeated)** — same failure fingerprint. Moved to Backlog and blocked from automatic retry.\n\nAgent summary: ${agentResult.summary}`,
+            safetyCap(`🚫 **No file changes produced (repeated)** — same failure fingerprint. Moved to Backlog and blocked from automatic retry.\n\nAgent summary: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
@@ -1032,7 +1033,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           await updateIssue(issue.id, { stateId: STATES.todo });
           await addComment(
             issue.id,
-            `⚠️ **No file changes produced** — returned to Todo with cooldown for manual review.\n\nAgent summary: ${agentResult.summary}`,
+            safetyCap(`⚠️ **No file changes produced** — returned to Todo with cooldown for manual review.\n\nAgent summary: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
@@ -1314,7 +1315,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         // Preserve dirty tree for same-worktree repair
         const validationErrors = validation.results
           .filter((r) => !r.pass)
-          .map((r) => `### ${r.check}\n${String(r.detail).slice(0, 2000)}\n`)
+          .map((r) => `### ${r.check}\n${String(r.detail)}\n`)
           .join("\n");
 
         // Write full validation output to sidecar file for next repair cycle
@@ -1330,7 +1331,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
             state: "validation_failed_repairable",
             worktreeId: WORKTREE_ID,
             stickyOwner: WORKTREE_ID,
-            lastError: validationErrors.slice(0, 500),
+            lastError: validationErrors,
             attempts: valRepairAttempts,
           },
           reason: "validation_failed_repairable",
@@ -1339,7 +1340,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         await updateIssue(issue.id, { stateId: STATES.inReview });
         await addComment(
           issue.id,
-          `❌ **Validation failed** (repair ${valRepairAttempts}/${RUNNER_VALIDATION_REPAIR_MAX}) — preserving dirty tree for same-worktree repair.\n\n${validationErrors.slice(0, 1500)}`,
+          safetyCap(`❌ **Validation failed** (repair ${valRepairAttempts}/${RUNNER_VALIDATION_REPAIR_MAX}) — preserving dirty tree for same-worktree repair.\n\n${validationErrors}`),
         );
         recordTransition(issue.identifier, {
           actor: "runner",
@@ -1366,13 +1367,13 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         });
         await addComment(
           issue.id,
-          `❌ **Validation failed** after ${validationFixAttempts} fix attempt(s). Moved to Backlog and blocked from automatic retry.\n\n${validation.results
+          safetyCap(`❌ **Validation failed** after ${validationFixAttempts} fix attempt(s). Moved to Backlog and blocked from automatic retry.\n\n${validation.results
             .filter((r) => !r.pass)
             .map(
               (r) => `### ${r.check}\n\
-${String(r.detail).slice(0, 1000)}\n`,
+${String(r.detail)}\n`,
             )
-            .join("\n")}`,
+            .join("\n")}`),
         );
         recordTransition(issue.identifier, {
           actor: "runner",
@@ -1394,10 +1395,10 @@ ${String(r.detail).slice(0, 1000)}\n`,
         });
         await addComment(
           issue.id,
-          `🚫 **Validation failed (repeated same signature)** after ${validationFixAttempts} fix attempt(s). Quarantined to Backlog.\n\n${validation.results
+          safetyCap(`🚫 **Validation failed (repeated same signature)** after ${validationFixAttempts} fix attempt(s). Quarantined to Backlog.\n\n${validation.results
             .filter((r) => !r.pass)
-            .map((r) => `### ${r.check}\n${String(r.detail).slice(0, 1000)}\n`)
-            .join("\n")}`,
+            .map((r) => `### ${r.check}\n${String(r.detail)}\n`)
+            .join("\n")}`),
         );
         recordTransition(issue.identifier, {
           actor: "runner",
@@ -1416,13 +1417,13 @@ ${String(r.detail).slice(0, 1000)}\n`,
         await updateIssue(issue.id, { stateId: STATES.todo });
         await addComment(
           issue.id,
-          `❌ **Validation failed** after ${validationFixAttempts} fix attempt(s). Returned to Todo with cooldown.\n\n${validation.results
+          safetyCap(`❌ **Validation failed** after ${validationFixAttempts} fix attempt(s). Returned to Todo with cooldown.\n\n${validation.results
             .filter((r) => !r.pass)
             .map(
               (r) => `### ${r.check}\n\
-${String(r.detail).slice(0, 1000)}\n`,
+${String(r.detail)}\n`,
             )
-            .join("\n")}`,
+            .join("\n")}`),
         );
         recordTransition(issue.identifier, {
           actor: "runner",
@@ -1581,7 +1582,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
       ...validation.results.map((r) => `- ${r.pass ? "✅" : "❌"} ${r.check}`),
     ].join("\n");
 
-    await addComment(issue.id, completionComment);
+    await addComment(issue.id, safetyCap(completionComment));
 
     const commitHash = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
       cwd: ROOT,

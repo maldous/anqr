@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 
 import { ensureEvidenceRecord } from "../../../core/task-evidence.mjs";
+import { EXIT_LOCK_CONTENTION } from "../../../orchestration/symphony-runner/exit-codes.mjs";
 import { sendJson } from "./send-json.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
@@ -90,6 +91,20 @@ export async function executeLinearIssueRequest(req, res) {
     }
     if (stderr) {
       logWarn(`[linear-execute] runner stderr for ${identifier}\n${stderr}`);
+    }
+
+    // Exit code EXIT_LOCK_CONTENTION = lock contention (another runner active on this worktree)
+    // This is NOT a failure of the issue itself — return 503 so the scheduler
+    // knows to retry later rather than marking the issue as processed.
+    // execFileAsync sets err.code to the numeric exit code for non-zero exits.
+    if (err?.code === EXIT_LOCK_CONTENTION) {
+      logWarn(`[linear-execute] Runner for ${identifier} exited with lock contention (exit=2) — returning 503`);
+      return sendJson(res, 503, {
+        status: "worktree_busy",
+        identifier,
+        correlationId,
+        error: { message: "Worktree lock contention — another runner is active", type: "worktree_busy" },
+      });
     }
 
     const message =

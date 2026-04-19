@@ -11,6 +11,7 @@ import { SYMPHONY_BRIDGE_MODEL } from "./symphony-bridge-model.mjs";
 import { SYMPHONY_BRIDGE_URL } from "./symphony-bridge-url.mjs";
 import { TOOL_DEFINITIONS } from "./tool-definitions.mjs";
 import { logDebug } from "./logger.mjs";
+import { safetyCap } from "../../../lib/safety-cap.mjs";
 
 export async function callLLM(
   provider,
@@ -50,7 +51,7 @@ export async function callLLM(
 
       if (!res.ok) {
         const body = await res.text().catch(() => "");
-        throw new Error(`Symphony bridge ${res.status}: ${body.slice(0, 500)}`);
+        throw new Error(safetyCap(`Symphony bridge ${res.status}: ${body}`));
       }
 
       // Stream the response and accumulate content
@@ -234,7 +235,7 @@ export async function callLLM(
         method: "codebuff-direct",
         outputLength: 0,
         output: "",
-        error: String(err?.message || err).slice(0, 500),
+        error: String(err?.message || err),
       };
 
       try {
@@ -281,7 +282,7 @@ export async function callLLM(
     clearTimeout(timer);
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      throw new Error(`LLM API ${res.status}: ${body.slice(0, 500)}`);
+      throw new Error(safetyCap(`LLM API ${res.status}: ${body}`));
     }
     return await res.json();
   } catch (err) {

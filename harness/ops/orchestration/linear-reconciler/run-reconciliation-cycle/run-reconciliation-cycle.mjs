@@ -19,6 +19,7 @@ import { getHealthyLinearCapacity } from "../get-healthy-linear-capacity.mjs";
 import { computeReconciliationActions } from "../compute-reconciliation-actions.mjs";
 import { logInfo, logWarn, logDebug } from "../logger.mjs";
 import { recoverInProgressIssue } from "./recover-in-progress-issue.mjs";
+import { recoverInReviewIssue } from "./recover-in-review-issue.mjs";
 import { feedDesiredWorkQueue } from "./feed-desired-work-queue.mjs";
 
 export async function runReconciliationCycle() {
@@ -51,6 +52,7 @@ export async function runReconciliationCycle() {
   const freshSnap = await getQueueSnapshot();
   const todoIssues = await listIssuesByState(QUEUE_STATES.readyStates);
   const inProgressIssues = await listIssuesByState(QUEUE_STATES.activeStates);
+  const inReviewIssues = await listIssuesByState(QUEUE_STATES.closeoutStates);
   const eligibleTodo = todoIssues
     .filter((issue) => canExecuteIssue(issue))
     .filter((issue) => !isDiscordSourced(issue));
@@ -82,10 +84,11 @@ export async function runReconciliationCycle() {
     finalizationStates,
     inProgressIssues,
     activeIssueIdentifiers,
+    inReviewIssues,
   });
 
   logInfo(
-    `Reconciliation: todo=${todoIssues.length} eligible=${summary.eligibleCount} active=${freshSnap.activeDepth} budget=${summary.dispatchBudget} dispatching=${summary.dispatchCount} stale=${summary.staleRecoveryCount} integration_queue=${summary.staleIntegrationCount}`,
+    `Reconciliation: todo=${todoIssues.length} eligible=${summary.eligibleCount} active=${freshSnap.activeDepth} budget=${summary.dispatchBudget} dispatching=${summary.dispatchCount} stale=${summary.staleRecoveryCount} orphaned_review=${summary.orphanedReviewCount} integration_queue=${summary.staleIntegrationCount}`,
   );
 
   let dispatched = 0;
@@ -108,6 +111,11 @@ export async function runReconciliationCycle() {
 
     if (action.type === "recover_in_progress") {
       if (await recoverInProgressIssue(action)) recovered++;
+      continue;
+    }
+
+    if (action.type === "recover_in_review") {
+      if (await recoverInReviewIssue(action)) recovered++;
       continue;
     }
 

@@ -14,6 +14,7 @@ import { maybeRunPreflights } from "./maybe-run-preflights.mjs";
 import { releaseLock } from "./release-lock.mjs";
 import { showStatus } from "./show-status.mjs";
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
+import { EXIT_LOCK_CONTENTION } from "./exit-codes.mjs";
 
 export async function main() {
   const args = new Map();
@@ -38,7 +39,7 @@ export async function main() {
   }
   if (!doOnce && !targetIssue) {
     logError("Usage: symphony-runner.mjs --once [--dry-run] [--issue IDENTIFIER] | --status");
-    process.exit(2);
+    process.exit(64); // 64 = EX_USAGE (sysexits) — bad usage, not lock contention
   }
   // Allow --issue without --once for webhook-triggered execution
   if (!doOnce && targetIssue) {
@@ -115,7 +116,7 @@ export async function main() {
   }
   if (!acquireLock()) {
     logInfo("[runner] Another runner instance is active — exiting");
-    process.exit(0);
+    process.exit(EXIT_LOCK_CONTENTION);
   }
   process.on("exit", releaseLock);
   process.on("SIGINT", () => {

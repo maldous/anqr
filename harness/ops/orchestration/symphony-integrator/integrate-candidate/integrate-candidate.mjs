@@ -4,6 +4,7 @@ import { recordIntegrationResult, MAX_EVIDENCE_RETRIES } from "../../../core/tas
 import { findIssueByIdentifier } from "../find-issue-by-identifier.mjs";
 import { git } from "../git.mjs";
 import { logInfo, logWarn, logError } from "../logger.mjs";
+import { safetyCap } from "../../../lib/safety-cap.mjs";
 import { forceCloseWithIncompleteEvidence } from "./force-close-with-incomplete-evidence.mjs";
 import { publishEvidenceAndClose } from "./publish-evidence-and-close.mjs";
 
@@ -92,7 +93,7 @@ export async function integrateCandidate(issueIdentifier) {
       git("cherry-pick", headSha);
     } catch (cpErr) {
       const stderr = cpErr.stderr?.toString() || cpErr.message || "";
-      logWarn(`[integrator] Cherry-pick failed for ${issueIdentifier}: ${stderr.slice(0, 200)}`);
+      logWarn(`[integrator] Cherry-pick failed for ${issueIdentifier}: ${stderr}`);
 
       try {
         git("cherry-pick", "--abort");
@@ -109,7 +110,7 @@ export async function integrateCandidate(issueIdentifier) {
       transitionIssue(issueIdentifier, "integration_failed", {
         finalization: {
           state: "integration_failed_repairable",
-          lastError: stderr.slice(0, 500),
+          lastError: stderr,
           attempts,
           updatedAt: new Date().toISOString(),
         },
@@ -122,7 +123,7 @@ export async function integrateCandidate(issueIdentifier) {
         await updateIssue(detail.id, { stateId: STATES.inReview });
         await addComment(
           detail.id,
-          `⚠️ Integration to main failed due to conflict. Returned to same worktree for repair.\n\nError: ${stderr.slice(0, 300)}`,
+          safetyCap(`⚠️ Integration to main failed due to conflict. Returned to same worktree for repair.\n\nError: ${stderr}`),
         );
       }
 
@@ -130,7 +131,7 @@ export async function integrateCandidate(issueIdentifier) {
         try {
           recordIntegrationResult(correlationId, {
             success: false,
-            error: stderr.slice(0, 200),
+            error: stderr,
           });
         } catch {
           /* best-effort evidence */
@@ -221,7 +222,7 @@ export async function integrateCandidate(issueIdentifier) {
     transitionIssue(issueIdentifier, "integration_failed", {
       finalization: {
         state: "integration_failed_repairable",
-        lastError: err.message.slice(0, 500),
+        lastError: err.message,
         attempts,
         updatedAt: new Date().toISOString(),
       },

@@ -48,6 +48,7 @@ export const QUEUE_STATES = {
   feedSource: ["Backlog"],
   activeStates: ["In Progress"],
   readyStates: ["Todo"],
+  closeoutStates: ["In Review"],
 };
 
 // ---------------------------------------------------------------------------

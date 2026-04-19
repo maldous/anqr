@@ -40,6 +40,11 @@ export async function main() {
   const snap = await getQueueSnapshot();
   const todoAll = await listIssuesByState(QUEUE_STATES.readyStates);
   const inProgressAll = await listIssuesByState(QUEUE_STATES.activeStates);
+  const inReviewAll = await listIssuesByState(QUEUE_STATES.closeoutStates);
+
+  const orphanedReview = inReviewAll.filter(
+    (i) => !getFinalizationState(i.identifier),
+  );
 
   console.log("┌─ Queue State ────────────────────────────────────────");
   console.log(`│  Open Todo issues:      ${todoAll.length}`);
@@ -47,6 +52,7 @@ export async function main() {
     `│  Eligible Todo issues:  ${todoAll.filter((i) => !hasActiveCooldown(i.identifier)).length}`,
   );
   console.log(`│  Active executions:     ${snap.activeDepth}`);
+  console.log(`│  In Review issues:      ${inReviewAll.length}${orphanedReview.length ? ` (${orphanedReview.length} orphaned)` : ""}`);
   console.log(`│  Integration queue:     ${listIntegrationCandidates().length}`);
   console.log("└──────────────────────────────────────────────────────\n");
 

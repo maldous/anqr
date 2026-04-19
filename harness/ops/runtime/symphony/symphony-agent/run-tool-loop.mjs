@@ -100,7 +100,7 @@ export async function runToolLoop({
       messages.push(msg);
       return {
         completed: sr.completed,
-        summary: (msg.content || "").slice(0, 1000),
+        summary: msg.content || "",
         turns: sr.stepCount || turn + 1,
         toolCalls: sr.toolCallCount || totalToolCalls,
         filesChanged: sr.changedFiles || [...filesChanged],
@@ -134,7 +134,7 @@ export async function runToolLoop({
         return {
           completed: false,
           summary: content
-            ? `Symphony bridge returned text without structured result: ${content.slice(0, 500)}`
+            ? `Symphony bridge returned text without structured result: ${content}`
             : "Symphony bridge returned no structured result",
           turns: turn + 1,
           toolCalls: totalToolCalls,
@@ -175,12 +175,12 @@ export async function runToolLoop({
           logWarn("[agent] Autonomous agent reported failure");
           return {
             completed: false,
-            summary: `Autonomous agent failed: ${content.slice(0, 500)}`,
+            summary: `Autonomous agent failed: ${content}`,
             turns: turn + 1,
             toolCalls: totalToolCalls,
             filesChanged: [...filesChanged],
             timedOut: content.includes("Timeout"),
-            error: content.slice(0, 500),
+            error: content,
             messages,
             providerName: actualProviderName,
           };
@@ -263,7 +263,7 @@ export async function runToolLoop({
 
         // No active subgoals - agent actually completed
         logInfo("[agent] Autonomous agent completed - no active subgoals");
-        const summary = cleanContent.slice(0, 1000);
+        const summary = cleanContent;
         return {
           completed: true,
           summary: summary,
