@@ -7,8 +7,9 @@ export const KNOWN_TOOL_CAPABLE = new Set([
   "gemini",
   "gemini-lite",
   "github-models",
+  "huggingface",
   "fireworks",
-  "cerebras", // dynamic: may be excluded at runtime by RAW_TOOL_JSON_TEXT detection
   "sambanova",
   "together",
+  "openrouter", // 600+ dynamic catalog children inherit tool capability
 ]);
