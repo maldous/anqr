@@ -42,6 +42,7 @@ export async function callLLM(
         body: JSON.stringify({
           model: provider.model || SYMPHONY_BRIDGE_MODEL,
           messages,
+          cwd: projectRoot,
           stream: true,
           temperature: 0.2,
         }),
