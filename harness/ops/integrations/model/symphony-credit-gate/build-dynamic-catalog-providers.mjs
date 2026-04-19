@@ -1,4 +1,5 @@
 import { loadProviderCatalogCache } from "../symphony-openai-bridge/load-provider-catalog-cache.mjs";
+import { extractParamCountB } from "./extract-param-count-b.mjs";
 import { getCachedProbeEntry } from "./get-cached-probe-entry.mjs";
 import { sanitizeModelSegment } from "./sanitize-model-segment.mjs";
 import { shouldSkipProviderFromCache } from "./should-skip-provider-from-cache.mjs";
@@ -38,18 +39,6 @@ const EXCLUDED_MODEL_PATTERNS = [
  * code generation with correct syntax, imports, and conventions.
  */
 const MIN_CODING_PARAMS_B = 14;
-
-/**
- * Extract approximate parameter count from model name.
- * Matches patterns like "8b", "70b", "0.5b", "3.1-8b", "-14b-", etc.
- * Returns null if no parameter indicator is found.
- */
-function extractParamCountB(model) {
-  // Match parameter size indicators like "8b", "70b", "0.5b", "3b", "14b"
-  const match = model.match(/(?:^|[-._/:])(\d+(?:\.\d+)?)[bB](?:[-._/:]|$)/);
-  if (!match) return null;
-  return parseFloat(match[1]);
-}
 
 export function buildDynamicCatalogProviders(staticProviders) {
   function hasConfiguredCredentials(provider) {
