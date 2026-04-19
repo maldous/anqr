@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 
-import { LOCK_FILE } from "./lock-file.mjs";
+import { getLockFile } from "./lock-file.mjs";
 import { ROOT } from "./root.mjs";
 import { RUN_ID } from "./run-id.mjs";
 import { WORKTREE_ID } from "./worktree-id.mjs";
@@ -12,6 +12,7 @@ export function showStatus() {
   logInfo("[runner] Symphony Runner Status\n");
   logInfo(`  Worktree: ${WORKTREE_ID}`);
   logInfo(`  Root: ${ROOT}`);
+  const LOCK_FILE = getLockFile();
   if (existsSync(LOCK_FILE)) {
     const pid = readFileSync(LOCK_FILE, "utf-8").trim();
     logInfo(`  Lock: ${isProcessAlive(Number(pid)) ? "🔒 LOCKED" : "🔓 stale"} (PID ${pid})`);

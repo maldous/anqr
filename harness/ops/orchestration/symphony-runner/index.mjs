@@ -7,7 +7,7 @@ export { rootMatchesPattern } from "./root-matches-pattern.mjs";
 export { WORKFLOW_PATH } from "./workflow-path.mjs";
 export { uid } from "./uid.mjs";
 export { STATE_DIR } from "./state-dir.mjs";
-export { LOCK_FILE } from "./lock-file.mjs";
+export { getLockFile } from "./lock-file.mjs";
 export { RUN_ID } from "./run-id.mjs";
 export { SYNC_FAILURE_THRESHOLD } from "./sync-failure-threshold.mjs";
 export { SYNC_FAIL_COUNT_FILE } from "./sync-fail-count-file.mjs";
