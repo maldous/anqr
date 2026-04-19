@@ -200,9 +200,10 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
 
             // Log tool call with resolved arguments (from tc.input after tool-input-delta accumulation)
             // This is the accurate representation of what the tool actually received
+            const toolCallIndex = executionMetrics.toolCallCount;
             if (tc.toolName === "read") {
               logInfo(`🔧 ${tc.toolName}: (output suppressed)`);
-              logDebug(`[invokeWithAI] Tool call resolved`, {
+              logDebug(`[invokeWithAI] Tool call #${toolCallIndex} resolved`, {
                 toolName: tc.toolName,
                 toolCallId: tc.toolCallId,
                 argsKeys: input ? Object.keys(input) : [],
@@ -210,10 +211,12 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
             } else {
               const summary = input ? JSON.stringify(input).slice(0, 200) : "(no args)";
               logInfo(`🔧 ${tc.toolName}: ${summary}`);
-              logDebug(`[invokeWithAI] Tool call resolved`, {
+              logDebug(`[invokeWithAI] Tool call #${toolCallIndex} resolved`, {
                 toolName: tc.toolName,
                 toolCallId: tc.toolCallId,
                 argsKeys: input ? Object.keys(input) : [],
+                stepNumber: executionMetrics.stepCount,
+                providerName: provider.name,
               });
             }
 

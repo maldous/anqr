@@ -619,6 +619,11 @@ export const server = http.createServer(async (req, res) => {
       setRequestIdCounter(requestIdCounter + 1);
       const requestId = `req-${requestIdCounter}`;
 
+      // Structured request lifecycle log — request start
+      logDebug(
+        `[${requestId}] REQUEST START | model=${route.responseModelId} stream=${stream} useTools=${route.useTools} sessionKey=${effectiveSessionKey || "none"} worktreeId=${worktreeId || "none"} messages=${messages.length}`,
+      );
+
       // Set concurrency-safe async-local context (used by getCurrentRequestId() / getRequestContext()).
       // Also set the deprecated module-global for backward compat with code not yet migrated
       // to use the async-local getters — under concurrency, only the async-local value is reliable.
@@ -885,6 +890,10 @@ export const server = http.createServer(async (req, res) => {
         logInfo(
           `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
         );
+        // Structured provider selection debug log with rationale
+        logDebug(
+          `[${requestId}] PROVIDER SELECTED | name=${selectedProvider?.name || "none"} model=${selectedProvider?.model || "N/A"} tier=${selectedProvider?.tier || "N/A"} driver=${selectedProvider?.driver || "N/A"} score=${selectedProvider?.score ?? "N/A"} route=${route.normalizedModelId} rationale=${selectionLog.length > 0 ? selectionLog.join("; ") : "default"}`,
+        );
 
         if (correlationId && selectedProvider) {
           try {
@@ -955,6 +964,10 @@ export const server = http.createServer(async (req, res) => {
 
             logInfo(
               `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName}, ${result.text.length} chars)`,
+            );
+            // Structured request lifecycle log — Codebuff direct stream completion
+            logDebug(
+              `[${requestId}] REQUEST COMPLETE | provider=${result.providerName} duration=${Date.now() - startTime}ms chars=${result.text.length} path=codebuff-direct`,
             );
 
             await finalizeDiscordStream({ requestId });
@@ -1137,6 +1150,10 @@ export const server = http.createServer(async (req, res) => {
 
           logInfo(
             `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName})`,
+          );
+          // Structured request lifecycle log — standard fallback stream completion
+          logDebug(
+            `[${requestId}] REQUEST COMPLETE | provider=${result.providerName} duration=${Date.now() - startTime}ms attempts=${result.attempts} tried=${result.triedProviders.join(",")} chars=${result.text.length} path=fallback-stream`,
           );
 
           await finalizeDiscordStream({ requestId });
@@ -1359,6 +1376,11 @@ export const server = http.createServer(async (req, res) => {
         // Send comprehensive completion metrics (non-blocking)
         const tokensIn = result.usage?.promptTokens || 0;
         const tokensOut = result.usage?.completionTokens || 0;
+
+        // Structured request lifecycle log — non-streaming completion
+        logDebug(
+          `[${requestId}] REQUEST COMPLETE | provider=${result.providerName} duration=${Date.now() - startTime}ms attempts=${result.attempts} tried=${result.triedProviders.join(",")} tokensIn=${tokensIn} tokensOut=${tokensOut} path=non-stream`,
+        );
         const totalTokens = tokensIn + tokensOut;
 
         const nonStreamCompletionFields = [
