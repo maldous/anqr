@@ -869,31 +869,29 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       if (agentResult.completed === true && !isExternallyCompleted) {
         if (agentResult.toolCalls > 0 && !completionPromoted) {
           // Agent natively completed (task_complete / subgoals finished) via tool calls
-          // with no file changes — tool calls ARE the work product (e.g. creating
-          // Linear issues, checking things, updating status). Mark as Done.
-          await updateIssue(issue.id, { stateId: STATES.done });
+          // but produced NO file changes. This is likely a false positive — most
+          // coding tasks should produce file changes. Move to In Review for human
+          // verification rather than auto-marking as Done.
+          await updateIssue(issue.id, { stateId: STATES.inReview });
           await addComment(
             issue.id,
-            safetyCap(`✅ **Agent completed via tool calls** — no file changes needed.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`),
+            safetyCap(`ℹ️ **Agent completed via tool calls but no file changes** — moved to In Review for human verification.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}\n\n⚠️ This may be a false positive — coding tasks typically produce file changes.`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
-            reason: "agent_completed_via_tools",
+            reason: "agent_completed_via_tools_no_changes",
             from: "In Progress",
-            to: "Done",
+            to: "In Review",
             runId: RUN_ID,
           });
-          clearCooldown(issue.identifier);
           if (provider?.name) {
             recordLinearCompletion(metricsProviderName, {
-              completed: true,
+              completed: false,
               priority: issue.priority,
               estimate: issue.estimate,
             });
-            recordProviderSuccess(metricsProviderName);
           }
-          logInfo(`[runner] ✅ Completed via tools: ${issue.identifier} — ${issue.title}`);
-          voiceAnnounce(`Finished ${issue.identifier}: ${issue.title}.`);
+          logInfo(`[runner] ℹ️ Completed via tools (no file changes): ${issue.identifier} — ${issue.title} — moved to In Review`);
         } else if (agentResult.toolCalls > 0 && completionPromoted) {
           // Agent did real work (tool calls) but didn't explicitly complete —
           // promoted from partial progress. Move to In Review for human verification.

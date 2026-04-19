@@ -25,7 +25,7 @@ export const ADVERTISED_MODELS = [
   { id: "symphony/gemini-lite", ownedBy: "gemini-lite", allowedNames: ["gemini-lite"] },
   { id: "symphony/openrouter", ownedBy: "openrouter", allowedNames: OPENROUTER_PROVIDER_NAMES },
   { id: "symphony/sambanova", ownedBy: "sambanova", allowedNames: ["sambanova"] },
-  { id: "symphony/cerebras", ownedBy: "cerebras", allowedNames: ["cerebras"] },
+  // cerebras removed — 8B model below minimum coding capability threshold
   {
     id: "symphony/github-models",
     ownedBy: "github-models",
@@ -34,24 +34,6 @@ export const ADVERTISED_MODELS = [
   { id: "symphony/huggingface", ownedBy: "huggingface", allowedNames: ["huggingface"] },
   { id: "symphony/fireworks", ownedBy: "fireworks", allowedNames: ["fireworks"] },
   { id: "symphony/together", ownedBy: "together", allowedNames: ["together"] },
-  {
-    id: "symphony/ollama-local",
-    ownedBy: "ollama-local",
-    allowedNames: ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
-  },
-  {
-    id: "symphony/ollama-qwen2.5-coder-3b",
-    ownedBy: "ollama-qwen2.5-coder-3b",
-    allowedNames: ["ollama-qwen2.5-coder-3b"],
-  },
-  {
-    id: "symphony/ollama-qwen2.5-coder-0.5b",
-    ownedBy: "ollama-qwen2.5-coder-0.5b",
-    allowedNames: ["ollama-qwen2.5-coder-0.5b"],
-  },
-  {
-    id: "symphony/ollama-qwen3-coder-next",
-    ownedBy: "ollama-local",
-    allowedNames: ["ollama-local"],
-  },
+  // ollama 3b/0.5b removed — below 14B minimum coding capability threshold
+  // ollama-qwen3-coder-next removed — no corresponding static provider after ollama cleanup
 ];

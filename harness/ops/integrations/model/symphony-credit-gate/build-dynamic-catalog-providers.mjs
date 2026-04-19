@@ -29,6 +29,28 @@ const EXCLUDED_MODEL_PATTERNS = [
   /(?:^|[-_/])vl(?:$|[-_/])/i,
 ];
 
+/**
+ * Minimum parameter count (in billions) for a model to be considered capable
+ * of real coding tasks. Models below this threshold produce false-positive
+ * completions — they call task_complete without writing any code.
+ *
+ * 14B is the floor: below that, models lack the capacity for multi-file
+ * code generation with correct syntax, imports, and conventions.
+ */
+const MIN_CODING_PARAMS_B = 14;
+
+/**
+ * Extract approximate parameter count from model name.
+ * Matches patterns like "8b", "70b", "0.5b", "3.1-8b", "-14b-", etc.
+ * Returns null if no parameter indicator is found.
+ */
+function extractParamCountB(model) {
+  // Match parameter size indicators like "8b", "70b", "0.5b", "3b", "14b"
+  const match = model.match(/(?:^|[-._/:])(\d+(?:\.\d+)?)[bB](?:[-._/:]|$)/);
+  if (!match) return null;
+  return parseFloat(match[1]);
+}
+
 export function buildDynamicCatalogProviders(staticProviders) {
   function hasConfiguredCredentials(provider) {
     if (provider?.driver === "codex-sdk") {
@@ -63,6 +85,10 @@ export function buildDynamicCatalogProviders(staticProviders) {
     if (EXCLUDED_MODEL_PATTERNS.some((pattern) => pattern.test(model))) return false;
     if (!supportsTextIO(row?.raw || row)) return false;
     if (row?.toolSupport === "unsupported") return false;
+    // Reject models below minimum coding capability threshold.
+    // Models with <14B params produce false-positive completions.
+    const paramB = extractParamCountB(model);
+    if (paramB !== null && paramB < MIN_CODING_PARAMS_B) return false;
     return true;
   }
 

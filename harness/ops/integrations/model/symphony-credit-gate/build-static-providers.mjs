@@ -1,15 +1,12 @@
 import {
-  RUNNER_OLLAMA_BASE_URL,
   RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
 } from "../../../symphony-config.mjs";
 import { TIER_FREE_CLOUD } from "./tier-free-cloud.mjs";
-import { TIER_LOCAL_SAFETY_NET } from "./tier-local-safety-net.mjs";
 import { TIER_PAID } from "./tier-paid.mjs";
 import { probeCodexSdk } from "./probe-codex-sdk.mjs";
 import { probeCodebuff } from "./probe-codebuff.mjs";
 import { probeGeminiModels } from "./probe-gemini-models.mjs";
 import { probeGitHubModels } from "./probe-git-hub-models.mjs";
-import { probeOllamaModel } from "./probe-ollama-model.mjs";
 
 export function buildStaticProviders() {
   return [
@@ -86,14 +83,10 @@ export function buildStaticProviders() {
       modelsUrl: "https://api.sambanova.ai/v1/models",
       catalogCacheKey: "sambanova",
     },
-    {
-      name: "cerebras",
-      model: "llama3.1-8b",
-      baseUrl: "https://api.cerebras.ai/v1",
-      envVar: "CEREBRAS_TOKEN",
-      modelsUrl: "https://api.cerebras.ai/v1/models",
-      catalogCacheKey: "cerebras",
-    },
+    // cerebras llama3.1-8b excluded — 8B params is below the minimum coding
+    // capability threshold (14B). It produces false-positive completions
+    // (calls task_complete without writing any code). Replaced by dynamic
+    // catalog providers that respect the MIN_CODING_PARAMS_B filter.
     {
       name: "github-models",
       model: "gpt-4.1-mini",
@@ -127,21 +120,8 @@ export function buildStaticProviders() {
       modelsUrl: "https://api.together.xyz/v1/models",
       catalogCacheKey: "together",
     },
-    {
-      name: "ollama-qwen2.5-coder-3b",
-      tier: TIER_LOCAL_SAFETY_NET,
-      model: "qwen2.5-coder:3b-instruct",
-      baseUrl: RUNNER_OLLAMA_BASE_URL,
-      envVar: null,
-      probe: () => probeOllamaModel("qwen2.5-coder:3b-instruct"),
-    },
-    {
-      name: "ollama-qwen2.5-coder-0.5b",
-      tier: TIER_LOCAL_SAFETY_NET,
-      model: "qwen2.5-coder:0.5b",
-      baseUrl: RUNNER_OLLAMA_BASE_URL,
-      envVar: null,
-      probe: () => probeOllamaModel("qwen2.5-coder:0.5b"),
-    },
+    // ollama 3b/0.5b excluded — below 14B minimum coding capability.
+    // They produce false-positive completions with zero file changes.
+    // Re-enable only if a larger model (e.g. qwen2.5-coder:14b) is available.
   ];
 }
