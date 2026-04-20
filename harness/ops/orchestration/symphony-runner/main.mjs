@@ -15,6 +15,7 @@ import { releaseLock } from "./release-lock.mjs";
 import { showStatus } from "./show-status.mjs";
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
 import { EXIT_LOCK_CONTENTION } from "./exit-codes.mjs";
+import { writeRunnerOutcome } from "./write-runner-outcome.mjs";
 
 export async function main() {
   const args = new Map();
@@ -229,8 +230,63 @@ export async function main() {
       if (!issue) break;
       const status = await executeIssue(issue, dryRun, { operatorOverride: !!targetIssue });
       if (status === "skip") {
+        writeRunnerOutcome({ result: "skip", issueIdentifier: issue.identifier });
         excludeIds.add(issue.id);
         continue;
+      }
+
+      // ── Structured outcome (ADR-0008) ─────────────────────────────────
+      // After executeIssue returns "done", inspect the finalization state to
+      // write a structured outcome file. This lets the HTTP layer distinguish
+      // "commit exists" from "runner just finished" — closing the gap where
+      // the system previously treated exit-0 as success regardless of whether
+      // a real commit was created.
+      const { getFinalizationState } = await import("../../symphony-state.mjs");
+      const fin = getFinalizationState(issue.identifier);
+      if (fin?.state === "integration_pending") {
+        writeRunnerOutcome({
+          result: "integration_pending",
+          issueIdentifier: issue.identifier,
+          branch: fin.branch,
+          headSha: fin.headSha,
+          finalizationState: fin.state,
+        });
+      } else if (fin?.state === "branch_push_failed_repairable") {
+        writeRunnerOutcome({
+          result: "local_commit_complete",
+          issueIdentifier: issue.identifier,
+          branch: fin.branch,
+          headSha: fin.headSha,
+          finalizationState: fin.state,
+          reason: fin.lastError || "push failed",
+        });
+      } else if (fin?.state === "validation_failed_repairable") {
+        writeRunnerOutcome({
+          result: "validation_failed",
+          issueIdentifier: issue.identifier,
+          finalizationState: fin.state,
+          reason: fin.lastError || "validation failed",
+        });
+      } else if (fin?.state === "commit_failed_repairable" || fin?.state === "commit_failed_blocked") {
+        writeRunnerOutcome({
+          result: "commit_failed",
+          issueIdentifier: issue.identifier,
+          finalizationState: fin.state,
+          reason: fin.lastError || "git commit failed",
+        });
+      } else if (fin) {
+        writeRunnerOutcome({
+          result: fin.state,
+          issueIdentifier: issue.identifier,
+          finalizationState: fin.state,
+        });
+      } else {
+        // No finalization state → no commit was created
+        writeRunnerOutcome({
+          result: "no_changes",
+          issueIdentifier: issue.identifier,
+          reason: "runner completed without finalization state",
+        });
       }
       // After completing an issue (success or handled outcome), feed queue to eliminate idle gap
       // CRITICAL: Use readyDepth (Todo count), not queueDepth (includes In Progress)

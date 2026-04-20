@@ -43,7 +43,35 @@ export function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
     }
     return true;
   } catch (err) {
-    logError(`[runner] Git commit failed: ${err.message}`);
+    // Capture rich diagnostics for commit failure observability
+    const stderr = err.stderr?.toString().trim() || "";
+    const stdout = err.stdout?.toString().trim() || "";
+    const exitCode = err.status ?? err.code ?? "unknown";
+    let branch = "unknown";
+    let headSha = "unknown";
+    let porcelain = "";
+    try {
+      branch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+        cwd: ROOT, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
+    } catch {}
+    try {
+      headSha = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
+        cwd: ROOT, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
+    } catch {}
+    try {
+      porcelain = execFileSync("git", ["status", "--porcelain"], {
+        cwd: ROOT, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
+      }).trim().slice(0, 500);
+    } catch {}
+    logError(
+      `[runner] Git commit failed: ${err.message}\n` +
+      `  exitCode=${exitCode} branch=${branch} HEAD=${headSha}\n` +
+      `  porcelain=${porcelain || "(empty)"}\n` +
+      `  stderr=${stderr || "(empty)"}\n` +
+      `  stdout=${stdout || "(empty)"}`,
+    );
     return false;
   }
 }

@@ -4,6 +4,7 @@ import { promisify } from "node:util";
 
 import { ensureEvidenceRecord } from "../../../core/task-evidence.mjs";
 import { EXIT_LOCK_CONTENTION } from "../../../orchestration/symphony-runner/exit-codes.mjs";
+import { readRunnerOutcome } from "../../../orchestration/symphony-runner/read-runner-outcome.mjs";
 import { sendJson } from "./send-json.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 
@@ -78,6 +79,28 @@ export async function executeLinearIssueRequest(req, res) {
     }
 
     logInfo(`[linear-execute] Completed ${identifier}`);
+
+    // Read structured runner outcome — this is the single source of truth
+    // for whether a commit was actually created. Previously the HTTP layer
+    // returned 202 "execution_complete" regardless, conflating "runner
+    // finished" with "commit exists".
+    const outcome = readRunnerOutcome(correlationId);
+    if (outcome) {
+      logInfo(
+        `[linear-execute] Runner outcome for ${identifier}: result=${outcome.result}` +
+        (outcome.branch ? ` branch=${outcome.branch}` : "") +
+        (outcome.headSha ? ` sha=${outcome.headSha.slice(0, 8)}` : "") +
+        (outcome.reason ? ` reason=${outcome.reason}` : ""),
+      );
+      return sendJson(res, 202, {
+        status: outcome.result,
+        identifier,
+        correlationId,
+        outcome,
+      });
+    }
+
+    // No outcome file (legacy path) — still return 202 for backward compat
     return sendJson(res, 202, {
       status: "execution_complete",
       identifier,

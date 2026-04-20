@@ -29,12 +29,25 @@ export async function gitPushWorktreeBranch() {
       }
       return { ok: true, branch, head: getRepoHeadSha("HEAD") };
     } catch (err) {
+      const pushStderr = err.stderr?.toString().trim() || "";
+      const pushStdout = err.stdout?.toString().trim() || "";
+      const pushExitCode = err.status ?? err.code ?? "unknown";
       if (attempt < 3) {
-        logWarn(`[runner] Push to ${branch} failed (attempt ${attempt}/3): ${err.message}`);
+        logWarn(
+          `[runner] Push to ${branch} failed (attempt ${attempt}/3): ${err.message}\n` +
+          `  exitCode=${pushExitCode}\n` +
+          `  stderr=${pushStderr || "(empty)"}\n` +
+          `  stdout=${pushStdout || "(empty)"}`,
+        );
         await new Promise((r) => setTimeout(r, attempt * 1000));
       } else {
-        logError(`[runner] Git push to ${branch} failed after 3 attempts: ${err.message}`);
-        return { ok: false, branch, head: getRepoHeadSha("HEAD"), error: err.message };
+        logError(
+          `[runner] Git push to ${branch} failed after 3 attempts: ${err.message}\n` +
+          `  exitCode=${pushExitCode}\n` +
+          `  stderr=${pushStderr || "(empty)"}\n` +
+          `  stdout=${pushStdout || "(empty)"}`,
+        );
+        return { ok: false, branch, head: getRepoHeadSha("HEAD"), error: err.message, stderr: pushStderr, stdout: pushStdout };
       }
     }
   }

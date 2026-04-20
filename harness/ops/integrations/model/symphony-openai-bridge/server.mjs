@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import http from "node:http";
+import path from "node:path";
 import {
   selectProvider,
   recordProviderFailure,
@@ -49,6 +50,7 @@ import { logMemory } from "./log-memory.mjs";
 import { maybeGC } from "./maybe-gc.mjs";
 import { nonToolCapableProviders } from "./non-tool-capable-providers.mjs";
 import { normalizeRequestCwd } from "./normalize-request-cwd.mjs";
+import { BRIDGE_ROOT } from "./bridge-root.mjs";
 import { parseBody } from "./parse-body.mjs";
 import { providerStatusCache } from "./provider-status-cache.mjs";
 import { recordBridgeMetrics } from "./record-bridge-metrics.mjs";
@@ -351,6 +353,52 @@ export const server = http.createServer(async (req, res) => {
       const correlationId = req.headers["x-anqr-correlation-id"] || null;
       const isSymphonyRunner = req.headers["x-symphony-origin"] === "runner";
       const requestCwd = normalizeRequestCwd(body.cwd);
+
+      // ── Bridge cwd invariant (ADR-0008 enforcement) ───────────────────────
+      // Runner requests MUST carry body.cwd so that bridge tool mutations
+      // land in the correct worktree, not in the bridge's default root.
+      // If cwd is absent or the normalized path escapes the worktree,
+      // fail closed (400) to prevent silent cross-worktree leakage.
+      if (isSymphonyRunner) {
+        if (!body.cwd || typeof body.cwd !== "string" || !body.cwd.trim()) {
+          logError(
+            `[boundary] REJECT: Runner request missing body.cwd — ` +
+            `tool mutations would default to BRIDGE_ROOT (${BRIDGE_ROOT})`,
+          );
+          return sendJson(res, 400, {
+            error: {
+              message: "Runner requests must include body.cwd to ensure worktree-scoped tool mutations",
+              type: "invalid_request_error",
+              param: "cwd",
+            },
+          });
+        }
+        // Verify that the normalized cwd stays within the worktree boundary.
+        // If remapRepoPathToBridgeRoot redirects the path outside the expected
+        // worktree root, fail closed to prevent cross-worktree leakage.
+        const relativeFromBridgeRoot = path.relative(BRIDGE_ROOT, requestCwd);
+        // path.relative() returns a relative path or empty string; the only way
+        // to escape the parent is if the result starts with "..".
+        const escapesWorktree = relativeFromBridgeRoot.startsWith("..");
+        if (escapesWorktree) {
+          logError(
+            `[boundary] REJECT: Runner cwd escapes worktree boundary — ` +
+            `requested=${body.cwd} normalized=${requestCwd} bridgeRoot=${BRIDGE_ROOT} ` +
+            `relative=${relativeFromBridgeRoot}`,
+          );
+          return sendJson(res, 400, {
+            error: {
+              message: `Runner cwd (${requestCwd}) escapes worktree boundary (${BRIDGE_ROOT}) — tool mutations would land outside the assigned worktree`,
+              type: "invalid_request_error",
+              param: "cwd",
+            },
+          });
+        }
+        // Log both the raw and normalized cwd for observability.
+        logInfo(
+          `[boundary] Runner cwd: requested=${body.cwd} normalized=${requestCwd} bridgeRoot=${BRIDGE_ROOT}`,
+        );
+      }
 
       // Extract Discord message ID, thread name, and Linear thread name for thread/reply functionality
       const discordMessageId = req.headers["x-discord-message-id"] || null;
