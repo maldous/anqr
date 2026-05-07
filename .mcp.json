@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "anqr-serena": {
+      "type": "http",
+      "url": "http://127.0.0.1:9122/mcp"
+    },
+    "openclaw-serena": {
+      "type": "http",
+      "url": "http://127.0.0.1:9121/mcp"
+    },
+    "linear": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@tacticlaunch/mcp-linear"],
+      "env": {
+        "LINEAR_API_TOKEN": "$LINEAR_API_KEY"
+      }
+    }
+  }
+}
