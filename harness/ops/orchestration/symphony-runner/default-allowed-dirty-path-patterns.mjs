@@ -8,4 +8,8 @@ export const DEFAULT_ALLOWED_DIRTY_PATH_PATTERNS = [
   /^reports\/doctor\.json$/,
   /^reports\/latest\.json$/,
   /^task_requests\/tasks\//,
+  // Bridge server runtime files — modified on every AI request
+  /^harness\/ops\/runtime\/openclaw-config\/canvas\//,
+  /^harness\/ops\/runtime\/openclaw-config\/identity\//,
+  /^\.gitignore$/,
 ];

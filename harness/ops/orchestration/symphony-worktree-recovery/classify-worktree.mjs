@@ -142,7 +142,11 @@ export function classifyWorktree(snapshot) {
       result.classification = "dirty_orphaned";
       result.confidence = 0.3;
       // ADR-0005: Recovery shall not auto-commit orphaned dirty worktrees.
-      result.repairAction = "quarantine";
+      // reset_to_main discards unfinalized AI changes and restores to a clean
+      // state so the worktree is available for new work. This breaks the
+      // permanent quarantine loop where dirty_orphaned worktrees could never
+      // recover automatically.
+      result.repairAction = "reset_to_main";
     }
     return result;
   }

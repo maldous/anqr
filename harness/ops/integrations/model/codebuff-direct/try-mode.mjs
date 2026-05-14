@@ -95,14 +95,11 @@ export async function tryMode(apiKey, cwd, costMode, prompt, onTextChunk = null)
     hasSubgoals: lastSubgoalStatus !== null,
     usedTools: [...usedTools],
     finishReason,
-    _symphonyResult: inferSymphonyResultFromCompletion({
-      finishReason,
-      text,
-    }) || {
+    _symphonyResult: {
       completed: !needsContinuation,
       needsContinuation,
-      failureClass: null,
-      mutationCount: 0,
+      failureClass: needsContinuation ? "step_limit_reached" : null,
+      mutationCount: usedTools.size,
       changedFiles: [],
       validationIntent: false,
       toolCallCount: usedTools.size,
