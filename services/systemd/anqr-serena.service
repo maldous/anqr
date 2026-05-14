@@ -1,0 +1,14 @@
+[Unit]
+Description=ANQR Serena MCP service (TypeScript LSP)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/user/src/anqr
+EnvironmentFile=/home/user/src/anqr/.claude/tools/anqr-ai/config.env
+ExecStart=/home/user/src/anqr/.claude/tools/anqr-ai/bin/serena-run.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
