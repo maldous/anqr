@@ -1,4 +1,6 @@
-export const SYMPHONY_BASE_URL = "http://127.0.0.1:4319";
+// Use the executor directly (not the router at 4319) so tests avoid
+// cross-worktree lease contention when running sequentially.
+export const SYMPHONY_BASE_URL = "http://127.0.0.1:4321";
 export const SYMPHONY_EXECUTOR_URL = "http://127.0.0.1:4321";
 export const SYMPHONY_API_KEY = "local-symphony";
 

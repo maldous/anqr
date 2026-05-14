@@ -6,7 +6,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? "html" : "list",
   use: {
@@ -40,6 +40,7 @@ export default defineConfig({
       testMatch: /openclaw.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
       timeout: 120_000,
+      fullyParallel: false,
     },
   ],
   // Web server only needed for UI-based projects (basic, advanced, professional, permutations).

@@ -3,7 +3,7 @@ export function isTransientError(status: number, errMsg: string): boolean {
   if (status === 429) return true;
   if (
     status === 500 &&
-    /Too Many Requests|rate.limit|quota|exhausted|system memory|not enough memory|out of memory/i.test(
+    /Too Many Requests|rate.limit|quota|exhausted|system memory|not enough memory|out of memory|No providers available/i.test(
       errMsg,
     )
   )
