@@ -22,3 +22,4 @@ This directory contains the repo-local automation surface.
 Not every leaf needs a README.
 
 Keep README files only where they reduce navigation cost or define a boundary. Remove generated inventory files that merely restate filenames.
+<!-- HARNESS_TEST_SENTINEL -->
