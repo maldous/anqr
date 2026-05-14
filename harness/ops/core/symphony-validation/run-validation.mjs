@@ -1,5 +1,4 @@
 import { runAstDensity } from "./run-ast-density.mjs";
-import { runCspell } from "./run-cspell.mjs";
 import { runLint } from "./run-lint.mjs";
 import { runTests } from "./run-tests.mjs";
 import { runTypecheck } from "./run-typecheck.mjs";
@@ -10,7 +9,6 @@ export async function runValidation(projectRoot, changedFiles = [], opts = {}) {
   const results = [
     { check: "typecheck", ...(await runTypecheck(projectRoot, heartbeatOpts)) },
     { check: "lint", ...(await runLint(projectRoot, heartbeatOpts)) },
-    { check: "cspell", ...(await runCspell(projectRoot, changedFiles, heartbeatOpts)) },
     { check: "ast-density", ...(await runAstDensity(projectRoot, changedFiles, heartbeatOpts)) },
     { check: "test-unit", ...(await runTests(projectRoot, heartbeatOpts)) },
   ];

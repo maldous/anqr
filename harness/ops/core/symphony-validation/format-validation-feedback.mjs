@@ -10,7 +10,7 @@ export function formatValidationFeedback(validation) {
   }
   lines.push(
     "Fix ONLY the errors listed above.",
-    "Run run_typecheck, run_lint, run_cspell, run_ast_density, and run_tests after your last code change.",
+    "Run run_typecheck, run_lint, run_ast_density, and run_tests after your last code change.",
     "Then call task_complete when all checks pass.",
   );
   return lines.join("\n");

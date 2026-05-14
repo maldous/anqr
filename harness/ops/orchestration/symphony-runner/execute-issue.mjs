@@ -745,7 +745,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
             leaseId: leaseNonce,
             executionMode: "mutating",
             feedback:
-              "Continue working on the active subgoals. Complete the remaining tasks and call task_complete when done. Make sure to run run_typecheck, run_lint, run_cspell, run_ast_density, and run_tests before calling task_complete.",
+              "Continue working on the active subgoals. Complete the remaining tasks and call task_complete when done. Make sure to run run_typecheck, run_lint, run_ast_density, and run_tests before calling task_complete.",
             maxTurns: RUNNER_MAX_TURNS,
             maxMs: contRemainingMs,
           });

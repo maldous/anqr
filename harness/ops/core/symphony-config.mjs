@@ -75,7 +75,7 @@ export const RUNNER_VALIDATION_REPAIR_MAX = 3; // Phase 2: max same-worktree val
 // ---------------------------------------------------------------------------
 // Linear reconciler configuration
 // ---------------------------------------------------------------------------
-export const RECONCILER_POLL_INTERVAL_MS = 90_000; // 90 sec — periodic backlog reconciliation
+export const RECONCILER_POLL_INTERVAL_MS = 10 * 60_000; // 10 min — backstop only; webhooks handle real-time dispatch
 export const RECONCILER_DISPATCH_COOLDOWN_MS = 5_000; // 5 sec — delay between dispatches to avoid thundering herd
 
 // ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@ import { getQueueSnapshot, feedQueue, detectStuckWork } from "../../symphony-que
 import { getHealthyLinearCapacity } from "../linear-reconciler/get-healthy-linear-capacity.mjs";
 import { getEligibleWork } from "./get-eligible-work.mjs";
 import { dispatchToExecutor } from "./dispatch-to-executor.mjs";
+import { planIssue, issueAlreadyPlanned, markPlanned } from "../symphony-planner/plan-issue.mjs";
 import { logInfo, logWarn, logDebug } from "./logger.mjs";
 
 /**
@@ -54,6 +55,21 @@ export async function scheduleCycle() {
   if (eligible.length === 0) {
     logDebug("[scheduler] No eligible issues");
     return { dispatched: 0, eligible: 0 };
+  }
+
+  // Enrich unplanned issues with AI planning context before dispatch.
+  // Await so the plan comment lands in Linear before executor fetches the issue.
+  // Soft failure — planning errors never block dispatch.
+  for (const issue of eligible.slice(0, dispatchBudget)) {
+    if (!issueAlreadyPlanned(issue)) {
+      try {
+        await planIssue(issue);
+        markPlanned(issue.identifier);
+        logInfo(`[scheduler] Planned ${issue.identifier}`);
+      } catch (err) {
+        logWarn(`[scheduler] Planning failed for ${issue.identifier}: ${err.message}`);
+      }
+    }
   }
 
   // ADR-0002: Build available worktree pool from durable capacity state.
