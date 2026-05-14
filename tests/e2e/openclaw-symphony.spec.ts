@@ -988,7 +988,7 @@ test.describe("OpenRouter Model Coverage (requires running bridge)", () => {
 // ---------------------------------------------------------------------------
 
 test.describe("Full Provider Cascade Summary (requires running bridge)", () => {
-  test.setTimeout(180_000);
+  test.setTimeout(400_000);
 
   test("remote API routes — majority succeed in parallel", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
@@ -1213,6 +1213,7 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
   }
 
   test("streaming cascade — majority of remote routes stream successfully", async () => {
+    test.setTimeout(400_000);
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     test.skip(!reachable, "Symphony bridge not reachable - requires running bridge on port 4319");
 
