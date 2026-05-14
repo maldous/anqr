@@ -22,7 +22,7 @@ export async function main() {
   if (daemon) {
     await runDaemon();
   } else {
-    const result = await runReconciliationCycle();
+    const result = await runReconciliationCycle(true); // single-cycle: always full poll
     logInfo(`Single cycle: ${JSON.stringify(result)}`);
     process.exit(0);
   }

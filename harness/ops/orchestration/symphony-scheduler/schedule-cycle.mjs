@@ -1,6 +1,7 @@
 import { claimAndAssignWorktree, releaseLease } from "../../symphony-state.mjs";
 import {
   SCHEDULER_MAX_DISPATCH_PER_CYCLE,
+  SCHEDULER_FULL_POLL_INTERVAL_CYCLES,
   RECONCILER_DISPATCH_COOLDOWN_MS,
   TARGET_MIN,
 } from "../../symphony-config.mjs";
@@ -11,33 +12,43 @@ import { dispatchToExecutor } from "./dispatch-to-executor.mjs";
 import { planIssue, issueAlreadyPlanned, markPlanned } from "../symphony-planner/plan-issue.mjs";
 import { logInfo, logWarn, logDebug } from "./logger.mjs";
 
+// Module-level cycle counter for gating expensive Linear API calls.
+// Housekeeping (detectStuckWork, feedQueue, queue snapshots) only runs
+// on full-poll cycles to avoid burning the Linear API rate limit.
+let cycleCount = 0;
+
 /**
  * Run one authoritative scheduling cycle — ADR-0002.
  *
- * 1. Detect stuck work and feed queue if needed
- * 2. Compute healthy capacity
- * 3. Get eligible work (priority-sorted)
+ * 1. Housekeeping (stuck work, feed queue) — only on full-poll cycles
+ * 2. Compute healthy capacity (from local state, no API call)
+ * 3. Get eligible work (webhook-first, full-poll backstop)
  * 4. Atomically claim + dispatch up to budget
  */
 export async function scheduleCycle() {
   const cycleStart = Date.now();
+  cycleCount++;
+  const isFullPollCycle = cycleCount % SCHEDULER_FULL_POLL_INTERVAL_CYCLES === 0;
 
-  // Housekeeping: detect stuck work, feed queue
-  const snap = await getQueueSnapshot();
-  await detectStuckWork(snap, false);
-  if (snap.readyDepth < TARGET_MIN) {
-    logDebug(`[scheduler] Queue depth ${snap.readyDepth} < target ${TARGET_MIN} — feeding`);
-    await feedQueue(snap, false);
+  // Housekeeping: detect stuck work, feed queue — only on full-poll cycles.
+  // These call listIssuesByState (3 API calls each) and are expensive.
+  // The reconciler also does these independently every 10 min.
+  if (isFullPollCycle) {
+    const snap = await getQueueSnapshot();
+    await detectStuckWork(snap, false);
+    if (snap.readyDepth < TARGET_MIN) {
+      logDebug(`[scheduler] Queue depth ${snap.readyDepth} < target ${TARGET_MIN} — feeding`);
+      await feedQueue(snap, false);
+    }
   }
 
-  // Compute capacity
+  // Compute capacity (from local durable state — no Linear API call)
   const capacity = getHealthyLinearCapacity();
   if (capacity.healthy === 0) {
     logWarn("[scheduler] No healthy Linear worktrees — skipping cycle");
     return { dispatched: 0, skipped: true, reason: "no_healthy_worktrees" };
   }
 
-  const freshSnap = await getQueueSnapshot();
   const dispatchBudget = Math.min(
     Math.max(0, capacity.available),
     SCHEDULER_MAX_DISPATCH_PER_CYCLE,
@@ -45,13 +56,13 @@ export async function scheduleCycle() {
 
   if (dispatchBudget === 0) {
     logDebug(
-      `[scheduler] No dispatch budget (available=${capacity.available}, active=${freshSnap.activeDepth})`,
+      `[scheduler] No dispatch budget (available=${capacity.available})`,
     );
     return { dispatched: 0, budget: 0 };
   }
 
-  // Get eligible work
-  const eligible = await getEligibleWork();
+  // Get eligible work (webhook-first, full-poll only on backstop cycles)
+  const eligible = await getEligibleWork(isFullPollCycle);
   if (eligible.length === 0) {
     logDebug("[scheduler] No eligible issues");
     return { dispatched: 0, eligible: 0 };

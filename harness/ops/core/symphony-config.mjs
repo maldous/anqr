@@ -77,6 +77,7 @@ export const RUNNER_VALIDATION_REPAIR_MAX = 3; // Phase 2: max same-worktree val
 // ---------------------------------------------------------------------------
 export const RECONCILER_POLL_INTERVAL_MS = 10 * 60_000; // 10 min — backstop only; webhooks handle real-time dispatch
 export const RECONCILER_DISPATCH_COOLDOWN_MS = 5_000; // 5 sec — delay between dispatches to avoid thundering herd
+export const RECONCILER_FULL_POLL_INTERVAL_CYCLES = 3; // full Todo poll every 3 cycles (30 min) — webhooks handle real-time dispatch
 
 // ---------------------------------------------------------------------------
 // Authoritative scheduler (Workstream A — ADR-0002)
@@ -93,6 +94,8 @@ export const RECONCILER_DISPATCH_COOLDOWN_MS = 5_000; // 5 sec — delay between
 export const SCHEDULER_AUTHORITATIVE = true;
 export const SCHEDULER_POLL_INTERVAL_MS = 15_000; // 15 sec — scheduler cycle interval
 export const SCHEDULER_MAX_DISPATCH_PER_CYCLE = 4; // max issues to claim+dispatch in one cycle
+export const SCHEDULER_FULL_POLL_INTERVAL_CYCLES = 20; // full listIssuesByState poll every 20 cycles (5 min) — webhooks handle real-time
+export const SCHEDULER_MAX_DESIRED_WORK_FETCH = 30; // cap parallel getIssueDetail calls per cycle — avoids burning rate limit on backlog drains
 
 // ---------------------------------------------------------------------------
 // Recovery daemon configuration (Phase 3)

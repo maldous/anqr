@@ -1,8 +1,9 @@
 import { createDurableQueue } from "../../lib/durable-kv.mjs";
+import { SCHEDULER_MAX_DESIRED_WORK_FETCH } from "../../symphony-config.mjs";
 import { logDebug } from "./logger.mjs";
 
 const DESIRED_WORK_QUEUE_NAME = "symphony-desired-work";
-const MAX_DRAIN_PER_CYCLE = 100;
+const MAX_DRAIN_PER_CYCLE = SCHEDULER_MAX_DESIRED_WORK_FETCH;
 
 /**
  * Drain the desired-work queue and return advisory signals.

@@ -14,6 +14,7 @@ import {
   TARGET_MIN,
   RECONCILER_DISPATCH_COOLDOWN_MS,
   RECOVERY_GRACE_MS,
+  RECONCILER_FULL_POLL_INTERVAL_CYCLES,
 } from "../../../symphony-config.mjs";
 import { isDiscordSourced } from "../../../core/discord-source.mjs";
 import { getHealthyLinearCapacity } from "../get-healthy-linear-capacity.mjs";
@@ -23,7 +24,7 @@ import { recoverInProgressIssue } from "./recover-in-progress-issue.mjs";
 import { recoverInReviewIssue } from "./recover-in-review-issue.mjs";
 import { feedDesiredWorkQueue } from "./feed-desired-work-queue.mjs";
 
-export async function runReconciliationCycle() {
+export async function runReconciliationCycle(isFullPollCycle = true) {
   const cycleStart = Date.now();
 
   const capacity = getHealthyLinearCapacity();
@@ -51,9 +52,21 @@ export async function runReconciliationCycle() {
   }
 
   const freshSnap = await getQueueSnapshot();
-  const todoIssues = await listIssuesByState(QUEUE_STATES.readyStates);
+
+  // InProgress and InReview polls always run — needed for stuck-work recovery.
   const inProgressIssues = await listIssuesByState(QUEUE_STATES.activeStates);
   const inReviewIssues = await listIssuesByState(QUEUE_STATES.closeoutStates);
+
+  // Todo poll is throttled — webhooks handle real-time dispatch.
+  // Only do a full Todo poll on periodic backstop cycles (or single-cycle runs).
+  let todoIssues = [];
+  if (isFullPollCycle) {
+    todoIssues = await listIssuesByState(QUEUE_STATES.readyStates);
+    logDebug(`[reconciler] Full Todo poll: ${todoIssues.length} issues (every ${RECONCILER_FULL_POLL_INTERVAL_CYCLES} cycles)`);
+  } else {
+    logDebug("[reconciler] Skipping Todo poll — trusting webhooks (next full poll in < 30 min)");
+  }
+
   const eligibleTodo = todoIssues
     .filter((issue) => canExecuteIssue(issue))
     .filter((issue) => !isDiscordSourced(issue));
@@ -96,7 +109,7 @@ export async function runReconciliationCycle() {
   });
 
   logInfo(
-    `Reconciliation: todo=${todoIssues.length} eligible=${summary.eligibleCount} active=${freshSnap.activeDepth} budget=${summary.dispatchBudget} dispatching=${summary.dispatchCount} stale=${summary.staleRecoveryCount} orphaned_review=${summary.orphanedReviewCount} integration_queue=${summary.staleIntegrationCount}`,
+    `Reconciliation: todo=${todoIssues.length} eligible=${summary.eligibleCount} active=${freshSnap.activeDepth} budget=${summary.dispatchBudget} dispatching=${summary.dispatchCount} stale=${summary.staleRecoveryCount} orphaned_review=${summary.orphanedReviewCount} integration_queue=${summary.staleIntegrationCount}${isFullPollCycle ? "" : " (skipped Todo poll)"}`,
   );
 
   let dispatched = 0;
