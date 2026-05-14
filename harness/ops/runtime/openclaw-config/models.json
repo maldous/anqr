@@ -1,7 +1,7 @@
 {
   "providers": {
     "symphony-bridge": {
-      "baseUrl": "http://127.0.0.1:18790/v1",
+      "baseUrl": "http://127.0.0.1:4319/v1",
       "apiKey": "local-bridge",
       "api": "openai-completions",
       "models": [
@@ -20,6 +20,14 @@
         {
           "id": "symphony/codebuff",
           "name": "Symphony Codebuff SDK"
+        },
+        {
+          "id": "symphony/codebuff-paid",
+          "name": "Symphony Codebuff Paid"
+        },
+        {
+          "id": "symphony/codebuff-free",
+          "name": "Symphony Codebuff Free"
         },
         {
           "id": "symphony/groq",
@@ -46,16 +54,20 @@
           "name": "Symphony SambaNova"
         },
         {
-          "id": "symphony/cerebras",
-          "name": "Symphony Cerebras"
+          "id": "symphony/github-models",
+          "name": "Symphony GitHub Models"
         },
         {
-          "id": "symphony/ollama-local",
-          "name": "Symphony Ollama Local"
+          "id": "symphony/huggingface",
+          "name": "Symphony HuggingFace"
         },
         {
-          "id": "symphony/qwen3-coder",
-          "name": "Qwen3 Coder Next"
+          "id": "symphony/fireworks",
+          "name": "Symphony Fireworks"
+        },
+        {
+          "id": "symphony/together",
+          "name": "Symphony Together"
         }
       ]
     },
@@ -85,14 +97,19 @@
       "fallbacks": [
         "symphony-bridge/symphony/codex",
         "symphony-bridge/symphony/codebuff",
+        "symphony-bridge/symphony/codebuff-paid",
+        "symphony-bridge/symphony/codebuff-free",
         "symphony-bridge/symphony/groq",
         "symphony-bridge/symphony/mistral",
         "symphony-bridge/symphony/gemini",
         "symphony-bridge/symphony/gemini-lite",
         "symphony-bridge/symphony/openrouter",
         "symphony-bridge/symphony/sambanova",
-        "symphony-bridge/symphony/cerebras",
-        "symphony-bridge/symphony/ollama-local",
+        "symphony-bridge/symphony/github-models",
+        "symphony-bridge/symphony/huggingface",
+        "symphony-bridge/symphony/fireworks",
+        "symphony-bridge/symphony/together",
+        "symphony-bridge/symphony/text",
         "ollama/qwen2.5-coder:0.5b",
         "ollama/qwen2.5-coder:3b-instruct",
         "ollama/qwen3-coder-next:latest"

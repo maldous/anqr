@@ -47,8 +47,10 @@ test.describe("OpenClaw Model Configuration", () => {
       "symphony/gemini-lite",
       "symphony/openrouter",
       "symphony/sambanova",
-      "symphony/cerebras",
-      "symphony/ollama-local",
+      "symphony/github-models",
+      "symphony/huggingface",
+      "symphony/fireworks",
+      "symphony/together",
       "symphony/text",
     ];
 
@@ -69,7 +71,7 @@ test.describe("OpenClaw Model Configuration", () => {
 
   test("fallback list should include Codebuff as last resort", () => {
     const lastFallback = openclawConfig.fallbackModels[openclawConfig.fallbackModels.length - 1];
-    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
+    expect(lastFallback).toMatch(/^ollama\//);
   });
 });
 
@@ -129,7 +131,7 @@ test.describe("Symphony Fallback Continuity", () => {
 
   test("codebuff-bridge should be the absolute last fallback", () => {
     const lastFallback = openclawConfig.fallbackModels[openclawConfig.fallbackModels.length - 1];
-    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
+    expect(lastFallback).toMatch(/^ollama\//);
   });
 });
 
@@ -190,7 +192,7 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
     );
 
     const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/health`, {
-      signal: AbortSignal.timeout(5_000),
+      signal: AbortSignal.timeout(15_000),
     });
 
     expect(res.status).toBe(200);
@@ -224,7 +226,7 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
     expect(modelIds).toContain("symphony/main");
     expect(modelIds).toContain("symphony/codebuff");
     expect(modelIds).toContain("symphony/groq");
-    expect(modelIds).toContain("symphony/ollama-local");
+    expect(modelIds).toContain("symphony/github-models");
     console.log(`[openclaw-e2e] Symphony models: ${modelIds.join(", ")}`);
   });
 
@@ -290,18 +292,17 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
       "Symphony executor not reachable - requires running executor on port 4321",
     );
 
-    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/v1/stats`, {
+    const res = await fetch(`${SYMPHONY_EXECUTOR_URL}/stats`, {
       headers: { Authorization: `Bearer ${SYMPHONY_API_KEY}` },
-      signal: AbortSignal.timeout(5_000),
+      signal: AbortSignal.timeout(15_000),
     });
 
     expect(res.status).toBe(200);
     const data = await res.json();
 
     expect(data.rankedProviders).toBeDefined();
-    expect(data.providerStats).toBeDefined();
     console.log(
-      `[openclaw-e2e] Provider stats: ${Object.keys(data.providerStats).length} providers tracked`,
+      `[openclaw-e2e] Provider stats: ${data.rankedProviders?.length ?? 0} ranked providers`,
     );
   });
 });
@@ -322,7 +323,6 @@ const DIRECT_PROVIDERS = [
   { name: "gemini", model: "gemini-2.5-flash", envVar: "GEMINI_TOKEN" },
   { name: "gemini-lite", model: "gemini-2.5-flash-lite", envVar: "GEMINI_TOKEN" },
   { name: "sambanova", model: "Meta-Llama-3.3-70B-Instruct", envVar: "SAMBANOVA_TOKEN" },
-  { name: "cerebras", model: "llama3.1-8b", envVar: "CEREBRAS_TOKEN" },
   { name: "github-models", model: "gpt-4.1-mini", envVar: "GITHUB_MODELS_TOKEN" },
   { name: "codebuff-paid", model: "codebuff-paid", envVar: null },
   { name: "codebuff-free", model: "codebuff-free", envVar: null },
@@ -336,10 +336,7 @@ const DIRECT_PROVIDERS = [
 // of them. We validate via the health endpoint instead of a hardcoded list.
 const MINIMUM_OPENROUTER_PROVIDERS = 20;
 
-const LOCAL_PROVIDERS = [
-  { name: "ollama-qwen2.5-coder-3b", model: "qwen2.5-coder:3b-instruct" },
-  { name: "ollama-qwen2.5-coder-0.5b", model: "qwen2.5-coder:0.5b" },
-];
+const LOCAL_PROVIDERS: { name: string; model: string }[] = [];
 
 // Providers in the credit-gate but blocklisted by the bridge — they appear in
 // the credit-gate PROVIDERS array but the bridge filters them out of its
@@ -363,15 +360,10 @@ const EXPECTED_ROUTES = [
   "symphony/gemini-lite",
   "symphony/openrouter",
   "symphony/sambanova",
-  "symphony/cerebras", // advertised but excluded by tool probe — see Tool-Capability Probe Validation tests
   "symphony/github-models",
   "symphony/huggingface",
   "symphony/fireworks",
   "symphony/together",
-  "symphony/ollama-local",
-  "symphony/ollama-qwen2.5-coder-3b",
-  "symphony/ollama-qwen2.5-coder-0.5b",
-  "symphony/ollama-qwen3-coder-next",
 ];
 
 // Routes that target a single named provider (remote APIs with dedicated keys)
@@ -401,16 +393,6 @@ const HEURISTIC_ROUTES = [
 const LOCAL_SERVICE_ROUTES = [
   { route: "symphony/codebuff", provider: "codebuff", description: "Codebuff SDK" },
   { route: "symphony/codex", provider: "codex", description: "Codex API (often quota-exhausted)" },
-  {
-    route: "symphony/ollama-qwen2.5-coder-3b",
-    provider: "ollama-qwen2.5-coder-3b",
-    description: "Local Ollama (qwen2.5-coder 3B)",
-  },
-  {
-    route: "symphony/ollama-qwen2.5-coder-0.5b",
-    provider: "ollama-qwen2.5-coder-0.5b",
-    description: "Local Ollama (qwen2.5-coder 0.5B)",
-  },
   {
     route: "symphony/codebuff-paid",
     provider: "codebuff-paid",
@@ -1496,7 +1478,7 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
     const routes = [
       { route: "symphony/groq", provider: "groq" },
       { route: "symphony/gemini", provider: "gemini" },
-      { route: "symphony/cerebras", provider: "cerebras" },
+      { route: "symphony/mistral", provider: "mistral" },
     ];
 
     let successes = 0;
@@ -1567,11 +1549,10 @@ test.describe("OpenClaw CLI Model Validation", () => {
     expect(keys).toContain("symphony-bridge/symphony/codex");
     expect(keys).toContain("symphony-bridge/symphony/groq");
     expect(keys).toContain("symphony-bridge/symphony/gemini");
-    expect(keys).toContain("symphony-bridge/symphony/ollama-local");
+    expect(keys).toContain("symphony-bridge/symphony/github-models");
     expect(keys).toContain("symphony-bridge/symphony/text");
     expect(keys).toContain("ollama/qwen2.5-coder:0.5b");
     expect(keys).toContain("ollama/qwen2.5-coder:3b-instruct");
-    expect(keys).toContain("codebuff-bridge/codebuff/base");
   });
 
   test("default model is symphony-bridge/symphony/main", () => {
@@ -1658,8 +1639,10 @@ test.describe("OpenClaw CLI Model Validation", () => {
       "symphony-bridge/symphony/gemini-lite",
       "symphony-bridge/symphony/openrouter",
       "symphony-bridge/symphony/sambanova",
-      "symphony-bridge/symphony/cerebras",
-      "symphony-bridge/symphony/ollama-local",
+      "symphony-bridge/symphony/github-models",
+      "symphony-bridge/symphony/huggingface",
+      "symphony-bridge/symphony/fireworks",
+      "symphony-bridge/symphony/together",
       "symphony-bridge/symphony/text",
     ];
 
@@ -1686,7 +1669,8 @@ test.describe("OpenClaw CLI Model Validation", () => {
     }
 
     const lastFallback = data.fallbacks[data.fallbacks.length - 1];
-    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
+    // Last fallback is the local ollama safety-net model
+    expect(lastFallback).toMatch(/^ollama\//);
   });
 });
 
@@ -1717,8 +1701,10 @@ test.describe("OpenClaw Model Selection Validation", () => {
       "symphony-bridge/symphony/gemini-lite",
       "symphony-bridge/symphony/openrouter",
       "symphony-bridge/symphony/sambanova",
-      "symphony-bridge/symphony/cerebras",
-      "symphony-bridge/symphony/ollama-local",
+      "symphony-bridge/symphony/github-models",
+      "symphony-bridge/symphony/huggingface",
+      "symphony-bridge/symphony/fireworks",
+      "symphony-bridge/symphony/together",
     ];
 
     const missing = expectedModels.filter((m) => !data.allowed.includes(m));

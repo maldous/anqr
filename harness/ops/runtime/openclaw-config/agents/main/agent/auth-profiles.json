@@ -13,6 +13,11 @@
       "refresh": "rt_UfXqjlQTGa5ysdlFGHbnp6bcgza1bs1rRujqGlDflPI.1OcLWWDzlKNa12UwPtwAIpuT0nLf6cOmJl-LnbOYs98",
       "expires": 1777553543000,
       "accountId": "de563b05-e59e-44c1-a10c-9663a42def93"
+    },
+    "symphony-bridge:default": {
+      "type": "api_key",
+      "provider": "symphony-bridge",
+      "key": "local-bridge"
     }
   },
   "lastGood": {},

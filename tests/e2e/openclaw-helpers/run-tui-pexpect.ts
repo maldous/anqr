@@ -23,7 +23,7 @@ result = {
 }
 
 start = time.time()
-cmd = "openclaw tui --no-color --session {} --message '{}'".format(session_id, message)
+cmd = "openclaw tui --session {} --message '{}'".format(session_id, message)
 child = pexpect.spawn(cmd, encoding="utf-8", timeout=timeout_secs + 10)
 
 try:
