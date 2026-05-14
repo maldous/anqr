@@ -1,9 +1,14 @@
 export function isRateLimitError(errStr) {
+  const s = String(errStr || "").toLowerCase();
   return (
-    errStr.includes("rate_limit") ||
-    errStr.includes("rate limit") ||
-    errStr.includes("too many requests") ||
-    errStr.includes("quota exceeded") ||
-    errStr.includes("throttled")
+    s.includes("rate_limit") ||
+    s.includes("rate limit") ||
+    s.includes("too many requests") ||
+    s.includes("quota exceeded") ||
+    s.includes("throttled") ||
+    s.includes("session limit") ||
+    s.includes("weekly limit") ||
+    s.includes("limit resets") ||
+    s.includes("continue with credits")
   );
 }
