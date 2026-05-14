@@ -20,7 +20,7 @@ export async function maybeRunPreflights() {
     logInfo("[runner] Baseline cache hit — skipping full pre-flights");
     baselineResult = { pass: true, cached: true };
   } else {
-    baselineResult = runGlobalPreflights(ROOT);
+    baselineResult = await runGlobalPreflights(ROOT);
     setGlobalValue("baseline.head", head);
     setGlobalValue("baseline.manifestHash", manifestHash);
     setGlobalValue("baseline.pass", Boolean(baselineResult.pass));
