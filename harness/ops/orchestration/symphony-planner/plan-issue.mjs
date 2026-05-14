@@ -75,14 +75,4 @@ export async function planIssue(issue) {
   return planText;
 }
 
-// In-memory set: avoids re-planning across dispatch cycles in the same process.
-// On restart, issues get re-planned — that's acceptable (idempotent).
-const plannedThisSession = new Set();
 
-export function issueAlreadyPlanned(issue) {
-  return plannedThisSession.has(issue.identifier);
-}
-
-export function markPlanned(identifier) {
-  plannedThisSession.add(identifier);
-}

@@ -9,7 +9,9 @@ import { getQueueSnapshot, feedQueue, detectStuckWork } from "../../symphony-que
 import { getHealthyLinearCapacity } from "../linear-reconciler/get-healthy-linear-capacity.mjs";
 import { getEligibleWork } from "./get-eligible-work.mjs";
 import { dispatchToExecutor } from "./dispatch-to-executor.mjs";
-import { planIssue, issueAlreadyPlanned, markPlanned } from "../symphony-planner/plan-issue.mjs";
+import { planIssue } from "../symphony-planner/plan-issue.mjs";
+import { issueAlreadyPlanned } from "../symphony-planner/issue-already-planned.mjs";
+import { markPlanned } from "../symphony-planner/mark-planned.mjs";
 import { logInfo, logWarn, logDebug } from "./logger.mjs";
 
 // Module-level cycle counter for gating expensive Linear API calls.

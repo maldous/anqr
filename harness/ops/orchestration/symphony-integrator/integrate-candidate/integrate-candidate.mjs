@@ -7,7 +7,8 @@ import { logInfo, logWarn, logError } from "../logger.mjs";
 import { safetyCap } from "../../../lib/safety-cap.mjs";
 import { forceCloseWithIncompleteEvidence } from "./force-close-with-incomplete-evidence.mjs";
 import { publishEvidenceAndClose } from "./publish-evidence-and-close.mjs";
-import { critiqueDiff, extractPlanComment } from "../../symphony-critique/critique-diff.mjs";
+import { critiqueDiff } from "../../symphony-critique/critique-diff.mjs";
+import { extractPlanComment } from "../../symphony-critique/extract-plan-comment.mjs";
 
 export async function integrateCandidate(issueIdentifier) {
   const finalization = getFinalizationState(issueIdentifier);
