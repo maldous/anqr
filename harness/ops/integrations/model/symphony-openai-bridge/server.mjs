@@ -1160,11 +1160,13 @@ export const server = http.createServer(async (req, res) => {
           isSelectedCodebuff && selectedProvider?.name ? [selectedProvider.name] : [];
 
         try {
+          let streamedTextLength = 0;
           const result = await invokeWithFallbackStream(
             messages,
             route,
             (chunk) => {
               if (chunk.type === "text") {
+                streamedTextLength += chunk.text.length;
                 const chunkData = {
                   id: completionId,
                   object: "chat.completion.chunk",
@@ -1209,6 +1211,22 @@ export const server = http.createServer(async (req, res) => {
             } catch {
               /* best-effort evidence */
             }
+          }
+
+          // If the provider returned text but streaming emitted no chunks (e.g. groq gpt-oss
+          // returns text only in result.text with no text-delta events), emit it now so the
+          // caller sees content rather than an empty stream.
+          if (streamedTextLength === 0 && result.text?.length > 0) {
+            logInfo(`⚠️ Stream produced no text chunks; emitting result.text as final content (${result.text.length} chars)`);
+            const fallbackChunk = {
+              id: completionId,
+              object: "chat.completion.chunk",
+              created,
+              model: route.responseModelId,
+              choices: [{ index: 0, delta: { content: result.text }, finish_reason: null }],
+            };
+            res.write(`data: ${JSON.stringify(fallbackChunk)}\n\n`);
+            if (streamToDiscord) streamToDiscord(result.text);
           }
 
           // Send final chunk (includes structured result for runner/agent consumption)

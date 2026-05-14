@@ -13,6 +13,7 @@ import {
   QUEUE_STATES,
   TARGET_MIN,
   RECONCILER_DISPATCH_COOLDOWN_MS,
+  RECOVERY_GRACE_MS,
 } from "../../../symphony-config.mjs";
 import { isDiscordSourced } from "../../../core/discord-source.mjs";
 import { getHealthyLinearCapacity } from "../get-healthy-linear-capacity.mjs";
@@ -64,6 +65,13 @@ export async function runReconciliationCycle() {
     const state = getIssueState(issue.identifier);
     if (leaseIsActive(state)) {
       activeLeases.add(issue.identifier);
+    } else if (state.lease?.heartbeat_at) {
+      // Grace period: protect issues whose lease just expired but whose heartbeat
+      // was recent — the runner is alive, just between heartbeat cycles.
+      const heartbeatAge = Date.now() - new Date(state.lease.heartbeat_at).getTime();
+      if (heartbeatAge < RECOVERY_GRACE_MS) {
+        activeLeases.add(issue.identifier);
+      }
     }
   }
 

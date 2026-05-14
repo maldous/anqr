@@ -90,7 +90,11 @@ export async function selectProvider(options = {}) {
       continue;
     }
     const health = getProviderHealthState(provider.name);
-    if (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED) {
+    // SDK providers own their own failure handling; never skip them based on health state
+    if (
+      !provider.requiresSdk &&
+      (health.state === HEALTH_STATES.COOLING_DOWN || health.state === HEALTH_STATES.BLOCKED)
+    ) {
       if (selectionLog)
         selectionLog.push({
           name: providerName,

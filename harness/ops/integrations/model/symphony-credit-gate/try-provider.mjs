@@ -36,7 +36,8 @@ export async function tryProvider(provider) {
     return null;
   }
 
-  if (isRecentlyFailed(provider.name)) {
+  // SDK providers own their own failure handling; never skip them based on failure history
+  if (!provider.requiresSdk && isRecentlyFailed(provider.name)) {
     logDebug(`${provider.name}: skipped (recently failed)`, { providerName: provider.name });
     return null;
   }

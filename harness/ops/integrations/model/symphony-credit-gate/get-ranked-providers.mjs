@@ -60,9 +60,14 @@ export function getRankedProviders(options = {}) {
     const selections = stats.selections?.[provider.name] || 0;
     const tier = getEffectiveProviderTier(provider, probeEntry);
 
-    // Paid providers without a persisted score get a bootstrap fallback
-    // so they land in the "ranked" array instead of "pending"
-    if ((baseScore === null || baseScore === undefined) && tier === TIER_PAID) {
+    // Paid providers and SDK providers without a persisted score get a bootstrap fallback
+    // so they land in the "ranked" array instead of "pending".
+    // SDK providers (requiresSdk) are always capable (they own their own failure handling)
+    // so they should appear early in the cascade regardless of tier.
+    if (
+      (baseScore === null || baseScore === undefined) &&
+      (tier === TIER_PAID || provider.requiresSdk)
+    ) {
       baseScore = getProviderBootstrapScore(provider.name, stats);
     }
     let effectiveScore = null;

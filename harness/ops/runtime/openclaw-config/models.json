@@ -7,67 +7,99 @@
       "models": [
         {
           "id": "symphony/main",
-          "name": "Symphony Main (auto-provider selection)"
+          "name": "Symphony Main (auto-provider selection)",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/text",
-          "name": "Symphony Text (local-only)"
+          "name": "Symphony Text (local-only)",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/codex",
-          "name": "Symphony Codex (paid)"
+          "name": "Symphony Codex (paid)",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/codebuff",
-          "name": "Symphony Codebuff SDK"
+          "name": "Symphony Codebuff SDK",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/codebuff-paid",
-          "name": "Symphony Codebuff Paid"
+          "name": "Symphony Codebuff Paid",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/codebuff-free",
-          "name": "Symphony Codebuff Free"
+          "name": "Symphony Codebuff Free",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/groq",
-          "name": "Symphony Groq"
+          "name": "Symphony Groq",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/mistral",
-          "name": "Symphony Mistral"
+          "name": "Symphony Mistral",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/gemini",
-          "name": "Symphony Gemini"
+          "name": "Symphony Gemini",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/gemini-lite",
-          "name": "Symphony Gemini Lite"
+          "name": "Symphony Gemini Lite",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/openrouter",
-          "name": "Symphony OpenRouter"
+          "name": "Symphony OpenRouter",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/sambanova",
-          "name": "Symphony SambaNova"
+          "name": "Symphony SambaNova",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/github-models",
-          "name": "Symphony GitHub Models"
+          "name": "Symphony GitHub Models",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/huggingface",
-          "name": "Symphony HuggingFace"
+          "name": "Symphony HuggingFace",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/fireworks",
-          "name": "Symphony Fireworks"
+          "name": "Symphony Fireworks",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         },
         {
           "id": "symphony/together",
-          "name": "Symphony Together"
+          "name": "Symphony Together",
+          "contextWindow": 200000,
+          "maxTokens": 32000
         }
       ]
     },

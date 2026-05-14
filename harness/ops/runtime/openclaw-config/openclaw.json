@@ -99,7 +99,7 @@
         ]
       },
       "symphony-bridge": {
-        "baseUrl": "http://127.0.0.1:18790/v1",
+        "baseUrl": "http://127.0.0.1:4319/v1",
         "apiKey": "local-symphony",
         "api": "openai-completions",
         "models": [
