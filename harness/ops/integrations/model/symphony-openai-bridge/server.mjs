@@ -582,14 +582,17 @@ export const server = http.createServer(async (req, res) => {
       const route = resolveRoute(body.model || MODEL_ID);
       const isCodexRequest = worktreeId === "codex";
 
-      // Detect voice requests early — scan last 4 messages so bootstrap/context
-      // injections after the transcript don't break detection.
+      // Detect voice requests early — scan last 6 messages, match anywhere in content
+      // (not just ^) because openclaw may prepend bootstrap context to the same message.
       const isVoiceRequestEarly = messages
-        .slice(-4)
+        .slice(-6)
         .some((m) => {
           const c = typeof m.content === "string" ? m.content : Array.isArray(m.content) ? m.content.filter((p) => p.type === "text").map((p) => p.text).join(" ") : "";
-          return VOICE_TRANSCRIPT_RE.test(c);
+          const match = /Voice transcript from speaker/i.test(c);
+          if (match) logInfo(`🎙️ Voice detection: matched in role=${m.role} content="${c.slice(0, 80)}"`);
+          return match;
         });
+      logInfo(`🎙️ isVoiceRequestEarly=${isVoiceRequestEarly} (scanned ${Math.min(6, messages.length)} messages)`);
 
       // Voice requests are conversational — strip tools to reclaim context budget.
       route.useTools = !isVoiceRequestEarly && (isCodexRequest || shouldUseToolsForRequest(messages, route));
@@ -798,9 +801,11 @@ export const server = http.createServer(async (req, res) => {
       // Build sanitized message preview for Discord notifications
       const messagePreview = sanitizeForDiscordPreview(contentStr) || "(system task)";
 
-      // Skip Discord text notifications and voice announcements for voice requests —
-      // OpenClaw auto-TTS speaks the response, so extra notifications cause feedback.
-      if (!isVoiceRequest && (!isSymphonyRunner || isDiscordOriginRequest)) {
+      // Announce only for: coding tasks from the symphony runner, OR explicit discord-origin
+      // requests. Internal openclaw requests (context summarization, etc.) have neither
+      // header and must not trigger voice announces.
+      const shouldAnnounce = !isVoiceRequest && (isDiscordOriginRequest || (isSymphonyRunner && !isDiscordOriginRequest));
+      if (shouldAnnounce) {
         // Build title with worktree ID
         const worktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
         const embedTitle = issueContext?.identifier
@@ -893,12 +898,28 @@ export const server = http.createServer(async (req, res) => {
       // the LLM to respond in speech-friendly format. This applies to all three
       // provider paths (Codebuff direct, standard stream cascade, non-streaming).
       if (isVoiceRequest) {
-        logInfo(`🎙️ Voice request detected — injecting speech-friendly system prompt`);
-        const firstNonSystem = messages.findIndex((m) => m.role !== "system");
-        messages.splice(firstNonSystem < 0 ? messages.length : firstNonSystem, 0, {
-          role: "system",
-          content: VOICE_SYSTEM_PROMPT,
-        });
+        logInfo(`🎙️ Voice request detected — replacing system prompt with voice-only prompt`);
+        // Keep only the first system message (agent identity from SOUL.md), replace the
+        // rest (coding executor instructions) with the concise voice prompt. This reclaims
+        // ~8K tokens of coding-executor context for conversation history.
+        const firstSystem = messages.find((m) => m.role === "system");
+        const nonSystemMessages = messages.filter((m) => m.role !== "system");
+        const identityLine = firstSystem?.content
+          ? (typeof firstSystem.content === "string" ? firstSystem.content : "")
+              .split("\n")
+              .slice(0, 3)
+              .join(" ")
+              .slice(0, 200)
+          : "";
+        const combinedSystemContent = [
+          identityLine || "You are ANQR, a coding assistant running in Discord.",
+          VOICE_SYSTEM_PROMPT,
+        ]
+          .filter(Boolean)
+          .join(" ");
+        messages.length = 0;
+        messages.push({ role: "system", content: combinedSystemContent }, ...nonSystemMessages);
+        logInfo(`🎙️ Voice system prompt: ${combinedSystemContent.slice(0, 120)}...`);
       }
 
       if (stream) {
@@ -1047,7 +1068,7 @@ export const server = http.createServer(async (req, res) => {
             const completionTitle = issueContext?.identifier
               ? `✅ ${issueContext.identifier}${completionWorktreeLabel}`
               : `✅ Done${completionWorktreeLabel}`;
-            if (!isVoiceRequest && (!isSymphonyRunner || isDiscordOriginRequest)) {
+            if (shouldAnnounce) {
               sendDiscordEmbed(
                 {
                   title: completionTitle,
@@ -1233,7 +1254,7 @@ export const server = http.createServer(async (req, res) => {
           const streamCompletionTitle = issueContext?.identifier
             ? `✅ ${issueContext.identifier}${streamCompletionWorktreeLabel}`
             : `✅ Done${streamCompletionWorktreeLabel}`;
-          if (!isVoiceRequest && (!isSymphonyRunner || isDiscordOriginRequest)) {
+          if (shouldAnnounce) {
             sendDiscordEmbed(
               {
                 title: streamCompletionTitle,
@@ -1461,7 +1482,7 @@ export const server = http.createServer(async (req, res) => {
         const nonStreamCompletionTitle = issueContext?.identifier
           ? `✅ ${issueContext.identifier}${nonStreamCompletionWorktreeLabel}`
           : `✅ Done${nonStreamCompletionWorktreeLabel}`;
-        if (!isVoiceRequest && (!isSymphonyRunner || isDiscordOriginRequest)) {
+        if (shouldAnnounce) {
           sendDiscordEmbed(
             {
               title: nonStreamCompletionTitle,
