@@ -73,10 +73,39 @@ Do not imply broader launch readiness unless the docs are updated first.
 6. Escalate secrets, signing material, billing, ads, legal/compliance, and launch-claim changes to humans.
 7. Preserve operator stability for `harness/ops/*` and `services/systemd/*`.
 
+## AST Density Rule — mandatory design constraint
+
+**Every `.ts`, `.tsx`, and `.mjs` file must contain at most ONE top-level declaration.** A top-level declaration is any of: function, class, interface, type alias, enum, module, or exported variable statement (const/let).
+
+This is NOT a style preference or a lint rule you can ignore. It is an architectural constraint enforced by the preflight gate. Violations block commit and push.
+
+### Why this rule exists
+
+- **Single Responsibility** — one file = one exported symbol. Makes code discoverable and prevents "kitchen sink" files.
+- **Tree-shaking & dead code elimination** — bundlers can strip unused exports at file granularity.
+- **Explicit import graph** — every import has a clear, traceable origin. No hidden coupling.
+- **Testability** — one declaration per file makes unit tests focused and mock boundaries clear.
+
+### How to comply
+
+- **Before creating a new declaration, ask:** does the target file already have a top-level declaration? If yes, create a new file instead.
+- **When a file grows a second declaration**, extract the new one into its own file in the same directory.
+- **Use barrel re-exports** (`index.mjs` / `index.ts`) to present a clean public API from a directory of single-declaration files.
+- **Type-only files are exempt:** files containing only `interface` and/or `type` declarations (no runtime code) may have multiple declarations.
+- **No exceptions for small constants.** A `const DEFAULT_TIMEOUT = 5000` at the top level IS a declaration and will fail the check if the file already has another. Extract it into its own file.
+
+### When planning changes
+
+1. Identify which files you will touch.
+2. For each file, count its current top-level declarations.
+3. If adding your change would push a file over 1 declaration, plan to create a new file instead.
+4. Run `run_ast_density` after making changes. Fix violations BEFORE running other validation.
+
 ## Validation and evidence
 
 - Run the smallest truthful gate set from `docs/harness/05-quality-gates.md`.
 - For harness-only work, use the harness-specific gates when relevant.
+- Run `run_ast_density` EARLY — before `run_typecheck` and `run_tests` — because density violations often require file restructuring that would invalidate typecheck results anyway.
 - Do not claim a gate passed unless it actually ran.
 - Produce evidence in the format required by `docs/harness/06-evidence-and-reporting.md`.
 
