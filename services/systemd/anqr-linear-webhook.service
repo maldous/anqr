@@ -28,7 +28,7 @@ Environment=HOME=%h
 Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 
 # Webhook configuration
-Environment=LINEAR_WEBHOOK_PORT=18791
+Environment=LINEAR_WEBHOOK_PORT=18795
 Environment=LINEAR_WORKTREES=1,2,3,4
 
 # Secrets — E Phase 3: fail fast on missing env (LINEAR_WEBHOOK_SECRET required)

@@ -23,9 +23,9 @@ export const MONITORED_SERVICES = [
   {
     name: "anqr-linear-webhook.service",
     shortName: "linear-webhook",
-    port: 18791,
+    port: 18795,
     criticalFiles: ["harness/ops/integrations/model/linear-webhook-receiver.mjs"],
-    healthEndpoint: "http://127.0.0.1:18791/health",
+    healthEndpoint: "http://127.0.0.1:18795/health",
     skipProviderCheck: true,
   },
   {
