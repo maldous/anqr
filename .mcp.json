@@ -8,12 +8,21 @@
       "type": "http",
       "url": "http://127.0.0.1:9121/mcp"
     },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_TOKEN",
+        "GITHUB_TOKEN": "$GITHUB_TOKEN"
+      }
+    },
     "linear": {
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@tacticlaunch/mcp-linear"],
       "env": {
-        "LINEAR_API_TOKEN": "$LINEAR_API_KEY"
+        "LINEAR_API_TOKEN": "lin_api_6honorbZtgEPwetiRZ88GK8LpMbo8a5Gt7C5u8Sn"
       }
     }
   }

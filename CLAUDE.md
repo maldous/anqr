@@ -14,3 +14,5 @@ For harness work, also read:
 3. `harness/ops/README.md`
 
 This file is a compatibility shim. Repo-wide rules live in `AGENTS.md`.
+
+@.claude/h5i.md

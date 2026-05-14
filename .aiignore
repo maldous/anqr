@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+test-results/
+reports/
+.git/
+android/
+ios/
+*.min.js
+*.min.css
+*.map
+*.tsbuildinfo
+bootstrap.zip
+harness-code.zip
