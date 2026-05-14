@@ -312,8 +312,9 @@ describe("Provider Routing Edge Cases", () => {
   });
 
   describe("Safety Net Activation", () => {
-    it("should activate safety net when all regular providers fail and override is enabled", async () => {
-      // Remove all API keys so all cloud providers are skipped
+    it("should return null when all providers (including SDK) have no credentials", async () => {
+      // Safety-net ollama providers were removed (below 14B minimum).
+      // With all API keys including SDK credentials deleted, no provider is available.
       delete process.env.GROQ_TOKEN;
       delete process.env.MISTRAL_TOKEN;
       delete process.env.GEMINI_TOKEN;
@@ -322,62 +323,40 @@ describe("Provider Routing Edge Cases", () => {
       delete process.env.SAMBANOVA_TOKEN;
       delete process.env.CEREBRAS_TOKEN;
       delete process.env.GITHUB_MODELS_TOKEN;
+      delete process.env.CODEBUFF_API_KEY;
 
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(
-        async (url: string | URL | Request) => {
-          const urlStr = String(url);
-          if (urlStr.includes("/api/tags") || urlStr.includes("/models")) {
-            return {
-              ok: true,
-              text: async () => "qwen2.5-coder:3b-instruct",
-            } as Response;
-          }
-          return null as unknown as Response;
-        },
+        async () => ({ ok: false, status: 503, text: async () => "unavailable" }) as Response,
+      );
+
+      const result = await selectProvider({ allowSafetyNetOverride: true });
+
+      expect(result).toBeNull();
+    });
+
+    it("should select codebuff when cloud keys are missing but SDK credentials exist", async () => {
+      // SDK providers (codebuff) bypass health-state and failure-window gates —
+      // they own their own retry logic. With all HTTP-only providers down,
+      // codebuff is still tried and succeeds.
+      delete process.env.GROQ_TOKEN;
+      delete process.env.MISTRAL_TOKEN;
+      delete process.env.GEMINI_TOKEN;
+      delete process.env.OPENAI_API_KEY;
+      delete process.env.OPENROUTER_TOKEN;
+      delete process.env.SAMBANOVA_TOKEN;
+      delete process.env.CEREBRAS_TOKEN;
+      delete process.env.GITHUB_MODELS_TOKEN;
+      process.env.CODEBUFF_API_KEY = "test-key";
+
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(
+        async () => ({ ok: false, status: 503, text: async () => "unavailable" }) as Response,
       );
 
       const result = await selectProvider({ allowSafetyNetOverride: true });
 
       expect(result).not.toBeNull();
       if (result) {
-        expect(result.name).toMatch(/^ollama/);
-        expect(result.tier).toBe("local-safety-net");
-      }
-    });
-
-    it("should bypass excludeNames for explicit safety net override", async () => {
-      // Remove all API keys
-      delete process.env.GROQ_TOKEN;
-      delete process.env.MISTRAL_TOKEN;
-      delete process.env.GEMINI_TOKEN;
-      delete process.env.OPENAI_API_KEY;
-      delete process.env.OPENROUTER_TOKEN;
-      delete process.env.SAMBANOVA_TOKEN;
-      delete process.env.CEREBRAS_TOKEN;
-      delete process.env.GITHUB_MODELS_TOKEN;
-
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(
-        async (url: string | URL | Request) => {
-          const urlStr = String(url);
-          if (urlStr.includes("/api/tags") || urlStr.includes("/models")) {
-            return {
-              ok: true,
-              text: async () => "qwen2.5-coder:3b-instruct",
-            } as Response;
-          }
-          return null as unknown as Response;
-        },
-      );
-
-      // Try to exclude ollama — safety net should override
-      const result = await selectProvider({
-        allowSafetyNetOverride: true,
-        excludeNames: ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
-      });
-
-      expect(result).not.toBeNull();
-      if (result) {
-        expect(result.name).toMatch(/^ollama/);
+        expect(result.name).toMatch(/^codebuff/);
       }
     });
   });
