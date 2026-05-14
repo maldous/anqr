@@ -29,21 +29,25 @@ export async function executeRepair(worktreeId, classification) {
         releaseLease(inferredOwner);
         logInfo(`[recovery] Released stale lease for ${inferredOwner} on ${worktreeId}`);
       }
-      if (classification.confidence >= RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD && inferredOwner) {
+      // If there are dirty files and we have confident ownership → continue repair
+      if (classification.hasDirtyFiles && classification.confidence >= RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD && inferredOwner) {
         transitionWorktree(worktreeId, "dirty_owned", { assignedIssue: inferredOwner });
         return {
           ok: true,
           action: "reclaim_lease",
           nextState: "dirty_owned",
-          evidence: buildEvidence(
-            "reclaim_lease",
-            worktreeId,
-            "stale_lease_released",
-            inferredOwner,
-          ),
+          evidence: buildEvidence("reclaim_lease", worktreeId, "stale_lease_released", inferredOwner),
         };
       }
-      return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" });
+      // No dirty files (or low confidence): lease released, restore to available
+      transitionWorktree(worktreeId, "available", { assignedIssue: null });
+      logInfo(`[recovery] Restored ${worktreeId} to available after stale lease release`);
+      return {
+        ok: true,
+        action: "reclaim_lease",
+        nextState: "available",
+        evidence: buildEvidence("reclaim_lease", worktreeId, "stale_lease_released", inferredOwner),
+      };
     }
 
     case "continue_repair": {

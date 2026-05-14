@@ -15,6 +15,7 @@ export function classifyWorktree(snapshot) {
     confidence: 1.0,
     inferredOwner: null,
     repairAction: null,
+    hasDirtyFiles: false,
   };
 
   if (!snapshot.exists) {
@@ -24,6 +25,7 @@ export function classifyWorktree(snapshot) {
   }
 
   const hasDirtyFiles = snapshot.gitDirtyFiles.length > 0;
+  result.hasDirtyFiles = hasDirtyFiles;
   const finState = snapshot.finalizationState;
   const isRepairable =
     finState &&
@@ -45,6 +47,7 @@ export function classifyWorktree(snapshot) {
     // Stale heartbeat — lease still technically active but runner may be dead
     result.classification = "stale_lease";
     result.confidence = 0.8;
+    result.inferredOwner = snapshot.issueIdentifier || null;
     result.repairAction = "reclaim_lease";
     return result;
   }
