@@ -581,7 +581,18 @@ export const server = http.createServer(async (req, res) => {
 
       const route = resolveRoute(body.model || MODEL_ID);
       const isCodexRequest = worktreeId === "codex";
-      route.useTools = isCodexRequest || shouldUseToolsForRequest(messages, route);
+
+      // Detect voice requests early — scan last 4 messages so bootstrap/context
+      // injections after the transcript don't break detection.
+      const isVoiceRequestEarly = messages
+        .slice(-4)
+        .some((m) => {
+          const c = typeof m.content === "string" ? m.content : Array.isArray(m.content) ? m.content.filter((p) => p.type === "text").map((p) => p.text).join(" ") : "";
+          return VOICE_TRANSCRIPT_RE.test(c);
+        });
+
+      // Voice requests are conversational — strip tools to reclaim context budget.
+      route.useTools = !isVoiceRequestEarly && (isCodexRequest || shouldUseToolsForRequest(messages, route));
       const stream = body.stream === true;
 
       // Log message summary for debugging
@@ -781,8 +792,8 @@ export const server = http.createServer(async (req, res) => {
         });
       }
 
-      // Detect voice requests early to gate Discord notifications (prevents TTS→STT feedback loop)
-      const isVoiceRequest = VOICE_TRANSCRIPT_RE.test(contentStr);
+      // Reuse early detection (scans last 4 messages, not just last one)
+      const isVoiceRequest = isVoiceRequestEarly;
 
       // Build sanitized message preview for Discord notifications
       const messagePreview = sanitizeForDiscordPreview(contentStr) || "(system task)";
