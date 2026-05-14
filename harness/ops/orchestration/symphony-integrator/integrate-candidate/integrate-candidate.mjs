@@ -7,6 +7,7 @@ import { logInfo, logWarn, logError } from "../logger.mjs";
 import { safetyCap } from "../../../lib/safety-cap.mjs";
 import { forceCloseWithIncompleteEvidence } from "./force-close-with-incomplete-evidence.mjs";
 import { publishEvidenceAndClose } from "./publish-evidence-and-close.mjs";
+import { critiqueDiff, extractPlanComment } from "../../symphony-critique/critique-diff.mjs";
 
 export async function integrateCandidate(issueIdentifier) {
   const finalization = getFinalizationState(issueIdentifier);
@@ -139,6 +140,52 @@ export async function integrateCandidate(issueIdentifier) {
       }
 
       return { ok: false, reason: "conflict" };
+    }
+
+    // Collect diff for critique before pushing to main
+    let prePushDiff = "";
+    try {
+      prePushDiff = git("diff", "origin/main..HEAD");
+    } catch {
+      /* best-effort */
+    }
+
+    // Critique: LLM reviews diff vs plan before merging. Soft failure — critique
+    // errors never block integration. Rejection sends issue back for repair.
+    if (prePushDiff) {
+      const issueDetail = await findIssueByIdentifier(issueIdentifier).catch(() => null);
+      const planComment = issueDetail ? extractPlanComment(issueDetail) : null;
+      try {
+        const { approved, critiqueText } = await critiqueDiff({
+          issueIdentifier,
+          issueId: issueDetail?.id || null,
+          diff: prePushDiff,
+          planComment,
+        });
+        if (!approved) {
+          logWarn(`[integrator] Critique REJECTED ${issueIdentifier} — sending back for repair`);
+          try {
+            git("cherry-pick", "--abort");
+          } catch { /* already clean */ }
+          git("checkout", "main");
+          transitionIssue(issueIdentifier, "integration_failed", {
+            finalization: {
+              state: "integration_failed_repairable",
+              lastError: `Critique rejected: ${critiqueText.slice(0, 300)}`,
+              attempts: (finalization.attempts || 0) + 1,
+              updatedAt: new Date().toISOString(),
+            },
+            reason: "critique_rejected",
+          });
+          if (issueDetail) {
+            await updateIssue(issueDetail.id, { stateId: STATES.inReview });
+          }
+          return { ok: false, reason: "critique_rejected" };
+        }
+        logInfo(`[integrator] Critique APPROVED ${issueIdentifier}`);
+      } catch (err) {
+        logWarn(`[integrator] Critique failed for ${issueIdentifier} (proceeding): ${err.message}`);
+      }
     }
 
     git("push", "origin", "HEAD:main");
