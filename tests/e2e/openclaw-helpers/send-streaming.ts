@@ -26,7 +26,7 @@ export async function sendStreamingCompletion(
         messages: [{ role: "user", content: prompt }],
         stream: true,
       }),
-      signal: AbortSignal.timeout(90_000),
+      signal: AbortSignal.timeout(30_000),
     });
 
     const contentType = res.headers.get("content-type");

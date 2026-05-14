@@ -16,7 +16,7 @@ export async function sendCompletion(
         model: route,
         messages: [{ role: "user", content: prompt }],
       }),
-      signal: AbortSignal.timeout(90_000),
+      signal: AbortSignal.timeout(30_000),
     });
     const data = await res.json();
     return { status: res.status, data, elapsed: Date.now() - startTime };

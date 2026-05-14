@@ -16,3 +16,4 @@ export { runCliJson } from "./run-cli-json";
 export { isGatewayReachable } from "./is-gateway-reachable";
 export { spawnTuiAndCapture } from "./spawn-tui";
 export { runTuiPromptWithPexpect } from "./run-tui-pexpect";
+export { waitExecutorDrain } from "./wait-executor-drain";
