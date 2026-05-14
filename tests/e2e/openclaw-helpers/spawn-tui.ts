@@ -10,7 +10,7 @@ export function spawnTuiAndCapture(
     try {
       child = spawn(
         "script",
-        ["-qc", `openclaw tui --no-color --message "${messageText}"`, "/dev/null"],
+        ["-qc", `openclaw tui --message "${messageText}"`, "/dev/null"],
         {
           env: { ...process.env, NO_COLOR: "1", TERM: "dumb" },
           stdio: ["pipe", "pipe", "pipe"],

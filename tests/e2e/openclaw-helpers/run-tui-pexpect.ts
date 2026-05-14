@@ -27,7 +27,7 @@ cmd = "openclaw tui --session {} --message '{}'".format(session_id, message)
 child = pexpect.spawn(cmd, encoding="utf-8", timeout=timeout_secs + 10)
 
 try:
-    child.expect("connected", timeout=60)
+    child.expect("connect", timeout=60)
     result["connected"] = True
 
     try:
