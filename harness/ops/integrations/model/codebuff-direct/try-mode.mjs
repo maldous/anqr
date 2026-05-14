@@ -1,5 +1,3 @@
-import { inferSymphonyResultFromCompletion } from "../../../core/bridge-result.mjs";
-
 import { CODEBUFF_MAX_CONTINUATIONS } from "./codebuff-max-continuations.mjs";
 import { CODEBUFF_MAX_STEPS } from "./codebuff-max-steps.mjs";
 import { CODEBUFF_MODEL_ID } from "./codebuff-model-id.mjs";
