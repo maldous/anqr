@@ -105,8 +105,9 @@ describe("classifyWorktree", () => {
       }),
     );
     expect(result.classification).toBe("dirty_orphaned");
-    // ADR-0005: Recovery shall not auto-commit orphaned dirty worktrees — quarantine instead
-    expect(result.repairAction).toBe("quarantine");
+    // reset_to_main discards unfinalized changes and makes worktree available again;
+    // avoids a permanent quarantine loop where dirty_orphaned could never auto-recover
+    expect(result.repairAction).toBe("reset_to_main");
     expect(result.confidence).toBeLessThan(0.5);
   });
 
