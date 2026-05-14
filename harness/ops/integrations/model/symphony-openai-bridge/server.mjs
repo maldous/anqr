@@ -34,7 +34,6 @@ import { MAX_CONCURRENT_REQUESTS } from "./max-concurrent-requests.mjs";
 import { MODEL_ID } from "./model-id.mjs";
 import { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
 import { VOICE_SYSTEM_PROMPT } from "./voice-system-prompt.mjs";
-import { VOICE_TRANSCRIPT_RE } from "./voice-transcript-re.mjs";
 import { activeRequests } from "./active-requests.mjs";
 import { buildSelectionOptions } from "./build-selection-options.mjs";
 import { checkAuth } from "./check-auth.mjs";
