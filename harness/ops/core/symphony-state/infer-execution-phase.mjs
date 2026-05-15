@@ -13,10 +13,10 @@
  * fields.
  *
  * Priority order (higher wins):
- * 1. Active lease   → claimed / executing (work is happening)
- * 2. Hard blocks    → blocked (needs human attention)
- * 3. Cooldown       → cooldown (temporary scheduling hold)
- * 4. Finalization   → mapped phase (post-execution lifecycle)
+ * 1. Hard blocks    → blocked (needs human attention)
+ * 2. Cooldown       → cooldown (temporary scheduling hold)
+ * 3. Finalization   → mapped phase (post-execution lifecycle)
+ * 4. Active lease   → claimed / executing (work is happening)
  * 5. completed_at   → completed (finished — only when no finalization state)
  * 6. Default        → eligible
  */
@@ -34,34 +34,37 @@ import { leaseIsActive } from "./lease-is-active.mjs";
 export function inferExecutionPhase(record, now = Date.now()) {
   if (!record) return ISSUE_PHASES.eligible;
 
-  // 1. Active lease — work is in progress, this is the authoritative signal
-  if (leaseIsActive(record, now)) {
-    const lease = record.lease;
-    // If the lease has a run_id, the runner has started execution.
-    // Otherwise the scheduler has claimed but the runner hasn't picked it up.
-    return lease && lease.run_id ? ISSUE_PHASES.executing : ISSUE_PHASES.claimed;
-  }
-
-  // 2. Hard blocks — needs human attention
+  // 1. Hard blocks — needs human attention
   if (record.human_only || record.retry_exhausted || record.blocked_reason) {
     return ISSUE_PHASES.blocked;
   }
 
-  // 3. Cooldown — temporary scheduling hold
+  // 2. Cooldown — temporary scheduling hold
   if (record.cooldown_until && new Date(record.cooldown_until).getTime() > now) {
     return ISSUE_PHASES.cooldown;
   }
 
-  // 4. Finalization state — post-execution lifecycle
+  // 3. Finalization state — post-execution lifecycle
   //    This must take priority over completed_at because the runner sets
   //    completed_at before integration runs.  Without this ordering,
   //    inferExecutionPhase would return "completed" for issues that still
   //    need integration (finalization.state = "integration_pending").
+  //    It also takes priority over a leftover active lease once finalization
+  //    exists; finalization means the runner's execution phase has ended even
+  //    if process cleanup is still releasing the lease.
   if (record.finalization && record.finalization.state) {
     const mapped = FINALIZATION_STATE_TO_PHASE[record.finalization.state];
     // Unknown finalization states conservatively map to integration_pending
     // to prevent re-claiming of issues in an unrecognized finalization state.
     return mapped || ISSUE_PHASES.integration_pending;
+  }
+
+  // 4. Active lease — work is in progress when no post-execution state exists.
+  if (leaseIsActive(record, now)) {
+    const lease = record.lease;
+    // If the lease has a run_id, the runner has started execution.
+    // Otherwise the scheduler has claimed but the runner hasn't picked it up.
+    return lease && lease.run_id ? ISSUE_PHASES.executing : ISSUE_PHASES.claimed;
   }
 
   // 5. Completed — finished lifecycle (no finalization state present)

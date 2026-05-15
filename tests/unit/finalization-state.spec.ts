@@ -90,6 +90,27 @@ describe("setFinalizationState", () => {
     expect(result!.stickyOwner).toBe("wt3");
   });
 
+  it("should preserve evidence closeout metadata", () => {
+    setFinalizationState("ANQ-103", {
+      state: "evidence_pending_closeout",
+      worktreeId: "wt1",
+      correlationId: "corr-103",
+      changedFiles: ["docs/harness/e2e-lifecycle-probe.md"],
+      diffStat: "1 file changed",
+      evidenceRetries: 2,
+      missingEvidence: ["integration.mainSha"],
+      evidenceOverride: true,
+    });
+
+    const result = getFinalizationState("ANQ-103");
+    expect(result!.correlationId).toBe("corr-103");
+    expect(result!.changedFiles).toEqual(["docs/harness/e2e-lifecycle-probe.md"]);
+    expect(result!.diffStat).toBe("1 file changed");
+    expect(result!.evidenceRetries).toBe(2);
+    expect(result!.missingEvidence).toEqual(["integration.mainSha"]);
+    expect(result!.evidenceOverride).toBe(true);
+  });
+
   it("should return null for issues without finalization", () => {
     const result = getFinalizationState("ANQ-NONEXISTENT");
     expect(result).toBeNull();

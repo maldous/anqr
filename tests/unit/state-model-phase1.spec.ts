@@ -463,6 +463,14 @@ describe("inferExecutionPhase", () => {
     expect(inferExecutionPhase(record, now)).toBe("executing");
   });
 
+  it("should prioritize finalization over leftover active lease", () => {
+    const record = {
+      lease: { owner: "runner", run_id: "run-1", expires_at: futureExpiry },
+      finalization: { state: "integration_pending" },
+    };
+    expect(inferExecutionPhase(record, now)).toBe("integration_pending");
+  });
+
   it("should prioritize blocked over completed_at", () => {
     // Priority fix: blocked (priority 2) beats completed_at (priority 5)
     // because a blocked issue needs human attention regardless of

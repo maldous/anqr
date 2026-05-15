@@ -39,6 +39,16 @@ export function normalizeRecord(record = {}) {
             baseMainSha: record.finalization.baseMainSha || null,
             headSha: record.finalization.headSha || null,
             integratedMainSha: record.finalization.integratedMainSha || null,
+            correlationId: record.finalization.correlationId || null,
+            changedFiles: Array.isArray(record.finalization.changedFiles)
+              ? record.finalization.changedFiles
+              : [],
+            diffStat: record.finalization.diffStat || null,
+            evidenceRetries: Number(record.finalization.evidenceRetries || 0),
+            missingEvidence: Array.isArray(record.finalization.missingEvidence)
+              ? record.finalization.missingEvidence
+              : [],
+            evidenceOverride: Boolean(record.finalization.evidenceOverride),
             attempts: Number(record.finalization.attempts || 0),
             lastError: record.finalization.lastError || null,
             updatedAt: record.finalization.updatedAt || null,
