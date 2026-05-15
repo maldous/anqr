@@ -184,10 +184,19 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       validationToolsRun: new Set(),
     };
 
+    // Per-turn stream timeout: abort if no response within 5 minutes (covers hung SSE connections)
+    const STREAM_TURN_TIMEOUT_MS = 5 * 60 * 1000;
+    const streamAbortController = new AbortController();
+    const streamTimeoutHandle = setTimeout(() => {
+      logWarn(`[invokeWithAI] Stream timeout after ${STREAM_TURN_TIMEOUT_MS / 1000}s — aborting ${provider.name}`);
+      streamAbortController.abort(new Error(`stream_timeout:${provider.name}`));
+    }, STREAM_TURN_TIMEOUT_MS);
+
     // Streaming with tool execution (tools disabled for providers that don't support them)
     const result = await streamText({
       model,
       messages: aiMessages,
+      abortSignal: streamAbortController.signal,
       ...(useTools
         ? { tools: activeTools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
         : {}),
@@ -268,6 +277,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
         }
         // Note: The step limit warning is handled after the stream loop (line ~2085)
         // because errorCount is not yet available in onFinish callback.
+        clearTimeout(streamTimeoutHandle);
       },
     });
 
