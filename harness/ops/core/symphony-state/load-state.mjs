@@ -7,34 +7,30 @@ import { normalizeRecord } from "./normalize-record.mjs";
 import { normalizeWorktreeRecord } from "./worktree-record-schema.mjs";
 
 export function loadState() {
+  const stateFile = getStateFile();
+  let raw;
   try {
-    const stateFile = getStateFile();
-    let raw;
-    try {
-      raw = fs.readFileSync(stateFile, "utf-8");
-    } catch (readErr) {
-      if (readErr.code === "ENOENT") return emptyStore();
-      throw readErr;
-    }
-    const data = JSON.parse(raw);
-    const store = emptyStore();
-    store.version = data.version || 1;
-    store.updatedAt = data.updatedAt || store.updatedAt;
-    store.hostId = data.hostId || HOST_ID;
-    store.global = {
-      integrationLock: null,
-      ...data.global,
-    };
-    store.issues = {};
-    for (const [key, value] of Object.entries(data.issues || {})) {
-      store.issues[key] = normalizeRecord({ ...value, issueIdentifier: key });
-    }
-    store.worktreeStates = {};
-    for (const [wtId, value] of Object.entries(data.worktreeStates || {})) {
-      store.worktreeStates[wtId] = normalizeWorktreeRecord(wtId, value);
-    }
-    return store;
-  } catch (err) {
-    throw err;
+    raw = fs.readFileSync(stateFile, "utf-8");
+  } catch (readErr) {
+    if (readErr.code === "ENOENT") return emptyStore();
+    throw readErr;
   }
+  const data = JSON.parse(raw);
+  const store = emptyStore();
+  store.version = data.version || 1;
+  store.updatedAt = data.updatedAt || store.updatedAt;
+  store.hostId = data.hostId || HOST_ID;
+  store.global = {
+    integrationLock: null,
+    ...data.global,
+  };
+  store.issues = {};
+  for (const [key, value] of Object.entries(data.issues || {})) {
+    store.issues[key] = normalizeRecord({ ...value, issueIdentifier: key });
+  }
+  store.worktreeStates = {};
+  for (const [wtId, value] of Object.entries(data.worktreeStates || {})) {
+    store.worktreeStates[wtId] = normalizeWorktreeRecord(wtId, value);
+  }
+  return store;
 }
