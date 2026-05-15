@@ -24,7 +24,12 @@
 import { describe, it, expect, afterAll, beforeAll } from "vitest";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
-import { findEvidenceByIssue, pollForEvidenceField } from "./e2e-helpers.ts";
+import {
+  deleteEvidence,
+  findAllEvidenceByIssue,
+  findEvidenceByIssue,
+  pollForEvidenceField,
+} from "./e2e-helpers.ts";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -50,6 +55,41 @@ async function importHarness() {
   return { createIssue, updateIssue, STATES, listIssuesByState, createDurableQueue };
 }
 
+async function createOrReuseE2eIssue(harness: Awaited<ReturnType<typeof importHarness>>) {
+  const description =
+    `Append a single line \`${E2E_PROBE_LINE}\` to \`${E2E_TARGET_FILE}\`. ` +
+    "This is an automated end-to-end test. The change will be reverted after validation.";
+
+  try {
+    return await harness.createIssue({
+      title: E2E_TITLE,
+      description,
+      stateId: harness.STATES.todo,
+      priority: 1,
+    });
+  } catch (err) {
+    if (!String((err as Error).message).includes("USAGE_LIMIT_EXCEEDED")) throw err;
+
+    const canceled = await harness.listIssuesByState(["Canceled"]);
+    const reusable = canceled
+      .filter((i: { title: string }) => i.title === E2E_TITLE)
+      .sort((a: { updatedAt: string }, b: { updatedAt: string }) =>
+        b.updatedAt.localeCompare(a.updatedAt),
+      )[0];
+    if (!reusable) throw err;
+
+    for (const evidence of findAllEvidenceByIssue(reusable.identifier)) {
+      deleteEvidence(evidence.correlationId);
+    }
+
+    return harness.updateIssue(reusable.id, {
+      description,
+      stateId: harness.STATES.todo,
+      priority: 1,
+    });
+  }
+}
+
 // ── Git helpers (no shell — args passed as array to avoid injection) ───────────
 
 function git(cwd: string, ...args: string[]): string {
@@ -68,7 +108,8 @@ let integrationSha = "";
 
 describe("Full lifecycle: Linear → AI → push to main → worktree sync", { timeout: VITEST_TIMEOUT_MS }, () => {
     beforeAll(async () => {
-      const { createIssue, updateIssue, listIssuesByState, STATES } = await importHarness();
+      const harness = await importHarness();
+      const { updateIssue, listIssuesByState, STATES } = harness;
 
       // Cancel any stale e2e test issues left from previous runs.
       const stale = await listIssuesByState(["Todo", "In Progress", "In Review"]);
@@ -81,15 +122,9 @@ describe("Full lifecycle: Linear → AI → push to main → worktree sync", { t
       await new Promise((r) => setTimeout(r, 2000));
 
       // Trivial task — minimises AI cost and avoids TS-only validation gates.
-      // The harness executes this in an isolated worktree.
-      const issue = await createIssue({
-        title: E2E_TITLE,
-        description:
-          `Append a single line \`${E2E_PROBE_LINE}\` to \`${E2E_TARGET_FILE}\`. ` +
-          "This is an automated end-to-end test. The change will be reverted after validation.",
-        stateId: STATES.todo,
-        priority: 1,
-      });
+      // If Linear's issue quota blocks creation, reuse this test's own latest
+      // canceled issue instead of mutating unrelated work.
+      const issue = await createOrReuseE2eIssue(harness);
 
       issueId = issue.id;
       issueIdentifier = issue.identifier;
