@@ -1161,6 +1161,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         `[runner] Validation aborted due to heartbeat failure for ${issue.identifier}: ${hbReason} (phase=${hbDetail?.phase}, elapsed=${hbDetail?.elapsedMs}ms)`,
       );
       gitRevert();
+      setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, `lease_lost_during_validation:${hbReason}`, hbReason);
       recordTransition(issue.identifier, {
         actor: "runner",
         reason: `lease_lost_during_validation:${hbReason}`,
