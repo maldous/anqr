@@ -28,7 +28,6 @@ export function loadState() {
     }
     return store;
   } catch (err) {
-    if (err.code === "ENOENT") return emptyStore();
     throw err;
   }
 }
