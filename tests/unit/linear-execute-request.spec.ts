@@ -130,12 +130,13 @@ describe("executeLinearIssueRequest", () => {
       { "x-linear-identifier": "ANQ-789" },
     );
 
+    // Verify that the identifier is correctly extracted from the header
     expect(sendJsonMock).toHaveBeenCalledWith(
       expect.anything(),
       500,
       expect.objectContaining({
         error: expect.objectContaining({
-          message: expect.stringContaining("LINEAR_API_KEY"),
+          message: expect.stringContaining("ANQ-789"),
         }),
       }),
     );

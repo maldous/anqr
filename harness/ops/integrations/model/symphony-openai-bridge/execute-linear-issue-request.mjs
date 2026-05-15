@@ -44,7 +44,7 @@ export async function executeLinearIssueRequest(req, res) {
 
   if (!process.env.LINEAR_API_KEY) {
     return sendJson(res, 500, {
-      error: { message: "LINEAR_API_KEY is not set", type: "server_error" },
+      error: { message: `LINEAR_API_KEY is not set for identifier ${identifier}`, type: "server_error" },
     });
   }
 
