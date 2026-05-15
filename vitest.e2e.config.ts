@@ -14,6 +14,7 @@ export default defineConfig({
       "tests/e2e/discord-flow.spec.ts",
       "tests/e2e/integration-promotion.spec.ts",
       "tests/e2e/live-lifecycle-demo.spec.ts",
+      "tests/e2e/full-lifecycle.spec.ts",
     ],
     exclude: ["node_modules", "dist"],
     fileParallelism: false,
