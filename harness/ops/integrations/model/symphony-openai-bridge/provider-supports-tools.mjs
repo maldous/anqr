@@ -36,6 +36,5 @@ export function providerSupportsTools(providerName, { strict = false } = {}) {
   }
 
   // Not yet probed — decision depends on mode
-  if (strict) return false;
-  return true;
+  return !strict;
 }
