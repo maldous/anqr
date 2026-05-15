@@ -8,6 +8,9 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import {
   mutateState,
   getWorktreeState,
@@ -18,6 +21,8 @@ import {
   loadState,
 } from "../../harness/ops/core/symphony-state.mjs";
 import { setWorktreeState } from "../../harness/ops/core/symphony-state/set-worktree-state.mjs";
+
+process.env.ANQR_SYMPHONY_STATE_DIR = mkdtempSync(path.join(tmpdir(), "anqr-worktree-health-"));
 
 beforeEach(() => {
   mutateState((store) => {
@@ -89,6 +94,7 @@ describe("Quarantine", () => {
     expect(state!.reason).toBeNull();
     expect(state!.quarantinedAt).toBeNull();
   });
+
 });
 
 describe("Fleet snapshot", () => {

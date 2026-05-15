@@ -46,6 +46,20 @@ describe("classifyProviderFailure", () => {
     expect(classifyProviderFailure("HTTP 429 rate limited")).toBe("quota");
   });
 
+  it("classifies bridge concurrency 429 as local_busy", () => {
+    expect(
+      classifyProviderFailure(
+        'Symphony bridge 429: {"error":{"message":"Symphony agent is at concurrent capacity. Please retry shortly.","type":"overloaded"}}',
+      ),
+    ).toBe("local_busy");
+  });
+
+  it("classifies generic concurrent request overload as local_busy", () => {
+    expect(classifyProviderFailure("Too many concurrent requests. Please try again later.")).toBe(
+      "local_busy",
+    );
+  });
+
   it("classifies 'quota' as quota error", () => {
     expect(classifyProviderFailure("insufficient_quota for model")).toBe("quota");
   });

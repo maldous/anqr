@@ -1,4 +1,5 @@
 import { getWorktreeState } from "../../../symphony-state.mjs";
+import { globalActiveRequests, setGlobalActiveRequests } from "./global-active-requests.mjs";
 import { WORKTREES } from "./worktrees.mjs";
 import { logDebug } from "./logger.mjs";
 
@@ -31,6 +32,16 @@ export function reconcileWorktreeCounters() {
       corrections++;
     }
   }
+
+  const activeRequestTotal = WORKTREES.reduce(
+    (total, wt) => total + Math.max(0, wt.activeRequests || 0),
+    0,
+  );
+  if (globalActiveRequests !== activeRequestTotal) {
+    setGlobalActiveRequests(activeRequestTotal);
+    corrections++;
+  }
+
   if (corrections > 0) {
     logDebug(`[reconcile] Corrected ${corrections} worktree counter(s) from durable state`);
   }

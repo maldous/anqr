@@ -1,8 +1,17 @@
 export function classifyProviderFailure(message = "") {
   const msg = String(message || "");
+  const lowerMsg = msg.toLowerCase();
   // All retryable errors are now handled by the bridge - the bridge tries ALL providers
   // No special classification needed here - just pass through to provider handling
-  if (msg.includes("LOCAL_BUSY") || msg.includes("local_busy")) return "local_busy";
+  if (
+    msg.includes("LOCAL_BUSY") ||
+    msg.includes("local_busy") ||
+    lowerMsg.includes("concurrent capacity") ||
+    lowerMsg.includes("too many concurrent requests") ||
+    lowerMsg.includes('"type":"overloaded"') ||
+    lowerMsg.includes('"type": "overloaded"')
+  )
+    return "local_busy";
   if (
     msg.includes("429") ||
     msg.includes("quota") ||

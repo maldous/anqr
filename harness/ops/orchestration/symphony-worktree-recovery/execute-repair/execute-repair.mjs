@@ -4,6 +4,7 @@ import {
   recordQuarantine,
   releaseLease,
   leaseIsActive,
+  loadState,
 } from "../../../symphony-state.mjs";
 import { RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD } from "../../../symphony-config.mjs";
 import { getWorktreePath, PROJECT_ROOT } from "../../../core/worktree-config.mjs";
@@ -11,6 +12,15 @@ import { execFileSync } from "node:child_process";
 import { sendDiscordEmbed } from "../../../integrations/notifications/openclaw-discord.mjs";
 import { buildEvidence } from "./build-evidence.mjs";
 import { logInfo, logWarn } from "../logger.mjs";
+
+function findActiveIssueForWorktree(worktreeId) {
+  const store = loadState();
+  for (const [identifier, record] of Object.entries(store.issues || {})) {
+    if (record?.assignment?.worktreeId !== worktreeId) continue;
+    if (record?.lease && leaseIsActive({ lease: record.lease })) return identifier;
+  }
+  return null;
+}
 
 export async function executeRepair(worktreeId, classification) {
   const { repairAction, inferredOwner } = classification;
@@ -104,6 +114,18 @@ export async function executeRepair(worktreeId, classification) {
     }
 
     case "quarantine": {
+      const activeIssue = findActiveIssueForWorktree(worktreeId);
+      if (activeIssue) {
+        logWarn(
+          `[recovery] quarantine blocked: ${worktreeId} has active issue lease for ${activeIssue}`,
+        );
+        return {
+          ok: true,
+          action: "skip",
+          nextState: "unchanged",
+          evidence: buildEvidence("skip", worktreeId, "active_issue_lease", activeIssue),
+        };
+      }
       const wtState = getWorktreeState(worktreeId);
       recordQuarantine(worktreeId, {
         reason: classification.classification,
@@ -141,11 +163,17 @@ export async function executeRepair(worktreeId, classification) {
       //
       // Defense-in-depth: explicitly verify the sandbox is not actively executing.
       const wtState = getWorktreeState(worktreeId);
-      if (wtState && leaseIsActive(wtState)) {
+      const activeIssue = findActiveIssueForWorktree(worktreeId);
+      if ((wtState && leaseIsActive(wtState)) || activeIssue) {
         logWarn(
-          `[recovery] reset_to_main blocked: ${worktreeId} has an active lease — quarantining instead`,
+          `[recovery] reset_to_main blocked: ${worktreeId} has an active lease${activeIssue ? ` for ${activeIssue}` : ""} — skipping`,
         );
-        return executeRepair(worktreeId, { ...classification, repairAction: "quarantine" });
+        return {
+          ok: true,
+          action: "skip",
+          nextState: "unchanged",
+          evidence: buildEvidence("skip", worktreeId, "active_issue_lease", activeIssue),
+        };
       }
 
       const resetPath =

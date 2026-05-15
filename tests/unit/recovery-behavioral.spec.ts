@@ -24,6 +24,7 @@ const mockGetWorktreeState = vi.fn().mockReturnValue(null);
 const mockRecordQuarantine = vi.fn();
 const mockReleaseLease = vi.fn();
 const mockLeaseIsActive = vi.fn().mockReturnValue(false);
+const mockLoadState = vi.fn().mockReturnValue({ issues: {} });
 
 vi.mock("../../harness/ops/symphony-state.mjs", () => ({
   transitionWorktree: (...args: unknown[]) => mockTransitionWorktree(...args),
@@ -31,6 +32,7 @@ vi.mock("../../harness/ops/symphony-state.mjs", () => ({
   recordQuarantine: (...args: unknown[]) => mockRecordQuarantine(...args),
   releaseLease: (...args: unknown[]) => mockReleaseLease(...args),
   leaseIsActive: (...args: unknown[]) => mockLeaseIsActive(...args),
+  loadState: (...args: unknown[]) => mockLoadState(...args),
 }));
 
 vi.mock("../../harness/ops/symphony-config.mjs", () => ({
@@ -97,6 +99,7 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
     vi.clearAllMocks();
     mockGetWorktreeState.mockReturnValue(null);
     mockLeaseIsActive.mockReturnValue(false);
+    mockLoadState.mockReturnValue({ issues: {} });
   });
 
   it("skip action: returns unchanged state with state-only evidence", async () => {
@@ -146,6 +149,33 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
         reason: "dirty_orphaned",
       }),
     );
+  });
+
+  it("quarantine action: skips when an active issue lease owns the worktree", async () => {
+    const { executeRepair } =
+      await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
+
+    mockLoadState.mockReturnValue({
+      issues: {
+        "ANQ-900": {
+          assignment: { worktreeId: "wt2" },
+          lease: { expires_at: new Date(Date.now() + 600_000).toISOString() },
+        },
+      },
+    });
+    mockLeaseIsActive.mockReturnValue(true);
+
+    const result = await executeRepair("wt2", {
+      repairAction: "quarantine",
+      inferredOwner: "ANQ-OLD",
+      classification: "dirty_owned",
+      confidence: 0.6,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.action).toBe("skip");
+    expect(result.nextState).toBe("unchanged");
+    expect(mockRecordQuarantine).not.toHaveBeenCalled();
   });
 
   it("retry_push: demoted to quarantine at runtime — no git push executed", async () => {
@@ -199,7 +229,7 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
     expect(execFileSync).not.toHaveBeenCalled();
   });
 
-  it("reset_to_main: blocked when worktree has active lease — falls back to quarantine", async () => {
+  it("reset_to_main: blocked when worktree has active lease", async () => {
     const { executeRepair } =
       await import("../../harness/ops/orchestration/symphony-worktree-recovery/execute-repair/execute-repair.mjs");
     const { execFileSync } = await import("node:child_process");
@@ -219,13 +249,11 @@ describe("Recovery executeRepair behavioral tests — ADR-0005 + ADR-0006", () =
     });
 
     expect(result.ok).toBe(true);
-    // Must have been redirected to quarantine because of active lease
-    expect(result.action).toBe("quarantine");
-    expect(result.nextState).toBe("quarantined");
+    expect(result.action).toBe("skip");
+    expect(result.nextState).toBe("unchanged");
     // No git reset/clean must have been attempted
     expect(execFileSync).not.toHaveBeenCalled();
-    // Must have called recordQuarantine
-    expect(mockRecordQuarantine).toHaveBeenCalled();
+    expect(mockRecordQuarantine).not.toHaveBeenCalled();
   });
 
   it("reset_to_main: executes sandbox reset when no active lease", async () => {

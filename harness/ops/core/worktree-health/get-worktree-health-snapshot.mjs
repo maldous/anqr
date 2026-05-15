@@ -50,18 +50,35 @@ export function getWorktreeHealthSnapshot(worktreeId) {
     snapshot.finalizationState = getFinalizationState(durableOwner);
   }
 
-  // Validate ownership by checking for active lease (reverse scan is
-  // validation only, not authority — Phase 5 invariant).
+  const store = loadState();
+
+  // Validate ownership by checking for active lease. Prefer the durable
+  // worktree owner, but fall back to active issue assignment because stale
+  // recovery state must never hide a live runner lease.
   let activeLease = null;
   const ownerToCheck = snapshot.issueIdentifier;
   if (ownerToCheck) {
-    const store = loadState();
     const record = store.issues[ownerToCheck];
     if (record?.lease) {
       activeLease = record.lease;
     }
   }
+  if (!activeLease) {
+    for (const [identifier, record] of Object.entries(store.issues || {})) {
+      if (record?.assignment?.worktreeId !== wtId) continue;
+      if (!record?.lease || !leaseIsActive({ lease: record.lease })) continue;
+      activeLease = record.lease;
+      snapshot.issueIdentifier = identifier;
+      snapshot.finalizationState = getFinalizationState(identifier);
+      break;
+    }
+  }
   snapshot.leaseState = activeLease;
+
+  if (activeLease && leaseIsActive({ lease: activeLease })) {
+    snapshot.classification = "executing";
+    return snapshot;
+  }
 
   // If worktree state was explicitly set, prefer it
   if (wtState?.state === "quarantined") {

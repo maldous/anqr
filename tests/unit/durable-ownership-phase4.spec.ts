@@ -250,7 +250,11 @@ describe("execute-issue executing guard (Phase 4)", () => {
 // ---------------------------------------------------------------------------
 
 describe("reconcileWorktreeCounters (Phase 4)", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    const { setGlobalActiveRequests } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/global-active-requests.mjs");
+
+    setGlobalActiveRequests(0);
     rawStateOnDisk = emptyStore();
     // Reset counters
     for (const wt of mockWorktrees) {
@@ -268,7 +272,7 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
     rawStateOnDisk = store;
 
     const corrections = reconcileWorktreeCounters();
-    expect(corrections).toBe(1);
+    expect(corrections).toBe(2);
     expect(mockWorktrees[0].activeRequests).toBe(1);
   });
 
@@ -290,9 +294,12 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
   it("should not modify counters when already in sync", async () => {
     const { reconcileWorktreeCounters } =
       await import("../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs");
+    const { setGlobalActiveRequests } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/global-active-requests.mjs");
 
     // wt1 executing with counter=1, wt2 available with counter=0
     mockWorktrees[0].activeRequests = 1;
+    setGlobalActiveRequests(1);
     const store = emptyStore();
     store.worktreeStates["wt1"] = { state: "executing", assignedIssue: "ANQ-200" };
     store.worktreeStates["wt2"] = { state: "available" };
@@ -302,7 +309,7 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
     expect(corrections).toBe(0);
   });
 
-  it("should not touch Discord worktrees (wt5+)", async () => {
+  it("should not modify Discord worktree counters (wt5+)", async () => {
     const { reconcileWorktreeCounters } =
       await import("../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs");
 
@@ -311,7 +318,7 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
     rawStateOnDisk = emptyStore();
 
     const corrections = reconcileWorktreeCounters();
-    expect(corrections).toBe(0);
+    expect(corrections).toBe(1);
     expect(mockWorktrees[4].activeRequests).toBe(2); // unchanged
   });
 
@@ -326,6 +333,35 @@ describe("reconcileWorktreeCounters (Phase 4)", () => {
     const corrections = reconcileWorktreeCounters();
     expect(corrections).toBe(1);
     expect(mockWorktrees[2].activeRequests).toBe(0);
+  });
+
+  it("should reset stale global active count from worktree counters", async () => {
+    const globalCounters =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/global-active-requests.mjs");
+    const { reconcileWorktreeCounters } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs");
+
+    globalCounters.setGlobalActiveRequests(7);
+    rawStateOnDisk = emptyStore();
+
+    const corrections = reconcileWorktreeCounters();
+    expect(corrections).toBe(1);
+    expect(globalCounters.globalActiveRequests).toBe(0);
+  });
+
+  it("should keep global active count equal to summed active worktrees", async () => {
+    const globalCounters =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/global-active-requests.mjs");
+    const { reconcileWorktreeCounters } =
+      await import("../../harness/ops/integrations/model/symphony-agent-router/reconcile-worktree-counters.mjs");
+
+    globalCounters.setGlobalActiveRequests(0);
+    mockWorktrees[4].activeRequests = 2;
+    rawStateOnDisk = emptyStore();
+
+    const corrections = reconcileWorktreeCounters();
+    expect(corrections).toBe(1);
+    expect(globalCounters.globalActiveRequests).toBe(2);
   });
 });
 
