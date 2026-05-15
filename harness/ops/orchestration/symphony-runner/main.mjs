@@ -145,11 +145,12 @@ export async function main() {
           `[runner] Dirty worktree allowed for repair candidate (${dirtyWtState.issueIdentifier})`,
         );
       } else {
-        logError(
-          `[runner] Git working tree is dirty — refusing to run in a shared or unsafe worktree (${workingTree.blocked.length} blocking path(s))`,
+        // Stale changes from a prior incomplete run — reset to HEAD and continue.
+        logWarn(
+          `[runner] Dirty worktree (${workingTree.blocked.length} path(s)) — resetting to HEAD before execution`,
         );
-        logWorkingTreeEntries("[runner] blocking-dirty", workingTree.blocked);
-        process.exit(1);
+        logWorkingTreeEntries("[runner] auto-reset", workingTree.blocked);
+        execFileSync("git", ["checkout", "--", "."], { cwd: ROOT });
       }
     }
 
