@@ -18,7 +18,9 @@ export async function gitPushWorktreeBranch() {
   }
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      execFileSync("git", ["push", "-u", "origin", `HEAD:${branch}`], {
+      // Worktree branches are dedicated automation refs; stale remote history
+      // should not block publishing the latest validated runner evidence.
+      execFileSync("git", ["push", "--force", "-u", "origin", `HEAD:${branch}`], {
         cwd: ROOT,
         stdio: "pipe",
         timeout: 30_000,
