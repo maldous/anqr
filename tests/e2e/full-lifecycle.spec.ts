@@ -42,8 +42,9 @@ async function importHarness() {
   const { createIssue } = await import(`${HARNESS_OPS}/integrations/linear/linear-client/create-issue.mjs`);
   const { updateIssue } = await import(`${HARNESS_OPS}/integrations/linear/linear-client/update-issue.mjs`);
   const { STATES } = await import(`${HARNESS_OPS}/integrations/linear/linear-client/states.mjs`);
+  const { listIssuesByState } = await import(`${HARNESS_OPS}/integrations/linear/linear-client/list-issues-by-state.mjs`);
   const { createDurableQueue } = await import(`${HARNESS_OPS}/lib/durable-kv.mjs`);
-  return { createIssue, updateIssue, STATES, createDurableQueue };
+  return { createIssue, updateIssue, STATES, listIssuesByState, createDurableQueue };
 }
 
 // ── Git helpers (no shell — args passed as array to avoid injection) ───────────
@@ -64,7 +65,18 @@ let integrationSha = "";
 
 describe("Full lifecycle: Linear → AI → push to main → worktree sync", { timeout: VITEST_TIMEOUT_MS }, () => {
     beforeAll(async () => {
-      const { createIssue, STATES } = await importHarness();
+      const { createIssue, updateIssue, listIssuesByState, STATES } = await importHarness();
+
+      // Cancel any stale e2e test issues left from previous runs.
+      const E2E_TITLE = "E2E: add a code comment to tests/e2e/full-lifecycle.spec.ts";
+      const stale = await listIssuesByState(["Todo", "In Progress", "In Review"]);
+      for (const si of stale.filter((i: { title: string }) => i.title === E2E_TITLE)) {
+        await updateIssue(si.id, { stateId: STATES.canceled });
+        console.info(`[full-lifecycle] Cancelled stale e2e issue ${si.identifier}`);
+      }
+
+      // Brief pause so Linear state settles before creating the new issue.
+      await new Promise((r) => setTimeout(r, 2000));
 
       // Trivial task — minimises AI cost and execution time.
       // The harness executes this in an isolated worktree.
