@@ -8,6 +8,10 @@
  * - getNextRepairableIssueForWorktree returns sticky owner only
  */
 
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   getFinalizationState,
@@ -20,10 +24,16 @@ import {
 } from "../../harness/ops/core/symphony-state.mjs";
 import { setFinalizationState } from "../../harness/ops/core/symphony-state/set-finalization-state.mjs";
 
+const testStateDir =
+  process.env.ANQR_SYMPHONY_STATE_DIR || mkdtempSync(path.join(tmpdir(), "anqr-finalization-state-"));
+process.env.ANQR_SYMPHONY_STATE_DIR = testStateDir;
+
 // Reset state before each test
 beforeEach(() => {
+  rmSync(path.join(testStateDir, "state.json"), { force: true });
   mutateState((store) => {
     store.issues = {};
+    store.worktreeStates = {};
     store.global = { integrationLock: null };
     return store;
   });

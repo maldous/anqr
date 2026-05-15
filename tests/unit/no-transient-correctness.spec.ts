@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+import { setGlobalActiveRequests } from "../../harness/ops/integrations/model/symphony-agent-router/global-active-requests.mjs";
+
 /**
  * Workstream B Phase 6 — No-transient-correctness proof.
  *
@@ -134,6 +136,7 @@ function zeroAllCounters() {
     wt.activeRequests = 0;
     wt.failures = 0;
   }
+  setGlobalActiveRequests(0);
 }
 
 // ---------------------------------------------------------------------------
@@ -163,7 +166,7 @@ describe("Restart reconstruction (Phase 6)", () => {
 
     // Reconciliation reconstructs counters
     const corrections = reconcileWorktreeCounters();
-    expect(corrections).toBe(2);
+    expect(corrections).toBe(3);
 
     // Counters now reflect durable state
     expect(mockWorktrees[0].activeRequests).toBe(1); // wt1 executing
@@ -183,7 +186,7 @@ describe("Restart reconstruction (Phase 6)", () => {
     rawStateOnDisk = store;
 
     const corrections = reconcileWorktreeCounters();
-    expect(corrections).toBe(4);
+    expect(corrections).toBe(5);
     expect(mockWorktrees.every((wt) => wt.activeRequests === 1)).toBe(true);
   });
 
@@ -401,7 +404,7 @@ describe("Full restart scenario (Phase 6)", () => {
 
     // Step 4: Reconciliation corrects counters
     const corrections = reconcileWorktreeCounters();
-    expect(corrections).toBe(1); // Only wt1 needs correction (executing, counter=0)
+    expect(corrections).toBe(2); // wt1 activeRequests + global active count
     expect(mockWorktrees[0].activeRequests).toBe(1);
     expect(mockWorktrees[1].activeRequests).toBe(0); // quarantined ≠ executing
     expect(mockWorktrees[2].activeRequests).toBe(0);
@@ -431,7 +434,7 @@ describe("Full restart scenario (Phase 6)", () => {
 
     // Phase C: reconciliation restores counters from durable state
     const corrections = reconcileWorktreeCounters();
-    expect(corrections).toBe(2);
+    expect(corrections).toBe(3);
     expect(mockWorktrees[0].activeRequests).toBe(1);
     expect(mockWorktrees[1].activeRequests).toBe(1);
     expect(mockWorktrees[2].activeRequests).toBe(0);
