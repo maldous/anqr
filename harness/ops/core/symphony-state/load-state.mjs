@@ -9,7 +9,14 @@ import { normalizeWorktreeRecord } from "./worktree-record-schema.mjs";
 export function loadState() {
   try {
     const stateFile = getStateFile();
-    const data = JSON.parse(fs.readFileSync(stateFile, "utf-8"));
+    let raw;
+    try {
+      raw = fs.readFileSync(stateFile, "utf-8");
+    } catch (readErr) {
+      if (readErr.code === "ENOENT") return emptyStore();
+      throw readErr;
+    }
+    const data = JSON.parse(raw);
     const store = emptyStore();
     store.version = data.version || 1;
     store.updatedAt = data.updatedAt || store.updatedAt;
