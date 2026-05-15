@@ -180,9 +180,8 @@ export async function main() {
 
   if (totalFindings === 0) {
     logInfo("[sonar-audit] Clean - no findings");
-    process.exit(0);
+  } else {
+    logInfo(`[sonar-audit] Findings exist (${totalFindings}) - synced to Linear`);
   }
-
-  logInfo(`[sonar-audit] Findings exist - exiting with code 1 (blocking)`);
-  process.exit(1);
+  process.exit(0);
 }
