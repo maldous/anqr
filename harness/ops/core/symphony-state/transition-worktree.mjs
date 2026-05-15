@@ -33,7 +33,7 @@ export function transitionWorktree(worktreeId, targetState, metadata = {}) {
     const existing = store.worktreeStates[worktreeId] || {};
     const from = existing.state || "available";
 
-    if (!isValidWorktreeTransition(from, targetState)) {
+    if (from !== targetState && !isValidWorktreeTransition(from, targetState)) {
       return { ok: false, reason: "invalid_transition", from, to: targetState };
     }
 

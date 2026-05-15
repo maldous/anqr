@@ -370,6 +370,33 @@ describe("transitionWorktree", () => {
     expect(record.leasedAt).toBe("2026-04-15T00:00:00Z");
   });
 
+  it("should allow same-state metadata cleanup", async () => {
+    const { transitionWorktree } =
+      await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");
+    const store = emptyStore();
+    store.worktreeStates["wt-cleanup"] = {
+      state: "available",
+      reason: "dirty_owned",
+      quarantinedAt: "2026-04-14T00:00:00Z",
+      lastError: "stale",
+    };
+    rawStateOnDisk = store;
+
+    const result = transitionWorktree("wt-cleanup", "available", {
+      reason: null,
+      quarantinedAt: null,
+      lastError: null,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.from).toBe("available");
+    expect(result.to).toBe("available");
+    const record = result.record as Record<string, unknown>;
+    expect(record.reason).toBeNull();
+    expect(record.quarantinedAt).toBeNull();
+    expect(record.lastError).toBeNull();
+  });
+
   it("should handle executing → dirty_owned transition", async () => {
     const { transitionWorktree } =
       await import("../../harness/ops/core/symphony-state/transition-worktree.mjs");

@@ -427,14 +427,29 @@ describe("clearQuarantine (Phase 3 migration)", () => {
     expect(wt.repairAttempts).toBe(0);
   });
 
-  it("should reject clearing quarantine on a non-quarantined worktree", async () => {
+  it("should clear stale quarantine metadata on an available worktree", async () => {
     const { clearQuarantine } =
       await import("../../harness/ops/core/symphony-state/clear-quarantine.mjs");
 
-    // Default state is available — available → available is invalid
+    const store = emptyStore();
+    store.worktreeStates["wt4"] = {
+      state: "available",
+      reason: "dirty_owned",
+      quarantinedAt: "2026-04-14T00:00:00Z",
+      lastError: "stale",
+    };
+    rawStateOnDisk = store;
+
     const result = clearQuarantine("wt4");
-    expect(result.ok).toBe(false);
-    expect(result.reason).toBe("invalid_transition");
+    expect(result.ok).toBe(true);
+    expect(result.from).toBe("available");
+    expect(result.to).toBe("available");
+
+    const updated = rawStateOnDisk as Record<string, Record<string, Record<string, unknown>>>;
+    const wt = updated.worktreeStates["wt4"];
+    expect(wt.reason).toBeNull();
+    expect(wt.quarantinedAt).toBeNull();
+    expect(wt.lastError).toBeNull();
   });
 });
 
