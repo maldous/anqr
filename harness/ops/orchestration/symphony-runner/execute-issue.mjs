@@ -52,6 +52,7 @@ import { runAgent, continueAgent } from "../../symphony-agent.mjs";
 import { runValidation, formatValidationFeedback } from "../../symphony-validation.mjs";
 import { writePreValidationPatch } from "./write-pre-validation-patch.mjs";
 import { removeTempFile } from "./remove-temp-file.mjs";
+import { gitMetadataPath } from "./git-path.mjs";
 import { getQueueSnapshot } from "../../symphony-queue-control.mjs";
 import { sendDiscordEmbed } from "../../integrations/notifications/openclaw-discord.mjs";
 import { voiceAnnounce } from "../../integrations/model/symphony-openai-bridge/voice-announce.mjs";
@@ -371,7 +372,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
     // Phase 2: Add repair context for repairable states
     if (isRepairCandidate) {
       if (currentFinalization.state === "validation_failed_repairable") {
-        const sidecarPath = resolve(ROOT, ".git", "SYMPHONY_VALIDATION_ERRORS");
+        const sidecarPath = gitMetadataPath("SYMPHONY_VALIDATION_ERRORS");
         const validationErrors = existsSync(sidecarPath)
           ? readFileSync(sidecarPath, "utf-8")
           : currentFinalization.lastError || "unknown";
@@ -1314,7 +1315,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           .join("\n");
 
         // Write full validation output to sidecar file for next repair cycle
-        const sidecarPath = resolve(ROOT, ".git", "SYMPHONY_VALIDATION_ERRORS");
+        const sidecarPath = gitMetadataPath("SYMPHONY_VALIDATION_ERRORS");
         try {
           writeFileSync(sidecarPath, validationErrors, "utf-8");
         } catch {
@@ -1675,7 +1676,7 @@ ${String(r.detail)}\n`,
       transitionWorktree(WORKTREE_ID, "available", { assignedIssue: null });
     }
     // Clean up validation sidecar file on successful completion
-    const sidecarCleanup = resolve(ROOT, ".git", "SYMPHONY_VALIDATION_ERRORS");
+    const sidecarCleanup = gitMetadataPath("SYMPHONY_VALIDATION_ERRORS");
     try {
       if (existsSync(sidecarCleanup)) unlinkSync(sidecarCleanup);
     } catch {

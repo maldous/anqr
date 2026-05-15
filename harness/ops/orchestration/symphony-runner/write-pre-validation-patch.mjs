@@ -1,12 +1,12 @@
-import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 
 import { ROOT } from "./root.mjs";
+import { gitMetadataPath } from "./git-path.mjs";
 import { normalizeRepoPath } from "./normalize-repo-path.mjs";
 
 export function writePreValidationPatch(changedFiles) {
-  const patchFile = resolve(ROOT, ".git", `SYMPHONY_PREVALIDATION_${Date.now()}.patch`);
+  const patchFile = gitMetadataPath(`SYMPHONY_PREVALIDATION_${Date.now()}.patch`);
   const filesToCapture = [
     ...new Set((changedFiles || []).map((file) => normalizeRepoPath(file)).filter(Boolean)),
   ];

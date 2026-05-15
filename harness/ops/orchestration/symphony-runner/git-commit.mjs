@@ -1,9 +1,9 @@
 import { execFileSync } from "node:child_process";
-import { resolve } from "node:path";
 import { writeFileSync, unlinkSync } from "node:fs";
 
 import { HEADER_MAX_LENGTH } from "./header-max-length.mjs";
 import { ROOT } from "./root.mjs";
+import { gitMetadataPath } from "./git-path.mjs";
 import { inferCommitScope } from "./infer-commit-scope.mjs";
 import { normalizeRepoPath } from "./normalize-repo-path.mjs";
 import { sanitizeCommitSubject } from "./sanitize-commit-subject.mjs";
@@ -28,7 +28,7 @@ export function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
     const header = `${prefix}${truncatedSubject}`;
     const body = `${issueIdentifier}\n\n${summary}`;
     const msg = `${header}\n\n${body}`;
-    const tmpFile = resolve(ROOT, ".git", "SYMPHONY_COMMIT_MSG");
+    const tmpFile = gitMetadataPath("SYMPHONY_COMMIT_MSG");
     writeFileSync(tmpFile, msg, "utf-8");
     try {
       execFileSync("git", ["commit", "--no-verify", "-F", tmpFile], {
