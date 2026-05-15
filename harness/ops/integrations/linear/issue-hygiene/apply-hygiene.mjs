@@ -47,15 +47,13 @@ export async function applyHygiene(result, dryRun) {
     notificationLines.push("");
     notificationLines.push(
       "⚠️ **SYSTEMIC FAILURE PATTERN DETECTED** — This issue requires human investigation.",
-    );
-    notificationLines.push("");
-    notificationLines.push("Possible causes:");
-    notificationLines.push("- Fundamental architectural issue");
-    notificationLines.push("- Missing dependencies or environment configuration");
-    notificationLines.push("- Incorrectly scoped issue (too broad)");
-    notificationLines.push("- AI agent capability limitation");
-    notificationLines.push("");
-    notificationLines.push(
+      "",
+      "Possible causes:",
+      "- Fundamental architectural issue",
+      "- Missing dependencies or environment configuration",
+      "- Incorrectly scoped issue (too broad)",
+      "- AI agent capability limitation",
+      "",
       "**Recommendation:** Review failure signatures in description and determine root cause.",
     );
   } else {
