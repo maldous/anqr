@@ -16,7 +16,6 @@ import {
   getFinalizationState,
   transitionWorktree,
   getWorktreeState,
-  markIssueHumanOnly,
 } from "../../symphony-state.mjs";
 import { execFileSync } from "node:child_process";
 import {
@@ -869,23 +868,19 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       // No-file-change completion hardening: require explicit evidence before accepting
       if (agentResult.completed === true && !isExternallyCompleted) {
         if (agentResult.toolCalls > 0 && !completionPromoted) {
-          // Agent natively completed (task_complete / subgoals finished) via tool calls
-          // but produced NO file changes. This is likely a false positive — most
-          // coding tasks should produce file changes. Move to In Review for human
-          // verification rather than auto-marking as Done.
-          await updateIssue(issue.id, { stateId: STATES.inReview });
+          // Agent completed via tool calls but produced no file changes — canceled.
+          await updateIssue(issue.id, { stateId: STATES.canceled });
           await addComment(
             issue.id,
-            safetyCap(`ℹ️ **Agent completed via tool calls but no file changes** — moved to In Review for human verification.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}\n\n⚠️ This may be a false positive — coding tasks typically produce file changes.`),
+            safetyCap(`❌ **Agent completed with no file changes** — canceled.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
             reason: "agent_completed_via_tools_no_changes",
             from: "In Progress",
-            to: "In Review",
+            to: "Canceled",
             runId: RUN_ID,
           });
-          markIssueHumanOnly(issue.identifier);
           if (provider?.name) {
             recordLinearCompletion(metricsProviderName, {
               completed: false,
@@ -893,25 +888,21 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
               estimate: issue.estimate,
             });
           }
-          logInfo(`[runner] ℹ️ Completed via tools (no file changes): ${issue.identifier} — ${issue.title} — moved to In Review`);
+          logInfo(`[runner] ❌ Completed via tools (no file changes): ${issue.identifier} — canceled`);
         } else if (agentResult.toolCalls > 0 && completionPromoted) {
-          // Agent did real work (tool calls) but didn't explicitly complete —
-          // promoted from partial progress. Move to In Review for human verification.
-          await updateIssue(issue.id, { stateId: STATES.inReview });
+          // Agent ran but made no file changes — canceled.
+          await updateIssue(issue.id, { stateId: STATES.canceled });
           await addComment(
             issue.id,
-            safetyCap(`ℹ️ **Agent made progress with no file changes** — moved to In Review for human verification.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`),
+            safetyCap(`❌ **Agent ran but produced no file changes** — canceled.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
-            reason: "agent_partial_no_changes_review",
+            reason: "agent_no_changes_canceled",
             from: "In Progress",
-            to: "In Review",
+            to: "Canceled",
             runId: RUN_ID,
           });
-          // Mark human_only so the reconciler doesn't recover this as an orphaned
-          // In Review issue and re-dispatch it in a loop.
-          markIssueHumanOnly(issue.identifier);
           if (provider?.name) {
             recordLinearCompletion(metricsProviderName, {
               completed: false,
@@ -920,7 +911,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
             });
           }
           logInfo(
-            `[runner] ⚠️ Partial progress (no file changes): ${issue.identifier} — ${issue.title}`,
+            `[runner] ❌ No file changes: ${issue.identifier} — canceled`,
           );
         } else {
           // Agent reported completion with zero tool calls and zero file changes — false positive
