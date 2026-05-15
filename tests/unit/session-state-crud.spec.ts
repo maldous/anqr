@@ -132,8 +132,8 @@ describe("session-state CRUD", () => {
     });
 
     it("does nothing for null/empty sessionId", () => {
-      updateSessionProvider(null as unknown as string, { name: "test" });
-      updateSessionProvider("", { name: "test" });
+      expect(() => updateSessionProvider(null as unknown as string, { name: "test" })).not.toThrow();
+      expect(() => updateSessionProvider("", { name: "test" })).not.toThrow();
     });
 
     it("getSessionProvider returns null for nonexistent session", () => {
