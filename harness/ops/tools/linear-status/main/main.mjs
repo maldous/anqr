@@ -52,7 +52,8 @@ export async function main() {
     `│  Eligible Todo issues:  ${todoAll.filter((i) => !hasActiveCooldown(i.identifier)).length}`,
   );
   console.log(`│  Active executions:     ${snap.activeDepth}`);
-  console.log(`│  In Review issues:      ${inReviewAll.length}${orphanedReview.length ? ` (${orphanedReview.length} orphaned)` : ""}`);
+  const orphanedSuffix = orphanedReview.length ? ` (${orphanedReview.length} orphaned)` : "";
+  console.log(`│  In Review issues:      ${inReviewAll.length}${orphanedSuffix}`);
   console.log(`│  Integration queue:     ${listIntegrationCandidates().length}`);
   console.log("└──────────────────────────────────────────────────────\n");
 
