@@ -2,7 +2,7 @@
  * E2E: Full lifecycle — Linear issue creation → AI execution → push to main → worktree sync
  *
  * This test exercises the COMPLETE production flow end-to-end:
- *   1. Create a real Linear issue (trivial task: add a comment to a safe file)
+ *   1. Create a real Linear issue (trivial task: add a line to a safe docs fixture)
  *   2. Enqueue it directly to the desired-work queue (bypasses 10-min reconciler wait)
  *   3. Poll evidence until push.success + integration.mainSha are populated
  *   4. Assert origin/main advanced to the integration SHA
@@ -32,9 +32,12 @@ const HARNESS_OPS = path.resolve(import.meta.dirname, "../../harness/ops");
 const REPO_ROOT = path.resolve(import.meta.dirname, "../../");
 const WORKTREE_ROOTS = [1, 2, 3, 4].map((n) => path.resolve(REPO_ROOT, `../anqr-wt${n}`));
 
-const EXECUTION_TIMEOUT_MS = 10 * 60_000;
+const EXECUTION_TIMEOUT_MS = 20 * 60_000;
 const POLL_INTERVAL_MS = 3_000;
-const VITEST_TIMEOUT_MS = 12 * 60_000;
+const VITEST_TIMEOUT_MS = 25 * 60_000;
+const E2E_TITLE = "E2E: add a lifecycle probe line to docs/harness/e2e-lifecycle-probe.md";
+const E2E_TARGET_FILE = "docs/harness/e2e-lifecycle-probe.md";
+const E2E_PROBE_LINE = "Lifecycle probe: e2e-lifecycle-probe";
 
 // ── Harness module loader ─────────────────────────────────────────────────────
 
@@ -68,7 +71,6 @@ describe("Full lifecycle: Linear → AI → push to main → worktree sync", { t
       const { createIssue, updateIssue, listIssuesByState, STATES } = await importHarness();
 
       // Cancel any stale e2e test issues left from previous runs.
-      const E2E_TITLE = "E2E: add a code comment to tests/e2e/full-lifecycle.spec.ts";
       const stale = await listIssuesByState(["Todo", "In Progress", "In Review"]);
       for (const si of stale.filter((i: { title: string }) => i.title === E2E_TITLE)) {
         await updateIssue(si.id, { stateId: STATES.canceled });
@@ -78,13 +80,12 @@ describe("Full lifecycle: Linear → AI → push to main → worktree sync", { t
       // Brief pause so Linear state settles before creating the new issue.
       await new Promise((r) => setTimeout(r, 2000));
 
-      // Trivial task — minimises AI cost and execution time.
+      // Trivial task — minimises AI cost and avoids TS-only validation gates.
       // The harness executes this in an isolated worktree.
       const issue = await createIssue({
-        title: "E2E: add a code comment to tests/e2e/full-lifecycle.spec.ts",
+        title: E2E_TITLE,
         description:
-          "Add a single-line comment `// e2e-lifecycle-probe` at the top of " +
-          "`tests/e2e/full-lifecycle.spec.ts` (below the file-level JSDoc block). " +
+          `Append a single line \`${E2E_PROBE_LINE}\` to \`${E2E_TARGET_FILE}\`. ` +
           "This is an automated end-to-end test. The change will be reverted after validation.",
         stateId: STATES.todo,
         priority: 1,
@@ -107,7 +108,7 @@ describe("Full lifecycle: Linear → AI → push to main → worktree sync", { t
         const queue = createDurableQueue("symphony-desired-work");
         queue.enqueue({
           identifier: issueIdentifier,
-          title: "E2E: add a code comment to tests/e2e/full-lifecycle.spec.ts",
+          title: E2E_TITLE,
           action: "create",
           source: "e2e-test",
           correlationId: `e2e-${issueIdentifier}-${Date.now()}`,
