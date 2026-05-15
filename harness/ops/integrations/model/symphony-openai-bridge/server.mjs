@@ -406,13 +406,13 @@ export const server = http.createServer(async (req, res) => {
         ? decodeURIComponent(discordThreadNameRaw)
         : null;
       const linearThreadName = req.headers["x-linear-thread-name"] || null;
-      const discordSource = discordMessageId
-        ? "discord"
-        : discordThreadName
-          ? "discord"
-          : linearThreadName
-            ? "linear"
-            : null;
+      // Extract Discord source type from available identifiers
+      let discordSource = null;
+      if (discordMessageId || discordThreadName) {
+        discordSource = "discord";
+      } else if (linearThreadName) {
+        discordSource = "linear";
+      }
       const isDiscordOriginRequest = discordSource === "discord";
       const discordOptions = {};
       if (discordMessageId) discordOptions.replyTo = discordMessageId;
