@@ -16,6 +16,7 @@ import {
   getFinalizationState,
   transitionWorktree,
   getWorktreeState,
+  markIssueHumanOnly,
 } from "../../symphony-state.mjs";
 import { execFileSync } from "node:child_process";
 import {
@@ -884,6 +885,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
             to: "In Review",
             runId: RUN_ID,
           });
+          markIssueHumanOnly(issue.identifier);
           if (provider?.name) {
             recordLinearCompletion(metricsProviderName, {
               completed: false,
@@ -907,6 +909,9 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
             to: "In Review",
             runId: RUN_ID,
           });
+          // Mark human_only so the reconciler doesn't recover this as an orphaned
+          // In Review issue and re-dispatch it in a loop.
+          markIssueHumanOnly(issue.identifier);
           if (provider?.name) {
             recordLinearCompletion(metricsProviderName, {
               completed: false,

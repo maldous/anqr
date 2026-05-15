@@ -93,7 +93,12 @@ export async function runReconciliationCycle(isFullPollCycle = true) {
   const store = loadState();
   for (const id of new Set([...candidates, ...Object.keys(store.issues)])) {
     const fin = getFinalizationState(id);
-    if (fin) finalizationStates[id] = fin;
+    if (fin) {
+      finalizationStates[id] = fin;
+    } else if (store.issues[id]?.human_only) {
+      // human_only issues are intentionally parked in In Review — don't recover them as orphans
+      finalizationStates[id] = { state: "human_review_pending", reason: "human_only" };
+    }
   }
 
   const { actions, summary } = computeReconciliationActions({
