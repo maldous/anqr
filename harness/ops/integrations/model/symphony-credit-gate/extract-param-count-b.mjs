@@ -7,5 +7,5 @@ export function extractParamCountB(model) {
   // Match parameter size indicators like "8b", "70b", "0.5b", "3b", "14b"
   const match = model.match(/(?:^|[-._/:])(\d+(?:\.\d+)?)[bB](?:[-._/:]|$)/);
   if (!match) return null;
-  return parseFloat(match[1]);
+  return Number.parseFloat(match[1]);
 }
