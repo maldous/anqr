@@ -27,7 +27,8 @@ export function loadState() {
       store.worktreeStates[wtId] = normalizeWorktreeRecord(wtId, value);
     }
     return store;
-  } catch {
-    return emptyStore();
+  } catch (err) {
+    if (err.code === "ENOENT") return emptyStore();
+    throw err;
   }
 }

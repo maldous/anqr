@@ -8,8 +8,17 @@ export function heartbeatLease(issueIdentifier, nonce, ttlMs = DEFAULT_LEASE_MS)
   return withStateLock(() => {
     const store = loadState();
     const current = normalizeRecord(store.issues[issueIdentifier] || { issueIdentifier });
-    if (!current.lease || current.lease.nonce !== nonce)
-      return { ok: false, reason: "lease_mismatch" };
+    if (!current.lease || current.lease.nonce !== nonce) {
+      const isStatewipe = !store.issues[issueIdentifier] || !current.lease;
+      const reason = isStatewipe ? "lease_mismatch:state_wipe" : "lease_mismatch";
+      if (isStatewipe) {
+        console.error(
+          `[heartbeat-lease] STATE WIPE DETECTED for ${issueIdentifier}: no record in store`,
+          new Error("state-wipe stack").stack,
+        );
+      }
+      return { ok: false, reason };
+    }
     const now = Date.now();
     current.lease = {
       ...current.lease,
