@@ -17,15 +17,15 @@ export function setSessionSource(sessionId, source) {
   withBridgeLock(FILE_NAME, () => {
     const state = loadSessionState();
     const session = state[sessionId];
-    if (!session) {
+    if (session) {
+      session.source = source;
+      session.lastUsed = Date.now();
+    } else {
       // Create a stub session with source identity (will be enriched by updateSessionProvider later)
       state[sessionId] = {
         lastUsed: Date.now(),
         source,
       };
-    } else {
-      session.source = source;
-      session.lastUsed = Date.now();
     }
     saveSessionState(state);
   });

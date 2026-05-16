@@ -1,3 +1,7 @@
+## ANQ-1810: [Sonar] Unexpected negated condition. (set-session-source.mjs:20) (2025-01-15)
+
+- Refactored if-else block to check for positive condition (`session`) first instead of negated condition
+
 ## ANQ-1808: [Sonar] Add at least one assertion to this test case. (request-rehydration.spec.ts:89) (2025-01-15)
 
 - Added assertions to verify that invalid request IDs (empty string and null) do not create inflight request records
