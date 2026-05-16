@@ -1,0 +1,274 @@
+ANQR SYMPHONY PIPELINE — HANDOVER
+Generated: 2026-05-16 ~19:15 AEST
+=====================================
+
+## GOAL
+Reliably complete Linear issues (Sonar fixes) from Todo → Done via the symphony
+pipeline: Linear issue → scheduler claims → executor bridge → runner (AI agent)
+→ validation → git push → integrator cherry-picks to main → Linear Done.
+
+---
+
+## CURRENT STATE (at handover)
+
+### Services running
+- bridge-watchdog: spawns 8 executor bridges (wt1-8)
+- symphony-scheduler: dispatches issues to worktrees
+- symphony-integrator: cherry-picks worktree branches → main
+- symphony-worktree-recovery: repairs/resets quarantined worktrees
+- Log files: /tmp/anqr-{watchdog,scheduler,integrator,recovery}.log
+
+### Worktrees
+- wt1-4: Linear execution pool (Sonar issues)
+- wt5-8: Discord execution pool (unused currently)
+- All synced to origin/main at handover
+
+### Symphony state file
+  $XDG_RUNTIME_DIR/anqr-symphony-state/state.json
+
+### Current pipeline activity
+- wt1: executing ANQ-3277
+- wt2: executing ANQ-3275
+- wt3: executing ANQ-3313
+- wt4: executing ANQ-3312
+- 1x validation_failed_repairable (will auto-retry on sticky worktree)
+- 1x integrated_main (success)
+- Linear: ~39 Todo Sonar issues, first Done reached
+
+### Linear issues
+- All prior issues cleared/archived
+- Fresh Sonar issues created via sonar-linear-audit
+- Format: "Sonar: <rule> (<count>)" — consolidated per rule
+- Each issue description now has file:line:message per occurrence (40 max)
+
+---
+
+## FIXES APPLIED THIS SESSION (commits on main)
+
+1. **fix(recovery): reset_to_main instead of quarantine for low-confidence dirty worktrees**
+   - commit: 6e7302c5c
+   - File: harness/ops/orchestration/symphony-worktree-recovery/classify-worktree.mjs
+   - Problem: case 5 (dirty + no lease + no finalization) with confidence < 0.7 was
+     quarantining worktrees instead of resetting. Led to permanent quarantine loops.
+   - Fix: changed action from "quarantine" to "reset_to_main" for low-confidence case.
+
+2. **fix(bridge): remove no-op propose_str_replace and propose_write_file tools**
+   - commit: a48f27dda
+   - File: harness/ops/integrations/model/symphony-openai-bridge/tools.mjs
+   - Problem: These tools existed in all tiers but returned success without writing
+     files. Agents thought they were making changes but weren't. Led to "no file
+     changes" cancellations.
+   - Fix: Removed both tools entirely from tools.mjs (imports + definitions).
+
+3. **fix(bridge): release worktree lease on SIGTERM to avoid 20-min scheduler lockout**
+   - commit: 6af02aab8
+   - File: harness/ops/integrations/model/symphony-openai-bridge/shutdown.mjs
+   - Problem: DEFAULT_LEASE_MS = 20 min. When executor bridge restarts (systemd or
+     manual), the active lease locked the worktree for 20 minutes.
+   - Fix: On SIGTERM, reads symphony state and releases active lease + transitions
+     worktree back to "available". Requires ANQR_WORKTREE_ID env var (set correctly).
+
+4. **fix(runner): use git reset --hard instead of merge --ff-only for worktree sync**
+   - commit: 11f8fd2ee
+   - File: harness/ops/orchestration/symphony-runner/execute-issue.mjs (line ~142)
+   - Problem: After cherry-pick integration, the worktree branch diverges from
+     origin/main (same changes, different SHA). --ff-only always fails, triggering
+     the sync_failure_threshold quarantine after 3 attempts.
+   - Fix: Replace --ff-only with reset --hard origin/main. Safe because dirty-file
+     check happens before sync.
+
+5. **fix(runner): skip updateIssue(inReview) when push succeeded — integrator owns state**
+   - commit: 8a8bb9c24
+   - File: harness/ops/orchestration/symphony-runner/execute-issue.mjs
+   - Problem: Race condition where runner reset issue to In Review even after push
+     succeeded, overwriting integrator's Done transition.
+
+6. **fix(sonar-audit): include file:line per occurrence in Linear issue descriptions**
+   - commit: 06349ed13
+   - File: harness/ops/integrations/sonar/sonar-linear-audit/main.mjs
+   - Problem: Consolidated issues only listed filenames with no line numbers. Agents
+     had no actionable context → cancelled with "no changes" every time.
+   - Fix: Description now lists up to 40 entries of `file:line — message` so agents
+     can navigate directly to each Sonar finding.
+
+7. **fix(integrator): retry push with re-fetch+cherry-pick on non-fast-forward rejection**
+   - commit: ed96419de
+   - File: harness/ops/orchestration/symphony-integrator/integrate-candidate/integrate-candidate.mjs
+   - Problem: When another commit lands between integrator's fetch and push, git
+     rejects with non-fast-forward. Previously marked as integration_failed_repairable
+     and required full agent loop to retry.
+   - Fix: Up to 3 push retries, each re-fetching main and re-cherry-picking the
+     commit SHA onto fresh origin/main.
+
+---
+
+## KNOWN REMAINING ISSUES
+
+### 1. Issues cycling fast → Canceled (high priority)
+**Symptom:** Worktrees complete issues in ~2 min, Linear shows Canceled not Done.
+**Root cause:** Agents may still not produce file changes for some Sonar rules.
+  - Some rules involve complex refactors (90 occurrences of Array#push) — agent
+    may attempt changes but produce no git diff.
+  - The file:line fix (commit 06349ed13) should help but wasn't deployed long enough
+    to verify at handover.
+**How to debug:**
+  - Watch Linear for first "Done" issues
+  - If still Canceled: check runner voice_speak Discord messages for "no file changes"
+  - Check: reports/symphony/external-completions.log for cancellation reasons
+
+### 2. validation_failed_repairable — AI breaks tests while fixing Sonar
+**Symptom:** Agent renames catch parameter → breaks test assertion on that variable.
+**Root cause:** Sonar rule S7718 (rename catch param to error_) — agent renames in
+  production code AND test files, but test assertions check the old name.
+**How to debug:**
+  - Check finalization.lastError for "test-unit" failures
+  - Look at the specific test file — usually active-job-ownership.spec.ts or similar
+**Mitigation:** The repair loop (validation_failed_repairable) retries up to 3x.
+  After that it moves to Backlog. Consider adding test guidance in WORKFLOW.md:
+  "When renaming catch parameters, only rename in the catch block, not in test
+   assertion strings."
+
+### 3. Consolidated vs individual issue format
+**Current:** One Linear issue per Sonar rule, e.g. "Sonar: javascript:S7778 (90)"
+**Trade-off:** Consolidated saves Linear quota but gives the agent a big batch.
+  Agent may fix 10/90 occurrences and get a successful commit, leaving 80 unfixed.
+  The Sonar issue stays open until all occurrences are fixed.
+**Alternative:** Individual issues per finding (old approach) — more Linear quota
+  but each issue is a targeted 1-line fix with higher success rate.
+**Status:** Current consolidated format with file:line is a compromise. Monitor
+  whether agents fix all occurrences or partial.
+
+### 4. changedFiles=[] in finalization → commit_failed_repairable loop
+**Symptom:** Issue gets commit_failed_repairable with changedFiles=[] and headSha
+  pointing to current main.
+**Root cause:** Agent called str_replace but the target string wasn't found (already
+  fixed or wrong line), so git sees nothing to commit.
+**Impact:** Runner retries with "fix commit issues" prompt, agent re-runs, same result.
+  Eventually hits max attempts and moves to Backlog.
+**Fix needed:** When changedFiles=[] AND headSha=current main → cancel immediately
+  rather than entering repair loop. The Sonar finding is already fixed.
+  Location: execute-issue.mjs around line 1502 — add check before setting
+  commit_failed_repairable state.
+
+### 5. Integration layer uses symphony/integration branch on main checkout
+**Issue:** The integrator runs from the main repo checkout (/home/user/src/anqr).
+  When I (Claude) also commit to main from here, the integrator's push races with
+  my manual commits. The retry fix (commit ed96419de) handles this, but it adds
+  latency.
+**Best practice:** Don't commit to main manually while the integrator is running.
+  All code changes should go through worktree branches.
+
+---
+
+## PIPELINE ARCHITECTURE QUICK REFERENCE
+
+```
+Linear Todo issue
+    ↓ scheduler (15s poll)
+    → claims issue, dispatches to worktree (wt1-4)
+    ↓ executor bridge (symphony-openai-bridge.mjs, port 4321-4328)
+    → spawns runner subprocess (symphony-runner/runtime.mjs --issue ANQ-xxx)
+    ↓ runner
+    → acquires lease (20 min TTL, heartbeat every 30s)
+    → sync worktree: git fetch + reset --hard origin/main
+    → calls AI agent via bridge (model selection, tool provision)
+    → agent makes file changes (str_replace, write_file tools)
+    → validation: lint + test-unit + typecheck
+    → git commit + push symphony/wt{n} branch
+    → sets finalization: integration_pending
+    ↓ integrator (30s poll)
+    → cherry-picks wt branch commit onto origin/main
+    → pushes HEAD:main (up to 3 retries on non-fast-forward)
+    → calls publishEvidenceAndClose → Linear Done
+    ↓ Linear Done ✓
+```
+
+### Failure states and recovery
+| State | Cause | Recovery |
+|-------|-------|----------|
+| quarantined | 3x sync failures | recovery service: reset_to_main |
+| validation_failed_repairable | lint/test fail | sticky repair (same wt) x3 |
+| commit_failed_repairable | nothing to commit | sticky repair (re-runs agent) |
+| integration_failed_repairable | cherry-pick conflict | sticky repair (agent resolves) |
+| Backlog (Linear) | max retries exhausted | manual: move back to Todo |
+
+### Key config values (harness/ops/core/symphony-config.mjs)
+- RUNNER_MAX_RETRIES = 10
+- RUNNER_VALIDATION_REPAIR_MAX = 3
+- RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD = 0.7
+- RECOVERY_QUARANTINE_THRESHOLD_MS = 600_000 (10 min)
+- DEFAULT_LEASE_MS = 20 * 60 * 1000 (20 min)
+- TARGET_MIN = queue target depth
+
+---
+
+## IMMEDIATE NEXT STEPS
+
+1. **Verify first Done**: Watch Linear for issues reaching Done state. If none after
+   30 min, check integrator log and runner voice Discord.
+
+2. **Check cancellation rate**: If >50% issues cancel with "no file changes", the
+   consolidated format is still not actionable enough. Consider switching to 1 Linear
+   issue per Sonar finding (will hit quota faster but higher success rate).
+
+3. **Fix changedFiles=[] → auto-cancel** (see Known Issue #4 above):
+   In execute-issue.mjs ~line 1500, before setting commit_failed_repairable, check:
+   ```js
+   if ((changedFiles?.length === 0) && headSha === git('rev-parse', 'origin/main')) {
+     // Already fixed — cancel
+     await updateIssue(issue.id, { stateId: STATES.canceled });
+     return 'done';
+   }
+   ```
+
+4. **Add WORKFLOW.md guidance for Sonar catch-parameter renames**:
+   Tell agent not to rename catch parameter references inside test assertion strings,
+   only inside the catch block itself.
+
+5. **Monitor recovery**: `quarantined=0` should hold. If quarantine appears, check
+   recovery log and classify-worktree.mjs for the new case.
+
+---
+
+## SERVICE RESTART COMMANDS
+
+```bash
+# Stop all
+kill $(ps aux | grep "symphony-openai-bridge.mjs\|bridge-watchdog\|symphony-scheduler\|symphony-integrator\|symphony-worktree-recovery" | grep -v grep | awk '{print $2}')
+
+# Start (from /home/user/src/anqr)
+node harness/ops/runtime/watchdog/bridge-watchdog.mjs > /tmp/anqr-watchdog.log 2>&1 &
+node harness/ops/orchestration/symphony-scheduler/runtime.mjs --daemon > /tmp/anqr-scheduler.log 2>&1 &
+node harness/ops/orchestration/symphony-integrator.mjs daemon > /tmp/anqr-integrator.log 2>&1 &
+node harness/ops/orchestration/symphony-worktree-recovery.mjs daemon > /tmp/anqr-recovery.log 2>&1 &
+
+# Clear and restart clean
+rm -f $XDG_RUNTIME_DIR/anqr-symphony-state/state.json
+for i in 1 2 3 4 5 6 7 8; do git -C /home/user/src/anqr-wt$i reset --hard origin/main; done
+```
+
+## MONITORING COMMANDS
+
+```bash
+# Quick state check
+cat $XDG_RUNTIME_DIR/anqr-symphony-state/state.json | python3 -c "
+import json,sys; s=json.load(sys.stdin)
+wts=s.get('worktreeStates') or {}; iss=s.get('issues') or {}
+for k in sorted(wts):
+    if k.startswith('wt') and int(k[2:])<=4:
+        v=wts[k] or {}; print(k, v.get('state'), v.get('assignedIssue',''))
+fins={}
+for v in iss.values():
+    if isinstance(v,dict): st=(v.get('finalization') or {}).get('state',''); fins[st]=fins.get(st,0)+1 if st else fins
+print('fins:', {k:v for k,v in fins.items() if k})
+"
+
+# Recovery health
+tail -5 /tmp/anqr-recovery.log
+
+# Integration activity
+tail -20 /tmp/anqr-integrator.log
+
+# Scheduler dispatch
+tail -10 /tmp/anqr-scheduler.log
+```

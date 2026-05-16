@@ -2,28 +2,32 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const SONAR_PATH = resolve("harness/ops/sonar-group-issues.mjs");
+const SYNC_PATH = resolve(
+  "harness/ops/integrations/sonar/sonar-linear-sync/sync-sonar-to-linear.mjs",
+);
 
-describe("sonar-group-issues idempotency", () => {
-  const source = readFileSync(SONAR_PATH, "utf-8");
+describe("sonar-sync idempotency (individual per-finding issues)", () => {
+  const source = readFileSync(SYNC_PATH, "utf-8");
 
-  it("imports findOpenIssuesByTitle for duplicate detection", () => {
-    expect(source).toContain("findOpenIssuesByTitle");
+  it("imports findOpenLinearIssuesByTag for duplicate detection", () => {
+    expect(source).toContain("findOpenLinearIssuesByTag");
   });
 
-  it("checks for existing issues before creating new ones in the loop body", () => {
-    const importEnd = source.indexOf("async function main");
-    const body = source.slice(importEnd);
-    const findIndex = body.indexOf("findOpenIssuesByTitle");
+  it("checks keyToLinear map before creating new issues", () => {
+    // Scope to function body only (after opening brace) to exclude imports
+    const funcStart = source.indexOf("export async function syncSonarToLinear");
+    const bodyStart = source.indexOf("{", funcStart) + 1;
+    const body = source.slice(bodyStart);
+    const hasIndex = body.indexOf("keyToLinear.has");
     const createIndex = body.indexOf("createIssue");
 
-    expect(findIndex).toBeGreaterThan(-1);
+    expect(hasIndex).toBeGreaterThan(-1);
     expect(createIndex).toBeGreaterThan(-1);
-    expect(findIndex).toBeLessThan(createIndex);
+    expect(hasIndex).toBeLessThan(createIndex);
   });
 
-  it("skips creation when matching issue already exists", () => {
-    expect(source).toContain("existing");
-    expect(source).toContain("Skipping existing");
+  it("skips creation when matching sonar-key already exists", () => {
+    expect(source).toContain("keyToLinear.has");
+    expect(source).toContain("skipped");
   });
 });

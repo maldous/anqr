@@ -35,12 +35,11 @@ The current runtime roots are:
 
 ### Control-plane maintenance and recovery
 
-- `services/systemd/anqr-linear-reconciler.service`
-- `services/systemd/anqr-symphony-integrator.service`
-- `services/systemd/anqr-symphony-worktree-recovery.service`
-- `services/systemd/anqr-watchdog.service`
-- `services/systemd/anqr-worktree-health.service`
-- `services/systemd/anqr-worktree-health.timer`
+- `services/systemd/anqr-linear-reconciler.service` — level-triggered backlog reconciliation; feeds desired-work queue; handles `integrated_main → Done` transition. Runs infinite `--daemon` loop. Can exit cleanly — needs monitoring/restart policy.
+- `services/systemd/anqr-symphony-integrator.service` — single-writer cherry-pick integration to `main`; evidence-gated closure (ADR-0012)
+- `services/systemd/anqr-symphony-worktree-recovery.service` — state-only recovery (ADR-0005); `reset_to_main` for dirty worktrees; no git mutation of active worktrees
+- `services/systemd/anqr-watchdog.service` — monitors router + all 8 executors via `/health` endpoints. Executor health checks use 10s timeout (raised from 5s on 2026-05-16 to handle large JSON serialization). Monitors: symphony-router (skipProviderCheck), discord-router (skipProviderCheck), linear-webhook (skipProviderCheck), symphony-integrator (no health endpoint), executor-wt1–wt8 (provider check enabled)
+- `services/systemd/anqr-worktree-health.service` + `.timer` — peridon fleet health checks; currently inactive (`dead`)
 
 ### Supporting automation
 
@@ -87,7 +86,7 @@ Used for:
 
 ### Discord path
 
-- `harness/ops/integrations/model/discord-request-router/*`
+- `harness/ops/integrations/model/discord-request-router/*` — three services: main balancer (wt1-4), text router (wt5-6), voice router (wt7-8)
 - `harness/ops/integrations/model/symphony-openai-bridge/*`
 
 Current behavior:
@@ -102,17 +101,19 @@ Current behavior:
 - `harness/ops/integrations/model/linear-webhook-receiver/*`
 - `harness/ops/integrations/model/symphony-agent-router/*`
 - `harness/ops/orchestration/linear-reconciler/*`
-- `harness/ops/orchestration/symphony-runner/*`
+- `harness/ops/orchestration/symphony-scheduler/*` — ADR-0002 authoritative scheduler; sole claim authority
+- `harness/ops/orchestration/symphony-runner/*` — executes assigned work only; no self-pick
 
 Current behavior:
 
 - webhook receiver accepts eligible events and writes desired-work ingress
-- reconciler feeds desired-work signals instead of dispatching runnable work
-- the authoritative scheduler claims runnable issues, assigns worktrees, and dispatches through the router
-- the router verifies scheduler-owned claims on both trigger and queue-drain paths before forwarding to executors
+- reconciler feeds desired-work signals instead of dispatching runnable work; handles `integrated_main → Done` transitions; runs as an infinite daemon loop that can exit cleanly (needs restart monitoring)
+- scheduler claims runnable issues atomically, assigns worktrees, and dispatches through the router
+- router verifies scheduler-owned claims on both trigger and queue-drain paths before forwarding to executors
 - runners execute assigned work only; they do not self-pick global Linear work
+- `changedFiles=[]` + `HEAD===origin/main` triggers immediate cancel (no unnecessary `commit_failed_repairable` loop)
 
-That means the Linear path now has one effective scheduler for global issue admission and claim.
+That means the Linear path has one authoritative scheduler for global issue admission and claim.
 
 ## State and persistence
 

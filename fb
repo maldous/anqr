@@ -1,0 +1,1 @@
+cd  /home/user/src/anqr && MANICODE_CONFIG_DIR=/home/user/.config/manicode /home/user/src/codebuff/cli/bin/freebuff

@@ -12,3 +12,5 @@
 ### 2026-05-07T22:11:32.185Z - Watchdog restarted linear-webhook service (reason: stuck in activating for 68s, commit: bccd6968a, action: restart-only)
 
 ### 2026-05-14T01:39:04.669Z - Watchdog restarted linear-webhook service (reason: stuck in activating for 65s, commit: 56c8cbfab, action: restart-only)
+
+### 2026-05-16T08:47:42.866Z - Watchdog restarted executor-wt4 service (reason: stuck in activating for 67s, commit: 3924caec4, action: restart-only)

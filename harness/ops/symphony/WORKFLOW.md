@@ -123,6 +123,15 @@ Format (prepend under `# Changelog`, newest first):
 
 Do this as your final step before calling `task_complete`.
 
+## Sonar catch-parameter rename rules
+
+When fixing Sonar rules that require renaming catch parameters (e.g., S7718: rename to `error_`):
+
+1. **Rename ONLY inside the catch block** — do not rename string literals in test assertion statements
+2. **Test files need special handling** — if a test file has an assertion like `expect(mockFn).toHaveBeenCalledWith('some error')`, that string is a test fixture, not a variable reference
+3. **Verify tests still pass** — after any catch parameter rename, run `run_tests` to confirm the rename didn't break test assertions
+4. **Common pattern:** `catch (e)` → `catch (error_)` but `expect(callStack).toContain('error message')` stays unchanged
+
 ## Working sequence
 
 1. Read the issue carefully.

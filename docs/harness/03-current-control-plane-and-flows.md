@@ -6,16 +6,16 @@
 
 The current platform has these control-plane actors:
 
-- `linear-webhook-receiver`
-- `discord-request-router`
-- `symphony-agent-router`
-- `linear-reconciler`
-- `symphony-runner`
-- `symphony-queue-control`
-- `symphony-integrator`
-- `symphony-worktree-recovery`
-- `bridge-watchdog`
-- `worktree-health`
+- `linear-webhook-receiver` — event-driven ingress
+- `discord-request-router` (+ text/voice variants) — request routing with load balancing
+- `symphony-agent-router` — transport layer; verifies scheduler-owned claims before forwarding
+- `symphony-scheduler` — **authoritative claim authority** (ADR-0002); sole owner of claim decisions
+- `linear-reconciler` — level-triggered backlog feed; handles `integrated_main → Done`; runs infinite daemon loop (can exit cleanly — needs restart monitoring)
+- `symphony-runner` — executor; runs assigned work only; no self-pick
+- `symphony-integrator` — single-writer cherry-pick to `main`; evidence-gated closure (ADR-0012)
+- `symphony-worktree-recovery` — state-only recovery (ADR-0005); no git mutation of active worktrees
+- `bridge-watchdog` — monitors router + 8 executors; 10s health check timeout; does not monitor reconciler
+- `worktree-health` — fleet health checks; currently **inactive** (dead)
 
 Not all of them should own scheduling or git mutation.
 

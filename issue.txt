@@ -1,0 +1,108 @@
+# Harness Failure Analysis — 2026-05-15
+
+## Current Symptom
+Full-lifecycle e2e test stalls at "scheduler creates an evidence record" checkpoint.
+After scheduler dispatches the issue, the runner subprocess exits in ~20s with `quota_exhausted`,
+setting a 15–30 min cooldown that blocks all retries.
+
+## Root Cause #1 — FIXED: State wipe (loadState silent emptyStore)
+**Was**: loadState() caught read/parse errors and silently returned emptyStore() with issues:{}.
+Any mutator (heartbeat, transitionWorktree, etc.) calling loadState on error would then
+saveState(emptyStore) → wiping all active leases → recovery daemon saw no lease → reset worktree.
+
+**Fix** (commit e6ad5d279 + 3e4a53cf):
+- loadState() returns emptyStore on ENOENT (clean boot), throws on all other errors
+- saveState() refuses to overwrite non-empty disk issues with issues:{} — reads disk first,
+  aborts write if disk has active issues (guards against stale in-memory snapshot)
+- loadStateOrEmpty() for explicit bootstrap paths (mutateState)
+
+**Status**: CONFIRMED FIXED. State has been stable across multiple runs since.
+
+## Root Cause #2 — FIXED: Hung SSE stream (no per-turn timeout)
+**Was**: invoke-with-aiinner.mjs's streamText() call had no AbortController/timeout.
+When a provider (e.g. mistral-codestral-2508) accepted the request but stalled mid-stream,
+the executor hung indefinitely. Heartbeat stopped → recovery daemon reset worktree → work lost.
+
+**Fix** (commit 7ee004a1):
+- 5-minute AbortController timeout on every streamText() call
+- clearTimeout on stream finish (onFinish callback)
+
+**Status**: CONFIRMED FIXED. No more indefinite hangs.
+
+## Root Cause #3 — FIXED: Lint failure blocking baseline preflight
+**Was**: loadState() had a useless try/catch wrapper (catch err; throw err) that triggered
+oxlint's no-useless-catch rule. Runner's baseline pre-flight lint check failed →
+execution limited to sticky repair → issue immediately exited with quota_exhausted.
+
+**Fix** (commit 3e4a53cf): Removed useless try/catch wrapper.
+
+**Status**: CONFIRMED FIXED. Config preflight now passes.
+
+## Root Cause #4 — ACTIVE: Provider rate limits / quota_exhausted cascade
+**Symptom**: Runner starts, passes preflight, hits "Queue depth 0 < target 8", then exits
+immediately with quota_exhausted (~20s total). The AI execution phase is failing fast.
+
+**Trace**:
+1. Runner starts → Config preflight passes
+2. feedQueue() called → no backlog issues → returns immediately (no AI call here)
+3. findOpenIssuesByIdentifier(ANQ-177x) fetches issue from Linear (it's "In Progress")
+4. executeIssue() called → invoke-with-fallback-stream → selectProvider
+5. All providers return errors in rapid succession:
+   - codebuff-paid: "Too Many Requests" (rate limited)
+   - mistral-codestral-2508: was working, now rate limited?
+   - groq-qwen-qwen3-32b: "Request too large" (TPM limit)
+   - groq-openai-gpt-oss-120b: rate limited
+   - Other providers: payment required or endpoint offline
+6. All providers exhausted → quota_exhausted set → 15–30min cooldown
+
+**Why so fast**: The bridge starts fresh per executor restart (no cached state), but provider
+APIs are genuinely rate-limited from many previous runs throughout the day. Each failed attempt
+burns more quota. We've run ~10+ test cycles today, each with multiple provider attempts.
+
+**Evidence**: Providers seen failing:
+- sambanova: "payment method required"
+- together-agentica: "endpoint not running"
+- groq: TPM limit exceeded
+- codebuff-paid: Too Many Requests (429)
+
+**Key missing log**: We don't see the provider fallback logs in journalctl because
+execute-linear-issue-request.mjs collects runner stderr via execFileAsync, and only forwards
+it AFTER the process exits. The quota_exhausted may be happening inside executeIssue but the
+logs are buffered and appear as a single dump. The state transition to quota_exhausted IS
+happening inside the runner (via setCooldown in execute-issue.mjs:610).
+
+## Insight: feedQueue call is harmless
+Initially suspected feedQueue was causing quota_exhausted. Confirmed NOT the case:
+feedQueue only makes Linear API calls (updateIssue), never touches the AI bridge.
+
+## Insight: Runner stderr buffering masks real failures
+The runner subprocess writes to stderr. execute-linear-issue-request.mjs uses execFileAsync
+which buffers all stderr and dumps it only after process exit. This means provider fallback
+logs (which show WHY quota_exhausted fires) appear as a batch dump in journalctl AFTER
+the runner exits. This makes it look like the runner exited "right after" the queue check,
+when in reality it ran the full provider cascade and only THEN exited.
+
+## Insight: Cooldown compounds the problem
+quota_exhausted → 15min cooldown (exponential backoff from symphony-config.mjs).
+Each failed run EXTENDS the cooldown for subsequent attempts. After several failures
+today, the cooldown is in the 30+ min range. Manually clearing cooldown via mutateState
+works but the next run immediately hits quota again.
+
+## What would fix Root Cause #4
+Option A: Wait for rate limits to reset (1–60 min depending on provider)
+  - Groq TPM: resets per minute, but we're hitting it immediately on each turn
+  - codebuff-paid: session-based, may need longer wait
+  - mistral: was working fine, may recover quickly
+
+Option B: Reduce token usage per turn to stay under TPM limits
+  - groq-qwen-qwen3-32b: "Limit 6000, Requested 9032" → task prompt is too large
+
+Option C: Ensure at least one provider with adequate quota is selected
+  - codex (codex-sdk) is listed first in selectProvider candidates — check if it's available
+  - openrouter-openai-gpt-oss-120b-free listed as candidate — check status
+
+## Next Steps
+1. Check if any provider has headroom right now (codex, openrouter, mistral)
+2. Consider reducing the e2e task prompt size to fit within groq's 6000 TPM limit
+3. Wait ~1 hour for rate limits to fully reset, then retry with clean state
+4. Add provider health check to e2e setup to fail fast if no providers available

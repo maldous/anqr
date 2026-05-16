@@ -874,10 +874,13 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       if (agentResult.completed === true && !isExternallyCompleted) {
         if (agentResult.toolCalls > 0 && !completionPromoted) {
           // Agent completed via tool calls but produced no file changes — canceled.
+          const localSha = getRepoHeadSha("HEAD");
+          const mainSha = getRepoHeadSha("origin/main");
+          const headDelta = localSha === mainSha ? "(HEAD=main)" : `(HEAD=${localSha.slice(0,7)}, main=${mainSha.slice(0,7)})`;
           await updateIssue(issue.id, { stateId: STATES.canceled });
           await addComment(
             issue.id,
-            safetyCap(`❌ **Agent completed with no file changes** — canceled.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`),
+            safetyCap(`❌ **Agent completed with no file changes** — canceled.\n\nFinding: ${issue.identifier}\nTool calls: ${agentResult.toolCalls}\nFiles: ${changedFiles.length} changed\nGit: ${headDelta}\nAgent: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",

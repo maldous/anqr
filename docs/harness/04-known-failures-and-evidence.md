@@ -1,26 +1,42 @@
-# Known Failures And Evidence
-
-> **⚠️ Pre-implementation architecture review document.** The failures listed here were the structural issues that drove Workstreams A–G. All have been addressed: duplicate dispatch (A), recovery git mutation (C), split scheduling (A), capacity advisory (B), worktree drift (C+D), and test gaps (A–G). See ADRs and subsystem READMEs for current behavior.
+# Known Failures And Evidence> **⚠️ Pre-implementation architecture review document.** Written before Workstreams A–G. The structural failures listed here were addressed in Workstreams A–G. The current known issues section below reflects live operational findings from 2026-05.
 
 ## Summary (Historical)
 
-The failures described below were structural.
+The failures described below were structural and were addressed by Workstreams A–G:
 
-Provider rate limits, individual AI errors, and flaky tasks exist, but they are not the main reason the harness behaves unpredictably.
+- duplicate dispatch → ADR-0002 authoritative scheduler
+- recovery git mutation → ADR-0005 state-only recovery
+- split scheduling → ADR-0002 scheduler is sole claim authority
+- capacity advisory → durable state reconstruction on startup
+- worktree drift → ADR-0005 reset_to_main for idle, sticky base SHA
+- test gaps → added concurrency and lease-expiry tests
 
-## Evidence-backed failure list
+## Current Known Issues (2026-05)
 
-| Failure                                     | Current evidence                                                                                                                                                         | Current mechanism                                                                            | Required correction                                                                                                      |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Duplicate Linear dispatch                   | Router logs show the same issue dispatched to more than one worktree. Example: `ANQ-1580` was sent to `wt1` and `wt2` within about one second.                           | Webhook and reconciler both triggered dispatch before a durable claim existed.               | Create an atomic claim before dispatch and make one scheduler authoritative per repo.                                    |
-| Repeated replay of the same issue           | Router and reconciler logs show repeated redispatch of `ANQ-1617`.                                                                                                       | Reconciler re-sees work as eligible because ownership and retry state are not stable enough. | Separate ingress from claim. Reconciler may only requeue expired claims, not redispatch runnable work opportunistically. |
-| Lease loss during execution and validation  | Integration tests and logs include `lease_mismatch` and abandonment flows.                                                                                               | Lease starts too late and competes with other state mutations.                               | Move durable claim earlier. Keep lease as execution heartbeat only.                                                      |
-| Recovery mutates git                        | `anqr-symphony-worktree-recovery.service` sets `ANQR_AUTOMATION_COMMIT=1` and `ANQR_AUTOMATION_PUSH=1`. Recovery code performs commit, push, sync, and propagation work. | Recovery is acting as a second git writer.                                                   | Make recovery state-only. Do not allow background repair to commit, push, merge, or reset active workspaces.             |
-| Late conflict discovery                     | Integrator logs show repeated cherry-pick conflicts for `ANQ-1617` before a later success.                                                                               | Conflict is discovered after local execution, not at claim or candidate admission time.      | Make candidate admission explicit and repo-serial. Treat base SHA drift as a first-class invalidation rule.              |
-| Split scheduling authority                  | Webhook, reconciler, runner self-pick, queue control, and recovery all influence runnable work.                                                                          | The control plane is split.                                                                  | Introduce one repo-scoped scheduler with exclusive claim authority.                                                      |
-| Capacity is advisory, not authoritative     | Router chooses least-loaded worktree using local `activeRequests`.                                                                                                       | Local request counters do not prove issue ownership.                                         | Capacity decisions must consume durable claim state, not only in-memory request counters.                                |
-| Worktrees drift and get repaired under load | Recovery and runner both sync or repair against `origin/main`.                                                                                                           | Worktree baseline can move under or between executions.                                      | Idle worktrees may refresh. Active worktrees must stay pinned to claim base until completion or expiry.                  |
-| Tests miss the control-plane failure mode   | Current tests verify webhook ingress, worktree creation, and some lease-loss behavior. They do not prove scheduler exclusivity under concurrent ingress.                 | Tests prove local intent, not distributed correctness.                                       | Add duplicate-dispatch, split-brain, restart, conflict, and lease-expiry concurrency tests.                              |
+These are live operational findings not captured in the historical table above:
+
+| Issue | Evidence | Mechanism | Status |
+| ----- | -------- | --------- | ------ |
+| Watchdog false "unhealthy" on all executors | All 8 executors flagged `health check timeout` every cycle | Executor bridges return large JSON (~628 providers, 60KB+) taking 5–8s to serialize, exceeding the 5s timeout | Fixed: timeout raised to 10s (2026-05-16). wt4 occasionally hits 15s — may need further tuning or a lightweight `/ping` endpoint |
+| Issues cycling fast without file changes | Issues reach `Canceled` with no commit produced | Agent fixes target correctly before runner commits; `changedFiles=[]` + `HEAD===origin/main` causes immediate cancel | Fixed: auto-cancel added in `execute-issue.mjs` (2026-05-16) |
+| `integrated_main` issues not reaching Done | ANQ-3312, ANQ-3273 stuck in `integrated_main` | `anqr-linear-reconciler.service` was dead (exit status 0/SUCCESS) — reconciler handles the `integrated_main → Done` transition | Fixed: service restarted (2026-05-16). Reconciler exits cleanly after long runs — needs watchdog monitoring or restart policy |
+| Catch-parameter rename breaks test assertions | AI renames catch param but changes test assertion strings | `validation_failed_repairable` when agent renames `catch (e)` → `catch (error_)` AND also renames string literals in `expect(...).toHaveBeenCalledWith('some error')` | Documented in `harness/ops/symphony/WORKFLOW.md` Sonar catch-parameter rules. Agent must only rename the parameter, not string literals |
+| `anqr-nightly.service` failing | `anqr-nightly.service` in `failed` state | Nightly operations pass encountering errors | Needs investigation — service is dead but not blocking pipeline |
+| Discord routers use same port load-balancer | `anqr-discord-router.service` + `anqr-discord-text-router.service` + `anqr-discord-voice-router.service` | Three router services for different Discord workloads (text vs voice vs main) | Operational split — currently wt1-4 for Linear, wt5-8 for Discord, with text/voice sub-split |
+
+## Resolved Historical Issues
+
+| Failure | Resolution | Date |
+| ------- | ---------- | ---- |
+| Duplicate Linear dispatch | ADR-0002 scheduler is sole claim authority | 2026-04 |
+| Recovery mutates git | ADR-0005 state-only recovery; `reset_to_main` for dirty worktrees | 2026-04 |
+| Split scheduling authority | `symphony-scheduler.service` owns all claims | 2026-04 |
+| Late conflict discovery | Integrator uses retry with re-fetch+cherry-pick on non-fast-forward | 2026-05 |
+| Runner skips `updateIssue(inReview)` after push | Runner no longer calls `updateIssue(inReview)` when push succeeds | 2026-05 |
+| Watchdog false unhealthy (5s timeout) | HEALTH_CHECK_TIMEOUT_MS raised to 10000ms | 2026-05-16 |
+| No-op `propose_str_replace` and `propose_write_file` tools | Removed from bridge | 2026-05 |
+| Bridge worktree lease not released on SIGTERM | Bridge now releases worktree lease on SIGTERM | 2026-05 |
+| Git sync used `merge --ff-only` | Changed to `reset --hard` for worktree sync | 2026-05 |
 
 ## Current nonconformances that must be documented openly
 
@@ -29,6 +45,14 @@ Provider rate limits, individual AI errors, and flaky tasks exist, but they are 
 The current runtime is not effectively-once for mutating Linear work.
 
 It is at best at-least-once with manual cleanup.
+
+### Reconciler exit behavior needs monitoring
+
+The `linear-reconciler` runs as an infinite `--daemon` loop but can exit cleanly (status=0/SUCCESS) after long running periods (~4h39min observed). The watchdog does not monitor it. Without a restart policy, `integrated_main` issues will stack up without transitioning to Done.
+
+### Watchdog timeout still borderline for wt4
+
+wt4 occasionally takes >10s on the health endpoint (15s observed on curl). The 10s timeout may still cause occasional false timeouts for wt4 specifically. Long-term fix: add a lightweight `/ping` endpoint to bridges that returns minimal JSON without the provider list.
 
 ### Ancillary services are not ancillary enough
 

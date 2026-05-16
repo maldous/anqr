@@ -19,6 +19,12 @@ When the control plane is under repair, disable mutation and keep read-only and 
 
 Current helper scripts such as `harness/ops/orchestration/symphony-control.mjs` may remain useful, but service restart must follow the claim and integration state, not only timer state.
 
+**Executor health endpoint note:** Executor bridges (`wt1`–`wt8`) return large JSON (~628 providers, 60KB+) that takes 5–8s to serialize. The watchdog uses a 10s timeout. If restarting executors, expect brief "health check timeout" warnings until the new process loads the updated timeout constant (300ms interval × ~33 cycles to settle). If timeouts persist beyond restart, check `harness/ops/runtime/watchdog/bridge-watchdog/health-check-timeout-ms.mjs`.
+
+**Watchdog restart:** Use `systemctl --user stop anqr-watchdog.service && systemctl --user start anqr-watchdog.service` — a simple restart may leave the old process alive if it wasn't properly terminated. Verify with `ps aux | grep bridge-watchdog` (should show only one PID).
+
+**Reconciler restart:** The `anqr-linear-reconciler.service` runs as an infinite `--daemon` loop but can exit cleanly (status=0/SUCCESS) after long runs. Monitor with `systemctl --user status anqr-linear-reconciler.service`. Restart with `systemctl --user start anqr-linear-reconciler.service`.
+
 ## Runbook: duplicate execution suspected
 
 1. identify the issue identifier

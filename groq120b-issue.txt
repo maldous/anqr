@@ -1,0 +1,24 @@
+groq-openai-gpt-oss-120b tool schema issue
+2026-05-15 ~20:23:35
+
+Provider: groq-openai-gpt-oss-120b (model: openai/gpt-oss-120b)
+Error type: invalid_request_error / tool_use_failed
+
+Error message:
+  "Tool call validation failed: tool call validation failed: parameters for tool exec did not match schema:
+   errors: [missing properties: 'command', additionalProperties 'cmd' not allowed]"
+
+What happened:
+  The model called the `exec` tool using `cmd` as the parameter name instead of `command`.
+  Groq's hosted gpt-oss-120b emits tool calls with wrong parameter keys — it has learned
+  a different schema than what the symphony bridge advertises.
+
+Impact:
+  - Provider skipped in fallback cascade (non-retryable error)
+  - Fallback continued to openrouter-openai-gpt-oss-120b-free successfully
+
+Possible fix:
+  - Add a tool-call parameter normalizer that maps `cmd` → `command` for exec tool calls
+    before validation, OR
+  - Exclude groq-openai-gpt-oss-120b from the exec-tool tier so it never receives
+    tool schemas it can't reliably call

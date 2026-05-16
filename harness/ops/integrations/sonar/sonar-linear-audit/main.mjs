@@ -3,22 +3,15 @@ import {
   fetchAllSonarHotspots,
   fetchAllSonarDuplicationIssues,
   fetchSonarMeasures,
+  syncSonarToLinear,
+  syncSonarHotspotsToLinear,
+  syncSonarDuplicationsToLinear,
 } from "../../../lib/sonar-linear-sync.mjs";
-import {
-  findOpenIssuesByTitle,
-  updateIssue,
-  STATES,
-  createIssue,
-  LABELS,
-} from "../../linear/linear-client.mjs";
 import { sendNotification } from "../../../lib/notify.mjs";
 
 import { PROJECT_KEY } from "./project-key.mjs";
 import { SONAR_HOST } from "./sonar-host.mjs";
 import { SONAR_TOKEN } from "./sonar-token.mjs";
-import { CONSOLIDATED_ISSUE_TITLE } from "./consolidated-issue-title.mjs";
-import { resolveStaleLinearIssues } from "./resolve-stale-linear-issues.mjs";
-import { findOrCreateConsolidatedIssue } from "./find-or-create-consolidated-issue.mjs";
 import { logInfo, logError } from "./logger.mjs";
 
 export async function main() {
@@ -43,111 +36,63 @@ export async function main() {
 
   const hotspotCount = hotspots.length;
   const measSummary = measures.map((m) => `${m.metric}: ${m.value}`).join(", ");
+  const totalFindings = issues.length + hotspotCount + dupIssues.length;
   logInfo(
     `[sonar-audit] Issues: ${issues.length}, Hotspots: ${hotspotCount}, Duplications: ${dupIssues.length}, Measures: ${measSummary || "none"}`,
   );
 
-  // Resolve stale individual issues (from previous per-finding approach)
-  const issueKeys = issues.map((i) => i.key);
-  const hotspotKeys = hotspots.map((h) => h.key);
-  const dupKeys = dupIssues.map((d) => d.key);
+  // Sync individual issues (idempotent — same as post-commit path).
+  // Each sync internally handles: creation, promotion/requeue, and stale resolution.
+  const [issueResult, hotspotResult, dupResult] = await Promise.all([
+    syncSonarToLinear({
+      sonarIssues: issues,
+      projectKey: PROJECT_KEY,
+      sonarHost: SONAR_HOST,
+      priority: 1,
+      resolveStale: true,
+      requeueToReady: false,
+    }),
+    syncSonarHotspotsToLinear({
+      sonarHotspots: hotspots,
+      projectKey: PROJECT_KEY,
+      sonarHost: SONAR_HOST,
+      priority: 1,
+      resolveStale: true,
+      requeueToTodo: false,
+    }),
+    syncSonarDuplicationsToLinear({
+      sonarDupIssues: dupIssues,
+      projectKey: PROJECT_KEY,
+      sonarHost: SONAR_HOST,
+      priority: 2,
+      resolveStale: true,
+      requeueToTodo: false,
+    }),
+  ]);
 
-  const staleIssues = await resolveStaleLinearIssues(issueKeys, "[Sonar]", "");
-  const staleHotspots = await resolveStaleLinearIssues(hotspotKeys, "[SonarHotspot]", "hotspot-");
-  const staleDupCount = await resolveStaleLinearIssues(dupKeys, "[SonarDup]", "dup-");
+  const totalCreated =
+    issueResult.created.length +
+    hotspotResult.created.length +
+    dupResult.created.length;
+  const totalResolved =
+    issueResult.resolved.length +
+    hotspotResult.resolved.length +
+    dupResult.resolved.length;
 
-  const totalResolved = staleIssues.length + staleHotspots.length + staleDupCount.length;
-  if (totalResolved > 0) {
-    logInfo(
-      `[sonar-audit] Resolved stale: ${staleIssues.length} issues, ${staleHotspots.length} hotspots, ${staleDupCount.length} duplications`,
-    );
-  }
-
-  // Group issues by rule type for automatic issue creation
-  const byRule = {};
-  for (const issue of issues) {
-    const rule = issue.rule;
-    if (!byRule[rule]) byRule[rule] = [];
-    byRule[rule].push(issue);
-  }
-  const ruleGroups = Object.entries(byRule).sort((a, b) => b[1].length - a[1].length);
-
-  // Find existing grouped issues (by checking for "Sonar:" prefix)
-  const existingGrouped = await findOpenIssuesByTitle("Sonar:");
-  const existingByTitle = new Map(existingGrouped.map((i) => [i.title, i]));
-
-  // Find or create the consolidated summary issue
-  const existingSummary = await findOpenIssuesByTitle(CONSOLIDATED_ISSUE_TITLE);
-  const summaryIssue = await findOrCreateConsolidatedIssue(existingSummary);
-
-  // Create/update grouped issues for each rule
-  const groupedIssueIds = [];
-  for (const [rule, ruleIssues] of ruleGroups) {
-    const count = ruleIssues.length;
-    const title = `Sonar: ${rule} (${count})`;
-
-    // Include file:line per occurrence so agents can locate and fix each one
-    const MAX_LOCATIONS = 40;
-    const locations = ruleIssues.slice(0, MAX_LOCATIONS).map((i) => {
-      const file = i.component.split(":")[1] || i.component;
-      return `- \`${file}:${i.line || "?"}\` — ${i.message}`;
-    });
-    const moreCount = count > MAX_LOCATIONS ? count - MAX_LOCATIONS : 0;
-
-    const description = [
-      `**Rule:** ${rule}`,
-      `**Count:** ${count}`,
-      "",
-      `**Fix each occurrence listed below. Apply the same pattern to all locations.**`,
-      "",
-      `**Locations (${Math.min(count, MAX_LOCATIONS)} of ${count}):**`,
-      ...locations,
-      moreCount > 0 ? `\n_(+${moreCount} more — fix the listed ones first)_` : "",
-      "",
-      `SonarQube: ${SONAR_HOST}/rules?rule_keys=${rule}`,
-    ].join("\n");
-
-    let groupIssue;
-    if (existingByTitle.has(title)) {
-      groupIssue = existingByTitle.get(title);
-      await updateIssue(groupIssue.id, {
-        description,
-        priority: Math.max(2, 4 - Math.floor(Math.log2(count))),
-      });
-    } else {
-      groupIssue = await createIssue({
-        title,
-        description,
-        priority: Math.max(2, 4 - Math.floor(Math.log2(count))),
-        labelIds: [LABELS.harness, LABELS.hygiene],
-        stateId: STATES.todo,
-      });
-    }
-    groupedIssueIds.push(groupIssue.id);
-  }
-
-  // Update or create consolidated summary issue
-  const totalFindings = issues.length + hotspotCount + dupIssues.length;
   if (totalFindings > 0) {
-    const summaryDesc = [
-      `**Nightly Sonar Audit Summary**`,
-      "",
-      `| Rule | Count |`,
-      `|------|-------|`,
-      ...ruleGroups.slice(0, 20).map(([rule, arr]) => `| ${rule} | ${arr.length} |`),
-      ruleGroups.length > 20 ? `\n_...and ${ruleGroups.length - 20} more rules_` : "",
-      "",
-      `**Total:** ${issues.length} issues, ${hotspotCount} hotspots, ${dupIssues.length} duplications`,
-      `**Rules:** ${ruleGroups.length} unique rules`,
-      `**Dashboard:** ${SONAR_HOST}/dashboard?id=${PROJECT_KEY}`,
-    ].join("\n");
-
-    await updateIssue(summaryIssue.id, { description: summaryDesc, priority: 1 });
+    // Group by rule for notification summary only (no grouped issue creation)
+    const byRule = {};
+    for (const issue of issues) {
+      const rule = issue.rule;
+      if (!byRule[rule]) byRule[rule] = [];
+      byRule[rule].push(issue);
+    }
+    const ruleGroups = Object.entries(byRule).sort((a, b) => b[1].length - a[1].length);
 
     sendNotification({
       subject: `Nightly sonar: ${issues.length} issues (${ruleGroups.length} rules), ${hotspotCount} hotspots`,
       body: [
-        `**Grouped into ${ruleGroups.length} Linear issues**`,
+        `**Created ${totalCreated} new individual issues**`,
         "",
         `Top rules:`,
         ...ruleGroups.slice(0, 5).map(([rule, arr]) => `- ${rule}: ${arr.length}`),
@@ -161,23 +106,9 @@ export async function main() {
       severity: "critical",
     });
   } else {
-    // All findings resolved
-    if (summaryIssue) {
-      await updateIssue(summaryIssue.id, { stateId: STATES.done });
-    }
-    // Also close all grouped issues
-    for (const id of groupedIssueIds) {
-      await updateIssue(id, { stateId: STATES.done });
-    }
-
     sendNotification({
       subject: "Nightly sonar: all findings resolved",
-      body: [
-        `All ${ruleGroups.length} grouped issues resolved.`,
-        totalResolved > 0 ? `Also resolved ${totalResolved} stale individual issues.` : "",
-      ]
-        .filter(Boolean)
-        .join("\n"),
+      body: totalResolved > 0 ? `Resolved ${totalResolved} stale individual issues.` : "No findings.",
       severity: "info",
     });
   }
@@ -185,7 +116,9 @@ export async function main() {
   if (totalFindings === 0) {
     logInfo("[sonar-audit] Clean - no findings");
   } else {
-    logInfo(`[sonar-audit] Findings exist (${totalFindings}) - synced to Linear`);
+    logInfo(
+      `[sonar-audit] Findings exist (${totalFindings}) - synced ${totalCreated} new individual issues to Linear`,
+    );
   }
   process.exit(0);
 }
