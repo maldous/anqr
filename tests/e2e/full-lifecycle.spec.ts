@@ -23,6 +23,7 @@
 
 import { describe, it, expect, afterAll, beforeAll } from "vitest";
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import {
   deleteEvidence,
@@ -118,6 +119,30 @@ describe("Full lifecycle: Linear → AI → push to main → worktree sync", { t
         console.info(`[full-lifecycle] Cancelled stale e2e issue ${si.identifier}`);
       }
 
+      // Wait until wt1-4 are all idle in symphony state (no active issue claimed).
+      // This prevents a mid-execution issue from consuming the worktree slot the
+      // new test issue needs, causing a queue-contention timeout failure.
+      const STATE_PATH = path.join(
+        process.env.XDG_RUNTIME_DIR || "/run/user/1000",
+        "anqr-symphony-state/state.json",
+      );
+      const IDLE_POLL_MS = 3_000;
+      const IDLE_DEADLINE = Date.now() + 90_000;
+      while (Date.now() < IDLE_DEADLINE) {
+        try {
+          const state = JSON.parse(fs.readFileSync(STATE_PATH, "utf-8"));
+          const activeIssues = Object.values(state.issues || {}) as Array<{ state?: string }>;
+          const busy = activeIssues.filter(
+            (i) => i.state && !["done", "canceled", "failed"].includes(i.state),
+          );
+          if (busy.length === 0) break;
+          console.info(`[full-lifecycle] Waiting for ${busy.length} active issue(s) to finish…`);
+        } catch {
+          break; // state file unreadable — assume idle
+        }
+        await new Promise((r) => setTimeout(r, IDLE_POLL_MS));
+      }
+
       // Brief pause so Linear state settles before creating the new issue.
       await new Promise((r) => setTimeout(r, 2000));
 
@@ -128,7 +153,7 @@ describe("Full lifecycle: Linear → AI → push to main → worktree sync", { t
 
       issueId = issue.id;
       issueIdentifier = issue.identifier;
-    }, 30_000);
+    }, 150_000);
 
     it("Linear issue was created", () => {
       expect(issueIdentifier).toMatch(/^ANQ-\d+$/);

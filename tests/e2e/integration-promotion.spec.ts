@@ -101,6 +101,9 @@ describe("Symphony router — queue management", () => {
 
 describe("Symphony router — Linear trigger endpoint", () => {
   it("POST /v1/linear/trigger dispatches to a worktree", async () => {
+    // Clear any stale queue/state so the trigger isn't rejected with 409.
+    await fetch(`${SYMPHONY_ROUTER_URL}/v1/linear/queue`, { method: "DELETE" }).catch(() => {});
+
     const testId = `E2E-TRG-${Date.now()}`;
 
     const res = await fetch(`${SYMPHONY_ROUTER_URL}/v1/linear/trigger`, {
@@ -155,12 +158,18 @@ describe("Service fleet — all critical services healthy", () => {
     expect(body.status).toBe("ok");
   });
 
-  it("all 8 executor bridges are reachable", async () => {
-    for (let i = 1; i <= 8; i++) {
-      const res = await fetch(`http://127.0.0.1:${4320 + i}/health`);
-      expect(res.ok, `wt${i} health check failed`).toBe(true);
-      const body = await res.json();
-      expect(body.status).toBe("ok");
+  it("all 8 executor bridges are reachable", { timeout: 60_000 }, async () => {
+    const results = await Promise.all(
+      Array.from({ length: 8 }, async (_, i) => {
+        const port = 4321 + i;
+        const res = await fetch(`http://127.0.0.1:${port}/health`);
+        const body = await res.json();
+        return { wt: `wt${i + 1}`, ok: res.ok, status: body.status };
+      }),
+    );
+    for (const { wt, ok, status } of results) {
+      expect(ok, `${wt} health check failed`).toBe(true);
+      expect(status).toBe("ok");
     }
   });
 });
