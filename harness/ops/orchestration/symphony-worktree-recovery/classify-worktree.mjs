@@ -135,12 +135,15 @@ export function classifyWorktree(snapshot) {
       result.classification = "dirty_owned";
       result.confidence = 0.6;
       result.inferredOwner = inferred;
-      // ADR-0005: Recovery shall not publish code. Quarantine low-confidence
-      // dirty worktrees instead of auto-committing.
+      // ADR-0005: Recovery shall not publish code.
+      // High confidence → continue repair (runner picks it up as dirty_owned).
+      // Low confidence → reset_to_main. No active lease + no repairable finalization
+      // means no committed work at risk. The issue will be retried from scratch.
+      // Quarantine (manual intervention) is avoided because these are bridge artifacts.
       result.repairAction =
         result.confidence >= RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD
           ? "continue_repair"
-          : "quarantine";
+          : "reset_to_main";
     } else {
       result.classification = "dirty_orphaned";
       result.confidence = 0.3;
