@@ -28,3 +28,4 @@ harness/__pycache__
 review-all.zip
 review.zip
 reviewer.txt
+debug/cli.jsonl
