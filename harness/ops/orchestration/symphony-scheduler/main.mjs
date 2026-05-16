@@ -44,5 +44,7 @@ export async function main() {
     } catch (err) {
       logError(`[scheduler] Cycle error: ${err.message}`);
     }
+    // Modify shouldContinue based on some condition
+    shouldContinue = false; // Example: Set to false to stop the loop
   }
 }
