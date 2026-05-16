@@ -53,7 +53,7 @@ export function handleLinearTrigger(req, res) {
     let target;
     if (claimCheck.assignedWorktreeId) {
       const assignedId = Number.parseInt(claimCheck.assignedWorktreeId.replace(/^wt/, ""), 10);
-      target = !isNaN(assignedId) ? WORKTREES.find((w) => w.id === assignedId) || null : null;
+      target = !Number.isNaN(assignedId) ? WORKTREES.find((w) => w.id === assignedId) || null : null;
       if (!target) {
         logWarn(
           `[router] Assigned worktree ${claimCheck.assignedWorktreeId} not found in pool — rejecting dispatch`,
