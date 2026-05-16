@@ -1282,7 +1282,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         recordValidationResult(correlationId, {
           passed: validation.passed,
           typecheckPassed: validation.results?.find((r) => r.check === "typecheck")?.pass ?? null,
-          testsPassed: validation.results?.find((r) => r.check === "vitest")?.pass ?? null,
+          testsPassed: validation.results?.find((r) => r.check === "test-unit" || r.check === "vitest")?.pass ?? null,
           lintPassed:
             validation.results?.find((r) => r.check === "oxlint" || r.check === "lint")?.pass ??
             null,
@@ -1329,6 +1329,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
             stickyOwner: WORKTREE_ID,
             lastError: validationErrors,
             attempts: valRepairAttempts,
+            correlationId,
           },
           reason: "validation_failed_repairable",
         });
@@ -1477,6 +1478,7 @@ ${String(r.detail)}\n`,
             stickyOwner: WORKTREE_ID,
             lastError: "git commit failed repeatedly",
             attempts: commitAttempts,
+            correlationId,
             updatedAt: new Date().toISOString(),
           },
           reason: "commit_failed_blocked",
@@ -1503,6 +1505,7 @@ ${String(r.detail)}\n`,
             headSha: getRepoHeadSha("HEAD"),
             lastError: "git commit failed during finalization",
             attempts: commitAttempts,
+            correlationId,
             updatedAt: new Date().toISOString(),
           },
           reason: "commit_failed_repairable",
