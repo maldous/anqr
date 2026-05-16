@@ -658,6 +658,23 @@ describe("Scenario 4: Restart-safe resumption from durable state", () => {
     getStateFile = stateFileMod.getStateFile;
     getEvidencePath = evidencePathMod.getEvidencePath;
 
+    // Purge any stale E2E-RESTART-SAFE-* entries from prior runs that failed
+    // to clean up. Without this, getNextRepairableIssueForWorktree("wt8")
+    // may return a stale issue from a previous run instead of the current one.
+    try {
+      const { mutateState } = await import("../../harness/ops/core/symphony-state.mjs");
+      mutateState((store: Record<string, Record<string, unknown>>) => {
+        for (const key of Object.keys(store.issues || {})) {
+          if (key.startsWith("E2E-RESTART-SAFE-")) {
+            delete store.issues[key];
+          }
+        }
+        return store;
+      });
+    } catch {
+      /* best effort — state may not exist yet */
+    }
+
     // Verify wt8 is idle before we stop it
     try {
       const health = await fetch(`http://127.0.0.1:${EXECUTOR_PORT}/health`);
