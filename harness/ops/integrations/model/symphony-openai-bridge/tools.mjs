@@ -21,8 +21,6 @@ import { listDirectoryTool } from "./list-directory-tool.mjs";
 import { lookupAgentInfoTool } from "./lookup-agent-info-tool.mjs";
 import { memoryGetTool } from "./memory-get-tool.mjs";
 import { memorySearchTool } from "./memory-search-tool.mjs";
-import { proposeStrReplaceTool } from "./propose-str-replace-tool.mjs";
-import { proposeWriteFileTool } from "./propose-write-file-tool.mjs";
 import { readDocsTool } from "./read-docs-tool.mjs";
 import { readFileTool } from "./read-file-tool.mjs";
 import { readFilesTool } from "./read-files-tool.mjs";
@@ -162,46 +160,6 @@ export const tools = {
       ),
     }),
     execute: spawnAgentsTool,
-  }),
-  propose_str_replace: tool({
-    description: "Propose string replacements without applying them",
-    inputSchema: z.object({
-      path: z.string().describe("Path to the file"),
-      replacements: z.preprocess(
-        (val) => {
-          if (Array.isArray(val)) return val;
-          if (typeof val === "string") {
-            const trimmed = val.trim();
-            if (!trimmed) return [];
-            try {
-              const parsed = JSON.parse(trimmed);
-              return Array.isArray(parsed) ? parsed : [parsed];
-            } catch {
-              return [];
-            }
-          }
-          if (val && typeof val === "object") return [val];
-          return [];
-        },
-        z.array(
-          z.object({
-            old: z.string().describe("String to replace"),
-            new: z.string().describe("Replacement string"),
-            allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
-          }),
-        ),
-      ),
-    }),
-    execute: proposeStrReplaceTool,
-  }),
-  propose_write_file: tool({
-    description: "Propose creating or editing a file without applying",
-    inputSchema: z.object({
-      path: z.string().describe("Path to the file"),
-      instructions: z.string().describe("What the change is intended to do"),
-      content: z.string().describe("Edit snippet to apply"),
-    }),
-    execute: proposeWriteFileTool,
   }),
   add_message: tool({
     description: "Add a message to the conversation history",
