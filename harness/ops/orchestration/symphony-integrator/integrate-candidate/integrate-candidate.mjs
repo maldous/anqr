@@ -189,8 +189,25 @@ export async function integrateCandidate(issueIdentifier) {
       }
     }
 
-    git("push", "origin", "HEAD:main");
-    const pushedMainSha = git("rev-parse", "HEAD");
+    // Push with up to 3 retries for non-fast-forward races (another commit landed between
+    // our fetch and push). Re-fetch main and re-apply the cherry-pick each time.
+    let pushedMainSha;
+    for (let pushAttempt = 0; pushAttempt < 3; pushAttempt++) {
+      try {
+        git("push", "origin", "HEAD:main");
+        pushedMainSha = git("rev-parse", "HEAD");
+        break;
+      } catch (pushErr) {
+        if (pushAttempt === 2) throw pushErr;
+        logWarn(
+          `[integrator] Push rejected (attempt ${pushAttempt + 1}/3) — re-fetching main and re-cherry-picking`,
+        );
+        // Re-base the integration branch on the latest main and retry
+        git("fetch", "origin", "main");
+        git("checkout", "-B", "symphony/integration", "origin/main");
+        git("cherry-pick", headSha);
+      }
+    }
 
     const integrationMs = Date.now() - integrationStartMs;
     logInfo(
