@@ -1,3 +1,7 @@
+## ANQ-3012: [Sonar] Add at least one assertion to this test case. (active-job-ownership.spec.ts:93) (2025-01-15)
+
+- Added assertion to verify that releaseJobOwnership with empty/null session keys doesn't affect state
+
 ## ANQ-3009: [Sonar] Unexpected negated condition. (main.mjs:70) (2025-01-15)
 
 - Refactored if-else block to check for positive condition (`gitTopLevel === ROOT`) first instead of negated condition

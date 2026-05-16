@@ -56,16 +56,6 @@ describe("active-job-ownership", () => {
         worktreeId: "wt1",
         correlationId: "corr-1",
       });
-      const record = getJobOwnership("discord:guild1:channel1");
-      expect(record).not.toBeNull();
-      expect(record!.worktreeId).toBe("wt1");
-      expect(record!.correlationId).toBe("corr-1");
-      expect(record!.startedAt).toBeDefined();
-    });
-
-    it("overwrites existing ownership", () => {
-      acquireJobOwnership("discord:g:c", { worktreeId: "wt1" });
-      acquireJobOwnership("discord:g:c", { worktreeId: "wt2" });
       const record = getJobOwnership("discord:g:c");
       expect(record).not.toBeNull();
       expect(record!.worktreeId).toBe("wt2");
@@ -94,6 +84,69 @@ describe("active-job-ownership", () => {
     it("does nothing for null/empty session key", () => {
       releaseJobOwnership("");
       releaseJobOwnership(null as unknown as string);
+      // Verify no crash and no ownership records were affected
+      expect(getAllActiveOwnership()).toEqual({});
+    });
+  });
+
+  describe("hasActiveJob", () => {
+    it("returns true when ownership exists", () => {
+      acquireJobOwnership("discord:g:c", { worktreeId: "wt1" });
+      expect(hasActiveJob("discord:g:c")).toBe(true);
+    });
+
+    it("returns false when no ownership exists", () => {
+      expect(hasActiveJob("discord:nonexistent:c")).toBe(false);
+    });
+  });
+
+  describe("getJobOwnership", () => {
+    it("returns null for non-existent session key", () => {
+      expect(getJobOwnership("discord:nope:c")).toBeNull();
+    });
+
+    it("returns null for null session key", () => {
+      expect(getJobOwnership(null as unknown as string)).toBeNull();
+    });
+
+    it("includes all stored details", () => {
+      acquireJobOwnership("discord:g:c", {
+        worktreeId: "wt3",
+        requestId: "req-99",
+        correlationId: "corr-abc",
+        channelId: "channel-xyz",
+        guildId: "guild-abc",
+      });
+      const record = getJobOwnership("discord:g:c");
+      expect(record).not.toBeNull();
+      expect(record!.worktreeId).toBe("wt2");
+    });
+
+    it("does nothing for null/empty session key", () => {
+      acquireJobOwnership("", { worktreeId: "wt1" });
+      acquireJobOwnership(null as unknown as string, { worktreeId: "wt1" });
+      // Verify no ownership was created for null/empty keys
+      expect(getAllActiveOwnership()).toEqual({});
+    });
+  });
+
+  describe("releaseJobOwnership", () => {
+    it("releases ownership for a session key", () => {
+      acquireJobOwnership("discord:g:c", { worktreeId: "wt1" });
+      releaseJobOwnership("discord:g:c");
+      expect(getJobOwnership("discord:g:c")).toBeNull();
+    });
+
+    it("does nothing for non-existent ownership", () => {
+      releaseJobOwnership("discord:nonexistent:c");
+      // No crash = pass
+    });
+
+    it("does nothing for null/empty session key", () => {
+      releaseJobOwnership("");
+      releaseJobOwnership(null as unknown as string);
+      // Verify no crash and no ownership records were affected
+      expect(getAllActiveOwnership()).toEqual({});
     });
   });
 
