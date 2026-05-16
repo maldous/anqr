@@ -98,6 +98,38 @@
           }
         ]
       },
+      "discord-text": {
+        "baseUrl": "http://127.0.0.1:18792/v1",
+        "apiKey": "local-discord",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "discord/text",
+            "name": "Discord Text Router (wt5-6)",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "discord-voice": {
+        "baseUrl": "http://127.0.0.1:18793/v1",
+        "apiKey": "local-discord",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "discord/voice",
+            "name": "Discord Voice Router (wt7-8)",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          }
+        ]
+      },
       "symphony-bridge": {
         "baseUrl": "http://127.0.0.1:4319/v1",
         "apiKey": "local-symphony",
@@ -278,8 +310,9 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "symphony-bridge/symphony/main",
+        "primary": "discord-text/discord/text",
         "fallbacks": [
+          "discord-voice/discord/voice",
           "symphony-bridge/symphony/codex",
           "symphony-bridge/symphony/codebuff",
           "symphony-bridge/symphony/codebuff-bridge",
@@ -302,6 +335,8 @@
         "primary": "google/gemini-3-pro-image-preview"
       },
       "models": {
+        "discord-text/discord/text": {},
+        "discord-voice/discord/voice": {},
         "codebuff-bridge/codebuff/base": {},
         "symphony-bridge/symphony/main": {},
         "symphony-bridge/symphony/text": {},
@@ -327,7 +362,7 @@
     "list": [
       {
         "id": "main",
-        "model": "symphony-bridge/symphony/main",
+        "model": "discord-text/discord/text",
         "tools": {
           "alsoAllow": [
             "browser",
@@ -389,7 +424,7 @@
       },
       {
         "id": "voice",
-        "model": "symphony-bridge/symphony/main",
+        "model": "discord-voice/discord/voice",
         "tools": {
           "alsoAllow": [
             "browser",
