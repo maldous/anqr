@@ -1616,7 +1616,13 @@ ${String(r.detail)}\n`,
     }).trim();
 
     await runSonarPostCommit(issue.identifier);
-    await updateIssue(issue.id, { stateId: finalStateId });
+    // Only update Linear state if push failed — when push succeeded the integrator
+    // owns the issue and will mark it Done. Calling updateIssue here after a
+    // successful push creates a race: integrator marks Done, then runner resets to
+    // In Review seconds later.
+    if (!branchPush.ok) {
+      await updateIssue(issue.id, { stateId: finalStateId });
+    }
 
     // Record completion with latency tracking
     const latencyMs = Date.now() - issueStartMs;
