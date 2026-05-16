@@ -35,4 +35,6 @@ export { trackWatchdogTrigger } from "./track-watchdog-trigger.mjs";
 export { quarantineAndRestart } from "./quarantine-and-restart.mjs";
 export { checkService } from "./check-service.mjs";
 export { monitorLoop } from "./monitor-loop.mjs";
+export { consecutiveUnhealthyCount } from "./consecutive-unhealthy-count.mjs";
+export { CONSECUTIVE_UNHEALTHY_MAX } from "./consecutive-unhealthy-max.mjs";
 export { shutdown } from "./shutdown.mjs";

@@ -14,6 +14,8 @@ import { rapidRestartHistory } from "./rapid-restart-history.mjs";
 import { restartTimestamps } from "./restart-timestamps.mjs";
 import { quarantineAndRestart } from "./quarantine-and-restart.mjs";
 import { verifyAndNotifyRecovery } from "./verify-and-notify-recovery.mjs";
+import { consecutiveUnhealthyCount } from "./consecutive-unhealthy-count.mjs";
+import { CONSECUTIVE_UNHEALTHY_MAX } from "./consecutive-unhealthy-max.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
 export async function checkService(service) {
@@ -128,12 +130,33 @@ export async function checkService(service) {
     const health = await checkHealthEndpoint(service);
     const activeSince = getServiceActiveTime(serviceName);
     if (!health.healthy) {
+      // Track consecutive unhealthy checks
+      const prev = consecutiveUnhealthyCount.get(serviceName) || 0;
+      const count = prev + 1;
+      consecutiveUnhealthyCount.set(serviceName, count);
+
       logWarn(
-        `[watchdog] ⚠️ ${shortName}: Service active but unhealthy: ${health.reason}${activeSince ? ` (active since ${activeSince.toISOString()})` : ""}`,
+        `[watchdog] ⚠️ ${shortName}: Service active but unhealthy (consecutive: ${count}/${CONSECUTIVE_UNHEALTHY_MAX}): ${health.reason}${activeSince ? ` (active since ${activeSince.toISOString()})` : ""}`,
       );
-      // Not rolling back immediately - give it time to recover
-      // But log it for visibility
+
+      // If threshold exceeded, restart the hung service
+      if (count >= CONSECUTIVE_UNHEALTHY_MAX) {
+        logError(
+          `[watchdog] 🚨 ${shortName}: ${count} consecutive unhealthy checks — forcing restart`,
+        );
+        consecutiveUnhealthyCount.delete(serviceName);
+        await quarantineAndRestart(
+          serviceName,
+          shortName,
+          `hung service: ${count} consecutive unhealthy health checks`,
+        );
+        await verifyAndNotifyRecovery(serviceName, shortName);
+      }
     } else {
+      // Reset consecutive unhealthy count on success
+      if (consecutiveUnhealthyCount.has(serviceName)) {
+        consecutiveUnhealthyCount.delete(serviceName);
+      }
       logDebug(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"}) - ${health.reason}`);
     }
   }
