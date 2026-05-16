@@ -8,7 +8,7 @@ export async function execTool({ command, cwd }) {
     const result = execSync(command, {
       cwd: resolveRequestDir(cwd),
       encoding: "utf-8",
-      timeout: 60000,
+      timeout: 180_000,  // 3 min — safety net for npm test via run_terminal_command; agents should use run_tests tool instead (240s timeout)
       maxBuffer: 10 * 1024 * 1024, // 10MB
     });
     return { output: result, exitCode: 0 };
