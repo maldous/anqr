@@ -1,3 +1,7 @@
+## ANQ-3009: [Sonar] Unexpected negated condition. (main.mjs:70) (2025-01-15)
+
+- Refactored if-else block to check for positive condition (`gitTopLevel === ROOT`) first instead of negated condition
+
 ## ANQ-1810: [Sonar] Unexpected negated condition. (set-session-source.mjs:20) (2025-01-15)
 
 - Refactored if-else block to check for positive condition (`session`) first instead of negated condition

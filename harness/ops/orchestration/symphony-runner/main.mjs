@@ -67,12 +67,12 @@ export async function main() {
     }).trim();
     logDebug(`[worktree-verify] Git top-level: ${gitTopLevel}`);
 
-    if (gitTopLevel !== ROOT) {
+    if (gitTopLevel === ROOT) {
+      logDebug(`[worktree-verify] ✓ git top-level matches ROOT`);
+    } else {
       logWarn(
         `[worktree-verify] ⚠️ INVARIANT VIOLATION: git top-level (${gitTopLevel}) !== ROOT (${ROOT})`,
       );
-    } else {
-      logDebug(`[worktree-verify] ✓ git top-level matches ROOT`);
     }
 
     // For non-main worktrees, verify we are NOT running inside the control repo
