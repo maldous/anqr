@@ -76,6 +76,9 @@ describe("request-rehydration", () => {
     it("does nothing for null/empty requestId", () => {
       persistInflightRequest("", { sessionKey: "test" });
       persistInflightRequest(null as unknown as string, { sessionKey: "test" });
+      // Verify no records were created for invalid request IDs
+      expect(getInflightRequest("")).toBeNull();
+      expect(getInflightRequest(null as unknown as string)).toBeNull();
     });
   });
 
