@@ -550,6 +550,104 @@ export const tools = {
   }),
 
   // ========================================================================
+  // Validation tools — mandatory pre-completion checks that the runner
+  // requires before accepting task_complete. Agents MUST run these after
+  // making changes and before calling task_complete.
+  // ========================================================================
+
+  run_typecheck: tool({
+    description:
+      "Run the TypeScript compiler (tsc --noEmit) to check for type errors. Always run this after making changes and fix any errors before calling task_complete.",
+    inputSchema: z.object({}),
+    execute: async () => {
+      const cwd = getCurrentRequestCwd();
+      try {
+        const result = execSync(
+          "( flock -w 120 9 || exit 1; npx tsc --noEmit ) 9>/tmp/anqr-typecheck.lock",
+          { cwd, encoding: "utf-8", timeout: 240_000, maxBuffer: 10 * 1024 * 1024 },
+        );
+        return { output: result, exitCode: 0 };
+      } catch (error) {
+        return { output: error.stdout || error.message, exitCode: error.status || 1, error: error.message };
+      }
+    },
+  }),
+  run_lint: tool({
+    description:
+      "Run the linter (oxlint) to check for lint errors and warnings. Always run this after making changes and fix any errors or warnings before calling task_complete.",
+    inputSchema: z.object({}),
+    execute: async () => {
+      const cwd = getCurrentRequestCwd();
+      try {
+        const result = execSync("npx oxlint -c oxlint.json src/ packages/ apps/ harness/", {
+          cwd,
+          encoding: "utf-8",
+          timeout: 60_000,
+          maxBuffer: 10 * 1024 * 1024,
+        });
+        return { output: result, exitCode: 0 };
+      } catch (error) {
+        return { output: error.stdout || error.message, exitCode: error.status || 1, error: error.message };
+      }
+    },
+  }),
+  run_cspell: tool({
+    description:
+      'Run the spell checker (cspell) on source files. If a domain-specific word is flagged, add it to the "words" array in cspell.json. Always run this after making changes and fix any issues before calling task_complete.',
+    inputSchema: z.object({}),
+    execute: async () => {
+      const cwd = getCurrentRequestCwd();
+      try {
+        const result = execSync("npx cspell --no-progress --no-must-find-files", {
+          cwd,
+          encoding: "utf-8",
+          timeout: 60_000,
+          maxBuffer: 10 * 1024 * 1024,
+        });
+        return { output: result, exitCode: 0 };
+      } catch (error) {
+        return { output: error.stdout || error.message, exitCode: error.status || 1, error: error.message };
+      }
+    },
+  }),
+  run_ast_density: tool({
+    description:
+      "Run the AST density audit on source files. Each file should have at most 1 top-level declaration (function, class, type, or const). If a file exceeds the threshold, split it into smaller files. Always run this after making changes and fix any violations before calling task_complete.",
+    inputSchema: z.object({}),
+    execute: async () => {
+      const cwd = getCurrentRequestCwd();
+      try {
+        const result = execSync("node harness/audit-ast-density.mjs --threshold 1", {
+          cwd,
+          encoding: "utf-8",
+          timeout: 120_000,
+          maxBuffer: 10 * 1024 * 1024,
+        });
+        return { output: result, exitCode: 0 };
+      } catch (error) {
+        return { output: error.stdout || error.message, exitCode: error.status || 1, error: error.message };
+      }
+    },
+  }),
+  run_tests: tool({
+    description:
+      "Run the unit test suite (vitest). Always run this after making changes and fix any failures before calling task_complete.",
+    inputSchema: z.object({}),
+    execute: async () => {
+      const cwd = getCurrentRequestCwd();
+      try {
+        const result = execSync(
+          "( flock -w 120 9 || exit 1; NODE_OPTIONS='--no-experimental-webstorage' npx vitest run --maxWorkers=1 --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts' --exclude 'tests/unit/qr-generator-perf-profile.spec.ts' ) 9>/tmp/anqr-vitest.lock",
+          { cwd, encoding: "utf-8", timeout: 240_000, maxBuffer: 10 * 1024 * 1024 },
+        );
+        return { output: result, exitCode: 0 };
+      } catch (error) {
+        return { output: error.stdout || error.message, exitCode: error.status || 1, error: error.message };
+      }
+    },
+  }),
+
+  // ========================================================================
   // Codebuff-native aliases (critical — these are the canonical tool names
   // used by the Codebuff SDK and many models trained on Codebuff docs)
   // ========================================================================

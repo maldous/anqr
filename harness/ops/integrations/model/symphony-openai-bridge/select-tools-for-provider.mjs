@@ -60,6 +60,11 @@ const STANDARD_TOOL_NAMES = new Set([
   "create_plan",
   "shell",
   "message",
+  "run_typecheck",
+  "run_lint",
+  "run_cspell",
+  "run_ast_density",
+  "run_tests",
 ]);
 
 export function selectToolsForProvider(effectiveMaxTokens) {
