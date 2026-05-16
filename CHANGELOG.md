@@ -10,3 +10,7 @@
 
 - Added an assertion to verify that the handler correctly extracts the identifier from the header in the test case at line 122 in linear-execute-request.spec.ts
 
+
+## ANQ-1813: [Sonar] Extract this nested ternary operation into an independent statement. (audit-evidence-completeness.mjs:25) (2025-01-15)
+
+- Refactored nested ternary operation into clear if-else chain for determining highest complete evidence level

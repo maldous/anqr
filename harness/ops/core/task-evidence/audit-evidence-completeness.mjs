@@ -20,13 +20,16 @@ export function auditEvidenceCompleteness(correlationId) {
   const standard = validateEvidenceCompleteness(correlationId, "standard");
   const full = validateEvidenceCompleteness(correlationId, "full");
 
-  const highestComplete = full.complete
-    ? "full"
-    : standard.complete
-      ? "standard"
-      : minimal.complete
-        ? "minimal"
-        : "none";
+  let highestComplete;
+  if (full.complete) {
+    highestComplete = "full";
+  } else if (standard.complete) {
+    highestComplete = "standard";
+  } else if (minimal.complete) {
+    highestComplete = "minimal";
+  } else {
+    highestComplete = "none";
+  }
 
   return {
     correlationId,
