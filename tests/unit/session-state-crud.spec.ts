@@ -227,6 +227,8 @@ describe("session-state CRUD", () => {
     it("does nothing for null/empty sessionId", () => {
       expect(() => clearSessionMessages(null as unknown as string)).not.toThrow();
       expect(() => clearSessionMessages("")).not.toThrow();
+      expect(getSessionMessages(null as unknown as string)).toBeNull();
+      expect(getSessionMessages("")).toBeNull();
     });
   });
 
