@@ -85,20 +85,24 @@ export async function main() {
   for (const [rule, ruleIssues] of ruleGroups) {
     const count = ruleIssues.length;
     const title = `Sonar: ${rule} (${count})`;
-    const files = [...new Set(ruleIssues.map((i) => i.component.split(":")[1]))].slice(0, 15);
-    const uniqueFiles = [...new Set(ruleIssues.map((i) => i.component))].size;
-    const moreFiles =
-      files.length < uniqueFiles ? `\n+${uniqueFiles - files.length} more files` : "";
+
+    // Include file:line per occurrence so agents can locate and fix each one
+    const MAX_LOCATIONS = 40;
+    const locations = ruleIssues.slice(0, MAX_LOCATIONS).map((i) => {
+      const file = i.component.split(":")[1] || i.component;
+      return `- \`${file}:${i.line || "?"}\` — ${i.message}`;
+    });
+    const moreCount = count > MAX_LOCATIONS ? count - MAX_LOCATIONS : 0;
 
     const description = [
       `**Rule:** ${rule}`,
       `**Count:** ${count}`,
       "",
-      `**Affected files (${uniqueFiles}):`,
-      ...files.map((f) => `- ${f}`),
-      moreFiles,
+      `**Fix each occurrence listed below. Apply the same pattern to all locations.**`,
       "",
-      `> ${ruleIssues[0].message}`,
+      `**Locations (${Math.min(count, MAX_LOCATIONS)} of ${count}):**`,
+      ...locations,
+      moreCount > 0 ? `\n_(+${moreCount} more — fix the listed ones first)_` : "",
       "",
       `SonarQube: ${SONAR_HOST}/rules?rule_keys=${rule}`,
     ].join("\n");
