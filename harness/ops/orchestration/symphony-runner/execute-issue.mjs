@@ -76,6 +76,7 @@ import { getRepoHeadSha } from "./get-repo-head-sha.mjs";
 import { getRunnerProvider } from "./get-runner-provider.mjs";
 import { gitCommit } from "./git-commit.mjs";
 import { gitDiffNames } from "./git-diff-names.mjs";
+import { getWorkingTreeStatus } from "./get-working-tree-status.mjs";
 import { gitDiffStat } from "./git-diff-stat.mjs";
 import { gitPushWorktreeBranch } from "./git-push-worktree-branch.mjs";
 import { gitRevert } from "./git-revert.mjs";
@@ -545,6 +546,21 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         `${agentResult.summary} ${agentResult.error || ""}`,
       );
       const failureMsg = agentResult.error || agentResult.summary || "Unknown failure";
+
+      // Preserve dirty working tree for retry: when the agent fails after making
+      // file changes, transition the worktree to dirty_owned so the next runner
+      // invocation keeps the changes instead of auto-resetting them.
+      // Without this, the runner auto-resets on the next cycle, throwing away
+      // the agent's partial work and creating a retry loop with no progress.
+      const hasDirtyFiles = getWorkingTreeStatus().blocked.length > 0;
+      if (hasDirtyFiles && failureKind !== "local_busy") {
+        transitionWorktree(WORKTREE_ID, "dirty_owned", {
+          reason: "agent_failed_with_changes",
+          issueIdentifier: issue.identifier,
+          failureKind,
+          updatedAt: new Date().toISOString(),
+        });
+      }
 
       if (failureKind === "local_busy") {
         const cooldownMs = 2 * 60 * 1000; // Short cooldown for local busy
