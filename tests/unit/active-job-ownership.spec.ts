@@ -74,7 +74,8 @@ describe("active-job-ownership", () => {
     it("does nothing for null/empty session key", () => {
       acquireJobOwnership("", { worktreeId: "wt1" });
       acquireJobOwnership(null as unknown as string, { worktreeId: "wt1" });
-      // No crash = pass
+      // Verify no ownership was created for null/empty keys
+      expect(getAllActiveOwnership()).toEqual({});
     });
   });
 
