@@ -639,10 +639,12 @@ export const server = http.createServer(async (req, res) => {
 
       // Stamp source identity on the session record for durable ownership tracking.
       if (effectiveSessionKey) {
-        const fallbackSourceType = canonicalSessionKey?.startsWith("linear:") ? "linear" : "header";
-        const sourceType = canonicalSessionKey?.startsWith("discord:")
-          ? "discord"
-          : fallbackSourceType;
+        let sourceType = "header";
+        if (canonicalSessionKey?.startsWith("discord:")) {
+          sourceType = "discord";
+        } else if (canonicalSessionKey?.startsWith("linear:")) {
+          sourceType = "linear";
+        }
         setSessionSource(effectiveSessionKey, {
           type: sourceType,
           discordGuildId: req.headers["x-discord-guild-id"] || undefined,
