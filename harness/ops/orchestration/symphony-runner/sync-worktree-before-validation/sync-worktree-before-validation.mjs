@@ -32,7 +32,7 @@ export function syncWorktreeBeforeValidation(worktreePath) {
     try {
       git("rebase origin/main", worktreePath);
       logInfo(`${label} Rebase onto origin/main succeeded`);
-    } catch (rebaseErr) {
+    } catch (error_) {
       logWarn(`${label} Rebase failed — aborting and keeping current state`);
       try {
         git("rebase --abort", worktreePath);
@@ -52,7 +52,7 @@ export function syncWorktreeBeforeValidation(worktreePath) {
         synced: false,
         method: "rebase-failed",
         mainSha,
-        error: rebaseErr.message,
+        error: error_.message,
       };
     }
 

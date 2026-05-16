@@ -56,9 +56,9 @@ describe("active-job-ownership", () => {
         worktreeId: "wt1",
         correlationId: "corr-1",
       });
-      const record = getJobOwnership("discord:g:c");
+      const record = getJobOwnership("discord:guild1:channel1");
       expect(record).not.toBeNull();
-      expect(record!.worktreeId).toBe("wt2");
+      expect(record!.worktreeId).toBe("wt1");
     });
 
     it("does nothing for null/empty session key", () => {
@@ -119,7 +119,11 @@ describe("active-job-ownership", () => {
       });
       const record = getJobOwnership("discord:g:c");
       expect(record).not.toBeNull();
-      expect(record!.worktreeId).toBe("wt2");
+      expect(record!.worktreeId).toBe("wt3");
+      expect(record!.requestId).toBe("req-99");
+      expect(record!.correlationId).toBe("corr-abc");
+      expect(record!.channelId).toBe("channel-xyz");
+      expect(record!.guildId).toBe("guild-abc");
     });
 
     it("does nothing for null/empty session key", () => {
