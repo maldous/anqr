@@ -275,6 +275,14 @@ export async function main() {
           finalizationState: fin.state,
           reason: fin.lastError || "git commit failed",
         });
+      } else if (fin?.state === "completed_no_changes") {
+        writeRunnerOutcome({
+          result: "completed_no_changes",
+          issueIdentifier: issue.identifier,
+          finalizationState: fin.state,
+          reason: fin.reason || "agent assessed complete",
+          toolCalls: fin.toolCalls,
+        });
       } else if (fin) {
         writeRunnerOutcome({
           result: fin.state,

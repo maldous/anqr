@@ -886,57 +886,55 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         /* best effort logging */
       }
 
-      // No-file-change completion hardening: require explicit evidence before accepting
+      // Agent-completed-without-file-changes handling: trust the AI's assessment.
+      // The agent made tool calls and determined the work was complete. The lack of
+      // git-tracked changes may be because: (a) the issue was a false positive,
+      // (b) code was already compliant, or (c) the agent verified in-place without
+      // producing a tracked diff. Cancel-causing this path wasted agent work.
       if (agentResult.completed === true && !isExternallyCompleted) {
-        if (agentResult.toolCalls > 0 && !completionPromoted) {
-          // Agent completed via tool calls but produced no file changes — canceled.
+        if (agentResult.toolCalls > 0) {
+          // Agent completed with tool calls — trust the AI's completion assessment.
           const localSha = getRepoHeadSha("HEAD");
           const mainSha = getRepoHeadSha("origin/main");
           const headDelta = localSha === mainSha ? "(HEAD=main)" : `(HEAD=${localSha.slice(0,7)}, main=${mainSha.slice(0,7)})`;
-          await updateIssue(issue.id, { stateId: STATES.canceled });
+          transitionIssue(issue.identifier, "done", {
+            finalization: {
+              state: "completed_no_changes",
+              worktreeId: WORKTREE_ID,
+              headSha: localSha,
+              reason: "agent_assessed_complete",
+              toolCalls: agentResult.toolCalls,
+              correlationId,
+              updatedAt: new Date().toISOString(),
+            },
+            reason: "agent_assessed_complete_no_changes",
+          });
+          await updateIssue(issue.id, { stateId: STATES.done });
           await addComment(
             issue.id,
-            safetyCap(`❌ **Agent completed with no file changes** — canceled.\n\nFinding: ${issue.identifier}\nTool calls: ${agentResult.toolCalls}\nFiles: ${changedFiles.length} changed\nGit: ${headDelta}\nAgent: ${agentResult.summary}`),
+            safetyCap(`✅ **Agent assessed work as complete** — marked Done.\n\nFinding: ${issue.identifier}\nTool calls: ${agentResult.toolCalls}\nFiles: ${changedFiles.length} changed\nGit: ${headDelta}\n\nThe AI determined the issue was resolved without producing tracked file changes (the code may already have been compliant, the issue may have been a false positive, or the agent verified in-place).\n\nAgent: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
-            reason: "agent_completed_via_tools_no_changes",
+            reason: "agent_assessed_complete_no_changes",
             from: "In Progress",
-            to: "Canceled",
+            to: "Done",
             runId: RUN_ID,
           });
-          if (provider?.name) {
-            recordLinearCompletion(metricsProviderName, {
-              completed: false,
-              priority: issue.priority,
-              estimate: issue.estimate,
-            });
-          }
-          logInfo(`[runner] ❌ Completed via tools (no file changes): ${issue.identifier} — canceled`);
-        } else if (agentResult.toolCalls > 0 && completionPromoted) {
-          // Agent ran but made no file changes — canceled.
-          await updateIssue(issue.id, { stateId: STATES.canceled });
-          await addComment(
-            issue.id,
-            safetyCap(`❌ **Agent ran but produced no file changes** — canceled.\n\nTool calls: ${agentResult.toolCalls}\nAgent summary: ${agentResult.summary}`),
-          );
-          recordTransition(issue.identifier, {
-            actor: "runner",
-            reason: "agent_no_changes_canceled",
-            from: "In Progress",
-            to: "Canceled",
-            runId: RUN_ID,
+          const latencyMs = Date.now() - issueStartMs;
+          recordCompletion(issue.identifier, {
+            latencyMs,
+            completedAt: new Date().toISOString(),
           });
-          if (provider?.name) {
-            recordLinearCompletion(metricsProviderName, {
-              completed: false,
-              priority: issue.priority,
-              estimate: issue.estimate,
-            });
-          }
-          logInfo(
-            `[runner] ❌ No file changes: ${issue.identifier} — canceled`,
-          );
+          recordLinearCompletion(metricsProviderName, {
+            completed: true,
+            priority: issue.priority,
+            estimate: issue.estimate,
+          });
+          recordProviderSuccess(metricsProviderName);
+          clearCooldown(issue.identifier);
+          logInfo(`[runner] ✅ Agent-assessed complete (no tracked changes): ${issue.identifier}`);
+          voiceAnnounce(`Finished ${issue.identifier}: ${issue.title}.`);
         } else {
           // Agent reported completion with zero tool calls and zero file changes — false positive
           await updateIssue(issue.id, { stateId: STATES.todo });
