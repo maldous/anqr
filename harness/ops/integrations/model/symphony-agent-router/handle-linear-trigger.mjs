@@ -52,7 +52,7 @@ export function handleLinearTrigger(req, res) {
     // is the sole worktree selection path. No fallback to local selection.
     let target;
     if (claimCheck.assignedWorktreeId) {
-      const assignedId = parseInt(claimCheck.assignedWorktreeId.replace(/^wt/, ""), 10);
+      const assignedId = Number.parseInt(claimCheck.assignedWorktreeId.replace(/^wt/, ""), 10);
       target = !isNaN(assignedId) ? WORKTREES.find((w) => w.id === assignedId) || null : null;
       if (!target) {
         logWarn(

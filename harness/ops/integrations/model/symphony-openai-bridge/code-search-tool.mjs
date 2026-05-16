@@ -17,7 +17,7 @@ export async function codeSearchTool({ pattern, flags, cwd, maxResults = 15 }) {
     const matches = lines.map((line) => {
       const match = line.match(/^([^:]+):(\d+):(.+)$/);
       if (match) {
-        return { file: match[1], line: parseInt(match[2]), content: match[3] };
+        return { file: match[1], line: Number.parseInt(match[2]), content: match[3] };
       }
       return { raw: line };
     });

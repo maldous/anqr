@@ -25,7 +25,7 @@ export function validateTimerSchedules(servicesDir) {
     if (match) {
       schedules.push({
         timer,
-        minutes: parseInt(match[1], 10) * 60 + parseInt(match[2], 10),
+        minutes: Number.parseInt(match[1], 10) * 60 + Number.parseInt(match[2], 10),
       });
     }
   }

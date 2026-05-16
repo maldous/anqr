@@ -86,7 +86,7 @@ setInterval(() => {
     // Resolve the assigned worktree from the scheduler's durable claim
     let target = null;
     if (claimCheck.assignedWorktreeId) {
-      const assignedId = parseInt(claimCheck.assignedWorktreeId.replace(/^wt/, ""), 10);
+      const assignedId = Number.parseInt(claimCheck.assignedWorktreeId.replace(/^wt/, ""), 10);
       target = !isNaN(assignedId) ? WORKTREES.find((w) => w.id === assignedId) || null : null;
       if (!target) {
         logWarn(

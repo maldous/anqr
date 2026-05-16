@@ -16,7 +16,7 @@ export function getSystemInfo() {
       });
       const match = meminfo.match(/(\d+)/);
       if (match) {
-        const memKB = parseInt(match[1], 10);
+        const memKB = Number.parseInt(match[1], 10);
         memFree = `${Math.round(memKB / 1024)} MB`;
       }
     }
