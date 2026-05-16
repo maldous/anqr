@@ -4,7 +4,7 @@ import { logProviderStats } from "../symphony-credit-gate.mjs";
 
 import { providerStatusCache } from "./provider-status-cache.mjs";
 import { server } from "./server.mjs";
-import { logInfo, logError } from "./logger.mjs";
+import { logInfo, logWarn, logError } from "./logger.mjs";
 
 export async function shutdown(signal) {
   logInfo(`\nReceived ${signal}, shutting down...`);
@@ -32,6 +32,33 @@ export async function shutdown(signal) {
   // stopDiscordMonitoring(); // REMOVED - function no longer exists
   // stopProcessingStatusUpdates(); // REMOVED - function no longer exists
   logProviderStats();
+
+  // Release active lease for this worktree so the scheduler can re-dispatch
+  // immediately rather than waiting for the 20-minute TTL to expire.
+  const worktreeId = process.env.ANQR_WORKTREE_ID;
+  if (worktreeId) {
+    try {
+      const { loadState, releaseLease, transitionWorktree } = await import(
+        "../../../core/symphony-state/index.mjs"
+      );
+      const state = loadState();
+      for (const [issueId, record] of Object.entries(state.issues || {})) {
+        const assignedWt = record?.assignment?.worktreeId || record?.finalization?.stickyOwner;
+        if (assignedWt === worktreeId && record?.lease) {
+          releaseLease(issueId);
+          logWarn(`[shutdown] Released active lease for ${issueId} on ${worktreeId}`);
+        }
+      }
+      const wtState = state.worktreeStates?.[worktreeId];
+      if (wtState?.state === "executing") {
+        transitionWorktree(worktreeId, "available", { assignedIssue: null });
+        logInfo(`[shutdown] Reset ${worktreeId} → available`);
+      }
+    } catch (err) {
+      logWarn(`[shutdown] Could not release lease on shutdown: ${err.message}`);
+    }
+  }
+
   server.close(() => {
     logInfo("Server closed");
   });
