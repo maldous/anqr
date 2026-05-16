@@ -11,9 +11,9 @@ export function loadState() {
   let raw;
   try {
     raw = fs.readFileSync(stateFile, "utf-8");
-  } catch (readErr) {
-    if (readErr.code === "ENOENT") return emptyStore();
-    throw readErr;
+  } catch (error_) {
+    if (error_.code === "ENOENT") return emptyStore();
+    throw error_;
   }
   const data = JSON.parse(raw);
   const store = emptyStore();
