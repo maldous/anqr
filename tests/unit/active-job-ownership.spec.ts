@@ -78,7 +78,8 @@ describe("active-job-ownership", () => {
 
     it("does nothing for non-existent ownership", () => {
       releaseJobOwnership("discord:nonexistent:c");
-      // No crash = pass
+      // Verify no ownership records were affected
+      expect(getAllActiveOwnership()).toEqual({});
     });
 
     it("does nothing for null/empty session key", () => {
@@ -143,7 +144,8 @@ describe("active-job-ownership", () => {
 
     it("does nothing for non-existent ownership", () => {
       releaseJobOwnership("discord:nonexistent:c");
-      // No crash = pass
+      // Verify no ownership records were affected
+      expect(getAllActiveOwnership()).toEqual({});
     });
 
     it("does nothing for null/empty session key", () => {
