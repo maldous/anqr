@@ -129,9 +129,20 @@ export async function checkKeyRotation({
   if (staleKeys.length > 0) parts.push(`${staleKeys.length} stale (>${maxAgeDays}d)`);
   if (rotatedKeys.length > 0) parts.push(`${rotatedKeys.length} rotated`);
 
-  const detail = pass
-    ? `${populatedKeys}/${entries.length} keys populated${staleKeys.length > 0 ? ` (${staleKeys.length} stale)` : ""}${rotatedKeys.length > 0 ? ` (${rotatedKeys.length} rotated)` : ""}`
-    : `Value issues: ${parts.join(", ")}`;
+  // Refactored detail string construction
+  let detail;
+  if (pass) {
+    let populatedDetail = `${populatedKeys}/${entries.length} keys populated`;
+    if (staleKeys.length > 0) {
+      populatedDetail += ` (${staleKeys.length} stale)`;
+    }
+    if (rotatedKeys.length > 0) {
+      populatedDetail += ` (${rotatedKeys.length} rotated)`;
+    }
+    detail = populatedDetail;
+  } else {
+    detail = `Value issues: ${parts.join(", ")}`;
+  }
 
   return {
     pass,
