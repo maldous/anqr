@@ -1,9 +1,16 @@
-import { getIssueDetail, listIssuesByState } from "../../linear-client.mjs";
+import { getIssueDetail, listIssuesByState, updateIssue, addComment, STATES } from "../../linear-client.mjs";
 import { QUEUE_STATES, SCHEDULER_MAX_DESIRED_WORK_FETCH } from "../../symphony-config.mjs";
-import { canExecuteIssue, leaseIsActive, getIssueState } from "../../symphony-state.mjs";
+import {
+  canExecuteIssue,
+  leaseIsActive,
+  getIssueState,
+  transitionIssue,
+  ISSUE_PHASES,
+  REPAIRABLE_FINALIZATION_STATES,
+} from "../../symphony-state.mjs";
 import { isDiscordSourced } from "../../core/discord-source.mjs";
 import { drainDesiredWork } from "./drain-desired-work.mjs";
-import { logDebug } from "./logger.mjs";
+import { logDebug, logInfo } from "./logger.mjs";
 
 /**
  * Return priority-sorted eligible Linear issues for scheduling.
@@ -56,6 +63,57 @@ export async function getEligibleWork(isFullPollCycle = false) {
   let pollIssues = [];
   if (needsFullPoll) {
     pollIssues = await listIssuesByState(QUEUE_STATES.readyStates);
+
+    // Step 4b: On full-poll cycles, also scan In Review for repairable issues
+    // that are stuck (validation_failed_repairable, branch_push_failed_repairable).
+    // Reset them to Todo in Linear and eligible locally so the scheduler can
+    // re-dispatch them on a fresh worktree.
+    try {
+      const inReviewIssues = await listIssuesByState(QUEUE_STATES.closeoutStates);
+      const recycled = [];
+      for (const issue of inReviewIssues) {
+        const state = getIssueState(issue.identifier);
+        const finState = state?.finalization?.state;
+        if (!finState || !REPAIRABLE_FINALIZATION_STATES.has(finState)) continue;
+
+        try {
+          // Reset locally FIRST — must succeed before touching Linear to avoid
+          // a state mismatch where Linear says Todo but local state is still stuck.
+          const reset = transitionIssue(issue.identifier, ISSUE_PHASES.eligible, {
+            finalization: null,
+            lease: null,
+            assignment: null,
+            cooldown_until: null,
+            reason: "scheduler_recycle_repairable",
+          });
+
+          if (!reset.ok) continue;
+
+          // Only update Linear after local reset confirmed
+          const detail = await getIssueDetail(issue.identifier).catch(() => null);
+          if (detail) {
+            await updateIssue(detail.id, { stateId: STATES.todo });
+            await addComment(
+              detail.id,
+              `\u{1F504} **Recycled by scheduler** — was In Review with ${finState}. Reset to Todo for fresh re-dispatch.`,
+            ).catch(() => {});
+            recycled.push(issue);
+          }
+          // If getIssueDetail fails, skip — don't recycle with a Linear/local mismatch
+        } catch {
+          // Best-effort: skip this issue if recycling fails
+        }
+      }
+      if (recycled.length > 0) {
+        logInfo(
+          `[scheduler] Recycled ${recycled.length} repairable In Review issues → Todo`,
+        );
+        // Add recycled issues to the poll results — they're now Todo and eligible
+        pollIssues.push(...recycled);
+      }
+    } catch {
+      // Best-effort: closeout-state poll failures don't block the cycle
+    }
   }
 
   // Step 5: Merge and deduplicate by identifier.
