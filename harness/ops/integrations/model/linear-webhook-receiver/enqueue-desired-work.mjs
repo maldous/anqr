@@ -4,6 +4,7 @@ import { logInfo } from "./logger.mjs";
 /**
  * Enqueue desired work into the durable Linear queue for the scheduler.
  * ADR-0002: Ingress writes desired work; it does NOT choose an executor.
+ * Returns true if work was enqueued, false if already existed in queue
  */
 export async function enqueueDesiredWork(processedEvent, correlationId) {
   const desiredWorkQueue = createDurableQueue("symphony-desired-work");
@@ -12,7 +13,7 @@ export async function enqueueDesiredWork(processedEvent, correlationId) {
   const existing = desiredWorkQueue.items();
   if (existing.some((item) => item.identifier === processedEvent.identifier)) {
     logInfo(`Issue ${processedEvent.identifier} already in desired-work queue — skipping`);
-    return true;
+    return false; // Now returns different values (false/true)
   }
 
   desiredWorkQueue.enqueue({
