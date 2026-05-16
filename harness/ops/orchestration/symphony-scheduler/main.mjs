@@ -36,7 +36,8 @@ export async function main() {
   }
 
   // Poll loop
-  while (true) {
+  let shouldContinue = true;
+  while (shouldContinue) {
     await new Promise((r) => setTimeout(r, SCHEDULER_POLL_INTERVAL_MS));
     try {
       await scheduleCycle();
