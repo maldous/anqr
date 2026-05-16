@@ -138,8 +138,12 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       logDebug(`[worktree-sync] Executing: git fetch origin main (cwd: ${ROOT})`);
       execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
 
-      logDebug(`[worktree-sync] Executing: git merge origin/main --ff-only (cwd: ${ROOT})`);
-      execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
+      // Use reset --hard instead of merge --ff-only: after cherry-pick integration the
+      // worktree branch diverges from origin/main (same changes, different SHA) so
+      // ff-only always fails. reset --hard is safe here because the working tree is
+      // clean at this point (dirty-check happens above via getWorkingTreeStatus).
+      logDebug(`[worktree-sync] Executing: git reset --hard origin/main (cwd: ${ROOT})`);
+      execFileSync("git", ["reset", "--hard", "origin/main"], { cwd: ROOT, stdio: "pipe" });
       logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} synced with main`);
       logDebug(`[worktree-sync] Sync successful`);
 
