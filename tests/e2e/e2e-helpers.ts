@@ -8,7 +8,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-export const LINEAR_WEBHOOK_URL = "http://127.0.0.1:18791";
+export const LINEAR_WEBHOOK_URL = `http://127.0.0.1:${process.env.LINEAR_WEBHOOK_PORT || "18795"}`;
 export const DISCORD_ROUTER_URL = "http://127.0.0.1:18790";
 export const SYMPHONY_ROUTER_URL = "http://127.0.0.1:4319";
 

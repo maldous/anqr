@@ -1437,6 +1437,33 @@ ${String(r.detail)}\n`,
       return "done";
     }
 
+    // If agent only modified CHANGELOG.md it made no substantive changes — treat as refusal/no-op.
+    const substantiveFiles = changedFiles.filter((f) => !f.replace(/^[MAD?!]\s+/, "").trim().endsWith("CHANGELOG.md"));
+    if (substantiveFiles.length === 0 && changedFiles.length > 0) {
+      gitRevert();
+      await updateIssue(issue.id, { stateId: STATES.canceled });
+      await addComment(
+        issue.id,
+        safetyCap(`❌ **Agent produced no substantive changes** (only CHANGELOG.md modified — likely a model refusal) — canceled.\n\nAgent summary: ${agentResult.summary}`),
+      );
+      recordTransition(issue.identifier, {
+        actor: "runner",
+        reason: "agent_only_changelog_canceled",
+        from: "In Progress",
+        to: "Canceled",
+        runId: RUN_ID,
+      });
+      if (provider?.name) {
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+      }
+      logInfo(`[runner] ❌ Only CHANGELOG.md changed (model refusal?): ${issue.identifier} — canceled`);
+      return "done";
+    }
+
     const diffStat = gitDiffStat();
     if (!gitCommit(issue.identifier, issue.title, agentResult.summary, changedFiles)) {
       const priorFinalization = getFinalizationState(issue.identifier);
