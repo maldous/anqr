@@ -48,6 +48,7 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
     const effectiveMaxTokens = Math.max(max_tokens, 10000);
 
     try {
+      try {
       const local = await tryLocalContext7({
         libraryTitle,
         topic,
@@ -73,9 +74,9 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
       logWarn(
         `⚠️ Context7 HTTP service not reachable — falling back to cloud docs (${err.message})`,
       );
-    }
+      }
 
-    const apiKey = process.env.CONTEXT7_API_KEY || process.env.DOCS_API_KEY;
+      const apiKey = process.env.CONTEXT7_API_KEY || process.env.DOCS_API_KEY;
 
     if (!apiKey) {
       return {
@@ -101,20 +102,20 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
       signal: AbortSignal.timeout(30000),
     });
 
-    if (!cloudResponse.ok) {
-      logError(`Context7 API returned ${cloudResponse.status}`);
-      throw new Error(`Context7 API returned ${cloudResponse.status}`);
-    }
+      if (!cloudResponse.ok) {
+        logError(`Context7 API returned ${cloudResponse.status}`);
+        throw new Error(`Context7 API returned ${cloudResponse.status}`);
+      }
 
-    const data = await cloudResponse.json();
-    return {
-      content: data.content || "",
-      library: libraryTitle,
-      topic,
-      source: "cloud-direct",
-      tokens: data.tokens || 0,
-    };
-  } catch (error) {
+      const data = await cloudResponse.json();
+      return {
+        content: data.content || "",
+        library: libraryTitle,
+        topic,
+        source: "cloud-direct",
+        tokens: data.tokens || 0,
+      };
+    } catch (error) {
     logWarn(`Documentation reading failed: ${error.message}`);
     return {
       error: error.message,
