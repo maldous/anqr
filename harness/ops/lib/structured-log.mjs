@@ -1,12 +1,5 @@
 import { createLogger } from "./logger.mjs";
-
-function stripNulls(obj) {
-  const result = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (value !== null && value !== undefined) result[key] = value;
-  }
-  return result;
-}
+import { stripNulls } from "./structured-log/strip-nulls.mjs";
 
 export function createStructuredLogger(service, defaultFields = {}) {
   const logger = createLogger(service);

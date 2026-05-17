@@ -1,10 +1,5 @@
 import { loadState } from "./load-state.mjs";
-
-function classifyBucket(state, summary) {
-  if (state === "dirty_owned" || state === "dirty_orphaned") return "dirty";
-  if (summary[state] === undefined) return "unknown";
-  return state;
-}
+import { classifyBucket } from "./get-fleet-snapshot/classify-bucket.mjs";
 
 export function getFleetSnapshot() {
   const store = loadState();

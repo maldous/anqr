@@ -4,23 +4,14 @@ import {
   recordQuarantine,
   releaseLease,
   leaseIsActive,
-  loadState,
 } from "../../../symphony-state.mjs";
 import { RECOVERY_OWNERSHIP_CONFIDENCE_THRESHOLD } from "../../../symphony-config.mjs";
 import { getWorktreePath, PROJECT_ROOT } from "../../../core/worktree-config.mjs";
 import { execFileSync } from "node:child_process";
 import { sendDiscordEmbed } from "../../../integrations/notifications/openclaw-discord.mjs";
 import { buildEvidence } from "./build-evidence.mjs";
+import { findActiveIssueForWorktree } from "./execute-repair/find-active-issue-for-worktree.mjs";
 import { logInfo, logWarn } from "../logger.mjs";
-
-function findActiveIssueForWorktree(worktreeId) {
-  const store = loadState();
-  for (const [identifier, record] of Object.entries(store.issues || {})) {
-    if (record?.assignment?.worktreeId !== worktreeId) continue;
-    if (record?.lease && leaseIsActive({ lease: record.lease })) return identifier;
-  }
-  return null;
-}
 
 export async function executeRepair(worktreeId, classification) {
   const { repairAction, inferredOwner } = classification;

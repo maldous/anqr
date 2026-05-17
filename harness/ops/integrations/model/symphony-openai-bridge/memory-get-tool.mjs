@@ -4,12 +4,7 @@ import fs from "node:fs";
 import { getCurrentRequestCwd } from "./get-current-request-cwd.mjs";
 import { resolveRequestPath } from "./resolve-request-path.mjs";
 import { logError } from "./logger.mjs";
-
-function resolveKnownFileName(rawName, validFiles) {
-  if (validFiles.includes(rawName)) return rawName;
-  const basename = path.basename(rawName);
-  return validFiles.includes(basename) ? basename : null;
-}
+import { resolveKnownFileName } from "./memory-get-tool/resolve-known-file-name.mjs";
 
 /** @param {{ file?: string, path?: string, from?: number, lines?: number }} params */
 export async function memoryGetTool({

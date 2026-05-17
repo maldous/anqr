@@ -1,12 +1,8 @@
 import { knownToolNames } from "./known-tool-names.mjs";
+import { parsePositiveInteger } from "./estimate-tool-overhead-tokens/parse-positive-integer.mjs";
 
 export const TOOL_SCHEMA_TOKENS_PER_TOOL = 120;
 export const TOOL_SCHEMA_FIXED_OVERHEAD = 800;
-
-function parsePositiveInteger(value) {
-  const parsed = Number.parseInt(String(value || ""), 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-}
 
 export function estimateToolOverheadTokens(options = {}) {
 

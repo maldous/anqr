@@ -12,11 +12,7 @@ import { getHealthyLinearCapacity } from "../../../orchestration/linear-reconcil
 import { logWarn, logError } from "../logger.mjs";
 import { pad } from "./pad.mjs";
 import { hasActiveCooldown } from "./has-active-cooldown.mjs";
-
-function resolveWorktreeStatus(wt) {
-  if (!wt.healthy) return wt.state;
-  return wt.executing ? "executing" : wt.state;
-}
+import { resolveWorktreeStatus } from "./resolve-worktree-status.mjs";
 
 export async function main() {
   if (!process.env.LINEAR_API_KEY) {

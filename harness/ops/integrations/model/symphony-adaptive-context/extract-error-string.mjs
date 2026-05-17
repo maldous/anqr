@@ -1,22 +1,5 @@
-function sanitizeText(value) {
-  return String(value || "")
-    .replaceAll(/\s+/g, " ")
-    .trim();
-}
-
-function summarizeResponseBody(body) {
-  if (!body) return "";
-  if (typeof body === "string") {
-    return sanitizeText(body).slice(0, 160);
-  }
-  if (typeof body === "object") {
-    const message =
-      body.message || body.error?.message || body.error || body.detail || body.reason;
-    if (message) return sanitizeText(message).slice(0, 160);
-    return `[responsebody:${Object.keys(body).slice(0, 8).join(",")}]`;
-  }
-  return sanitizeText(body).slice(0, 160);
-}
+import { sanitizeText } from "./extract-error-string/sanitize-text.mjs";
+import { summarizeResponseBody } from "./extract-error-string/summarize-response-body.mjs";
 
 export function extractErrorString(err) {
   const parts = [];

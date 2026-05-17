@@ -4,15 +4,7 @@ import { assertMutationContext } from "./assert-mutation-context.mjs";
 import { callLLM } from "./call-llm.mjs";
 import { executeTool } from "./execute-tool.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
-
-const PLANNING_ACTION_RE = /\blet me (understand|read|check|analyze|review)\b/i;
-const PLANNING_INTENT_RE = /\bI('ll| will) (start by|need to|first)\b/i;
-const PLANNING_HERE_RE = /\bhere('s| is) my plan\b/i;
-const PLANNING_SECTION_RE = /\b(steps|approach|thinking|analyzing|reviewing):\b/i;
-
-function isPlanningText(text) {
-  return PLANNING_ACTION_RE.test(text) || PLANNING_INTENT_RE.test(text) || PLANNING_HERE_RE.test(text) || PLANNING_SECTION_RE.test(text);
-}
+import { isPlanningText } from "./run-tool-loop/is-planning-text.mjs";
 
 export async function runToolLoop({
   provider,

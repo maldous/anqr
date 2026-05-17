@@ -1,8 +1,4 @@
-function buildToolTag(event) {
-  if (event.toolSupportHint) return ` [tools:${event.toolSupportHint}]`;
-  if (event.toolCapable) return " [tools]";
-  return "";
-}
+import { buildToolTag } from "./make-provider-probe-progress-callback/build-tool-tag.mjs";
 
 export function makeProviderProbeProgressCallback(state = {}) {
   const total = state.total || 0;

@@ -18,8 +18,7 @@ import { extractToolProbeAnswer } from "./extract-tool-probe-answer.mjs";
 import { classifyToolProbeErrorOutcome } from "./classify-tool-probe-error-outcome.mjs";
 import { providerToolSupportHint } from "./provider-tool-support-hint.mjs";
 import { probeMistralToolCapabilityViaHttp } from "./probe-mistral-tool-capability-via-http.mjs";
-
-function shouldWarnForStatus(status) {
+import { shouldWarnForStatus } from "./probe-tool-capability-for-provider/should-warn-for-status.mjs";
   return !new Set([
     "non-capable-rejected",
     "failed-function-call",

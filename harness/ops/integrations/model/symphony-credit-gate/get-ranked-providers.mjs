@@ -11,25 +11,8 @@ import { isProviderToolConfirmed } from "./is-provider-tool-confirmed.mjs";
 import { loadProbeResults } from "./load-probe-results.mjs";
 import { loadStats } from "./load-stats.mjs";
 import { shouldSkipProviderFromCache } from "./should-skip-provider-from-cache.mjs";
-
-function sortRankedEntries(a, b) {
-  const scoreA = typeof a.score === "number" ? a.score : Number.NEGATIVE_INFINITY;
-  const scoreB = typeof b.score === "number" ? b.score : Number.NEGATIVE_INFINITY;
-  return (
-    scoreB - scoreA ||
-    Number(b.toolConfirmed) - Number(a.toolConfirmed) ||
-    (b.selections || 0) - (a.selections || 0) ||
-    a.name.localeCompare(b.name)
-  );
-}
-
-function sortPendingEntries(a, b) {
-  return (
-    Number(b.toolConfirmed) - Number(a.toolConfirmed) ||
-    (b.selections || 0) - (a.selections || 0) ||
-    a.name.localeCompare(b.name)
-  );
-}
+import { sortRankedEntries } from "./get-ranked-providers/sort-ranked-entries.mjs";
+import { sortPendingEntries } from "./get-ranked-providers/sort-pending-entries.mjs";
 
 export function getRankedProviders(options = {}) {
 

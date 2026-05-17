@@ -19,13 +19,10 @@ import {
   setToolProbeRetryScheduled,
 } from "./tool-probe-retry-scheduled.mjs";
 import { logDebug, logError } from "./logger.mjs";
+import { providerFamilyKey } from "./probe-all-tool-capability/provider-family-key.mjs";
 
 const TOOL_PROBE_MAX_UNKNOWN_PROVIDERS_PER_CYCLE = 12;
 const TOOL_PROBE_MAX_PER_PROVIDER_FAMILY = 2;
-
-function providerFamilyKey(providerDef) {
-  return providerDef.baseProviderName || providerDef.name;
-}
 
 export async function probeAllToolCapability(options = {}) {
   function rankIndexByName() {

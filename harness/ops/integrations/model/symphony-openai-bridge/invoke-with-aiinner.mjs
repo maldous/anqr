@@ -28,13 +28,9 @@ import { sleep } from "./sleep.mjs";
 import { selectToolsForProvider } from "./select-tools-for-provider.mjs";
 import { trackFileChange } from "./track-file-change.mjs";
 import { unwrapAIError } from "./unwrap-aierror.mjs";
-function resolveFailureClass(hasErrors, finishReason) {
-  if (hasErrors) return "stream_error";
-  if (finishReason === "tool-calls") return "step_limit_reached";
-  return null;
-}
 
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
+import { resolveFailureClass } from "./invoke-with-aiinner/resolve-failure-class.mjs";
 
 export async function invokeWithAIInner(provider, messages, options = {}) {
   const { stream = false, onChunk } = options;

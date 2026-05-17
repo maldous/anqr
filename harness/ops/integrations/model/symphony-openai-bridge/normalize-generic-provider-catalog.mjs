@@ -1,16 +1,6 @@
 import { readGenericProviderToolSupport } from "./read-generic-provider-tool-support.mjs";
-
-function resolveRows(payload) {
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.models)) return payload.models;
-  return Array.isArray(payload) ? payload : [];
-}
-
-function resolveSupportedParams(entry) {
-  if (Array.isArray(entry?.supported_parameters)) return entry.supported_parameters;
-  if (Array.isArray(entry?.supportedParameters)) return entry.supportedParameters;
-  return [];
-}
+import { resolveRows } from "./normalize-generic-provider-catalog/resolve-rows.mjs";
+import { resolveSupportedParams } from "./normalize-generic-provider-catalog/resolve-supported-params.mjs";
 
 export function normalizeGenericProviderCatalog(payload) {
   const rows = resolveRows(payload);

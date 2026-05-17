@@ -1,4 +1,5 @@
 import { getCachedOpenrouterModels } from "./get-cached-openrouter-models.mjs";
+import { sortModels } from "./build-openrouter-providers-from-catalog/sort-models.mjs";
 
 const EXCLUDED_MODEL_PATTERNS = [
   /whisper/i,
@@ -19,18 +20,6 @@ const EXCLUDED_MODEL_PATTERNS = [
   /prover/i,
   /(?:^|[-_/])vl(?:$|[-_/])/i,
 ];
-
-function sortModels(a, b) {
-  const aTools = Array.isArray(a?.supportedParameters) ? a.supportedParameters.length : 0;
-  const bTools = Array.isArray(b?.supportedParameters) ? b.supportedParameters.length : 0;
-  const aContext = Number(a?.contextLength || 0);
-  const bContext = Number(b?.contextLength || 0);
-  return (
-    bTools - aTools ||
-    bContext - aContext ||
-    String(a?.model || "").localeCompare(String(b?.model || ""))
-  );
-}
 
 export function buildOpenrouterProvidersFromCatalog() {
   if (!process.env.OPENROUTER_TOKEN) {

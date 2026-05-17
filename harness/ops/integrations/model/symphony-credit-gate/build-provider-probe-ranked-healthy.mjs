@@ -4,16 +4,7 @@ import { getProviderStats } from "./get-provider-stats.mjs";
 import { getRankedProviders } from "./get-ranked-providers.mjs";
 import { isProviderRankedPoolEligible } from "./is-provider-ranked-pool-eligible.mjs";
 import { providerProbeRouteInfo } from "./provider-probe-route-info.mjs";
-
-function buildFallbackBridgeRoute(routeInfo) {
-  if (routeInfo?.isBridgeBlocked) {
-    return { status: "blocked", reason: "bridge blocked" };
-  }
-  if (routeInfo?.advertisedRouteIds?.length) {
-    return { status: "advertised", reason: routeInfo.advertisedRouteIds.join(", ") || "advertised" };
-  }
-  return { status: "not_advertised", reason: "not advertised" };
-}
+import { buildFallbackBridgeRoute } from "./build-provider-probe-ranked-healthy/build-fallback-bridge-route.mjs";
 
 export function buildProviderProbeRankedHealthy(results) {
   const stats = getProviderStats();

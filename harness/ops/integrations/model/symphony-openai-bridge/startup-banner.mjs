@@ -8,15 +8,7 @@ import { API_KEY } from "./api-key.mjs";
 import { CONTEXT7_HTTP_BASE } from "./context7-http-base.mjs";
 import { tools } from "./tools.mjs";
 import { logInfo } from "./logger.mjs";
-
-function normalizeContext7Status(status) {
-  const normalized = String(status || "unreachable").toLowerCase();
-  if (normalized === "ok" || normalized === "healthy" || normalized === "ready") return "ok";
-  if (normalized === "degraded" || normalized === "warming" || normalized === "starting") {
-    return "warming";
-  }
-  return normalized;
-}
+import { normalizeContext7Status } from "./startup-banner/normalize-context7-status.mjs";
 
 export async function logStartupBanner({ summary, enabled }) {
 

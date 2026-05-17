@@ -2,12 +2,7 @@ import { getIssueDetail } from "../linear-client.mjs";
 
 import { SYSTEMIC_FAILURE_THRESHOLD } from "./systemic-failure-threshold.mjs";
 import { analyzeComments } from "./analyze-comments.mjs";
-
-function getRecommendation(isSystemic, commentCount, threshold) {
-  if (isSystemic) return "FLAG_FOR_HUMAN_REVIEW";
-  if (commentCount > threshold * 2) return "ARCHIVE_AND_CONSOLIDATE";
-  return "ARCHIVE_ONLY";
-}
+import { getRecommendation } from "./analyze-issue/get-recommendation.mjs";
 
 export async function analyzeIssue(issue, threshold) {
   const detail = await getIssueDetail(issue.id);

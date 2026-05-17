@@ -1,14 +1,5 @@
-function formatPushStatus(push) {
-  if (push?.success === true) return "passed";
-  if (push?.success === false) return "failed";
-  return "unknown";
-}
-
-function formatValidationStatus(value) {
-  if (value === true) return "passed";
-  if (value === false) return "failed";
-  return "skipped or not recorded";
-}
+import { formatPushStatus } from "./build-evidence-comment/format-push-status.mjs";
+import { formatValidationStatus } from "./build-evidence-comment/format-validation-status.mjs";
 
 export function buildEvidenceComment({
   issueIdentifier,
