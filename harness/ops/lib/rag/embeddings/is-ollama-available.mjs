@@ -27,7 +27,8 @@ export async function isOllamaAvailable(options = {}) {
     }
 
     const data = await response.json().catch(() => ({}));
-    logDebug(`Ollama available at ${OLLAMA_BASE}${data?.version ? ` (v${data.version})` : ""}`);
+    const versionDetail = data?.version ? ` (v${data.version})` : "";
+    logDebug(`Ollama available at ${OLLAMA_BASE}${versionDetail}`);
     rememberHealth(true);
     return true;
   } catch (err) {

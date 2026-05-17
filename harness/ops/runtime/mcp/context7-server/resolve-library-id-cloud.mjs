@@ -27,8 +27,9 @@ export async function resolveLibraryIdCloud(libraryTitle, topic) {
     const response = await fetchCloud(url, apiKey);
     if (!response.ok) {
       const body = await response.text().catch(() => "");
+      const bodyDetail = body ? ` — ${body}` : "";
       logWarn(
-        `Cloud resolve-library-id failed: HTTP ${response.status}${body ? ` — ${body}` : ""}`,
+        `Cloud resolve-library-id failed: HTTP ${response.status}${bodyDetail}`,
       );
       return null;
     }

@@ -19,8 +19,9 @@ export async function getLibraryDocsLegacyCloud(apiKey, library, topic, maxToken
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
+      const bodyDetail = body ? ` — ${body}` : "";
       logWarn(
-        `Legacy cloud docs request failed: HTTP ${response.status}${body ? ` — ${body}` : ""}`,
+        `Legacy cloud docs request failed: HTTP ${response.status}${bodyDetail}`,
       );
       return null;
     }

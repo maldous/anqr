@@ -34,7 +34,8 @@ export async function runReconciliationCycle(isFullPollCycle = true) {
 
   for (const wt of capacity.worktrees) {
     if (!wt.healthy) {
-      logWarn(`  ${wt.wtId}: ${wt.state} (unhealthy${wt.reason ? `, ${wt.reason}` : ""})`);
+      const reasonDetail = wt.reason ? `, ${wt.reason}` : "";
+      logWarn(`  ${wt.wtId}: ${wt.state} (unhealthy${reasonDetail})`);
     }
   }
 

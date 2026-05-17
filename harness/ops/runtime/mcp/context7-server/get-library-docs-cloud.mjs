@@ -42,7 +42,8 @@ export async function getLibraryDocsCloud(libraryId, topic, maxTokens = 5000, li
       }
     } else {
       const body = await response.text().catch(() => "");
-      logWarn(`Cloud get-library-docs failed: HTTP ${response.status}${body ? ` — ${body}` : ""}`);
+      const bodyDetail = body ? ` — ${body}` : "";
+      logWarn(`Cloud get-library-docs failed: HTTP ${response.status}${bodyDetail}`);
     }
   } catch (err) {
     logError(`Cloud get-library-docs error: ${err.message}`);

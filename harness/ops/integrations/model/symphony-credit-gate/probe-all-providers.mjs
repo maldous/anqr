@@ -101,8 +101,9 @@ export async function probeAllProviders(options = {}) {
     `  ✅ Available (${available.length}): ${available.map((result) => result.name).join(", ")}`,
   );
   if (unavailable.length > 0) {
+    const unavailableLabels = unavailable.map((result) => `${result.name}(${result.status})`).join(", ");
     logWarn(
-      `  ❌ Unavailable (${unavailable.length}): ${unavailable.map((result) => `${result.name}(${result.status})`).join(", ")}`,
+      `  ❌ Unavailable (${unavailable.length}): ${unavailableLabels}`,
     );
   }
   return probeResults;

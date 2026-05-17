@@ -165,8 +165,9 @@ export async function executeRepair(worktreeId, classification) {
       const wtState = getWorktreeState(worktreeId);
       const activeIssue = findActiveIssueForWorktree(worktreeId);
       if ((wtState && leaseIsActive(wtState)) || activeIssue) {
+        const leaseDetail = activeIssue ? ` for ${activeIssue}` : "";
         logWarn(
-          `[recovery] reset_to_main blocked: ${worktreeId} has an active lease${activeIssue ? ` for ${activeIssue}` : ""} — skipping`,
+          `[recovery] reset_to_main blocked: ${worktreeId} has an active lease${leaseDetail} — skipping`,
         );
         return {
           ok: true,
