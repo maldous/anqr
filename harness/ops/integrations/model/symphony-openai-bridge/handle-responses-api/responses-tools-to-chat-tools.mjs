@@ -9,7 +9,7 @@ export function responsesToolsToChatTools(tools) {
         name: t.name,
         description: t.description || "",
         parameters: t.parameters || { type: "object", properties: {} },
-        ...(t.strict !== undefined ? { strict: t.strict } : {}),
+        ...(t.strict === undefined ? {} : { strict: t.strict }),
       },
     }));
 }

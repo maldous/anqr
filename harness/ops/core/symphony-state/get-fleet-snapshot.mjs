@@ -12,9 +12,9 @@ export function getFleetSnapshot() {
     const bucket =
       wt.state === "dirty_owned" || wt.state === "dirty_orphaned"
         ? "dirty"
-        : snapshot.summary[wt.state] !== undefined
-          ? wt.state
-          : "unknown";
+        : snapshot.summary[wt.state] === undefined
+          ? "unknown"
+          : wt.state;
     snapshot.summary[bucket] = (snapshot.summary[bucket] || 0) + 1;
   }
   return snapshot;

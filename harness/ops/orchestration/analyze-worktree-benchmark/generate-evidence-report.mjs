@@ -96,13 +96,13 @@ Concurrent execution with ${concurrentMetrics.worktreeCount} worktrees is ready 
 Issues detected — remediation required:
 
 ${
-  !comparison.thresholds.throughputIncrease
-    ? `- **Throughput:** Only ${comparison.comparison.throughputIncrease}% increase (target: ≥75%)\\n  - Review runner contention and lease acquisition delays\\n  - Check for queue starvation or idle gaps\\n`
-    : ""
+  comparison.thresholds.throughputIncrease
+    ? ""
+    : `- **Throughput:** Only ${comparison.comparison.throughputIncrease}% increase (target: ≥75%)\\n  - Review runner contention and lease acquisition delays\\n  - Check for queue starvation or idle gaps\\n`
 }${
-        !comparison.thresholds.conflictRate
-          ? `- **Conflicts:** ${comparison.concurrent.conflicts}% conflict rate (target: <5%)\\n  - Review git push collision handling\\n  - Consider serializing final push operations\\n`
-          : ""
+        comparison.thresholds.conflictRate
+          ? ""
+          : `- **Conflicts:** ${comparison.concurrent.conflicts}% conflict rate (target: <5%)\\n  - Review git push collision handling\\n  - Consider serializing final push operations\\n`
       }
 
 **Action:** Create remediation issues and rollback to single-runner mode.

@@ -1210,7 +1210,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       const fixRemainingMs = getRemainingMs();
       if (fixRemainingMs <= 0 || !leaseValid) {
         logWarn(
-          `[runner] ${!leaseValid ? "Lease lost" : "Wall-clock exhausted"} during validation fixes — breaking`,
+          `[runner] ${leaseValid ? "Wall-clock exhausted" : "Lease lost"} during validation fixes — breaking`,
         );
         break;
       }
