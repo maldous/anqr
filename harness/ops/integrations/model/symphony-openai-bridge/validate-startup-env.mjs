@@ -46,15 +46,15 @@ export function validateStartupEnv({
   // Without any provider tokens, the bridge cannot serve a single request.
   // This is a fatal misconfiguration — fail-closed.
   const hasProvider = PROVIDER_TOKEN_VARS.some((v) => !!env[v]);
-  if (!hasProvider) {
+  if (hasProvider) {
+    const present = PROVIDER_TOKEN_VARS.filter((v) => !!env[v]);
+    logInfo(`[startup-env] Provider tokens: ${present.join(", ")}`);
+  } else {
     const msg =
       "FATAL: No provider tokens found in environment — bridge cannot serve any requests. " +
       `Checked: ${PROVIDER_TOKEN_VARS.join(", ")}. Bridge startup refused.`;
     logError(`[startup-env] ${msg}`);
     throw new Error(msg);
-  } else {
-    const present = PROVIDER_TOKEN_VARS.filter((v) => !!env[v]);
-    logInfo(`[startup-env] Provider tokens: ${present.join(", ")}`);
   }
 
   // Check 2: ANQR_WORKTREE_ID for worktree/executor bridges.

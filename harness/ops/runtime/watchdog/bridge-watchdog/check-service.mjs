@@ -79,7 +79,9 @@ export async function checkService(service) {
     } else {
       // Try health check anyway - maybe service is running but unhealthy
       const health = await checkHealthEndpoint(service);
-      if (!health.healthy) {
+      if (health.healthy) {
+        // Health check passed — continue with normal status handling
+      } else {
         logError(`[watchdog] ❌ ${shortName}: Failed + unhealthy endpoint: ${health.reason}`);
         await quarantineAndRestart(
           serviceName,

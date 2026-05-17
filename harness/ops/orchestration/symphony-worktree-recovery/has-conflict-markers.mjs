@@ -9,7 +9,7 @@ export function hasConflictMarkers(worktreePath, dirtyFiles) {
       const fullPath = resolve(worktreePath, filePath);
       if (!existsSync(fullPath)) continue;
       const content = readFileSync(fullPath, "utf-8").slice(0, 10_000);
-      if (content.includes("<<<<<<<") && content.includes(">>>>>>>")) {
+      if (/<<<<<<<[\s\S]*>>>>>>>/.test(content)) {
         return true;
       }
     } catch {

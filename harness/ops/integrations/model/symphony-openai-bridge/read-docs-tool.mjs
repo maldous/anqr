@@ -70,12 +70,12 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
           `Context7 HTTP service reported success without documentation for "${libraryTitle}"`,
         );
       }
-      if (!local.retryable) {
+      if (local.retryable) {
+        logWarn(`Context7 HTTP service retryable failure: ${local.reason}`);
+      } else {
         logInfo(
           `ℹ️ Local Context7 returned no local result for "${libraryTitle}" (${local.reason})`,
         );
-      } else {
-        logWarn(`Context7 HTTP service retryable failure: ${local.reason}`);
       }
     } catch (err) {
       logWarn(

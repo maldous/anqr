@@ -1,5 +1,5 @@
 export function escapeProviderProbeMarkdownCell(text) {
   return String(text || "")
-    .replaceAll("|", "\\|")
+    .replaceAll("|", String.raw`\|`)
     .replaceAll("\n", " ");
 }
