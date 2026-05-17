@@ -1,0 +1,18 @@
+# anqr-tmp-cleanup.service — Clean stale ANQR logs from /tmp
+#
+# Removes anqr-*.log files older than 60 minutes from /tmp to prevent
+# accumulation during long-running sessions (scheduler, integrator, etc.).
+#
+# Triggered by anqr-tmp-cleanup.timer every hour. No [Install] needed —
+# timer-only oneshot.
+
+[Unit]
+Description=ANQR /tmp log cleanup
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/find /tmp -maxdepth 1 -name 'anqr-*.log' -mmin +60 -delete
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-tmp-cleanup

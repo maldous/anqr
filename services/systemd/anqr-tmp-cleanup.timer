@@ -1,0 +1,23 @@
+# anqr-tmp-cleanup.timer — Hourly /tmp ANQR log cleanup
+#
+# Triggers anqr-tmp-cleanup.service every hour to remove stale
+# anqr-*.log files from /tmp that are older than 60 minutes.
+#
+# Install:
+#   cp services/systemd/anqr-tmp-cleanup.* ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-tmp-cleanup.timer
+#
+# Check:
+#   systemctl --user status anqr-tmp-cleanup.timer
+
+[Unit]
+Description=Hourly ANQR /tmp log cleanup
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target
