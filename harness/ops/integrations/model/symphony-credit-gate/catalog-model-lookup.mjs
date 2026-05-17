@@ -50,9 +50,9 @@ export function catalogModelLookup(body, provider) {
       .trim()
       .toLowerCase();
     const candidates = new Set([model]);
-    if (model.includes(":free")) candidates.add(model.replace(/:free$/i, ""));
+    if (model.includes(":free")) candidates.add(model.replaceAll(/:free$/i, ""));
     if (entry?.name === "github-models") candidates.add(`openai/${model}`);
-    if (entry?.name === "sambanova") candidates.add(model.replace(/-/g, " "));
+    if (entry?.name === "sambanova") candidates.add(model.replaceAll(/-/g, " "));
     return [...candidates].filter(Boolean);
   }
 

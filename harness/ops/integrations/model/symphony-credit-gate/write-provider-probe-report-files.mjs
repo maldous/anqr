@@ -5,7 +5,7 @@ import { buildProviderProbeMarkdown } from "./build-provider-probe-markdown.mjs"
 
 export async function writeProviderProbeReportFiles(outputDir, generatedAt, report) {
   await fs.mkdir(outputDir, { recursive: true });
-  const stamp = generatedAt.replace(/[:.]/g, "-");
+  const stamp = generatedAt.replaceAll(/[:.]/g, "-");
   const jsonPath = path.join(outputDir, `provider-probe-report.${stamp}.json`);
   const mdPath = path.join(outputDir, `provider-probe-report.${stamp}.md`);
   const latestJsonPath = path.join(outputDir, "provider-probe-report.latest.json");

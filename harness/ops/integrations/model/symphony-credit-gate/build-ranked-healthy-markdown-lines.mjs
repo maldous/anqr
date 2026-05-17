@@ -4,8 +4,8 @@ export function buildRankedHealthyMarkdownLines(rankedHealthy) {
   const lines = ["## Healthy ranked pool", ""];
   lines.push(
     "| Rank | Provider | Model | Tier | Score | Selections | Success rate | Probe selections | Probe successes | Probe failures | Probe avg ms | Reason |",
+    "|---:|---|---|---|---|---:|---:|---:|---:|---:|---:|---|",
   );
-  lines.push("|---:|---|---|---|---|---:|---:|---:|---:|---:|---:|---|");
   for (const entry of rankedHealthy || []) {
     lines.push(
       `| ${entry.rank ?? "-"} | ${entry.providerName} | ${escapeProviderProbeMarkdownCell(entry.model)} | ${entry.tier} | ${entry.score} | ${entry.selections} | ${entry.successRate} | ${entry.probeSelections} | ${entry.probeSuccesses} | ${entry.probeFailures} | ${entry.probeAvgDurationMs} | ${escapeProviderProbeMarkdownCell(entry.reason)} |`,

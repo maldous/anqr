@@ -14,9 +14,9 @@ export function buildFailureSummary(issue, comments, analysis) {
   if (analysis.uniqueFailures.size >= SYSTEMIC_FAILURE_THRESHOLD) {
     lines.push(
       "⚠️ **SYSTEMIC FAILURE DETECTED** — This issue has failed repeatedly with similar signatures.",
+      "This likely indicates a fundamental problem that requires human investigation.",
+      "",
     );
-    lines.push("This likely indicates a fundamental problem that requires human investigation.");
-    lines.push("");
   }
 
   if (analysis.firstComment && analysis.lastComment) {
@@ -30,8 +30,7 @@ export function buildFailureSummary(issue, comments, analysis) {
     lines.push(`**First failure:** ${firstDate}`, `**Last failure:** ${lastDate}`, `**Duration:** ${durationDays} days`, "");
   }
 
-  lines.push("### Recent Failure Signatures");
-  lines.push("");
+  lines.push("### Recent Failure Signatures", "");
   const recentSignatures = Array.from(analysis.uniqueFailures).slice(-5);
   for (const sig of recentSignatures) {
     lines.push("```");
@@ -40,9 +39,9 @@ export function buildFailureSummary(issue, comments, analysis) {
     lines.push("");
   }
 
-  lines.push("---");
-  lines.push("*Archived by issue-hygiene.mjs*");
   lines.push(
+    "---",
+    "*Archived by issue-hygiene.mjs*",
     "*Original comment history preserved in Linear version history. Archive preserves failure patterns for analysis.*",
   );
 

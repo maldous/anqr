@@ -14,7 +14,7 @@ export function generateThreadName(messages) {
                 .join(" ")
             : null;
       if (content && content.trim()) {
-        const preview = content.trim().slice(0, 80).replace(/\n/g, " ");
+        const preview = content.trim().slice(0, 80).replaceAll(/\n/g, " ");
         return `🔧 ${preview}`;
       }
     }

@@ -1,4 +1,4 @@
-export const indexCache = null;
+export let indexCache = null;
 export function setIndexCache(value) {
   indexCache = value;
 }

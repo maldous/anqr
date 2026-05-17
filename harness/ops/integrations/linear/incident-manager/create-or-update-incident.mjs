@@ -51,12 +51,10 @@ export async function createOrUpdateIncident(params) {
     ];
 
     if (trigger) {
-      commentLines.push(`**Trigger:** ${trigger}`);
-      commentLines.push("");
+      commentLines.push(`**Trigger:** ${trigger}`, "");
     }
 
-    commentLines.push("### Evidence");
-    commentLines.push(formatEvidenceForIssue(evidence));
+    commentLines.push("### Evidence", formatEvidenceForIssue(evidence));
 
     await addComment(existing.id, commentLines.join("\n"));
 

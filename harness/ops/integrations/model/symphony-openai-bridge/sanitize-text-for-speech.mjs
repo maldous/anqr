@@ -5,63 +5,63 @@ export function sanitizeTextForSpeech(text) {
   let s = text;
 
   // 1. Fenced code blocks → brief note
-  s = s.replace(/```[\s\S]*?```/g, " (code omitted) ");
+  s = s.replaceAll(/```[\s\S]*?```/g, " (code omitted) ");
 
   // 2. HTML tags
-  s = s.replace(/<[^>]+>/g, "");
+  s = s.replaceAll(/<[^>]+>/g, "");
 
   // 3. Markdown links [text](url) → keep link text
-  s = s.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  s = s.replaceAll(/\[([^\]]+)\]\([^)]+\)/g, "$1");
 
   // 4. Inline code — keep simple short names, drop complex code
-  s = s.replace(/`([^`]+)`/g, (match, content) => {
+  s = s.replaceAll(/`([^`]+)`/g, (match, content) => {
     if (content.length < 30 && !/[{}();=<>/\\|&]/.test(content)) return content;
     return "code";
   });
 
   // 5. URLs → "a link"
-  s = s.replace(/https?:\/\/[^\s)]+/g, "a link");
+  s = s.replaceAll(/https?:\/\/[^\s)]+/g, "a link");
 
   // 6. File paths → just the filename
-  s = s.replace(/(?:\.{0,2}\/[\w.-]+){2,}/g, (match) => {
+  s = s.replaceAll(/(?:\.{0,2}\/[\w.-]+){2,}/g, (match) => {
     const parts = match.split("/");
     const filename = parts[parts.length - 1];
     return filename && /\.\w+$/.test(filename) ? filename : "a file";
   });
 
   // 7. Markdown formatting
-  s = s.replace(/^#{1,6}\s+/gm, "");
-  s = s.replace(/\*{1,3}([^*]+)\*{1,3}/g, "$1");
-  s = s.replace(/_{1,2}([^_]+)_{1,2}/g, "$1");
-  s = s.replace(/~~([^~]+)~~/g, "$1");
-  s = s.replace(/^[\s]*[-*+]\s+/gm, "");
-  s = s.replace(/^[\s]*\d+\.\s+/gm, "");
-  s = s.replace(/^>\s*/gm, "");
-  s = s.replace(/^\|.*\|$/gm, "");
-  s = s.replace(/^[-|:\s]+$/gm, "");
+  s = s.replaceAll(/^#{1,6}\s+/gm, "");
+  s = s.replaceAll(/\*{1,3}([^*]+)\*{1,3}/g, "$1");
+  s = s.replaceAll(/_{1,2}([^_]+)_{1,2}/g, "$1");
+  s = s.replaceAll(/~~([^~]+)~~/g, "$1");
+  s = s.replaceAll(/^[\s]*[-*+]\s+/gm, "");
+  s = s.replaceAll(/^[\s]*\d+\.\s+/gm, "");
+  s = s.replaceAll(/^>\s*/gm, "");
+  s = s.replaceAll(/^\|.*\|$/gm, "");
+  s = s.replaceAll(/^[-|:\s]+$/gm, "");
 
   // 8. Technical symbols → natural language
-  s = s.replace(/=>/g, " goes to ");
-  s = s.replace(/->/g, " to ");
-  s = s.replace(/===?/g, " equals ");
-  s = s.replace(/!==?/g, " not equals ");
-  s = s.replace(/\|\|/g, " or ");
-  s = s.replace(/&&/g, " and ");
-  s = s.replace(/::/g, " ");
+  s = s.replaceAll(/=>/g, " goes to ");
+  s = s.replaceAll(/->/g, " to ");
+  s = s.replaceAll(/===?/g, " equals ");
+  s = s.replaceAll(/!==?/g, " not equals ");
+  s = s.replaceAll(/\|\|/g, " or ");
+  s = s.replaceAll(/&&/g, " and ");
+  s = s.replaceAll(/::/g, " ");
 
   // 9. Emoji
-  s = s.replace(SPEECH_EMOJI_RE, " ");
+  s = s.replaceAll(SPEECH_EMOJI_RE, " ");
 
   // 10. Special chars that sound bad when read aloud
-  s = s.replace(/(\w)_(\w)/g, "$1 $2");
-  s = s.replace(/[{}<>[\]\\|~`#$%^&@*+=!?:]+/g, "");
-  s = s.replace(/_{2,}/g, "");
+  s = s.replaceAll(/(\w)_(\w)/g, "$1 $2");
+  s = s.replaceAll(/[{}<>[\]\\|~`#$%^&@*+=!?:]+/g, "");
+  s = s.replaceAll(/_{2,}/g, "");
 
   // 11. Collapse whitespace
-  s = s.replace(/\s+/g, " ").trim();
+  s = s.replaceAll(/\s+/g, " ").trim();
 
   // 12. Clean dangling punctuation
-  s = s.replace(/\s+([?!.,:;])/g, "$1");
+  s = s.replaceAll(/\s+([?!.,:;])/g, "$1");
 
   // 13. Truncate at a natural sentence boundary
   const MAX_SPEECH_LENGTH = 500;

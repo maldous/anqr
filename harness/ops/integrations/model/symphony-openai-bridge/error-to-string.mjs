@@ -1,7 +1,7 @@
 export function errorToString(err) {
   function sanitizeText(value) {
     return String(value || "")
-      .replace(/\s+/g, " ")
+      .replaceAll(/\s+/g, " ")
       .trim();
   }
 

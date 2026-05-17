@@ -28,8 +28,10 @@ export function buildProviderProbeMarkdown(report) {
       `- ${entry.providerName}: ${entry.status}, bridge ${entry.bridgeStatus}, tool ${entry.toolStatus}, ${entry.reason}${detail}`,
     );
   }
-  lines.push("", "## Provider results", "");
   lines.push(
+    "",
+    "## Provider results",
+    "",
     "| Provider | Model | Status | Duration ms | Reason | Routes | Bridge | Tool-capable | Tool probe | Tool detail |",
     "|---|---|---:|---:|---|---|---|---|---|---|",
   );
@@ -38,8 +40,10 @@ export function buildProviderProbeMarkdown(report) {
       `| ${result.providerName} | ${result.model} | ${result.status} | ${result.durationMs} | ${escapeProviderProbeMarkdownCell(result.reason)} | ${result.routeInfo.advertisedRouteIds.join(", ") || "-"} | ${result.bridgeRoute.status}: ${escapeProviderProbeMarkdownCell(result.bridgeRoute.reason)} | ${result.routeInfo.knownToolCapable ? "yes" : "no"} | ${result.toolProbe?.toolStatus || "-"} | ${escapeProviderProbeMarkdownCell(result.toolProbe?.detail || "")} |`,
     );
   }
-  lines.push("", "## Selector order", "");
   lines.push(
+    "",
+    "## Selector order",
+    "",
     "| Source | Provider | Status | Probe selectable | Bridge selectable | Selectable | Reason |",
     "|---|---|---|---|---|---|---|",
   );
@@ -52,7 +56,11 @@ export function buildProviderProbeMarkdown(report) {
   for (const [status, count] of Object.entries(report.failureBreakdown)) {
     lines.push(`- ${status}: ${count}`);
   }
-  lines.push("", "## Codebuff providers", "");
+  lines.push(
+    "",
+    "## Codebuff providers",
+    "",
+  );
   const codebuffProviders = report.results.filter((result) =>
     result.providerName.startsWith("codebuff"),
   );

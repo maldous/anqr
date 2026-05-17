@@ -1,4 +1,4 @@
-export const toolProbeRetryScheduled = false;
+export let toolProbeRetryScheduled = false;
 export function setToolProbeRetryScheduled(value) {
   toolProbeRetryScheduled = value;
 }

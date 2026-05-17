@@ -44,8 +44,8 @@ export async function applyHygiene(result, dryRun) {
   ];
 
   if (isSystemic) {
-    notificationLines.push("");
     notificationLines.push(
+      "",
       "⚠️ **SYSTEMIC FAILURE PATTERN DETECTED** — This issue requires human investigation.",
       "",
       "Possible causes:",
@@ -57,9 +57,7 @@ export async function applyHygiene(result, dryRun) {
       "**Recommendation:** Review failure signatures in description and determine root cause.",
     );
   } else {
-    notificationLines.push("");
-    notificationLines.push("Original comment history preserved in Linear version history.");
-    notificationLines.push("Failure patterns archived for analysis.");
+    notificationLines.push("", "Original comment history preserved in Linear version history.", "Failure patterns archived for analysis.");
   }
 
   await addComment(issue.id, notificationLines.join("\n"));

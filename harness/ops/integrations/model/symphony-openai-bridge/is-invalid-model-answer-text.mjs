@@ -10,9 +10,9 @@ export function isInvalidModelAnswerText(text, options = {}) {
   function normalizeLine(value) {
     return String(value || "")
       .trim()
-      .replace(/^```[\w-]*\s*/i, "")
-      .replace(/```$/i, "")
-      .replace(/\s+/g, " ")
+      .replaceAll(/^```[\w-]*\s*/gi, "")
+      .replaceAll(/```$/gi, "")
+      .replaceAll(/\s+/g, " ")
       .toUpperCase();
   }
 
