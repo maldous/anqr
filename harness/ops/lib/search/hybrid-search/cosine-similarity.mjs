@@ -1,1 +1,1 @@
-export const cosineSimilarity;
+export { cosineSimilarity } from "../../rag/embeddings/cosine-similarity.mjs";
