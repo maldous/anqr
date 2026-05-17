@@ -1,4 +1,4 @@
-export let lockHeld = false;
+export const lockHeld = false;
 export function setLockHeld(value) {
   lockHeld = value;
 }

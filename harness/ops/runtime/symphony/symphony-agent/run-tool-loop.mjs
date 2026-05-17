@@ -25,7 +25,6 @@ export async function runToolLoop({
   const validationsAfterMutation = {
     typecheck: false,
     lint: false,
-    cspell: false,
     astDensity: false,
     tests: false,
   };
@@ -396,14 +395,12 @@ export async function runToolLoop({
         }
         validationsAfterMutation.typecheck = false;
         validationsAfterMutation.lint = false;
-        validationsAfterMutation.cspell = false;
         validationsAfterMutation.astDensity = false;
         validationsAfterMutation.tests = false;
       }
 
       if (toolName === "run_typecheck") validationsAfterMutation.typecheck = true;
       if (toolName === "run_lint") validationsAfterMutation.lint = true;
-      if (toolName === "run_cspell") validationsAfterMutation.cspell = true;
       if (toolName === "run_ast_density") validationsAfterMutation.astDensity = true;
       if (toolName === "run_tests") validationsAfterMutation.tests = true;
 
@@ -434,7 +431,7 @@ export async function runToolLoop({
       logWarn(`[agent] Turn budget warning: ${turnsRemaining} turns remaining`);
       messages.push({
         role: "user",
-        content: `⚠️ TURN BUDGET WARNING: You have only ${turnsRemaining} turns remaining out of ${maxTurns}. Stop making new changes immediately. Run run_typecheck, run_lint, run_cspell, run_ast_density, and run_tests to verify your work, fix any errors, then call task_complete. Do not start any new modifications.`,
+        content: `⚠️ TURN BUDGET WARNING: You have only ${turnsRemaining} turns remaining out of ${maxTurns}. Stop making new changes immediately. Run run_typecheck, run_lint, run_ast_density, and run_tests to verify your work, fix any errors, then call task_complete. Do not start any new modifications.`,
       });
     }
   }

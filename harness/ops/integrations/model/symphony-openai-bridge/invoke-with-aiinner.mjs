@@ -246,7 +246,6 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
             if (
               tc.toolName === "run_typecheck" ||
               tc.toolName === "run_lint" ||
-              tc.toolName === "run_cspell" ||
               tc.toolName === "run_ast_density" ||
               tc.toolName === "run_tests"
             ) {

@@ -3,7 +3,7 @@
  * Sync all worktrees to origin/main
  */
 
-import { execSync } from "child_process";
+import { execSync } from "node:child_process";
 
 const WORKTREES = ["wt1", "wt2", "wt3", "wt4", "wt5", "wt6", "wt7", "wt8"];
 

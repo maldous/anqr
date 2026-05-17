@@ -240,7 +240,6 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
   let leaseValid = true;
   const state = getIssueState(issue.identifier);
   // Capture prior failure info BEFORE noteAttemptStart clears it (used for fingerprinting)
-  const _priorFailureReason = state.last_failure_reason;
   const priorFailureSignature = state.last_failure_signature;
 
   // Check retry limit BEFORE acquiring lease or incrementing retry_count

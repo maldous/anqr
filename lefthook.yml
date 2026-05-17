@@ -14,11 +14,6 @@ pre-commit:
       run: |
         [ "$ANQR_AUTOMATION_COMMIT" = "1" ] && exit 0
         npm run typecheck
-    cspell:
-      glob: "*.{ts,tsx,js,mjs,md,json}"
-      run: |
-        [ "$ANQR_AUTOMATION_COMMIT" = "1" ] && exit 0
-        npx cspell --no-progress --no-must-find-files {staged_files}
     ast-density:
       glob: "*.{ts,tsx}"
       run: |

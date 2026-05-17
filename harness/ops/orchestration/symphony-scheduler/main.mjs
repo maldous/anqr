@@ -36,8 +36,7 @@ export async function main() {
   }
 
   // Poll loop (infinite daemon — exit only on SIGTERM/SIGINT)
-  let shouldContinue = true;
-  while (shouldContinue) {
+  for (;;) {
     await new Promise((r) => setTimeout(r, SCHEDULER_POLL_INTERVAL_MS));
     try {
       await scheduleCycle();

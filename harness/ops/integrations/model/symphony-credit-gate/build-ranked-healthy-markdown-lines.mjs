@@ -1,9 +1,7 @@
 import { escapeProviderProbeMarkdownCell } from "./escape-provider-probe-markdown-cell.mjs";
 
 export function buildRankedHealthyMarkdownLines(rankedHealthy) {
-  const lines = [];
-  lines.push("## Healthy ranked pool");
-  lines.push("");
+  const lines = ["## Healthy ranked pool", ""];
   lines.push(
     "| Rank | Provider | Model | Tier | Score | Selections | Success rate | Probe selections | Probe successes | Probe failures | Probe avg ms | Reason |",
   );

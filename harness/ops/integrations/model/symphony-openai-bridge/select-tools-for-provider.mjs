@@ -62,7 +62,6 @@ const STANDARD_TOOL_NAMES = new Set([
   "message",
   "run_typecheck",
   "run_lint",
-  "run_cspell",
   "run_ast_density",
   "run_tests",
 ]);

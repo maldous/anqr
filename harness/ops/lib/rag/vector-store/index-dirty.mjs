@@ -1,4 +1,4 @@
-export let indexDirty = false;
+export const indexDirty = false;
 export function setIndexDirty(value) {
   indexDirty = value;
 }

@@ -161,8 +161,8 @@ describe("session-state CRUD", () => {
     });
 
     it("does nothing for null/empty sessionId", () => {
-      clearSessionProvider(null as unknown as string);
-      clearSessionProvider("");
+      expect(() => clearSessionProvider(null as unknown as string)).not.toThrow();
+      expect(() => clearSessionProvider("")).not.toThrow();
     });
   });
 

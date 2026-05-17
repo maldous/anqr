@@ -27,10 +27,7 @@ export function buildFailureSummary(issue, comments, analysis) {
         (1000 * 60 * 60 * 24),
     );
 
-    lines.push(`**First failure:** ${firstDate}`);
-    lines.push(`**Last failure:** ${lastDate}`);
-    lines.push(`**Duration:** ${durationDays} days`);
-    lines.push("");
+    lines.push(`**First failure:** ${firstDate}`, `**Last failure:** ${lastDate}`, `**Duration:** ${durationDays} days`, "");
   }
 
   lines.push("### Recent Failure Signatures");

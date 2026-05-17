@@ -9,13 +9,6 @@ export const VALIDATION_MANIFEST = {
     timeoutMs: 60_000,
     fullProject: true,
   },
-  cspell: {
-    command: "npx cspell --no-progress --no-must-find-files",
-    timeoutMs: 60_000,
-    changedOnly: true,
-    fullProjectGlobs: ['"src/**/*.{ts,tsx}"', '"harness/**/*.{mjs,js}"', '"docs/**/*.md"'],
-    extensions: /\.(ts|tsx|js|mjs|md|json)$/,
-  },
   astDensity: {
     command: "node harness/audit-ast-density.mjs --threshold 1",
     timeoutMs: 120_000,

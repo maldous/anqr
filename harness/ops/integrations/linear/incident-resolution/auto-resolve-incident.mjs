@@ -1,5 +1,4 @@
-import { updateIssue, addComment } from "../linear-client.mjs";
-import { STATES } from "../linear-client.mjs";
+import { updateIssue, addComment, STATES } from "../linear-client.mjs";
 import { logInfo } from "./logger.mjs";
 
 export async function autoResolveIncident(issue, resolution) {
@@ -19,11 +18,7 @@ export async function autoResolveIncident(issue, resolution) {
   ];
 
   if (healthData) {
-    commentLines.push("");
-    commentLines.push("### Health Check Data");
-    commentLines.push("```json");
-    commentLines.push(JSON.stringify(healthData, null, 2));
-    commentLines.push("```");
+    commentLines.push("", "### Health Check Data", "```json", JSON.stringify(healthData, null, 2), "```");
   }
 
   await addComment(issue.id, commentLines.join("\n"));

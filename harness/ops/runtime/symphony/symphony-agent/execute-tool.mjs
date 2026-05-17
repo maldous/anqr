@@ -4,7 +4,6 @@ import { toolPatchFile } from "./tool-patch-file.mjs";
 import { toolReadFile } from "./tool-read-file.mjs";
 import { toolRunAstDensity } from "./tool-run-ast-density.mjs";
 import { toolRunCommand } from "./tool-run-command.mjs";
-import { toolRunCspell } from "./tool-run-cspell.mjs";
 import { toolRunLint } from "./tool-run-lint.mjs";
 import { toolRunTests } from "./tool-run-tests.mjs";
 import { toolRunTypecheck } from "./tool-run-typecheck.mjs";
@@ -16,7 +15,6 @@ export function executeTool(projectRoot, toolCall, context = {}) {
 
   if (name === "run_typecheck") return toolRunTypecheck(projectRoot);
   if (name === "run_lint") return toolRunLint(projectRoot);
-  if (name === "run_cspell") return toolRunCspell(projectRoot, changedFiles);
   if (name === "run_ast_density") return toolRunAstDensity(projectRoot, changedFiles);
   if (name === "run_tests") return toolRunTests(projectRoot);
 

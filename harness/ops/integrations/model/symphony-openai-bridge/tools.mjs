@@ -591,25 +591,6 @@ export const tools = {
       }
     },
   }),
-  run_cspell: tool({
-    description:
-      'Run the spell checker (cspell) on source files. If a domain-specific word is flagged, add it to the "words" array in cspell.json. Always run this after making changes and fix any issues before calling task_complete.',
-    inputSchema: z.object({}),
-    execute: async () => {
-      const cwd = getCurrentRequestCwd();
-      try {
-        const result = execSync("npx cspell --no-progress --no-must-find-files", {
-          cwd,
-          encoding: "utf-8",
-          timeout: 60_000,
-          maxBuffer: 10 * 1024 * 1024,
-        });
-        return { output: result, exitCode: 0 };
-      } catch (error) {
-        return { output: error.stdout || error.message, exitCode: error.status || 1, error: error.message };
-      }
-    },
-  }),
   run_ast_density: tool({
     description:
       "Run the AST density audit on source files. Each file should have at most 1 top-level declaration (function, class, type, or const). If a file exceeds the threshold, split it into smaller files. Always run this after making changes and fix any violations before calling task_complete.",

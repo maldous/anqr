@@ -52,10 +52,6 @@ export const TOOL_DEFINITIONS = [
     "Run the linter (oxlint) to check for lint errors and warnings. Returns the linter output. Always run this after making changes and fix any errors or warnings before calling task_complete.",
   ),
   noParamTool(
-    "run_cspell",
-    'Run the spell checker (cspell) on source files. Returns any misspelled words. If a domain-specific word is flagged, add it to the "words" array in cspell.json. Always run this after making changes and fix any issues before calling task_complete.',
-  ),
-  noParamTool(
     "run_ast_density",
     "Run the AST density audit on source files. Each file should have at most 1 top-level declaration (function, class, type, or const). If a file exceeds the threshold, split it into smaller files. Always run this after making changes and fix any violations before calling task_complete.",
   ),
@@ -65,7 +61,7 @@ export const TOOL_DEFINITIONS = [
   ),
   paramTool(
     "task_complete",
-    "Signal that you have finished implementing the changes. You MUST run run_typecheck, run_lint, run_cspell, and run_ast_density first and fix any errors or warnings before calling this.",
+    "Signal that you have finished implementing the changes. You MUST run run_typecheck, run_lint and run_ast_density first and fix any errors or warnings before calling this.",
     { summary: { type: "string", description: "Brief summary of what was changed and why" } },
     ["summary"],
   ),

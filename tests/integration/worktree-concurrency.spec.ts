@@ -352,13 +352,11 @@ describe("Worktree Concurrency Tests", () => {
         (wt) => wt.id !== null && testWorktreeIds.includes(wt.id),
       );
 
-      console.log("\n📊 Test Worktree Summary:");
-      console.log(`   Total test worktrees: ${testWorktrees.length}`);
+      expect(testWorktrees.length).toBe(testWorktreeIds.length);
 
       for (const wt of testWorktrees) {
-        console.log(`   [${wt.id}] ${wt.path}`);
-        console.log(`       Branch: ${wt.branch}`);
-        console.log(`       Status: ${wt.prunable ? "⚠️  Prunable" : "✅ OK"}`);
+        expect(testWorktreeIds.includes(wt.id!)).toBe(true);
+        expect(wt.branch).toBe(getWorktreeBranch(wt.id!));
       }
     });
   });

@@ -117,16 +117,16 @@
 
     const hasIOS = () =>
       !!(
-        window.webkit &&
-        window.webkit.messageHandlers &&
-        window.webkit.messageHandlers.openclawCanvasA2UIAction
+        globalThis.webkit &&
+        globalThis.webkit.messageHandlers &&
+        globalThis.webkit.messageHandlers.openclawCanvasA2UIAction
       );
     const hasAndroid = () =>
       !!(
-        window.openclawCanvasA2UIAction &&
-        typeof window.openclawCanvasA2UIAction.postMessage === "function"
+        globalThis.openclawCanvasA2UIAction &&
+        typeof globalThis.openclawCanvasA2UIAction.postMessage === "function"
       );
-    const hasHelper = () => typeof window.openclawSendUserAction === "function";
+    const hasHelper = () => typeof globalThis.openclawSendUserAction === "function";
     statusEl.innerHTML =
       "Bridge: " +
       (hasHelper() ? "<span class='ok'>ready</span>" : "<span class='bad'>missing</span>") +
@@ -145,7 +145,7 @@
           (d.error ? " error=" + d.error : ""),
       );
     };
-    window.addEventListener("openclaw:a2ui-action-status", onStatus);
+    globalThis.addEventListener("openclaw:a2ui-action-status", onStatus);
 
     function send(name, sourceComponentId) {
       if (!hasHelper()) {
@@ -155,8 +155,8 @@
         return;
       }
       const sendUserAction =
-        typeof window.openclawSendUserAction === "function"
-          ? window.openclawSendUserAction
+        typeof globalThis.openclawSendUserAction === "function"
+          ? globalThis.openclawSendUserAction
           : undefined;
       const ok = sendUserAction({
         name,

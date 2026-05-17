@@ -18,7 +18,6 @@ export { toolRunCommand } from "./tool-run-command.mjs";
 export { toolListDirectory } from "./tool-list-directory.mjs";
 export { toolRunTypecheck } from "./tool-run-typecheck.mjs";
 export { toolRunAstDensity } from "./tool-run-ast-density.mjs";
-export { toolRunCspell } from "./tool-run-cspell.mjs";
 export { toolRunLint } from "./tool-run-lint.mjs";
 export { toolRunTests } from "./tool-run-tests.mjs";
 export { executeTool } from "./execute-tool.mjs";

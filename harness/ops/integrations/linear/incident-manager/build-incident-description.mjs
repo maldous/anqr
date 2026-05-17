@@ -2,14 +2,13 @@ import { buildFingerprintMarker } from "../incident-fingerprint.mjs";
 import { formatEvidenceForIssue } from "../incident-evidence.mjs";
 
 export function buildIncidentDescription(type, context, evidence, fingerprint) {
-  const lines = [];
-
-  // Add fingerprint marker (hidden in UI, used for deduplication)
-  lines.push(buildFingerprintMarker(fingerprint));
-  lines.push("");
-
-  lines.push(`# ${type}`);
-  lines.push("");
+  const lines = [
+    // Add fingerprint marker (hidden in UI, used for deduplication)
+    buildFingerprintMarker(fingerprint),
+    "",
+    `# ${type}`,
+    "",
+  ];
 
   // Context
   if (context.service) {

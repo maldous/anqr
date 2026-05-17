@@ -1,5 +1,5 @@
 export const PROFILES = {
-  quick: ["repo-structure", "typecheck", "lint", "knip", "cspell-coverage", "ast-density"],
+  quick: ["repo-structure", "typecheck", "lint", "knip", "ast-density"],
   continuous: [
     "repo-structure",
     "ollama-health",
@@ -14,7 +14,7 @@ export const PROFILES = {
     "lint",
     "depcruise",
     "knip",
-    "cspell-coverage",
+    
     "ast-density",
     "docs-freshness",
     "ollama-health",

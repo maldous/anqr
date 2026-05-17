@@ -427,9 +427,7 @@ describe("Tool Parameter Normalization (Symphony Bridge)", () => {
 
     describe("Unicode and special characters", () => {
       it("should handle Unicode filenames", () => {
-        // cspell:disable-next-line
         const result = coerceStringArrayInput(["测试.ts", "файл.js"]);
-        // cspell:disable-next-line
         expect(result).toEqual(["测试.ts", "файл.js"]);
       });
 

@@ -101,7 +101,7 @@ export function initializeProbes() {
         logInfo(`========================================`);
 
         // Phase 1: Reachability probe (knock out unreachable providers)
-        const _refreshed = await refreshProviderStatus({
+        await refreshProviderStatus({
           respectHealthState: false,
           recordHealthFailures: false,
         });

@@ -1,7 +1,6 @@
 import { collectIncidentEvidence, formatEvidenceForIssue } from "../incident-evidence.mjs";
 import { generateIncidentFingerprint } from "../incident-fingerprint.mjs";
-import { createIssue, addComment } from "../linear-client.mjs";
-import { STATES, LABELS } from "../linear-client.mjs";
+import { createIssue, addComment, STATES, LABELS } from "../linear-client.mjs";
 
 import { INCIDENT_TYPES } from "./incident-types.mjs";
 import { buildIncidentDescription } from "./build-incident-description.mjs";

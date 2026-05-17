@@ -4,7 +4,6 @@ export function isPidAlive(pid) {
     process.kill(pid, 0);
     return true;
   } catch (err) {
-    if (err && err.code === "EPERM") return true;
-    return false;
+    return err?.code === "EPERM";
   }
 }

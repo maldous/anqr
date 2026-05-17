@@ -1,1 +1,1 @@
-export const expectedPattern = new RegExp(`anqr-wt\\d+$`);
+export const expectedPattern = /anqr-wt\d+$/;

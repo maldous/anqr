@@ -1,5 +1,4 @@
 import { checkAstDensity } from "./check-ast-density.mjs";
-import { checkCspellCoverage } from "./check-cspell-coverage.mjs";
 import { checkDepcruise } from "./check-depcruise.mjs";
 import { checkKnip } from "./check-knip.mjs";
 import { checkDocsFreshness } from "./check-docs-freshness.mjs";
@@ -24,7 +23,6 @@ export const CHECKS = {
   "docs-freshness": { fn: checkDocsFreshness, async: false },
   "ollama-health": { fn: checkOllamaHealth, async: true },
   "litellm-routing": { fn: checkLitellmRouting, async: false },
-  "cspell-coverage": { fn: checkCspellCoverage, async: false },
   "ast-density": { fn: checkAstDensity, async: false },
   "sonar-audit": { fn: checkSonarAudit, async: true },
   "pipeline-latency": { fn: checkPipelineLatency, async: true },

@@ -1,4 +1,4 @@
-export let miniSearchIndex = null;
+export const miniSearchIndex = null;
 export function setMiniSearchIndex(value) {
   miniSearchIndex = value;
 }

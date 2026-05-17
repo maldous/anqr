@@ -1,4 +1,4 @@
-export let lastProbeTimeCheck = Date.now();
+export const lastProbeTimeCheck = Date.now();
 export function setLastProbeTimeCheck(value) {
   lastProbeTimeCheck = value;
 }

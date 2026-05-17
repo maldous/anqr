@@ -45,7 +45,7 @@ export function isRetryableError(err) {
     errStr.includes("connection") ||
     errStr.includes("enotfound") ||
     errStr.includes("no output generated") ||
-    errStr.includes("nooutputgeneratederror") || // cspell:disable-line
+    errStr.includes("nooutputgeneratederror") ||
     errStr.includes("context_length_exceeded") ||
     errStr.includes("request too large") ||
     errStr.includes("reduce the length") ||

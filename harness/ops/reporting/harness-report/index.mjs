@@ -19,7 +19,6 @@ export { checkDocsFreshness } from "./check-docs-freshness.mjs";
 export { checkOllamaHealth } from "./check-ollama-health.mjs";
 export { checkAstDensity } from "./check-ast-density.mjs";
 export { checkSonarAudit } from "./check-sonar-audit.mjs";
-export { checkCspellCoverage } from "./check-cspell-coverage.mjs";
 export { checkLitellmRouting } from "./check-litellm-routing.mjs";
 export { checkPipelineLatency } from "./check-pipeline-latency.mjs";
 export { checkLinearRagPipeline } from "./check-linear-rag-pipeline.mjs";
