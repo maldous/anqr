@@ -4,7 +4,7 @@ import { normalizeCwd } from "./normalize-cwd.mjs";
 import { tryMode } from "./try-mode.mjs";
 
 export async function invokeCodebuffDirect({ messages, cwd, costMode = undefined }) {
-  const apiKey = getApiKey();
+  const apiKey = getApiKey(costMode);
   if (!apiKey) {
     throw new Error("CODEBUFF_API_KEY is not set");
   }

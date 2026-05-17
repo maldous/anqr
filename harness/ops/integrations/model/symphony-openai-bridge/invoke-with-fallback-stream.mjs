@@ -17,12 +17,14 @@ import {
 } from "../symphony-adaptive-context.mjs";
 import { estimateMessagesTokens } from "../symphony-bridge-truncation.mjs";
 import { invokeCodebuffDirectStream } from "../codebuff-direct.mjs";
+import { markCodebuffKeyExhausted, clearCodebuffKeyCooldown } from "../codebuff-direct/codebuff-key-pool.mjs";
 import { releaseProviderLease } from "../symphony-credit-gate/release-provider-lease.mjs";
 import {
   updateSessionProvider,
   clearSessionProvider,
   detectCodebuffMode,
   setSessionMessages,
+  saveSessionContextBudgetCap,
 } from "../symphony-session-state.mjs";
 
 import { BRIDGE_METRICS } from "./bridge-metrics.mjs";
@@ -55,13 +57,14 @@ export async function invokeWithFallbackStream(
   sessionId = null,
   cwd = null,
   initialProvider = null,
+  initialContextBudgetCap = null,
 ) {
   const triedProviders = [...initialExcluded];
   const fallbackChain = [];
   const contextReductions = [];
   let lastError = null;
   let attemptNumber = 0;
-  let contextBudgetCap = null;
+  let contextBudgetCap = initialContextBudgetCap;
 
   while (true) {
     attemptNumber++;
@@ -150,6 +153,9 @@ export async function invokeWithFallbackStream(
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, null, true);
       recordContextSuccess(provider.name);
+      if (isCodebuffProvider) {
+        clearCodebuffKeyCooldown();
+      }
       recordTokenUsage(provider.name, {
         inputTokens: estimateMessagesTokens(messages),
         outputTokens: Math.ceil((result.text?.length || 0) / 4),
@@ -226,6 +232,18 @@ export async function invokeWithFallbackStream(
       }
 
       recordErrorType(provider.name, errorType);
+
+      // Exhaust the CodeBuff key on rate-limit, credit-exhaustion, or quota errors
+      if (isCodebuffProvider) {
+        const isExhaustionError =
+          errorType === ERROR_TYPES.RATE_LIMITED ||
+          (errorType === ERROR_TYPES.SERVER_ERROR &&
+            /(?:quota|credit|insufficient|exhausted|limit reached)/i.test(errStr));
+        if (isExhaustionError) {
+          markCodebuffKeyExhausted();
+        }
+      }
+
       if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
         const details = parseContextErrorDetails(err);
         recordContextError(provider.name, details);
@@ -236,6 +254,7 @@ export async function invokeWithFallbackStream(
         if (limit) {
           const previousCap = contextBudgetCap;
           contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, limit) : limit;
+          if (sessionId) saveSessionContextBudgetCap(sessionId, contextBudgetCap);
           logInfo(
             `📉 Context budget cap: ${contextBudgetCap} tokens (from ${provider.name} limit=${limit})`,
           );
@@ -251,6 +270,7 @@ export async function invokeWithFallbackStream(
           const previousCap = contextBudgetCap;
           const estimated = Math.floor(details.requestedTokens * 0.6);
           contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, estimated) : estimated;
+          if (sessionId) saveSessionContextBudgetCap(sessionId, contextBudgetCap);
           logInfo(
             `📉 Context budget cap (estimated): ${contextBudgetCap} tokens (from ${provider.name} requested=${details.requestedTokens})`,
           );

@@ -7,14 +7,14 @@ import { providerProbeStage } from "./provider-probe-stage.mjs";
 import { runCodebuffProbeMode } from "./run-codebuff-probe-mode.mjs";
 
 export async function probeCodebuffDetailed(provider = {}, options = {}) {
-  const apiKey = getApiKey();
+  const sdkCostMode = provider.costMode === "free" ? "free" : undefined;
+  const mode = provider.costMode === "free" ? "free" : "paid";
+  const apiKey = getApiKey(sdkCostMode);
   const startedAt = Date.now();
   const stages = [];
   const providerName = provider.name || "codebuff-paid";
   const model = provider.model || process.env.CODEBUFF_MODEL_ID || "codebuff/base";
   const progress = options.progress || null;
-  const costMode = provider.costMode === "free" ? "free" : undefined;
-  const mode = provider.costMode === "free" ? "free" : "paid";
 
   if (!apiKey) {
     stages.push(providerProbeStage("env_missing", { envVar: "CODEBUFF_API_KEY" }));
@@ -46,7 +46,7 @@ export async function probeCodebuffDetailed(provider = {}, options = {}) {
         apiKey,
         cwd,
         prompt,
-        costMode,
+        sdkCostMode,
         stages,
         progress,
         providerName,

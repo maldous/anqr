@@ -9,7 +9,7 @@ export async function invokeCodebuffDirectStream({
   onTextChunk,
   costMode = undefined,
 }) {
-  const apiKey = getApiKey();
+  const apiKey = getApiKey(costMode);
   if (!apiKey) {
     throw new Error("CODEBUFF_API_KEY is not set");
   }

@@ -22,6 +22,8 @@ import {
   setSessionMessages,
   resolveSessionKey,
   setSessionSource,
+  clearSessionProvider,
+  getSessionContextBudgetCap,
 } from "../symphony-session-state.mjs";
 
 import { ADVERTISED_MODELS } from "./advertised-models.mjs";
@@ -572,6 +574,9 @@ export const server = http.createServer(async (req, res) => {
 
       // Voice requests are conversational — strip tools to reclaim context budget.
       route.useTools = !isVoiceRequestEarly && (isCodexRequest || shouldUseToolsForRequest(messages, route));
+      const voiceContextBudgetCap = isVoiceRequestEarly
+        ? Number(process.env.SYMPHONY_VOICE_CONTEXT_CAP) || 8000
+        : null;
       const stream = body.stream === true;
 
       // Log message summary for debugging
@@ -612,6 +617,30 @@ export const server = http.createServer(async (req, res) => {
 
       if (canonicalSessionKey && canonicalSessionKey !== sessionId) {
         logDebug(`Session key remapped: ${sessionId} → ${canonicalSessionKey}`);
+      }
+
+      // Clear voice session sticky after session key is resolved so voice
+      // requests get fresh provider selection (prevents getting trapped on a
+      // single provider with a small context window).
+      if (isVoiceRequestEarly && effectiveSessionKey) {
+        clearSessionProvider(effectiveSessionKey);
+        logInfo(`🎙️ Voice request — cleared session sticky for fresh provider selection`);
+      }
+
+      // Load persisted context budget cap from session state so learned
+      // limits survive bridge restarts (ANQ-4342).
+      const persistedContextBudgetCap = getSessionContextBudgetCap(effectiveSessionKey);
+      const initialContextBudgetCap =
+        voiceContextBudgetCap != null
+          ? persistedContextBudgetCap != null
+            ? Math.min(voiceContextBudgetCap, persistedContextBudgetCap)
+            : voiceContextBudgetCap
+          : persistedContextBudgetCap;
+
+      if (initialContextBudgetCap) {
+        logInfo(
+          `📏 Initial context budget cap: ${initialContextBudgetCap} tokens (voice=${voiceContextBudgetCap}, persisted=${persistedContextBudgetCap})`,
+        );
       }
 
       // Stamp source identity on the session record for durable ownership tracking.
@@ -995,8 +1024,36 @@ export const server = http.createServer(async (req, res) => {
               `🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
             );
 
+            // For voice requests, proactively truncate messages before sending to
+            // CodeBuff SDK to avoid first-attempt CONTEXT_TOO_LARGE errors.
+            // CodeBuff direct path doesn't go through the fallback cascade, so the
+            // voiceContextBudgetCap must be applied here.
+            let codebuffMessages = messages;
+            if (isVoiceRequest && voiceContextBudgetCap) {
+              const markerRe = /^\[\d+ earlier messages removed/;
+              const sysMsgs = messages.filter(
+                (m) => m.role === "system" && !markerRe.test(m.content),
+              );
+              const nonSysMsgs = messages.filter((m) => m.role !== "system");
+              const keepCount = 4; // keep last 4 non-system messages for voice
+              if (nonSysMsgs.length > keepCount) {
+                const dropped = nonSysMsgs.length - keepCount;
+                codebuffMessages = [
+                  ...sysMsgs,
+                  {
+                    role: "system",
+                    content: `[${dropped} earlier messages removed for voice context limits]`,
+                  },
+                  ...nonSysMsgs.slice(-keepCount),
+                ];
+                logInfo(
+                  `🎙️ Voice+CodeBuff: truncated ${dropped} messages (${messages.length} → ${codebuffMessages.length})`,
+                );
+              }
+            }
+
             const result = await invokeCodebuffDirectStreamToSSE(
-              messages,
+              codebuffMessages,
               res,
               streamToDiscord,
               requestCwd,
@@ -1155,6 +1212,7 @@ export const server = http.createServer(async (req, res) => {
             effectiveSessionKey,
             requestCwd,
             isSelectedCodebuff ? null : selectedProvider,
+            initialContextBudgetCap,
           );
 
           clearInterval(heartbeat);
@@ -1369,7 +1427,7 @@ export const server = http.createServer(async (req, res) => {
         // Non-streaming
         let result;
         try {
-          result = await invokeWithFallback(messages, route, effectiveSessionKey, requestCwd);
+          result = await invokeWithFallback(messages, route, effectiveSessionKey, requestCwd, initialContextBudgetCap);
         } catch (nonStreamError) {
           // F Phase 3: Emit failure-path evidence for non-streaming exhaustion (F2, F3, F4)
           if (correlationId && nonStreamError.safetyNetData) {

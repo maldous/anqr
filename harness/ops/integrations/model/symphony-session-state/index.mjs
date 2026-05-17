@@ -31,6 +31,8 @@ export { clearSessionMessages } from "./clear-session-messages.mjs";
 export { detectCodebuffMode } from "./detect-codebuff-mode.mjs";
 export { tuneAdaptiveParams } from "./tune-adaptive-params.mjs";
 export { getProviderTurnLimit } from "./get-provider-turn-limit.mjs";
+export { saveSessionContextBudgetCap } from "./save-session-context-budget-cap.mjs";
+export { getSessionContextBudgetCap } from "./get-session-context-budget-cap.mjs";
 export { shouldTriggerEvalCycle } from "./should-trigger-eval-cycle.mjs";
 export { getEvaluationSampleProvider } from "./get-evaluation-sample-provider.mjs";
 export { paramsCache } from "./params-cache.mjs";

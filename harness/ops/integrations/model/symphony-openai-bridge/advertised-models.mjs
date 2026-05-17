@@ -36,4 +36,5 @@ export const ADVERTISED_MODELS = [
   { id: "symphony/together", ownedBy: "together", allowedNames: ["together"] },
   // ollama 3b/0.5b removed — below 14B minimum coding capability threshold
   // ollama-qwen3-coder-next removed — no corresponding static provider after ollama cleanup
+  { id: "symphony/deepseek", ownedBy: "deepseek", allowedNames: ["deepseek"] },
 ];

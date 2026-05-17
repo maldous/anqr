@@ -21,6 +21,11 @@
 // The adaptive context system (recordContextError) also reacts to 413 errors
 // reactively, but proactive caps prevent wasted first-attempt tokens.
 export const STATIC_PER_REQUEST_LIMITS = {
+  // ── CodeBuff free-tier per-request limits ──
+  // FreeBuff models (DeepSeek V4 Pro, Kimi K2.6, MiniMax M2.7) have
+  // per-request limits lower than their published context windows.
+  "codebuff-free": 16_000,
+
   // ── Groq free-tier per-request limits ──
   // Context window is 131K but free tier enforces these per-request caps.
   // See: 413 "tokens_limit_reached" errors with TPM limits in Groq API responses.

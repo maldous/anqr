@@ -123,5 +123,11 @@ export function buildStaticProviders() {
     // ollama 3b/0.5b excluded — below 14B minimum coding capability.
     // They produce false-positive completions with zero file changes.
     // Re-enable only if a larger model (e.g. qwen2.5-coder:14b) is available.
+    {
+      name: "deepseek",
+      model: "deepseek-v4-pro",
+      baseUrl: "https://api.deepseek.com/v1",
+      envVar: "DEEPSEEK_TOKEN",
+    },
   ];
 }

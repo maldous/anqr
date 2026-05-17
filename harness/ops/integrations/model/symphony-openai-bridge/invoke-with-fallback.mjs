@@ -4,6 +4,7 @@ import {
   detectCodebuffMode,
   shouldTriggerEvalCycle,
   setSessionMessages,
+  saveSessionContextBudgetCap,
 } from "../symphony-session-state.mjs";
 import {
   selectProvider,
@@ -12,6 +13,7 @@ import {
   recordProviderSuccess,
 } from "../symphony-credit-gate.mjs";
 import { invokeCodebuffDirect } from "../codebuff-direct.mjs";
+import { markCodebuffKeyExhausted, clearCodebuffKeyCooldown } from "../codebuff-direct/codebuff-key-pool.mjs";
 import {
   recordContextError,
   recordContextSuccess,
@@ -43,13 +45,13 @@ import { unwrapAIError } from "./unwrap-aierror.mjs";
 import { isInvalidModelAnswerText } from "./is-invalid-model-answer-text.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
-export async function invokeWithFallback(messages, route, sessionId = null, cwd = null) {
+export async function invokeWithFallback(messages, route, sessionId = null, cwd = null, initialContextBudgetCap = null) {
   const triedProviders = [];
   const fallbackChain = [];
   const contextReductions = [];
   let lastError = null;
   let attemptNumber = 0;
-  let contextBudgetCap = null;
+  let contextBudgetCap = initialContextBudgetCap;
 
   logDebug(`[invokeWithFallback] Starting fallback cascade`, {
     routeModelId: route.responseModelId,
@@ -160,6 +162,9 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, result.usage, true);
       recordContextSuccess(provider.name);
+      if (isCodebuffProvider) {
+        clearCodebuffKeyCooldown();
+      }
       recordTokenUsage(provider.name, {
         inputTokens: estimateMessagesTokens(messages),
         outputTokens: Math.ceil((result.text?.length || 0) / 4),
@@ -229,6 +234,18 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
       }
 
       recordErrorType(provider.name, errorType);
+
+      // Exhaust the CodeBuff key on rate-limit, credit-exhaustion, or quota errors
+      if (isCodebuffProvider) {
+        const isExhaustionError =
+          errorType === ERROR_TYPES.RATE_LIMITED ||
+          (errorType === ERROR_TYPES.SERVER_ERROR &&
+            /(?:quota|credit|insufficient|exhausted|limit reached)/i.test(errStr));
+        if (isExhaustionError) {
+          markCodebuffKeyExhausted();
+        }
+      }
+
       if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
         const details = parseContextErrorDetails(err);
         recordContextError(provider.name, details);
@@ -239,6 +256,7 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
         if (limit) {
           const previousCap = contextBudgetCap;
           contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, limit) : limit;
+          if (sessionId) saveSessionContextBudgetCap(sessionId, contextBudgetCap);
           logInfo(
             `📉 Context budget cap: ${contextBudgetCap} tokens (from ${provider.name} limit=${limit})`,
           );
@@ -253,6 +271,7 @@ export async function invokeWithFallback(messages, route, sessionId = null, cwd 
           const previousCap = contextBudgetCap;
           const estimated = Math.floor(details.requestedTokens * 0.6);
           contextBudgetCap = contextBudgetCap ? Math.min(contextBudgetCap, estimated) : estimated;
+          if (sessionId) saveSessionContextBudgetCap(sessionId, contextBudgetCap);
           logInfo(
             `📉 Context budget cap (estimated): ${contextBudgetCap} tokens (from ${provider.name} requested=${details.requestedTokens})`,
           );
