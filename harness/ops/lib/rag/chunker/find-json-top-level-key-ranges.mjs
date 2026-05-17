@@ -13,7 +13,7 @@ export function findJsonTopLevelKeyRanges(text) {
     let searchFrom = 0;
 
     for (const key of keys) {
-      const escaped = key.replaceAll(/[.*+?^${}()|[\]\]/g, "\$&");
+      const escaped = key.replaceAll(/[.*+?^${}()|[\]\\]/g, "\$&");
       const matcher = new RegExp(`^\s*"${escaped}"\s*:`);
       let found = -1;
 
