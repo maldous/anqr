@@ -1,3 +1,9 @@
+function buildToolTag(event) {
+  if (event.toolSupportHint) return ` [tools:${event.toolSupportHint}]`;
+  if (event.toolCapable) return " [tools]";
+  return "";
+}
+
 export function makeProviderProbeProgressCallback(state = {}) {
   const total = state.total || 0;
   const providerIndex = state.providerIndex || new Map();
@@ -7,9 +13,7 @@ export function makeProviderProbeProgressCallback(state = {}) {
     const detail = event.detail ? `, detail=${JSON.stringify(String(event.detail))}` : "";
     const answer = event.answer ? `, answer=${JSON.stringify(String(event.answer))}` : "";
     if (event.type === "provider_started") {
-      const tag = event.toolSupportHint
-        ? ` [tools:${event.toolSupportHint}]`
-        : event.toolCapable ? " [tools]" : "";
+      const tag = buildToolTag(event);
       console.log(`${prefix} starting${tag}${detail}`);
       return;
     }

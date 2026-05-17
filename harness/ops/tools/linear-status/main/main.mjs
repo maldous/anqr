@@ -13,6 +13,11 @@ import { logWarn, logError } from "../logger.mjs";
 import { pad } from "./pad.mjs";
 import { hasActiveCooldown } from "./has-active-cooldown.mjs";
 
+function resolveWorktreeStatus(wt) {
+  if (!wt.healthy) return wt.state;
+  return wt.executing ? "executing" : wt.state;
+}
+
 export async function main() {
   if (!process.env.LINEAR_API_KEY) {
     logError("LINEAR_API_KEY is not set");
@@ -26,9 +31,7 @@ export async function main() {
   const capacity = getHealthyLinearCapacity();
   console.log("┌─ Worktree Health (wt1-wt4) ─────────────────────────");
   for (const wt of capacity.worktrees) {
-    const status = wt.healthy
-      ? (wt.executing ? "executing" : wt.state)
-      : wt.state;
+    const status = resolveWorktreeStatus(wt);
     const issue = wt.issueIdentifier ? ` -> ${wt.issueIdentifier}` : "";
     const detail = wt.reason || wt.lastError ? ` (${wt.reason || wt.lastError})` : "";
     console.log(`│  ${pad(wt.wtId, 5)} ${pad(status, 20)} ${issue}${detail}`);

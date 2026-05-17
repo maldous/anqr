@@ -1,3 +1,9 @@
+function pickFirstArray(obj, keyA, keyB) {
+  if (Array.isArray(obj?.[keyA])) return obj[keyA];
+  if (Array.isArray(obj?.[keyB])) return obj[keyB];
+  return [];
+}
+
 function toolSupportStatus(capabilities, supportedParameters) {
   if (capabilities.function_calling === false) {
     return { status: "unsupported", reason: "capabilities.function_calling=false" };
@@ -23,10 +29,6 @@ function toolSupportStatus(capabilities, supportedParameters) {
 
 export function providerToolSupportHint(providerDef) {
   const capabilities = providerDef?.capabilities || {};
-  const supportedParameters = Array.isArray(providerDef?.supportedParameters)
-    ? providerDef.supportedParameters
-    : Array.isArray(providerDef?.supported_parameters)
-      ? providerDef.supported_parameters
-      : [];
+  const supportedParameters = pickFirstArray(providerDef, "supportedParameters", "supported_parameters");
   return toolSupportStatus(capabilities, supportedParameters);
 }
