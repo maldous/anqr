@@ -9,7 +9,7 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
       body: JSON.stringify({
         libraryTitle,
         topic,
-        max_tokens: effectiveMaxTokens || max_tokens,
+        max_tokens,
       }),
       signal: AbortSignal.timeout(35000),
     });
