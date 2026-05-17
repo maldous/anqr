@@ -13,7 +13,7 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
   // Validate input - must have at least one message
   if (!messages || messages.length === 0) {
     logError(
-      `⚠️ truncateMessagesForProvider: messages array is empty (provider: ${providerName}) - this should never happen`,
+      `No messages provided for provider ${providerName}. This should never happen.`,
       {
         providerName,
         messageCount: messages?.length,
@@ -54,7 +54,7 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
     return messages;
   }
 
-  logInfo(`✂️ Context pruning for ${providerName}: ~${estimated} tokens > ${maxTokens} limit`, {
+  logInfo(`Context pruning for ${providerName}: ${estimated} tokens exceeds the ${maxTokens} limit`, {
     providerName,
     estimatedTokens: estimated,
     maxTokens,
@@ -68,7 +68,7 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
   let truncated = messages.map((msg) => truncateMessageContent(msg, PER_MESSAGE_CHAR_LIMIT));
   estimated = estimateMessagesTokens(truncated);
   if (estimated <= maxTokens) {
-    logInfo(`✂️ Pass 1 (truncate large messages): ~${estimated} tokens — fits`, {
+    logInfo(`Pass one, truncating large messages: ${estimated} tokens fits within limit`, {
       estimatedTokens: estimated,
       maxTokens,
       messageCount: truncated.length,
@@ -104,7 +104,7 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
     };
     truncated = [...systemMessages, marker, ...kept];
     estimated = estimateMessagesTokens(truncated);
-    logInfo(`✂️ Pass 2 (drop ${dropped} middle messages): ~${estimated} tokens`, {
+    logInfo(`Pass two, dropped ${dropped} middle messages: ${estimated} tokens remaining`, {
       droppedCount: dropped,
       estimatedTokens: estimated,
       maxTokens,
@@ -120,10 +120,9 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
     messageCount: truncated.length,
   });
   truncated = truncated.map((msg) => truncateMessageContent(msg, aggressiveLimit));
-  estimated = estimateMessagesTokens(truncated);
-  logInfo(
-    `✂️ Pass 3 (aggressive truncation to ${aggressiveLimit} chars/msg): ~${estimated} tokens`,
-    {
+  estimated = estimateMessagesTokens(truncated);    logInfo(
+      `Pass three, aggressive truncation to ${aggressiveLimit} characters per message: ${estimated} tokens remaining`,
+      {
       aggressiveLimit,
       estimatedTokens: estimated,
       maxTokens,
@@ -148,7 +147,7 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
       .map((m) => truncateMessageContent(m, lastResortLimit));
     truncated = [...sysMsg, ...lastTwo];
     estimated = estimateMessagesTokens(truncated);
-    logInfo(`✂️ Pass 4 (last resort — system + last 2): ~${estimated} tokens`, {
+    logInfo(`Pass four, last resort keeping system message and last two messages: ${estimated} tokens remaining`, {
       lastResortLimit,
       estimatedTokens: estimated,
       maxTokens,
@@ -158,7 +157,7 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
 
   // Final validation - ensure we always return at least one message
   if (!truncated || truncated.length === 0) {
-    logError(`⚠️ Truncation resulted in empty array — returning last message only`, {
+    logError(`Truncation resulted in no messages. Using the last message only.`, {
       providerName,
       originalMessageCount: messages.length,
     });
@@ -171,11 +170,11 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
   const coherence = validateContextCoherence(truncated, providerName);
   if (!coherence.valid) {
     for (const warning of coherence.warnings) {
-      logInfo(`⚠️ Context coherence: ${warning}`);
+      logInfo(`Context coherence warning: ${warning}`);
     }
   }
 
-  logInfo(`[truncateMessagesForProvider] Complete`, {
+  logInfo(`Truncation complete`, {
     providerName,
     originalMessageCount: messages.length,
     truncatedMessageCount: truncated.length,

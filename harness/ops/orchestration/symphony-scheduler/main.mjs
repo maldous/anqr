@@ -14,12 +14,12 @@ export async function main() {
 
   if (once || !daemon) {
     const result = await scheduleCycle();
-    logInfo(`[scheduler] Single cycle: ${JSON.stringify(result)}`);
+    logInfo(`[scheduler] Single cycle complete.`, { result });
     process.exit(0);
   }
 
   // Daemon mode
-  logInfo(`[scheduler] Starting daemon mode (poll every ${SCHEDULER_POLL_INTERVAL_MS / 1000}s)`);
+  logInfo(`[scheduler] Starting daemon mode, polling every ${SCHEDULER_POLL_INTERVAL_MS / 1000} seconds`);
 
   const shutdown = (signal) => {
     logInfo(`[scheduler] Received ${signal}, shutting down...`);
