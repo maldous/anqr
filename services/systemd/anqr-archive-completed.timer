@@ -1,0 +1,25 @@
+# anqr-archive-completed.timer — Hourly archive of old completed issues
+#
+# Triggers anqr-archive-completed.service every hour to remove issues
+# with fin=integrated_main that are older than 60 minutes from the
+# symphony state file, keeping the state lean.
+#
+# Install:
+#   cp services/systemd/anqr-archive-completed.* ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-archive-completed.timer
+#
+# Check:
+#   systemctl --user status anqr-archive-completed.timer
+#   journalctl --user -u anqr-archive-completed.service --since today
+
+[Unit]
+Description=Hourly archive of completed ANQR issues
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=180
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,26 @@
+# anqr-archive-completed.service — Archive old completed issues from state
+#
+# Removes issues from the symphony state file whose finalization state is
+# "integrated_main" and whose updatedAt is older than 60 minutes.
+# Uses the symphony state module's mutateState for safe atomic writes.
+#
+# Triggered by anqr-archive-completed.timer every hour. No [Install] needed —
+# timer-only oneshot.
+
+[Unit]
+Description=ANQR archive completed issues from state
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+WorkingDirectory=%h/src/anqr
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node harness/ops/runtime/monitor/archive-completed-issues.mjs
+TimeoutStartSec=30
+MemoryMax=256M
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-archive-completed

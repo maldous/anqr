@@ -16,4 +16,4 @@ Persistent=true
 RandomizedDelaySec=30
 
 [Install]
-WantedBy=default.target
+WantedBy=timers.target
