@@ -32,6 +32,10 @@ export async function checkService(service) {
     logInfo(`[watchdog] 🔍 ${shortName}: New restart detected (PID ${pid})`);
     restartTimestamps.set(serviceName, pid);
 
+    // Clear consecutive unhealthy count on fresh restart (stale counts
+    // from a previous hung instance should not accumulate across restarts)
+    consecutiveUnhealthyCount.delete(serviceName);
+
     // Track for rapid restart detection
     detectRapidRestarts(serviceName);
   }
