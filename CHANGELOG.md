@@ -1,3 +1,7 @@
+## ANQ-3649: [Sonar] Add at least one assertion to this test case. (request-rehydration.spec.ts:92) (2026-01-16)
+
+- Added assertion to verify `completeInflightRequest` does not modify state when called with null/empty requestId.
+
 ## ANQ-3647: [Sonar] Add at least one assertion to this test case. (session-state-crud.spec.ts:163) (2026-01-16)
 
 - Added assertions to verify `setSessionMessages` does not throw for null/empty sessionId in the "setSessionMessages + getSessionMessages" describe block.

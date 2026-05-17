@@ -96,6 +96,8 @@ describe("request-rehydration", () => {
     it("does nothing for null/empty requestId", () => {
       completeInflightRequest("");
       completeInflightRequest(null as unknown as string);
+      // Verify no records were removed (state remains empty)
+      expect(getAllInflightRequests()).toEqual({});
     });
   });
 
