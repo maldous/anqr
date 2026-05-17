@@ -56,3 +56,7 @@
 ### 2026-05-17T09:04:30.877Z - Watchdog restarted executor-wt4 service (reason: stuck in activating for 112s, commit: 7fe7007b1, action: restart-only)
 
 ### 2026-05-17T09:05:48.246Z - Watchdog restarted executor-wt3 service (reason: stuck in activating for 77s, commit: 7fe7007b1, action: restart-only)
+
+### 2026-05-17T09:09:26.291Z - Watchdog restarted executor-wt1 service (reason: stuck in activating for 65s, commit: 572627031, action: restart-only)
+
+### 2026-05-17T09:09:43.865Z - Watchdog restarted executor-wt2 service (reason: stuck in activating for 83s, commit: 572627031, action: restart-only)

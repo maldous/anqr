@@ -7,9 +7,9 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        libraryTitle: localLibraryTitle,
-        topic: localTopic,
-        max_tokens: maxTokens,
+        libraryTitle,
+        topic,
+        max_tokens: effectiveMaxTokens || max_tokens,
       }),
       signal: AbortSignal.timeout(35000),
     });
@@ -30,8 +30,8 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
         ok: true,
         result: {
           content: result.documentation,
-          library: localLibraryTitle,
-          topic: localTopic,
+          library: libraryTitle,
+          topic: topic,
           source: result.source || "local-http",
           tokens: Math.ceil(result.documentation.length / 4),
         },
@@ -44,10 +44,6 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
       status: 200,
       reason: result.error || "Context7 HTTP service returned no documentation",
     };
-  }
-
-  try {
-    logInfo(`📚 Reading docs: ${libraryTitle} - ${topic}`);
 
     const effectiveMaxTokens = Math.max(max_tokens, 10000);
 
