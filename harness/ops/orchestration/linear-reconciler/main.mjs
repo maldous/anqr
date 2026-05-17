@@ -5,8 +5,8 @@ import { logInfo, logError } from "./logger.mjs";
 
 export async function main() {
   const args = new Set(process.argv.slice(2));
-  const daemon = args.includes("--daemon");
-  const status = args.includes("--status");
+  const daemon = args.has("--daemon");
+  const status = args.has("--status");
 
   if (!process.env.LINEAR_API_KEY) {
     logError("LINEAR_API_KEY is not set");
