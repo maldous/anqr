@@ -19,17 +19,18 @@ import { classifyToolProbeErrorOutcome } from "./classify-tool-probe-error-outco
 import { providerToolSupportHint } from "./provider-tool-support-hint.mjs";
 import { probeMistralToolCapabilityViaHttp } from "./probe-mistral-tool-capability-via-http.mjs";
 
+function shouldWarnForStatus(status) {
+  return !new Set([
+    "non-capable-rejected",
+    "failed-function-call",
+    "quota-exhausted",
+    "auth-invalid",
+    "unavailable-model",
+    "bad-request",
+  ]).has(status);
+}
+
 export async function probeToolCapabilityForProvider(providerDef) {
-  function shouldWarnForStatus(status) {
-    return !new Set([
-      "non-capable-rejected",
-      "failed-function-call",
-      "quota-exhausted",
-      "auth-invalid",
-      "unavailable-model",
-      "bad-request",
-    ]).has(status);
-  }
   const name = providerDef.name;
   const supportHint = providerToolSupportHint(providerDef);
 

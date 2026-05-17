@@ -40,57 +40,55 @@ const EXCLUDED_MODEL_PATTERNS = [
  */
 const MIN_CODING_PARAMS_B = 14;
 
+function hasConfiguredCredentials(provider) {
+  if (provider?.driver === "codex-sdk") {
+    return Boolean(process.env.OPENAI_API_KEY);
+  }
+  if (!provider?.envVar) {
+    return typeof provider?.loadToken === "function" || true;
+  }
+  const value = process.env[provider.envVar];
+  return Boolean((value && value !== "REPLACE" && value.length > 1) || provider?.loadToken);
+}
+
+function supportsTextIO(raw) {
+  const inputModalities = Array.isArray(raw?.architecture?.input_modalities)
+    ? raw.architecture.input_modalities
+    : Array.isArray(raw?.input_modalities)
+      ? raw.input_modalities
+      : [];
+  const outputModalities = Array.isArray(raw?.architecture?.output_modalities)
+    ? raw.architecture.output_modalities
+    : Array.isArray(raw?.output_modalities)
+      ? raw.output_modalities
+      : [];
+  const acceptsText = inputModalities.length === 0 || inputModalities.includes("text");
+  const outputsText = outputModalities.length === 0 || outputModalities.includes("text");
+  return acceptsText && outputsText;
+}
+
+function sortCatalogRows(a, b) {
+  const aSupport = a?.toolSupport === "supported" ? 1 : 0;
+  const bSupport = b?.toolSupport === "supported" ? 1 : 0;
+  const aContext = Number(a?.contextLength || 0);
+  const bContext = Number(b?.contextLength || 0);
+  return (
+    bSupport - aSupport ||
+    bContext - aContext ||
+    String(a?.model || "").localeCompare(String(b?.model || ""))
+  );
+}
+
 export function buildDynamicCatalogProviders(staticProviders) {
-  function hasConfiguredCredentials(provider) {
-    if (provider?.driver === "codex-sdk") {
-      return Boolean(process.env.OPENAI_API_KEY);
-    }
-    if (!provider?.envVar) {
-      return typeof provider?.loadToken === "function" || true;
-    }
-    const value = process.env[provider.envVar];
-    return Boolean((value && value !== "REPLACE" && value.length > 1) || provider?.loadToken);
-  }
-
-  function supportsTextIO(raw) {
-    const inputModalities = Array.isArray(raw?.architecture?.input_modalities)
-      ? raw.architecture.input_modalities
-      : Array.isArray(raw?.input_modalities)
-        ? raw.input_modalities
-        : [];
-    const outputModalities = Array.isArray(raw?.architecture?.output_modalities)
-      ? raw.architecture.output_modalities
-      : Array.isArray(raw?.output_modalities)
-        ? raw.output_modalities
-        : [];
-    const acceptsText = inputModalities.length === 0 || inputModalities.includes("text");
-    const outputsText = outputModalities.length === 0 || outputModalities.includes("text");
-    return acceptsText && outputsText;
-  }
-
   function isEligibleCatalogRow(row) {
     const model = String(row?.model || row?.id || "").trim();
     if (!model) return false;
     if (EXCLUDED_MODEL_PATTERNS.some((pattern) => pattern.test(model))) return false;
     if (!supportsTextIO(row?.raw || row)) return false;
     if (row?.toolSupport === "unsupported") return false;
-    // Reject models below minimum coding capability threshold.
-    // Models with <14B params produce false-positive completions.
     const paramB = extractParamCountB(model);
     if (paramB !== null && paramB < MIN_CODING_PARAMS_B) return false;
     return true;
-  }
-
-  function sortCatalogRows(a, b) {
-    const aSupport = a?.toolSupport === "supported" ? 1 : 0;
-    const bSupport = b?.toolSupport === "supported" ? 1 : 0;
-    const aContext = Number(a?.contextLength || 0);
-    const bContext = Number(b?.contextLength || 0);
-    return (
-      bSupport - aSupport ||
-      bContext - aContext ||
-      String(a?.model || "").localeCompare(String(b?.model || ""))
-    );
   }
 
   const cache = loadProviderCatalogCache();

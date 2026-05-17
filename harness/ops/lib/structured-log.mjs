@@ -1,5 +1,13 @@
 import { createLogger } from "./logger.mjs";
 
+function stripNulls(obj) {
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== null && value !== undefined) result[key] = value;
+  }
+  return result;
+}
+
 export function createStructuredLogger(service, defaultFields = {}) {
   const logger = createLogger(service);
 
@@ -15,14 +23,6 @@ export function createStructuredLogger(service, defaultFields = {}) {
       attempt: fields.attempt ?? defaultFields.attempt ?? null,
       stateTransition: fields.stateTransition || defaultFields.stateTransition || null,
     };
-  }
-
-  function stripNulls(obj) {
-    const result = {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (value !== null && value !== undefined) result[key] = value;
-    }
-    return result;
   }
 
   return {

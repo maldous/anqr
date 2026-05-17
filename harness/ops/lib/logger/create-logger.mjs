@@ -9,25 +9,25 @@ const MAX_LOG_ARRAY_ITEMS = 8;
 const MAX_LOG_OBJECT_KEYS = 20;
 const MAX_LOG_DEPTH = 3;
 
+function getLoggerRegistry() {
+  if (!globalThis[LOGGER_REGISTRY_KEY]) {
+    globalThis[LOGGER_REGISTRY_KEY] = new Set();
+  }
+  return globalThis[LOGGER_REGISTRY_KEY];
+}
+
+function sanitizeText(value) {
+  return String(value || "");
+}
+
+function summarizeObjectKeys(value) {
+  return Object.keys(value || {}).slice(0, MAX_LOG_OBJECT_KEYS);
+}
+
 export function createLogger(scriptName = "", options = {}) {
-  function getLoggerRegistry() {
-    if (!globalThis[LOGGER_REGISTRY_KEY]) {
-      globalThis[LOGGER_REGISTRY_KEY] = new Set();
-    }
-    return globalThis[LOGGER_REGISTRY_KEY];
-  }
-
-  function sanitizeText(value) {
-    return String(value || "");
-  }
-
   function truncateText(value, limit = MAX_LOG_STRING_LENGTH) {
     const text = sanitizeText(value);
     return text.length > limit ? `${text.slice(0, limit)}…` : text;
-  }
-
-  function summarizeObjectKeys(value) {
-    return Object.keys(value || {}).slice(0, MAX_LOG_OBJECT_KEYS);
   }
 
   function sanitizeValue(value, key = "", depth = 0, seen = new WeakSet()) {

@@ -9,15 +9,16 @@ import { CONTEXT7_HTTP_BASE } from "./context7-http-base.mjs";
 import { tools } from "./tools.mjs";
 import { logInfo } from "./logger.mjs";
 
-export async function logStartupBanner({ summary, enabled }) {
-  function normalizeContext7Status(status) {
-    const normalized = String(status || "unreachable").toLowerCase();
-    if (normalized === "ok" || normalized === "healthy" || normalized === "ready") return "ok";
-    if (normalized === "degraded" || normalized === "warming" || normalized === "starting") {
-      return "warming";
-    }
-    return normalized;
+function normalizeContext7Status(status) {
+  const normalized = String(status || "unreachable").toLowerCase();
+  if (normalized === "ok" || normalized === "healthy" || normalized === "ready") return "ok";
+  if (normalized === "degraded" || normalized === "warming" || normalized === "starting") {
+    return "warming";
   }
+  return normalized;
+}
+
+export async function logStartupBanner({ summary, enabled }) {
 
   const ragStats = getHybridSearchStats();
   const linearStats = getLinearIndexStats();

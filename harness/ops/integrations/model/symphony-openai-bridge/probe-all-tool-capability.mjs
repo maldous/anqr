@@ -23,6 +23,10 @@ import { logDebug, logError } from "./logger.mjs";
 const TOOL_PROBE_MAX_UNKNOWN_PROVIDERS_PER_CYCLE = 12;
 const TOOL_PROBE_MAX_PER_PROVIDER_FAMILY = 2;
 
+function providerFamilyKey(providerDef) {
+  return providerDef.baseProviderName || providerDef.name;
+}
+
 export async function probeAllToolCapability(options = {}) {
   function rankIndexByName() {
     const ranked = getRankedProviders({ includeAvailable: true });
@@ -36,10 +40,6 @@ export async function probeAllToolCapability(options = {}) {
         (rankedIndex.get(a.name) ?? Number.MAX_SAFE_INTEGER) -
           (rankedIndex.get(b.name) ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name),
     );
-  }
-
-  function providerFamilyKey(providerDef) {
-    return providerDef.baseProviderName || providerDef.name;
   }
 
   function preclassifyProvider(providerDef) {

@@ -4,11 +4,12 @@ const CONSOLE_GUARD_KEY = Symbol.for("anqr.symphony-openai-bridge.console-guard"
 const MAX_ITEMS = 8;
 const MAX_STRING = 240;
 
+function trimString(value, limit = MAX_STRING) {
+  const text = String(value || "");
+  return text.length > limit ? `${text.slice(0, limit)}…` : text;
+}
+
 export function installConsoleOutputGuard() {
-  function trimString(value, limit = MAX_STRING) {
-    const text = String(value || "");
-    return text.length > limit ? `${text.slice(0, limit)}…` : text;
-  }
 
   function summarize(value, depth = 0, seen = new WeakSet()) {
     if (value === null || value === undefined) return value;
