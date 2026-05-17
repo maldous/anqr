@@ -1,7 +1,7 @@
 # anqr-symphony-scheduler-check.service — One-shot scheduler health check
 #
 # Runs check-scheduler-health.sh and logs result.
-# Triggered by anqr-symphony-scheduler-check.timer every 5 minutes.
+# Triggered by anqr-symphony-scheduler-check.timer every 5 minutes. No [Install] needed - timer-only oneshot.
 #
 # On failure: alerts via syslog and exit code.
 
@@ -20,5 +20,3 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=anqr-scheduler-health
 
-[Install]
-WantedBy=default.target
