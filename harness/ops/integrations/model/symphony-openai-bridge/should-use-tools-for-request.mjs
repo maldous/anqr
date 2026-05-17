@@ -9,7 +9,6 @@ function isSimpleChat(text) {
   return GREETINGS_RE.test(text) || THANKS_RE.test(text) || QUESTIONS_RE.test(text) || ACKS_RE.test(text) || TEST_RE.test(text) || HELP_RE.test(text);
 }
 
-const TOOL_KEYWORDS_RE = /\b(read|write|edit|patch|replace|search|grep|find|open|inspect|fix|change|run|execute|test|lint|build|compile|commit|branch|worktree|file|files|directory|repo|repository|code|log|logs|trace|debug|issue|ticket|linear|discord|provider|probe|service|systemd|curl|http|api|json|yaml|markdown|md|tsconfig|eslint|vitest|jest|docker|kubernetes|helm|grafana|alloy|otlp|zip)\b/i;
 const TOOL_SYMBOLS_RE = /[`$]/;
 const TOOL_PATH_RE = /\/[\w.-]+/;
 const TOOL_FILE_EXT_RE = /\b[a-z0-9_-]+\.(?:mjs|js|ts|tsx|json|md|yaml|yml|sh|py|txt|zip)\b/i;
