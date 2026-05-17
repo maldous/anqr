@@ -28,8 +28,6 @@ import { ADVERTISED_MODELS } from "./advertised-models.mjs";
 import { BRIDGE_METRICS } from "./bridge-metrics.mjs";
 import { PROBE_CACHE_FILE } from "./probe-cache-file.mjs";
 import { DISCOVERED_PER_REQUEST_LIMITS_FILE } from "../symphony-bridge-truncation.mjs";
-import { BRIDGE_PROVIDER_BLOCKLIST } from "./bridge-provider-blocklist.mjs";
-import { BRIDGE_PROVIDER_BLOCKLIST_REASONS } from "./bridge-provider-blocklist-reasons.mjs";
 import { MAX_CONCURRENT_REQUESTS } from "./max-concurrent-requests.mjs";
 import { MODEL_ID } from "./model-id.mjs";
 import { REQUEST_TIMEOUT_MS } from "./request-timeout-ms.mjs";
@@ -69,8 +67,6 @@ import { sendJson } from "./send-json.mjs";
 import { shouldUseToolsForRequest } from "./should-use-tools-for-request.mjs";
 import { requestContextStorage } from "./request-context-storage.mjs";
 import { setCurrentRequestId } from "./set-current-request-id.mjs";
-import { toolCapableProviders } from "./tool-capable-providers.mjs";
-import { tools } from "./tools.mjs";
 import { unauthorized } from "./unauthorized.mjs";
 import { verifyWorktreeFreshnessNonBlocking } from "./verify-worktree-freshness-non-blocking.mjs";
 import { voiceAnnounce } from "./voice-announce.mjs";
@@ -148,10 +144,8 @@ export const server = http.createServer(async (req, res) => {
       });
     }
 
-    // GET /health
+    // GET /health — lightweight (must NOT call getProviderStats or getRankedProviders)
     if (req.method === "GET" && req.url === "/health") {
-      const stats = getProviderStats();
-      const statsCount = Object.keys(stats).length;
       const configuredCount = providerStatusCache.configured.length;
       const availableCount = providerStatusCache.probeResults.filter((r) => r.available).length;
 
@@ -160,27 +154,7 @@ export const server = http.createServer(async (req, res) => {
         model: MODEL_ID,
         providersConfigured: configuredCount,
         providersAvailable: availableCount,
-        providersWithStats: statsCount,
-        rankedProviders: getRankedProviders({ excludeNames: nonToolCapableProviders })
-          .slice(0, 5)
-          .map((p) => ({ name: p.name, score: p.score })),
-        configuredProviders: providerStatusCache.probeResults
-          .filter((r) => r.status !== "excluded")
-          .map((r) => ({ name: r.name, status: r.status, available: r.available })),
-        toolProbe: {
-          capable: [...toolCapableProviders].sort(),
-          excluded: [...nonToolCapableProviders].sort(),
-          unclassified: (providerStatusCache.probeResults || [])
-            .filter((r) => r.available)
-            .map((r) => r.name)
-            .filter((n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n))
-            .sort(),
-          blocked: [...BRIDGE_PROVIDER_BLOCKLIST].map((name) => ({
-            name,
-            reason: BRIDGE_PROVIDER_BLOCKLIST_REASONS[name] || "blocklisted",
-          })),
-        },
-        tools: Object.keys(tools),
+        providersWithStats: configuredCount,
         lastProbeAt: providerStatusCache.lastProbeAt,
       });
     }
