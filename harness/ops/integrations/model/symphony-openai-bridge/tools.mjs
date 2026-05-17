@@ -776,10 +776,7 @@ export const tools = {
       // Use execFileSync to avoid shell escaping issues with user-provided code
       const lang = (language || "python").toLowerCase();
       let bin, args;
-      if (lang === "python" || lang === "python3") {
-        bin = "python3";
-        args = ["-c", code];
-      } else if (lang === "javascript" || lang === "node" || lang === "js") {
+      if (lang === "javascript" || lang === "node" || lang === "js") {
         bin = "node";
         args = ["-e", code];
       } else if (lang === "bash" || lang === "sh") {

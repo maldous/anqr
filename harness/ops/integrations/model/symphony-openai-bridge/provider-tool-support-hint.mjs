@@ -12,8 +12,8 @@ export function providerToolSupportHint(providerDef) {
       ? providerDef.supported_parameters
       : [];
   if (supportedParameters.length > 0) {
-    const lower = supportedParameters.map((item) => String(item).toLowerCase());
-    if (lower.includes("tools") || lower.includes("tool_choice") || lower.includes("tool-choice")) {
+    const lower = new Set(supportedParameters.map((item) => String(item).toLowerCase()));
+    if (lower.has("tools") || lower.has("tool_choice") || lower.has("tool-choice")) {
       return {
         status: "supported",
         reason: `supported_parameters=${supportedParameters.join(",")}`,

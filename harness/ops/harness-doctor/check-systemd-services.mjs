@@ -26,9 +26,9 @@ export function checkSystemdServices() {
     "anqr-linear-webhook",
     "anqr-watchdog",
     "anqr-worktree-health",
-  ];
+  ]);
 
-  const results = [];
+  const results = []);
   for (const service of services) {
     try {
       const out = execFileSync("systemctl", ["is-active", "--user", service], {

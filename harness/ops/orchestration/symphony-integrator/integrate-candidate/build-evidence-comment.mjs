@@ -8,7 +8,7 @@ export function buildEvidenceComment({
 }) {
   const validation = evidence?.validation || null;
   const push = evidence?.push || null;
-  const docsUpdated = changedFiles.some((f) => /(^docs\/)|README\.md$/.test(f));
+  const docsUpdated = changedFiles.some((f) => /(?:^docs\/|README\.md$)/.test(f));
   const verificationResults = [
     ["typecheck", validation?.typecheckPassed],
     ["tests", validation?.testsPassed],

@@ -6,7 +6,7 @@ export async function codeSearchTool({ pattern, flags, cwd, maxResults = 15 }) {
   try {
     const baseDir = resolveRequestDir(cwd);
     const flagsStr = flags || "";
-    const command = `rg "${pattern.replaceAll(/"/g, '\\"')}" ${flagsStr} "${baseDir}" -n --max-count=${maxResults} 2>/dev/null || true`;
+    const command = `rg "${pattern.replaceAll(""", '\"')}" ${flagsStr} "${baseDir}" -n --max-count=${maxResults} 2>/dev/null || true`;
     const result = execSync(command, {
       encoding: "utf-8",
       timeout: 10000,

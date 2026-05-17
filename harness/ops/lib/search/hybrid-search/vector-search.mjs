@@ -1,1 +1,1 @@
-export let vectorSearch;
+export const vectorSearch;

@@ -526,7 +526,6 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
     // local-busy). If it's just an unrecognised "other" failure, promote to
     // partial completion so the downstream changedFiles / continuation logic
     // handles it instead of applying exponential backoff meant for real errors.
-    let completionPromoted = false;
     if (!agentResult.completed && agentResult.toolCalls > 0) {
       const preFailureKind = classifyProviderFailure(
         `${agentResult.summary} ${agentResult.error || ""}`,
@@ -536,7 +535,6 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           `[runner] Agent returned completed=false but made ${agentResult.toolCalls} tool calls — treating as partial completion`,
         );
         agentResult.completed = true;
-        completionPromoted = true;
       }
     }
 
@@ -770,7 +768,6 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
             maxMs: contRemainingMs,
           });
           agentResult = continueResult;
-          completionPromoted = false;
           changedFiles = gitDiffNames();
         } catch (err) {
           logError(`[runner] Continuation failed: ${err.message}`);

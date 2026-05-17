@@ -12,7 +12,7 @@ import { inferOwnerFromBranch } from "./infer-owner-from-branch.mjs";
 export function classifyWorktree(snapshot) {
   const result = {
     classification: "clean",
-    confidence: 1.0,
+    confidence: 1,
     inferredOwner: null,
     repairAction: null,
     hasDirtyFiles: false,
@@ -74,7 +74,7 @@ export function classifyWorktree(snapshot) {
   if (finState?.state === "branch_push_failed_repairable" && finState.stickyOwner === snapshot.id) {
     result.classification = "half_committed";
     result.repairAction = "retry_push";
-    result.confidence = 1.0;
+    result.confidence = 1;
     result.inferredOwner = snapshot.issueIdentifier;
 
     const finAge = Date.now() - new Date(finState.updatedAt || 0).getTime();
@@ -90,7 +90,7 @@ export function classifyWorktree(snapshot) {
   // 3b. Other repairable states with stickyOwner match → dirty_owned / continue_repair
   if (isRepairable && finState.stickyOwner === snapshot.id) {
     result.classification = "dirty_owned";
-    result.confidence = 1.0;
+    result.confidence = 1;
     result.inferredOwner = snapshot.issueIdentifier;
     result.repairAction = "continue_repair";
 

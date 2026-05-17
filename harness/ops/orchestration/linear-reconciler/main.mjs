@@ -4,7 +4,7 @@ import { getHealthyLinearCapacity } from "./get-healthy-linear-capacity.mjs";
 import { logInfo, logError } from "./logger.mjs";
 
 export async function main() {
-  const args = process.argv.slice(2);
+  const args = new Set(process.argv.slice(2));
   const daemon = args.includes("--daemon");
   const status = args.includes("--status");
 

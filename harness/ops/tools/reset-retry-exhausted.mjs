@@ -29,7 +29,7 @@ async function main() {
     process.exit(2);
   }
 
-  logInfo(`[reset-retry-exhausted]${dryRun ? " (DRY RUN)" : ""} Starting...\\n`);
+  logInfo(`[reset-retry-exhausted]${dryRun ? " (DRY RUN)" : ""} Starting...\n`);
 
   let issuesToReset = [];
 
@@ -68,7 +68,7 @@ async function main() {
     process.exit(0);
   }
 
-  logInfo(`Found ${issuesToReset.length} retry_exhausted issues:\\n`);
+  logInfo(`Found ${issuesToReset.length} retry_exhausted issues:\n`);
 
   for (const { identifier, title, blocked_reason } of issuesToReset) {
     logInfo(`  ${identifier}: ${blocked_reason || "retry_exhausted"}`);
@@ -76,11 +76,11 @@ async function main() {
   }
 
   if (dryRun) {
-    logInfo(`\\n[DRY RUN] Would reset ${issuesToReset.length} issues`);
+    logInfo(`\n[DRY RUN] Would reset ${issuesToReset.length} issues`);
     process.exit(0);
   }
 
-  logInfo(`\\nResetting ${issuesToReset.length} issues...`);
+  logInfo(`\nResetting ${issuesToReset.length} issues...`);
 
   let resetCount = 0;
   for (const { identifier } of issuesToReset) {
@@ -92,8 +92,8 @@ async function main() {
     logInfo(`  ✅ Reset ${identifier}`);
   }
 
-  logInfo(`\\n✅ Successfully reset ${resetCount} issues`);
-  logInfo("\\nThese issues can now be fed from Backlog → Todo");
+  logInfo(`\n✅ Successfully reset ${resetCount} issues`);
+  logInfo("\nThese issues can now be fed from Backlog → Todo");
 }
 
 await main();

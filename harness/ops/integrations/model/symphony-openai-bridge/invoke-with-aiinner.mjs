@@ -634,7 +634,6 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       } else if (onChunk) {
         onChunk({ type: "text", text: rawJsonGuardBuffer });
       }
-      rawJsonGuardDone = true;
     }
 
     // Summary of suppressed empty reasoning-delta events

@@ -1,1 +1,1 @@
-export let generateEmbedding;
+export const generateEmbedding;

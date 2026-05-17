@@ -20,7 +20,8 @@ import { writeRunnerOutcome } from "./write-runner-outcome.mjs";
 export async function main() {
   const args = new Map();
   // Parse arguments with values (e.g., --issue ISSUE-123)
-  for (let i = 2; i < process.argv.length; i++) {
+  let i = 2;
+  while (i < process.argv.length) {
     const arg = process.argv[i];
     if (arg === "--dry-run") args.set("dryRun", true);
     else if (arg === "--once") args.set("once", true);
@@ -29,6 +30,7 @@ export async function main() {
       args.set("issue", process.argv[i + 1]);
       i++; // Skip next arg (the value)
     }
+    i++;
   }
   const dryRun = args.get("dryRun");
   const doOnce = args.get("once");

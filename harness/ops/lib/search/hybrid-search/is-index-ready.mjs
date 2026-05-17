@@ -1,1 +1,1 @@
-export let isIndexReady;
+export const isIndexReady;

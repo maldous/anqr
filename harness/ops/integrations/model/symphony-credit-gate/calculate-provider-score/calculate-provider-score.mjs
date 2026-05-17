@@ -64,7 +64,7 @@ export function calculateProviderScore(providerName, stats) {
   const contextLengthValue = stats.contextLength?.[providerName] || 0;
   const baseContextScore = computeContextLengthScore(contextLengthValue);
   // Dynamically reduce context boost for underperformers: if successRate < 0.3, scale down
-  const contextDamping = successRate < 0.3 ? successRate / 0.3 : 1.0;
+  const contextDamping = successRate < 0.3 ? successRate / 0.3 : 1;
   const contextLengthScore = baseContextScore * contextDamping;
 
   // Probe-vs-usage reliability score (consolidated from record-probe-usage-reliability.mjs)

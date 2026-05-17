@@ -10,6 +10,7 @@ const REAP_INTERVAL_MS = 60 * 1000;
 
 setInterval(() => {
   const now = Date.now();
+  if (discordStreamBuffers.size === 0) return;
   for (const [key, state] of discordStreamBuffers) {
     if (state.createdAt && now - state.createdAt > ORPHAN_TTL_MS) {
       if (state.timer) clearTimeout(state.timer);

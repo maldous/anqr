@@ -8,9 +8,7 @@ export function buildIncidentDescription(type, context, evidence, fingerprint) {
     "",
     `# ${type}`,
     "",
-  ];
-
-  // Context
+  ];  // Context
   if (context.service) {
     lines.push(`**Service:** ${context.service}`);
   }
@@ -20,17 +18,7 @@ export function buildIncidentDescription(type, context, evidence, fingerprint) {
   if (context.issueRef) {
     lines.push(`**Related Issue:** ${context.issueRef}`);
   }
-  lines.push("");
-
-  // Evidence
-  lines.push(formatEvidenceForIssue(evidence));
-
-  // Resolution instructions
-  lines.push("---", "", "## Resolution", "", "This incident will auto-close when:",
-    "1. Service health checks pass consistently for >1 hour",
-    "2. Related issue (if any) moves to Done state",
-    "",
-    "To manually resolve, add evidence of root cause fix and move to Done.");
+  lines.push("", formatEvidenceForIssue(evidence), "---", "", "## Resolution", "", "This incident will auto-close when:", "1. Service health checks pass consistently for >1 hour", "2. Related issue (if any) moves to Done state", "", "To manually resolve, add evidence of root cause fix and move to Done.");
 
   return lines.join("\n");
 }

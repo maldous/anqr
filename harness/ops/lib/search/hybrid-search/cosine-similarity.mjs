@@ -1,1 +1,1 @@
-export let cosineSimilarity;
+export const cosineSimilarity;

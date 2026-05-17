@@ -1,1 +1,1 @@
-export let isOllamaAvailable;
+export const isOllamaAvailable;
