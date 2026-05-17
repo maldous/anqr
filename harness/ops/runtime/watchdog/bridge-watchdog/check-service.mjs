@@ -135,7 +135,13 @@ export async function checkService(service) {
   if (status === "active") {
     const health = await checkHealthEndpoint(service);
     const activeSince = getServiceActiveTime(serviceName);
-    if (!health.healthy) {
+    if (health.healthy) {
+      // Reset consecutive unhealthy count on success
+      if (consecutiveUnhealthyCount.has(serviceName)) {
+        consecutiveUnhealthyCount.delete(serviceName);
+      }
+      logDebug(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"}) - ${health.reason}`);
+    } else {
       // Track consecutive unhealthy checks
       const prev = consecutiveUnhealthyCount.get(serviceName) || 0;
       const count = prev + 1;
@@ -161,12 +167,6 @@ export async function checkService(service) {
         );
         await verifyAndNotifyRecovery(serviceName, shortName);
       }
-    } else {
-      // Reset consecutive unhealthy count on success
-      if (consecutiveUnhealthyCount.has(serviceName)) {
-        consecutiveUnhealthyCount.delete(serviceName);
-      }
-      logDebug(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"}) - ${health.reason}`);
     }
   }
 

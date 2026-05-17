@@ -17,9 +17,6 @@ export async function callLLM(provider, messages, taskDescription, opts = {}) {
   const {
     projectRoot = PROJECT_ROOT,
     worktreeId = null,
-    _worktreeRoot = null,
-    _leaseId = null,
-    _executionMode = null,
   } = opts;
 
   if (provider.name === "symphony-bridge") {
