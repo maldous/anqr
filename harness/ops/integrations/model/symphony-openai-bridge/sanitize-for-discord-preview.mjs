@@ -7,12 +7,12 @@ export function sanitizeForDiscordPreview(text) {
   s = s.replaceAll(/Conversation info \(untrusted metadata\):\s*\{[\s\S]*?\}\s*/g, "");
 
   // Strip system instruction preambles (memory flush, workspace bootstrap, etc.)
-  s = s.replaceAll(/Pre-compaction memory flush[\s\S]*?(?=\n\n|$)/i, "");
-  s = s.replaceAll(/Store durable memories only in[\s\S]*?(?=\n\n|$)/i, "");
-  s = s.replaceAll(/Treat workspace bootstrap\/reference files[\s\S]*?(?=\n\n|$)/i, "");
+  s = s.replaceAll(/Pre-compaction memory flush[\s\S]*?(?=\n\n|$)/gi, "");
+  s = s.replaceAll(/Store durable memories only in[\s\S]*?(?=\n\n|$)/gi, "");
+  s = s.replaceAll(/Treat workspace bootstrap\/reference files[\s\S]*?(?=\n\n|$)/gi, "");
 
   // Strip voice transcript preamble, keep the actual transcript
-  s = s.replaceAll(/^Voice transcript from speaker\s+"[^"]*":\s*/i, "");
+  s = s.replaceAll(/^Voice transcript from speaker\s+"[^"]*":\s*/gi, "");
 
   // Strip remaining fenced code blocks (often JSON metadata)
   s = s.replaceAll(/```[\s\S]*?```/g, "");
