@@ -1,0 +1,42 @@
+# anqr-status-server.service — ANQR status dashboard
+#
+# Lightweight HTTP server that aggregates health from all ANQR services
+# and serves a web dashboard showing system status.
+#
+# Install:
+#   sudo cp services/systemd/anqr-status-server.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-status-server.service
+#
+# View: http://127.0.0.1:18800/
+
+[Unit]
+Description=ANQR Status Server (health dashboard)
+After=network-online.target anqr-symphony-router.service anqr-discord-router.service anqr-linear-webhook.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/src/anqr
+
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
+
+Environment=STATUS_SERVER_PORT=18800
+
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/status-server/status-server.mjs
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-status-server
+
+Restart=on-failure
+RestartSec=5
+
+TimeoutStartSec=30
+MemoryHigh=128M
+MemoryMax=256M
+
+[Install]
+WantedBy=default.target

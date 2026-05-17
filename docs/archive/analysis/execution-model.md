@@ -8,7 +8,7 @@ One request enters the system through exactly one ingress point:
 
 | Ingress          | Service                       | Port  | Dispatches To   |
 | ---------------- | ----------------------------- | ----- | --------------- |
-| Linear webhook   | `anqr-linear-webhook.service` | 18791 | Symphony Router |
+| Linear webhook   | `anqr-linear-webhook.service` | 18795 | Symphony Router |
 | Discord/OpenClaw | `anqr-discord-router.service` | 18790 | Symphony Router |
 
 The **Symphony Router** (`anqr-symphony-router.service`, port 4319) is the

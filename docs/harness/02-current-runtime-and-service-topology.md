@@ -21,7 +21,7 @@ The current runtime roots are:
   - default port `18790`
 - `services/systemd/anqr-linear-webhook.service`
   - Linear webhook receiver
-  - default port `18791`
+  - default port `18795` (via `LINEAR_WEBHOOK_PORT` in systemd override; default `18791`)
 - `services/systemd/anqr-symphony-router.service`
   - Symphony router
   - default port `4319`

@@ -11,7 +11,7 @@
 | ---------------- | ----------------------------------------- | --------- | --------------------------------------- | ----------------------------------------------- |
 | Symphony Router  | `anqr-symphony-router.service`            | 4319      | `symphony-agent-router.mjs`             | Central dispatch — routes work to executors     |
 | Discord Router   | `anqr-discord-router.service`             | 18790     | `discord-request-router.mjs`            | Routes Discord/OpenClaw requests                |
-| Linear Webhook   | `anqr-linear-webhook.service`             | 18791     | `linear-webhook-receiver.mjs`           | Receives Linear webhook events                  |
+| Linear Webhook   | `anqr-linear-webhook.service`             | 18795†    | `linear-webhook-receiver.mjs`           | Receives Linear webhook events                  |
 | Executors (×8)   | `anqr-symphony-executor@{1..8}.service`   | 4321-4328 | `symphony-openai-bridge.mjs`            | AI execution in isolated worktrees              |
 | Integrator       | `anqr-symphony-integrator.service`        | —         | `symphony-integrator.mjs daemon`        | Serial promotion to origin/main                 |
 | Recovery Daemon  | `anqr-symphony-worktree-recovery.service` | —         | `symphony-worktree-recovery.mjs daemon` | Repairs broken worktree state                   |
@@ -20,6 +20,8 @@
 | OpenClaw Gateway | `openclaw-gateway.service`                | 18789     | `openclaw gateway`                      | Discord bot gateway                             |
 | LiteLLM Proxy    | `litellm-proxy.service`                   | 4010      | `litellm`                               | Ollama tool-call translator                     |
 | Model Injector   | `model-injector-proxy.service`            | 4011      | `model-injector-proxy.py`               | Fixes Codex CLI model=None bug                  |
+
+> † Port overridden via `LINEAR_WEBHOOK_PORT` in the systemd service. Default is `18791` when not overridden.
 
 ### Timer-Driven Oneshots
 
@@ -36,7 +38,7 @@
 ### Linear Flow
 
 ```
-Linear (webhook) → linear-webhook-receiver (18791)
+Linear (webhook) → linear-webhook-receiver (18795)
   → Symphony Router (4319)
     → Executor wt1-wt4 (4321-4324)
       → AI execution + git commit + push to symphony/wtN

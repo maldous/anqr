@@ -45,7 +45,7 @@ Rationale:
 | Service                                 | Port      | State                   | Notes                                                                          |
 | --------------------------------------- | --------- | ----------------------- | ------------------------------------------------------------------------------ |
 | `anqr-symphony-scheduler.service`       | —         | ✅ **active (running)** | Enabled in `default.target.wants`. Immediately dispatched ANQ-1552 on startup. |
-| `anqr-linear-webhook.service`           | 18791     | ✅ **active (running)** | Listening on 127.0.0.1:18791                                                   |
+| `anqr-linear-webhook.service`           | 18795     | ✅ **active (running)** | Listening on 127.0.0.1:18795 (via `LINEAR_WEBHOOK_PORT` override)              |
 | `anqr-symphony-router.service`          | 4319      | ✅ **active (running)** | Routing to all 8 worktrees                                                     |
 | `anqr-symphony-executor@{1..4}.service` | 4321-4324 | ✅ **active (running)** | Linear pool — all 4 active                                                     |
 | `anqr-symphony-executor@{5..8}.service` | 4325-4328 | ✅ **active (running)** | Discord pool — all 4 active                                                    |
@@ -173,7 +173,7 @@ Required running services (verified by pre-demo gate above):
   anqr-symphony-scheduler (authoritative claim path)
   anqr-symphony-router (port 4319)
   anqr-symphony-executor@{1..8} (ports 4321-4328)
-  anqr-linear-webhook (port 18791)
+  anqr-linear-webhook (port 18795)
   anqr-discord-router (port 18790)
   anqr-symphony-integrator
   anqr-symphony-worktree-recovery

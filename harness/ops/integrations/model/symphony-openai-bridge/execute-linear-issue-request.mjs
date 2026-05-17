@@ -3,8 +3,8 @@ import { randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 
 import { ensureEvidenceRecord } from "../../../core/task-evidence.mjs";
-import { EXIT_LOCK_CONTENTION } from "../../../orchestration/symphony-runner/exit-codes.mjs";
-import { readRunnerOutcome } from "../../../orchestration/symphony-runner/read-runner-outcome.mjs";
+import { EXIT_LOCK_CONTENTION } from "../../../core/symphony-runner-exit-codes.mjs";
+import { readRunnerOutcome } from "./read-runner-outcome.mjs";
 import { sendJson } from "./send-json.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
 

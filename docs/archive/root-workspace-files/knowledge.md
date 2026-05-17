@@ -109,7 +109,7 @@ systemctl --user restart anqr-symphony-executor@{1..8}.service anqr-discord-rout
 - **No single bridge** - each worktree runs its own `symphony-openai-bridge.mjs`
 - **Codebuff integrated** into Symphony executors (per ADR-0003) - no separate bridge
 - **Router** (port 4319) routes requests to available worktrees
-- **Linear Webhook Receiver** (port 18791) handles Linear webhook events
+- **Linear Webhook Receiver** (port 18795, via `LINEAR_WEBHOOK_PORT` systemd override) handles Linear webhook events
 - **Linear Reconciler** daemon ensures level-triggered backlog pickup every 90s
 - **Health-aware dispatch** filters out quarantined/diverged worktrees
 - **Divergence detection** in recovery daemon auto-resets diverged worktrees

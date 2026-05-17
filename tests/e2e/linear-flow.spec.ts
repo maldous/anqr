@@ -1,7 +1,7 @@
 /**
  * E2E: Linear webhook → symphony router → executor
  *
- * These tests hit the LIVE webhook receiver (port 18791) and symphony router
+ * These tests hit the LIVE webhook receiver (port 18795, set via LINEAR_WEBHOOK_PORT env) and symphony router
  * (port 4319) over HTTP. Evidence records are verified on the filesystem —
  * proving the correlation-ID and durable-state layers work in the real runtime.
  *

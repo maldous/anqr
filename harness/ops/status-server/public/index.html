@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANQR · System Status</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>⚡</text></svg>">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-left">
+        <h1>⚡ ANQR</h1>
+        <span class="header-subtitle">System Status</span>
+      </div>
+      <div class="header-right">
+        <span class="update-time" id="updateTime">—</span>
+        <button class="btn btn-refresh" id="refreshBtn" title="Refresh now">↻</button>
+      </div>
+    </header>
+
+    <section class="overview" id="overview">
+      <div class="stat-card stat-total">
+        <div class="stat-value" id="totalServices">—</div>
+        <div class="stat-label">Services</div>
+      </div>
+      <div class="stat-card stat-healthy">
+        <div class="stat-value" id="healthyCount">—</div>
+        <div class="stat-label">Healthy</div>
+      </div>
+      <div class="stat-card stat-degraded">
+        <div class="stat-value" id="degradedCount">—</div>
+        <div class="stat-label">Degraded</div>
+      </div>
+      <div class="stat-card stat-down">
+        <div class="stat-value" id="downCount">—</div>
+        <div class="stat-label">Down</div>
+      </div>
+    </section>
+
+    <section class="banner" id="banner">
+      <div class="banner-inner">
+        <span class="banner-icon">✅</span>
+        <span class="banner-text">All systems operational</span>
+      </div>
+    </section>
+
+    <section class="services" id="services">
+      <div class="services-header">
+        <h2>Services</h2>
+        <div class="services-filter">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="healthy">Healthy</button>
+          <button class="filter-btn" data-filter="degraded">Degraded</button>
+          <button class="filter-btn" data-filter="down">Down</button>
+        </div>
+      </div>
+      <div class="services-list" id="servicesList">
+        <div class="loading">Loading services…</div>
+      </div>
+    </section>
+
+    <section class="infra-grid">
+      <div class="infra-panel" id="commitsPanel">
+        <div class="infra-panel-header">
+          <h2>Recent Commits</h2>
+          <span class="infra-count" id="commitsCount">—</span>
+        </div>
+        <div class="infra-panel-body" id="commitsList">
+          <div class="loading">Loading commits…</div>
+        </div>
+      </div>
+      <div class="infra-panel" id="issuesPanel">
+        <div class="infra-panel-header">
+          <h2>Running Issues</h2>
+          <span class="infra-count" id="issuesCount">—</span>
+        </div>
+        <div class="infra-panel-body" id="issuesList">
+          <div class="loading">Loading issues…</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span id="footerTimestamp">—</span>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

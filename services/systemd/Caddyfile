@@ -1,0 +1,94 @@
+# ANQR Caddyfile
+#
+# External-facing reverse proxy that:
+#   - Routes POST /linear/webhook to the webhook receiver (18795)
+#   - Proxies /api/* and / to the status dashboard (18800)
+#   - Optionally serves public/ assets
+#
+# Install:
+#   sudo cp services/systemd/Caddyfile /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+#
+# HTTPS certificates are auto-provisioned by Caddy via Let's Encrypt
+# when a domain is configured. For local-only access, use :80 without a domain.
+
+# ── Domain-based config (uncomment and replace with your domain) ────────────
+# anqr.example.com {
+#     # Webhook receiver — POST /linear/webhook only
+#     handle /linear/webhook* {#     reverse_proxy 127.0.0.1:18795
+#     }
+#
+#     # Status dashboard (API + HTML)
+#     handle /* {
+#         reverse_proxy 127.0.0.1:18800
+#     }
+# }
+
+# ── Local-only config (serves on port 80, no HTTPS) ─────────────────────────
+:80 {
+    # Webhook receiver (listening on port 18795 per systemd config)
+    handle /linear/webhook {
+        reverse_proxy 127.0.0.1:18795
+    }
+
+    # Health endpoint for the webhook receiver
+    handle /health {
+        reverse_proxy 127.0.0.1:18795
+    }
+
+    # Status dashboard — API routes
+    handle /api/* {
+        reverse_proxy 127.0.0.1:18800
+    }
+
+    # Status dashboard — static files (explicit routes to avoid catch-all bug)
+    handle /app.js {
+        reverse_proxy 127.0.0.1:18800
+    }
+    handle /style.css {
+        reverse_proxy 127.0.0.1:18800
+    }
+    handle /index.html {
+        reverse_proxy 127.0.0.1:18800
+    }
+
+    # Status dashboard (catch-all: root and unknown paths)
+    handle / {
+        reverse_proxy 127.0.0.1:18800
+    }
+}
+
+# ── HTTPS config (replace <your-domain> and uncomment) ─────────────────────
+# <your-domain> {
+#     # Webhook receiver
+#     handle /linear/webhook* {#     reverse_proxy 127.0.0.1:18795
+#     }
+#
+#     # Status dashboard
+#     handle /* {
+#         reverse_proxy 127.0.0.1:18800
+#     }
+#
+#     # Logging
+#     log {
+#         output file /var/log/caddy/anqr.access.log
+#     }
+# }
+
+# ── HTTPS config (replace <your-domain> and uncomment) ─────────────────────
+# <your-domain> {
+#     # Webhook receiver
+#     handle /linear/webhook* {
+#         reverse_proxy 127.0.0.1:18795
+#     }
+#
+#     # Status dashboard
+#     handle /* {
+#         reverse_proxy 127.0.0.1:18800
+#     }
+#
+#     # Logging
+#     log {
+#         output file /var/log/caddy/anqr.access.log
+#     }
+# }

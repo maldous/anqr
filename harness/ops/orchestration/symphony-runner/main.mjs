@@ -14,7 +14,7 @@ import { maybeRunPreflights } from "./maybe-run-preflights.mjs";
 import { releaseLock } from "./release-lock.mjs";
 import { showStatus } from "./show-status.mjs";
 import { logInfo, logWarn, logError, logDebug } from "./logger.mjs";
-import { EXIT_LOCK_CONTENTION } from "./exit-codes.mjs";
+import { EXIT_LOCK_CONTENTION } from "../../core/symphony-runner-exit-codes.mjs";
 import { writeRunnerOutcome } from "./write-runner-outcome.mjs";
 
 export async function main() {
