@@ -81,8 +81,8 @@ export async function refreshProviderStatus(options = {}) {
     // Enrich context-length data from catalog cache + known static sizes
     try {
       await enrichProviderContextSizes();
-    } catch (ctxErr) {
-      logInfo(`Context-size enrichment skipped: ${ctxErr.message}`);
+    } catch (error_) {
+      logInfo(`Context-size enrichment skipped: ${error_.message}`);
     }
 
     const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
