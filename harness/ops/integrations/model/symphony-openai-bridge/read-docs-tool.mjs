@@ -87,7 +87,7 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
       };
     }
 
-    const response = await fetch("https://api.context7.com/v1/docs", {
+    const cloudResponse = await fetch("https://api.context7.com/v1/docs", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -101,12 +101,12 @@ export async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) 
       signal: AbortSignal.timeout(30000),
     });
 
-    if (!response.ok) {
-      logError(`Context7 API returned ${response.status}`);
-      throw new Error(`Context7 API returned ${response.status}`);
+    if (!cloudResponse.ok) {
+      logError(`Context7 API returned ${cloudResponse.status}`);
+      throw new Error(`Context7 API returned ${cloudResponse.status}`);
     }
 
-    const data = await response.json();
+    const data = await cloudResponse.json();
     return {
       content: data.content || "",
       library: libraryTitle,
