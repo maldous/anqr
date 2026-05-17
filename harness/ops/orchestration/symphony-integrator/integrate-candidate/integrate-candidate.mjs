@@ -93,8 +93,8 @@ export async function integrateCandidate(issueIdentifier) {
 
     try {
       git("cherry-pick", headSha);
-    } catch (cpErr) {
-      const stderr = cpErr.stderr?.toString() || cpErr.message || "";
+    } catch (error_) {
+      const stderr = error_.stderr?.toString() || error_.message || "";
       logWarn(`[integrator] Cherry-pick failed for ${issueIdentifier}: ${stderr}`);
 
       try {
@@ -197,8 +197,8 @@ export async function integrateCandidate(issueIdentifier) {
         git("push", "origin", "HEAD:main");
         pushedMainSha = git("rev-parse", "HEAD");
         break;
-      } catch (pushErr) {
-        if (pushAttempt === 2) throw pushErr;
+      } catch (error_) {
+        if (pushAttempt === 2) throw error_;
         logWarn(
           `[integrator] Push rejected (attempt ${pushAttempt + 1}/3) — re-fetching main and re-cherry-picking`,
         );

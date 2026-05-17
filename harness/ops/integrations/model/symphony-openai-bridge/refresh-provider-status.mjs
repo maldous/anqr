@@ -74,8 +74,8 @@ export async function refreshProviderStatus(options = {}) {
     try {
       await refreshLiveProviderCatalogs();
       reloadProvidersFromCatalogCache();
-    } catch (catalogErr) {
-      logInfo(`Provider catalog refresh skipped: ${catalogErr.message}`);
+    } catch (error_) {
+      logInfo(`Provider catalog refresh skipped: ${error_.message}`);
     }
 
     // Enrich context-length data from catalog cache + known static sizes

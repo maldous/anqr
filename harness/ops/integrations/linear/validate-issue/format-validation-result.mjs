@@ -11,23 +11,23 @@ export function formatValidationResult(result) {
 
   if (result.errors.length > 0) {
     output += "\n🚨 Errors (must fix):\n";
-    result.errors.forEach((error) => {
+    for (const error of result.errors) {
       output += `  ${error}\n`;
-    });
+    }
   }
 
   if (result.warnings.length > 0) {
     output += "\n⚠️  Warnings (recommended improvements):\n";
-    result.warnings.forEach((warning) => {
+    for (const warning of result.warnings) {
       output += `  ${warning}\n`;
-    });
+    }
   }
 
   if (result.recommendations.length > 0) {
     output += "\n💡 Recommendations:\n";
-    result.recommendations.forEach((recommendation) => {
+    for (const recommendation of result.recommendations) {
       output += `  ${recommendation}\n`;
-    });
+    }
   }
 
   return output;

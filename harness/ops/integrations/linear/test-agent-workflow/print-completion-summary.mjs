@@ -23,7 +23,7 @@ export function printCompletionSummary(_testResults) {
     "Issue URL is returned and displayed",
   ];
 
-  criteria.forEach((criterion, index) => {
+  for (const [index, criterion] of criteria.entries()) {
     console.log(`   ${index + 1}. ✅ ${criterion}`);
   });
 

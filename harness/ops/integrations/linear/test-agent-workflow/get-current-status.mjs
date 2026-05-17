@@ -11,9 +11,9 @@ export async function getCurrentStatus() {
     };
 
     console.log("🔑 Environment Variables:");
-    Object.entries(envVars).forEach(([name, status]) => {
+    for (const [name, status] of Object.entries(envVars)) {
       console.log(`   ${name}: ${status}`);
-    });
+    }
 
     // Check required files
     const requiredFiles = [

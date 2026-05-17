@@ -133,7 +133,7 @@ export async function runAgentWorkflowTests() {
       "Use established constants (STATES, LABELS, TEAM_ID) for consistency",
     ];
 
-    bestPractices.forEach((practice, index) => {
+    for (const [index, practice] of bestPractices.entries()) {
       console.log(`   ${index + 1}. ${practice}`);
     });
 
@@ -196,7 +196,7 @@ export async function runAgentWorkflowTests() {
       },
     ];
 
-    extensibilityOptions.forEach((option) => {
+    for (const option of extensibilityOptions) {
       console.log(`\n   🔧 ${option.name}:`);
       console.log(`      Description: ${option.description}`);
 
@@ -206,14 +206,14 @@ export async function runAgentWorkflowTests() {
 
       if (option.examples) {
         console.log(`      Possible specialized workflows:`);
-        option.examples.forEach((example) => {
+        for (const example of option.examples) {
           console.log(`         - ${example}`);
         });
       }
 
       if (option.examples2) {
         console.log(`      Automation options:`);
-        option.examples2.forEach((example) => {
+        for (const example of option.examples2) {
           console.log(`         - ${example}`);
         });
       }

@@ -117,13 +117,13 @@ export function validateIssueInput(input) {
       /\{\{[^}]+\}\}/g, // Template placeholders
     ];
 
-    duplicatePatterns.forEach((pattern) => {
+    for (const pattern of duplicatePatterns) {
       if (pattern.test(input.description)) {
         warnings.push(
           `⚠️  Description contains template placeholders matching pattern: ${pattern}`,
         );
       }
-    });
+    }
   }
 
   return {

@@ -34,20 +34,20 @@ export function sanitizeTextForSpeech(text) {
   s = s.replaceAll(/\*{1,3}([^*]+)\*{1,3}/g, "$1");
   s = s.replaceAll(/_{1,2}([^_]+)_{1,2}/g, "$1");
   s = s.replaceAll(/~~([^~]+)~~/g, "$1");
-  s = s.replaceAll(/^[\s]*[-*+]\s+/gm, "");
-  s = s.replaceAll(/^[\s]*\d+\.\s+/gm, "");
+  s = s.replaceAll(/^\s*[-*+]\s+/gm, "");
+  s = s.replaceAll(/^\s*\d+\.\s+/gm, "");
   s = s.replaceAll(/^>\s*/gm, "");
   s = s.replaceAll(/^\|.*\|$/gm, "");
   s = s.replaceAll(/^[-|:\s]+$/gm, "");
 
   // 8. Technical symbols → natural language
-  s = s.replaceAll(/=>/g, " goes to ");
-  s = s.replaceAll(/->/g, " to ");
+  s = s.replaceAll("=>", " goes to ");
+  s = s.replaceAll("->", " to ");
   s = s.replaceAll(/===?/g, " equals ");
   s = s.replaceAll(/!==?/g, " not equals ");
-  s = s.replaceAll(/\|\|/g, " or ");
-  s = s.replaceAll(/&&/g, " and ");
-  s = s.replaceAll(/::/g, " ");
+  s = s.replaceAll("||", " or ");
+  s = s.replaceAll("&&", " and ");
+  s = s.replaceAll("::", " ");
 
   // 9. Emoji
   s = s.replaceAll(SPEECH_EMOJI_RE, " ");

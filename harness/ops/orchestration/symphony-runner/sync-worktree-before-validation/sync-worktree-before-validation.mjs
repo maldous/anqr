@@ -60,8 +60,8 @@ export function syncWorktreeBeforeValidation(worktreePath) {
       try {
         git("stash pop", worktreePath);
         logInfo(`${label} Restored stashed changes`);
-      } catch (popErr) {
-        logWarn(`${label} Stash pop failed — changes remain in stash: ${popErr.message}`);
+      } catch (error_) {
+        logWarn(`${label} Stash pop failed — changes remain in stash: ${error_.message}`);
       }
     }
 

@@ -201,7 +201,7 @@ export async function probeToolCapabilityForProvider(providerDef) {
     const detail = `${String(error?.message || error)} | provider=${name} | model=${providerDef.model} | baseUrl=${providerDef.baseUrl || ""}`;
     const classified = classifyToolProbeErrorOutcome(detail);
     const durationMs = Date.now() - startTime;
-    const failureType = classified.status.replaceAll(/-/g, "_");
+    const failureType = classified.status.replaceAll("-", "_");
 
     if (
       classified.status === "non-capable-rejected" ||

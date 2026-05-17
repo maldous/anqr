@@ -28,12 +28,7 @@ export function providerSupportsTools(providerName, { strict = false } = {}) {
   // meaning they can NEVER call write_file/patch_file, producing
   // false-positive completions with zero file changes.
   const base = baseProviderName(providerName);
-  if (base) {
-    // Base provider is non-tool-capable → inherit rejection
-    if (nonToolCapableProviders.has(base)) return false;
-    // Base is confirmed tool-capable (static or runtime) → inherit
-    return true;
-  }
+  if (base) return !nonToolCapableProviders.has(base);
 
   // Not yet probed — decision depends on mode
   return !strict;

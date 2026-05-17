@@ -86,11 +86,11 @@ export async function tryProvider(provider) {
     if (!probeResult.available) {
       return null;
     }
-  } catch (probeErr) {
+  } catch (error_) {
     saveProbeResult(provider.name, false, {
       status: "probe_error",
-      reason: probeErr.message,
-      message: probeErr.message,
+      reason: error_.message,
+      message: error_.message,
     });
     return null;
   }

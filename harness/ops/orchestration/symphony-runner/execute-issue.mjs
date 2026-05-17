@@ -494,8 +494,8 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           issue.id,
           `⚠️ **Run abandoned** — lease lost during agent execution. Changes reverted. No successful completion occurred.\n\nRun: ${RUN_ID}\nWorktree: ${WORKTREE_ID}`,
         );
-      } catch (wbErr) {
-        logWarn(`[runner] Abandonment writeback failed: ${wbErr.message}`);
+      } catch (error_) {
+        logWarn(`[runner] Abandonment writeback failed: ${error_.message}`);
       }
       sendDiscordEmbed({
         title: `⚠️ Abandoned | ${WORKTREE_ID}`,
@@ -794,8 +794,8 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
               issue.id,
               `⚠️ **Run abandoned** — lease lost during agent continuation. Changes reverted. No successful completion occurred.\n\nRun: ${RUN_ID}\nWorktree: ${WORKTREE_ID}`,
             );
-          } catch (wbErr) {
-            logWarn(`[runner] Abandonment writeback failed: ${wbErr.message}`);
+          } catch (error_) {
+            logWarn(`[runner] Abandonment writeback failed: ${error_.message}`);
           }
           sendDiscordEmbed({
             title: `⚠️ Abandoned | ${WORKTREE_ID}`,
@@ -1187,8 +1187,8 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           issue.id,
           `⚠️ **Run abandoned** — lease lost during validation (${hbReason}). Changes reverted. No successful completion occurred.\n\nPhase: ${hbDetail?.phase || "unknown"}\nElapsed: ${hbDetail?.elapsedMs || "unknown"}ms\nRun: ${RUN_ID}\nWorktree: ${WORKTREE_ID}`,
         );
-      } catch (wbErr) {
-        logWarn(`[runner] Abandonment writeback failed: ${wbErr.message}`);
+      } catch (error_) {
+        logWarn(`[runner] Abandonment writeback failed: ${error_.message}`);
       }
       sendDiscordEmbed({
         title: `⚠️ Abandoned | ${WORKTREE_ID}`,
@@ -1273,8 +1273,8 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           issue.id,
           `⚠️ **Run abandoned** — lease lost during validation fixes. Changes reverted. No successful completion occurred.\n\nRun: ${RUN_ID}\nWorktree: ${WORKTREE_ID}`,
         );
-      } catch (wbErr) {
-        logWarn(`[runner] Abandonment writeback failed: ${wbErr.message}`);
+      } catch (error_) {
+        logWarn(`[runner] Abandonment writeback failed: ${error_.message}`);
       }
       sendDiscordEmbed({
         title: `⚠️ Abandoned | ${WORKTREE_ID}`,

@@ -26,11 +26,11 @@ export function buildIncidentDescription(type, context, evidence, fingerprint) {
   lines.push(formatEvidenceForIssue(evidence));
 
   // Resolution instructions
-  lines.push("---", "", "## Resolution", "", "This incident will auto-close when:");
-  lines.push("1. Service health checks pass consistently for >1 hour");
-  lines.push("2. Related issue (if any) moves to Done state");
-  lines.push("");
-  lines.push("To manually resolve, add evidence of root cause fix and move to Done.");
+  lines.push("---", "", "## Resolution", "", "This incident will auto-close when:",
+    "1. Service health checks pass consistently for >1 hour",
+    "2. Related issue (if any) moves to Done state",
+    "",
+    "To manually resolve, add evidence of root cause fix and move to Done.");
 
   return lines.join("\n");
 }

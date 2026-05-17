@@ -1,11 +1,11 @@
 import { execFileSync } from "node:child_process";
 
-const CRITICAL_SERVICES = [
+const CRITICAL_SERVICES = new Set([
   "anqr-symphony-router",
   "anqr-symphony-integrator",
   "anqr-discord-router",
   "anqr-linear-webhook",
-];
+]);
 
 export function checkSystemdServices() {
   const isProduction = process.env.ANQR_RUNTIME_MODE === "production";
@@ -44,7 +44,7 @@ export function checkSystemdServices() {
 
   const activeCount = results.filter((r) => r.status === "active").length;
   const criticalDown = results.filter(
-    (r) => CRITICAL_SERVICES.includes(r.name) && r.status !== "active",
+    (r) => CRITICAL_SERVICES.has(r.name) && r.status !== "active",
   );
 
   if (isProduction && criticalDown.length > 0) {

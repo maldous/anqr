@@ -33,10 +33,7 @@ export function buildFailureSummary(issue, comments, analysis) {
   lines.push("### Recent Failure Signatures", "");
   const recentSignatures = Array.from(analysis.uniqueFailures).slice(-5);
   for (const sig of recentSignatures) {
-    lines.push("```");
-    lines.push(sig);
-    lines.push("```");
-    lines.push("");
+    lines.push("```", sig, "```", "");
   }
 
   lines.push(
