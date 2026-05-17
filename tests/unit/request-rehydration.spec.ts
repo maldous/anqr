@@ -91,6 +91,7 @@ describe("request-rehydration", () => {
 
     it("does nothing for non-existent request", () => {
       completeInflightRequest("req-nonexistent");
+      expect(getInflightRequest("req-nonexistent")).toBeNull();
     });
 
     it("does nothing for null/empty requestId", () => {

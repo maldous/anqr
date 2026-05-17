@@ -1,3 +1,7 @@
+## ANQ-3650: [Sonar] Add at least one assertion to this test case. (request-rehydration.spec.ts:96) (2026-01-16)
+
+- Added assertion to verify `completeInflightRequest` does not throw and returns expected state for non-existent request.
+
 ## ANQ-3649: [Sonar] Add at least one assertion to this test case. (request-rehydration.spec.ts:92) (2026-01-16)
 
 - Added assertion to verify `completeInflightRequest` does not modify state when called with null/empty requestId.
