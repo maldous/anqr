@@ -17,7 +17,11 @@ export async function processQueue() {
     return { processed: 0 };
   }
 
-  logInfo(`[integrator] Queue has ${candidates.length} candidate(s): ${candidates.join(", ")}`);
+  if (candidates.length === 1) {
+    logInfo(`[integrator] Queue has 1 candidate: ${candidates[0]}`);
+  } else {
+    logInfo(`[integrator] Queue has ${candidates.length} candidates: ${candidates.join(", ")}`);
+  }
 
   // Acquire global integration lock
   const lock = acquireIntegrationLock(INTEGRATOR_ID, LOCK_TTL_MS);

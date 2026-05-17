@@ -14,3 +14,23 @@
 ### 2026-05-14T01:39:04.669Z - Watchdog restarted linear-webhook service (reason: stuck in activating for 65s, commit: 56c8cbfab, action: restart-only)
 
 ### 2026-05-16T08:47:42.866Z - Watchdog restarted executor-wt4 service (reason: stuck in activating for 67s, commit: 3924caec4, action: restart-only)
+
+### 2026-05-17T00:03:20.033Z - Watchdog restarted executor-wt6 service (reason: hung service: 5 consecutive unhealthy health checks, commit: e02472a50, action: restart-only)
+
+### 2026-05-17T00:03:44.630Z - Watchdog restarted executor-wt7 service (reason: hung service: 5 consecutive unhealthy health checks, commit: e02472a50, action: restart-only)
+
+### 2026-05-17T00:04:09.024Z - Watchdog restarted executor-wt8 service (reason: hung service: 5 consecutive unhealthy health checks, commit: e02472a50, action: restart-only)
+
+### 2026-05-17T00:09:28.760Z - Watchdog restarted executor-wt1 service (reason: hung service: 5 consecutive unhealthy health checks, commit: e4778b2ec, action: restart-only)
+
+### 2026-05-17T00:09:53.797Z - Watchdog restart FAILED for executor-wt2 service: spawnSync /bin/sh ETIMEDOUT
+
+### 2026-05-17T00:10:10.672Z - Watchdog restarted executor-wt3 service (reason: hung service: 5 consecutive unhealthy health checks, commit: e4778b2ec, action: restart-only)
+
+### 2026-05-17T00:10:21.388Z - CRITICAL: Watchdog triggered 4 times in 1 hour - systemic instability detected
+
+### 2026-05-17T00:10:27.143Z - Watchdog restarted executor-wt4 service (reason: hung service: 5 consecutive unhealthy health checks, commit: e4778b2ec, action: restart-only)
+
+### 2026-05-17T00:10:43.545Z - Watchdog restarted executor-wt5 service (reason: hung service: 5 consecutive unhealthy health checks, commit: e4778b2ec, action: restart-only)
+
+### 2026-05-17T00:59:57.901Z - Watchdog restart FAILED for executor-wt4 service: spawnSync /bin/sh ETIMEDOUT

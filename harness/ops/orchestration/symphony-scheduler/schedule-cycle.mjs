@@ -125,7 +125,7 @@ export async function scheduleCycle() {
     if (ok) {
       dispatched++;
       logInfo(
-        `[scheduler] Claimed + dispatched ${issue.identifier} -> ${worktreeId}: ${issue.title}`,
+        `[scheduler] Claimed and dispatched ${issue.identifier} to ${worktreeId}: ${issue.title}`,
       );
     } else {
       // Blocker 5: Roll back on dispatch failure — release claim and
@@ -145,7 +145,7 @@ export async function scheduleCycle() {
 
   const cycleMs = Date.now() - cycleStart;
   logInfo(
-    `[scheduler] Cycle complete: dispatched=${dispatched} rejected=${claimRejected} eligible=${eligible.length} budget=${dispatchBudget} (${cycleMs}ms)`,
+    `[scheduler] Cycle complete: dispatched ${dispatched}, rejected ${claimRejected}, ${eligible.length} eligible, budget ${dispatchBudget}. Completed in ${cycleMs} milliseconds.`,
   );
 
   return { dispatched, claimRejected, eligible: eligible.length, budget: dispatchBudget, cycleMs };

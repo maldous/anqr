@@ -87,7 +87,7 @@ export async function runRecoveryCycle() {
   }
 
   logInfo(
-    `[recovery] Cycle complete: scanned=${stats.scanned} repaired=${stats.repaired} quarantined=${stats.quarantined} skipped=${stats.skipped} errors=${stats.errors.length}`,
+    `[recovery] Cycle complete: scanned ${stats.scanned} worktrees, repaired ${stats.repaired}, quarantined ${stats.quarantined}, skipped ${stats.skipped}, ${stats.errors.length} errors.`,
   );
   return stats;
 }

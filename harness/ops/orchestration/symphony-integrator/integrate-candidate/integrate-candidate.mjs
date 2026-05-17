@@ -76,7 +76,7 @@ export async function integrateCandidate(issueIdentifier) {
   }
 
   logInfo(
-    `[integrator] Integrating ${issueIdentifier}: branch=${branch} head=${headSha.slice(0, 8)}`,
+    `[integrator] Integrating ${issueIdentifier} on branch ${branch}, at commit ${headSha.slice(0, 8)}`,
   );
   const integrationStartMs = Date.now();
 
@@ -211,7 +211,7 @@ export async function integrateCandidate(issueIdentifier) {
 
     const integrationMs = Date.now() - integrationStartMs;
     logInfo(
-      `[integrator] ✅ ${issueIdentifier} integrated to main at ${pushedMainSha.slice(0, 8)} (${integrationMs}ms)`,
+      `[integrator] ${issueIdentifier} integrated to main at commit ${pushedMainSha.slice(0, 8)}. Completed in ${integrationMs} milliseconds.`,
     );
 
     if (correlationId) {

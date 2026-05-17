@@ -139,8 +139,11 @@ export async function checkService(service) {
       const count = prev + 1;
       consecutiveUnhealthyCount.set(serviceName, count);
 
+      const activeSinceMsg = activeSince
+        ? `, active for ${Math.round((Date.now() - activeSince.getTime()) / 1000)} seconds`
+        : "";
       logWarn(
-        `[watchdog] ⚠️ ${shortName}: Service active but unhealthy (consecutive: ${count}/${CONSECUTIVE_UNHEALTHY_MAX}): ${health.reason}${activeSince ? ` (active since ${activeSince.toISOString()})` : ""}`,
+        `[watchdog] ${shortName}: Service active but unhealthy, ${count} out of ${CONSECUTIVE_UNHEALTHY_MAX} checks failed. Reason: ${health.reason}${activeSinceMsg}.`,
       );
 
       // If threshold exceeded, restart the hung service
