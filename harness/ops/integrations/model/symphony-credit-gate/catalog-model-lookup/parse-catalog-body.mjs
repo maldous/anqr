@@ -9,7 +9,7 @@ export function parseCatalogBody(text) {
       tokens: new Set(
         String(text || "")
           .toLowerCase()
-          .split(/[^a-z0-9._:/-]+/i)
+          .split(/[^a-z0-9._:\/-]+/i)
           .filter(Boolean),
       ),
     };

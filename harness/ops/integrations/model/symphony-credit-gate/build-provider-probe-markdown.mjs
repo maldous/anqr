@@ -14,10 +14,11 @@ export function buildProviderProbeMarkdown(report) {
     `- Degraded: ${report.summary.degraded}`,
     `- Failed: ${report.summary.failed}`,
     `- Bridge-blocked: ${report.summary.bridgeBlocked}`,
-    const wouldChooseDesc = report.selector.wouldChoose
-      ? `${report.selector.wouldChoose.providerName} via ${report.selector.wouldChoose.source} (${report.selector.wouldChoose.status})`
-      : "none";
-    `- Selector would choose: ${wouldChooseDesc}`,
+    `- Selector would choose: ${
+      report.selector.wouldChoose
+        ? `${report.selector.wouldChoose.providerName} via ${report.selector.wouldChoose.source} (${report.selector.wouldChoose.status})`
+        : "none"
+    }`,
     "",
     ...buildRankedHealthyMarkdownLines(report.rankedHealthy),
     "## Tool-capability summary",
@@ -73,11 +74,9 @@ export function buildProviderProbeMarkdown(report) {
   for (const result of codebuffProviders) {
     lines.push(`- ${result.providerName}: status=${result.status}, reason=${result.reason}`);
     for (const stage of result.stages || []) {
-      lines.push(
-        const modePart = stage.mode ? ` (${stage.mode})` : "";
+      const modePart = stage.mode ? ` (${stage.mode})` : "";
       const statusPart = stage.status ? ` [${stage.status}]` : "";
-      `  - ${stage.name}${modePart}${statusPart}`,
-      );
+      lines.push(`  - ${stage.name}${modePart}${statusPart}`);
     }
   }
   lines.push("");

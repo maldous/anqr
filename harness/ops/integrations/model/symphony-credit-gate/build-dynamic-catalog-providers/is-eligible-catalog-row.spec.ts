@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { describe, it, expect } from "vitest";
 
 const { isEligibleCatalogRow } = await import("./is-eligible-catalog-row.mjs");

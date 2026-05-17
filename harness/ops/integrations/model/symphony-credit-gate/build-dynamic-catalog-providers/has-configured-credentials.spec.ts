@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const { hasConfiguredCredentials } = await import("./has-configured-credentials.mjs");
