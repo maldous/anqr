@@ -1,1 +1,1 @@
-export const generateEmbedding;
+export { generateEmbedding } from "../../rag/embeddings/generate-embedding.mjs";

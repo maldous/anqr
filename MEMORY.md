@@ -38,3 +38,13 @@
 ### 2026-05-17T03:29:02.467Z - Watchdog restarted executor-wt1 service (reason: hung service: 5 consecutive unhealthy health checks, commit: 482d91812, action: restart-only)
 
 ### 2026-05-17T03:29:02.467Z - Watchdog restarted executor-wt1 service (reason: hung service: 5 consecutive unhealthy health checks, commit: 482d91812, action: restart-only)
+
+### 2026-05-17T08:58:01.274Z - Watchdog restarted executor-wt1 service (reason: stuck in activating for 60s, commit: 4a0875397, action: restart-only)
+
+### 2026-05-17T08:58:18.932Z - Watchdog restarted executor-wt2 service (reason: stuck in activating for 78s, commit: 4a0875397, action: restart-only)
+
+### 2026-05-17T08:58:36.555Z - Watchdog restarted executor-wt3 service (reason: stuck in activating for 95s, commit: 4a0875397, action: restart-only)
+
+### 2026-05-17T08:58:54.356Z - CRITICAL: Watchdog triggered 4 times in 1 hour - systemic instability detected
+
+### 2026-05-17T08:59:00.689Z - Watchdog restarted executor-wt4 service (reason: stuck in activating for 113s, commit: 4a0875397, action: restart-only)
