@@ -1,18 +1,14 @@
 import { makeChunkFromOffsets } from "./make-chunk-from-offsets.mjs";
 import { splitRangeBySize } from "./split-range-by-size.mjs";
 
-export function pushSegmentedRange(
-  chunks,
-  text,
-  lineStarts,
-  filePath,
-  ext,
-  startOffset,
-  endOffset,
-  maxChunkSize,
-  overlap,
-  type = null,
-) {
+export function pushSegmentedRange(chunks, text, lineStarts, filePath, ext, opts = {}) {
+  const {
+    startOffset,
+    endOffset,
+    maxChunkSize,
+    overlap,
+    type = null,
+  } = opts;
   const length = endOffset - startOffset;
   if (length <= 0) return;
 

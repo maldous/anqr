@@ -8,17 +8,12 @@ export function chunkGenericText(text, filePath, options) {
   const ext = extname(filePath).toLowerCase();
   const lineStarts = buildLineStarts(text);
   const chunks = [];
-  pushSegmentedRange(
-    chunks,
-    text,
-    lineStarts,
-    filePath,
-    ext,
-    0,
-    text.length,
-    options.maxChunkSize,
-    options.overlap,
-    TEXT_CONFIG_EXTENSIONS.has(ext) ? "block" : null,
-  );
+  pushSegmentedRange(chunks, text, lineStarts, filePath, ext, {
+    startOffset: 0,
+    endOffset: text.length,
+    maxChunkSize: options.maxChunkSize,
+    overlap: options.overlap,
+    type: TEXT_CONFIG_EXTENSIONS.has(ext) ? "block" : null,
+  });
   return chunks;
 }

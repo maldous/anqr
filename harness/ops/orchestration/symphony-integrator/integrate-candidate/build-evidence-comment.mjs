@@ -1,3 +1,15 @@
+function formatPushStatus(push) {
+  if (push?.success === true) return "passed";
+  if (push?.success === false) return "failed";
+  return "unknown";
+}
+
+function formatValidationStatus(value) {
+  if (value === true) return "passed";
+  if (value === false) return "failed";
+  return "skipped or not recorded";
+}
+
 export function buildEvidenceComment({
   issueIdentifier,
   finalization,
@@ -28,7 +40,7 @@ export function buildEvidenceComment({
     `| Branch | \`${finalization.branch || "unknown"}\` |`,
     `| Files changed | ${changedFiles.length} |`,
     `| Docs updated | ${docsUpdated ? "yes" : "no"} |`,
-    `| Push status | ${push?.success === true ? "passed" : push?.success === false ? "failed" : "unknown"} |`,
+    `| Push status | ${formatPushStatus(push)} |`,
     `| Integration method | cherry-pick |`,
     `| Timestamp | ${new Date().toISOString()} |`,
     "",
@@ -40,7 +52,7 @@ export function buildEvidenceComment({
     `### Verification results`,
     ...verificationResults.map(
       ([name, value]) =>
-        `- ${name}: ${value === true ? "passed" : value === false ? "failed" : "skipped or not recorded"}`,
+        `- ${name}: ${formatValidationStatus(value)}`,
     ),
     validation?.errors?.length
       ? `- errors: ${validation.errors.join(", ")}`

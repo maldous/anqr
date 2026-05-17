@@ -5,7 +5,14 @@ import { callLLM } from "./call-llm.mjs";
 import { executeTool } from "./execute-tool.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
-const PLANNING_PHRASES_RE = /\b(let me (understand|read|check|analyze|review)|I('ll| will) (start by|need to|first)|here('s| is) my plan)\b|\b(steps|approach|thinking|analyzing|reviewing):/i;
+const PLANNING_ACTION_RE = /\blet me (understand|read|check|analyze|review)\b/i;
+const PLANNING_INTENT_RE = /\bI('ll| will) (start by|need to|first)\b/i;
+const PLANNING_HERE_RE = /\bhere('s| is) my plan\b/i;
+const PLANNING_SECTION_RE = /\b(steps|approach|thinking|analyzing|reviewing):\b/i;
+
+function isPlanningText(text) {
+  return PLANNING_ACTION_RE.test(text) || PLANNING_INTENT_RE.test(text) || PLANNING_HERE_RE.test(text) || PLANNING_SECTION_RE.test(text);
+}
 
 export async function runToolLoop({
   provider,
@@ -50,16 +57,13 @@ export async function runToolLoop({
 
     let response;
     try {
-      response = await callLLM(
-        provider,
-        messages,
-        taskDescription,
+      response = await callLLM(provider, messages, taskDescription, {
         projectRoot,
         worktreeId,
-        worktreeRoot,
-        leaseId,
-        executionMode,
-      );
+        _worktreeRoot: worktreeRoot,
+        _leaseId: leaseId,
+        _executionMode: executionMode,
+      });
     } catch (err) {
       logError(`[agent] LLM call failed: ${err.message}`);
       return {
@@ -284,7 +288,7 @@ export async function runToolLoop({
         // Bridge signaled continuation needed
         response.needsContinuation ||
         // Planning/understanding phrases
-        PLANNING_PHRASES_RE.test(content) ||
+        isPlanningText(content) ||
         // Subgoal management activity
         /\bsubgoal/i.test(content) ||
         // Reading/context gathering

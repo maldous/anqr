@@ -25,34 +25,24 @@ export function chunkJson(text, filePath, options) {
         keyRanges.keyLineIndices[i + 1] ?? keyRanges.lines.length,
         text.length,
       );
-      pushSegmentedRange(
-        chunks,
-        text,
-        lineStarts,
-        filePath,
-        ext,
+      pushSegmentedRange(chunks, text, lineStarts, filePath, ext, {
         startOffset,
         endOffset,
-        options.maxChunkSize,
-        options.overlap,
-        "block",
-      );
+        maxChunkSize: options.maxChunkSize,
+        overlap: options.overlap,
+        type: "block",
+      });
     }
     if (chunks.length > 0) return chunks;
   }
 
   const fallbackChunks = [];
-  pushSegmentedRange(
-    fallbackChunks,
-    text,
-    lineStarts,
-    filePath,
-    ext,
-    0,
-    text.length,
-    options.maxChunkSize,
-    options.overlap,
-    "block",
-  );
+  pushSegmentedRange(fallbackChunks, text, lineStarts, filePath, ext, {
+    startOffset: 0,
+    endOffset: text.length,
+    maxChunkSize: options.maxChunkSize,
+    overlap: options.overlap,
+    type: "block",
+  });
   return fallbackChunks;
 }

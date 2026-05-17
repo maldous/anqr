@@ -1,5 +1,14 @@
-const SIMPLE_CHAT_RE =
-  /\b(who are you|what are you|what can you do|hello|hi|hey|thanks|thank you|ok|okay|test|ping|are you there|help)\b/i;
+const GREETINGS_RE = /\b(hello|hi|hey)\b/i;
+const THANKS_RE = /\b(thanks|thank you)\b/i;
+const QUESTIONS_RE = /\b(who are you|what are you|what can you do)\b/i;
+const ACKS_RE = /\b(ok|okay|are you there)\b/i;
+const TEST_RE = /\b(test|ping)\b/i;
+const HELP_RE = /\b(help)\b/i;
+
+function isSimpleChat(text) {
+  return GREETINGS_RE.test(text) || THANKS_RE.test(text) || QUESTIONS_RE.test(text) || ACKS_RE.test(text) || TEST_RE.test(text) || HELP_RE.test(text);
+}
+
 const TOOL_KEYWORDS_RE = /\b(read|write|edit|patch|replace|search|grep|find|open|inspect|fix|change|run|execute|test|lint|build|compile|commit|branch|worktree|file|files|directory|repo|repository|code|log|logs|trace|debug|issue|ticket|linear|discord|provider|probe|service|systemd|curl|http|api|json|yaml|markdown|md|tsconfig|eslint|vitest|jest|docker|kubernetes|helm|grafana|alloy|otlp|zip)\b/i;
 const TOOL_SYMBOLS_RE = /[`$]/;
 const TOOL_PATH_RE = /\/[\w.-]+/;
@@ -29,7 +38,7 @@ export function shouldUseToolsForRequest(messages = [], route = null) {
 
   if (!normalized) return false;
   if (
-    SIMPLE_CHAT_RE.test(normalized) &&
+    isSimpleChat(normalized) &&
     normalized.length <= 400 &&
     !hasToolIntent(normalized)
   ) {

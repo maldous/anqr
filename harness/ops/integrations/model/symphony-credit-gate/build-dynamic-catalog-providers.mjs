@@ -79,18 +79,18 @@ function sortCatalogRows(a, b) {
   );
 }
 
-export function buildDynamicCatalogProviders(staticProviders) {
-  function isEligibleCatalogRow(row) {
-    const model = String(row?.model || row?.id || "").trim();
-    if (!model) return false;
-    if (EXCLUDED_MODEL_PATTERNS.some((pattern) => pattern.test(model))) return false;
-    if (!supportsTextIO(row?.raw || row)) return false;
-    if (row?.toolSupport === "unsupported") return false;
-    const paramB = extractParamCountB(model);
-    if (paramB !== null && paramB < MIN_CODING_PARAMS_B) return false;
-    return true;
-  }
+function isEligibleCatalogRow(row) {
+  const model = String(row?.model || row?.id || "").trim();
+  if (!model) return false;
+  if (EXCLUDED_MODEL_PATTERNS.some((pattern) => pattern.test(model))) return false;
+  if (!supportsTextIO(row?.raw || row)) return false;
+  if (row?.toolSupport === "unsupported") return false;
+  const paramB = extractParamCountB(model);
+  if (paramB !== null && paramB < MIN_CODING_PARAMS_B) return false;
+  return true;
+}
 
+export function buildDynamicCatalogProviders(staticProviders) {
   const cache = loadProviderCatalogCache();
   const dynamicProviders = [];
   for (const provider of staticProviders) {

@@ -13,16 +13,15 @@ import { TOOL_DEFINITIONS } from "./tool-definitions.mjs";
 import { logDebug } from "./logger.mjs";
 import { safetyCap } from "../../../lib/safety-cap.mjs";
 
-export async function callLLM(
-  provider,
-  messages,
-  taskDescription,
-  projectRoot = PROJECT_ROOT,
-  worktreeId = null,
-  _worktreeRoot = null,
-  _leaseId = null,
-  _executionMode = null,
-) {
+export async function callLLM(provider, messages, taskDescription, opts = {}) {
+  const {
+    projectRoot = PROJECT_ROOT,
+    worktreeId = null,
+    _worktreeRoot = null,
+    _leaseId = null,
+    _executionMode = null,
+  } = opts;
+
   if (provider.name === "symphony-bridge") {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);

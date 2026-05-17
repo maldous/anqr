@@ -21,18 +21,13 @@ export function chunkMarkdown(text, filePath, options) {
   for (let i = 0; i < boundaries.length; i++) {
     const startOffset = lineIndexToOffset(lineStarts, boundaries[i], text.length);
     const endOffset = lineIndexToOffset(lineStarts, boundaries[i + 1] ?? lines.length, text.length);
-    pushSegmentedRange(
-      chunks,
-      text,
-      lineStarts,
-      filePath,
-      ext,
+    pushSegmentedRange(chunks, text, lineStarts, filePath, ext, {
       startOffset,
       endOffset,
-      options.maxChunkSize,
-      options.overlap,
-      "section",
-    );
+      maxChunkSize: options.maxChunkSize,
+      overlap: options.overlap,
+      type: "section",
+    });
   }
 
   return chunks;

@@ -17,17 +17,12 @@ export function chunkCode(text, filePath, options) {
     const endLineIndex = i + 1 < boundaries.length ? boundaries[i + 1] : lines.length;
     const startOffset = lineIndexToOffset(lineStarts, startLineIndex, text.length);
     const endOffset = lineIndexToOffset(lineStarts, endLineIndex, text.length);
-    pushSegmentedRange(
-      chunks,
-      text,
-      lineStarts,
-      filePath,
-      ext,
+    pushSegmentedRange(chunks, text, lineStarts, filePath, ext, {
       startOffset,
       endOffset,
-      options.maxChunkSize,
-      options.overlap,
-    );
+      maxChunkSize: options.maxChunkSize,
+      overlap: options.overlap,
+    });
   }
 
   return chunks;
