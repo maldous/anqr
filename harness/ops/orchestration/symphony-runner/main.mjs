@@ -197,7 +197,6 @@ export async function main() {
     }
 
     // SECOND: Pick and execute issues (now with recovered issues in Todo)
-    const excludeIds = new Set();
     let executed = false;
     while (!executed) {
       // If --issue flag provided, fetch that specific issue directly
@@ -232,7 +231,6 @@ export async function main() {
       const status = await executeIssue(issue, dryRun, { operatorOverride: !!targetIssue });
       if (status === "skip") {
         writeRunnerOutcome({ result: "skip", issueIdentifier: issue.identifier });
-        excludeIds.add(issue.id);
         continue;
       }
 

@@ -1,3 +1,7 @@
+## ANQ-3654: [Sonar] Either use this collection's contents or remove the collection. (main.mjs:200) (2026-01-16)
+
+- Removed unused `excludeIds` Set collection from symphony-runner main loop.
+
 ## ANQ-3650: [Sonar] Add at least one assertion to this test case. (request-rehydration.spec.ts:96) (2026-01-16)
 
 - Added assertion to verify `completeInflightRequest` does not throw and returns expected state for non-existent request.
