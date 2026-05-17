@@ -135,7 +135,7 @@ export async function runAgentWorkflowTests() {
 
     for (const [index, practice] of bestPractices.entries()) {
       console.log(`   ${index + 1}. ${practice}`);
-    });
+    }
 
     console.log("\n🎯 NEXT STEPS FOR IMPLEMENTATION:");
     console.log("1. Review the created workflow files");
@@ -208,16 +208,16 @@ export async function runAgentWorkflowTests() {
         console.log(`      Possible specialized workflows:`);
         for (const example of option.examples) {
           console.log(`         - ${example}`);
-        });
+        }
       }
 
       if (option.examples2) {
         console.log(`      Automation options:`);
         for (const example of option.examples2) {
           console.log(`         - ${example}`);
-        });
+        }
       }
-    });
+    }
 
     console.log("\n✅ ALL ACCEPTANCE CRITERIA MET");
     console.log("=".repeat(60));

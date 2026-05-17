@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { describe, it, expect } from "vitest";
 
 const { sortPendingEntries } = await import("./sort-pending-entries.mjs");

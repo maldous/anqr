@@ -30,8 +30,8 @@ export function getLeastLoadedWorktree(sessionId = null) {
   const selected = candidates[roundRobinIndex % candidates.length];
   setRoundRobinIndex((roundRobinIndex + 1) % WORKTREE_URLS.length);
 
+  const candidateLabels = candidates.map((wt) => `wt${wt.id}`).join(",");
   logInfo(
-    const candidateLabels = candidates.map((wt) => `wt${wt.id}`).join(",");
     `🔀 Round-robin: session=${sessionId || "(none)"} -> wt${selected?.id} (load: ${minLoad}, candidates: ${candidateLabels})`,
   );
 

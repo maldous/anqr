@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { describe, it, expect } from "vitest";
 
 const { supportsTextIO } = await import("./supports-text-io.mjs");

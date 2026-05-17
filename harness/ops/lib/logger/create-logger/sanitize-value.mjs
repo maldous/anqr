@@ -1,7 +1,6 @@
 import { truncateText } from "./truncate-text.mjs";
 import { summarizeObjectKeys } from "./summarize-object-keys.mjs";
 
-const MAX_LOG_STRING_LENGTH = 240;
 const MAX_LOG_ARRAY_ITEMS = 8;
 const MAX_LOG_OBJECT_KEYS = 20;
 const MAX_LOG_DEPTH = 3;

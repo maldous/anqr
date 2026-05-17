@@ -25,7 +25,7 @@ export function printCompletionSummary(_testResults) {
 
   for (const [index, criterion] of criteria.entries()) {
     console.log(`   ${index + 1}. ✅ ${criterion}`);
-  });
+  }
 
   console.log("\n🎉 SUCCESS: All goals achieved and acceptance criteria met!");
 

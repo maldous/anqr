@@ -10,7 +10,7 @@ import { getWorktreePath, PROJECT_ROOT } from "../../../core/worktree-config.mjs
 import { execFileSync } from "node:child_process";
 import { sendDiscordEmbed } from "../../../integrations/notifications/openclaw-discord.mjs";
 import { buildEvidence } from "./build-evidence.mjs";
-import { findActiveIssueForWorktree } from "./execute-repair/find-active-issue-for-worktree.mjs";
+import { findActiveIssueForWorktree } from "./find-active-issue-for-worktree.mjs";
 import { logInfo, logWarn } from "../logger.mjs";
 
 export async function executeRepair(worktreeId, classification) {

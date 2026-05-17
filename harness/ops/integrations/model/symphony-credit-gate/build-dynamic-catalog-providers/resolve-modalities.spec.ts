@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { describe, it, expect } from "vitest";
 
 const { resolveModalities } = await import("./resolve-modalities.mjs");
