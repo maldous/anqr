@@ -19,6 +19,22 @@ function getResponseBodySummary(responseBody) {
   return undefined;
 }
 
+function formatArgs(args) {
+  return args
+    .map((arg) => {
+      if (typeof arg === "string") return arg;
+      return inspect(summarize(arg), {
+        depth: 3,
+        breakLength: 140,
+        maxArrayLength: MAX_ITEMS,
+        maxStringLength: MAX_STRING,
+        colors: false,
+        compact: true,
+      });
+    })
+    .join(" ");
+}
+
 function summarize(value, depth = 0, seen = new WeakSet()) {
   if (value === null || value === undefined) return value;
   if (typeof value === "string") return trimString(value);
@@ -55,23 +71,6 @@ function summarize(value, depth = 0, seen = new WeakSet()) {
 }
 
 export function installConsoleOutputGuard() {
-
-  function formatArgs(args) {
-    return args
-      .map((arg) => {
-        if (typeof arg === "string") return arg;
-        return inspect(summarize(arg), {
-          depth: 3,
-          breakLength: 140,
-          maxArrayLength: MAX_ITEMS,
-          maxStringLength: MAX_STRING,
-          colors: false,
-          compact: true,
-        });
-      })
-      .join(" ");
-  }
-
   if (globalThis[CONSOLE_GUARD_KEY]) return;
   globalThis[CONSOLE_GUARD_KEY] = true;
 

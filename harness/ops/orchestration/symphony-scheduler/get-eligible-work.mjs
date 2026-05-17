@@ -153,11 +153,13 @@ export async function getEligibleWork(isFullPollCycle = false) {
     return (a.priority ?? 99) - (b.priority ?? 99) || new Date(a.createdAt) - new Date(b.createdAt);
   });
 
-  const mode = needsFullPoll
-    ? isFullPollCycle
-      ? "full-poll"
-      : "full-poll (empty queue)"
-    : `webhook-driven (${webhookIssues.length} from queue)`;
+  function describeMode() {
+    if (needsFullPoll) {
+      return isFullPollCycle ? "full-poll" : "full-poll (empty queue)";
+    }
+    return `webhook-driven (${webhookIssues.length} from queue)`;
+  }
+  const mode = describeMode();
 
   logDebug(
     `[scheduler] Eligible work: ${eligible.length} issues (${mode})` +
