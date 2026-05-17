@@ -1,3 +1,7 @@
+## ANQ-3647: [Sonar] Add at least one assertion to this test case. (session-state-crud.spec.ts:163) (2026-01-16)
+
+- Added assertions to verify `setSessionMessages` does not throw for null/empty sessionId in the "setSessionMessages + getSessionMessages" describe block.
+
 ## ANQ-3329: [Sonar] Add at least one assertion to this test case. (active-job-ownership.spec.ts:144) (2026-05-16)
 
 - Added assertions to verify `getAllActiveOwnership` returns empty object in "does nothing for non-existent ownership" tests.

@@ -207,8 +207,8 @@ describe("session-state CRUD", () => {
     });
 
     it("does nothing for null/empty sessionId", () => {
-      setSessionMessages(null as unknown as string, []);
-      setSessionMessages("", []);
+      expect(() => setSessionMessages(null as unknown as string, [])).not.toThrow();
+      expect(() => setSessionMessages("", [])).not.toThrow();
     });
   });
 
