@@ -87,7 +87,7 @@ setInterval(() => {
     let target = null;
     if (claimCheck.assignedWorktreeId) {
       const assignedId = Number.parseInt(claimCheck.assignedWorktreeId.replace(/^wt/, ""), 10);
-      target = !isNaN(assignedId) ? WORKTREES.find((w) => w.id === assignedId) || null : null;
+      target = !Number.isNaN(assignedId) ? WORKTREES.find((w) => w.id === assignedId) || null : null;
       if (!target) {
         logWarn(
           `[router] Dropping queued item ${item.identifier}: assigned worktree ${claimCheck.assignedWorktreeId} not found in pool — claim may be stale`,
