@@ -1,5 +1,11 @@
 import { loadState } from "./load-state.mjs";
 
+function classifyBucket(state, summary) {
+  if (state === "dirty_owned" || state === "dirty_orphaned") return "dirty";
+  if (summary[state] === undefined) return "unknown";
+  return state;
+}
+
 export function getFleetSnapshot() {
   const store = loadState();
   const snapshot = {
@@ -9,12 +15,7 @@ export function getFleetSnapshot() {
   };
   for (const [id, wt] of Object.entries(store.worktreeStates)) {
     snapshot.worktrees[id] = wt;
-    function classifyBucket(state) {
-      if (state === "dirty_owned" || state === "dirty_orphaned") return "dirty";
-      if (snapshot.summary[state] === undefined) return "unknown";
-      return state;
-    }
-    const bucket = classifyBucket(wt.state);
+    const bucket = classifyBucket(wt.state, snapshot.summary);
     snapshot.summary[bucket] = (snapshot.summary[bucket] || 0) + 1;
   }
   return snapshot;
