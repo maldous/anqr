@@ -1,3 +1,10 @@
+function getContentText(content) {
+  if (Array.isArray(content)) {
+    return content.map((part) => (typeof part === "string" ? part : part?.text || "")).join("\n");
+  }
+  return typeof content === "string" ? content : "";
+}
+
 const GREETINGS_RE = /\b(hello|hi|hey)\b/i;
 const THANKS_RE = /\b(thanks|thank you)\b/i;
 const QUESTIONS_RE = /\b(who are you|what are you|what can you do)\b/i;
@@ -33,13 +40,7 @@ export function shouldUseToolsForRequest(messages = [], route = null) {
   const latestUserContent = [...messages]
     .reverse()
     .find((message) => message?.role === "user")?.content;
-  const latestUserText = Array.isArray(latestUserContent)
-    ? latestUserContent
-        .map((part) => (typeof part === "string" ? part : part?.text || ""))
-        .join("\n")
-    : typeof latestUserContent === "string"
-      ? latestUserContent
-      : "";
+  const latestUserText = getContentText(latestUserContent);
   const normalized = latestUserText.trim();
 
   if (!normalized) return false;

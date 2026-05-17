@@ -5,6 +5,12 @@ import { getCurrentRequestCwd } from "./get-current-request-cwd.mjs";
 import { resolveRequestPath } from "./resolve-request-path.mjs";
 import { logError } from "./logger.mjs";
 
+function resolveKnownFileName(rawName, validFiles) {
+  if (validFiles.includes(rawName)) return rawName;
+  const basename = path.basename(rawName);
+  return validFiles.includes(basename) ? basename : null;
+}
+
 /** @param {{ file?: string, path?: string, from?: number, lines?: number }} params */
 export async function memoryGetTool({
   file,
@@ -19,12 +25,7 @@ export async function memoryGetTool({
     const rawName = file || pathAlias || "MEMORY.md";
 
     // Resolve — check direct match then basename match against known files
-    const basename = path.basename(rawName);
-    const fileName = validFiles.includes(rawName)
-      ? rawName
-      : validFiles.includes(basename)
-        ? basename
-        : null;
+    const fileName = resolveKnownFileName(rawName, validFiles);
 
     // For unrecognized paths, try reading as a relative project path
     if (!fileName) {

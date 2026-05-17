@@ -80,6 +80,17 @@ import {
   scanStaleInflightRequests,
 } from "../../../core/symphony-shared-state/request-rehydration.mjs";
 
+function getMessageText(msg) {
+  if (typeof msg?.content === "string") return msg.content;
+  if (Array.isArray(msg?.content)) {
+    return msg.content
+      .filter((p) => p.type === "text")
+      .map((p) => p.text)
+      .join(" ");
+  }
+  return "";
+}
+
 // D Phase 3: Validate boundary invariants at bridge startup (ADR-0008).
 // Both validators throw on critical misconfigurations (fail-closed).
 // Advisory warnings are logged here for operator visibility.
@@ -493,15 +504,7 @@ export const server = http.createServer(async (req, res) => {
       const OPENCLAW_DIRECTIVE_RE =
         /Pre-compaction memory flush|Store durable memories only in memory\//i;
       const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
-      const lastUserTextRaw =
-        typeof lastUserMsg?.content === "string"
-          ? lastUserMsg.content
-          : Array.isArray(lastUserMsg?.content)
-            ? lastUserMsg.content
-                .filter((p) => p.type === "text")
-                .map((p) => p.text)
-                .join(" ")
-            : "";
+      const lastUserTextRaw = getMessageText(lastUserMsg);
 
       if (OPENCLAW_DIRECTIVE_RE.test(lastUserTextRaw)) {
         logInfo(
@@ -560,7 +563,7 @@ export const server = http.createServer(async (req, res) => {
       const isVoiceRequestEarly = messages
         .slice(-6)
         .some((m) => {
-          const c = typeof m.content === "string" ? m.content : Array.isArray(m.content) ? m.content.filter((p) => p.type === "text").map((p) => p.text).join(" ") : "";
+          const c = getMessageText(m);
           const match = /Voice transcript from speaker/i.test(c);
           if (match) logInfo(`🎙️ Voice detection: matched in role=${m.role} content="${c.slice(0, 80)}"`);
           return match;
@@ -879,11 +882,7 @@ export const server = http.createServer(async (req, res) => {
         const firstSystem = messages.find((m) => m.role === "system");
         const nonSystemMessages = messages.filter((m) => m.role !== "system");
         const identityLine = firstSystem?.content
-          ? (typeof firstSystem.content === "string" ? firstSystem.content : "")
-              .split("\n")
-              .slice(0, 3)
-              .join(" ")
-              .slice(0, 200)
+          ? getMessageText(firstSystem).split("\n").slice(0, 3).join(" ").slice(0, 200)
           : "";
         const combinedSystemContent = [
           identityLine || "You are ANQR, a coding assistant running in Discord.",

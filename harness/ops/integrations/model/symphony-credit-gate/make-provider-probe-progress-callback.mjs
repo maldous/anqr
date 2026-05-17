@@ -9,9 +9,7 @@ export function makeProviderProbeProgressCallback(state = {}) {
     if (event.type === "provider_started") {
       const tag = event.toolSupportHint
         ? ` [tools:${event.toolSupportHint}]`
-        : event.toolCapable
-          ? " [tools]"
-          : "";
+        : event.toolCapable ? " [tools]" : "";
       console.log(`${prefix} starting${tag}${detail}`);
       return;
     }

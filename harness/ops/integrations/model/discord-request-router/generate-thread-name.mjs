@@ -4,15 +4,17 @@ export function generateThreadName(messages) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     if (msg?.role === "user") {
-      const content =
-        typeof msg.content === "string"
-          ? msg.content
-          : Array.isArray(msg.content)
-            ? msg.content
-                .filter((p) => p?.type === "text")
-                .map((p) => p.text)
-                .join(" ")
-            : null;
+      function getMessageContent(msg) {
+        if (typeof msg?.content === "string") return msg.content;
+        if (Array.isArray(msg?.content)) {
+          return msg.content
+            .filter((p) => p?.type === "text")
+            .map((p) => p.text)
+            .join(" ");
+        }
+        return null;
+      }
+      const content = getMessageContent(msg);
       if (content && content.trim()) {
         const preview = content.trim().slice(0, 80).replaceAll("\n", " ");
         return `🔧 ${preview}`;

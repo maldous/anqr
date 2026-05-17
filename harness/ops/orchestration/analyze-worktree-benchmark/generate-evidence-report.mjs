@@ -4,6 +4,45 @@ import { writeFileSync } from "node:fs";
 import { EVIDENCE_DIR } from "./evidence-dir.mjs";
 import { logInfo } from "./logger.mjs";
 
+function buildRecommendationsSection(comparison, concurrentMetrics) {
+  if (comparison.pass) {
+    return (
+      "### ✅ Validation Passed\n\n" +
+      `Concurrent execution with ${concurrentMetrics.worktreeCount} worktrees is ready for production:\n\n` +
+      "1. Update `MAX_CONCURRENT_AGENTS` in `harness/ops/core/symphony-config.mjs` " +
+      `to ${concurrentMetrics.worktreeCount}\n` +
+      "2. Enable production worktree pool: " +
+      "`node harness/ops/orchestration/symphony-worktree-pool.mjs init " +
+      `${concurrentMetrics.worktreeCount}\`\n` +
+      "3. Enable systemd timers: " +
+      "`systemctl --user enable --now anqr-symphony-runner@{1.." +
+      `${concurrentMetrics.worktreeCount}}.timer\`\n` +
+      "4. Monitor for 7 days (Phase 3)\n"
+    );
+  }
+  const failures = [];
+  if (!comparison.thresholds.throughputIncrease) {
+    failures.push(
+      `- **Throughput:** Only ${comparison.comparison.throughputIncrease}% increase (target: ≥75%)\n` +
+        "  - Review runner contention and lease acquisition delays\n" +
+        "  - Check for queue starvation or idle gaps\n",
+    );
+  }
+  if (!comparison.thresholds.conflictRate) {
+    failures.push(
+      `- **Conflicts:** ${comparison.concurrent.conflicts}% conflict rate (target: <5%)\n` +
+        "  - Review git push collision handling\n" +
+        "  - Consider serializing final push operations\n",
+    );
+  }
+  return (
+    "### ❌ Validation Failed\n\n" +
+    "Issues detected — remediation required:\n\n" +
+    failures.join("") +
+    "\n**Action:** Create remediation issues and rollback to single-runner mode.\n"
+  );
+}
+
 export function generateEvidenceReport(comparison, baselineMetrics, concurrentMetrics) {
   const timestamp = new Date().toISOString().split("T")[0];
   const reportPath = resolve(EVIDENCE_DIR, `worktree-benchmark-${timestamp}.md`);
@@ -80,34 +119,7 @@ export function generateEvidenceReport(comparison, baselineMetrics, concurrentMe
 
 ## Recommendations
 
-${
-  comparison.pass
-    ? `### ✅ Validation Passed
-
-Concurrent execution with ${concurrentMetrics.worktreeCount} worktrees is ready for production:
-
-1. Update \`MAX_CONCURRENT_AGENTS\` in \`harness/ops/core/symphony-config.mjs\` to ${concurrentMetrics.worktreeCount}
-2. Enable production worktree pool: \`node harness/ops/orchestration/symphony-worktree-pool.mjs init ${concurrentMetrics.worktreeCount}\`
-3. Enable systemd timers: \`systemctl --user enable --now anqr-symphony-runner@{1..${concurrentMetrics.worktreeCount}}.timer\`
-4. Monitor for 7 days (Phase 3)
-`
-    : `### ❌ Validation Failed
-
-Issues detected — remediation required:
-
-${
-  comparison.thresholds.throughputIncrease
-    ? ""
-    : `- **Throughput:** Only ${comparison.comparison.throughputIncrease}% increase (target: ≥75%)\\n  - Review runner contention and lease acquisition delays\\n  - Check for queue starvation or idle gaps\\n`
-}${
-        comparison.thresholds.conflictRate
-          ? ""
-          : `- **Conflicts:** ${comparison.concurrent.conflicts}% conflict rate (target: <5%)\\n  - Review git push collision handling\\n  - Consider serializing final push operations\\n`
-      }
-
-**Action:** Create remediation issues and rollback to single-runner mode.
-`
-}
+${buildRecommendationsSection(comparison, concurrentMetrics)}
 
 ## Evidence Files
 

@@ -40,6 +40,12 @@ const EXCLUDED_MODEL_PATTERNS = [
  */
 const MIN_CODING_PARAMS_B = 14;
 
+function pickFirstArray(obj, key, fallback) {
+  if (Array.isArray(obj?.[key])) return obj[key];
+  if (Array.isArray(fallback?.[key])) return fallback[key];
+  return [];
+}
+
 function hasConfiguredCredentials(provider) {
   if (provider?.driver === "codex-sdk") {
     return Boolean(process.env.OPENAI_API_KEY);
@@ -51,17 +57,15 @@ function hasConfiguredCredentials(provider) {
   return Boolean((value && value !== "REPLACE" && value.length > 1) || provider?.loadToken);
 }
 
+function resolveModalities(raw, field) {
+  if (Array.isArray(raw?.architecture?.[`${field}_modalities`])) return raw.architecture[`${field}_modalities`];
+  if (Array.isArray(raw?.[`${field}_modalities`])) return raw[`${field}_modalities`];
+  return [];
+}
+
 function supportsTextIO(raw) {
-  const inputModalities = Array.isArray(raw?.architecture?.input_modalities)
-    ? raw.architecture.input_modalities
-    : Array.isArray(raw?.input_modalities)
-      ? raw.input_modalities
-      : [];
-  const outputModalities = Array.isArray(raw?.architecture?.output_modalities)
-    ? raw.architecture.output_modalities
-    : Array.isArray(raw?.output_modalities)
-      ? raw.output_modalities
-      : [];
+  const inputModalities = resolveModalities(raw, "input");
+  const outputModalities = resolveModalities(raw, "output");
   const acceptsText = inputModalities.length === 0 || inputModalities.includes("text");
   const outputsText = outputModalities.length === 0 || outputModalities.includes("text");
   return acceptsText && outputsText;
@@ -114,11 +118,7 @@ export function buildDynamicCatalogProviders(staticProviders) {
         model,
         dynamic: true,
         contextLength: row?.contextLength || provider.contextLength || null,
-        supportedParameters: Array.isArray(row?.supportedParameters)
-          ? row.supportedParameters
-          : Array.isArray(provider?.supportedParameters)
-            ? provider.supportedParameters
-            : [],
+        supportedParameters: pickFirstArray(row, "supportedParameters", provider),
         catalogToolSupport: row?.toolSupport || "unknown",
         catalogToolSupportReason: row?.toolSupportReason || "catalog has no explicit tool metadata",
         capabilities: row?.raw?.capabilities || provider?.capabilities || {},

@@ -28,6 +28,12 @@ import { sleep } from "./sleep.mjs";
 import { selectToolsForProvider } from "./select-tools-for-provider.mjs";
 import { trackFileChange } from "./track-file-change.mjs";
 import { unwrapAIError } from "./unwrap-aierror.mjs";
+function resolveFailureClass(hasErrors, finishReason) {
+  if (hasErrors) return "stream_error";
+  if (finishReason === "tool-calls") return "step_limit_reached";
+  return null;
+}
+
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
 export async function invokeWithAIInner(provider, messages, options = {}) {
@@ -808,12 +814,7 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
     const _symphonyResult = {
       completed: executionMetrics.taskCompleted === true,
       needsContinuation: finishReason === "tool-calls" || finishReason === "length",
-      failureClass:
-        errorCount > 0
-          ? "stream_error"
-          : finishReason === "tool-calls"
-            ? "step_limit_reached"
-            : null,
+      failureClass: resolveFailureClass(errorCount > 0, finishReason),
       mutationCount: executionMetrics.mutationCount,
       changedFiles: [...executionMetrics.changedFiles],
       validationIntent: executionMetrics.validationToolsRun.size > 0,

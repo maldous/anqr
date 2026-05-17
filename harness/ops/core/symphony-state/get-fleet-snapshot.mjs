@@ -9,12 +9,12 @@ export function getFleetSnapshot() {
   };
   for (const [id, wt] of Object.entries(store.worktreeStates)) {
     snapshot.worktrees[id] = wt;
-    const bucket =
-      wt.state === "dirty_owned" || wt.state === "dirty_orphaned"
-        ? "dirty"
-        : snapshot.summary[wt.state] === undefined
-          ? "unknown"
-          : wt.state;
+    function classifyBucket(state) {
+      if (state === "dirty_owned" || state === "dirty_orphaned") return "dirty";
+      if (snapshot.summary[state] === undefined) return "unknown";
+      return state;
+    }
+    const bucket = classifyBucket(wt.state);
     snapshot.summary[bucket] = (snapshot.summary[bucket] || 0) + 1;
   }
   return snapshot;

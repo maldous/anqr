@@ -5,6 +5,16 @@ import { getRankedProviders } from "./get-ranked-providers.mjs";
 import { isProviderRankedPoolEligible } from "./is-provider-ranked-pool-eligible.mjs";
 import { providerProbeRouteInfo } from "./provider-probe-route-info.mjs";
 
+function buildFallbackBridgeRoute(routeInfo) {
+  if (routeInfo?.isBridgeBlocked) {
+    return { status: "blocked", reason: "bridge blocked" };
+  }
+  if (routeInfo?.advertisedRouteIds?.length) {
+    return { status: "advertised", reason: routeInfo.advertisedRouteIds.join(", ") || "advertised" };
+  }
+  return { status: "not_advertised", reason: "not advertised" };
+}
+
 export function buildProviderProbeRankedHealthy(results) {
   const stats = getProviderStats();
   const byName = new Map(results.map((result) => [result.providerName, result]));
@@ -15,16 +25,7 @@ export function buildProviderProbeRankedHealthy(results) {
     const result = byName.get(rankedProvider.name);
     const cachedProbe = getCachedProbeEntry(rankedProvider.name);
     const routeInfo = result?.routeInfo || (provider ? providerProbeRouteInfo(provider) : null);
-    const bridgeRoute =
-      result?.bridgeRoute ||
-      (routeInfo?.isBridgeBlocked
-        ? { status: "blocked", reason: "bridge blocked" }
-        : routeInfo?.advertisedRouteIds?.length
-          ? {
-              status: "advertised",
-              reason: routeInfo.advertisedRouteIds.join(", ") || "advertised",
-            }
-          : { status: "not_advertised", reason: "not advertised" });
+    const bridgeRoute = result?.bridgeRoute || buildFallbackBridgeRoute(routeInfo);
     const candidate = {
       ...cachedProbe,
       ...result,

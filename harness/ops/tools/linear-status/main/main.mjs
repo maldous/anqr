@@ -26,7 +26,9 @@ export async function main() {
   const capacity = getHealthyLinearCapacity();
   console.log("┌─ Worktree Health (wt1-wt4) ─────────────────────────");
   for (const wt of capacity.worktrees) {
-    const status = wt.healthy ? (wt.executing ? "executing" : wt.state) : wt.state;
+    const status = wt.healthy
+      ? (wt.executing ? "executing" : wt.state)
+      : wt.state;
     const issue = wt.issueIdentifier ? ` -> ${wt.issueIdentifier}` : "";
     const detail = wt.reason || wt.lastError ? ` (${wt.reason || wt.lastError})` : "";
     console.log(`│  ${pad(wt.wtId, 5)} ${pad(status, 20)} ${issue}${detail}`);

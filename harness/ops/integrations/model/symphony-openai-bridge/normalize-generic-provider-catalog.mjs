@@ -1,13 +1,19 @@
 import { readGenericProviderToolSupport } from "./read-generic-provider-tool-support.mjs";
 
+function resolveRows(payload) {
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.models)) return payload.models;
+  return Array.isArray(payload) ? payload : [];
+}
+
+function resolveSupportedParams(entry) {
+  if (Array.isArray(entry?.supported_parameters)) return entry.supported_parameters;
+  if (Array.isArray(entry?.supportedParameters)) return entry.supportedParameters;
+  return [];
+}
+
 export function normalizeGenericProviderCatalog(payload) {
-  const rows = Array.isArray(payload?.data)
-    ? payload.data
-    : Array.isArray(payload?.models)
-      ? payload.models
-      : Array.isArray(payload)
-        ? payload
-        : [];
+  const rows = resolveRows(payload);
   return rows
     .map((entry) => {
       const toolSupport = readGenericProviderToolSupport(entry);
@@ -16,11 +22,7 @@ export function normalizeGenericProviderCatalog(payload) {
         contextLength:
           Number(entry?.context_length || entry?.contextWindow || entry?.max_input_tokens || 0) ||
           null,
-        supportedParameters: Array.isArray(entry?.supported_parameters)
-          ? entry.supported_parameters
-          : Array.isArray(entry?.supportedParameters)
-            ? entry.supportedParameters
-            : [],
+        supportedParameters: resolveSupportedParams(entry),
         toolSupport: toolSupport.status,
         toolSupportReason: toolSupport.reason,
         raw: entry,
