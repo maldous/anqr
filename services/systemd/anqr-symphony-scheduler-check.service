@@ -1,0 +1,24 @@
+# anqr-symphony-scheduler-check.service — One-shot scheduler health check
+#
+# Runs check-scheduler-health.sh and logs result.
+# Triggered by anqr-symphony-scheduler-check.timer every 5 minutes.
+#
+# On failure: alerts via syslog and exit code.
+
+[Unit]
+Description=ANQR Symphony Scheduler Health Check
+
+[Service]
+Type=oneshot
+ExecStart=%h/src/anqr/harness/ops/runtime/monitor/check-scheduler-health.sh
+WorkingDirectory=%h/src/anqr
+
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-scheduler-health
+
+[Install]
+WantedBy=default.target
