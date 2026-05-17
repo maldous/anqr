@@ -6,7 +6,9 @@ process.on("SIGINT", handleSignal("SIGINT"));
 
 process.on("SIGHUP", handleSignal("SIGHUP"));
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   logError(`Fatal gateway wrapper error: ${err.message}`);
   process.exitCode = 1;
-});
+}

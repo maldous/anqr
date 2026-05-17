@@ -14,20 +14,21 @@ if (isMainScript) {
   const mode = process.argv[2];
   process.stderr.write(`[recovery-runtime] Mode: ${mode}\n`);
   if (mode === "once") {
-    runRecoveryCycle()
-      .then((stats) => {
-        logInfo(`[recovery] Single cycle: ${JSON.stringify(stats)}`);
-        process.exit(stats.errors.length > 0 ? 1 : 0);
-      })
-      .catch((err) => {
-        logError(`[recovery] Fatal: ${err.message}`);
-        process.exit(1);
-      });
-  } else if (mode === "daemon") {
-    runDaemon().catch((err) => {
+    try {
+      const stats = await runRecoveryCycle();
+      logInfo(`[recovery] Single cycle: ${JSON.stringify(stats)}`);
+      process.exit(stats.errors.length > 0 ? 1 : 0);
+    } catch (err) {
       logError(`[recovery] Fatal: ${err.message}`);
       process.exit(1);
-    });
+    }
+  } else if (mode === "daemon") {
+    try {
+      await runDaemon();
+    } catch (err) {
+      logError(`[recovery] Fatal: ${err.message}`);
+      process.exit(1);
+    }
   } else if (mode === "status") {
     showStatus();
   } else {

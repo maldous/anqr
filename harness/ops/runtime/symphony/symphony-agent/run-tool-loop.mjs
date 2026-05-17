@@ -5,6 +5,8 @@ import { callLLM } from "./call-llm.mjs";
 import { executeTool } from "./execute-tool.mjs";
 import { logDebug, logInfo, logWarn, logError } from "./logger.mjs";
 
+const PLANNING_PHRASES_RE = /\b(let me (understand|read|check|analyze|review)|I('ll| will) (start by|need to|first)|here('s| is) my plan)\b|\b(steps|approach|thinking|analyzing|reviewing):/i;
+
 export async function runToolLoop({
   provider,
   messages,
@@ -282,9 +284,7 @@ export async function runToolLoop({
         // Bridge signaled continuation needed
         response.needsContinuation ||
         // Planning/understanding phrases
-        /\b(let me (understand|read|check|analyze|review)|I('ll| will) (start by|need to|first)|here('s| is) my plan|steps?:|approach:|thinking:|analyzing:|reviewing:)/i.test(
-          content,
-        ) ||
+        PLANNING_PHRASES_RE.test(content) ||
         // Subgoal management activity
         /\bsubgoal/i.test(content) ||
         // Reading/context gathering

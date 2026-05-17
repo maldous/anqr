@@ -3,12 +3,10 @@ export function isVoiceNoise(text) {
   const t = text.trim();
 
   // Provider failure / fallback patterns (the primary complaint)
-  if (
-    /\b(groq|mistral|gemini|ollama|codex|codebuff|openai|anthropic|deepseek|together|fireworks|perplexity|cerebras)\b\s+(fail|error|unavailable|timed? ?out|reject|refused)/i.test(
-      t,
-    )
-  )
-    return true;
+  const FAILED_PROVIDER_RE =
+    /\b(groq|mistral|gemini|ollama|codex|codebuff|openai|anthropic|deepseek|together|fireworks|perplexity|cerebras)\b/i;
+  const FAILURE_WORDS_RE = /\b(fail|error|unavailable|timed? ?out|reject|refused)\b/i;
+  if (FAILED_PROVIDER_RE.test(t) && FAILURE_WORDS_RE.test(t)) return true;
   if (/rate.?limit(ed|ing)?/i.test(t)) return true;
   if (/trying\s+next\s+provider|falling\s*back|triggering\s+fallback/i.test(t)) return true;
   if (/provider.*cooldown|cooldown.*provider/i.test(t)) return true;
