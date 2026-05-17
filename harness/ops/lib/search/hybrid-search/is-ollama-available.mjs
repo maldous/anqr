@@ -1,1 +1,1 @@
-export const isOllamaAvailable;
+export { isOllamaAvailable } from "../../rag/embeddings/is-ollama-available.mjs";
