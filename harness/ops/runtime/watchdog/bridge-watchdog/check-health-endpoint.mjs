@@ -30,6 +30,15 @@ export async function checkHealthEndpoint(service) {
         const available = data.providersAvailable || 0;
         const configured = data.providersConfigured || 0;
         if (available === 0) {
+          // If the bridge is still probing, treat as healthy (startup in progress).
+          // Without this, the watchdog kills the executor mid-probe and creates
+          // a restart death loop (ANQ-4354).
+          if (data.probing) {
+            return {
+              healthy: true,
+              reason: `probing in progress (${configured} configured)`,
+            };
+          }
           return {
             healthy: false,
             reason: `no providers available (${available}/${configured} configured)`,

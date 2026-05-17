@@ -36,6 +36,19 @@ export function initializeProbes() {
     logInfo(
       `Configured providers (${providerStatusCache.configured.length}): ${providerStatusCache.configured.map((p) => p.name).join(", ")}`,
     );
+
+    // Pre-populate probeResults with pending entries so the health endpoint
+    // reports providersAvailable > 0 during startup probing. Without this, the
+    // watchdog sees 0/N available and restarts the executor mid-probe, creating
+    // a restart death loop (ANQ-4354). Real probe results overwrite these later.
+    providerStatusCache.probeResults = providerStatusCache.configured.map((p) => ({
+      name: p.name,
+      model: p.model || "unknown",
+      status: "pending",
+      available: true,
+      durationMs: 0,
+    }));
+    providerStatusCache.probing = true;
   }
   if (BRIDGE_PROVIDER_BLOCKLIST.size > 0) {
     logInfo(`⛔ Blocked providers (${BRIDGE_PROVIDER_BLOCKLIST.size}):`);
@@ -204,8 +217,12 @@ export function initializeProbes() {
       }
     } catch (err) {
       logError(`Startup probe failed: ${err.message}`);
+      // Clear pending probe results so the watchdog correctly detects 0 providers.
+      // The continuous background probe (scheduled below) will re-probe shortly.
+      providerStatusCache.probeResults = [];
+      providerStatusCache.probing = false;
       logInfo(`========================================`);
-      logInfo(`Ready to accept requests (probe incomplete)`);
+      logInfo(`Ready to accept requests (probe incomplete — will retry via continuous probe)`);
       logInfo(`========================================`);
     }
   })();

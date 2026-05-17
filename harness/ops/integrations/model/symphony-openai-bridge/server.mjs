@@ -169,6 +169,7 @@ export const server = http.createServer(async (req, res) => {
         providersAvailable: availableCount,
         providersWithStats: configuredCount,
         lastProbeAt: providerStatusCache.lastProbeAt,
+        probing: providerStatusCache.probing || false,
       });
     }
 
