@@ -54,7 +54,7 @@ export function sanitizeTextForSpeech(text) {
 
   // 10. Special chars that sound bad when read aloud
   s = s.replace(/(\w)_(\w)/g, "$1 $2");
-  s = s.replace(/[{}<>[\]\\|~`]+/g, "");
+  s = s.replace(/[{}<>[\]\\|~`#]+/g, "");
   s = s.replace(/_{2,}/g, "");
 
   // 11. Collapse whitespace
