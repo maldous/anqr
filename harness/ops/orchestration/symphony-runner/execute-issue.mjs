@@ -1484,6 +1484,37 @@ ${String(r.detail)}\n`,
 
     const diffStat = gitDiffStat();
     if (!gitCommit(issue.identifier, issue.title, agentResult.summary, changedFiles)) {
+      // Check if issue is already fixed: changedFiles=[] AND headSha matches origin/main
+      // This prevents entering commit_failed_repairable loop for already-resolved findings
+      const headSha = getRepoHeadSha("HEAD");
+      const mainSha = getRepoHeadSha("origin/main");
+      if (changedFiles.length === 0 && headSha === mainSha) {
+        logInfo(
+          `[runner] Issue ${issue.identifier} has no changes and HEAD=main — already fixed, canceling`,
+        );
+        await updateIssue(issue.id, { stateId: STATES.canceled });
+        await addComment(
+          issue.id,
+          `✅ **Already fixed** — no changes needed. The finding was already resolved on main.\n\nHEAD: ${headSha.slice(0, 8)}\norigin/main: ${mainSha.slice(0, 8)}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "already_fixed_no_changes",
+          from: "In Progress",
+          to: "Canceled",
+          runId: RUN_ID,
+        });
+        recordLinearCompletion(metricsProviderName, {
+          completed: true,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+        recordProviderSuccess(metricsProviderName);
+        clearCooldown(issue.identifier);
+        logInfo(`[runner] ✅ Canceled (already fixed): ${issue.identifier}`);
+        return "done";
+      }
+
       const priorFinalization = getFinalizationState(issue.identifier);
       const commitAttempts = (priorFinalization?.attempts || 0) + 1;
       if (commitAttempts > 3) {
