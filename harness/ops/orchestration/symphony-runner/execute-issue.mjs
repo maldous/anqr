@@ -373,6 +373,15 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
     let systemPrompt = "You are a coding agent. Implement the requested changes.";
     if (existsSync(WORKFLOW_PATH)) systemPrompt = readFileSync(WORKFLOW_PATH, "utf-8");
 
+    // Inject no-action nudge when previous attempt made zero tool calls.
+    const preRunState = getIssueState(issue.identifier);
+    if (preRunState.notes?.no_action_nudge) {
+      systemPrompt += `\n\n## IMPORTANT: DO NOT PLAN\n\nThe previous attempt produced text only — no files were read or edited. This attempt must start with tool calls immediately. Do not write a plan or explain your approach. Read the files, find the lines, make the changes.`;
+      patchIssueState(issue.identifier, {
+        notes: { ...preRunState.notes, no_action_nudge: false },
+      });
+    }
+
     // Phase 2: Add repair context for repairable states
     if (isRepairCandidate) {
       if (currentFinalization.state === "validation_failed_repairable") {
@@ -543,6 +552,36 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         `${agentResult.summary} ${agentResult.error || ""}`,
       );
       const failureMsg = agentResult.error || agentResult.summary || "Unknown failure";
+
+      // No-action detection: agent produced text-only output with zero tool calls.
+      // This is a behaviour failure (agent planned instead of acted), not a provider
+      // error. Use a short flat cooldown, undo the retry-count increment so the
+      // retry budget is preserved, and inject a "do not plan" nudge for next run.
+      if (agentResult.toolCalls === 0 && failureKind === "other") {
+        const NO_ACTION_COOLDOWN_MS = 3 * 60 * 1000;
+        const stateBeforeUndo = getIssueState(issue.identifier);
+        patchIssueState(issue.identifier, {
+          retry_count: Math.max(0, (stateBeforeUndo.retry_count || 1) - 1),
+          notes: { ...stateBeforeUndo.notes, no_action_nudge: true },
+        });
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        setCooldown(issue.identifier, NO_ACTION_COOLDOWN_MS, "no_action");
+        await addComment(
+          issue.id,
+          safetyCap(
+            `🔄 **No action taken** — agent produced text only (0 tool calls). Retrying in 3 min.\n\n` +
+            `> **Next attempt:** do NOT write a plan. Immediately call tools: read the files listed in the description, locate the relevant lines, and make the changes. Do not explain what you are about to do — just do it.`,
+          ),
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "no_action",
+          from: "In Progress",
+          to: "Todo",
+          runId: RUN_ID,
+        });
+        return "done";
+      }
 
       // Preserve dirty working tree for retry: when the agent fails after making
       // file changes, transition the worktree to dirty_owned so the next runner
