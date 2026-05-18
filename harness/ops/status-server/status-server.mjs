@@ -14,7 +14,7 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT = parseInt(process.env.STATUS_SERVER_PORT || "18800", 10);
+const PORT = Number.parseInt(process.env.STATUS_SERVER_PORT || "18800", 10);
 const PUBLIC_DIR = path.resolve(__dirname, "public");
 const REPO_ROOT = path.resolve(__dirname, "../../..");
 
