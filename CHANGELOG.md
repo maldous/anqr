@@ -1,3 +1,7 @@
+## ANQ-4393: [Sonar] `validIssueIds` should be a `Set`, and use `validIssueIds.has()` to check existence or non-existence. (cleanup-stale-state.ts:21) (2026-01-16)
+
+- Changed `validIssueIds` from array to Set and updated filter to use `.has()` instead of `.includes()` for better performance.
+
 ## ANQ-4380: [Sonar] `String.raw` should be used to avoid escaping `\`. (code-search-tool.mjs:9) (2026-01-16)
 
 - Updated code-search-tool.mjs to use String.raw for backslash escape instead of manual escaping.

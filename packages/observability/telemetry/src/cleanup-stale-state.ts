@@ -18,11 +18,11 @@ export async function cleanupStaleState(): Promise<void> {
     
     // In a real implementation, we'd cross-reference with Linear API here
     // For demonstration, we'll manually remove specific IDs
-    const validIssueIds = [];
+    const validIssueIds = new Set<string>();
     
     // Filter out stale issues (example pattern)
     state.issues = Object.entries(state.issues)
-      .filter(([id]) => validIssueIds.includes(id))
+      .filter(([id]) => validIssueIds.has(id))
       .reduce((acc, [id, issue]) => {
         acc[id] = issue;
         return acc;
