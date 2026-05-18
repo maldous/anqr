@@ -1,3 +1,7 @@
+## ANQ-4380: [Sonar] `String.raw` should be used to avoid escaping `\`. (code-search-tool.mjs:9) (2026-01-16)
+
+- Updated code-search-tool.mjs to use String.raw for backslash escape instead of manual escaping.
+
 ## ANQ-3654: [Sonar] Either use this collection's contents or remove the collection. (main.mjs:200) (2026-01-16)
 
 - Removed unused `excludeIds` Set collection from symphony-runner main loop.

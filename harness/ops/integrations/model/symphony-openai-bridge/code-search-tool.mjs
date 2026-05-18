@@ -6,7 +6,7 @@ export async function codeSearchTool({ pattern, flags, cwd, maxResults = 15 }) {
   try {
     const baseDir = resolveRequestDir(cwd);
     const flagsStr = flags || "";
-    const escapedPattern = pattern.replaceAll('"', '\\"');
+    const escapedPattern = pattern.replaceAll('"', String.raw`\"`);
     const command = `rg "${escapedPattern}" ${flagsStr} "${baseDir}" -n --max-count=${maxResults} 2>/dev/null || true`;
     const result = execSync(command, {
       encoding: "utf-8",
