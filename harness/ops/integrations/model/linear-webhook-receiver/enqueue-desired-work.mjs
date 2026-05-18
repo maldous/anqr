@@ -1,4 +1,5 @@
 import { createDurableQueue } from "../../../lib/durable-kv.mjs";
+import { clearCooldown } from "../../../core/symphony-state/index.mjs";
 import { logInfo } from "./logger.mjs";
 
 /**
@@ -24,6 +25,11 @@ export async function enqueueDesiredWork(processedEvent, correlationId) {
     correlationId,
     timestamp: new Date().toISOString(),
   });
+
+  // Human moved the issue to a ready state — clear any active cooldown so the
+  // scheduler can dispatch it immediately rather than waiting out the backoff.
+  // This is intentional override: if a human explicitly moves to Todo, they want it run now.
+  clearCooldown(processedEvent.identifier);
 
   logInfo(`📝 Enqueued ${processedEvent.identifier} to desired-work queue (scheduler will claim)`);
   return true;
