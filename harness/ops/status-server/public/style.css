@@ -83,7 +83,6 @@ body {
 }
 
 .btn {
-  border: none;
   background: var(--bg-elevated);
   color: var(--text);
   cursor: pointer;
