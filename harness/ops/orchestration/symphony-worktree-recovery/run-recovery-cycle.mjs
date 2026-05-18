@@ -53,9 +53,12 @@ export async function runRecoveryCycle() {
         // scheduler of healthy worktrees.
         if (classification.classification === "clean") {
           const wtState = getWorktreeState(wtId);
-          if (wtState?.state === "quarantined") {
+          if (wtState?.state === "quarantined" || wtState?.state === "executing") {
+            // Clear quarantined state (and stale executing state — no active lease,
+            // no dirty files — runner died without cleaning up) so scheduler can
+            // dispatch new work.
             transitionWorktree(wtId, "available", { assignedIssue: null });
-            logInfo(`[recovery] Cleared quarantine for ${wtId} (now clean)`);
+            logInfo(`[recovery] Cleared stale ${wtState.state} for ${wtId} (now clean, no active lease)`);
             stats.repaired++;
             continue;
           }

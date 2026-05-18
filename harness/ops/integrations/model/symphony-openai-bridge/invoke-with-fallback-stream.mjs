@@ -108,11 +108,11 @@ export async function invokeWithFallbackStream(
     }
 
     const startedAt = Date.now();
+    const isCodebuffProvider =
+      provider.driver === "codebuff-sdk" ||
+      provider.name === "codebuff" ||
+      provider.name.startsWith("codebuff-");
     try {
-      const isCodebuffProvider =
-        provider.driver === "codebuff-sdk" ||
-        provider.name === "codebuff" ||
-        provider.name.startsWith("codebuff-");
       const result = isCodebuffProvider
         ? await invokeCodebuffDirectStream({
             messages,

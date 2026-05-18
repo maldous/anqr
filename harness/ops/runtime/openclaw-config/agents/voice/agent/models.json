@@ -160,8 +160,8 @@
           "api": "openai-completions"
         },
         {
-          "id": "symphony/codebuff",
-          "name": "Symphony Codebuff SDK",
+          "id": "symphony/main",
+          "name": "Symphony Bridge (auto-provider selection)",
           "reasoning": false,
           "input": ["text"],
           "cost": {
