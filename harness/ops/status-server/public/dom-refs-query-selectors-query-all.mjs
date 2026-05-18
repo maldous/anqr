@@ -1,0 +1,1 @@
+export const $$ = (sel) => document.querySelectorAll(sel);

@@ -28,7 +28,7 @@ export async function cleanupStaleState(): Promise<void> {
       }, {} as Record<string, any>);
       
     // Save the cleaned state back to storage
-    localStorage.setItem(STORAGE_KEY, JSON.parse(JSON.stringify(state)));
+    localStorage.setItem(STORAGE_KEY, structuredClone(state));
   } catch (error) {
     console.error('State cleanup failed:', error);
   }
