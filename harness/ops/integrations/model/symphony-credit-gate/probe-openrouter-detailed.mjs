@@ -20,8 +20,8 @@ export async function probeOpenrouterDetailed(provider, apiKey, options = {}) {
   stages.push(providerProbeStage("invoke_started", { url, timeoutMs, model: provider.model }));
   const response = await providerProbeFetchWithTimeout(
     url,
-    { method: "POST", headers, body },
     timeoutMs,
+    { method: "POST", headers, body },
   );
   const text = providerProbeTruncate(await response.text(), 12000);
   stages.push(providerProbeStage("invoke_completed", { status: response.status }));

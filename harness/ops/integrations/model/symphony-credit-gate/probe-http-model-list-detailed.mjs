@@ -26,7 +26,7 @@ export async function probeHttpModelListDetailed(provider, apiKey, options = {})
     };
   }
   try {
-    const response = await providerProbeFetchWithTimeout(url, { headers }, timeoutMs);
+    const response = await providerProbeFetchWithTimeout(url, timeoutMs, { headers });
     const bodyText = await response.text();
     const body = providerProbeTruncate(bodyText, 48000);
     stages.push(providerProbeStage("fetch_completed", { status: response.status }));

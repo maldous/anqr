@@ -7,7 +7,7 @@ export async function fetchModelsFromApi(provider, apiKey) {
 
   const headers = provider.envVar ? { Authorization: `Bearer ${apiKey}` } : {};
   try {
-    const response = await providerProbeFetchWithTimeout(url, { headers }, FETCH_TIMEOUT_MS);
+    const response = await providerProbeFetchWithTimeout(url, FETCH_TIMEOUT_MS, { headers });
     if (!response.ok) return null;
     const body = await response.json();
     return body;
