@@ -1,3 +1,7 @@
+## ANQ-4406: [Sonar] Use `for…of` instead of `.forEach(…)`. (app.js:171) (2026-01-16)
+
+- Replaced `.forEach()` with `for...of` loops in status-server app.js for better performance and consistency.
+
 ## ANQ-4393: [Sonar] `validIssueIds` should be a `Set`, and use `validIssueIds.has()` to check existence or non-existence. (cleanup-stale-state.ts:21) (2026-01-16)
 
 - Changed `validIssueIds` from array to Set and updated filter to use `.has()` instead of `.includes()` for better performance.

@@ -168,9 +168,11 @@ async function updateDashboard() {
 
 // ── Filters ─────────────────────────────────────────────────────────────────
 
-$$(".filter-btn").forEach((btn) => {
+for (const btn of $$(".filter-btn")) {
   btn.addEventListener("click", () => {
-    $$(".filter-btn").forEach((b) => b.classList.remove("active"));
+    for (const b of $$(".filter-btn")) {
+      b.classList.remove("active");
+    }
     btn.classList.add("active");
     currentFilter = btn.dataset.filter;
     // Re-render with filter
@@ -178,7 +180,7 @@ $$(".filter-btn").forEach((btn) => {
       renderServices(data);
     }).catch(() => {});
   });
-});
+}
 
 // ── Init ────────────────────────────────────────────────────────────────────
 
