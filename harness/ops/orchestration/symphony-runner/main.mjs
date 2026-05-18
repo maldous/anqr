@@ -233,6 +233,11 @@ export async function main() {
       const status = await executeIssue(issue, dryRun, { operatorOverride: !!targetIssue });
       if (status === "skip") {
         writeRunnerOutcome({ result: "skip", issueIdentifier: issue.identifier });
+        // For targeted one-shot runs (--issue), "skip" means the issue is permanently
+        // blocked (retry_exhausted, already done, etc.) — exit the loop. Without this,
+        // the loop re-fetches the same issue on every iteration, creating a death loop
+        // of thousands of no-op state writes per minute.
+        if (targetIssue) break;
         continue;
       }
 
