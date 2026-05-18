@@ -1,4 +1,4 @@
-export async function providerProbeFetchWithTimeout(url, timeoutMs, options = {}) {
+export async function providerProbeFetchWithTimeout(url, options = {}, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
