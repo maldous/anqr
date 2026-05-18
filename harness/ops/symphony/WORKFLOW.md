@@ -73,6 +73,21 @@ Do not imply broader launch readiness unless the docs are updated first.
 6. Escalate secrets, signing material, billing, ads, legal/compliance, and launch-claim changes to humans.
 7. Preserve operator stability for `harness/ops/*` and `services/systemd/*`.
 
+## Scope discipline — CRITICAL
+
+**When fixing a Sonar issue, change ONLY the specific line(s) identified in the issue description.** Do not refactor, rename, split, or restructure the surrounding file unless the issue explicitly requires it.
+
+**Never split a module into multiple files** to satisfy the AST Density Rule unless the issue explicitly asks for a refactor. If a file already exists with multiple declarations and you are only fixing one line in it, leave the rest of the file alone. The density rule applies to NEW files you create, not as a mandate to restructure existing files.
+
+**Before touching a file, check: who imports this file and what names do they import?** If you remove or rename an export, you must update every file that imports it. Failure to do so causes production crashes.
+
+**Concrete examples of what NOT to do:**
+- Issue says: fix one `structuredClone` call in `foo.mjs` → Only change that one call. Do NOT split `foo.mjs` into 5 files.
+- Issue says: remove unused import `X` → Only remove the import statement. Do NOT restructure the module.
+- Issue says: rename variable `e` to `error_` → Only rename inside the catch block. Do NOT touch tests or other files.
+
+**The cost of over-reach:** splitting a module without updating all callers breaks imports at runtime. A one-line Sonar fix should never cause production failures.
+
 ## AST Density Rule — mandatory design constraint
 
 **Every `.ts`, `.tsx`, and `.mjs` file must contain at most ONE top-level declaration.** A top-level declaration is any of: function, class, interface, type alias, enum, module, or exported variable statement (const/let).
