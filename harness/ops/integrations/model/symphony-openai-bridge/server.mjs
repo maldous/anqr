@@ -634,10 +634,8 @@ export const server = http.createServer(async (req, res) => {
       let initialContextBudgetCap;
       if (voiceContextBudgetCap != null && persistedContextBudgetCap != null) {
         initialContextBudgetCap = Math.min(voiceContextBudgetCap, persistedContextBudgetCap);
-      } else if (voiceContextBudgetCap != null) {
-        initialContextBudgetCap = voiceContextBudgetCap;
       } else {
-        initialContextBudgetCap = persistedContextBudgetCap;
+        initialContextBudgetCap = voiceContextBudgetCap ?? persistedContextBudgetCap;
       }
 
       if (initialContextBudgetCap) {

@@ -1,3 +1,7 @@
+## ANQ-4412: [Sonar] Unexpected negated condition. (server.mjs:637) (2025-01-24)
+
+- Simplified conditional logic using nullish coalescing operator to eliminate negated condition pattern
+
 ## ANQ-4406: [Sonar] Use `for…of` instead of `.forEach(…)`. (app.js:171) (2026-01-16)
 
 - Replaced `.forEach()` with `for...of` loops in status-server app.js for better performance and consistency.
