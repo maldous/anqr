@@ -631,12 +631,14 @@ export const server = http.createServer(async (req, res) => {
       // Load persisted context budget cap from session state so learned
       // limits survive bridge restarts (ANQ-4342).
       const persistedContextBudgetCap = getSessionContextBudgetCap(effectiveSessionKey);
-      const initialContextBudgetCap =
-        voiceContextBudgetCap != null
-          ? persistedContextBudgetCap != null
-            ? Math.min(voiceContextBudgetCap, persistedContextBudgetCap)
-            : voiceContextBudgetCap
-          : persistedContextBudgetCap;
+      let initialContextBudgetCap;
+      if (voiceContextBudgetCap != null && persistedContextBudgetCap != null) {
+        initialContextBudgetCap = Math.min(voiceContextBudgetCap, persistedContextBudgetCap);
+      } else if (voiceContextBudgetCap != null) {
+        initialContextBudgetCap = voiceContextBudgetCap;
+      } else {
+        initialContextBudgetCap = persistedContextBudgetCap;
+      }
 
       if (initialContextBudgetCap) {
         logInfo(
