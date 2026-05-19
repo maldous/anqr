@@ -49,3 +49,7 @@
 ## ANQ-3327: [Sonar] Add at least one assertion to this test case. (session-state-crud.spec.ts:163) (2026-05-16)
 
 - Added assertions to verify `getSessionMessages` returns null for null/empty sessionId in the "clearSessionMessages" test.
+
+## ANQ-4440: [Sonar] Remove this unused import of 'fs'. (status-server.mjs:11) (2025-01-16)
+
+- Removed unused `fs` import from harness/ops/status-server/status-server.mjs
