@@ -9,7 +9,6 @@
 
 import http from "node:http";
 import path from "node:path";
-import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { PORT, REPO_ROOT, REFRESH_INTERVAL_MS, COMMITS_REFRESH_MS, ISSUES_REFRESH_MS } from "./constants.mjs";

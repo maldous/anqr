@@ -53,3 +53,7 @@
 ## ANQ-4440: [Sonar] Remove this unused import of 'fs'. (status-server.mjs:11) (2025-01-16)
 
 - Removed unused `fs` import from harness/ops/status-server/status-server.mjs
+
+## ANQ-4441: [Sonar] Remove this unused import of 'execSync'. (status-server.mjs:13) (2025-01-24)
+
+- Removed unused import of execSync from harness/ops/status-server/status-server.mjs.
