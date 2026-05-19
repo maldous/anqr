@@ -57,3 +57,7 @@
 ## ANQ-4441: [Sonar] Remove this unused import of 'execSync'. (status-server.mjs:13) (2025-01-24)
 
 - Removed unused import of execSync from harness/ops/status-server/status-server.mjs.
+
+## ANQ-4508: [Sonar] Remove this unused import of 'fs'. (status-server.mjs:11) (2025-01-24)
+
+- Issue already resolved in previous commit (10036644f). No unused 'fs' import found in current file.
