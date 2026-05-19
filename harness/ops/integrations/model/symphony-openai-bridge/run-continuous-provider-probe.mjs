@@ -106,19 +106,36 @@ export async function runContinuousProviderProbe() {
     providerStatusCache.configured = getConfiguredProviders({ excludeNames });
     // Bypass health state on continuous probe — this is a periodic full re-assessment
     // that should check ALL providers regardless of cooling_down status
-    providerStatusCache.probeResults = await probeAllProviders({
+    const freshResults = await probeAllProviders({
       excludeNames,
       respectHealthState: false,
     });
-    providerStatusCache.lastProbeAt = new Date().toISOString();
 
-    // Save to shared cache immediately after probe
-    saveProbeCache({
-      configured: providerStatusCache.configured,
-      probeResults: providerStatusCache.probeResults,
-      lastProbeAt: providerStatusCache.lastProbeAt,
-      probing: false,
-    });
+    // Guard: don't overwrite in-memory state with a suspiciously empty result.
+    // If the new probe is dramatically worse than what we currently have, keep
+    // the existing results so live requests keep working while we investigate.
+    const freshAvail = freshResults.filter((r) => r.available).length;
+    const prevAvail = providerStatusCache.probeResults.filter((r) => r.available).length;
+    const MIN_SAVE = 10;
+    if (freshAvail < MIN_SAVE && prevAvail >= MIN_SAVE) {
+      logWarn(
+        `⚠️ Continuous probe returned only ${freshAvail} available providers — ` +
+        `keeping previous in-memory state (${prevAvail} available) to avoid poisoning live requests. ` +
+        `Cache save skipped (handled in saveProbeCache). Likely network outage or broken probe.`,
+      );
+      // Don't update probeResults or lastProbeAt; saveProbeCache will also reject the write.
+    } else {
+      providerStatusCache.probeResults = freshResults;
+      providerStatusCache.lastProbeAt = new Date().toISOString();
+
+      // Save to shared cache immediately after probe (saveProbeCache validates before writing)
+      saveProbeCache({
+        configured: providerStatusCache.configured,
+        probeResults: providerStatusCache.probeResults,
+        lastProbeAt: providerStatusCache.lastProbeAt,
+        probing: false,
+      });
+    }
 
     const reachable = providerStatusCache.probeResults.filter((r) => r.available);
     const total = providerStatusCache.configured.length;
