@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 import { PORT, REPO_ROOT, REFRESH_INTERVAL_MS, COMMITS_REFRESH_MS, ISSUES_REFRESH_MS, MIME_TYPES } from "./constants.mjs";
 import { SERVICES } from "./services.mjs";
-import { probeService, aggregateHealth, getHealth } from "./health-probing.mjs";
+import { probeService, aggregateHealth } from "./health-probing.mjs";
 import { fetchCommits, getCommits } from "./commits.mjs";
 import { fetchLinearIssues, getLinearIssues } from "./linear-issues.mjs";
 import { serveStatic, server } from "./server.mjs";
