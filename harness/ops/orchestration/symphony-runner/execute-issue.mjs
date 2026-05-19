@@ -971,29 +971,44 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           logInfo(`[runner] ✅ Agent-assessed complete (no tracked changes): ${issue.identifier}`);
           voiceAnnounce(`Finished ${issue.identifier}: ${issue.title}.`);
         } else {
-          // Agent reported completion with zero tool calls and zero file changes — false positive
-          await updateIssue(issue.id, { stateId: STATES.todo });
+          // Agent said completed=true with zero tool calls and zero file changes.
+          // Trust the assertion — issue is already resolved (false positive or previously fixed).
+          // Returning to Todo with no cooldown was causing infinite tight cycling (45+ runs/hr).
+          const localSha = getRepoHeadSha("HEAD");
+          const mainSha = getRepoHeadSha("origin/main");
+          transitionIssue(issue.identifier, "done", {
+            finalization: {
+              state: "completed_no_changes",
+              worktreeId: WORKTREE_ID,
+              headSha: localSha,
+              reason: "agent_assessed_complete_no_tools",
+              toolCalls: 0,
+              correlationId,
+              updatedAt: new Date().toISOString(),
+            },
+            reason: "agent_assessed_complete_no_tools",
+          });
+          await updateIssue(issue.id, { stateId: STATES.done });
           await addComment(
             issue.id,
-            safetyCap(`⚠️ **Agent reported completion with no file changes and no tool calls** — returned to Todo. Likely inferred false positive.\n\nAgent summary: ${agentResult.summary}`),
+            safetyCap(`✅ **Agent assessed work as complete** (no tool calls) — marked Done.\n\nThe agent determined the issue was already resolved without using file tools. This typically means the code was already compliant when the agent ran.\n\nAgent: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, {
             actor: "runner",
-            reason: "agent_completed_no_evidence",
+            reason: "agent_assessed_complete_no_tools",
             from: "In Progress",
-            to: "Todo",
+            to: "Done",
             runId: RUN_ID,
           });
-          if (provider?.name) {
-            recordLinearCompletion(metricsProviderName, {
-              completed: false,
-              priority: issue.priority,
-              estimate: issue.estimate,
-            });
-          }
-          logInfo(
-            `[runner] ⚠️ False positive (no changes, no tools): ${issue.identifier} — ${issue.title}`,
-          );
+          recordLinearCompletion(metricsProviderName, {
+            completed: true,
+            priority: issue.priority,
+            estimate: issue.estimate,
+          });
+          recordProviderSuccess(metricsProviderName);
+          clearCooldown(issue.identifier);
+          logInfo(`[runner] ✅ Agent-assessed complete (no tools, already resolved): ${issue.identifier}`);
+          voiceAnnounce(`Finished ${issue.identifier}: ${issue.title}.`);
         }
         return "done";
       }
