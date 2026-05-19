@@ -65,6 +65,11 @@ export async function invokeWithFallbackStream(
   let lastError = null;
   let attemptNumber = 0;
   let contextBudgetCap = initialContextBudgetCap;
+  const issueCtx = process.env.ANQR_ISSUE_ID ? ` issue=${process.env.ANQR_ISSUE_ID}` : "";
+  logInfo(
+    `[bridge:fallback] invokeWithFallbackStream entry:${issueCtx} model=${route.responseModelId} useTools=${route.useTools} ` +
+    `hasInitialProvider=${!!initialProvider} initialExcluded=[${initialExcluded.join(",")}]`,
+  );
 
   while (true) {
     attemptNumber++;
@@ -86,6 +91,11 @@ export async function invokeWithFallbackStream(
       } else {
         errorMsg = `No providers available for ${route.responseModelId} - check env vars and provider failures`;
       }
+      logError(
+        `[bridge:fallback] ALL PROVIDERS EXHAUSTED:${issueCtx} model=${route.responseModelId} ` +
+        `attempts=${attemptNumber} tried=[${triedProviders.join(", ")}] ` +
+        `lastError=${lastError ? lastError.slice(0, 400) : "none"}`,
+      );
       const exhaustionError = new Error(errorMsg);
       exhaustionError.safetyNetData = {
         triedProviders: [...triedProviders],
@@ -223,7 +233,7 @@ export async function invokeWithFallbackStream(
           ERROR_TYPES.SERVER_ERROR,
         ].includes(errorType);
       logWarn(
-        `❌ Streaming ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`,
+        `❌ Streaming ${provider.name} failed (attempt ${attemptNumber}):${issueCtx} ${errStr.slice(0, 500)}`,
       );
 
       if (isRetryable) {

@@ -338,6 +338,8 @@ export const server = http.createServer(async (req, res) => {
         req.headers["x-openclaw-session"] || req.headers["x-openclaw-session-key"] || null;
       const worktreeId = req.headers["x-worktree-id"] || null;
       const correlationId = req.headers["x-anqr-correlation-id"] || null;
+      const anqrIssueId = req.headers["x-anqr-issue-id"] || null;
+      const anqrRunId = req.headers["x-anqr-run-id"] || null;
       const isSymphonyRunner = req.headers["x-symphony-origin"] === "runner";
       const requestCwd = normalizeRequestCwd(body.cwd);
 
@@ -690,7 +692,7 @@ export const server = http.createServer(async (req, res) => {
 
       // Structured request lifecycle log — request start
       logDebug(
-        `[${requestId}] REQUEST START | model=${route.responseModelId} stream=${stream} useTools=${route.useTools} sessionKey=${effectiveSessionKey || "none"} worktreeId=${worktreeId || "none"} messages=${messages.length}`,
+        `[${requestId}] REQUEST START | model=${route.responseModelId} stream=${stream} useTools=${route.useTools} sessionKey=${effectiveSessionKey || "none"} worktreeId=${worktreeId || "none"} issue=${anqrIssueId || "none"} run=${anqrRunId || "none"} messages=${messages.length}`,
       );
 
       // Set concurrency-safe async-local context (used by getCurrentRequestId() / getRequestContext()).

@@ -278,6 +278,24 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
     `[runner] Attempt ${attempt}/${RUNNER_MAX_RETRIES} for ${issue.identifier}: ${issue.title}`,
   );
 
+  // ── Per-run trace file init ───────────────────────────────────────────────
+  process.env.ANQR_ISSUE_ID = issue.identifier;
+  process.env.ANQR_RUN_ID = RUN_ID;
+  process.env.ANQR_WORKTREE_ID = WORKTREE_ID;
+  const { initRunTrace, traceLog, getTracePath } = await import("../../lib/run-trace.mjs");
+  initRunTrace({ issueId: issue.identifier, runId: RUN_ID, worktreeId: WORKTREE_ID });
+  logInfo(`[runner] Trace file: ${getTracePath() || "(not initialized)"}`);
+  traceLog("START", "issue execution starting", {
+    issueId: issue.identifier,
+    issueTitle: issue.title,
+    attempt,
+    maxRetries: RUNNER_MAX_RETRIES,
+    worktreeId: WORKTREE_ID,
+    runId: RUN_ID,
+    isRepairCandidate,
+  });
+  // ─────────────────────────────────────────────────────────────────────────
+
   const leaseNonce = `${RUN_ID}:${issue.identifier}:${Date.now()}`;
   const lease = acquireLease(issue.identifier, {
     owner: "runner",
@@ -405,6 +423,28 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
     patchIssueState(issue.identifier, {
       notes: { ...currentState.notes, lastProvider: provider.name },
     });
+
+    // ── TRACE: system prompt snapshot ─────────────────────────────────────
+    {
+      const promptLen = systemPrompt.length;
+      const nudgePresent = systemPrompt.includes("DO NOT PLAN");
+      const repairPresent = systemPrompt.includes("REPAIR CONTEXT");
+      logInfo(
+        `[runner:trace] ${issue.identifier} system prompt: len=${promptLen} ` +
+        `nudge_injected=${nudgePresent} repair_context=${repairPresent} ` +
+        `preview=${JSON.stringify(systemPrompt.slice(0, 200))}`,
+      );
+      traceLog("PROMPT", "system prompt snapshot", {
+        len: promptLen, nudgeInjected: nudgePresent, repairContext: repairPresent,
+        preview: systemPrompt.slice(0, 300),
+      });
+    }
+    logInfo(
+      `[runner:trace] ${issue.identifier} provider: name=${provider.name} model=${provider.model} attempt=${attempt}`,
+    );
+    traceLog("PROVIDER", "provider selected", { providerName: provider.name, model: provider.model, attempt });
+    // ───────────────────────────────────────────────────────────────────────
+
     if (startingCommentId) {
       await updateComment(
         startingCommentId,
@@ -532,6 +572,18 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       notes: { ...currentState.notes, lastProvider: metricsProviderName },
     });
 
+    // ── TRACE: full agentResult at decision point ──────────────────────────
+    logInfo(
+      `[runner:trace] ${issue.identifier} agentResult: ` +
+      `completed=${agentResult.completed} ` +
+      `toolCalls=${agentResult.toolCalls} ` +
+      `provider=${metricsProviderName} ` +
+      `timedOut=${agentResult.timedOut} ` +
+      `error=${agentResult.error ? JSON.stringify(agentResult.error.slice(0, 120)) : "none"} ` +
+      `summary=${JSON.stringify((agentResult.summary || "").slice(0, 150))}`,
+    );
+    // ────────────────────────────────────────────────────────────────────────
+
     // If agent did real work (tool calls) but bridge returned completed=false,
     // check whether the failure is a known infrastructure error (quota, rate-limit,
     // local-busy). If it's just an unrecognised "other" failure, promote to
@@ -554,6 +606,11 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         `${agentResult.summary} ${agentResult.error || ""}`,
       );
       const failureMsg = agentResult.error || agentResult.summary || "Unknown failure";
+      logInfo(
+        `[runner:trace] ${issue.identifier} failure classification: ` +
+        `failureKind=${failureKind} ` +
+        `classifiedFrom=${JSON.stringify((agentResult.summary + " " + (agentResult.error||"")).slice(0,120))}`,
+      );
 
       // No-action detection: agent produced text-only output with zero tool calls.
       // This is a behaviour failure (agent planned instead of acted), not a provider
@@ -564,6 +621,15 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         // no_action_done is set when the nudge was already injected and consumed.
         // If still no tool calls after the nudge, issue is likely already resolved.
         const nudgeAlreadyTried = stateBeforeUndo.notes?.no_action_done === true;
+        logInfo(
+          `[runner:trace] ${issue.identifier} no_action path: ` +
+          `nudgeAlreadyTried=${nudgeAlreadyTried} ` +
+          `no_action_nudge=${stateBeforeUndo.notes?.no_action_nudge} ` +
+          `no_action_done=${stateBeforeUndo.notes?.no_action_done} ` +
+          `retry_count=${stateBeforeUndo.retry_count} ` +
+          `prior_retry_events=${(stateBeforeUndo.notes?.retry_events||[]).length} ` +
+          `provider=${metricsProviderName}`,
+        );
 
         if (nudgeAlreadyTried) {
           // Second consecutive no_action after nudge. Two distinct cases:
@@ -803,6 +869,8 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       return "done";
     }
     let changedFiles = gitDiffNames();
+    logInfo(`[runner:trace] ${issue.identifier} changedFiles (${changedFiles.length}): [${changedFiles.join(", ")}]`);
+    traceLog("CHANGED_FILES", "git diff names", { count: changedFiles.length, files: changedFiles });
     if (changedFiles.length === 0) {
       // Check if agent needs continuation (has active subgoals)
       const needsContinuation = agentResult.needsContinuation === true;
@@ -967,7 +1035,13 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
 
       // Document external completion in a log file for audit trail
       const externalLogPath = resolve(ROOT, "reports", "symphony", "external-completions.log");
-      const externalLogEntry = `[${new Date().toISOString()}] ${issue.identifier}: ${issue.title}\n  Agent: ${agentResult.summary}\n  Externally completed: ${isExternallyCompleted}\n  Agent completed: ${agentResult.completed}\n`;
+      const externalLogEntry = [
+        `[${new Date().toISOString()}] ${issue.identifier}: ${issue.title}`,
+        `  provider=${agentResult.providerName || provider.name}  completed=${agentResult.completed}  toolCalls=${agentResult.toolCalls}  timedOut=${agentResult.timedOut}`,
+        `  externally_completed=${isExternallyCompleted}  changed_files=${changedFiles?.length ?? 0}`,
+        `  error=${agentResult.error ? agentResult.error.slice(0, 200) : "none"}`,
+        `  Agent: ${(agentResult.summary || "").slice(0, 300)}`,
+      ].join("\n") + "\n";
       try {
         const dir = resolve(ROOT, "reports", "symphony");
         if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -1267,6 +1341,16 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
     }
 
     let validation = await runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
+    logInfo(
+      `[runner:trace] ${issue.identifier} validation: passed=${validation.passed} ` +
+      `checks=${(validation.results||[]).map(r=>`${r.check}:${r.pass?"PASS":"FAIL"}`).join(",")} ` +
+      `signature=${validation.signature||"none"}`,
+    );
+    traceLog("VALIDATION", "validation result", {
+      passed: validation.passed,
+      signature: validation.signature || null,
+      results: (validation.results||[]).map(r=>({ check: r.check, pass: r.pass })),
+    });
 
     let validationFixAttempts = 0;
     let previousSignature = validation.signature;
@@ -1693,6 +1777,10 @@ ${String(r.detail)}\n`,
     let branchPush = { ok: false };
     if (RUNNER_AUTO_PUSH) {
       branchPush = await gitPushWorktreeBranch();
+      logInfo(
+        `[runner:trace] ${issue.identifier} push: ok=${branchPush.ok} branch=${branchPush.branch||"?"} sha=${branchPush.head||"?"} error=${branchPush.error||"none"}`,
+      );
+      traceLog("PUSH", "git push result", { ok: branchPush.ok, branch: branchPush.branch||null, sha: branchPush.head||null, error: branchPush.error||null });
       if (correlationId) {
         try {
           recordPushResult(correlationId, {
@@ -1771,6 +1859,8 @@ ${String(r.detail)}\n`,
       cwd: ROOT,
       encoding: "utf-8",
     }).trim();
+    logInfo(`[runner:trace] ${issue.identifier} commit: sha=${commitHash} files=${changedFiles.length} push=${branchPush.ok}`);
+    traceLog("COMMIT", "commit created", { sha: commitHash, files: changedFiles, pushed: branchPush.ok });
 
     await runSonarPostCommit(issue.identifier);
     // Only update Linear state if push failed — when push succeeded the integrator

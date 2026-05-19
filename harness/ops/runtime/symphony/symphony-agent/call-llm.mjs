@@ -260,6 +260,9 @@ export async function callLLM(provider, messages, taskDescription, opts = {}) {
     if (worktreeId) {
       headers["X-Worktree-ID"] = worktreeId;
     }
+    // Propagate issue/run context so bridge logs can be correlated by issue ID
+    if (process.env.ANQR_ISSUE_ID) headers["X-Anqr-Issue-ID"] = process.env.ANQR_ISSUE_ID;
+    if (process.env.ANQR_RUN_ID) headers["X-Anqr-Run-ID"] = process.env.ANQR_RUN_ID;
     const res = await fetch(`${provider.baseUrl}/chat/completions`, {
       method: "POST",
       headers,

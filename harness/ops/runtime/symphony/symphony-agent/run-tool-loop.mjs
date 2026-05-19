@@ -95,6 +95,16 @@ export async function runToolLoop({
     if (response._symphonyResult) {
       const sr = response._symphonyResult;
       messages.push(msg);
+      // TRACE: log the full _symphonyResult so we can see exactly what the bridge returned
+      logInfo(
+        `[agent:trace] _symphonyResult from ${actualProviderName}: ` +
+        `completed=${sr.completed} toolCallCount=${sr.toolCallCount} failureClass=${sr.failureClass || "none"} ` +
+        `stepCount=${sr.stepCount} mutationCount=${sr.mutationCount || 0} ` +
+        `needsContinuation=${sr.needsContinuation} changedFiles=${(sr.changedFiles || []).length}`,
+      );
+      if (!sr.completed && sr.failureClass) {
+        logWarn(`[agent:trace] bridge failure — failureClass=${sr.failureClass} contentLen=${(msg.content||"").length} contentPreview=${(msg.content||"").slice(0,200)}`);
+      }
       return {
         completed: sr.completed,
         summary: msg.content || "",

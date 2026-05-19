@@ -64,9 +64,18 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
   // providers are rejected to prevent tool-call failures during demos.
   let useTools =
     options.useTools === false ? false : providerSupportsTools(provider.name, { strict: true });
+  const issueTag = process.env.ANQR_ISSUE_ID ? ` [${process.env.ANQR_ISSUE_ID}]` : "";
   logInfo(
-    `Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? "" : " [no-tools]"}`,
+    `Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? "" : " [no-tools]"}${issueTag} ` +
+    `(options.useTools=${options.useTools} probeCapable=${providerSupportsTools(provider.name, { strict: true })})`,
   );
+  if (!useTools) {
+    logWarn(
+      `[bridge:tools] TOOLS STRIPPED for ${provider.name}${issueTag} — provider is not tool-capable or tools explicitly disabled. ` +
+      `Model will receive plain text prompt with NO tool definitions. ` +
+      `Agent will produce text-only response (0 tool calls).`,
+    );
+  }
   logDebug(`[invokeWithAI] Provider configuration`, {
     providerName: provider.name,
     providerModel: provider.model,
@@ -817,6 +826,20 @@ export async function invokeWithAIInner(provider, messages, options = {}) {
       toolCallCount: executionMetrics.toolCallCount,
       stepCount: executionMetrics.stepCount,
     };
+    logInfo(
+      `[bridge:result] _symphonyResult assembled for ${provider.name}${issueTag}: ` +
+      `completed=${_symphonyResult.completed} toolCallCount=${_symphonyResult.toolCallCount} ` +
+      `failureClass=${_symphonyResult.failureClass || "none"} stepCount=${_symphonyResult.stepCount} ` +
+      `mutationCount=${_symphonyResult.mutationCount} changedFiles=${_symphonyResult.changedFiles.length} ` +
+      `finishReason=${finishReason} errorCount=${errorCount} useTools=${useTools}`,
+    );
+    if (!_symphonyResult.completed && _symphonyResult.failureClass) {
+      logWarn(
+        `[bridge:result] FAILURE for ${provider.name}${issueTag}: failureClass=${_symphonyResult.failureClass} ` +
+        `errorCount=${errorCount} finishReason=${finishReason} ` +
+        `contentPreview=${JSON.stringify(fullText.slice(0, 300))}`,
+      );
+    }
 
     // CHANGED: Return the recovered fullText (which may have been populated via
     // result.text fallback), not rely on result.text being consistently populated
