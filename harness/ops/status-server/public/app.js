@@ -4,7 +4,7 @@ import { API_BASE, REFRESH_INTERVAL, INFRA_REFRESH_INTERVAL, currentFilter } fro
 import { $, $$, els } from "./dom-refs.mjs";
 import { updateBanner } from "./banner.mjs";
 import { updateStats } from "./stats.mjs";
-import { createServiceCard, renderServices } from "./service-cards.mjs";
+import { renderServices } from "./service-cards.mjs";
 import { updateDashboard } from "./dashboard.mjs";
 import { fetchAndRenderCommits } from "./commits.mjs";
 import { fetchAndRenderIssues, renderIssues } from "./linear-issues.mjs";

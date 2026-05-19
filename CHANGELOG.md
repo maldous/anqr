@@ -65,3 +65,7 @@
 ## ANQ-4508: [Sonar] Remove this unused import of 'fs'. (status-server.mjs:11) (2025-01-24)
 
 - Issue already resolved in previous commit (10036644f). No unused 'fs' import found in current file.
+
+## ANQ-4435: [Sonar] Remove this unused import of 'createServiceCard'. (app.js:8) (2025-01-24)
+
+- Removed unused import of createServiceCard from harness/ops/status-server/public/app.js.
