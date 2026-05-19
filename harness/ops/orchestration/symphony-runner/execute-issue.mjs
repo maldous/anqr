@@ -558,8 +558,38 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       // error. Use a short flat cooldown, undo the retry-count increment so the
       // retry budget is preserved, and inject a "do not plan" nudge for next run.
       if (agentResult.toolCalls === 0 && failureKind === "other") {
-        const NO_ACTION_COOLDOWN_MS = 3 * 60 * 1000;
         const stateBeforeUndo = getIssueState(issue.identifier);
+        const nudgeAlreadyTried = stateBeforeUndo.notes?.no_action_nudge === true;
+
+        if (nudgeAlreadyTried) {
+          // Second consecutive no_action after nudge — agent persistently produces no tool calls.
+          // Issue is likely already resolved or genuinely requires no change. Mark Done.
+          transitionIssue(issue.identifier, "done", {
+            finalization: {
+              state: "completed_no_changes",
+              worktreeId: WORKTREE_ID,
+              headSha: getRepoHeadSha("HEAD"),
+              reason: "no_action_after_nudge",
+              toolCalls: 0,
+              correlationId,
+              updatedAt: new Date().toISOString(),
+            },
+            reason: "no_action_after_nudge",
+          });
+          await updateIssue(issue.id, { stateId: STATES.done });
+          await addComment(
+            issue.id,
+            safetyCap(`✅ **Marked Done** — agent produced no tool calls on two consecutive attempts (including after explicit nudge). Issue is likely already resolved or requires no change.\n\nAgent summary: ${agentResult.summary}`),
+          );
+          recordTransition(issue.identifier, { actor: "runner", reason: "no_action_after_nudge", from: "In Progress", to: "Done", runId: RUN_ID });
+          recordLinearCompletion(metricsProviderName, { completed: true, priority: issue.priority, estimate: issue.estimate });
+          recordProviderSuccess(metricsProviderName);
+          clearCooldown(issue.identifier);
+          logInfo(`[runner] ✅ Done (no_action after nudge — likely already resolved): ${issue.identifier}`);
+          return "done";
+        }
+
+        const NO_ACTION_COOLDOWN_MS = 3 * 60 * 1000;
         patchIssueState(issue.identifier, {
           retry_count: Math.max(0, (stateBeforeUndo.retry_count || 1) - 1),
           notes: { ...stateBeforeUndo.notes, no_action_nudge: true },
@@ -573,13 +603,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
             `> **Next attempt:** do NOT write a plan. Immediately call tools: read the files listed in the description, locate the relevant lines, and make the changes. Do not explain what you are about to do — just do it.`,
           ),
         );
-        recordTransition(issue.identifier, {
-          actor: "runner",
-          reason: "no_action",
-          from: "In Progress",
-          to: "Todo",
-          runId: RUN_ID,
-        });
+        recordTransition(issue.identifier, { actor: "runner", reason: "no_action", from: "In Progress", to: "Todo", runId: RUN_ID });
         return "done";
       }
 
