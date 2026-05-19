@@ -566,8 +566,35 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         const nudgeAlreadyTried = stateBeforeUndo.notes?.no_action_done === true;
 
         if (nudgeAlreadyTried) {
-          // Second consecutive no_action after nudge — agent persistently produces no tool calls.
-          // Issue is likely already resolved or genuinely requires no change. Mark Done.
+          // Second consecutive no_action after nudge. Two distinct cases:
+          // (a) Issue genuinely already resolved → safe to close as Done
+          // (b) Agent is writing plan text instead of using tools (wrong model/provider) → NOT safe to close
+          //
+          // Distinguish by checking prior history: if the issue previously had real tool calls
+          // or validation failures, the agent CAN use tools, so no_action means "already done".
+          // If the issue has ONLY ever had quota/stream errors and no_action runs, the agent
+          // never successfully used tools → likely a provider problem, not "already done".
+          // Move to Backlog for human review instead of falsely closing.
+          const hadPriorToolUse = (stateBeforeUndo.notes?.retry_events || []).some(
+            (e) => e.type === "success" || (e.type === "failure" && e.reason === "validation_failed"),
+          );
+          const hasValidationHistory = getFinalizationState(issue.identifier)?.state?.includes("repairable");
+
+          if (!hadPriorToolUse && !hasValidationHistory) {
+            // Never successfully used tools — likely a provider/model problem, not "already resolved".
+            // Move to Backlog for human review rather than silently closing.
+            await updateIssue(issue.id, { stateId: STATES.backlog });
+            markRetryExhausted(issue.identifier, { reason: "no_action_provider_issue" });
+            await addComment(
+              issue.id,
+              safetyCap(`🔍 **Needs human review** — agent consistently produced text-only responses (0 tool calls) without ever successfully using tools on this issue. This usually means the model selected was in text-completion mode rather than tool-use mode.\n\nThe agent's last response described what to do correctly but didn't execute it:\n\n${agentResult.summary?.slice(0, 500)}`),
+            );
+            recordTransition(issue.identifier, { actor: "runner", reason: "no_action_provider_issue", from: "In Progress", to: "Backlog", runId: RUN_ID });
+            logInfo(`[runner] 🔍 Backlog (no prior tool use — provider issue not resolution): ${issue.identifier}`);
+            return "done";
+          }
+
+          // Agent previously used tools successfully → no_action now means issue is already resolved.
           transitionIssue(issue.identifier, "done", {
             finalization: {
               state: "completed_no_changes",
@@ -583,7 +610,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           await updateIssue(issue.id, { stateId: STATES.done });
           await addComment(
             issue.id,
-            safetyCap(`✅ **Marked Done** — agent produced no tool calls on two consecutive attempts (including after explicit nudge). Issue is likely already resolved or requires no change.\n\nAgent summary: ${agentResult.summary}`),
+            safetyCap(`✅ **Marked Done** — agent produced no tool calls on two consecutive attempts (after explicit nudge) but previously used tools successfully on this issue. Issue is likely already resolved.\n\nAgent summary: ${agentResult.summary}`),
           );
           recordTransition(issue.identifier, { actor: "runner", reason: "no_action_after_nudge", from: "In Progress", to: "Done", runId: RUN_ID });
           recordLinearCompletion(metricsProviderName, { completed: true, priority: issue.priority, estimate: issue.estimate });
