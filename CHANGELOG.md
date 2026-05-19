@@ -1,3 +1,7 @@
+## ANQ-4443: [Sonar] Remove this unused import of 'MIME_TYPES'. (status-server.mjs:16) (2025-01-24)
+
+- Removed unused import of MIME_TYPES from harness/ops/status-server/status-server.mjs.
+
 ## ANQ-4412: [Sonar] Unexpected negated condition. (server.mjs:637) (2025-01-24)
 
 - Simplified conditional logic using nullish coalescing operator to eliminate negated condition pattern
