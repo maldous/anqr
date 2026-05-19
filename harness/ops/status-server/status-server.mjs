@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { REPO_ROOT, REFRESH_INTERVAL_MS } from "./constants.mjs";
+import { REFRESH_INTERVAL_MS } from "./constants.mjs";
 import { SERVICES } from "./services.mjs";
 import { aggregateHealth } from "./health-probing.mjs";
 import { fetchCommits, getCommits } from "./commits.mjs";
