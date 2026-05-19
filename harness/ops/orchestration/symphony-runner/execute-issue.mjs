@@ -582,6 +582,14 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       `error=${agentResult.error ? JSON.stringify(agentResult.error.slice(0, 120)) : "none"} ` +
       `summary=${JSON.stringify((agentResult.summary || "").slice(0, 150))}`,
     );
+    traceLog("AGENT_RESULT", "agentResult received", {
+      completed: agentResult.completed,
+      toolCalls: agentResult.toolCalls,
+      provider: metricsProviderName,
+      timedOut: agentResult.timedOut,
+      error: agentResult.error ? agentResult.error.slice(0, 200) : null,
+      summary: (agentResult.summary || "").slice(0, 300),
+    });
     // ────────────────────────────────────────────────────────────────────────
 
     // If agent did real work (tool calls) but bridge returned completed=false,
@@ -611,6 +619,12 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         `failureKind=${failureKind} ` +
         `classifiedFrom=${JSON.stringify((agentResult.summary + " " + (agentResult.error||"")).slice(0,120))}`,
       );
+      traceLog("FAILURE", "agent failure classified", {
+        failureKind,
+        failureMsg: failureMsg.slice(0, 300),
+        completed: agentResult.completed,
+        toolCalls: agentResult.toolCalls,
+      });
 
       // No-action detection: agent produced text-only output with zero tool calls.
       // This is a behaviour failure (agent planned instead of acted), not a provider
@@ -630,6 +644,14 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           `prior_retry_events=${(stateBeforeUndo.notes?.retry_events||[]).length} ` +
           `provider=${metricsProviderName}`,
         );
+        traceLog("NO_ACTION", "agent produced 0 tool calls", {
+          nudgeAlreadyTried,
+          no_action_nudge: stateBeforeUndo.notes?.no_action_nudge,
+          no_action_done: stateBeforeUndo.notes?.no_action_done,
+          retry_count: stateBeforeUndo.retry_count,
+          prior_retry_events: (stateBeforeUndo.notes?.retry_events||[]).length,
+          provider: metricsProviderName,
+        });
 
         if (nudgeAlreadyTried) {
           // Second consecutive no_action after nudge. Two distinct cases:
