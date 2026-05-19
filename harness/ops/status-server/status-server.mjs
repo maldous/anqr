@@ -1,19 +1,9 @@
-/**
- * ANQR Status Server
- *
- * Lightweight HTTP server that aggregates health from all ANQR services
- * and serves the operation dashboard.
- *
- * Port: STATUS_SERVER_PORT env var or 18800
- */
-
-import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { REPO_ROOT, REFRESH_INTERVAL_MS } from "./constants.mjs";
 import { SERVICES } from "./services.mjs";
-import { probeService, aggregateHealth } from "./health-probing.mjs";
+import { aggregateHealth } from "./health-probing.mjs";
 import { fetchCommits, getCommits } from "./commits.mjs";
 import { fetchLinearIssues, getLinearIssues } from "./linear-issues.mjs";
 import { serveStatic, server } from "./server.mjs";
