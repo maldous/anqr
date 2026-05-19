@@ -6,7 +6,7 @@ import { updateBanner } from "./banner.mjs";
 import { updateStats } from "./stats.mjs";
 import { createServiceCard, renderServices } from "./service-cards.mjs";
 import { updateDashboard } from "./dashboard.mjs";
-import { fetchAndRenderCommits, renderCommits } from "./commits.mjs";
+import { fetchAndRenderCommits } from "./commits.mjs";
 import { fetchAndRenderIssues, renderIssues } from "./linear-issues.mjs";
 
 // ── Fetch Health ────────────────────────────────────────────────────────────
