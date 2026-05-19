@@ -374,11 +374,13 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
     if (existsSync(WORKFLOW_PATH)) systemPrompt = readFileSync(WORKFLOW_PATH, "utf-8");
 
     // Inject no-action nudge when previous attempt made zero tool calls.
+    // no_action_nudge: true  → inject prompt nudge then clear (consumed once)
+    // no_action_done: true   → persistent flag: next no_action run → Done
     const preRunState = getIssueState(issue.identifier);
     if (preRunState.notes?.no_action_nudge) {
       systemPrompt += `\n\n## IMPORTANT: DO NOT PLAN\n\nThe previous attempt produced text only — no files were read or edited. This attempt must start with tool calls immediately. Do not write a plan or explain your approach. Read the files, find the lines, make the changes.`;
       patchIssueState(issue.identifier, {
-        notes: { ...preRunState.notes, no_action_nudge: false },
+        notes: { ...preRunState.notes, no_action_nudge: false, no_action_done: true },
       });
     }
 
@@ -559,7 +561,9 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
       // retry budget is preserved, and inject a "do not plan" nudge for next run.
       if (agentResult.toolCalls === 0 && failureKind === "other") {
         const stateBeforeUndo = getIssueState(issue.identifier);
-        const nudgeAlreadyTried = stateBeforeUndo.notes?.no_action_nudge === true;
+        // no_action_done is set when the nudge was already injected and consumed.
+        // If still no tool calls after the nudge, issue is likely already resolved.
+        const nudgeAlreadyTried = stateBeforeUndo.notes?.no_action_done === true;
 
         if (nudgeAlreadyTried) {
           // Second consecutive no_action after nudge — agent persistently produces no tool calls.
