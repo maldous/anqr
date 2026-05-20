@@ -32,7 +32,7 @@ export function syncWorktreeBeforeValidation(worktreePath) {
     try {
       git("rebase origin/main", worktreePath);
       logInfo(`${label} Rebase onto origin/main succeeded`);
-    } catch (error_) {
+    } catch (error__) {
       logWarn(`${label} Rebase failed — aborting and hard-resetting to guarantee clean worktree`);
       // Always abort any in-progress rebase first
       try { git("rebase --abort", worktreePath); } catch { /* may not be mid-rebase */ }
@@ -43,8 +43,8 @@ export function syncWorktreeBeforeValidation(worktreePath) {
         git("reset --hard HEAD", worktreePath);
         git("clean -fd", worktreePath);
         logInfo(`${label} Hard-reset to HEAD after rebase failure — worktree is clean`);
-      } catch (resetErr) {
-        logWarn(`${label} Hard-reset also failed: ${resetErr.message}`);
+      } catch (error__) {
+        logWarn(`${label} Hard-reset also failed: ${error__.message}`);
       }
 
       if (hasUncommitted) {
@@ -55,7 +55,7 @@ export function syncWorktreeBeforeValidation(worktreePath) {
         synced: false,
         method: "rebase-failed",
         mainSha,
-        error: error_.message,
+        error: error__.message,
       };
     }
 
@@ -63,8 +63,8 @@ export function syncWorktreeBeforeValidation(worktreePath) {
       try {
         git("stash pop", worktreePath);
         logInfo(`${label} Restored stashed changes`);
-      } catch (error_) {
-        logWarn(`${label} Stash pop failed — changes remain in stash: ${error_.message}`);
+      } catch (error__) {
+        logWarn(`${label} Stash pop failed — changes remain in stash: ${error__.message}`);
       }
     }
 
@@ -72,8 +72,8 @@ export function syncWorktreeBeforeValidation(worktreePath) {
     logInfo(`${label} Sync complete: ${headSha} → ${newHead}`);
 
     return { synced: true, method: "rebase", mainSha, previousHead: headSha, newHead };
-  } catch (err) {
-    logError(`${label} Sync failed: ${err.message}`);
-    return { synced: false, method: "error", error: err.message };
+  } catch (error__) {
+    logError(`${label} Sync failed: ${error__.message}`);
+    return { synced: false, method: "error", error: error__.message };
   }
 }
