@@ -1,2 +1,2 @@
-export let cachedIssues = undefined;
+export let cachedIssues;
 export let issuesCacheAge = 0;
