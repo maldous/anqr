@@ -1,1 +1,1 @@
-export let cachedIssues = undefined;
+export let cachedIssues;
