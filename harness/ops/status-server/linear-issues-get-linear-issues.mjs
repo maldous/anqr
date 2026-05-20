@@ -3,6 +3,6 @@ export async function getLinearIssues() {
     return cachedIssues;
   }
   cachedIssues = await fetchLinearIssues();
-  const issuesCacheAge = Date.now();
+  issuesCacheAge = Date.now();
   return cachedIssues;
 }
