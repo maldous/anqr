@@ -1,1 +1,3 @@
-++ harness/ops/status-server/evidence-closure-gate.mjs
+export const evidenceClosureGate = () => {
+  // Implementation details
+};
