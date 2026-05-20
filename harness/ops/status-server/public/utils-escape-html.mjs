@@ -1,1 +1,1 @@
-export { escapeHtml } from "./escape-html.mjs";
+export { escapeHtml } from "./utils.mjs";
