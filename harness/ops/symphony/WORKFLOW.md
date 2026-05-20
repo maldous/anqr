@@ -124,19 +124,9 @@ This is NOT a style preference or a lint rule you can ignore. It is an architect
 - Do not claim a gate passed unless it actually ran.
 - Produce evidence in the format required by `docs/harness/06-evidence-and-reporting.md`.
 
-## CHANGELOG requirement — mandatory
+## CHANGELOG — do NOT modify
 
-**Every task must append an entry to `CHANGELOG.md` at the repo root.** This is not optional. If you make no other file changes, updating CHANGELOG is still required.
-
-Format (prepend under `# Changelog`, newest first):
-
-```
-## <issue-identifier>: <issue-title> (<YYYY-MM-DD>)
-
-- <one-line summary of what changed>
-```
-
-Do this as your final step before calling `task_complete`.
+**Do NOT edit `CHANGELOG.md`.**  Every agent modifies the same file causing constant rebase conflicts in concurrent worktrees. The git commit message and Linear issue provide the full audit trail. Touching CHANGELOG is actively harmful to pipeline stability.
 
 ## Sonar catch-parameter rename rules
 
@@ -153,9 +143,8 @@ When fixing Sonar rules that require renaming catch parameters (e.g., S7718: ren
 2. Read the governing docs and the relevant code.
 3. Plan the smallest correct change.
 4. Implement.
-5. Append the CHANGELOG entry.
-6. Run the truthful gates for the slice.
-7. Summarize:
+5. Run the truthful gates for the slice.
+6. Summarize:
    - what changed
    - what was validated
    - any remaining risk or follow-up

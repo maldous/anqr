@@ -33,19 +33,22 @@ export function syncWorktreeBeforeValidation(worktreePath) {
       git("rebase origin/main", worktreePath);
       logInfo(`${label} Rebase onto origin/main succeeded`);
     } catch (error_) {
-      logWarn(`${label} Rebase failed — aborting and keeping current state`);
+      logWarn(`${label} Rebase failed — aborting and hard-resetting to guarantee clean worktree`);
+      // Always abort any in-progress rebase first
+      try { git("rebase --abort", worktreePath); } catch { /* may not be mid-rebase */ }
+      // Hard-reset to HEAD to clear any conflict markers left by the failed rebase.
+      // Without this, the recovery service detects the conflict markers and quarantines
+      // the worktree — causing every subsequent issue to fail for the worktree's lifetime.
       try {
-        git("rebase --abort", worktreePath);
-      } catch {
-        /* may not be mid-rebase */
+        git("reset --hard HEAD", worktreePath);
+        git("clean -fd", worktreePath);
+        logInfo(`${label} Hard-reset to HEAD after rebase failure — worktree is clean`);
+      } catch (resetErr) {
+        logWarn(`${label} Hard-reset also failed: ${resetErr.message}`);
       }
 
       if (hasUncommitted) {
-        try {
-          git("stash pop", worktreePath);
-        } catch {
-          /* ok */
-        }
+        try { git("stash pop", worktreePath); } catch { /* ok */ }
       }
 
       return {
