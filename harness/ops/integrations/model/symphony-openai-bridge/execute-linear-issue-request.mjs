@@ -4,6 +4,7 @@ import { promisify } from "node:util";
 
 import { ensureEvidenceRecord } from "../../../core/task-evidence.mjs";
 import { EXIT_LOCK_CONTENTION } from "../../../core/symphony-runner-exit-codes.mjs";
+import { releaseLease } from "../../../symphony-state.mjs";
 import { readRunnerOutcome } from "./read-runner-outcome.mjs";
 import { sendJson } from "./send-json.mjs";
 import { logInfo, logWarn, logError } from "./logger.mjs";
@@ -135,6 +136,21 @@ export async function executeLinearIssueRequest(req, res) {
         ? `Timed out executing ${identifier}`
         : err?.message || `Failed executing ${identifier}`;
     logError(`[linear-execute] Failed for ${identifier}: ${message}`);
+
+    // Release the scheduler lease so the issue can be re-dispatched immediately.
+    // The router is fire-and-forget — the scheduler already returned 202 and
+    // kept the lease active. Without this release, the stale lease blocks
+    // re-dispatch for the full 20-minute TTL, causing "rejected: already_claimed"
+    // on every scheduler cycle until the lease expires.
+    try {
+      const released = releaseLease(identifier);
+      if (released?.ok) {
+        logInfo(`[linear-execute] Released stale lease for ${identifier} after runner crash`);
+      }
+    } catch (releaseErr) {
+      logWarn(`[linear-execute] Could not release lease for ${identifier}: ${releaseErr.message}`);
+    }
+
     return sendJson(res, 500, {
       error: { message, type: "server_error" },
     });
