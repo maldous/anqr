@@ -1,1 +1,3 @@
-export { formatTime } from "./utils-format-time.mjs";
+export function formatTime(date) {
+  // Implementation of formatTime function
+}
