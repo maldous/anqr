@@ -1,2 +1,4 @@
-import { cachedIssues } from "./cached-issues.mjs";
-const issuesCacheAge = 1000 * 60 * 60 * 24; // 24 hours
+export default function getLinearIssues(auth, fetchIssuesFromLinear, fetchProjectFromLinear) {
+    const issuesCacheAge = 7 * 24 * 60 * 60;
+    // ... rest of function implementation ...
+}
