@@ -1,3 +1,1 @@
-export const evidenceClosureGate = () => {
-  // Implementation details
-};
+export { evidenceClosureGate } from "./evidence-closure-gate-impl.mjs";
