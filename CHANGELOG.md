@@ -1,3 +1,7 @@
+## ANQ-4602: [Sonar] Module imports itself. (dom-refs-query-selectors-query-all.mjs:1) (2025-01-24)
+
+- Removed self-import from harness/ops/status-server/public/dom-refs-query-selectors-query-all.mjs.
+
 ## ANQ-4442: [Sonar] Remove this unused import of 'COMMITS_REFRESH_MS'. (status-server.mjs:16) (2025-01-24)
 
 - Removed unused import of COMMITS_REFRESH_MS from harness/ops/status-server/status-server.mjs.
