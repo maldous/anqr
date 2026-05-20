@@ -1,5 +1,3 @@
-import { $ } from "./dom-refs-query-selectors-query-one.mjs";
-import { $$ } from "./dom-refs-query-selectors-query-all.mjs";
-import { els } from "./dom-refs-elements.mjs";
-
-export { $, $$, els };
+export { $ } from "./dom-refs-query-selectors-query-one.mjs";
+export { $$ } from "./dom-refs-query-selectors-query-all.mjs";
+export { els } from "./dom-refs-elements.mjs";

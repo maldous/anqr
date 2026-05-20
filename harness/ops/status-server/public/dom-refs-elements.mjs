@@ -1,18 +1,1 @@
-export const els = {
-  total:     $("#totalServices"),
-  healthy:   $("#healthyCount"),
-  degraded:  $("#degradedCount"),
-  down:      $("#downCount"),
-  banner:    $("#banner"),
-  bannerInner: $("#banner .banner-inner"),
-  bannerText:  $("#banner .banner-text"),
-  bannerIcon:  $("#banner .banner-icon"),
-  servicesList: $("#servicesList"),
-  updateTime:   $("#updateTime"),
-  footerStamp:  $("#footerTimestamp"),
-  refreshBtn:   $("#refreshBtn"),
-  commitsList:  $("#commitsList"),
-  commitsCount: $("#commitsCount"),
-  issuesList:   $("#issuesList"),
-  issuesCount:  $("#issuesCount"),
-};
+export { els } from "./dom-refs-elements.mjs";
