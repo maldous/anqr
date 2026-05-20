@@ -1,5 +1,1 @@
-export function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
+export { escapeHtml } from "./utils-escape-html.mjs";

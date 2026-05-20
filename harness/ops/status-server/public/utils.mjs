@@ -1,4 +1,2 @@
-import { formatTime } from "./utils-format-time.mjs";
-import { escapeHtml } from "./utils-escape-html.mjs";
-
-export { formatTime, escapeHtml };
+export { formatTime } from "./utils-format-time.mjs";
+export { escapeHtml } from "./utils-escape-html.mjs";
