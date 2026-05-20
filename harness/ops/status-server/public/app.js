@@ -25,7 +25,7 @@ for (const btn of $$(".filter-btn")) {
       b.classList.remove("active");
     }
     btn.classList.add("active");
-    currentFilter = btn.dataset.filter;
+    let currentFilter = btn.dataset.filter;
     // Re-render with filter
     fetchHealth().then((data) => {
       renderServices(data);
