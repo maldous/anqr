@@ -2,7 +2,7 @@
 
 import { API_BASE, REFRESH_INTERVAL, INFRA_REFRESH_INTERVAL, currentFilter } from "./constants.mjs";
 import { $, $$, els } from "./dom-refs.mjs";
-import { updateBanner } from "./banner.mjs";
+
 import { updateStats } from "./stats.mjs";
 import { renderServices } from "./service-cards.mjs";
 import { updateDashboard } from "./dashboard.mjs";
