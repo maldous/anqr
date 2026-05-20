@@ -68,6 +68,8 @@ export async function publishEvidenceAndClose({
   });
 
   await addComment(detail.id, evidenceComment);
+  // PRIMARY STATES.done SETTER — all issue closure paths must go through this function
+  // or forceCloseWithIncompleteEvidence to ensure evidence completeness is validated
   await updateIssue(detail.id, { stateId: STATES.done });
   return { ok: true };
 }
