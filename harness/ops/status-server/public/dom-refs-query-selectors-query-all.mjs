@@ -1,1 +1,3 @@
-export { $$ } from "./dom-refs-query-selectors-query-all.mjs";
+export const $$ = (selectors) => {
+  return Array.from(document.querySelectorAll(selectors));
+};
