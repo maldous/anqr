@@ -1,2 +1,4 @@
-++ harness/ops/status-server/health-probing-get-health.mjs
-  let cachedHealth = await aggregateHealth();
+export async function getHealth() {
+    let cachedHealth = await aggregateHealth();
+    return cachedHealth;
+}
