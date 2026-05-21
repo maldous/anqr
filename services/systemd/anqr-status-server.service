@@ -24,6 +24,8 @@ Environment=HOME=%h
 Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
 
 Environment=STATUS_SERVER_PORT=18800
+EnvironmentFile=-%h/.config/symphony/anqr.env
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
 ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/harness/ops/status-server/status-server.mjs
 
