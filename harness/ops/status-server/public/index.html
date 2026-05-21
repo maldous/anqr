@@ -13,32 +13,29 @@
       <div class="header-left">
         <h1>⚡ ANQR</h1>
         <span class="header-subtitle">System Status</span>
+        <span class="chip chip-accent" id="providersChip" style="display:none"></span>
+        <span class="chip chip-green" id="worktreesChip" style="display:none"></span>
       </div>
       <div class="header-right">
         <span class="update-time" id="updateTime">—</span>
+        <button class="btn btn-sm" id="liveToggle" title="Toggle live updates">⏸</button>
         <button class="btn btn-refresh" id="refreshBtn" title="Refresh now">↻</button>
       </div>
     </header>
 
-    <section class="overview" id="overview">
-      <div class="stat-card stat-total">
-        <div class="stat-value" id="totalServices">—</div>
-        <div class="stat-label">Services</div>
-      </div>
-      <div class="stat-card stat-healthy">
-        <div class="stat-value" id="healthyCount">—</div>
-        <div class="stat-label">Healthy</div>
-      </div>
-      <div class="stat-card stat-degraded">
-        <div class="stat-value" id="degradedCount">—</div>
-        <div class="stat-label">Degraded</div>
-      </div>
-      <div class="stat-card stat-down">
-        <div class="stat-value" id="downCount">—</div>
-        <div class="stat-label">Down</div>
-      </div>
+    <!-- Overview Stats -->
+    <section class="stats-grid" id="statsGrid">
+      <div class="stat-card stat-total">  <div class="stat-value" id="totalServices">—</div><div class="stat-label">Services</div></div>
+      <div class="stat-card stat-healthy"><div class="stat-value" id="healthyCount">—</div><div class="stat-label">Healthy</div></div>
+      <div class="stat-card stat-degraded"><div class="stat-value" id="degradedCount">—</div><div class="stat-label">Degraded</div></div>
+      <div class="stat-card stat-down">   <div class="stat-value" id="downCount">—</div><div class="stat-label">Down</div></div>
+      <div class="stat-card stat-accent"> <div class="stat-value" id="totalCalls">—</div><div class="stat-label">AI Calls</div></div>
+      <div class="stat-card stat-wt">     <div class="stat-value" id="wtExecuting">—</div><div class="stat-label">Executing</div></div>
+      <div class="stat-card stat-purple"> <div class="stat-value" id="issuesActive">—</div><div class="stat-label">Issues Active</div></div>
+      <div class="stat-card stat-muted">  <div class="stat-value" id="issuesEligible">—</div><div class="stat-label">Queued</div></div>
     </section>
 
+    <!-- Banner -->
     <section class="banner" id="banner">
       <div class="banner-inner">
         <span class="banner-icon">✅</span>
@@ -46,47 +43,72 @@
       </div>
     </section>
 
-    <section class="services" id="services">
-      <div class="services-header">
+    <!-- Search / Filter Bar -->
+    <div class="search-bar">
+      <input class="search-input" id="globalSearch" type="search" placeholder="Search services, commits, issues, models…" autocomplete="off">
+      <div class="search-tabs" id="searchTabs">
+        <button class="tab active" data-tab="services">Services</button>
+        <button class="tab" data-tab="commits">Commits</button>
+        <button class="tab" data-tab="issues">Issues</button>
+        <button class="tab" data-tab="models">Models</button>
+        <button class="tab" data-tab="symphony">Pipeline</button>
+      </div>
+    </div>
+
+    <!-- Tab Panels -->
+    <section class="tab-panel active" id="tab-services">
+      <div class="panel-header">
         <h2>Services</h2>
-        <div class="services-filter">
+        <div class="filter-pills">
           <button class="filter-btn active" data-filter="all">All</button>
           <button class="filter-btn" data-filter="healthy">Healthy</button>
           <button class="filter-btn" data-filter="degraded">Degraded</button>
           <button class="filter-btn" data-filter="down">Down</button>
         </div>
       </div>
-      <div class="services-list" id="servicesList">
-        <div class="loading">Loading services…</div>
-      </div>
+      <div class="services-list" id="servicesList"><div class="loading">Loading…</div></div>
     </section>
 
-    <section class="infra-grid">
-      <div class="infra-panel" id="commitsPanel">
-        <div class="infra-panel-header">
-          <h2>Recent Commits</h2>
-          <span class="infra-count" id="commitsCount">—</span>
-        </div>
-        <div class="infra-panel-body" id="commitsList">
-          <div class="loading">Loading commits…</div>
-        </div>
-      </div>
-      <div class="infra-panel" id="issuesPanel">
-        <div class="infra-panel-header">
-          <h2>Running Issues</h2>
-          <span class="infra-count" id="issuesCount">—</span>
-        </div>
-        <div class="infra-panel-body" id="issuesList">
-          <div class="loading">Loading issues…</div>
+    <section class="tab-panel" id="tab-commits">
+      <div class="panel-header">
+        <h2>Recent Commits</h2>
+        <div class="filter-pills" id="commitTypeFilters">
+          <button class="filter-btn active" data-type="all">All</button>
+          <button class="filter-btn" data-type="fix">fix</button>
+          <button class="filter-btn" data-type="feat">feat</button>
+          <button class="filter-btn" data-type="other">other</button>
         </div>
       </div>
+      <div class="commits-list" id="commitsList"><div class="loading">Loading…</div></div>
     </section>
 
-    <footer class="footer">
-      <span id="footerTimestamp">—</span>
-    </footer>
+    <section class="tab-panel" id="tab-issues">
+      <div class="panel-header">
+        <h2>Running Issues</h2>
+        <span class="chip chip-green" id="issuesCountChip">0 active</span>
+      </div>
+      <div class="issues-list" id="issuesList"><div class="loading">Loading…</div></div>
+    </section>
+
+    <section class="tab-panel" id="tab-models">
+      <div class="panel-header">
+        <h2>AI Model Rankings</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="chip chip-accent" id="modelsAvailChip"></span>
+          <span class="chip chip-muted" id="modelsCallsChip"></span>
+        </div>
+      </div>
+      <div class="panel-meta" id="modelsLastProbe"></div>
+      <div class="models-list" id="modelsList"><div class="loading">Loading…</div></div>
+    </section>
+
+    <section class="tab-panel" id="tab-symphony">
+      <div class="panel-header"><h2>Symphony Pipeline</h2></div>
+      <div class="symphony-grid" id="symphonyGrid"><div class="loading">Loading…</div></div>
+    </section>
+
+    <footer class="footer"><span id="footerTimestamp">—</span></footer>
   </div>
-
-  <script src="/app.js?v=2"></script>
+  <script src="/app.js?v=4"></script>
 </body>
 </html>

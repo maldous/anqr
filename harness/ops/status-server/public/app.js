@@ -1,262 +1,260 @@
-/* ── ANQR Status Dashboard ────────────────────────────────────────────── */
+/* ── ANQR Status Dashboard v4 ── */
+const API = "";
+let live = true;
+let searchQ = "";
+let activeTab = "services";
+let serviceFilter = "all";
+let commitTypeFilter = "all";
+let allData = {};
 
-const API_BASE = "";
-const REFRESH_INTERVAL = 30000;
-const INFRA_REFRESH_INTERVAL = 60000;
-let currentFilter = "all";
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
 
-// ── DOM Refs ───────────────────────────────────────────────────────────────
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function fmt(iso) { return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
+function fmtNum(n) { if (n == null || isNaN(n)) return "—"; return n >= 1000 ? (n / 1000).toFixed(1) + "k" : String(n); }
+function ago(ts) { if (!ts) return ""; const s = Math.round((Date.now() - ts) / 1000); return s < 60 ? `${s}s ago` : `${Math.round(s/60)}m ago`; }
 
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
-
-const els = {
-  total:     $("#totalServices"),
-  healthy:   $("#healthyCount"),
-  degraded:  $("#degradedCount"),
-  down:      $("#downCount"),
-  banner:    $("#banner"),
-  bannerInner: $("#banner .banner-inner"),
-  bannerText:  $("#banner .banner-text"),
-  bannerIcon:  $("#banner .banner-icon"),
-  servicesList: $("#servicesList"),
-  updateTime:   $("#updateTime"),
-  footerStamp:  $("#footerTimestamp"),
-  refreshBtn:   $("#refreshBtn"),
-  commitsList:  $("#commitsList"),
-  commitsCount: $("#commitsCount"),
-  issuesList:   $("#issuesList"),
-  issuesCount:  $("#issuesCount"),
-};
-
-// ── Fetch Health ────────────────────────────────────────────────────────────
-
-async function fetchHealth() {
-  const res = await fetch(`${API_BASE}/api/health`);
+// ── Fetch all in one shot ────────────────────────────────────────────────────
+async function fetchAll() {
+  const res = await fetch(`${API}/api/all`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-// ── Formatting ──────────────────────────────────────────────────────────────
-
-function formatTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+// ── Render Stats ─────────────────────────────────────────────────────────────
+function renderStats(d) {
+  const h = d.health || {}; const s = h.summary || {};
+  const sym = d.symphony || {}; const bridge = d.bridge || {};
+  $("#totalServices").textContent = s.total ?? "—";
+  $("#healthyCount").textContent = s.healthy ?? "—";
+  $("#degradedCount").textContent = s.degraded ?? "—";
+  $("#downCount").textContent = s.down ?? "—";
+  $("#totalCalls").textContent = fmtNum(bridge.totalCalls);
+  const wts = sym.worktreeStats || {};
+  $("#wtExecuting").textContent = wts.executing ?? "—";
+  const iss = sym.issueStats || {};
+  $("#issuesActive").textContent = iss.active ?? "—";
+  $("#issuesEligible").textContent = iss.eligible ?? "—";
+  document.title = `ANQR · ${h.allClear ? "✅" : "⚠️"} ${s.healthy}/${s.total}`;
+  renderBanner(h);
+  renderProvidersChip(d.models);
+  renderWorktreesChip(wts);
+  $("#updateTime").textContent = fmt(h.timestamp || new Date().toISOString());
+  $("#footerTimestamp").textContent = `Updated ${new Date().toLocaleString()}`;
 }
 
-// ── Banner ──────────────────────────────────────────────────────────────────
-
-function updateBanner(data) {
-  if (data.allClear) {
-    els.banner.className = "banner ok";
-    els.bannerIcon.textContent = "✅";
-    els.bannerText.textContent = "All systems operational";
-  } else if (data.criticalDown.length > 0) {
-    els.banner.className = "banner error";
-    els.bannerIcon.textContent = "🚨";
-    const names = data.criticalDown.join(", ");
-    els.bannerText.textContent = `${data.criticalDown.length} critical service(s) down: ${names}`;
-  } else if (data.summary.down > 0 || data.summary.degraded > 0) {
-    els.banner.className = "banner warn";
-    els.bannerIcon.textContent = "⚠️";
-    els.bannerText.textContent = `${data.summary.degraded} degraded, ${data.summary.down} down`;
-  }
+function renderBanner(h) {
+  const b = $("#banner"); const icon = $(".banner-icon"); const text = $(".banner-text");
+  if (!h) return;
+  if (h.allClear) { b.className = "banner ok"; icon.textContent = "✅"; text.textContent = "All systems operational"; }
+  else if (h.criticalDown?.length) { b.className = "banner error"; icon.textContent = "🚨"; text.textContent = `Critical: ${h.criticalDown.join(", ")}`; }
+  else { b.className = "banner warn"; icon.textContent = "⚠️"; text.textContent = `${h.summary?.degraded ?? 0} degraded, ${h.summary?.down ?? 0} down`; }
 }
 
-// ── Stats ───────────────────────────────────────────────────────────────────
-
-function updateStats(data) {
-  els.total.textContent = data.summary.total;
-  els.healthy.textContent = data.summary.healthy;
-  els.degraded.textContent = data.summary.degraded;
-  els.down.textContent = data.summary.down;
+function renderProvidersChip(m) {
+  const el = $("#providersChip");
+  if (!m || !m.totalConfigured) { el.style.display = "none"; return; }
+  el.textContent = `${m.totalAvailable}/${m.totalConfigured} providers`;
+  el.style.display = "";
 }
 
-// ── Service Cards ───────────────────────────────────────────────────────────
+function renderWorktreesChip(wts) {
+  const el = $("#worktreesChip");
+  if (!wts) { el.style.display = "none"; return; }
+  el.textContent = `${wts.executing}/${wts.total} worktrees running`;
+  el.className = `chip ${wts.executing > 0 ? "chip-green" : "chip-muted"}`;
+  el.style.display = "";
+}
 
-function createServiceCard(service) {
-  const detailStr = service.data
-    ? JSON.stringify(service.data, null, 2)
-    : service.error || "(no response)";
-
-  const card = document.createElement("div");
-  card.className = `service-card ${currentFilter !== "all" && service.status !== currentFilter ? "hidden" : ""}`;
-  card.dataset.status = service.status;
-  card.dataset.id = service.id;
-
-  card.innerHTML = `
-    <div class="service-left">
-      <div class="service-indicator ${service.status}"></div>
-      <div class="service-info">
-        <div class="service-name">${service.name}</div>
-        <div class="service-meta">${service.statusCode ? `HTTP ${service.statusCode}` : service.error ? "Connection failed" : "—"}</div>
+// ── Services ─────────────────────────────────────────────────────────────────
+function renderServices(services) {
+  const el = $("#servicesList"); if (!services) { el.innerHTML = '<div class="empty-state">No data</div>'; return; }
+  const q = searchQ.toLowerCase();
+  el.innerHTML = services.map(s => {
+    const hide = (serviceFilter !== "all" && s.status !== serviceFilter) || (q && !s.name.toLowerCase().includes(q)) ? " hidden" : "";
+    const rt = s.responseTime != null ? `${s.responseTime}ms` : "";
+    const meta = [s.statusCode ? `HTTP ${s.statusCode}` : s.error ? "failed" : "—", rt].filter(Boolean).join(" · ");
+    const detail = s.data ? JSON.stringify(s.data, null, 2) : (s.error || "(no data)");
+    return `<div class="service-card${hide}" data-status="${s.status}">
+      <div class="service-left">
+        <div class="dot ${s.status}"></div>
+        <div><div class="service-name">${esc(s.name)}</div><div class="service-meta">${esc(meta)}</div></div>
+      </div>
+      <div class="service-right">
+        <span class="badge ${s.status}${s.critical ? " critical" : ""}">${s.status}${s.critical ? " ★" : ""}</span>
+        <button class="toggle-btn" onclick="toggleDetail(this)">▸</button>
       </div>
     </div>
-    <div class="service-right">
-      <span class="service-badge ${service.status}${service.critical ? " critical" : ""}">
-        ${service.status}${service.critical ? " ★" : ""}
-      </span>
-      <button class="service-detail-toggle" title="Toggle details" aria-label="Toggle details">▸</button>
+    <div class="service-detail">${esc(detail)}</div>`;
+  }).join("");
+}
+
+window.toggleDetail = (btn) => {
+  const d = btn.closest(".service-card").nextElementSibling;
+  const open = d.classList.toggle("open");
+  btn.textContent = open ? "▾" : "▸";
+};
+
+// ── Commits ───────────────────────────────────────────────────────────────────
+function renderCommits(commits) {
+  const el = $("#commitsList"); if (!commits?.length) { el.innerHTML = '<div class="empty-state">No commits</div>'; return; }
+  const q = searchQ.toLowerCase();
+  el.innerHTML = commits.map(c => {
+    const t = c.type || "other";
+    const hide = (commitTypeFilter !== "all" && t !== commitTypeFilter) || (q && !c.subject?.toLowerCase().includes(q) && !c.hash?.includes(q)) ? " hidden" : "";
+    return `<div class="commit-row${hide}">
+      <span class="commit-type ${t}">${t}</span>
+      <code class="commit-hash">${esc(c.hash)}</code>
+      <span class="commit-subject">${esc(c.subject || "")}</span>
+      <span class="commit-meta">${esc(c.relative || "")}</span>
+    </div>`;
+  }).join("");
+}
+
+// ── Issues ────────────────────────────────────────────────────────────────────
+function renderIssues(issues) {
+  const el = $("#issuesList"); const countEl = $("#issuesCountChip");
+  if (!issues?.length) { el.innerHTML = '<div class="empty-state">No running issues</div>'; countEl.textContent = "0 active"; return; }
+  countEl.textContent = `${issues.length} active`;
+  const q = searchQ.toLowerCase();
+  el.innerHTML = issues.map(i => {
+    const hide = q && !i.title?.toLowerCase().includes(q) && !i.identifier?.toLowerCase().includes(q) ? " hidden" : "";
+    const pClass = i.priority <= 1 ? "p1" : i.priority === 2 ? "p2" : i.priority === 3 ? "p3" : "p4";
+    const url = i.url || `https://linear.app/anqr/issue/${i.identifier}`;
+    return `<div class="issue-row${hide}">
+      <div class="issue-left">
+        <a class="issue-id" href="${esc(url)}" target="_blank" rel="noopener">${esc(i.identifier)}</a>
+        <span class="issue-title">${esc(i.title || "")}</span>
+      </div>
+      <div class="issue-right">
+        <span class="priority-dot ${pClass}" title="Priority ${i.priority}"></span>
+        <span class="issue-assignee">${esc(i.assignee?.name || "unassigned")}</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ── Models ────────────────────────────────────────────────────────────────────
+const PREFIXES = [["github-models-","github/"],["huggingface-","hf/"],["sambanova-","samba/"],["openrouter-","or/"],["together-","together/"],["mistral-","mistral/"],["groq-","groq/"],["cerebras-","cerebras/"],["fireworks-","fw/"]];
+function shortName(n) { for (const [p,s] of PREFIXES) if (n.startsWith(p)) return s+n.slice(p.length); return n; }
+
+function renderModels(data) {
+  const el = $("#modelsList");
+  if (!data?.ranked?.length) { el.innerHTML = `<div class="empty-state">${data?.error || "No data"}</div>`; return; }
+  const max = data.ranked[0]?.count || 1;
+  const q = searchQ.toLowerCase();
+  $("#modelsAvailChip").textContent = `${data.totalAvailable}/${data.totalConfigured} available`;
+  $("#modelsCallsChip").textContent = `${fmtNum(data.totalCalls)} total calls`;
+  if (data.lastProbe) $("#modelsLastProbe").textContent = `Last probe: ${new Date(data.lastProbe).toLocaleString()}`;
+  el.innerHTML = data.ranked.map((m, i) => {
+    const short = shortName(m.name);
+    if (q && !short.toLowerCase().includes(q) && !m.name.toLowerCase().includes(q)) return "";
+    const barW = Math.round(m.count / max * 100);
+    const hs = m.healthState === "healthy" ? "healthy" : m.healthState === "unknown" ? "unknown" : "degraded";
+    const avail = m.available ? "on" : "off";
+    return `<div class="model-row ${m.available ? "" : "unavailable"}" title="${esc(m.name)}">
+      <span class="model-rank">${i+1}</span>
+      <span class="model-avail ${avail}">${m.available ? "●" : "○"}</span>
+      <span class="model-name">${esc(short)}</span>
+      <div class="model-bar-wrap"><div class="model-bar" style="width:${barW}%"></div></div>
+      <span class="model-count">${fmtNum(m.count)}</span>
+      <span class="model-pct">${m.pct}%</span>
+      <span class="model-health ${hs}" title="${esc(m.healthState)}"></span>
+    </div>`;
+  }).join("");
+}
+
+// ── Symphony ──────────────────────────────────────────────────────────────────
+function renderSymphony(sym) {
+  const el = $("#symphonyGrid");
+  if (!sym) { el.innerHTML = '<div class="loading no-spin">Pipeline data unavailable</div>'; return; }
+  const wts = (sym.worktrees || []).filter(w => w.id.startsWith("wt") && parseInt(w.id.replace("wt","")) <= 8);
+  const iss = sym.issueStats || {};
+  const wStats = sym.worktreeStats || {};
+  el.innerHTML = `
+    <div class="sym-panel">
+      <h3>Worktrees</h3>
+      <div class="wt-grid">${wts.map(w => `<div class="wt-cell ${w.state}">
+        <div class="wt-id">${w.id}</div>
+        <div class="wt-state">${w.state}</div>
+        ${w.assignedIssue ? `<div class="wt-issue">${esc(w.assignedIssue)}</div>` : ""}
+      </div>`).join("")}</div>
     </div>
-  `;
-
-  // Detail panel (hidden by default)
-  const detail = document.createElement("div");
-  detail.className = "service-detail";
-  detail.textContent = detailStr;
-
-  const toggle = card.querySelector(".service-detail-toggle");
-  toggle.addEventListener("click", () => {
-    const isOpen = detail.classList.toggle("visible");
-    toggle.classList.toggle("open", isOpen);
-    toggle.textContent = isOpen ? "▾" : "▸";
-  });
-
-  const wrapper = document.createElement("div");
-  wrapper.appendChild(card);
-  wrapper.appendChild(detail);
-
-  return wrapper;
+    <div class="sym-panel">
+      <h3>Issue Queue</h3>
+      <div class="issue-stat-row"><span class="issue-stat-label">Active (leased)</span><span class="issue-stat-val" style="color:var(--green)">${iss.active ?? "—"}</span></div>
+      <div class="issue-stat-row"><span class="issue-stat-label">Eligible (queued)</span><span class="issue-stat-val" style="color:var(--accent)">${iss.eligible ?? "—"}</span></div>
+      <div class="issue-stat-row"><span class="issue-stat-label">On cooldown</span><span class="issue-stat-val" style="color:var(--yellow)">${iss.cooldown ?? "—"}</span></div>
+      <div class="issue-stat-row"><span class="issue-stat-label">Exhausted</span><span class="issue-stat-val" style="color:var(--red)">${iss.exhausted ?? "—"}</span></div>
+      <div class="issue-stat-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px"><span class="issue-stat-label">Total tracked</span><span class="issue-stat-val">${iss.total ?? "—"}</span></div>
+    </div>`;
 }
 
-function renderServices(data) {
-  els.servicesList.innerHTML = "";
-  const filtered = currentFilter === "all"
-    ? data.services
-    : data.services.filter((s) => s.status === currentFilter);
-
-  if (filtered.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "loading";
-    empty.textContent = `No ${currentFilter} services`;
-    els.servicesList.appendChild(empty);
-    return;
-  }
-
-  for (const svc of filtered) {
-    els.servicesList.appendChild(createServiceCard(svc));
-  }
+// ── Master Render ─────────────────────────────────────────────────────────────
+function renderAll(data) {
+  allData = data;
+  renderStats(data);
+  renderServices(data.health?.services);
+  renderCommits(data.commits);
+  renderIssues(data.issues);
+  renderModels(data.models);
+  renderSymphony(data.symphony);
 }
 
-// ── Update All ──────────────────────────────────────────────────────────────
-
-async function updateDashboard() {
-  els.refreshBtn.classList.add("spinning");
-  try {
-    const data = await fetchHealth();
-    document.title = `ANQR · ${data.allClear ? "✅" : "⚠️"} ${data.summary.healthy}/${data.summary.total}`;
-    updateStats(data);
-    updateBanner(data);
-    renderServices(data);
-    els.updateTime.textContent = formatTime(data.timestamp);
-    els.footerStamp.textContent = `Last updated: ${new Date().toLocaleString()}`;
-  } catch (err) {
-    els.servicesList.innerHTML = `<div class="loading" style="color:var(--red)">Failed to load: ${err.message}</div>`;
-  } finally {
-    setTimeout(() => els.refreshBtn.classList.remove("spinning"), 600);
-  }
+// ── Refresh ───────────────────────────────────────────────────────────────────
+async function refresh() {
+  const btn = $("#refreshBtn"); btn.classList.add("spinning");
+  try { renderAll(await fetchAll()); }
+  catch (e) { console.error("Fetch error:", e); }
+  finally { setTimeout(() => btn.classList.remove("spinning"), 600); }
 }
 
-// ── Filters ─────────────────────────────────────────────────────────────────
-
-$$(".filter-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    $$(".filter-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentFilter = btn.dataset.filter;
-    // Re-render with filter
-    fetchHealth().then((data) => {
-      renderServices(data);
-    }).catch(() => {});
-  });
+let timer = setInterval(refresh, 30000);
+$("#refreshBtn").addEventListener("click", refresh);
+$("#liveToggle").addEventListener("click", () => {
+  live = !live;
+  $("#liveToggle").textContent = live ? "⏸" : "▶";
+  if (live) { refresh(); timer = setInterval(refresh, 30000); }
+  else clearInterval(timer);
 });
 
-// ── Init ────────────────────────────────────────────────────────────────────
+// ── Tabs ───────────────────────────────────────────────────────────────────────
+$$(".tab").forEach(t => t.addEventListener("click", () => {
+  $$(".tab").forEach(x => x.classList.remove("active"));
+  $$(".tab-panel").forEach(x => x.classList.remove("active"));
+  t.classList.add("active");
+  activeTab = t.dataset.tab;
+  $(`#tab-${activeTab}`)?.classList.add("active");
+}));
 
-els.refreshBtn.addEventListener("click", updateDashboard);
-updateDashboard();
-setInterval(updateDashboard, REFRESH_INTERVAL);
+// ── Filters ───────────────────────────────────────────────────────────────────
+$$(".filter-pills .filter-btn[data-filter]").forEach(b => b.addEventListener("click", () => {
+  b.closest(".filter-pills").querySelectorAll(".filter-btn").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  serviceFilter = b.dataset.filter;
+  renderServices(allData.health?.services);
+}));
 
-// Refresh commits and issues on their own 60s cycle
-fetchAndRenderCommits();
-fetchAndRenderIssues();
-setInterval(fetchAndRenderCommits, INFRA_REFRESH_INTERVAL);
-setInterval(fetchAndRenderIssues, INFRA_REFRESH_INTERVAL);
+$$(".filter-pills .filter-btn[data-type]").forEach(b => b.addEventListener("click", () => {
+  b.closest(".filter-pills").querySelectorAll(".filter-btn").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  commitTypeFilter = b.dataset.type;
+  renderCommits(allData.commits);
+}));
 
-// ── Recent Commits ──────────────────────────────────────────────────────────
+// ── Search ────────────────────────────────────────────────────────────────────
+let searchTimer;
+$("#globalSearch").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    searchQ = e.target.value.trim();
+    renderServices(allData.health?.services);
+    renderCommits(allData.commits);
+    renderIssues(allData.issues);
+    renderModels(allData.models);
+  }, 150);
+});
 
-async function fetchAndRenderCommits() {
-  try {
-    const res = await fetch(`${API_BASE}/api/commits`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    els.commitsCount.textContent = data.count;
-    renderCommits(data.commits);
-  } catch (err) {
-    els.commitsList.innerHTML = `<div class="infra-empty">Failed: ${err.message}</div>`;
-  }
-}
-
-function renderCommits(commits) {
-  if (!commits || commits.length === 0) {
-    els.commitsList.innerHTML = '<div class="infra-empty">No commits</div>';
-    return;
-  }
-  els.commitsList.innerHTML = commits
-    .map(
-      (c) => `
-      <div class="commit-item">
-        <code class="commit-hash">${c.hash}</code>
-        <span class="commit-subject">${escapeHtml(c.subject)}</span>
-      </div>`,
-    )
-    .join("");
-}
-
-// ── Running Linear Issues ────────────────────────────────────────────────────
-
-async function fetchAndRenderIssues() {
-  try {
-    const res = await fetch(`${API_BASE}/api/linear-issues`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    els.issuesCount.textContent = data.count;
-    renderIssues(data.issues);
-  } catch (err) {
-    els.issuesList.innerHTML = `<div class="infra-empty">Failed: ${err.message}</div>`;
-  }
-}
-
-function renderIssues(issues) {
-  if (!issues || issues.length === 0) {
-    els.issuesList.innerHTML = '<div class="infra-empty">No running issues</div>';
-    return;
-  }
-  els.issuesList.innerHTML = issues
-    .map(
-      (iss) => {
-        const assignee = iss.assignee?.name || "unassigned";
-        const issueUrl = iss.url ? escapeHtml(iss.url) : `https://linear.app/anqr/issue/${escapeHtml(iss.identifier)}`;
-        return `
-      <div class="issue-item">
-        <div class="issue-left">
-          <a class="issue-identifier" href="${issueUrl}" target="_blank" rel="noopener" title="Open in Linear">${escapeHtml(iss.identifier)}</a>
-          <span class="issue-title">${escapeHtml(iss.title)}</span>
-        </div>
-        <div class="issue-right">
-          <span class="issue-state started">Started</span>
-          <span class="issue-assignee">${escapeHtml(assignee)}</span>
-        </div>
-      </div>`;
-      },
-    )
-    .join("");
-}
-
-// ── Escape HTML ──────────────────────────────────────────────────────────────
-
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
+// ── Init ──────────────────────────────────────────────────────────────────────
+refresh();
