@@ -1,3 +1,0 @@
-export default function getLinearIssues(auth, fetchIssuesFromLinear, fetchProjectFromLinear) {
-    // ... rest of function implementation ...
-}

@@ -1,5 +1,5 @@
-import { sanitizeValue } from "./sanitize-value.mjs";
-import { truncateText } from "./truncate-text.mjs";
+import { sanitizeValue } from "./create-logger/sanitize-value.mjs";
+import { truncateText } from "./create-logger/truncate-text.mjs";
 
 export function safeSerialize(data) {
   if (data === null || data === undefined) {

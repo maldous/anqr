@@ -1,1 +1,0 @@
-let harness = require('harness');

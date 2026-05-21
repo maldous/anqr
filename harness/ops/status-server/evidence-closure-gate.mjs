@@ -1,1 +1,0 @@
-export { evidenceClosureGate } from "./evidence-closure-gate-impl.mjs";

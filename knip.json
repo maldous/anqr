@@ -138,7 +138,22 @@
     "harness/ops/integrations/model/symphony-provider-health/project-root.mjs": ["exports"],
     "harness/ops/integrations/model/symphony-session-state/ensure-state-dir.mjs": ["exports"],
     "harness/ops/integrations/model/symphony-session-state/project-root.mjs": ["exports"],
-    "harness/ops/integrations/model/symphony-session-state/session-state-file.mjs": ["exports"]
+    "harness/ops/integrations/model/symphony-session-state/session-state-file.mjs": ["exports"],
+
+    "harness/ops/integrations/model/codebuff-direct/codebuff-key-pool-constants.mjs": ["exports"],
+    "harness/ops/integrations/model/codebuff-direct/codebuff-key-pool-key-management.mjs": ["exports"],
+    "harness/ops/integrations/model/codebuff-direct/codebuff-key-pool-main.mjs": ["exports"],
+    "harness/ops/integrations/model/codebuff-direct/codebuff-key-pool-pool-management.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-credit-gate/probe-ollama-model.mjs": ["exports"],
+    "harness/ops/integrations/model/symphony-openai-bridge/voice-transcript-re.mjs": ["exports"],
+    "harness/ops/lib/get-trace-path.mjs": ["exports"],
+    "harness/ops/lib/logger/create-logger/safe-serialize.mjs": ["exports"],
+    "harness/ops/lib/logger/log-debug.mjs": ["exports"],
+    "harness/ops/lib/logger/log-warn.mjs": ["exports"],
+    "harness/ops/lib/logger/safe-serialize.mjs": ["exports"],
+    "harness/ops/lib/trace-log.mjs": ["exports"],
+    "harness/ops/orchestration/symphony-runner/read-runner-outcome.mjs": ["exports"],
+    "harness/ops/orchestration/symphony-worktree-recovery/main-repo-root.mjs": ["exports"]
   },
 
   "workspaces": {
