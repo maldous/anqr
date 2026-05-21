@@ -1081,7 +1081,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
         if (agentResult.toolCalls > 0) {
           // Agent completed with tool calls — trust the AI's completion assessment.
           const localSha = getRepoHeadSha("HEAD");
-          const mainSha = getRepoHeadSha("origin/main");
+          
           const headDelta = localSha === mainSha ? "(HEAD=main)" : `(HEAD=${localSha.slice(0,7)}, main=${mainSha.slice(0,7)})`;
           transitionIssue(issue.identifier, "done", {
             finalization: {
