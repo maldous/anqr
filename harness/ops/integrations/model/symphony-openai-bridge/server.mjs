@@ -1211,11 +1211,13 @@ export const server = http.createServer(async (req, res) => {
                 if (streamToDiscord) streamToDiscord(chunk.text);
               }
             },
-            excludeAfterCodebuff,
-            effectiveSessionKey,
-            requestCwd,
-            isSelectedCodebuff ? null : selectedProvider,
-            initialContextBudgetCap,
+            {
+              initialExcluded: excludeAfterCodebuff,
+              sessionId: effectiveSessionKey,
+              cwd: requestCwd,
+              initialProvider: isSelectedCodebuff ? null : selectedProvider,
+              initialContextBudgetCap,
+            },
           );
 
           clearInterval(heartbeat);

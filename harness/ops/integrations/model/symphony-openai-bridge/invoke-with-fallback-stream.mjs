@@ -53,11 +53,13 @@ export async function invokeWithFallbackStream(
   messages,
   route,
   onChunk,
-  initialExcluded = [],
-  sessionId = null,
-  cwd = null,
-  initialProvider = null,
-  initialContextBudgetCap = null,
+  {
+    initialExcluded = [],
+    sessionId = null,
+    cwd = null,
+    initialProvider = null,
+    initialContextBudgetCap = null,
+  } = {},
 ) {
   const triedProviders = [...initialExcluded];
   const fallbackChain = [];
