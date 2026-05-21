@@ -227,14 +227,14 @@ const server = http.createServer(async (req, res) => {
     try {
       const apiKey = process.env.LINEAR_API_KEY;
       if (apiKey) {
-        const q = `query { issues(filter:{team:{id:{eq:"01534c1e-4041-474d-a81e-24f917f33912"}},state:{type:{in:["unstarted"]}}},first:1) { pageInfo { total } } }`;
+        const q = `query { issues(filter:{team:{id:{eq:"01534c1e-4041-474d-a81e-24f917f33912"}},state:{type:{in:["unstarted"]}}},first:250) { nodes { id } } }`;
         const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 3000);
         const r = await fetch("https://api.linear.app/graphql", {
           method: "POST", headers: { "Content-Type": "application/json", Authorization: apiKey },
           body: JSON.stringify({ query: q }), signal: ctrl.signal,
         });
         const body = await r.json();
-        linearTodoCount = body?.data?.issues?.pageInfo?.total ?? null;
+        linearTodoCount = body?.data?.issues?.nodes?.length ?? null;
       }
     } catch { /* best effort */ }
     return res200(res, { health, symphony: getSymphonyData(), models: getModelsData(),
