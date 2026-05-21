@@ -1,4 +1,3 @@
-++ b/harness/ops/lib/logger/format-log-entry.mjs
 import { getCallerInfo } from "./get-caller-info.mjs";
 import { truncateText } from "./create-logger/truncate-text.mjs";
 

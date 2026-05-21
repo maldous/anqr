@@ -147,8 +147,8 @@ export async function executeLinearIssueRequest(req, res) {
       if (released?.ok) {
         logInfo(`[linear-execute] Released stale lease for ${identifier} after runner crash`);
       }
-    } catch (releaseErr) {
-      logWarn(`[linear-execute] Could not release lease for ${identifier}: ${releaseErr.message}`);
+    } catch (error_) {
+      logWarn(`[linear-execute] Could not release lease for ${identifier}: ${error_.message}`);
     }
 
     return sendJson(res, 500, {

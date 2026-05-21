@@ -1126,7 +1126,6 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
           // Trust the assertion — issue is already resolved (false positive or previously fixed).
           // Returning to Todo with no cooldown was causing infinite tight cycling (45+ runs/hr).
           const localSha = getRepoHeadSha("HEAD");
-          const mainSha = getRepoHeadSha("origin/main");
           transitionIssue(issue.identifier, "done", {
             finalization: {
               state: "completed_no_changes",
@@ -1365,7 +1364,7 @@ export async function executeIssue(issue, dryRun = false, { operatorOverride = f
     let validation = await runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
     logInfo(
       `[runner:trace] ${issue.identifier} validation: passed=${validation.passed} ` +
-      `checks=${(validation.results||[]).map(r=>`${r.check}:${r.pass?"PASS":"FAIL"}`).join(",")} ` +
+      `checks=${(validation.results||[]).map(r=>r.check+":"+(r.pass?"PASS":"FAIL")).join(",")} ` +
       `signature=${validation.signature||"none"}`,
     );
     traceLog("VALIDATION", "validation result", {

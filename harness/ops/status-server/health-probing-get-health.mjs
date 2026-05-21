@@ -1,4 +1,4 @@
 export async function getHealth() {
-    let cachedHealth = await aggregateHealth();
-    return cachedHealth;
+  const cachedHealth = await aggregateHealth();
+  return cachedHealth;
 }

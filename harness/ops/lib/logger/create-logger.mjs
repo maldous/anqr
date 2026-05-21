@@ -6,6 +6,17 @@ import { truncateText } from "./create-logger/truncate-text.mjs";
 
 const LOGGER_SIGNAL_SETUP_KEY = Symbol.for("anqr.logger.signal-setup");
 
+function safeSerialize(data) {
+  if (data === null || data === undefined) {
+    return "";
+  }
+  try {
+    return JSON.stringify(sanitizeValue(data));
+  } catch (err) {
+    return `[serialization failed: ${truncateText(err?.message || String(err), 120)}]`;
+  }
+}
+
 export function createLogger(scriptName = "", options = {}) {
   function ensureSignalHandlers() {
     if (globalThis[LOGGER_SIGNAL_SETUP_KEY]) return;
@@ -61,18 +72,6 @@ export function createLogger(scriptName = "", options = {}) {
   const loggerControls = { incrementLogLevel, decrementLogLevel };
   ensureSignalHandlers();
   getLoggerRegistry().add(loggerControls);
-
-  function safeSerialize(data) {
-    if (data === null || data === undefined) {
-      return "";
-    }
-
-    try {
-      return JSON.stringify(sanitizeValue(data));
-    } catch (err) {
-      return `[serialization failed: ${truncateText(err?.message || String(err), 120)}]`;
-    }
-  }
 
   function formatLogEntry(level, msg, data) {
     const { filename, lineNumber } = getCallerInfo();
