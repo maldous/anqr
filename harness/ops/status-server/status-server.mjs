@@ -221,8 +221,25 @@ const server = http.createServer(async (req, res) => {
   if (p === "/api/bridge")        return res200(res, getBridgeStats() || { error: "unavailable" });
   if (p === "/api/all") {
     const [health, issues] = await Promise.all([getHealth(), getLinearIssues()]);
+    // Fetch Linear todo/backlog counts separately for accurate queue display
+    // (symphony state has 400+ stale historical records that inflate the "eligible" count)
+    let linearTodoCount = null;
+    try {
+      const apiKey = process.env.LINEAR_API_KEY;
+      if (apiKey) {
+        const q = `query { issues(filter:{team:{id:{eq:"01534c1e-4041-474d-a81e-24f917f33912"}},state:{type:{in:["unstarted"]}}},first:1) { pageInfo { total } } }`;
+        const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 3000);
+        const r = await fetch("https://api.linear.app/graphql", {
+          method: "POST", headers: { "Content-Type": "application/json", Authorization: apiKey },
+          body: JSON.stringify({ query: q }), signal: ctrl.signal,
+        });
+        const body = await r.json();
+        linearTodoCount = body?.data?.issues?.pageInfo?.total ?? null;
+      }
+    } catch { /* best effort */ }
     return res200(res, { health, symphony: getSymphonyData(), models: getModelsData(),
-      bridge: getBridgeStats(), commits: getCommits(), issues, generatedAt: new Date().toISOString() });
+      bridge: getBridgeStats(), commits: getCommits(), issues, linearTodoCount,
+      generatedAt: new Date().toISOString() });
   }
   let safePath = p === "/" ? "/index.html" : p;
   safePath = path.normalize(safePath).replace(/^(\.\.(\/|\\|$))+/, "");

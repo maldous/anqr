@@ -35,7 +35,9 @@ function renderStats(d) {
   $("#wtExecuting").textContent = wts.executing ?? "—";
   const iss = sym.issueStats || {};
   $("#issuesActive").textContent = iss.active ?? "—";
-  $("#issuesEligible").textContent = iss.eligible ?? "—";
+  // "Queued" = Linear Todo count (actual work waiting), NOT symphony eligible count
+  // (symphony state accumulates 400+ stale historical records that are not real queue items)
+  $("#issuesEligible").textContent = d.linearTodoCount ?? "—";
   document.title = `ANQR · ${h.allClear ? "✅" : "⚠️"} ${s.healthy}/${s.total}`;
   renderBanner(h);
   renderProvidersChip(d.models);
@@ -184,10 +186,12 @@ function renderSymphony(sym) {
     <div class="sym-panel">
       <h3>Issue Queue</h3>
       <div class="issue-stat-row"><span class="issue-stat-label">Active (leased)</span><span class="issue-stat-val" style="color:var(--green)">${iss.active ?? "—"}</span></div>
-      <div class="issue-stat-row"><span class="issue-stat-label">Eligible (queued)</span><span class="issue-stat-val" style="color:var(--accent)">${iss.eligible ?? "—"}</span></div>
       <div class="issue-stat-row"><span class="issue-stat-label">On cooldown</span><span class="issue-stat-val" style="color:var(--yellow)">${iss.cooldown ?? "—"}</span></div>
-      <div class="issue-stat-row"><span class="issue-stat-label">Exhausted</span><span class="issue-stat-val" style="color:var(--red)">${iss.exhausted ?? "—"}</span></div>
-      <div class="issue-stat-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px"><span class="issue-stat-label">Total tracked</span><span class="issue-stat-val">${iss.total ?? "—"}</span></div>
+      <div class="issue-stat-row"><span class="issue-stat-label">Exhausted retries</span><span class="issue-stat-val" style="color:var(--red)">${iss.exhausted ?? "—"}</span></div>
+      <div class="issue-stat-row" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+        <span class="issue-stat-label" title="All historical records including resolved issues">State records total</span>
+        <span class="issue-stat-val" style="color:var(--text-muted)">${iss.total ?? "—"}</span>
+      </div>
     </div>`;
 }
 
