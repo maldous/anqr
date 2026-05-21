@@ -575,8 +575,10 @@ export const server = http.createServer(async (req, res) => {
         });
       logInfo(`🎙️ isVoiceRequestEarly=${isVoiceRequestEarly} (scanned ${Math.min(6, messages.length)} messages)`);
 
-      // Voice requests are conversational — strip tools to reclaim context budget.
-      route.useTools = !isVoiceRequestEarly && (isCodexRequest || shouldUseToolsForRequest(messages, route));
+      // Voice requests are conversational but may include action requests (create issue, etc.).
+      // Keep tools enabled so the agent can act when asked — the context budget cap handles token pressure.
+      // Previously stripped tools entirely, but that prevented "create an issue" voice commands from working.
+      route.useTools = isCodexRequest || shouldUseToolsForRequest(messages, route);
       const voiceContextBudgetCap = isVoiceRequestEarly
         ? Number(process.env.SYMPHONY_VOICE_CONTEXT_CAP) || 8000
         : null;
