@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-04-12
-- Updated: 2026-04-16 (Workstream D boundary enforcement)
+- Updated: 2026-04-19
 
 ## Context
 
@@ -41,3 +41,7 @@ Workstream D formalized the isolation boundary with code-level enforcement:
 - **Tests**: `boundary-enforcement.spec.ts` proves all six defense layers
 
 The one approved exception is the Codex bridge (`anqr-symphony-codex.service`), which runs with `BRIDGE_MODE=control-plane` for developer tooling only. See ADR-0008 for full details.
+
+## Current Status
+
+The executor pool and worktree boundaries have been implemented as described. The current system state matches the documentation.

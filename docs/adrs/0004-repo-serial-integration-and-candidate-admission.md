@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-04-12
+- Updated: 2026-04-19
 
 ## Context
 
@@ -31,3 +32,7 @@ Only the integrator may write the repository mainline.
 - base drift is handled through stale-base or conflict policy
 - executors do not push to mainline
 - merge-back remains parallel in execution but serial in admission
+
+## Current Status
+
+The repo-serial integration and candidate admission model has been implemented as described. The current system state matches the documentation.

@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-04-14
+- Updated: 2026-04-19
 
 ## Context
 
@@ -70,3 +71,7 @@ See ADR-0011 for the full execution state model.
 - router verifies scheduler claims on all dispatch paths (trigger endpoint and queue drain) — no bypass mode exists
 - the flag is permanent
 - all execution ownership decisions survive process restart and are derived from durable state (see ADR-0011)
+
+## Current Status
+
+The authoritative claim and dispatch model has been implemented as described. The current system state matches the documentation.

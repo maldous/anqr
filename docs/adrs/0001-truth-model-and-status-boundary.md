@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-04-12
+- Updated: 2026-04-19
 
 ## Context
 
@@ -34,3 +35,7 @@ Documentation truth order is:
 - future docs must not describe a planned state as if it is already live
 - current faults must remain visible until they are removed from code and runtime
 - Structurizr views must model current runtime topology, not aspirational topology
+
+## Current Status
+
+The truth model has been implemented as described. The current system state matches the documentation.
