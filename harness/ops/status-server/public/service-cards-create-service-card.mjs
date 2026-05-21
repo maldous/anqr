@@ -1,1 +1,3 @@
-export { createServiceCard } from "./service-cards-create-service-card.mjs";
+export const createServiceCard = async (serviceCard) => {
+  // Implementation of createServiceCard
+};
