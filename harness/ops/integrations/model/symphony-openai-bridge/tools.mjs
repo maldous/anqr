@@ -28,6 +28,7 @@ import { readSubtreeTool } from "./read-subtree-tool.mjs";
 import { resolveRequestDir } from "./resolve-request-dir.mjs";
 import { runFileChangeHooksTool } from "./run-file-change-hooks-tool.mjs";
 import { searchLinearIssuesTool } from "./search-linear-issues-tool.mjs";
+import { createLinearIssueTool } from "./create-linear-issue-tool.mjs";
 import { setMessagesTool } from "./set-messages-tool.mjs";
 import { setOutputTool } from "./set-output-tool.mjs";
 import { skillTool } from "./skill-tool.mjs";
@@ -547,6 +548,16 @@ export const tools = {
       limit: z.number().optional().describe("Maximum number of matches to return. Defaults to 5."),
     }),
     execute: searchLinearIssuesTool,
+  }),
+  create_linear_issue: tool({
+    description:
+      "Create a new issue in the ANQR Linear project. Use this when the user asks you to log, track, or create an issue/ticket/task.",
+    inputSchema: z.object({
+      title: z.string().describe("Short, descriptive title for the issue"),
+      description: z.string().optional().describe("Detailed description including context, steps to reproduce, or acceptance criteria"),
+      priority: z.number().int().min(0).max(4).optional().describe("Priority: 0=none, 1=urgent, 2=high, 3=normal, 4=low. Defaults to 3 (normal)."),
+    }),
+    execute: createLinearIssueTool,
   }),
 
   // ========================================================================

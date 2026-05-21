@@ -47,6 +47,7 @@ const STANDARD_TOOL_NAMES = new Set([
   "web_search",
   "read_docs",
   "search_linear_issues",
+  "create_linear_issue",
   "str_replace",
   "write_file",
   "add_message",
