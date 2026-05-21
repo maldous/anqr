@@ -1,1 +1,1 @@
-export { els } from "./dom-refs-elements.mjs";
+export const els = {};
