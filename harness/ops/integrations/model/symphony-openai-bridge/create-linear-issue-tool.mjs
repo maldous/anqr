@@ -1,4 +1,4 @@
-import { createIssue, STATES } from "../../integrations/linear/linear-client.mjs";
+import { createIssue, STATES } from "../../linear/linear-client.mjs";
 
 export async function createLinearIssueTool({ title, description, priority = 3 }) {
   try {
