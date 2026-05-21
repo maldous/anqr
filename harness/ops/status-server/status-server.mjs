@@ -26,7 +26,7 @@ const SERVICES = [
   { id: "linear-webhook",   name: "Linear Webhook",   url: "http://127.0.0.1:18795/health", critical: true  },
   { id: "context7-mcp",     name: "Context7 MCP",     url: "http://127.0.0.1:4320/health",  critical: false },
   { id: "openclaw-gateway", name: "OpenClaw Gateway", url: "http://127.0.0.1:18789/health", critical: false },
-  { id: "litellm-proxy",    name: "LiteLLM Proxy",    url: "http://127.0.0.1:4010/health",  critical: false },
+  { id: "ollama",           name: "Ollama",            url: "http://127.0.0.1:11434/",       critical: false },
   { id: "executor-wt1",     name: "Executor wt1",     url: "http://127.0.0.1:4321/health",  critical: false },
   { id: "executor-wt2",     name: "Executor wt2",     url: "http://127.0.0.1:4322/health",  critical: false },
   { id: "executor-wt3",     name: "Executor wt3",     url: "http://127.0.0.1:4323/health",  critical: false },
