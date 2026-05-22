@@ -1,0 +1,10 @@
+token: "your-discord-bot-token"
+guildId: "your-guild-id"
+channelMappings:
+  - channelId: "channel-1"
+    toolPermissions:
+      - read
+  - channelId: "channel-2"
+    toolPermissions:
+      - read
+      - write
