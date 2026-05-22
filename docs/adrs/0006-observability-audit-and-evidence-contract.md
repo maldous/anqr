@@ -45,3 +45,18 @@ Recovery evidence must be strong enough to prove that recovery did not publish c
 - integration candidate IDs become mandatory
 - recovery evidence must distinguish state-only actions from sandbox maintenance
 - operator review becomes faster and more trustworthy
+
+## Current Launch Truth
+
+The current truthful 1.0 claim is:
+
+- `apps/web`
+- `netlify/*` for HTTP API and MCP
+
+Not currently in the claim:
+
+- `apps/api`
+- Android
+- iPhone
+
+Do not imply broader launch readiness unless the docs are updated first.

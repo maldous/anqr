@@ -35,3 +35,18 @@ Divergence is resolved by sandbox disposal or explicit replan, not by hidden bac
 - baseline health check detects cspell failures and reports them for operator intervention — it does not auto-fix
 - divergence becomes a visible state transition
 - every recovery action emits structured evidence per ADR-0006
+
+## Current Launch Truth
+
+The current truthful 1.0 claim is:
+
+- `apps/web`
+- `netlify/*` for HTTP API and MCP
+
+Not currently in the claim:
+
+- `apps/api`
+- Android
+- iPhone
+
+Do not imply broader launch readiness unless the docs are updated first.

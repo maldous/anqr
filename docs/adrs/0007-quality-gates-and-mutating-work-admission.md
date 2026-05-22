@@ -34,3 +34,18 @@ Escalate to `make quality-harness`, `make quality-fast`, or `make quality-full` 
 - gate results become part of candidate evidence
 - fake green merges are prohibited
 - operator confidence depends on recorded commands, not narrative claims
+
+## Current Launch Truth
+
+The current truthful 1.0 claim is:
+
+- `apps/web`
+- `netlify/*` for HTTP API and MCP
+
+Not currently in the claim:
+
+- `apps/api`
+- Android
+- iPhone
+
+Do not imply broader launch readiness unless the docs are updated first.

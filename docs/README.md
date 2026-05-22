@@ -34,3 +34,18 @@ Then choose the smallest relevant surface:
 - Historical reviews, migration notes, and completed plans belong in `archive/`.
 - Root docs stay minimal and point here.
 - Directory-local implementation detail belongs beside the code it describes.
+
+## Current Launch Truth
+
+The current truthful 1.0 claim is:
+
+- `apps/web`
+- `netlify/*` for HTTP API and MCP
+
+Not currently in the claim:
+
+- `apps/api`
+- Android
+- iPhone
+
+Do not imply broader launch readiness unless the docs are updated first.
