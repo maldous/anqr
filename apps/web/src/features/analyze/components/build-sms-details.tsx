@@ -47,7 +47,7 @@ export function buildSmsDetails(payload: string): DetailEntry[] {
       value: (
         <span className={count > 1 ? "text-amber-600 dark:text-amber-400" : ""}>
           {i18n.t("analyze.nSegments", "{{count}} segment(s)", { count })}
-          {count > 1 && i18n.t("analyze.mayCostMore", " (may cost more)")}
+          {count > 1 && ` ${i18n.t("analyze.mayCostMore", "(may cost more)")}`}
         </span>
       ),
       icon: <MessageSquare className="w-3 h-3" />,
