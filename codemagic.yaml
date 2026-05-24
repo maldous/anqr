@@ -17,9 +17,11 @@ workflows:
     max_build_duration: 60
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: link.anqr.app
+      # NOTE: deliberately NOT using `ios_signing:` block here.
+      # That block expects manually-uploaded .p12 + .mobileprovision in the
+      # CodeMagic UI. We instead use the App Store Connect integration to
+      # fetch (or auto-create) signing assets in the "Fetch or create signing
+      # assets" script step below — fewer manual UI clicks.
       vars:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
