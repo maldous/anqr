@@ -37,6 +37,14 @@ export const BusyOverlay = ({
 
   return (
     <div
+      // role="status" + aria-live="polite" so screen readers announce stage
+      // changes ("Rendering animation frames…", "Working on it…") and the
+      // completion state. Previously the overlay was visually-only — AT users
+      // had no idea something was in progress. See review-2026-05-24 D-F4.
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      aria-busy="true"
       className={overlayClass}
       style={{
         backgroundColor: fullScreen ? "rgba(8, 10, 14, 0.42)" : "rgba(255, 255, 255, 0.28)",

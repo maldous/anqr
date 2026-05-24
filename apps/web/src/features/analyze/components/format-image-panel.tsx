@@ -28,20 +28,20 @@ export function FormatImagePanel({
       >
         <div className="space-y-2">
           <DetailRow
-            label="Module Count"
+            label={t("analyze.moduleCount", "Module Count")}
             value={`${result.moduleCount} × ${result.moduleCount}`}
             icon={<Grid3x3 className="w-3.5 h-3.5" />}
           />
           {result.version !== null && (
             <DetailRow
-              label="Data Modules"
+              label={t("analyze.dataModules", "Data Modules")}
               value={`~${result.moduleCount ** 2 - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * (Math.floor(result.version / 7) + 2) ** 2 : 0)}`}
               icon={<Database className="w-3.5 h-3.5" />}
             />
           )}
           {result.eccLevel && (
             <DetailRow
-              label="ECC Description"
+              label={t("analyze.eccDescription", "ECC Description")}
               value={ECC_DESCRIPTIONS[result.eccLevel].description}
               icon={<Info className="w-3.5 h-3.5" />}
             />
@@ -56,12 +56,12 @@ export function FormatImagePanel({
         >
           <div className="space-y-2">
             <DetailRow
-              label="Image Size"
+              label={t("analyze.imageSize", "Image Size")}
               value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
               icon={<ImageIcon className="w-3.5 h-3.5" />}
             />
             <DetailRow
-              label="Aspect Ratio"
+              label={t("analyze.aspectRatio", "Aspect Ratio")}
               value={
                 result.imageProperties.aspectRatio === 1
                   ? "1:1 (Square)"
@@ -71,14 +71,14 @@ export function FormatImagePanel({
             />
             {result.imageProperties.estimatedQrSizePx > 0 && (
               <DetailRow
-                label="QR Code Size"
+                label={t("analyze.qrCodeSize", "QR Code Size")}
                 value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
                 icon={<QrCode className="w-3.5 h-3.5" />}
               />
             )}
             {result.imageProperties.estimatedQrSizePx > 0 && result.imageProperties.width > 0 && (
               <DetailRow
-                label="QR Coverage"
+                label={t("analyze.qrCoverage", "QR Coverage")}
                 value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
                 icon={<Grid3x3 className="w-3.5 h-3.5" />}
               />

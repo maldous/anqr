@@ -12,12 +12,14 @@ import {
   Shield,
   Type,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { DynamicTestId } from "../../../lib/dynamic-testid";
 import type { QRAnalysisResult } from "@/contracts/analyze";
 import { WCAGBadge } from "./wcag-badge";
 import { CONTENT_TYPE_ICONS } from "./content-type-icons";
 
 export const SummaryBar = ({ result }: Readonly<{ result: QRAnalysisResult }>) => {
+  const { t } = useTranslation();
   if (!result.success) return null;
 
   const badgeBase =
@@ -43,7 +45,7 @@ export const SummaryBar = ({ result }: Readonly<{ result: QRAnalysisResult }>) =
         {result.maskPattern !== null && (
           <span className={`${badgeBase} bg-indigo-500/10 text-indigo-700 dark:text-indigo-400`}>
             <Layers className="w-3 h-3" />
-            Mask {result.maskPattern}
+            {t("analyze.maskShort", "Mask {{n}}", { n: result.maskPattern })}
           </span>
         )}
         {result.encodingMode && result.encodingMode !== "unknown" && (
@@ -73,26 +75,28 @@ export const SummaryBar = ({ result }: Readonly<{ result: QRAnalysisResult }>) =
         {result.payload && (
           <span className={`${badgeBase} bg-muted text-muted-foreground`}>
             <Type className="w-3 h-3" />
-            {result.payload.length} chars
+            {t("analyze.nChars", "{{count}} chars", { count: result.payload.length })}
           </span>
         )}
         {result.payloadBytes && result.payloadBytes.length > 0 && (
           <span className={`${badgeBase} bg-muted text-muted-foreground`}>
             <Binary className="w-3 h-3" />
-            {result.payloadBytes.length} bytes
+            {t("analyze.nBytes", "{{count}} bytes", { count: result.payloadBytes.length })}
           </span>
         )}
         {typeof result.decoderMetadata?.totalByteLength === "number" &&
           result.decoderMetadata.totalByteLength > 0 && (
             <span className={`${badgeBase} bg-muted text-muted-foreground`}>
               <Database className="w-3 h-3" />
-              Dec {result.decoderMetadata.totalByteLength}
+              {t("analyze.decShort", "Dec {{n}}", {
+                n: result.decoderMetadata.totalByteLength,
+              })}
             </span>
           )}
         {typeof result.erasures === "number" && result.erasures >= 0 && (
           <span className={`${badgeBase} bg-amber-500/10 text-amber-700 dark:text-amber-400`}>
             <AlertTriangle className="w-3 h-3" />
-            Erasures {result.erasures}
+            {t("analyze.erasuresN", "Erasures {{n}}", { n: result.erasures })}
           </span>
         )}
         {typeof result.orientation === "number" && (
@@ -110,7 +114,7 @@ export const SummaryBar = ({ result }: Readonly<{ result: QRAnalysisResult }>) =
             ) : (
               <AlertTriangle className="w-3 h-3" />
             )}
-            Quiet Zone
+            {t("safety.quietZone", "Quiet Zone")}
           </span>
         )}
         {result.imageProperties && (

@@ -54,6 +54,7 @@ export function TableOfContents({
     handleGroupClick,
     toggleGroup,
     handleItemClick,
+    t,
   );
 
   return (
@@ -76,7 +77,7 @@ export function TableOfContents({
             type="button"
             className="fixed inset-0 z-40 bg-black/50 cursor-default"
             onClick={() => setMobileOpen(false)}
-            aria-label="Close sidebar"
+            aria-label={t("accessibility.closeSidebar", "Close sidebar")}
           />
         )}
 

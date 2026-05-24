@@ -22,21 +22,21 @@ export const VcardEditor = ({
         label={t("payload.fullName")}
         value={payload.vcard.fn || ""}
         onChange={(value) => setPayloadVCard({ fn: value })}
-        placeholder="John Doe"
+        placeholder={t("placeholders.fullName", "John Doe")}
         dataTestId="payload-vcard-fn-input"
       />
       <LabeledInputField
         label={t("payload.organization")}
         value={payload.vcard.org || ""}
         onChange={(value) => setPayloadVCard({ org: value })}
-        placeholder="Company Inc."
+        placeholder={t("placeholders.companyName", "Company Inc.")}
         dataTestId="payload-vcard-org-input"
       />
       <LabeledInputField
         label={t("payload.title")}
         value={payload.vcard.title || ""}
         onChange={(value) => setPayloadVCard({ title: value })}
-        placeholder="Software Engineer"
+        placeholder={t("placeholders.jobTitleExample", "Software Engineer")}
         dataTestId="payload-vcard-title-input"
       />
       <ValidatedLabeledInputField

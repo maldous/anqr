@@ -19,14 +19,14 @@ export const MecardEditor = ({
         label={t("payload.name")}
         value={payload.mecard.n || ""}
         onChange={(value) => setPayloadMeCard({ n: value })}
-        placeholder="Doe,John"
+        placeholder={t("placeholders.lastFirstName", "Doe,John")}
         dataTestId="payload-mecard-n-input"
       />
       <LabeledInputField
         label={t("payload.nickname")}
         value={payload.mecard.nickname || ""}
         onChange={(value) => setPayloadMeCard({ nickname: value })}
-        placeholder="Johnny"
+        placeholder={t("placeholders.nickname", "Johnny")}
         dataTestId="payload-mecard-nickname-input"
       />
       <ValidatedLabeledInputField
@@ -61,7 +61,7 @@ export const MecardEditor = ({
         label={t("payload.organization")}
         value={payload.mecard.org || ""}
         onChange={(value) => setPayloadMeCard({ org: value })}
-        placeholder="Company Inc."
+        placeholder={t("placeholders.companyName", "Company Inc.")}
         dataTestId="payload-mecard-org-input"
       />
       <LabeledInputField

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { Check, ClipboardCopy, ZoomIn, ZoomOut } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/web";
 
 export const ModuleMatrixView = ({
@@ -13,6 +14,7 @@ export const ModuleMatrixView = ({
   fgColor?: string;
   bgColor?: string;
 }>) => {
+  const { t } = useTranslation();
   const [zoom, setZoom] = useState(1);
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,7 +39,7 @@ export const ModuleMatrixView = ({
       <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-xs text-muted-foreground">
           {moduleCount} × {moduleCount} modules
-          {version && ` (Version ${version})`}
+          {version && ` (${t("analyze.version", "Version")} ${version})`}
         </span>
         <div className="flex items-center gap-1">
           <Button
@@ -49,12 +51,12 @@ export const ModuleMatrixView = ({
             {copied ? (
               <>
                 <Check className="w-3 h-3 text-green-500" />
-                <span className="text-green-500">Copied!</span>
+                <span className="text-green-500">{t("common.copied", "Copied!")}</span>
               </>
             ) : (
               <>
                 <ClipboardCopy className="w-3 h-3" />
-                <span>Copy as Text</span>
+                <span>{t("analyze.copyAsText", "Copy as Text")}</span>
               </>
             )}
           </Button>
@@ -103,7 +105,7 @@ export const ModuleMatrixView = ({
                   height: moduleSize,
                   backgroundColor: isDark ? fgColor : bgColor,
                 }}
-                title={`Row ${r}, Col ${c}: ${isDark ? "Dark" : "Light"}`}
+                title={`${t("analyze.row", "Row")} ${r}, ${t("analyze.col", "Col")} ${c}: ${isDark ? t("analyze.dark", "Dark") : t("analyze.light", "Light")}`}
               />
             )),
           )}

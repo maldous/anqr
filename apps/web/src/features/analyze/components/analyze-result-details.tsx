@@ -54,7 +54,7 @@ export function AnalyzeResultDetails({
         <div className="border rounded-lg p-4 bg-card shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <ImageIcon className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Original</span>
+            <span className="text-sm font-medium">{t("analyze.original", "Original")}</span>
             {result.imageProperties && (
               <span className="text-xs text-muted-foreground ml-auto">
                 {result.imageProperties.width} x {result.imageProperties.height}
@@ -65,7 +65,7 @@ export function AnalyzeResultDetails({
             {originalImageUrl ? (
               <img
                 src={originalImageUrl}
-                alt="Original QR Code"
+                alt={t("analyze.originalQrCode", "Original QR Code")}
                 data-testid={DynamicTestId.resolve(
                   "analyze-original-image",
                   "analyze-original-image",
@@ -73,15 +73,17 @@ export function AnalyzeResultDetails({
                 className="max-w-full max-h-full object-contain"
               />
             ) : (
-              <div className="text-muted-foreground text-sm">No image</div>
+              <div className="text-muted-foreground text-sm">{t("analyze.noImage", "No image")}</div>
             )}
           </div>
         </div>
         <div className="border rounded-lg p-4 bg-card shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <QrCode className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Reproduced</span>
-            <span className="text-xs text-muted-foreground ml-auto">From Extracted Settings</span>
+            <span className="text-sm font-medium">{t("analyze.reproduced", "Reproduced")}</span>
+            <span className="text-xs text-muted-foreground ml-auto">
+              {t("analyze.fromExtractedSettings", "From Extracted Settings")}
+            </span>
           </div>
           <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
             <canvas
@@ -101,12 +103,14 @@ export function AnalyzeResultDetails({
         <div className="border rounded-lg p-4 bg-card shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Database className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Payload Content</span>
+            <span className="text-sm font-medium">
+              {t("analyze.payloadContent", "Payload Content")}
+            </span>
             <span className="text-xs text-muted-foreground ml-auto mr-2">
               {result.payload.length} chars
               {result.payloadBytes && ` · ${result.payloadBytes.length} bytes`}
             </span>
-            <CopyButton text={result.payload} label="Copy" />
+            <CopyButton text={result.payload} label={t("common.copy", "Copy")} />
           </div>
           <pre className="text-sm font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap break-all">
             {result.payload}
@@ -118,7 +122,7 @@ export function AnalyzeResultDetails({
         <div className="grid md:grid-cols-2 gap-4">
           {result.contentType && (
             <CollapsibleSection
-              title="Content Analysis"
+              title={t("analyze.contentAnalysis", "Content Analysis")}
               icon={CONTENT_TYPE_ICONS[result.contentType.type] || <QrCode className="w-4 h-4" />}
               badge={
                 <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
@@ -128,7 +132,7 @@ export function AnalyzeResultDetails({
             >
               <div className="space-y-2">
                 <DetailRow
-                  label="Content Type"
+                  label={t("analyze.contentType", "Content Type")}
                   value={result.contentType.label}
                   icon={<Fingerprint className="w-3.5 h-3.5" />}
                 />
@@ -161,33 +165,33 @@ export function AnalyzeResultDetails({
 
           {result.structuralAnalysis && (
             <CollapsibleSection
-              title="Structural Patterns"
+              title={t("analyze.structuralPatterns", "Structural Patterns")}
               icon={<Settings className="w-4 h-4" />}
               testId="analyze-section-structural-patterns"
             >
               <div className="space-y-2">
                 <DetailRow
-                  label="Finder Patterns"
+                  label={t("analyze.finderPatterns", "Finder Patterns")}
                   value={
                     <StatusBadge
                       status={result.structuralAnalysis.hasFinderPatterns}
-                      trueLabel="Detected"
-                      falseLabel="Missing"
+                      trueLabel={t("analyze.detected", "Detected")}
+                      falseLabel={t("analyze.missing", "Missing")}
                     />
                   }
                 />
                 <DetailRow
-                  label="Timing Patterns"
+                  label={t("analyze.timingPatterns", "Timing Patterns")}
                   value={
                     <StatusBadge
                       status={result.structuralAnalysis.hasTimingPatterns}
-                      trueLabel="Detected"
-                      falseLabel="Missing"
+                      trueLabel={t("analyze.detected", "Detected")}
+                      falseLabel={t("analyze.missing", "Missing")}
                     />
                   }
                 />
                 <DetailRow
-                  label="Alignment Patterns"
+                  label={t("analyze.alignmentPatterns", "Alignment Patterns")}
                   value={
                     result.structuralAnalysis.hasAlignmentPatterns ? (
                       <span className="text-sm">

@@ -21,10 +21,13 @@ export function PlusCodeDisplay({ lat, lon, t }: PlusCodeDisplayProps) {
       return {
         plusCode: null,
         shortCode: null,
-        error: e instanceof Error ? e.message : "Failed to generate Plus Code",
+        error:
+          e instanceof Error
+            ? e.message
+            : t("payload.plusCodeFailed", "Failed to generate Plus Code"),
       };
     }
-  }, [lat, lon]);
+  }, [lat, lon, t]);
 
   const googleMapsUrl = plusCode
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plusCode)}`

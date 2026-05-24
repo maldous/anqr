@@ -20,27 +20,27 @@ export const TimingsSection = ({
     >
       <div className="space-y-2">
         <DetailRow
-          label="Decode Time"
+          label={t("analyze.decodeTime", "Decode Time")}
           value={formatMilliseconds(combinedTimings.decodeMs)}
           icon={<ScanLine className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Total Analysis Time"
+          label={t("analyze.totalAnalysisTime", "Total Analysis Time")}
           value={formatMilliseconds(combinedTimings.totalAnalysisMs)}
           icon={<BarChart3 className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Encode Time"
+          label={t("analyze.encodeTime", "Encode Time")}
           value={formatMilliseconds(combinedTimings.encodeMs)}
           icon={<Code2 className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Render Time"
+          label={t("analyze.renderTime", "Render Time")}
           value={formatMilliseconds(combinedTimings.renderMs)}
           icon={<Palette className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Export Time"
+          label={t("analyze.exportTime", "Export Time")}
           value={formatMilliseconds(combinedTimings.exportMs)}
           icon={<Download className="w-3.5 h-3.5" />}
         />
@@ -49,7 +49,7 @@ export const TimingsSection = ({
           combinedTimings.totalAnalysisMs !== null &&
           combinedTimings.totalAnalysisMs !== undefined && (
             <DetailRow
-              label="Non-Decode Overhead"
+              label={t("analyze.nonDecodeOverhead", "Non-Decode Overhead")}
               value={formatMilliseconds(
                 Math.max(0, combinedTimings.totalAnalysisMs - combinedTimings.decodeMs),
               )}

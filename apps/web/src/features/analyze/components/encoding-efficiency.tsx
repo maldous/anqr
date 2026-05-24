@@ -1,5 +1,6 @@
 import { BarChart3, Code2 } from "lucide-react";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { DetailRow } from "./detail-row";
 
 export function EncodingEfficiency({
@@ -11,6 +12,7 @@ export function EncodingEfficiency({
   payloadBytes?: Uint8Array;
   encodingMode: string | null;
 }>) {
+  const { t } = useTranslation();
   const analysis = useMemo(() => {
     const numericChars = (payload.match(/\d/g) || []).length;
     const alphanumericChars = (payload.match(/[0-9A-Z $%*+\-./:]/gi) || []).length;
@@ -37,28 +39,30 @@ export function EncodingEfficiency({
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="p-2 rounded-lg bg-muted/50">
           <div className="text-lg font-bold text-primary">{analysis.numericPercentage}%</div>
-          <div className="text-[10px] text-muted-foreground">Numeric</div>
+          <div className="text-[10px] text-muted-foreground">{t("analyze.numeric", "Numeric")}</div>
         </div>
         <div className="p-2 rounded-lg bg-muted/50">
           <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
             {analysis.alphanumericPercentage}%
           </div>
-          <div className="text-[10px] text-muted-foreground">Alphanumeric</div>
+          <div className="text-[10px] text-muted-foreground">
+            {t("qr.alphanumeric", "Alphanumeric")}
+          </div>
         </div>
         <div className="p-2 rounded-lg bg-muted/50">
           <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
             {analysis.bytesUsed}
           </div>
-          <div className="text-[10px] text-muted-foreground">Bytes</div>
+          <div className="text-[10px] text-muted-foreground">{t("analyze.bytes", "Bytes")}</div>
         </div>
       </div>
       <DetailRow
-        label="Current Mode"
+        label={t("analyze.currentMode", "Current Mode")}
         value={<span className="capitalize">{encodingMode || "Unknown"}</span>}
         icon={<Code2 className="w-3.5 h-3.5" />}
       />
       <DetailRow
-        label="Optimal Mode"
+        label={t("analyze.optimalMode", "Optimal Mode")}
         value={
           <span
             className={`capitalize ${
@@ -73,7 +77,10 @@ export function EncodingEfficiency({
         }
         icon={<BarChart3 className="w-3.5 h-3.5" />}
       />
-      <DetailRow label="Estimated Size" value={`${analysis.estimatedBits} bits`} />
+      <DetailRow
+        label={t("analyze.estimatedSize", "Estimated Size")}
+        value={`${analysis.estimatedBits} bits`}
+      />
     </div>
   );
 }

@@ -17,28 +17,28 @@ export const BizcardEditor = ({
         label={t("payload.firstName")}
         value={payload.bizcard.firstName || ""}
         onChange={(value) => setPayloadBizCard({ firstName: value })}
-        placeholder="John"
+        placeholder={t("placeholders.firstName", "John")}
         dataTestId="payload-bizcard-firstname-input"
       />
       <LabeledInputField
         label={t("payload.lastName")}
         value={payload.bizcard.lastName || ""}
         onChange={(value) => setPayloadBizCard({ lastName: value })}
-        placeholder="Doe"
+        placeholder={t("placeholders.lastName", "Doe")}
         dataTestId="payload-bizcard-lastname-input"
       />
       <LabeledInputField
         label={t("payload.company")}
         value={payload.bizcard.company || ""}
         onChange={(value) => setPayloadBizCard({ company: value })}
-        placeholder="Company Inc."
+        placeholder={t("placeholders.companyName", "Company Inc.")}
         dataTestId="payload-bizcard-company-input"
       />
       <LabeledInputField
         label={t("payload.title")}
         value={payload.bizcard.title || ""}
         onChange={(value) => setPayloadBizCard({ title: value })}
-        placeholder="Manager"
+        placeholder={t("placeholders.jobTitle", "Manager")}
         dataTestId="payload-bizcard-title-input"
       />
       <LabeledInputField
@@ -60,7 +60,7 @@ export const BizcardEditor = ({
         label={t("payload.address")}
         value={payload.bizcard.address || ""}
         onChange={(value) => setPayloadBizCard({ address: value })}
-        placeholder="123 Main St, City"
+        placeholder={t("placeholders.streetAddress", "123 Main St, City")}
         dataTestId="payload-bizcard-address-input"
       />
       <p className="text-xs text-muted-foreground">{t("hints.bizcardLegacy")}</p>

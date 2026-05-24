@@ -49,16 +49,21 @@ export const ShortLinkEditor = ({
         try {
           const encodedUrl = encodeURIComponent(shortLinkForm.longUrl);
           const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodedUrl}`);
-          if (!response.ok) throw new Error("TinyURL service unavailable");
+          if (!response.ok)
+            throw new Error(t("errors.tinyurlUnavailable", "TinyURL service unavailable"));
           const shortUrl = await response.text();
-          if (!shortUrl.startsWith("http")) throw new Error("Invalid response from shortener");
+          if (!shortUrl.startsWith("http"))
+            throw new Error(
+              t("errors.invalidShortenerResponse", "Invalid response from shortener"),
+            );
           setShortLinkForm((prev) => ({ ...prev, shortUrl, isLoading: false }));
           setPayloadText(shortUrl.trim());
         } catch (err) {
           setShortLinkForm((prev) => ({
             ...prev,
             isLoading: false,
-            error: err instanceof Error ? err.message : "Failed to shorten URL",
+            error:
+              err instanceof Error ? err.message : t("errors.shortenFailed", "Failed to shorten URL"),
           }));
         }
       }}

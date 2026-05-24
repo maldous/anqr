@@ -7,6 +7,7 @@ import {
   MessageSquare,
   Wallet,
 } from "lucide-react";
+import i18n from "i18next";
 import { parseCryptoPayload } from "./payload-parsers";
 import { CopyButton } from "./copy-button";
 import type { DetailEntry } from "./detail-entry";
@@ -24,7 +25,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
     };
     const colorClass = networkColors[String(cryptoData.network)] || "bg-muted text-foreground";
     details.push({
-      label: "Network",
+      label: i18n.t("analyze.network", "Network"),
       value: (
         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
           {cryptoData.network}
@@ -36,7 +37,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.addressPreview) {
     details.push({
-      label: "Address",
+      label: i18n.t("analyze.streetAddress", "Address"),
       value: <span className="font-mono text-xs">{cryptoData.addressPreview}</span>,
       icon: <Hash className="w-3 h-3" />,
     });
@@ -44,7 +45,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.address) {
     details.push({
-      label: "Full Address",
+      label: i18n.t("analyze.fullAddress", "Full Address"),
       value: (
         <div className="flex items-center gap-1">
           <span className="font-mono text-[10px] break-all max-w-[150px]">
@@ -59,7 +60,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.amount) {
     details.push({
-      label: "Amount",
+      label: i18n.t("analyze.amount", "Amount"),
       value: (
         <span className="font-mono text-sm font-bold">
           {cryptoData.amount} {cryptoData.network}
@@ -71,7 +72,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.label) {
     details.push({
-      label: "Label",
+      label: i18n.t("analyze.labelField", "Label"),
       value: cryptoData.label,
       icon: <FileText className="w-3 h-3" />,
     });
@@ -79,7 +80,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.message) {
     details.push({
-      label: "Message",
+      label: i18n.t("analyze.message", "Message"),
       value: <span className="text-xs">{cryptoData.message}</span>,
       icon: <MessageSquare className="w-3 h-3" />,
     });
@@ -87,7 +88,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.explorerUrl) {
     details.push({
-      label: "Block Explorer",
+      label: i18n.t("analyze.blockExplorer", "Block Explorer"),
       value: (
         <a
           href={String(cryptoData.explorerUrl)}
@@ -95,7 +96,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
           rel="noopener noreferrer"
           className="text-xs text-primary hover:underline flex items-center gap-1"
         >
-          View on blockchain <ChevronRight className="w-3 h-3" />
+          {i18n.t("analyze.viewOnBlockchain", "View on blockchain")} <ChevronRight className="w-3 h-3" />
         </a>
       ),
       icon: <Globe className="w-3 h-3" />,

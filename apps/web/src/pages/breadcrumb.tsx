@@ -1,12 +1,14 @@
+import { useTranslation } from "react-i18next";
 import type { BreadcrumbProps } from "./breadcrumb.types";
 
 export function Breadcrumb({ items, lang }: BreadcrumbProps) {
+  const { t } = useTranslation();
   if (!items || items.length === 0) return null;
 
   return (
     <nav
       className="flex items-center gap-2 text-sm text-muted-foreground mb-4"
-      aria-label="Breadcrumb"
+      aria-label={t("accessibility.breadcrumb", "Breadcrumb")}
     >
       <a href={`/?lang=${lang}`} className="hover:text-primary transition-colors">
         ANQR

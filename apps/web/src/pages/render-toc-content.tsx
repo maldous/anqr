@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { TocGroup } from "./static-page-types";
 
@@ -8,6 +9,7 @@ export function renderTocContent(
   handleGroupClick: (group: TocGroup) => void,
   toggleGroup: (key: string) => void,
   handleItemClick: (slug: string) => void,
+  t: TFunction,
 ) {
   return (
     <nav className="text-sm">
@@ -18,7 +20,7 @@ export function renderTocContent(
               type="button"
               onClick={() => handleGroupClick(group)}
               className="flex-1 text-left text-base font-bold text-foreground hover:text-primary py-2 px-2 rounded-l transition-colors cursor-pointer"
-              title={`Go to ${group.title}`}
+              title={t("nav.goTo", "Go to {{label}}", { label: group.title })}
             >
               {group.title}
             </button>
@@ -26,7 +28,11 @@ export function renderTocContent(
               type="button"
               onClick={() => toggleGroup(group.key)}
               className="p-2 rounded-r hover:bg-muted transition-colors"
-              title={expandedGroups.has(group.key) ? "Collapse" : "Expand"}
+              title={
+                expandedGroups.has(group.key)
+                  ? t("common.collapse", "Collapse")
+                  : t("common.expand", "Expand")
+              }
             >
               {expandedGroups.has(group.key) ? (
                 <ChevronUp className="h-4 w-4 text-muted-foreground" />

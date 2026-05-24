@@ -1,4 +1,5 @@
 import { FileText, Hash, Lock, Settings, Shield } from "lucide-react";
+import i18n from "i18next";
 import { parseOtpAuthPayload } from "./payload-parsers";
 import { appendOtpTimingEntries } from "./append-otp-timing-entries";
 import type { DetailEntry } from "./detail-entry";
@@ -9,7 +10,7 @@ export function buildOtpAuthDetails(payload: string): DetailEntry[] {
 
   if (otpData.type) {
     details.push({
-      label: "Type",
+      label: i18n.t("analyze.typeLabel", "Type"),
       value: (
         <span
           className={`px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -18,7 +19,9 @@ export function buildOtpAuthDetails(payload: string): DetailEntry[] {
               : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
           }`}
         >
-          {otpData.type === "TOTP" ? "Time-based OTP" : "Counter-based OTP"}
+          {otpData.type === "TOTP"
+            ? i18n.t("analyze.timeBasedOtp", "Time-based OTP")
+            : i18n.t("analyze.counterBasedOtp", "Counter-based OTP")}
         </span>
       ),
       icon: <Lock className="w-3 h-3" />,
@@ -27,7 +30,7 @@ export function buildOtpAuthDetails(payload: string): DetailEntry[] {
 
   if (otpData.issuer) {
     details.push({
-      label: "Issuer",
+      label: i18n.t("analyze.issuer", "Issuer"),
       value: <span className="font-medium">{otpData.issuer}</span>,
       icon: <Shield className="w-3 h-3" />,
     });
@@ -35,7 +38,7 @@ export function buildOtpAuthDetails(payload: string): DetailEntry[] {
 
   if (otpData.account) {
     details.push({
-      label: "Account",
+      label: i18n.t("analyze.account", "Account"),
       value: <span className="font-mono text-xs">{otpData.account}</span>,
       icon: <FileText className="w-3 h-3" />,
     });
@@ -43,7 +46,7 @@ export function buildOtpAuthDetails(payload: string): DetailEntry[] {
 
   if (otpData.algorithm) {
     details.push({
-      label: "Algorithm",
+      label: i18n.t("analyze.algorithm", "Algorithm"),
       value: (
         <div className="text-right">
           <span className="font-mono text-xs">{otpData.algorithm}</span>
@@ -58,8 +61,8 @@ export function buildOtpAuthDetails(payload: string): DetailEntry[] {
 
   if (otpData.digits) {
     details.push({
-      label: "Code Length",
-      value: `${otpData.digits} digits`,
+      label: i18n.t("analyze.codeLength", "Code Length"),
+      value: i18n.t("analyze.nDigits", "{{count}} digits", { count: Number(otpData.digits) }),
       icon: <Hash className="w-3 h-3" />,
     });
   }

@@ -144,7 +144,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
 
   // Reset all settings
   const handleReset = () => {
-    if (confirm("Reset all settings to defaults?")) {
+    if (confirm(t("sidebar.resetConfirm", "Reset all settings to defaults?"))) {
       globalThis.location.reload();
     }
   };
@@ -215,12 +215,12 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
             }
           }}
         >
-          <span className="sr-only">Close sidebar</span>
+          <span className="sr-only">{t("accessibility.closeSidebar", "Close sidebar")}</span>
         </button>
       )}
 
       <aside
-        aria-label="QR code settings"
+        aria-label={t("accessibility.qrCodeSettings", "QR code settings")}
         ref={sidebarRef}
         data-testid={DynamicTestId.resolve("sidebar", "sidebar")}
         className={`
@@ -286,6 +286,27 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
               <X className="h-4 w-4" />
             </button>
           </div>
+          {searchQuery && visibleSections.length === 0 ? (
+            // No section matched the search query. Render a friendly card
+            // with a "Clear search" affordance so users on non-English
+            // locales (whose keyword list is English-only — see D-F1) can
+            // recover quickly. Ref: review-2026-05-24 D-F6.
+            <div className="flex flex-col items-center text-center gap-2 px-4 py-8 bg-muted/30 rounded-md">
+              <p className="text-sm font-medium text-foreground">
+                {t("search.noResultsTitle", "No settings match “{{q}}”", { q: searchQuery })}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("search.noResultsHint", "Try a different word, or clear the search to see everything.")}
+              </p>
+              <button
+                type="button"
+                className="text-xs font-medium text-primary hover:underline mt-2"
+                onClick={() => setSearchQuery("")}
+              >
+                {t("search.clear", "Clear search")}
+              </button>
+            </div>
+          ) : null}
           <Accordion type="multiple" value={openSections} onValueChange={setOpenSections}>
             {visibleSections.map((section) => {
               const Icon = section.icon;
@@ -301,7 +322,9 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
                 >
                   <AccordionTrigger
                     className="hover:no-underline py-3 px-3 bg-muted/50 rounded-md shadow-sm [&>svg]:ml-auto"
-                    title={`${t(section.labelKey)} settings - Click to expand`}
+                    title={t("sidebar.expandHint", "{{label}} settings - Click to expand", {
+                      label: t(section.labelKey),
+                    })}
                   >
                     <div className="flex items-center gap-2">
                       <Icon className="h-4 w-4 text-muted-foreground" />

@@ -1,4 +1,5 @@
 import { Binary, Database, Shield, Type } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { CollapsibleSection } from "./collapsible-section";
 import { DetailRow } from "./detail-row";
 import { formatRsErrorCorrection } from "@/application/analyze";
@@ -12,9 +13,10 @@ export function EncodingPanel({
   payloadBytes: Uint8Array | undefined;
   errorsCorrected: number | null;
 }>) {
+  const { t } = useTranslation();
   return (
     <CollapsibleSection
-      title="Encoding"
+      title={t("analyze.encodingTitle", "Encoding")}
       icon={<Binary className="w-4 h-4" />}
       testId="analyze-section-encoding"
       badge={
@@ -29,19 +31,19 @@ export function EncodingPanel({
     >
       <div className="space-y-2">
         <DetailRow
-          label="Mode"
+          label={t("analyze.mode", "Mode")}
           value={<span className="capitalize">{encodingMode || "Unknown"}</span>}
           icon={<Type className="w-3.5 h-3.5" />}
         />
         {payloadBytes && (
           <DetailRow
-            label="Raw Bytes"
+            label={t("analyze.rawBytes", "Raw Bytes")}
             value={`${payloadBytes.length} bytes`}
             icon={<Database className="w-3.5 h-3.5" />}
           />
         )}
         <DetailRow
-          label="RS Error Correction"
+          label={t("analyze.rsErrorCorrection", "RS Error Correction")}
           value={formatRsErrorCorrection(errorsCorrected)}
           icon={<Shield className="w-3.5 h-3.5" />}
         />

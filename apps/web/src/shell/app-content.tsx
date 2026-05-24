@@ -174,7 +174,7 @@ export function AppContent() {
         return;
       }
       lastBackPressAtRef.current = now;
-      await showNativeToast("Press back again to exit", "short");
+      await showNativeToast(t("app.pressBackToExit", "Press back again to exit"), "short");
     };
 
     // Listen for the custom event dispatched from native Android

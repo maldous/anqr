@@ -1,15 +1,17 @@
 import { Binary, Grid3x3, Settings } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { CollapsibleSection } from "./collapsible-section";
 import { HexDumpView } from "./hex-dump-view";
 import { ModuleMatrixView } from "./module-matrix-view";
 import type { QRAnalysisResult } from "@/contracts/analyze";
 
 export function AnalyzeDataGrid({ result }: Readonly<{ result: QRAnalysisResult }>) {
+  const { t } = useTranslation();
   return (
     <div className="grid md:grid-cols-1 gap-4">
       {result.payloadBytes && result.payloadBytes.length > 0 && (
         <CollapsibleSection
-          title="Binary Data (Hex Dump)"
+          title={t("analyze.binaryDataHex", "Binary Data (Hex Dump)")}
           icon={<Binary className="w-4 h-4" />}
           badge={
             <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
@@ -22,7 +24,7 @@ export function AnalyzeDataGrid({ result }: Readonly<{ result: QRAnalysisResult 
       )}
       {result.moduleMatrix && result.moduleMatrix.length > 0 && (
         <CollapsibleSection
-          title="Module Matrix"
+          title={t("analyze.moduleMatrix", "Module Matrix")}
           icon={<Grid3x3 className="w-4 h-4" />}
           testId="analyze-section-module-matrix"
           badge={
@@ -41,7 +43,7 @@ export function AnalyzeDataGrid({ result }: Readonly<{ result: QRAnalysisResult 
       )}
       {result.debugLog && (
         <CollapsibleSection
-          title="Debug Log"
+          title={t("analyze.debugLog", "Debug Log")}
           icon={<Settings className="w-4 h-4" />}
           defaultOpen={false}
         >

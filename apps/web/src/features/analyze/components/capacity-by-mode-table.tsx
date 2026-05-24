@@ -1,4 +1,5 @@
 import { Binary, Globe, Hash, Type } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ECCLevel } from "@/contracts/analyze";
 import {
   ECC_CAPACITIES_ALPHANUMERIC,
@@ -15,29 +16,30 @@ export const CapacityByModeTable = ({
   eccLevel: ECCLevel;
   currentBytes?: number;
 }>) => {
+  const { t } = useTranslation();
   const versionIndex = version - 1;
   const capacities = [
     {
-      mode: "Numeric",
+      mode: t("analyze.numeric", "Numeric"),
       icon: <Hash className="w-3.5 h-3.5" />,
       capacity: ECC_CAPACITIES_NUMERIC[eccLevel]?.[versionIndex] ?? 0,
       unit: "digits",
     },
     {
-      mode: "Alphanumeric",
+      mode: t("qr.alphanumeric", "Alphanumeric"),
       icon: <Type className="w-3.5 h-3.5" />,
       capacity: ECC_CAPACITIES_ALPHANUMERIC[eccLevel]?.[versionIndex] ?? 0,
       unit: "chars",
     },
     {
-      mode: "Byte",
+      mode: t("analyze.byte", "Byte"),
       icon: <Binary className="w-3.5 h-3.5" />,
       capacity: ECC_CAPACITIES_BYTE[eccLevel]?.[versionIndex] ?? 0,
       unit: "bytes",
       current: currentBytes,
     },
     {
-      mode: "Kanji",
+      mode: t("qr.kanji", "Kanji"),
       icon: <Globe className="w-3.5 h-3.5" />,
       capacity: Math.floor((ECC_CAPACITIES_BYTE[eccLevel]?.[versionIndex] ?? 0) * 0.6),
       unit: "chars",
@@ -47,7 +49,7 @@ export const CapacityByModeTable = ({
   return (
     <div className="space-y-2">
       <div className="text-xs text-muted-foreground mb-2">
-        Maximum capacity for Version {version} with ECC {eccLevel}
+        {t("analyze.maximumCapacityFor", "Maximum capacity for Version {{version}} with ECC {{ecc}}", { version, ecc: eccLevel })}
       </div>
       <div className="grid grid-cols-2 gap-2">
         {capacities.map((cap) => (

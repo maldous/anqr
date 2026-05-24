@@ -28,7 +28,7 @@ export function HeaderMobileNav({
       onAnimationEnd={() => {
         if (isMobileMenuClosing) onCloseAnimationEnd();
       }}
-      aria-label="Mobile navigation"
+      aria-label={t("accessibility.mobileNavigation", "Mobile navigation")}
     >
       <nav className="flex flex-col gap-2">
         <div className="grid grid-cols-2 gap-1.5">
@@ -47,7 +47,9 @@ export function HeaderMobileNav({
                   }
                   onClose();
                 }}
-                title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+                title={t("nav.goTo", "Go to {{label}}", {
+                  label: t(link.labelKey, link.defaultLabel),
+                })}
                 aria-current={isActive ? "page" : undefined}
               >
                 <HeaderMobileNavLinkBody
@@ -91,7 +93,9 @@ export function HeaderMobileNav({
                   }
                   onClose();
                 }}
-                pageTitle={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+                pageTitle={t("nav.goTo", "Go to {{label}}", {
+                  label: t(link.labelKey, link.defaultLabel),
+                })}
               />
             );
           })}

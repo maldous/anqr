@@ -25,19 +25,19 @@ export const SpatialAnalysisSection = ({
       <div className="space-y-2">
         {estimatedModulePx !== null && (
           <DetailRow
-            label="Module Size"
+            label={t("analyze.moduleSize", "Module Size")}
             value={`~${estimatedModulePx} px`}
             icon={<Square className="w-3.5 h-3.5" />}
           />
         )}
         {estimatedModulePx !== null && (
           <DetailRow
-            label="Scan Module Size"
+            label={t("analyze.scanModuleSize", "Scan Module Size")}
             value={
               <StatusBadge
                 status={estimatedModulePx >= 3}
-                trueLabel="Scan-safe"
-                falseLabel="Too small"
+                trueLabel={t("analyze.scanSafe", "Scan-safe")}
+                falseLabel={t("analyze.tooSmall", "Too small")}
               />
             }
             icon={<ScanLine className="w-3.5 h-3.5" />}
@@ -46,12 +46,12 @@ export const SpatialAnalysisSection = ({
         {geometry && (
           <>
             <DetailRow
-              label="Rotation"
+              label={t("analyze.rotation", "Rotation")}
               value={`${geometry.estimatedRotationDeg.toFixed(1)}°`}
               icon={<Ruler className="w-3.5 h-3.5" />}
             />
             <DetailRow
-              label="Bounding Box"
+              label={t("analyze.boundingBox", "Bounding Box")}
               value={`${Math.round(geometry.boundingBox.width)} × ${Math.round(geometry.boundingBox.height)} px`}
               icon={<Grid3x3 className="w-3.5 h-3.5" />}
             />
@@ -64,8 +64,8 @@ export const SpatialAnalysisSection = ({
               value={
                 <StatusBadge
                   status={quietZone.adequate}
-                  trueLabel="Adequate"
-                  falseLabel="Insufficient"
+                  trueLabel={t("analyze.adequate", "Adequate")}
+                  falseLabel={t("analyze.insufficient", "Insufficient")}
                 />
               }
               icon={<Square className="w-3.5 h-3.5" />}
@@ -73,19 +73,27 @@ export const SpatialAnalysisSection = ({
             <div className="grid grid-cols-4 gap-1 text-center mt-2">
               <div className="p-2 rounded bg-muted/50">
                 <div className="text-sm font-mono">{quietZone.top}</div>
-                <div className="text-[10px] text-muted-foreground">Top</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {t("analyze.top", "Top")}
+                </div>
               </div>
               <div className="p-2 rounded bg-muted/50">
                 <div className="text-sm font-mono">{quietZone.right}</div>
-                <div className="text-[10px] text-muted-foreground">Right</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {t("analyze.right", "Right")}
+                </div>
               </div>
               <div className="p-2 rounded bg-muted/50">
                 <div className="text-sm font-mono">{quietZone.bottom}</div>
-                <div className="text-[10px] text-muted-foreground">Bottom</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {t("analyze.bottom", "Bottom")}
+                </div>
               </div>
               <div className="p-2 rounded bg-muted/50">
                 <div className="text-sm font-mono">{quietZone.left}</div>
-                <div className="text-[10px] text-muted-foreground">Left</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {t("analyze.left", "Left")}
+                </div>
               </div>
             </div>
           </>

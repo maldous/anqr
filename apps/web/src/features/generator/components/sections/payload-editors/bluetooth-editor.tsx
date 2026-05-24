@@ -28,7 +28,7 @@ export const BluetoothEditor = ({
         <Label>
           <HighlightedLabel>{t("payload.deviceName")}</HighlightedLabel>
         </Label>
-        <Input placeholder="My Bluetooth Device" />
+        <Input placeholder={t("placeholders.bluetoothDeviceName", "My Bluetooth Device")} />
       </div>
       <p className="text-xs text-muted-foreground">{t("hints.bluetoothNote")}</p>
     </div>

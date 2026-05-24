@@ -126,7 +126,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     if (ratio >= 7) return "AAA";
     if (ratio >= 4.5) return "AA";
     if (ratio >= 3) return "AA-L";
-    return "Poor";
+    return t("preview.contrastPoor", "Poor");
   };
 
   const contrastRatioToHeatmapColor = (ratio: number): { r: number; g: number; b: number } => {
@@ -301,7 +301,10 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                       if (contrastAnalysis.meetsAA) return "WCAG AA";
                       return t("safety.poor");
                     })()}`}
-                    aria-label={`Contrast ratio: ${contrastAnalysis.ratio.toFixed(1)} to 1, ${getContrastLabel(contrastAnalysis.ratio)}`}
+                    aria-label={t("preview.contrastAria", "Contrast ratio: {{ratio}} to 1, {{grade}}", {
+                      ratio: contrastAnalysis.ratio.toFixed(1),
+                      grade: getContrastLabel(contrastAnalysis.ratio),
+                    })}
                   >
                     <Eye className="h-3 w-3" aria-hidden="true" />
                     <span>{contrastAnalysis.ratio.toFixed(1)}:1</span>

@@ -1,4 +1,5 @@
 import { FileText, Globe, Image as ImageIcon } from "lucide-react";
+import i18n from "i18next";
 import { parseVCardPayload } from "./payload-parsers";
 import type { DetailEntry } from "./detail-entry";
 
@@ -8,14 +9,14 @@ export function appendVCardExtras(
 ): void {
   if (vcardData.birthday) {
     details.push({
-      label: "Birthday",
+      label: i18n.t("analyze.birthday", "Birthday"),
       value: vcardData.birthday,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (vcardData.url) {
     details.push({
-      label: "Website",
+      label: i18n.t("analyze.website", "Website"),
       value: (
         <a
           href={String(vcardData.url)}
@@ -31,7 +32,7 @@ export function appendVCardExtras(
   }
   if (vcardData.note) {
     details.push({
-      label: "Notes",
+      label: i18n.t("analyze.notes", "Notes"),
       value: (
         <span className="text-xs">
           {String(vcardData.note).slice(0, 100)}
@@ -43,8 +44,12 @@ export function appendVCardExtras(
   }
   if (vcardData.hasPhoto === "true") {
     details.push({
-      label: "Photo",
-      value: <span className="text-green-600 dark:text-green-400">Embedded</span>,
+      label: i18n.t("analyze.photo", "Photo"),
+      value: (
+        <span className="text-green-600 dark:text-green-400">
+          {i18n.t("analyze.embedded", "Embedded")}
+        </span>
+      ),
       icon: <ImageIcon className="w-3 h-3" />,
     });
   }

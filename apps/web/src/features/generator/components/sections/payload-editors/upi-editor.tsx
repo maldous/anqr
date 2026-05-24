@@ -40,7 +40,7 @@ export function UpiEditor({
         <Input
           value={upiForm.payeeName}
           onChange={(e) => setUpiForm((prev) => ({ ...prev, payeeName: e.target.value }))}
-          placeholder="John Doe"
+          placeholder={t("placeholders.fullName", "John Doe")}
           data-testid={DynamicTestId.resolve(
             "payload-upi-payee-name-input",
             "payload-upi-payee-name-input",
@@ -70,7 +70,7 @@ export function UpiEditor({
         <Input
           value={upiForm.transactionNote}
           onChange={(e) => setUpiForm((prev) => ({ ...prev, transactionNote: e.target.value }))}
-          placeholder="Payment for order"
+          placeholder={t("placeholders.paymentMemo", "Payment for order")}
           data-testid={DynamicTestId.resolve("payload-upi-note-input", "payload-upi-note-input")}
         />
       </div>

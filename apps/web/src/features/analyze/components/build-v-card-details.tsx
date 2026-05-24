@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import i18n from "i18next";
 import { parseVCardPayload } from "./payload-parsers";
 import { appendVCardPhoneEntries } from "./append-v-card-phone-entries";
 import { appendVCardEmailEntries } from "./append-v-card-email-entries";
@@ -12,28 +13,28 @@ export function buildVCardDetails(payload: string): DetailEntry[] {
 
   if (vcardData.version) {
     details.push({
-      label: "vCard Version",
+      label: i18n.t("analyze.vcardVersion", "vCard Version"),
       value: <span className="font-mono text-xs">v{vcardData.version}</span>,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (vcardData.fullName) {
     details.push({
-      label: "Full Name",
+      label: i18n.t("analyze.fullName", "Full Name"),
       value: <span className="font-medium">{vcardData.fullName}</span>,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (vcardData.organization) {
     details.push({
-      label: "Organization",
+      label: i18n.t("analyze.organization", "Organization"),
       value: vcardData.organization,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (vcardData.title) {
     details.push({
-      label: "Title",
+      label: i18n.t("analyze.titleLabel", "Title"),
       value: vcardData.title,
       icon: <FileText className="w-3 h-3" />,
     });

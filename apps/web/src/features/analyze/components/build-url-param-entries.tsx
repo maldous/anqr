@@ -1,4 +1,5 @@
 import { ChevronRight, Settings } from "lucide-react";
+import i18n from "i18next";
 import type { DetailEntry } from "./detail-entry";
 
 export function buildUrlParamEntries(
@@ -7,8 +8,12 @@ export function buildUrlParamEntries(
   if (!params || params.length === 0) return [];
   const entries: DetailEntry[] = [
     {
-      label: "Query Parameters",
-      value: <span className="font-medium">{params.length} parameter(s)</span>,
+      label: i18n.t("analyze.queryParameters", "Query Parameters"),
+      value: (
+        <span className="font-medium">
+          {i18n.t("analyze.nParameters", "{{count}} parameter(s)", { count: params.length })}
+        </span>
+      ),
       icon: <Settings className="w-3 h-3" />,
     },
   ];
@@ -22,7 +27,11 @@ export function buildUrlParamEntries(
   if (params.length > 5) {
     entries.push({
       label: "",
-      value: <span className="text-xs text-muted-foreground">...and {params.length - 5} more</span>,
+      value: (
+        <span className="text-xs text-muted-foreground">
+          {i18n.t("analyze.andNMore", "...and {{count}} more", { count: params.length - 5 })}
+        </span>
+      ),
     });
   }
   return entries;

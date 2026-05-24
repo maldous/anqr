@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import type { QRState } from "../../../../../state/qr-store";
 import { CityAmountFields } from "./city-amount-fields";
 import { MerchantNameField } from "./merchant-name-field";
@@ -47,6 +48,7 @@ export function MerchantCityAmountEditor({
   primaryPlaceholder: string;
   primaryValue: string;
 }>) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <ValidatedTextField
@@ -59,7 +61,7 @@ export function MerchantCityAmountEditor({
       />
       <MerchantNameField
         invalidMessage={invalidMessage}
-        label="Merchant Name"
+        label={t("payload.merchantName", "Merchant Name")}
         merchantName={merchantName}
         onChange={onMerchantNameChange}
         payload={payload}

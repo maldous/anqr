@@ -8,7 +8,10 @@ export function HeaderDesktopNav({
 }: Readonly<{ resolvedPage: HeaderPage; onNavigate?: (page: HeaderPage) => void }>) {
   const { t } = useTranslation();
   return (
-    <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
+    <nav
+      className="hidden lg:flex items-center gap-1"
+      aria-label={t("accessibility.mainNavigation", "Main navigation")}
+    >
       {NAV_LINKS.map((link) => {
         const isActive = link.page === resolvedPage;
         if (link.external) {
@@ -35,7 +38,9 @@ export function HeaderDesktopNav({
               e.preventDefault();
               onNavigate(link.page);
             }}
-            title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+            title={t("nav.goTo", "Go to {{label}}", {
+              label: t(link.labelKey, link.defaultLabel),
+            })}
           >
             {t(link.labelKey, link.defaultLabel)}
           </a>

@@ -1,4 +1,5 @@
 import { Binary, Database, Hash, Layers, Settings, Shield } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   formatDecoderErrors,
   formatDecoderErasures,
@@ -16,61 +17,65 @@ export const DecoderMetadataPanel = ({
 }: Readonly<{
   decoderMetadata: NonNullable<QRAnalysisResult["decoderMetadata"]>;
 }>) => {
+  const { t } = useTranslation();
   return (
     <CollapsibleSection
-      title="Decoder Metadata"
+      title={t("analyze.decoderMetadata", "Decoder Metadata")}
       icon={<Database className="w-4 h-4" />}
       testId="analyze-section-decoder-metadata"
       defaultOpen={true}
       badge={
         <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
-          Authoritative
+          {t("analyze.authoritative", "Authoritative")}
         </span>
       }
     >
       <div className="space-y-2">
         <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
-          Raw decoder output - authoritative source for reproduction.
+          {t(
+            "analyze.rawDecoderOutput",
+            "Raw decoder output - authoritative source for reproduction.",
+          )}
         </div>
         <DetailRow
-          label="Version"
+          label={t("analyze.version", "Version")}
           value={formatDecoderVersion(decoderMetadata.version)}
           icon={<Hash className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Mask Pattern"
+          label={t("qr.mask", "Mask Pattern")}
           value={formatDecoderMaskPattern(decoderMetadata.maskPattern)}
           icon={<Layers className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="ECC Level"
+          label={t("analyze.eccLevel", "ECC Level")}
           value={
             decoderMetadata.eccLevel ?? <span className="text-amber-500">— (not detected)</span>
           }
           icon={<Shield className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Errors Corrected"
+          label={t("analyze.errorsCorrected", "Errors Corrected")}
           value={formatDecoderErrors(decoderMetadata.errorsCorrected)}
           icon={<Shield className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Erasures"
+          label={t("analyze.erasures", "Erasures")}
           value={formatDecoderErasures(decoderMetadata.erasures)}
           icon={<Shield className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Raw Bits"
+          label={t("analyze.rawBits", "Raw Bits")}
           value={formatDecoderNumBits(decoderMetadata.numBits)}
           icon={<Binary className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Orientation"
+          label={t("analyze.orientation", "Orientation")}
           value={formatDecoderOrientation(decoderMetadata.orientation)}
           icon={<Settings className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Structured Append"
+          label={t("analyze.structuredAppend", "Structured Append")}
           value={
             decoderMetadata.hasStructuredAppend
               ? `Seq ${decoderMetadata.structuredAppendSequence}, Parity ${decoderMetadata.structuredAppendParity}`
@@ -79,7 +84,7 @@ export const DecoderMetadataPanel = ({
           icon={<Layers className="w-3.5 h-3.5" />}
         />
         <DetailRow
-          label="Byte Segments"
+          label={t("analyze.byteSegments", "Byte Segments")}
           value={
             decoderMetadata.byteSegmentCount > 0
               ? `${decoderMetadata.byteSegmentCount} segment(s), ${decoderMetadata.totalByteLength} bytes`

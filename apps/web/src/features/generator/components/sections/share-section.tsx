@@ -69,16 +69,22 @@ export function ShareSection() {
   ]);
 
   const embedCode = useMemo(() => {
-    return generateImageEmbed(shareableUrl, "QR Code", { width: 200, height: 200 });
-  }, [shareableUrl]);
+    return generateImageEmbed(shareableUrl, t("share.embedAlt", "QR Code"), {
+      width: 200,
+      height: 200,
+    });
+  }, [shareableUrl, t]);
 
   const markdownEmbed = useMemo(() => {
-    return generateMarkdownEmbed(shareableUrl, "QR Code");
-  }, [shareableUrl]);
+    return generateMarkdownEmbed(shareableUrl, t("share.embedAlt", "QR Code"));
+  }, [shareableUrl, t]);
 
   const socialUrls = useMemo(() => {
-    return getSocialShareUrls(shareableUrl, "Check out this QR code!");
-  }, [shareableUrl]);
+    return getSocialShareUrls(
+      shareableUrl,
+      t("share.socialMessage", "Check out this QR code!"),
+    );
+  }, [shareableUrl, t]);
 
   // Count the number of URL parameters being shared
   const _paramCount = useMemo(() => {

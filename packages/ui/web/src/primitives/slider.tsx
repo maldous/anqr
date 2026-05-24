@@ -1,6 +1,7 @@
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Minus, Plus } from "lucide-react";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { useDynamicTestId } from "../dynamic-testid";
 import { cn } from "../utils";
 
@@ -8,6 +9,7 @@ const Slider = React.forwardRef<
   React.ComponentRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
 >(({ className, min = 0, max = 100, step = 1, value, onValueChange, disabled, ...props }, ref) => {
+  const { t } = useTranslation();
   const testId = useDynamicTestId(props, "slider");
 
   const handleDecrement = () => {
@@ -30,7 +32,7 @@ const Slider = React.forwardRef<
         onClick={handleDecrement}
         disabled={disabled || !value || value[0] <= min}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none"
-        aria-label="Decrease"
+        aria-label={t("common.decrease", "Decrease")}
       >
         <Minus className="h-3 w-3" />
       </button>
@@ -57,7 +59,7 @@ const Slider = React.forwardRef<
         onClick={handleIncrement}
         disabled={disabled || !value || value[0] >= max}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none"
-        aria-label="Increase"
+        aria-label={t("common.increase", "Increase")}
       >
         <Plus className="h-3 w-3" />
       </button>

@@ -1,4 +1,5 @@
 import { ArrowRight, Eye, Palette } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { wcagComplianceClass } from "@/application/analyze";
 import type { QRAnalysisResult } from "@/contracts/analyze";
 import { CollapsibleSection } from "./collapsible-section";
@@ -13,26 +14,35 @@ export const ColorsWcagSection = ({
   detectedColors: NonNullable<QRAnalysisResult["detectedColors"]>;
   dominantColors: QRAnalysisResult["dominantColors"];
 }>) => {
+  const { t } = useTranslation();
   return (
     <CollapsibleSection
-      title="Colors & WCAG Compliance"
+      title={t("analyze.colorsWcag", "Colors & WCAG Compliance")}
       icon={<Palette className="w-4 h-4" />}
       badge={<WCAGBadge ratio={detectedColors.contrastRatio} size="sm" />}
     >
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <ColorSwatch color={detectedColors.foreground} label="Foreground" />
+          <ColorSwatch
+            color={detectedColors.foreground}
+            label={t("analyze.foreground", "Foreground")}
+          />
           <div className="flex flex-col items-center">
             <ArrowRight className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">contrast</span>
+            <span className="text-xs text-muted-foreground">
+              {t("analyze.contrast", "contrast")}
+            </span>
           </div>
-          <ColorSwatch color={detectedColors.background} label="Background" />
+          <ColorSwatch
+            color={detectedColors.background}
+            label={t("analyze.background", "Background")}
+          />
         </div>
 
         {dominantColors && dominantColors.length > 0 && (
           <div className="space-y-2">
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Dominant Palette
+              {t("analyze.dominantPalette", "Dominant Palette")}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {dominantColors.map((entry, idx) => (
@@ -46,7 +56,9 @@ export const ColorsWcagSection = ({
 
         <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">WCAG Compliance</span>
+            <span className="text-sm font-medium">
+              {t("analyze.wcagCompliance", "WCAG Compliance")}
+            </span>
             <WCAGBadge ratio={detectedColors.contrastRatio} size="md" />
           </div>
           <div className="grid grid-cols-3 gap-2 text-center text-xs">
@@ -68,7 +80,7 @@ export const ColorsWcagSection = ({
         </div>
 
         <DetailRow
-          label="Contrast Ratio"
+          label={t("analyze.contrastRatio", "Contrast Ratio")}
           value={`${detectedColors.contrastRatio.toFixed(2)}:1`}
           icon={<Eye className="w-3.5 h-3.5" />}
         />

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Check, ClipboardCopy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/web";
 
 export const CopyButton = ({
@@ -11,6 +12,7 @@ export const CopyButton = ({
   label?: string;
   className?: string;
 }>) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -29,7 +31,7 @@ export const CopyButton = ({
       {copied ? (
         <>
           <Check className="w-3 h-3 text-green-500" />
-          <span className="text-green-500">Copied!</span>
+          <span className="text-green-500">{t("common.copied", "Copied!")}</span>
         </>
       ) : (
         <>

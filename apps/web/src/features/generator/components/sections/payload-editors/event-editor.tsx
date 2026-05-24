@@ -24,8 +24,8 @@ export const EventEditor = ({
         onDescriptionChange={(value) => setPayloadEvent({ description: value })}
         onStartChange={(value) => setPayloadEvent({ start: value })}
         onEndChange={(value) => setPayloadEvent({ end: value })}
-        summaryPlaceholder="Meeting"
-        locationPlaceholder="Conference Room A"
+        summaryPlaceholder={t("placeholders.eventSummary", "Meeting")}
+        locationPlaceholder={t("placeholders.eventLocation", "Conference Room A")}
         summaryTestId="payload-event-summary-input"
         locationTestId="payload-event-location-input"
         descriptionTestId="payload-event-description-textarea"

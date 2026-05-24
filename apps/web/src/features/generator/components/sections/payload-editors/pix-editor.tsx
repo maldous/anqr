@@ -36,7 +36,7 @@ export const PixEditor = ({
       <Input
         value={pixForm.name}
         onChange={(e) => setPixForm((prev) => ({ ...prev, name: e.target.value }))}
-        placeholder="João Silva"
+        placeholder={t("placeholders.pixReceiverName", "João Silva")}
         data-testid={DynamicTestId.resolve("payload-pix-name-input", "payload-pix-name-input")}
       />
     </div>

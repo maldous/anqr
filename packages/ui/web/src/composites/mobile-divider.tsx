@@ -1,5 +1,6 @@
 import { GripHorizontal } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function MobileDivider({
   onDrag,
@@ -8,6 +9,7 @@ export function MobileDivider({
   onDrag: (deltaY: number) => void;
   onDragEnd: () => void;
 }>) {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const lastY = useRef<number>(0);
   const dividerRef = useRef<HTMLButtonElement>(null);
@@ -102,10 +104,13 @@ export function MobileDivider({
     <button
       ref={dividerRef}
       type="button"
-      aria-label="Resize panels. Use arrow keys to adjust."
+      aria-label={t(
+        "accessibility.resizePanels",
+        "Resize panels. Use arrow keys to adjust.",
+      )}
       className={`
         md:hidden
-        h-4 w-full
+        h-4 py-3 -my-3 w-full
         flex items-center justify-center
         bg-muted border-y border-border
         cursor-row-resize

@@ -273,7 +273,7 @@ export function OverlaySection() {
                   <HelpLink anchor="protection" />
                 </Label>
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm">Preserve All</Label>
+                  <Label className="text-sm">{t("overlay.preserveAll", "Preserve All")}</Label>
                   <Switch checked={allPreservationsEnabled} onCheckedChange={setAllPreservations} />
                 </div>
                 <div className="flex items-center justify-between">

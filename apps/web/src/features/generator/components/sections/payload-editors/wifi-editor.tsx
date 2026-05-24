@@ -32,7 +32,7 @@ export const WifiEditor = ({
         <Input
           value={payload.wifi.ssid}
           onChange={(e) => setPayloadWifi({ ssid: e.target.value })}
-          placeholder="MyWiFiNetwork"
+          placeholder={t("placeholders.wifiSsid", "MyWiFiNetwork")}
           data-testid={DynamicTestId.resolve("payload-wifi-ssid-input", "payload-wifi-ssid-input")}
           className={
             payload.validate && payload.wifi.ssid && !isValidSSID(payload.wifi.ssid)

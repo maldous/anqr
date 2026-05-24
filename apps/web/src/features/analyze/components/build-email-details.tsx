@@ -1,4 +1,5 @@
 import { FileText, Globe, Mail } from "lucide-react";
+import i18n from "i18next";
 import { parseEmailPayload } from "./payload-parsers";
 import type { DetailEntry } from "./detail-entry";
 
@@ -16,7 +17,7 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
     };
     const colorClass = providerColors[String(emailData.provider)] || "bg-muted text-foreground";
     details.push({
-      label: "Email Provider",
+      label: i18n.t("analyze.emailProvider", "Email Provider"),
       value: (
         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
           {emailData.provider}
@@ -28,7 +29,7 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.to) {
     details.push({
-      label: "Recipient",
+      label: i18n.t("analyze.recipient", "Recipient"),
       value: (
         <a
           href={`mailto:${emailData.to}`}
@@ -43,7 +44,7 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.domain) {
     details.push({
-      label: "Domain",
+      label: i18n.t("analyze.domain", "Domain"),
       value: <span className="font-mono text-xs">{emailData.domain}</span>,
       icon: <Globe className="w-3 h-3" />,
     });
@@ -51,7 +52,7 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.subject) {
     details.push({
-      label: "Subject",
+      label: i18n.t("analyze.subject", "Subject"),
       value: <span className="text-xs font-medium">{emailData.subject}</span>,
       icon: <FileText className="w-3 h-3" />,
     });
@@ -59,7 +60,7 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.body) {
     details.push({
-      label: "Body Preview",
+      label: i18n.t("analyze.bodyPreview", "Body Preview"),
       value: (
         <span className="text-xs text-muted-foreground">
           {String(emailData.body).slice(0, 80)}
@@ -72,14 +73,14 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.cc) {
     details.push({
-      label: "CC",
+      label: i18n.t("analyze.cc", "CC"),
       value: <span className="font-mono text-xs">{emailData.cc}</span>,
       icon: <Mail className="w-3 h-3" />,
     });
   }
   if (emailData.bcc) {
     details.push({
-      label: "BCC",
+      label: i18n.t("analyze.bcc", "BCC"),
       value: <span className="font-mono text-xs">{emailData.bcc}</span>,
       icon: <Mail className="w-3 h-3" />,
     });

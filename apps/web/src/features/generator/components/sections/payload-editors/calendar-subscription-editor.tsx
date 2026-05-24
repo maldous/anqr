@@ -55,7 +55,7 @@ export const CalendarSubscriptionEditor = ({
         <Input
           value={payload.calendarSub.calendarName || ""}
           onChange={(e) => setPayloadCalendarSub({ calendarName: e.target.value })}
-          placeholder="Team Schedule"
+          placeholder={t("placeholders.calendarName", "Team Schedule")}
           data-testid={DynamicTestId.resolve(
             "payload-calsub-name-input",
             "payload-calsub-name-input",

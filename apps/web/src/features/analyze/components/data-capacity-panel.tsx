@@ -1,4 +1,5 @@
 import { AlertTriangle, Database } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { CollapsibleSection } from "./collapsible-section";
 import { DetailRow } from "./detail-row";
 import { ProgressBar } from "./progress-bar";
@@ -10,15 +11,16 @@ export function DataCapacityPanel({
 }: Readonly<{
   dataCapacity: NonNullable<QRAnalysisResult["dataCapacity"]>;
 }>) {
+  const { t } = useTranslation();
   return (
     <CollapsibleSection
-      title="Data Capacity"
+      title={t("analyze.dataCapacity", "Data Capacity")}
       icon={<Database className="w-4 h-4" />}
       badge={
         dataCapacity.overflow ? (
           <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" />
-            Detection mismatch
+            {t("analyze.detectionMismatch", "Detection mismatch")}
           </span>
         ) : (
           <span
@@ -26,7 +28,7 @@ export function DataCapacityPanel({
               dataCapacity.percentage,
             )}`}
           >
-            {dataCapacity.percentage}% used
+            {t("analyze.percentUsed", "{{percent}}% used", { percent: dataCapacity.percentage })}
           </span>
         )
       }
@@ -36,17 +38,20 @@ export function DataCapacityPanel({
           <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
-              Payload ({dataCapacity.used} bytes) exceeds detected capacity ({dataCapacity.total}{" "}
-              bytes). Version or ECC detection may be inaccurate.
+              {t(
+                "analyze.payloadExceedsCapacity",
+                "Payload ({{used}} bytes) exceeds detected capacity ({{total}} bytes). Version or ECC detection may be inaccurate.",
+                { used: dataCapacity.used, total: dataCapacity.total },
+              )}
             </span>
           </div>
           <DetailRow
-            label="Payload Size"
+            label={t("analyze.payloadSize", "Payload Size")}
             value={`${dataCapacity.used} bytes`}
             icon={<Database className="w-3.5 h-3.5" />}
           />
           <DetailRow
-            label="Detected Capacity"
+            label={t("analyze.detectedCapacity", "Detected Capacity")}
             value={`${dataCapacity.total} bytes`}
             icon={<Database className="w-3.5 h-3.5" />}
           />
@@ -55,7 +60,7 @@ export function DataCapacityPanel({
         <ProgressBar
           value={dataCapacity.used}
           max={dataCapacity.total}
-          label="Byte Mode Capacity"
+          label={t("analyze.byteModeCapacity", "Byte Mode Capacity")}
         />
       )}
     </CollapsibleSection>

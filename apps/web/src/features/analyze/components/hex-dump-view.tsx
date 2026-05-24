@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/web";
 import { CopyButton } from "./copy-button";
 
@@ -9,6 +10,7 @@ export const HexDumpView = ({
   bytes: Uint8Array;
   maxRows?: number;
 }>) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const bytesPerRowDesktop = 16;
   const bytesPerRowMobile = 8;
@@ -75,14 +77,14 @@ export const HexDumpView = ({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">{bytes.length} bytes</span>
-        <CopyButton text={fullHex} label="Copy Hex" />
+        <CopyButton text={fullHex} label={t("analyze.copyHex", "Copy Hex")} />
       </div>
       <div className="bg-muted/50 rounded-lg shadow-inner p-2 md:hidden">
         <div className="font-mono text-[9px] leading-relaxed">
           <div className="grid grid-cols-[4ch_1fr_1fr] gap-2 text-muted-foreground mb-1 border-b border-muted pb-1">
-            <span>Addr</span>
-            <span>Hex</span>
-            <span>ASCII</span>
+            <span>{t("analyze.address", "Addr")}</span>
+            <span>{t("analyze.hex", "Hex")}</span>
+            <span>{t("analyze.ascii", "ASCII")}</span>
           </div>
           {hexDumpMobile.map((row) => (
             <div key={row.offset} className="grid grid-cols-[4ch_1fr_1fr] gap-2">
@@ -96,9 +98,9 @@ export const HexDumpView = ({
       <div className="bg-muted/50 rounded-lg shadow-inner p-3 hidden md:block">
         <div className="font-mono text-[10px] leading-relaxed">
           <div className="grid grid-cols-[4ch_1fr_1fr] gap-3 text-muted-foreground mb-1 border-b border-muted pb-1">
-            <span>Addr</span>
-            <span>Hex</span>
-            <span>ASCII</span>
+            <span>{t("analyze.address", "Addr")}</span>
+            <span>{t("analyze.hex", "Hex")}</span>
+            <span>{t("analyze.ascii", "ASCII")}</span>
           </div>
           {hexDumpDesktop.map((row) => (
             <div key={row.offset} className="grid grid-cols-[4ch_1fr_1fr] gap-3">
@@ -116,7 +118,9 @@ export const HexDumpView = ({
           onClick={() => setExpanded(!expanded)}
           className="w-full text-xs shadow-sm"
         >
-          {expanded ? "Show Less" : `Show All (${totalRowsMobile} rows)`}
+          {expanded
+            ? t("common.showLess", "Show Less")
+            : `${t("analyze.showAll", "Show All")} (${totalRowsMobile} ${t("analyze.rows", "rows")})`}
         </Button>
       )}
     </div>
