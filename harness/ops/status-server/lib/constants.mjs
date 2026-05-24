@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const PORT = parseInt(process.env.STATUS_SERVER_PORT || "18800", 10);
+export const PORT = Number.parseInt(process.env.STATUS_SERVER_PORT || "18800", 10);
 export const PUBLIC_DIR = path.resolve(__dirname, "../public");
 export const REPO_ROOT = path.resolve(__dirname, "../../../..");
 export const BRIDGE_STATE = process.env.XDG_RUNTIME_DIR

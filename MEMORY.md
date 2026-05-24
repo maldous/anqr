@@ -360,3 +360,27 @@
 ### 2026-05-21T10:09:19.036Z - Watchdog restarted executor-wt7 service (reason: stuck in activating for 90s, commit: 285d6885d, action: restart-only)
 
 ### 2026-05-21T10:09:28.809Z - Watchdog restarted executor-wt8 service (reason: stuck in activating for 102s, commit: 285d6885d, action: restart-only)
+
+### 2026-05-24T18:22:46.290Z - Watchdog restarted executor-wt4 service (reason: hung service: 5 consecutive unhealthy health checks, commit: ee93513e4, action: restart-only)
+
+### 2026-05-24T18:22:46.290Z - Watchdog restarted executor-wt4 service (reason: hung service: 5 consecutive unhealthy health checks, commit: ee93513e4, action: restart-only)
+
+### 2026-05-24T19:43:56.148Z - Watchdog restart FAILED for executor-wt1 service: spawnSync /bin/sh ETIMEDOUT
+
+### 2026-05-24T19:43:56.158Z - Watchdog restart FAILED for executor-wt1 service: spawnSync /bin/sh ETIMEDOUT
+
+### 2026-05-24T19:47:53.945Z - Watchdog restarted executor-wt3 service (reason: hung service: 5 consecutive unhealthy health checks, commit: 91c6d992c, action: restart-only)
+
+### 2026-05-24T19:48:00.463Z - Watchdog restarted executor-wt3 service (reason: hung service: 5 consecutive unhealthy health checks, commit: 91c6d992c, action: restart-only)
+
+### 2026-05-24T20:04:55.958Z - Watchdog restarted executor-wt4 service (reason: hung service: 5 consecutive unhealthy health checks, commit: f608b311e, action: restart-only)
+
+### 2026-05-24T20:05:04.190Z - Watchdog restarted executor-wt4 service (reason: hung service: 5 consecutive unhealthy health checks, commit: f608b311e, action: restart-only)
+
+### 2026-05-24T22:06:50.557Z - Watchdog restart FAILED for executor-wt3 service: spawnSync /bin/sh ETIMEDOUT
+
+### 2026-05-24T22:06:52.136Z - Watchdog restarted executor-wt3 service (reason: hung service: 5 consecutive unhealthy health checks, commit: f608b311e, action: restart-only)
+
+### 2026-05-24T22:33:56.924Z - Watchdog restarted symphony-router service (reason: file corruption: harness/ops/integrations/model/symphony-credit-gate.mjs is suspiciously small (70 bytes), commit: 7ea439f36, action: restart-only)
+
+### 2026-05-24T22:33:59.415Z - Watchdog restarted symphony-router service (reason: file corruption: harness/ops/integrations/model/symphony-credit-gate.mjs is suspiciously small (70 bytes), commit: 7ea439f36, action: restart-only)

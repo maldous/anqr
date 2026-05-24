@@ -4,8 +4,7 @@ import { esc } from "./format.js";
 export function renderSymphony(sym) {
   const el = $("#symphonyGrid");
   if (!sym) { el.innerHTML = '<div class="loading no-spin">Pipeline data unavailable</div>'; return; }
-  const wts = (sym.worktrees || []).filter(w => w.id.startsWith("wt") && parseInt(w.id.replace("wt","")) <= 8);
-  const wStats = wts.length;
+  const wts = (sym.worktrees || []).filter(w => w.id.startsWith("wt") && Number.parseInt(w.id.replace("wt",""), 10) <= 8);
   const iss = sym.issueStats || {};
   
   el.innerHTML = `

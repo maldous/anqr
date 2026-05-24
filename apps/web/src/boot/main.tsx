@@ -5,7 +5,6 @@ import { initAutoDynamicTestIds } from "../lib/auto-testid";
 import { initRemoteDiagnostics } from "@/infra/telemetry/zaraz";
 import { createLogger } from "@/lib/logger";
 import { loadWebOnlyBootAssets } from "@/platform/browser";
-import { initAds } from "./init-ads";
 
 import { isCapacitor } from "./is-capacitor";
 import { renderApp } from "./render-app";
@@ -94,7 +93,7 @@ Sentry.init({
 // Sentry.lazyLoadIntegration fetches from Sentry's CDN at runtime, so the
 // ~100-150 KB Replay code stays out of the initial bundle. Add via
 // requestIdleCallback so it doesn't compete with first paint.
-if (!isCapacitor && typeof window !== "undefined") {
+if (!isCapacitor && typeof globalThis.window !== "undefined") {
   const loadReplay = () => {
     void Sentry.lazyLoadIntegration("replayIntegration")
       .then((replayIntegration) => {
