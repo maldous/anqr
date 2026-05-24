@@ -7,9 +7,21 @@ export function renderIssues(issues) {
   if (!issues?.length) { el.innerHTML = '<div class="empty-state">No running issues</div>'; countEl.textContent = "0 active"; return; }
   countEl.textContent = `${issues.length} active`;
   const q = searchQ.toLowerCase();
+  issues.forEach(i => {
+    let pClass;
+    if (i.priority <= 1) {
+      pClass = "p1";
+    } else if (i.priority === 2) {
+      pClass = "p2";
+    } else if (i.priority === 3) {
+      pClass = "p3";
+    } else {
+      pClass = "p4";
+    }
+    i.pClass = pClass; // attaching to the object for use below
+  });
   el.innerHTML = issues.map(i => {
     const hide = q && !i.title?.toLowerCase().includes(q) && !i.identifier?.toLowerCase().includes(q) ? " hidden" : "";
-    const pClass = i.priority <= 1 ? "p1" : i.priority === 2 ? "p2" : i.priority === 3 ? "p3" : "p4";
     const url = i.url || `https://linear.app/anqr/issue/${i.identifier}`;
     return `<div class="issue-row${hide}">
       <div class="issue-left">
@@ -17,7 +29,7 @@ export function renderIssues(issues) {
         <span class="issue-title">${esc(i.title || "")}</span>
       </div>
       <div class="issue-right">
-        <span class="priority-dot ${pClass}" title="Priority ${i.priority}"></span>
+        <span class="priority-dot ${i.pClass}" title="Priority ${i.priority}"></span>
         <span class="issue-assignee">${esc(i.assignee?.name || "unassigned")}</span>
       </div>
     </div>`;
