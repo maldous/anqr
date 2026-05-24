@@ -1,13 +1,13 @@
 import { createRateLimitResponse } from "./create-rate-limit-response";
 import { getClientKey } from "./get-client-key";
-import { getRateLimitPerMinute } from "./get-rate-limit-per-minute";
+import { getApiQrRateLimitPerMinute } from "./get-api-qr-rate-limit-per-minute";
 import { API_QR_RATE_LIMIT_WINDOW_MS } from "./api-qr-rate-limit.const";
 import type { RateLimitEntry } from "./rate-limit-entry.types";
 
 const requestCounts = new Map<string, RateLimitEntry>();
 
 export function enforceApiQrRateLimit(request: Request): Response | null {
-  const limit = getRateLimitPerMinute();
+  const limit = getApiQrRateLimitPerMinute();
   const key = getClientKey(request);
   const now = Date.now();
   const current = requestCounts.get(key);

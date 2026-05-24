@@ -16,6 +16,22 @@ export function bootstrapNodeRenderRuntime(options: BootstrapOptions = {}): void
         process.env.SENTRY_ENVIRONMENT ||
         process.env.NODE_ENV ||
         "production",
+      // Strip @sentry/node's OpenTelemetry auto-instrumentation suite. We
+      // don't use mongodb/kafkajs/pg/mysql/redis/etc., but the default
+      // integrations bundle wrappers for all of them — ~10 MB per function
+      // zip and a require-in-the-middle shim that wraps `require` on cold
+      // start. We keep the handful we actually need below. See
+      // review-2026-05-24 C-F2.
+      defaultIntegrations: false,
+      integrations: [
+        Sentry.httpIntegration(),
+        Sentry.onUncaughtExceptionIntegration(),
+        Sentry.onUnhandledRejectionIntegration(),
+        Sentry.linkedErrorsIntegration(),
+        Sentry.functionToStringIntegration(),
+        Sentry.contextLinesIntegration(),
+        Sentry.nativeNodeFetchIntegration(),
+      ],
     });
   }
 

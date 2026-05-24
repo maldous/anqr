@@ -5,14 +5,14 @@ functions = "netlify/functions"
 edge_functions = "netlify/edge-functions"
 
 [functions]
-# Note: with Netlify Functions v2 (default for new functions in this repo),
-# the bundler is always NFT — this directive is ignored. Kept for v1
-# functions if any are ever added.
-node_bundler = "esbuild"
+# Note: every function in this repo uses Netlify v2 (default async Request
+# handler signature), which always bundles via NFT regardless of any
+# `node_bundler` directive. No esbuild config is necessary here. See
+# review-2026-05-24 C-F8.
+#
 # Hard-exclude the entire public/ tree from function bundles. NFT would
 # otherwise statically trace process.cwd() + "public" through the overlay-
-# resolver path and add ~81 MB to every function zip. See
-# docs/review-2026-05-24.md C-F1.
+# resolver path and add ~81 MB to every function zip. See C-F1.
 included_files = ["!public/**", "!apps/web/public/**"]
 
 # ===================================================================================
@@ -223,6 +223,13 @@ status = 200
 [[redirects]]
 from = "/api/qr.png"
 to = "/api/qr"
+status = 301
+
+# Legacy favicon.ico requests now go to the PNG; we no longer ship a real
+# .ico (the file was always a mis-labelled PNG). See review-2026-05-24 B-F5.
+[[redirects]]
+from = "/favicon.ico"
+to = "/favicon.png"
 status = 301
 
 # SPA catch-all for client-side routing
