@@ -83,7 +83,7 @@ $("#globalSearch").addEventListener("input", e => {
     renderCommits(allData.commits);
     renderIssues(allData.issues);
     renderModels(allData.models);
-    if (typeof window.renderBookmarks === "function") window.renderBookmarks();
+    if (typeof globalThis.renderBookmarks === "function") globalThis.renderBookmarks();
   }, 150);
 });
 
