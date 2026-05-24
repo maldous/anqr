@@ -1,1 +1,1 @@
-      const m = /^(fix|feat|chore|docs|refactor|test|ci|build|perf|style|revert)[:]/.exec(subject);
+      const m = /^(fix|feat|chore|docs|refactor|test|ci|build|perf|style|revert):/.exec(subject);
