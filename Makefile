@@ -30,7 +30,8 @@ QUALITY_MOBILE_TARGETS := \
   quality quality-fast quality-release quality-harness quality-mobile quality-full \
   install install-services hooks bootstrap clean zip \
   typecheck-all lint-all depcruise-all contracts-check verify-migration \
-  i18n-diff i18n-coverage i18n-check i18n-sync-xlate
+  i18n-diff i18n-coverage i18n-check i18n-sync-xlate \
+  ship ship-dry-run deploy-web deploy-android prerender-gallery
 
 help: ## Show grouped Makefile targets
 	@printf "\nANQR Makefile\n\n"
@@ -353,6 +354,53 @@ clean: ## Remove build and cache artifacts
 
 verify-migration: ## Run the legacy migration verification bundle
 	npm run typecheck:all && npm run lint:all && npm run depcruise:all && npm run test:unit && npm run harness:quick
+
+# ============================================
+# Ship: full prod check + deploy + Android
+# ============================================
+
+PLAY_TRACK ?= internal
+SHIP_NOTES ?= Bug fixes and improvements.
+
+prerender-gallery: ## Prerender all gallery thumbnails using the client renderer
+	@echo "→ starting preview server"
+	@npm run preview > /tmp/anqr-ship-preview.log 2>&1 & echo $$! > /tmp/anqr-ship-preview.pid
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+	  curl -s -o /dev/null http://localhost:4173/ && break || sleep 1; \
+	done
+	@PRERENDER_CONCURRENCY=4 npx tsx tools/gallery/prerender-gallery-thumbs.ts || \
+	  (kill $$(cat /tmp/anqr-ship-preview.pid) 2>/dev/null; exit 1)
+	@kill $$(cat /tmp/anqr-ship-preview.pid) 2>/dev/null || true
+	@rm -f /tmp/anqr-ship-preview.pid
+
+deploy-web: build-web ## Build and deploy web to Netlify production
+	netlify deploy --filter "@anqr/app-web" \
+	  --dir "$$(pwd)/dist" \
+	  --functions "$$(pwd)/netlify/functions" \
+	  --prod
+
+deploy-android: ## Build signed AAB and upload to Play (PLAY_TRACK=internal by default)
+	VITE_SENTRY_RELEASE="anqr@$$(node -p "require('./package.json').version")" $(MAKE) build-web
+	npx cap sync android
+	@find android/app/src/main/assets/public -name "*.gz" -delete
+	cd android && ./gradlew bundleRelease
+	python3 tools/android/upload-to-play.py $(PLAY_TRACK) --notes "$(SHIP_NOTES)"
+
+ship-dry-run: ## Full prod readiness check (gates only, no deploy)
+	$(MAKE) quality-fast
+	$(MAKE) test-unit
+	$(MAKE) build-web
+	@echo ""
+	@echo "✓ Dry run passed. Run 'make ship' to deploy."
+
+ship: ## Full prod check + Netlify deploy + Android Play upload (PLAY_TRACK=internal)
+	$(MAKE) quality-fast
+	$(MAKE) test-unit
+	$(MAKE) prerender-gallery
+	$(MAKE) deploy-web
+	$(MAKE) deploy-android PLAY_TRACK=$(PLAY_TRACK)
+	@echo ""
+	@echo "✓ Shipped. Web → https://anqr.link · Play → $(PLAY_TRACK) track"
 
 zip:
 	rm -f anqr.zip .zip-openclaw.lst && \
