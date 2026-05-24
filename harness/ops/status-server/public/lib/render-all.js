@@ -8,12 +8,12 @@ import { renderSymphony } from "./render-symphony.js";
 
 export function renderAll(data) {
   setAllData(data);
-  globalThis.searchQ = searchQ;
+  window.searchQ = searchQ;
   renderStats(data);
   renderServices(data.health?.services);
   renderCommits(data.commits);
   renderIssues(data.issues);
   renderModels(data.models);
   renderSymphony(data.symphony);
-  if (typeof window.renderBookmarks === "function") globalThis.renderBookmarks();
+  if (typeof globalThis.renderBookmarks === "function") globalThis.renderBookmarks();
 }
