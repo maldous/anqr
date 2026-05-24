@@ -82,6 +82,16 @@ workflows:
           IPA_PATH="$CM_BUILD_DIR/build/ios/ipa"
           KEY_PATH="$HOME/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8"
 
+          # Materialise the .p8 file. Codemagic injects the key as an env
+          # var (APP_STORE_CONNECT_PRIVATE_KEY) but not always as a file.
+          # xcodebuild's -authenticationKeyPath requires a real file.
+          mkdir -p "$HOME/private_keys"
+          if [ ! -f "$KEY_PATH" ]; then
+            printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > "$KEY_PATH"
+            chmod 600 "$KEY_PATH"
+          fi
+          ls -la "$KEY_PATH"
+
           mkdir -p "$IPA_PATH"
 
           xcodebuild \
