@@ -1,7 +1,7 @@
 /* ── ANQR Status Dashboard v4 ── */
 import { $ } from "./lib/dom-query.js";
 import { $$ } from "./lib/dom-query-all.js";
-import { live, setLive, searchQ, setSearchQ, activeTab, setActiveTab, serviceFilter, setServiceFilter, commitTypeFilter, setCommitTypeFilter, allData } from "./lib/state.js";
+import { live, setLive, searchQ, setSearchQ, activeTab, setActiveTab, commitTypeFilter, setCommitTypeFilter, allData } from "./lib/state.js";
 import { esc } from "./lib/format.js";
 import { fetchAll } from "./lib/fetch-all.js";
 import { renderAll } from "./lib/render-all.js";
@@ -57,7 +57,6 @@ for (const b of serviceFilterButtons) {
     const allButtons = b.closest(".filter-pills").querySelectorAll(".filter-btn");
     for (const x of allButtons) { x.classList.remove("active"); }
     b.classList.add("active");
-    setServiceFilter(b.dataset.filter);
     renderServices(allData.health?.services);
   });
 }

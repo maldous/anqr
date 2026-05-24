@@ -1,5 +1,5 @@
 import { $ } from "./dom-query.js";
-import { searchQ, serviceFilter } from "./state.js";
+import { searchQ } from "./state.js";
 import { esc } from "./format.js";
 
 export function renderServices(services) {
