@@ -1,0 +1,95 @@
+# CodeMagic CI for ANQR iOS (Capacitor → TestFlight)
+#
+# Triggers on every push to `main`. Free tier covers ~10× of these per month.
+#
+# One-time setup in the CodeMagic web UI (see codemagic/SETUP.md):
+#   1. Add App Store Connect integration (paste the .p8 key from bootstrap.zip)
+#   2. Create a "TestFlight" beta group in App Store Connect that matches
+#      `beta_groups` below
+#
+# After that: every `git push origin main` triggers a build that ends up on
+# the ANQR TestFlight internal track.
+
+workflows:
+  ios-testflight:
+    name: ANQR iOS → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: link.anqr.app
+      vars:
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+        BUNDLE_ID: "link.anqr.app"
+        APP_STORE_APPLE_ID: "6760246476"
+      node: "22"
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+      cancel_previous_builds: true
+
+    integrations:
+      app_store_connect: AppStoreConnect_anqr
+
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Build the Vite web bundle
+        script: |
+          export VITE_SENTRY_RELEASE="anqr@${CM_BUILD_NUMBER:-local}"
+          npm run build:web
+
+      - name: Capacitor sync to iOS
+        script: |
+          npx cap sync ios
+          find ios/App/App/public -name '*.gz' -delete || true
+
+      - name: Install CocoaPods
+        script: |
+          cd ios/App
+          pod install --repo-update
+
+      - name: Fetch / generate signing assets
+        script: |
+          # Pulls (or creates) the App Store distribution certificate and
+          # provisioning profile via the App Store Connect API integration,
+          # then writes them where Xcode expects.
+          xcode-project use-profiles
+
+      - name: Bump iOS build number
+        script: |
+          cd ios/App
+          NEXT_BUILD=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID") + 1))
+          agvtool new-version -all "$NEXT_BUILD"
+
+      - name: Build the .ipa
+        script: |
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - "ios/App/build/ios/ipa/*.ipa"
+      - "/tmp/xcodebuild_logs/*.log"
+      - "$HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app.dSYM.zip"
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - ANQR
+        expire_build_submitted_for_review: true
