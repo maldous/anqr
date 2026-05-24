@@ -97,11 +97,19 @@ Sentry.init({
 initRemoteDiagnostics();
 log.info("App starting", { environment: isCapacitor ? "capacitor" : "web" });
 
-// Start ad initialization after DOM is ready
+// Start ad initialization AFTER the splash has had time to dismiss, so the
+// AdMob banner doesn't render on top of the launch splash. Web/desktop runs
+// it immediately on load; native delays by ~1300ms (slightly more than the
+// splash launchShowDuration in capacitor.config.json).
+const adsBoot = () => void initAds(log);
+const scheduleAds = () => {
+  if (isCapacitor) globalThis.setTimeout(adsBoot, 1300);
+  else adsBoot();
+};
 if (document.readyState === "complete") {
-  void initAds(log);
+  scheduleAds();
 } else {
-  globalThis.addEventListener("load", () => void initAds(log), { once: true });
+  globalThis.addEventListener("load", scheduleAds, { once: true });
 }
 
 const rootElement = document.getElementById("root");

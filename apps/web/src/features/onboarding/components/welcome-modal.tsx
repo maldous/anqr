@@ -2,11 +2,11 @@ import { DynamicTestId } from "../../../lib/dynamic-testid";
 /**
  * WelcomeModal Component
  *
- * A splash screen / welcome dialog shown to new visitors or when content has been updated.
- * Only shown on web (not native apps). Tracks last seen version in localStorage.
+ * Shown to new visitors or when WELCOME_VERSION changes (gated by the
+ * `anqr-welcome-seen` localStorage key). Now also shows on native — it
+ * doubles as the "what's new" intro replacing the native launch splash.
  */
 
-import { Capacitor } from "@capacitor/core";
 import {
   Check,
   Globe,
@@ -25,7 +25,7 @@ import { Button } from "@/ui/web";
 import { languages } from "../../../i18n";
 
 // Increment this version whenever you want to show the modal again to all users
-const WELCOME_VERSION = "2026.05.24";
+const WELCOME_VERSION = "2026.05.24.2";
 const STORAGE_KEY = "anqr-welcome-seen";
 
 export function WelcomeModal({ onClose }: { readonly onClose?: () => void }) {
@@ -35,9 +35,6 @@ export function WelcomeModal({ onClose }: { readonly onClose?: () => void }) {
 
   // Check if we should show the modal
   useEffect(() => {
-    // Skip on native platforms - they have their own onboarding
-    if (Capacitor.isNativePlatform()) return;
-
     const lastSeen = localStorage.getItem(STORAGE_KEY);
     if (lastSeen !== WELCOME_VERSION) {
       // Small delay for smoother page load
@@ -85,6 +82,15 @@ export function WelcomeModal({ onClose }: { readonly onClose?: () => void }) {
 
   // Grouped updates by date - newest first
   const updateGroups = [
+    {
+      date: t("welcome.updateDate5"),
+      items: [
+        t("welcome.update21"),
+        t("welcome.update22"),
+        t("welcome.update24"),
+        t("welcome.update23"),
+      ],
+    },
     {
       date: t("welcome.updateDate4"),
       items: [

@@ -26,13 +26,13 @@
     </style>
 
     <!--
-      Launch theme. Uses a plain NoActionBar parent (NOT Theme.SplashScreen)
-      so the Android 12+ system splash doesn't persist on top of the WebView.
-      The windowBackground drawable shows for a single frame during cold
-      start, then disappears the moment the WebView (and React) paints.
+      Launch theme — no splash screen. App opens directly to a solid colour
+      that matches the app background; the WebView paints over it almost
+      immediately. Welcome modal handles the "what's new" intro once the SPA
+      has loaded.
     -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">@drawable/splash</item>
+        <item name="android:windowBackground">@color/colorPrimary</item>
         <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
     </style>
 </resources>

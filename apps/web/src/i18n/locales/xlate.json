@@ -1569,7 +1569,12 @@
     "update17": "NEW: QR Code Analyser - scan, decode, and inspect any QR code in detail",
     "update18": "Analyse camera captures, uploads, or URLs with full technical breakdown",
     "update19": "Import analysed QR codes directly into the generator to modify and recreate",
-    "update20": "Performance optimisations with dynamic font loading and improved accessibility"
+    "update20": "Performance optimisations with dynamic font loading and improved accessibility",
+    "updateDate5": "May 24, 2026",
+    "update21": "Refreshed gallery: every example loads instantly and matches what you see when you click in",
+    "update22": "SVG export now supported via the /api/contract/qr endpoint for crisp print-ready output",
+    "update23": "Polished welcome dialog grouping (yes, we noticed the January 30 date was in the wrong slot)",
+    "update24": "Faster startup on mobile — no more lingering splash screen"
   },
   "payload": {
     "emailAddress": "Email Address",
