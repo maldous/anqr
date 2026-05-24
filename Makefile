@@ -29,7 +29,8 @@ QUALITY_MOBILE_TARGETS := \
   email-ingest email-ingest-dry-run notify-test nightly nightly-dry-run \
   quality quality-fast quality-release quality-harness quality-mobile quality-full \
   install install-services hooks bootstrap clean zip \
-  typecheck-all lint-all depcruise-all contracts-check verify-migration
+  typecheck-all lint-all depcruise-all contracts-check verify-migration \
+  i18n-diff i18n-coverage i18n-check i18n-sync-xlate
 
 help: ## Show grouped Makefile targets
 	@printf "\nANQR Makefile\n\n"
@@ -245,6 +246,24 @@ nightly-dry-run: ## Dry-run nightly ops
 
 contracts-check: ## Run contracts structural checks
 	npm run contracts:check
+
+# ============================================
+# i18n Targets
+# ============================================
+
+I18N_TOOLS := harness/ops/tools/i18n
+
+i18n-diff: ## Show keys present in en-US.json but missing from xlate.json
+	@python3 $(I18N_TOOLS)/diff.py
+
+i18n-coverage: ## Show translation coverage (leaf key count) for each locale
+	@python3 $(I18N_TOOLS)/coverage.py
+
+i18n-check: ## Fail if xlate.json is missing any keys relative to en-US.json
+	@python3 $(I18N_TOOLS)/check.py
+
+i18n-sync-xlate: ## Add missing keys to xlate.json from en-US.json, then show diff
+	@python3 $(I18N_TOOLS)/sync-xlate.py && make i18n-diff
 
 quality-fast: $(QUALITY_FAST_TARGETS) ## Run the fast, non-interactive quality baseline
 

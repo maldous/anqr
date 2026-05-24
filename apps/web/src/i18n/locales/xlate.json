@@ -30,7 +30,18 @@
     "startFrame": "Start Frame",
     "temporalDither": "Temporal Dither",
     "wave": "Wave",
-    "auto": "Auto"
+    "auto": "Auto",
+    "secondaryPattern": "Secondary Pattern",
+    "secondaryTarget": "Secondary Target",
+    "secondaryWaveAxis": "Secondary Wave Axis",
+    "target": "Primary Target",
+    "targetBoth": "Both Layers",
+    "targetModules": "Module Layer",
+    "targetResult": "Result Layer",
+    "waveAxis": "Wave Axis",
+    "waveAxisX": "X Axis",
+    "waveAxisXY": "X + Y",
+    "waveAxisY": "Y Axis"
   },
   "languages": {
     "en-GB": "English",
@@ -985,7 +996,11 @@
     "cashAppNote": "Cash App $cashtag payment link",
     "emvGenericNote": "Generic EMVCo MPM QR code format",
     "maxFramesAuto": "0 = Auto (uses source frames, max 50 for performance)",
-    "paletteMode": "How colors from the palette are assigned to modules"
+    "paletteMode": "How colors from the palette are assigned to modules",
+    "characterEncoding": "Character Encoding",
+    "characterEncodingNote": "Character encoding for byte mode. UTF-8 supports all Unicode characters including emoji.",
+    "maskPattern": "Select mask pattern to control module distribution (affects visual appearance)",
+    "maskPatternNote": "Mask pattern affects the visual appearance. Auto selects the optimal pattern for scannability."
   },
   "language": {
     "current": "Language",
@@ -1066,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - Click Export to download",
     "simulating": "Simulating",
-    "simulationActive": "Environmental simulation active - Preview shows how QR code may appear under different conditions"
+    "simulationActive": "Environmental simulation active - Preview shows how QR code may appear under different conditions",
+    "busy": {
+      "workingOnIt": "Working on it...",
+      "waitingForThingsToSettle": "Waiting for things to settle...",
+      "gettingAnimationPreviewReady": "Getting the animation preview ready...",
+      "generatingPreview": "Generating your preview...",
+      "preparingPreview": "Preparing your preview...",
+      "buildingQrStructure": "Building the QR structure...",
+      "preparingQrArtComputation": "Preparing QR-Art computation...",
+      "stillRenderingDetailedOverlay": "Still rendering the detailed overlay...",
+      "renderingQrPreview": "Rendering your QR preview...",
+      "checkingScanability": "Checking that it scans properly...",
+      "finalizingPreview": "Finalizing the preview...",
+      "preparingAnimationFrames": "Preparing the animation frames...",
+      "renderingAnimationFrames": "Rendering the animation frames...",
+      "smoothingAnimationFrames": "Smoothing the animation frames...",
+      "finalizingFirstAnimationFrame": "Finalizing the first animation frame...",
+      "qrArt": {
+        "encodingBaseData": "Encoding the base data...",
+        "analyzingLayout": "Analyzing the layout...",
+        "buildingErrorCorrectionFoundation": "Building the error correction foundation...",
+        "mappingBitsToPixels": "Mapping bits to pixels...",
+        "processingImage": "Processing your image...",
+        "rankingPixelsByImportance": "Ranking pixels by importance...",
+        "solvingMatrix": "Solving the matrix...",
+        "selectingBestBasisVectors": "Selecting the best basis vectors...",
+        "countingPredictedMatches": "Counting predicted matches...",
+        "adjustingDataBytes": "Adjusting data bytes...",
+        "reEncodingQrCode": "Re-encoding the QR code...",
+        "validatingResult": "Validating the result...",
+        "complete": "Complete...",
+        "maskStage": "Mask {{mask}}: {{stage}}...",
+        "attemptStage": "Attempt {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Attempt {{current}}/{{total}}: Mask {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Fast Preview",
+    "draft": "Draft"
   },
   "qr": {
     "additionalBorder": "Additional border beyond quiet zone",
@@ -1095,7 +1147,20 @@
     "nPx": "{{count}}px",
     "numericOnly": "Numeric Only",
     "quartile": "Q - Quartile (25%)",
-    "version": "Version"
+    "version": "Version",
+    "maskPattern0": "Pattern 0 - (row + col) mod 2 = 0",
+    "maskPattern1": "Pattern 1 - row mod 2 = 0",
+    "maskPattern2": "Pattern 2 - col mod 3 = 0",
+    "maskPattern3": "Pattern 3 - (row + col) mod 3 = 0",
+    "maskPattern4": "Pattern 4 - (row/2 + col/3) mod 2 = 0",
+    "maskPattern5": "Pattern 5 - (row*col) mod 2 + (row*col) mod 3 = 0",
+    "maskPattern6": "Pattern 6 - ((row*col) mod 2 + (row*col) mod 3) mod 2 = 0",
+    "maskPattern7": "Pattern 7 - ((row+col) mod 2 + (row*col) mod 3) mod 2 = 0",
+    "characterEncoding": "Character Encoding",
+    "latin1Default": "ISO-8859-1 (Latin-1 Default)",
+    "utf8Unicode": "UTF-8 (Full Unicode)",
+    "iso88591": "ISO-8859-1 (Western European)",
+    "shiftJis": "Shift-JIS (Japanese)"
   },
   "render": {
     "none": "None",
@@ -1279,7 +1344,8 @@
     "imageUnavailable": "Image unavailable",
     "messageSent": "Message sent",
     "lastUpdated": "Last Updated",
-    "scanMePlaceholder": "Scan Me!"
+    "scanMePlaceholder": "Scan Me!",
+    "skipToMainContent": "Skip to main content"
   },
   "contact": {
     "messageSentTitle": "Message sent",
@@ -1438,7 +1504,21 @@
     "pleaseEnterUrl": "Please enter a URL",
     "preview": "Preview",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "artworkMode": "Artwork",
+    "artworkModeInfo": "Artwork mode searches for URL fragments that make the QR pattern match your image. Results vary - works best with simple, high-contrast images. For complex images, other overlay modes like Dithered or Halftone may produce better results.",
+    "artworkRequiresLowEcc": "Artwork mode requires Low error correction for maximum pixel control.",
+    "blendPreservations": "Blend Preservations",
+    "blendPreservationMode": "Blend Preservation Mode",
+    "blendPreservationModeDither": "Dither In",
+    "blendPreservationModeOverlay": "Overlay Pass-Through",
+    "photo": "Camera",
+    "halftoneDitheredMode": "Halftone Dithered",
+    "preservationStrength": "Preservation Strength",
+    "qrFirstMode": "QR-First Mode",
+    "qrFirstModeHelp": "Force QR data priority over overlay for high-contrast B&W images",
+    "searchIterations": "Search Iterations",
+    "searchIterationsHelp": "More iterations = better match but slower generation. 10,000-50,000 recommended for most images."
   },
   "welcome": {
     "title": "Welcome to ANQR",
@@ -1469,7 +1549,27 @@
     "step2": "Customize colors, style, and optionally add an image overlay",
     "step3": "Export your QR code or share the configuration link",
     "footerNote": "This message won't appear again until the next update.",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "updateDate1": "January 4, 2026",
+    "updateDate2": "January 11, 2026",
+    "update5": "January 30, 2026",
+    "update6": "New /translate page for community translation contributions",
+    "update7": "Camera capture for quick overlay demo (Android)",
+    "update8": "Redesigned mobile navigation with icon grid layout",
+    "update9": "Mask pattern selection for exact QR code reproduction",
+    "update10": "Character encoding options (ISO-8859-1, UTF-8, Shift-JIS)",
+    "update11": "Full Shift-JIS support for Japanese text (hiragana, katakana, kanji)",
+    "updateDate3": "January 30, 2026",
+    "update12": "Comprehensive QR Code Analyser with detailed technical breakdown",
+    "update13": "Import analysed QR codes directly into the generator to modify",
+    "update14": "Enhanced payload validations across all data types",
+    "update15": "WCAG compliance checking and module matrix visualisation",
+    "update16": "Debug log and hex dump view for technical QR analysis",
+    "updateDate4": "February 1, 2026",
+    "update17": "NEW: QR Code Analyser - scan, decode, and inspect any QR code in detail",
+    "update18": "Analyse camera captures, uploads, or URLs with full technical breakdown",
+    "update19": "Import analysed QR codes directly into the generator to modify and recreate",
+    "update20": "Performance optimisations with dynamic font loading and improved accessibility"
   },
   "payload": {
     "emailAddress": "Email Address",
@@ -1973,5 +2073,18 @@
     "itAsset": "IT Asset",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Document"
+  },
+  "analyze": {
+    "confidence": "Confidence",
+    "exportJson": "Export JSON",
+    "formatInformation": "Format Information",
+    "imageProperties": "Image Properties",
+    "processingTimings": "Processing Timings",
+    "spatialAnalysis": "Spatial Analysis",
+    "noCodeDetectedInImage": "No QR code detected in image"
+  },
+  "errors": {
+    "failedToGenerateQr": "Failed to generate QR code",
+    "contentTooLongForQr": "Content too long for QR code. Please shorten your content or use a URL shortener."
   }
 }
