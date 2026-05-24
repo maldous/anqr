@@ -175,21 +175,29 @@ workflows:
           # everything it needs and no ASC API hand-off is required during
           # archive itself.
           #
-          # CERT_KEY_PATH: an iOS Distribution cert exists in ASC but we
-          # don't have its private key locally (we never had a Mac). Without
-          # a key path, `fetch-signing-files` errors with "Cannot save
-          # Signing Certificates without certificate private key". Generate
-          # a fresh keypair and pass it; --create lets the tool register a
-          # NEW distribution cert with this key when the existing cert can't
-          # be reused. Apple permits multiple Distribution certs per team.
+          # CERT_KEY: an iOS Distribution cert exists in ASC but we don't
+          # have its private key locally (we never had a Mac). Without one,
+          # `fetch-signing-files` errors with "Cannot save Signing
+          # Certificates without certificate private key". Generate a fresh
+          # keypair and pass via --certificate-key (the CLI takes the PEM
+          # contents inline; --certificate-key-path doesn't exist in this
+          # CLI version, which is why round 4 failed with "unrecognized
+          # arguments"). With --create the CLI registers a NEW Distribution
+          # cert tied to this key. Apple permits multiple Distribution certs
+          # per team.
           CERT_KEY_PATH="$HOME/build_cert_key.pem"
           openssl genrsa -out "$CERT_KEY_PATH" 2048
           chmod 600 "$CERT_KEY_PATH"
 
+          # Dump help once so future failures are easier to diagnose.
+          echo "=== app-store-connect fetch-signing-files --help ==="
+          app-store-connect fetch-signing-files --help 2>&1 | head -60 || true
+          echo "==="
+
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create \
-            --certificate-key-path "$CERT_KEY_PATH"
+            --certificate-key="@file:$CERT_KEY_PATH"
           keychain add-certificates
           xcode-project use-profiles
 
