@@ -62,11 +62,21 @@ workflows:
           cd ios/App
           pod install --repo-update
 
-      - name: Fetch / generate signing assets
+      - name: Initialise keychain
         script: |
-          # Pulls (or creates) the App Store distribution certificate and
-          # provisioning profile via the App Store Connect API integration,
-          # then writes them where Xcode expects.
+          keychain initialize
+
+      - name: Fetch or create signing assets
+        script: |
+          # `fetch-signing-files` talks to App Store Connect via the
+          # integration, fetches the existing IOS_APP_STORE distribution
+          # certificate + provisioning profile for link.anqr.app, OR creates
+          # them on the fly if none exist (--create). Then `use-profiles`
+          # installs them where Xcode expects.
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
           xcode-project use-profiles
 
       - name: Bump iOS build number
