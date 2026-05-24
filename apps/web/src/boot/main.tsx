@@ -134,7 +134,13 @@ function renderApp(): void {
   );
 }
 
-await preloadDetectedLocale();
+// Render React immediately and kick off the locale fetch in parallel.
+// The top-level Suspense + react-i18next's useSuspense handle the
+// "translations not yet loaded" state via the existing Loading… fallback,
+// so the user sees the app shell paint as soon as JS evaluates instead of
+// waiting an extra round-trip on the locale JSON. See review-2026-05-24
+// B-F2. en-GB is bundled and returns synchronously from this function.
+void preloadDetectedLocale();
 renderApp();
 
 // Dismiss the native splash screen explicitly once React has rendered.
