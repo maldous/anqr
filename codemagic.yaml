@@ -271,7 +271,22 @@ workflows:
             --create \
             --certificate-key="@file:$CERT_KEY_PATH"
           keychain add-certificates
-          xcode-project use-profiles
+
+          # `xcode-project use-profiles` can ALSO emit a ready-to-use
+          # exportOptions.plist with manual signingStyle + the freshly-
+          # fetched profile name in `provisioningProfiles`. That's what we
+          # need: round 9 succeeded at archive (Manual signing, profile
+          # installed) but the export step failed with "No profiles for
+          # 'link.anqr.app'" because the hand-written plist said
+          # signingStyle: automatic and Xcode couldn't auto-discover the
+          # profile during export. Letting use-profiles generate the plist
+          # keeps archive + export in sync.
+          xcode-project use-profiles \
+            --export-options-plist "$CM_BUILD_DIR/build/ios/exportOptions.plist" \
+            --custom-export-options '{"stripSwiftSymbols": true, "uploadSymbols": true}'
+          echo "=== Generated exportOptions.plist ==="
+          cat "$CM_BUILD_DIR/build/ios/exportOptions.plist"
+          echo "==="
 
           xcodebuild \
             -project "$XCODE_PROJECT" \
@@ -282,33 +297,14 @@ workflows:
             archive \
             COMPILER_INDEX_STORE_ENABLE=NO
 
-          # Export the archive to an .ipa for TestFlight upload
-          cat > "$CM_BUILD_DIR/build/ios/exportOptions.plist" <<'PLIST'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store-connect</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>uploadSymbols</key>
-            <true/>
-          </dict>
-          </plist>
-          PLIST
-
+          # Manual export against the generated plist. -allowProvisioningUpdates
+          # + ASC API key intentionally OMITTED here: with a manual-style plist
+          # they trigger the "Cloud signing permission error" path round 9 hit.
           xcodebuild \
             -exportArchive \
             -archivePath "$ARCHIVE_PATH" \
             -exportPath "$IPA_PATH" \
-            -exportOptionsPlist "$CM_BUILD_DIR/build/ios/exportOptions.plist" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$KEY_PATH" \
-            -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+            -exportOptionsPlist "$CM_BUILD_DIR/build/ios/exportOptions.plist"
 
     artifacts:
       - "$CM_BUILD_DIR/build/ios/ipa/*.ipa"
