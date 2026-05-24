@@ -11,9 +11,9 @@ import { renderIssues } from "./lib/render-issues.js";
 import { renderModels } from "./lib/render-models.js";
 
 // Expose esc + searchQ for bookmarks.js (loaded as separate script).
-window.escForBookmarks = esc;
+globalThis.escForBookmarks = esc;
 
-window.toggleDetail = (btn) => {
+globalThis.toggleDetail = (btn) => {
   const d = btn.closest(".service-card").nextElementSibling;
   const open = d.classList.toggle("open");
   btn.textContent = open ? "▾" : "▸";
@@ -79,7 +79,7 @@ $("#globalSearch").addEventListener("input", e => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
     setSearchQ(e.target.value.trim());
-    window.searchQ = searchQ;
+    globalThis.searchQ = searchQ;
     renderServices(allData.health?.services);
     renderCommits(allData.commits);
     renderIssues(allData.issues);
