@@ -5,8 +5,9 @@ export function renderSymphony(sym) {
   const el = $("#symphonyGrid");
   if (!sym) { el.innerHTML = '<div class="loading no-spin">Pipeline data unavailable</div>'; return; }
   const wts = (sym.worktrees || []).filter(w => w.id.startsWith("wt") && parseInt(w.id.replace("wt","")) <= 8);
+  const wStats = wts.length;
   const iss = sym.issueStats || {};
-  const wStats = sym.worktreeStats || {};
+  
   el.innerHTML = `
     <div class="sym-panel">
       <h3>Worktrees</h3>
