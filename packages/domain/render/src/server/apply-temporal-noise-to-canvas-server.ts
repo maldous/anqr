@@ -34,11 +34,11 @@ export function applyTemporalNoiseToCanvasServer(
       const noise = ((x * phi + yPhi + offsetTerm) % 1) - 0.5;
       const adjust = Math.round(noise * strengthScale);
       let v = data[i] + adjust;
-      data[i] = v < 0 ? 0 : v > 255 ? 255 : v;
+      data[i] = Math.min(Math.max(v, 0), 255);
       v = data[i + 1] + adjust;
-      data[i + 1] = v < 0 ? 0 : v > 255 ? 255 : v;
+      data[i + 1] = Math.min(Math.max(v, 0), 255);
       v = data[i + 2] + adjust;
-      data[i + 2] = v < 0 ? 0 : v > 255 ? 255 : v;
+      data[i + 2] = Math.min(Math.max(v, 0), 255);
     }
   }
 
