@@ -470,8 +470,12 @@ export const viteConfig = defineConfig({
           ) {
             return "app-qr-runtime";
           }
-          // Gallery data
-          if (id.includes("/data/gallery-showcase.generated")) {
+          // Gallery data — note the file actually lives at
+          // apps/web/src/content/generated/gallery-showcase.generated.ts,
+          // NOT /data/. The old rule never matched, so the 320 KB showcase
+          // co-located into shared-gallery-data on the editor critical
+          // path. See docs/review-2026-05-24.md B-F1.
+          if (id.includes("/content/generated/gallery-showcase")) {
             return "app-gallery-generated";
           }
           if (id.includes("/data/gallery-items")) {
