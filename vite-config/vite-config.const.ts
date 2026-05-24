@@ -307,6 +307,13 @@ export const viteConfig = defineConfig({
         // This keeps English in precache for offline-first, others cached on-demand
         manifestTransforms: [
           (entries: Array<{ url: string; revision: string | null; size: number }>) => {
+            // Per-locale re-export shims emit as e.g. assets/vi-XX.js,
+            // assets/ar-XX.js, assets/zh-cn-XX.js — short language codes
+            // without a `locale-`/`static-` prefix. The original filter
+            // missed them all, ballooning the SW precache to ~367 chunks.
+            // See review-2026-05-24 B-F4.
+            const LOCALE_SHIM_RE = /\/assets\/[a-z]{2}(-[a-z]{2})?-[A-Za-z0-9_-]+\.js$/;
+            const EN_GB_SHIM_RE = /\/assets\/en(-gb)?-[A-Za-z0-9_-]+\.js$/;
             const manifest = entries.filter((entry) => {
               const url = entry.url;
               // Keep English locale and static files for offline-first experience
@@ -316,6 +323,8 @@ export const viteConfig = defineConfig({
               if (url.includes("/assets/locale-")) return false;
               // Exclude all other static content chunks (translated pages, ~80MB+)
               if (url.includes("/assets/static-")) return false;
+              // Exclude per-locale shim chunks (NEW). Keep English shims.
+              if (LOCALE_SHIM_RE.test(url) && !EN_GB_SHIM_RE.test(url)) return false;
               // Keep everything else
               return true;
             });

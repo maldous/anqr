@@ -86,15 +86,52 @@ Sentry.init({
     }
     return breadcrumb;
   },
-  // Session replay for web only (not available in Capacitor WebView)
+  // Session replay is lazy-loaded below to keep the initial Sentry vendor
+  // chunk small (~100-150 KB gz saving). See review-2026-05-24 B-F3.
   replaysSessionSampleRate: 0,
-  replaysOnErrorSampleRate: isCapacitor ? 0 : 0.5,
+  replaysOnErrorSampleRate: 0,
   // Tag environment for filtering in Sentry dashboard
   environment: isCapacitor ? "capacitor" : "web",
 });
 
-// Initialize logging system (after Sentry, so errors during init are captured)
-initRemoteDiagnostics();
+// Lazy-load Sentry Replay on web only (not available in Capacitor WebView).
+// Sentry.lazyLoadIntegration fetches from Sentry's CDN at runtime, so the
+// ~100-150 KB Replay code stays out of the initial bundle. Add via
+// requestIdleCallback so it doesn't compete with first paint.
+if (!isCapacitor && typeof window !== "undefined") {
+  const loadReplay = () => {
+    void Sentry.lazyLoadIntegration("replayIntegration")
+      .then((replayIntegration) => {
+        Sentry.addIntegration(
+          replayIntegration({
+            maskAllText: true,
+            blockAllMedia: true,
+          }),
+        );
+      })
+      .catch((e: unknown) => log.debug("replay lazy-load failed", { e }));
+  };
+  if ("requestIdleCallback" in globalThis) {
+    (
+      globalThis as {
+        requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => void;
+      }
+    ).requestIdleCallback(loadReplay, { timeout: 5000 });
+  } else {
+    globalThis.setTimeout(loadReplay, 3000);
+  }
+}
+
+// Initialize logging system (after Sentry, so errors during init are captured).
+// In production, only attach the window.anqrDiag debug surface if the user
+// has explicitly enabled it — keeps the dev-tools-only API out of the boot
+// path for ~99.9 % of sessions. See review-2026-05-24 B-F9.
+if (
+  import.meta.env.DEV ||
+  (typeof localStorage !== "undefined" && localStorage.getItem("anqrDiagEnabled") === "true")
+) {
+  initRemoteDiagnostics();
+}
 log.info("App starting", { environment: isCapacitor ? "capacitor" : "web" });
 
 // Start ad initialization AFTER the splash has had time to dismiss, so the

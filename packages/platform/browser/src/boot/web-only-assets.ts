@@ -52,6 +52,8 @@ export const loadWebOnlyBootAssets = (): void => {
     storage: { useSiteId: true },
   };
 
+  // Iubenda (consent) must load early — anything that emits trackable
+  // identifiers waits on the consent decision.
   addScript("anqr-iubenda-autoblocking", "https://cs.iubenda.com/autoblocking/4407480.js");
   addScript("anqr-iubenda-gpp-stub", "https://cdn.iubenda.com/cs/gpp/stub.js");
   addScript("anqr-iubenda-cs", "https://cdn.iubenda.com/cs/iubenda_cs.js", {
@@ -62,9 +64,19 @@ export const loadWebOnlyBootAssets = (): void => {
     "https://embeds.iubenda.com/widgets/28e23ca9-eb78-41ab-ac5e-46b90c7791c7.js",
   );
 
-  addScript(
-    "anqr-adsense",
-    "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2270701384951162",
-    { crossOrigin: "anonymous" },
-  );
+  // AdSense (~80 KB gz on Google's CDN) doesn't need to compete with first
+  // paint — defer until the page is idle. See review-2026-05-24 B-F8.
+  const loadAdSense = () => {
+    addScript(
+      "anqr-adsense",
+      "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2270701384951162",
+      { crossOrigin: "anonymous" },
+    );
+  };
+  if ("requestIdleCallback" in globalThis) {
+    (globalThis as { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => void })
+      .requestIdleCallback(loadAdSense, { timeout: 4000 });
+  } else {
+    setTimeout(loadAdSense, 2000);
+  }
 };
