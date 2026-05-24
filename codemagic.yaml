@@ -30,7 +30,9 @@ workflows:
         APP_STORE_APPLE_ID: "6760246476"
       node: "22"
       xcode: latest
-      cocoapods: default
+      # No cocoapods — this Capacitor 8 project uses Swift Package Manager
+      # only (ios/App/CapApp-SPM/Package.swift). xcodebuild resolves SPM
+      # dependencies automatically during archive.
 
     triggering:
       events:
@@ -59,11 +61,6 @@ workflows:
           npx cap sync ios
           find ios/App/App/public -name '*.gz' -delete || true
 
-      - name: Install CocoaPods
-        script: |
-          cd ios/App
-          pod install --repo-update
-
       - name: Initialise keychain
         script: |
           keychain initialize
@@ -89,8 +86,9 @@ workflows:
 
       - name: Build the .ipa
         script: |
+          # SPM project, no .xcworkspace — build from the .xcodeproj directly.
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
