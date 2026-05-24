@@ -6,7 +6,8 @@ export function renderServices(services) {
   const el = $("#servicesList"); if (!services) { el.innerHTML = '<div class="empty-state">No data</div>'; return; }
   const q = searchQ.toLowerCase();
   el.innerHTML = services.map(s => {
-    const hide = (serviceFilter !== "all" && s.status !== serviceFilter) || (q && !s.name.toLowerCase().includes(q)) ? " hidden" : "";
+    const matchesSearch = !q || s.name.toLowerCase().includes(q);
+    const hide = (serviceFilter !== "all" && s.status !== serviceFilter) || !matchesSearch ? " hidden" : "";
     const rt = s.responseTime != null ? `${s.responseTime}ms` : "";
     const meta = [s.statusCode ? `HTTP ${s.statusCode}` : s.error ? "failed" : "—", rt].filter(Boolean).join(" · ");
     const detail = s.data ? JSON.stringify(s.data, null, 2) : (s.error || "(no data)");
