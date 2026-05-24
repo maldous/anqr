@@ -1,11 +1,9 @@
-import { execFileSync } from "node:child_process";
-
-import { ROOT } from "./root.mjs";
+import * as imports from "./imports.mjs";
 
 export function checkAstDensity() {
   try {
-    const output = execFileSync("node", ["harness/audit-ast-density.mjs", "--threshold", "1"], {
-      cwd: ROOT,
+    const output = imports.execFileSync("node", ["harness/audit-ast-density.mjs", "--threshold", "1"], {
+      cwd: imports.ROOT,
       timeout: 120_000,
       stdio: "pipe",
       encoding: "utf-8",

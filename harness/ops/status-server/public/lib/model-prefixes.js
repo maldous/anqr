@@ -1,0 +1,1 @@
+export const PREFIXES = [["github-models-","github/"],["huggingface-","hf/"],["sambanova-","samba/"],["openrouter-","or/"],["together-","together/"],["mistral-","mistral/"],["groq-","groq/"],["cerebras-","cerebras/"],["fireworks-","fw/"]];

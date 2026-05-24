@@ -1,10 +1,5 @@
-import { Capacitor } from "@capacitor/core";
 import * as Sentry from "@sentry/react";
-import React, { Suspense } from "react";
-import ReactDOM from "react-dom/client";
-import App from "../shell/app-shell.types";
 import "../index.css";
-import { ErrorBoundary } from "../shell/error-boundary";
 import { preloadDetectedLocale } from "../i18n/preload-detected-locale";
 import { initAutoDynamicTestIds } from "../lib/auto-testid";
 import { initRemoteDiagnostics } from "@/infra/telemetry/zaraz";
@@ -12,10 +7,11 @@ import { createLogger } from "@/lib/logger";
 import { loadWebOnlyBootAssets } from "@/platform/browser";
 import { initAds } from "./init-ads";
 
-const log = createLogger("MAIN");
+import { isCapacitor } from "./is-capacitor";
+import { renderApp } from "./render-app";
+import { scheduleAds } from "./schedule-ads";
 
-// Detect if running in Capacitor (native app) environment
-const isCapacitor = Capacitor.isNativePlatform();
+const log = createLogger("MAIN");
 
 // Load external web-only third-party assets (consent scripts, web fonts, AdSense).
 // Native builds skip these to reduce startup/network overhead.
@@ -138,38 +134,16 @@ log.info("App starting", { environment: isCapacitor ? "capacitor" : "web" });
 // AdMob banner doesn't render on top of the launch splash. Web/desktop runs
 // it immediately on load; native delays by ~1300ms (slightly more than the
 // splash launchShowDuration in capacitor.config.json).
-const adsBoot = () => void initAds(log);
-const scheduleAds = () => {
-  if (isCapacitor) globalThis.setTimeout(adsBoot, 1300);
-  else adsBoot();
-};
+const runAdsInit = () => scheduleAds(log);
 if (document.readyState === "complete") {
-  scheduleAds();
+  runAdsInit();
 } else {
-  globalThis.addEventListener("load", scheduleAds, { once: true });
+  globalThis.addEventListener("load", runAdsInit, { once: true });
 }
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
 const appRoot = rootElement;
-
-function renderApp(): void {
-  ReactDOM.createRoot(appRoot).render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <Suspense
-          fallback={
-            <div className="min-h-screen flex items-center justify-center bg-background">
-              <div className="animate-pulse text-muted-foreground">Loading...</div>
-            </div>
-          }
-        >
-          <App />
-        </Suspense>
-      </ErrorBoundary>
-    </React.StrictMode>,
-  );
-}
 
 // Render React immediately and kick off the locale fetch in parallel.
 // The top-level Suspense + react-i18next's useSuspense handle the
@@ -178,7 +152,7 @@ function renderApp(): void {
 // waiting an extra round-trip on the locale JSON. See review-2026-05-24
 // B-F2. en-GB is bundled and returns synchronously from this function.
 void preloadDetectedLocale();
-renderApp();
+renderApp(appRoot);
 
 // Dismiss the native splash screen explicitly once React has rendered.
 // Without this the Android system splash (Theme.SplashScreen, API 31+) and
