@@ -37,28 +37,41 @@ $("#liveToggle").addEventListener("click", () => {
 });
 
 // ── Tabs ───────────────────────────────────────────────────────────────────────
-$$(".tab").forEach(t => t.addEventListener("click", () => {
-  $$(".tab").forEach(x => x.classList.remove("active"));
-  $$(".tab-panel").forEach(x => x.classList.remove("active"));
-  t.classList.add("active");
-  setActiveTab(t.dataset.tab);
-  $(`#tab-${activeTab}`)?.classList.add("active");
-}));
+const tabs = $$(".tab");
+for (const t of tabs) {
+  t.addEventListener("click", () => {
+    const allTabs = $$(".tab");
+    for (const x of allTabs) { x.classList.remove("active"); }
+    const allTabPanels = $$(".tab-panel");
+    for (const x of allTabPanels) { x.classList.remove("active"); }
+    t.classList.add("active");
+    setActiveTab(t.dataset.tab);
+    $(`#tab-${activeTab}`)?.classList.add("active");
+  });
+}
 
 // ── Filters ───────────────────────────────────────────────────────────────────
-$$(".filter-pills .filter-btn[data-filter]").forEach(b => b.addEventListener("click", () => {
-  b.closest(".filter-pills").querySelectorAll(".filter-btn").forEach(x => x.classList.remove("active"));
-  b.classList.add("active");
-  setServiceFilter(b.dataset.filter);
-  renderServices(allData.health?.services);
-}));
+const serviceFilterButtons = $$(".filter-pills .filter-btn[data-filter]");
+for (const b of serviceFilterButtons) {
+  b.addEventListener("click", () => {
+    const allButtons = b.closest(".filter-pills").querySelectorAll(".filter-btn");
+    for (const x of allButtons) { x.classList.remove("active"); }
+    b.classList.add("active");
+    setServiceFilter(b.dataset.filter);
+    renderServices(allData.health?.services);
+  });
+}
 
-$$(".filter-pills .filter-btn[data-type]").forEach(b => b.addEventListener("click", () => {
-  b.closest(".filter-pills").querySelectorAll(".filter-btn").forEach(x => x.classList.remove("active"));
-  b.classList.add("active");
-  setCommitTypeFilter(b.dataset.type);
-  renderCommits(allData.commits);
-}));
+const commitTypeFilterButtons = $$(".filter-pills .filter-btn[data-type]");
+for (const b of commitTypeFilterButtons) {
+  b.addEventListener("click", () => {
+    const allButtons = b.closest(".filter-pills").querySelectorAll(".filter-btn");
+    for (const x of allButtons) { x.classList.remove("active"); }
+    b.classList.add("active");
+    setCommitTypeFilter(b.dataset.type);
+    renderCommits(allData.commits);
+  });
+}
 
 // ── Search ────────────────────────────────────────────────────────────────────
 let searchTimer;
