@@ -221,27 +221,27 @@ status = 301
 # Scope to concrete file extensions so /gallery (the SPA route) still works.
 [[redirects]]
 from = "/gallery/*.png"
-to = "/gallery/:splat"
+to = "/index.html"
 status = 404
 
 [[redirects]]
 from = "/gallery/*.gif"
-to = "/gallery/:splat"
+to = "/index.html"
 status = 404
 
 [[redirects]]
 from = "/gallery/*.webp"
-to = "/gallery/:splat"
+to = "/index.html"
 status = 404
 
 [[redirects]]
 from = "/gallery/*.jpg"
-to = "/gallery/:splat"
+to = "/index.html"
 status = 404
 
 [[redirects]]
 from = "/gallery/*.jpeg"
-to = "/gallery/:splat"
+to = "/index.html"
 status = 404
 
 # SPA catch-all for client-side routing
