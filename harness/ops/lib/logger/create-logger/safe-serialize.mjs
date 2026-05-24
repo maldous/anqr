@@ -5,7 +5,6 @@ export function safeSerialize(data) {
   if (data === null || data === undefined) {
     return "";
   }
-
   try {
     return JSON.stringify(sanitizeValue(data));
   } catch (err) {

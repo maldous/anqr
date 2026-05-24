@@ -1,21 +1,10 @@
 import { LOG_LEVELS } from "./log-levels.mjs";
 import { getCallerInfo } from "./get-caller-info.mjs";
 import { getLoggerRegistry } from "./create-logger/get-logger-registry.mjs";
-import { sanitizeValue } from "./create-logger/sanitize-value.mjs";
+import { safeSerialize } from "./create-logger/safe-serialize.mjs";
 import { truncateText } from "./create-logger/truncate-text.mjs";
 
 const LOGGER_SIGNAL_SETUP_KEY = Symbol.for("anqr.logger.signal-setup");
-
-function safeSerialize(data) {
-  if (data === null || data === undefined) {
-    return "";
-  }
-  try {
-    return JSON.stringify(sanitizeValue(data));
-  } catch (err) {
-    return `[serialization failed: ${truncateText(err?.message || String(err), 120)}]`;
-  }
-}
 
 export function createLogger(scriptName = "", options = {}) {
   function ensureSignalHandlers() {
