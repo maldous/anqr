@@ -174,9 +174,22 @@ workflows:
           # the fetched .mobileprovision; from then on Manual signing has
           # everything it needs and no ASC API hand-off is required during
           # archive itself.
+          #
+          # CERT_KEY_PATH: an iOS Distribution cert exists in ASC but we
+          # don't have its private key locally (we never had a Mac). Without
+          # a key path, `fetch-signing-files` errors with "Cannot save
+          # Signing Certificates without certificate private key". Generate
+          # a fresh keypair and pass it; --create lets the tool register a
+          # NEW distribution cert with this key when the existing cert can't
+          # be reused. Apple permits multiple Distribution certs per team.
+          CERT_KEY_PATH="$HOME/build_cert_key.pem"
+          openssl genrsa -out "$CERT_KEY_PATH" 2048
+          chmod 600 "$CERT_KEY_PATH"
+
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --certificate-key-path "$CERT_KEY_PATH"
           keychain add-certificates
           xcode-project use-profiles
 

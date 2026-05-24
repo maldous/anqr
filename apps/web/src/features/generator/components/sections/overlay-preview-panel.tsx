@@ -1,4 +1,5 @@
 import { Button, Label, Slider, Switch } from "@/ui/web";
+import type { TFunction } from "i18next";
 import { X } from "lucide-react";
 import type React from "react";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
@@ -30,7 +31,7 @@ export function OverlayPreviewPanel({
   setPreviewImageSize: (v: PreviewImageSize | null) => void;
   setOverlayCrop: ReturnType<typeof useQRStore.getState>["setOverlayCrop"];
   clearOverlay: () => void;
-  t: (key: string, options?: Record<string, unknown>) => string;
+  t: TFunction;
 }>) {
   return (
     <div className="space-y-2">
@@ -51,8 +52,11 @@ export function OverlayPreviewPanel({
           role={overlay.cropEnabled ? "application" : "img"}
           aria-label={
             overlay.cropEnabled
-              ? "Image preview with crop area selector. Drag to adjust crop position."
-              : "Image preview"
+              ? t(
+                  "overlay.previewWithCrop",
+                  "Image preview with crop area selector. Drag to adjust crop position.",
+                )
+              : t("overlay.previewLabel", "Image preview")
           }
           {...(overlay.cropEnabled && buildCropInteractionProps(cropDrag))}
           className="relative w-full aspect-square bg-muted/30 rounded-lg overflow-hidden border cursor-crosshair touch-none focus:outline-none focus:ring-2 focus:ring-ring"
