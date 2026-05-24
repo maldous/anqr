@@ -40,4 +40,23 @@ npx cap sync ios
 echo "[ci_post_clone] stripping .gz assets that duplicate Xcode resources…"
 find "$REPO_ROOT/ios/App/App/public" -name '*.gz' -delete || true
 
+# Xcode Cloud disables automatic Swift Package Manager resolution by default
+# and the entire project.xcworkspace/ directory (where Package.resolved lives)
+# is gitignored, so the lock file is never checked in. Resolve packages here
+# so the subsequent archive step finds the file at the expected path.
+echo "[ci_post_clone] resolving Swift Package Manager dependencies…"
+xcodebuild -resolvePackageDependencies \
+  -project "$REPO_ROOT/ios/App/App.xcodeproj" \
+  -scheme App \
+  -clonedSourcePackagesDirPath "$REPO_ROOT/ios/App/SourcePackages" \
+  -disableAutomaticPackageResolution=NO
+
+# Sanity check the lock file landed where Xcode Cloud's archive step expects it.
+RESOLVED="$REPO_ROOT/ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+if [ -f "$RESOLVED" ]; then
+  echo "[ci_post_clone] Package.resolved present ($(wc -c < "$RESOLVED") bytes)"
+else
+  echo "[ci_post_clone] WARN: Package.resolved not produced; archive step may fail"
+fi
+
 echo "[ci_post_clone] done."
