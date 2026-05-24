@@ -214,18 +214,32 @@ workflows:
           : > /tmp/asc-cert-ids.txt
           for cert_type in DISTRIBUTION IOS_DISTRIBUTION; do
             echo "=== Listing certificates of type $cert_type ==="
-            app-store-connect --silent certificates list --type "$cert_type" --json \
+            app-store-connect --silent --no-color certificates list \
+              --type "$cert_type" --json \
               > "/tmp/asc-certs-$cert_type.json" 2>&1 \
               || echo "  (list failed for $cert_type; continuing)"
             cat "/tmp/asc-certs-$cert_type.json" | head -10
             python3 - "/tmp/asc-certs-$cert_type.json" >> /tmp/asc-cert-ids.txt <<'PY'
-          import json, sys
+          # Round 7 lesson: --silent does NOT suppress the CLI's human-readable
+          # "Found N Signing Certificates matching..." preamble, and the CLI
+          # also embeds ANSI color escapes whose `\x1b[...` byte mid-string
+          # confused a char-by-char "first [ or {" locator. Strip ANSI, then
+          # locate the JSON by finding the first LINE that begins with [ or {
+          # (whitespace-tolerant). That is robust against future preamble
+          # changes.
+          import json, re, sys
           path = sys.argv[1]
           try:
               raw = open(path).read()
-              start = next((i for i, ch in enumerate(raw) if ch in "[{"), -1)
-              if start < 0: sys.exit(0)
-              data = json.loads(raw[start:])
+              raw = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", raw)
+              lines = raw.split("\n")
+              start = next(
+                  (i for i, line in enumerate(lines) if line.lstrip().startswith(("[", "{"))),
+                  -1,
+              )
+              if start < 0:
+                  sys.exit(0)
+              data = json.loads("\n".join(lines[start:]))
               certs = data if isinstance(data, list) else data.get("data", [])
               for c in certs:
                   cid = c.get("id") if isinstance(c, dict) else None
