@@ -87,9 +87,16 @@ workflows:
       - name: Build the .ipa
         script: |
           # SPM project, no .xcworkspace — build from the .xcodeproj directly.
+          # `-allowProvisioningUpdates` lets xcodebuild itself talk to the
+          # App Store Connect API (using the .p8 key Codemagic places at
+          # ~/private_keys/AuthKey_$KEY_ID.p8) to fetch or create the iOS
+          # App Store provisioning profile during archive. This handles
+          # the project's "Automatically manage signing" setting cleanly,
+          # which `xcode-project use-profiles` alone can't.
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --archive-flags="-allowProvisioningUpdates"
 
     artifacts:
       - "ios/App/build/ios/ipa/*.ipa"
