@@ -40,45 +40,34 @@ npx cap sync ios
 echo "[ci_post_clone] stripping .gz assets that duplicate Xcode resources…"
 find "$REPO_ROOT/ios/App/App/public" -name '*.gz' -delete || true
 
-# Xcode Cloud disables automatic Swift Package Manager resolution by default
-# and the entire project.xcworkspace/ directory (where Package.resolved lives)
-# is gitignored. We resolve packages explicitly via the workspace (created by
-# CocoaPods' `pod install`, which Xcode Cloud runs after this script). Until
-# the workspace exists, fall back to project-level resolution. Either path
-# must produce the lock file before xcodebuild's archive step runs.
-echo "[ci_post_clone] resolving Swift Package Manager dependencies…"
-if [ -d "$REPO_ROOT/ios/App/App.xcworkspace" ]; then
-  xcodebuild -resolvePackageDependencies \
-    -workspace "$REPO_ROOT/ios/App/App.xcworkspace" \
-    -scheme App \
-    -clonedSourcePackagesDirPath "$REPO_ROOT/ios/App/SourcePackages" \
-    -disableAutomaticPackageResolution NO \
-    || true
-else
-  xcodebuild -resolvePackageDependencies \
-    -project "$REPO_ROOT/ios/App/App.xcodeproj" \
-    -scheme App \
-    -clonedSourcePackagesDirPath "$REPO_ROOT/ios/App/SourcePackages" \
-    -disableAutomaticPackageResolution NO \
-    || true
-fi
-
-# Ensure the lock file lives where the archive step looks for it. If
-# resolution didn't drop it there, write a minimal empty-pins lock so the
-# "resolved file is required" gate passes — Xcode will then resolve on
-# the fly during the archive step.
+# Write a Package.resolved that pins the only remote SPM dependency this
+# project actually has (capacitor-swift-pm at the version declared in
+# ios/App/CapApp-SPM/Package.swift). The full Capacitor package graph also
+# includes several path-based local packages under node_modules/ — those
+# do not need pins.
+#
+# Xcode Cloud has automatic dependency resolution OFF by default, so a
+# valid lock file MUST exist before the archive step runs.
 RESOLVED="$REPO_ROOT/ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
 mkdir -p "$(dirname "$RESOLVED")"
-if [ ! -s "$RESOLVED" ]; then
-  echo "[ci_post_clone] writing minimal Package.resolved placeholder"
-  cat > "$RESOLVED" <<'EOF'
+echo "[ci_post_clone] writing Package.resolved for capacitor-swift-pm@8.2.0"
+cat > "$RESOLVED" <<'EOF'
 {
-  "originHash" : "",
-  "pins" : [],
+  "originHash" : "anqr-capacitor-8.2.0",
+  "pins" : [
+    {
+      "identity" : "capacitor-swift-pm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ionic-team/capacitor-swift-pm.git",
+      "state" : {
+        "revision" : "0e862e6ff13852a710c8a484180ca4d6a2cc9761",
+        "version" : "8.2.0"
+      }
+    }
+  ],
   "version" : 3
 }
 EOF
-fi
 echo "[ci_post_clone] Package.resolved present ($(wc -c < "$RESOLVED") bytes)"
 
 echo "[ci_post_clone] done."
