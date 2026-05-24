@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import type { TocGroup } from "./static-page-types";
 
 export type TableOfContentsProps = Readonly<{
@@ -6,5 +7,5 @@ export type TableOfContentsProps = Readonly<{
   onNavigate: (slug: string) => void;
   onClose: () => void;
   isOpen: boolean;
-  t: (key: string) => string;
+  t: TFunction;
 }>;
