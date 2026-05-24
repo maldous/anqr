@@ -79,7 +79,7 @@ const BOOKMARKS = [
 function renderBookmarks() {
   const grid = document.getElementById("bookmarksGrid");
   if (!grid) return;
-  const q = (window.searchQ || "").toLowerCase();
+  const q = (globalThis.searchQ || "").toLowerCase();
 
   // Filter, then build DOM with safe methods (createElement, textContent) — no innerHTML.
   grid.replaceChildren();
