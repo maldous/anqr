@@ -1,9 +1,15 @@
 import { qrApiContract, qrApiSuccessSchema } from "@/contracts/api";
 import { renderBasicServerQROutput } from "@/application/generator/server";
+import { enforceApiQrRateLimit } from "@/platform/node";
 import { nodeCanvasFactory } from "@/platform/node/server";
 import { createErrorBody } from "./create-error-body";
 
 export async function handler(request: Request): Promise<Response> {
+  const rateLimited = enforceApiQrRateLimit(request);
+  if (rateLimited) {
+    return rateLimited;
+  }
+
   if (request.method !== qrApiContract.generateQR.method) {
     return Response.json(createErrorBody("Method not allowed", 405, "METHOD_NOT_ALLOWED"), {
       status: 405,

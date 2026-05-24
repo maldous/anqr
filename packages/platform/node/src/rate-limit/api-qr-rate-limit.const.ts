@@ -1,0 +1,1 @@
+export const API_QR_RATE_LIMIT_WINDOW_MS = 60_000;
