@@ -5,7 +5,6 @@
  */
 
 import { applyColorCycle } from "@/domain/render/animation";
-import { cloneCanvasSimple } from "./clone-canvas-simple.service";
 import type { PatternEffect } from "./frames-patterneffect.types";
 import { applyWatermarkToCanvas } from "../generation/apply-watermark-to-canvas.service";
 
@@ -43,12 +42,14 @@ export async function applyFramePostProcessing<
     );
   }
   if (params.hasColorCycle) {
-    const colorCycleTarget = cloneCanvasSimple(finalResult);
+    // Don't pre-clone — applyColorCycle's resolveEffectTargetCanvas already
+    // allocates an OffscreenCanvas (or HTMLCanvas fallback) and copies once.
+    // The previous code did clone + then color-cycle internal copy = 2
+    // drawImage calls per animated frame. See review-2026-05-24 A-F4.
     finalResult = applyColorCycle(
       finalResult,
       params.frameIdx,
       params.framesToProcessLength,
-      colorCycleTarget,
     );
   }
   let previewFrame: HTMLCanvasElement | OffscreenCanvas = finalResult;

@@ -17,16 +17,29 @@ export function applyTemporalNoiseToCanvasServer(
   const imageData = ctx.getImageData(0, 0, width, height);
   const data = imageData.data;
   const phi = 1.618033988749895;
+  const phiSq = phi * phi;
+  const offsetTerm = offset * 1000;
+  const strengthScale = strength * 255;
 
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] === 0) continue;
-    const x = (i / 4) % width;
-    const y = Math.floor(i / 4 / width);
-    const noise = ((x * phi + y * phi * phi + offset * 1000) % 1) - 0.5;
-    const adjust = Math.round(noise * strength * 255);
-    data[i] = Math.max(0, Math.min(255, data[i] + adjust));
-    data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + adjust));
-    data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + adjust));
+  // Nested y/x loop so x/y are loop indices instead of a per-pixel mod/divide
+  // on `i`. The `y * phiSq` term and the constant offsetTerm are hoisted out
+  // of the inner loop. Output is bit-identical to the legacy loop. See
+  // review-2026-05-24 A-F6.
+  for (let y = 0; y < height; y++) {
+    const yPhi = y * phiSq;
+    const rowBase = y * width;
+    for (let x = 0; x < width; x++) {
+      const i = (rowBase + x) << 2;
+      if (data[i + 3] === 0) continue;
+      const noise = ((x * phi + yPhi + offsetTerm) % 1) - 0.5;
+      const adjust = Math.round(noise * strengthScale);
+      let v = data[i] + adjust;
+      data[i] = v < 0 ? 0 : v > 255 ? 255 : v;
+      v = data[i + 1] + adjust;
+      data[i + 1] = v < 0 ? 0 : v > 255 ? 255 : v;
+      v = data[i + 2] + adjust;
+      data[i + 2] = v < 0 ? 0 : v > 255 ? 255 : v;
+    }
   }
 
   ctx.putImageData(imageData, 0, 0);

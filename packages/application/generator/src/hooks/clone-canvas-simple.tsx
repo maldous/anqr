@@ -1,12 +1,3 @@
-export function cloneCanvasSimple(
-  sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
-): HTMLCanvasElement | OffscreenCanvas {
-  const cloned = document.createElement("canvas");
-  cloned.width = sourceCanvas.width;
-  cloned.height = sourceCanvas.height;
-  const clonedCtx = cloned.getContext("2d");
-  if (clonedCtx) {
-    clonedCtx.drawImage(sourceCanvas, 0, 0);
-  }
-  return cloned;
-}
+// Re-export from the canonical location to dedup the implementation —
+// see review-2026-05-24 A-F9.
+export { cloneCanvasSimple } from "../frames/clone-canvas-simple.service";

@@ -1,6 +1,5 @@
 import { type Canvas, type SKRSContext2D } from "@napi-rs/canvas";
 import type { WatermarkOptions } from "./watermark-options.types";
-import { createTextWatermark } from "./create-text-watermark";
 import { applyBlendMode } from "./apply-blend-mode";
 import { getWatermarkPositions } from "./get-watermark-positions";
 
@@ -10,13 +9,12 @@ export function drawWatermarkLayerServer(
   canvasWidth: number,
   canvasHeight: number,
 ): void {
-  let watermarkCanvas: Canvas | null = null;
-
-  if (options.kind === "text" && options.text) {
-    watermarkCanvas = createTextWatermark(options.text, 14, "sans-serif", "#000000");
-  } else if ((options.kind === "image" || options.kind === "pattern") && options.imageCanvas) {
-    watermarkCanvas = options.imageCanvas;
-  }
+  // options.imageCanvas now holds the pre-rendered watermark for every kind
+  // (text rendered once at buildWatermarkOpts time; image/pattern already
+  // pre-built). Previously text was re-rendered per frame via
+  // createTextWatermark — a font-shape pass per frame on every animated GIF.
+  // See review-2026-05-24 A-F3.
+  const watermarkCanvas: Canvas | null = options.imageCanvas ?? null;
 
   if (!watermarkCanvas) return;
 
