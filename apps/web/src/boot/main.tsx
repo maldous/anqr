@@ -129,5 +129,15 @@ function renderApp(): void {
 await preloadDetectedLocale();
 renderApp();
 
+// Dismiss the native splash screen explicitly once React has rendered.
+// Without this the Android system splash (Theme.SplashScreen, API 31+) and
+// the Capacitor SplashScreen plugin can keep the splash on top of the WebView.
+if (isCapacitor) {
+  // Dynamic import so the web bundle doesn't pull in the plugin.
+  void import("@capacitor/splash-screen").then(({ SplashScreen }) =>
+    SplashScreen.hide().catch((e: unknown) => log.debug("splash hide failed", { e })),
+  );
+}
+
 // Ensure every interactive element has a unique dynamic test id.
 initAutoDynamicTestIds();

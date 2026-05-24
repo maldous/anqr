@@ -4,5 +4,13 @@
   "webDir": "dist",
   "android": {
     "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "launchAutoHide": true,
+      "backgroundColor": "#0a0e27",
+      "showSpinner": false
+    }
   }
 }
