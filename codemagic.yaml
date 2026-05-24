@@ -253,11 +253,17 @@ workflows:
           mv /tmp/asc-cert-ids.unique /tmp/asc-cert-ids.txt
           echo "=== Certs to revoke ==="
           cat /tmp/asc-cert-ids.txt
+          # The CLI's subcommand is `delete`, NOT `revoke` — Apple's API calls
+          # the action "revoke" but codemagic-cli-tools exposes it as delete.
+          # Subcommand list (from `certificates --help`): {create,delete,get,list}.
+          echo "=== app-store-connect certificates delete --help ==="
+          app-store-connect certificates delete --help 2>&1 | head -25 || true
+          echo "==="
           while read cid; do
             [ -z "$cid" ] && continue
-            echo "Revoking distribution cert $cid (no local private key)"
-            app-store-connect certificates revoke "$cid" 2>&1 \
-              || echo "  (revoke failed; continuing)"
+            echo "Deleting (revoking) distribution cert $cid (no local private key)"
+            app-store-connect certificates delete "$cid" --ignore-not-found 2>&1 \
+              || echo "  (delete failed; continuing)"
           done < /tmp/asc-cert-ids.txt
 
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
