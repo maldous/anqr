@@ -131,4 +131,4 @@ function renderBookmarks() {
 }
 
 // Wire to app.js's render/search loop. app.js calls renderBookmarks() in renderAll().
-window.renderBookmarks = renderBookmarks;
+globalThis.renderBookmarks = renderBookmarks;
