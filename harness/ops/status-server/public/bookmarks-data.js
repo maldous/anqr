@@ -42,7 +42,6 @@ const BOOKMARKS = [
     items: [
       { name: "Linear (ANQR)", url: "https://linear.app/anqr", note: "main backlog" },
       { name: "GitHub Issues", url: "https://github.com/maldous/anqr/issues", note: "" },
-      { name: "Jira (ENG)", url: "https://paperly.atlassian.net/", note: "board 9" },
     ],
   },
   {
