@@ -2187,7 +2187,7 @@
     "wifiHidden": "Yes (won't appear in scan)",
     "wifiVisible": "No (visible)",
     "maskPatternN": "Pattern {{n}}",
-    "versionN": "Level {{level}}",
+    "eccLevelN": "Level {{level}}",
     "row": "Row",
     "col": "Col",
     "dark": "Dark",

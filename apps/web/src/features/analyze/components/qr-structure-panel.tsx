@@ -35,7 +35,7 @@ export function QrStructurePanel({
           value={
             eccLevel ? (
               <div className="text-right">
-                <div>{t("analyze.versionN", "Level {{level}}", { level: eccLevel })}</div>
+                <div>{t("analyze.eccLevelN", "Level {{level}}", { level: eccLevel })}</div>
                 <div className="text-xs text-muted-foreground">
                   {ECC_DESCRIPTIONS[eccLevel].recovery} recovery
                 </div>
