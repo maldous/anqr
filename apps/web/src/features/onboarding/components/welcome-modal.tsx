@@ -25,7 +25,7 @@ import { Button } from "@/ui/web";
 import { languages } from "../../../i18n";
 
 // Increment this version whenever you want to show the modal again to all users
-const WELCOME_VERSION = "2026.02.01";
+const WELCOME_VERSION = "2026.05.24";
 const STORAGE_KEY = "anqr-welcome-seen";
 
 export function WelcomeModal({ onClose }: { readonly onClose?: () => void }) {
@@ -97,9 +97,12 @@ export function WelcomeModal({ onClose }: { readonly onClose?: () => void }) {
       ],
     },
     {
+      date: t("welcome.updateDate3"),
+      items: [t("welcome.update18")],
+    },
+    {
       date: t("welcome.updateDate2"),
       items: [
-        t("welcome.update5"),
         t("welcome.update6"),
         t("welcome.update7"),
         t("welcome.update8"),
@@ -131,7 +134,7 @@ export function WelcomeModal({ onClose }: { readonly onClose?: () => void }) {
         type="button"
         className="absolute inset-0 w-full h-full cursor-default bg-transparent border-none"
         onClick={handleDismiss}
-        aria-label="Close modal"
+        aria-label={t("common.close")}
         tabIndex={-1}
       />
       <dialog
