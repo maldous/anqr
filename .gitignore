@@ -29,3 +29,35 @@ review-all.zip
 review.zip
 reviewer.txt
 debug/cli.jsonl
+
+# Netlify CLI / function build artifacts (large binary zips, ~100 MB each)
+.netlify/
+apps/web/.netlify/
+
+# Playwright MCP scratch traces (screenshots + accessibility yml + console logs)
+.playwright-mcp/
+
+# AI agent scratch files written into the working dir during sessions
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
+learn.txt
+
+# Visual parity / debug screenshots captured during dev
+parity-*.png
+gallery-thumb-*.png
+gallery-thumb-*.gif
+gallery-parity-*.png
+gallery-after-prerender.png
+dashboard-bookmarks.png
+
+# Misc per-session logs
+tailwindcss-*.log
+
+# Deno cache file (created by Netlify edge-bundler test runs)
+deno.lock
+
+# Lock files for ad-hoc tool scratch state
+.claude/scheduled_tasks.lock
