@@ -7,7 +7,7 @@ export function renderIssues(issues) {
   if (!issues?.length) { el.innerHTML = '<div class="empty-state">No running issues</div>'; countEl.textContent = "0 active"; return; }
   countEl.textContent = `${issues.length} active`;
   const q = searchQ.toLowerCase();
-  issues.forEach(i => {
+  for (const i of issues) {
     let pClass;
     if (i.priority <= 1) {
       pClass = "p1";
@@ -19,7 +19,7 @@ export function renderIssues(issues) {
       pClass = "p4";
     }
     i.pClass = pClass; // attaching to the object for use below
-  });
+  }
   el.innerHTML = issues.map(i => {
     const hide = q && !i.title?.toLowerCase().includes(q) && !i.identifier?.toLowerCase().includes(q) ? " hidden" : "";
     const url = i.url || `https://linear.app/anqr/issue/${i.identifier}`;
