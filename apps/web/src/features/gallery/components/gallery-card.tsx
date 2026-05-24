@@ -28,14 +28,13 @@ export function GalleryCard({ item }: Readonly<GalleryCardProps>) {
   }, [primaryImageSrc]);
 
   const handleImageError = () => {
+    // Primary path is the prerendered PNG. If that's somehow missing
+    // (e.g. a new gallery item was added without re-running the prerender
+    // script), fall back to the dynamic server render so the card isn't
+    // permanently blank.
     if (fallbackStage === 0) {
       setFallbackStage(1);
-      setImageSrc(getGalleryImagePath(item, item.isAnimated ? "png" : "gif"));
-      return;
-    }
-    if (fallbackStage === 1) {
-      setFallbackStage(2);
-      setImageSrc(buildGalleryRenderImageUrl(item));
+      setImageSrc(buildGalleryRenderImageUrl(item, "png"));
       return;
     }
     setImageError(true);
