@@ -1,11 +1,11 @@
 import type { Context } from "https://edge.netlify.com";
-import type { PageMeta } from "./page-meta.types";
-import { truncate } from "./truncate";
-import { buildOgImageUrl } from "./build-og-image-url";
-import { BASE_URL } from "./base-url.const";
-import { PAGE_META } from "./page-meta.const";
-import { escapeHtml } from "./escape-html";
-import { OG_IMAGE_SIZE } from "./og-image-size.const";
+import type { PageMeta } from "./page-meta.types.ts";
+import { truncate } from "./truncate.ts";
+import { buildOgImageUrl } from "./build-og-image-url.ts";
+import { BASE_URL } from "./base-url.const.ts";
+import { PAGE_META } from "./page-meta.const.ts";
+import { escapeHtml } from "./escape-html.ts";
+import { OG_IMAGE_SIZE } from "./og-image-size.const.ts";
 
 export default async function handler(request: Request, context: Context) {
   const url = new URL(request.url);
