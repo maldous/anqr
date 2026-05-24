@@ -251,7 +251,7 @@ contracts-check: ## Run contracts structural checks
 # i18n Targets
 # ============================================
 
-I18N_TOOLS := harness/ops/tools/i18n
+I18N_TOOLS := tools/i18n
 
 i18n-diff: ## Show keys present in en-US.json but missing from xlate.json
 	@python3 $(I18N_TOOLS)/diff.py
