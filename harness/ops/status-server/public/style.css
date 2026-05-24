@@ -201,3 +201,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .model-bar-wrap{display:none}
   .model-pct{display:none}
 }
+
+/* ── Bookmarks (3rd-party services tab) ── */
+.bookmarks-grid{padding:16px;display:flex;flex-direction:column;gap:20px}
+.bookmark-group-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
+.bookmark-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.bookmark-card{display:block;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;color:inherit;transition:border-color .15s,transform .15s,background .15s}
+.bookmark-card:hover{border-color:var(--accent);background:var(--bg-hover);transform:translateY(-1px)}
+.bookmark-name{font-size:13px;font-weight:600;color:var(--fg)}
+.bookmark-note{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono,ui-monospace,monospace);word-break:break-word}
+.empty{padding:24px;text-align:center;color:var(--muted);font-size:13px}

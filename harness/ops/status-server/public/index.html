@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ANQR · System Status</title>
-  <link rel="stylesheet" href="/style.css?v=4">
+  <link rel="stylesheet" href="/style.css?v=5">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>⚡</text></svg>">
 </head>
 <body>
@@ -52,6 +52,7 @@
         <button class="tab" data-tab="issues">Issues</button>
         <button class="tab" data-tab="models">Models</button>
         <button class="tab" data-tab="symphony">Pipeline</button>
+        <button class="tab" data-tab="bookmarks">Bookmarks</button>
       </div>
     </div>
 
@@ -107,8 +108,14 @@
       <div class="symphony-grid" id="symphonyGrid"><div class="loading">Loading…</div></div>
     </section>
 
+    <section class="tab-panel" id="tab-bookmarks">
+      <div class="panel-header"><h2>3rd-Party Services</h2></div>
+      <div class="bookmarks-grid" id="bookmarksGrid"></div>
+    </section>
+
     <footer class="footer"><span id="footerTimestamp">—</span></footer>
   </div>
-  <script src="/app.js?v=4"></script>
+  <script src="/bookmarks.js?v=1"></script>
+  <script src="/app.js?v=5"></script>
 </body>
 </html>

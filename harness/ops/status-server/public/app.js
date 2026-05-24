@@ -195,15 +195,20 @@ function renderSymphony(sym) {
     </div>`;
 }
 
+// Expose esc + searchQ for bookmarks.js (loaded as separate script).
+window.escForBookmarks = esc;
+
 // ── Master Render ─────────────────────────────────────────────────────────────
 function renderAll(data) {
   allData = data;
+  window.searchQ = searchQ;
   renderStats(data);
   renderServices(data.health?.services);
   renderCommits(data.commits);
   renderIssues(data.issues);
   renderModels(data.models);
   renderSymphony(data.symphony);
+  if (typeof window.renderBookmarks === "function") window.renderBookmarks();
 }
 
 // ── Refresh ───────────────────────────────────────────────────────────────────
@@ -253,10 +258,12 @@ $("#globalSearch").addEventListener("input", e => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
     searchQ = e.target.value.trim();
+    window.searchQ = searchQ;
     renderServices(allData.health?.services);
     renderCommits(allData.commits);
     renderIssues(allData.issues);
     renderModels(allData.models);
+    if (typeof window.renderBookmarks === "function") window.renderBookmarks();
   }, 150);
 });
 
