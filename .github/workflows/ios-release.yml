@@ -1,0 +1,117 @@
+name: iOS Release (TestFlight)
+
+# Manual trigger only — TestFlight upload is a deliberate action.
+
+on:
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: "Fastlane lane to run"
+        required: true
+        default: "beta"
+        type: choice
+        options:
+          - beta       # TestFlight
+          - release    # App Store production
+          - build      # Simulator-only sanity build (no upload)
+
+concurrency:
+  group: ios-release
+  cancel-in-progress: false
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      # Move workflow_dispatch input into env so it can't be expanded into shell text.
+      LANE: ${{ inputs.lane }}
+      RUN_ID: ${{ github.run_id }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: false
+
+      - name: Install npm deps
+        run: npm install --legacy-peer-deps
+
+      - name: Install fastlane (bundler)
+        working-directory: ios/App
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Select latest stable Xcode
+        run: |
+          ls /Applications | grep -E '^Xcode' || true
+          sudo xcode-select -s "/Applications/Xcode.app" || true
+          xcodebuild -version
+
+      - name: Materialise App Store Connect API key
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+        run: |
+          KEY_B64=$(printf '%s' "$KEY_CONTENT" | base64)
+          jq -n \
+            --arg key_id "$KEY_ID" \
+            --arg issuer_id "$ISSUER_ID" \
+            --arg key "$KEY_B64" \
+            '{key_id: $key_id, issuer_id: $issuer_id, key: $key, is_key_content_base64: true, in_house: false}' \
+            > ios/App/fastlane/api_key.json
+          test -s ios/App/fastlane/api_key.json
+          echo "api_key.json written ($(wc -c < ios/App/fastlane/api_key.json) bytes)"
+
+      - name: Build web bundle
+        env:
+          VITE_SENTRY_RELEASE: anqr@1.0.70-${{ github.run_id }}
+        run: npm run build:web
+
+      - name: Capacitor sync
+        run: |
+          npx cap sync ios
+          find ios/App/App/public -name "*.gz" -delete || true
+
+      - name: Install CocoaPods
+        working-directory: ios/App
+        run: |
+          gem install cocoapods --no-document
+          pod install --repo-update
+
+      - name: Run fastlane lane
+        working-directory: ios/App
+        env:
+          FASTLANE_DISABLE_COLORS: "1"
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: bundle exec fastlane "$LANE"
+
+      - name: Upload build artifact (ipa + dSYM)
+        if: success() && inputs.lane != 'build'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-${{ inputs.lane }}-${{ github.run_id }}
+          path: |
+            ios/App/build/*.ipa
+            ios/App/build/*.app.dSYM.zip
+          if-no-files-found: warn
+          retention-days: 14
