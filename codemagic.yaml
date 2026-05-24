@@ -104,43 +104,56 @@ workflows:
           find "$HOME/private_keys" "$HOME/Library/MobileDevice" -type f 2>/dev/null | head -20
           echo "==============================================="
 
-          # Try to find an existing .p8 written by the Codemagic integration.
-          EXISTING_P8=$(find "$HOME" "$CM_BUILD_DIR" -name "AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8" -type f 2>/dev/null | head -1)
-          if [ -n "$EXISTING_P8" ] && [ -s "$EXISTING_P8" ]; then
-            echo "Using existing key at: $EXISTING_P8"
-            KEY_PATH="$EXISTING_P8"
-          else
-            # Fallback: try to write from env var (likely will fail again
-            # but the diagnostics above will tell us what's actually set).
-            python3 - "$KEY_PATH" <<'PY'
-          import os, sys
+          # Resolve the ASC private key. CodeMagic stores integration-managed
+          # keys as a file reference (`@file:/path/to/AuthKey_XYZ.p8`); direct
+          # env vars contain the raw PEM. Handle both.
+          python3 - "$KEY_PATH" <<'PY'
+          import os, sys, shutil
           path = sys.argv[1]
-          key = (
+          raw = (
               os.environ.get("APP_STORE_CONNECT_PRIVATE_KEY")
               or os.environ.get("APP_STORE_CONNECT_KEY_CONTENT")
               or ""
-          )
-          if not key:
+          ).strip()
+          if not raw:
               print("ERROR: no ASC private key in env", file=sys.stderr)
               sys.exit(1)
-          if "BEGIN" not in key:
-              import base64
-              try:
-                  decoded = base64.b64decode(key + "==").decode("ascii")
-                  if "BEGIN" in decoded:
-                      key = decoded
-                  else:
-                      print(f"ERROR: env var ({len(key)} chars) has no PEM header even after base64 decode", file=sys.stderr)
-                      sys.exit(2)
-              except Exception as e:
-                  print(f"ERROR: env var ({len(key)} chars) has no PEM header and is not base64: {e}", file=sys.stderr)
+
+          # Case 1: CodeMagic integration file reference.
+          if raw.startswith("@file:"):
+              src = raw[len("@file:"):]
+              if not os.path.isfile(src):
+                  print(f"ERROR: @file reference points to missing path: {src}", file=sys.stderr)
                   sys.exit(2)
-          with open(path, "w") as f:
-              f.write(key.rstrip() + "\n")
-          os.chmod(path, 0o600)
-          print(f"Wrote {os.path.getsize(path)} bytes to {path}")
+              shutil.copyfile(src, path)
+              os.chmod(path, 0o600)
+              print(f"Copied {os.path.getsize(path)} bytes from {src} → {path}")
+              sys.exit(0)
+
+          # Case 2: raw PEM content in env var.
+          if "BEGIN" in raw:
+              with open(path, "w") as f:
+                  f.write(raw.rstrip() + "\n")
+              os.chmod(path, 0o600)
+              print(f"Wrote {os.path.getsize(path)} bytes (raw PEM env)")
+              sys.exit(0)
+
+          # Case 3: base64-encoded PEM.
+          import base64
+          try:
+              decoded = base64.b64decode(raw + "==").decode("ascii")
+              if "BEGIN" in decoded:
+                  with open(path, "w") as f:
+                      f.write(decoded.rstrip() + "\n")
+                  os.chmod(path, 0o600)
+                  print(f"Wrote {os.path.getsize(path)} bytes (base64-decoded PEM)")
+                  sys.exit(0)
+          except Exception as e:
+              print(f"ERROR: env var ({len(raw)} chars) is neither @file ref, PEM, nor base64: {e}", file=sys.stderr)
+              sys.exit(3)
+          print(f"ERROR: env var ({len(raw)} chars) format not recognised", file=sys.stderr)
+          sys.exit(4)
           PY
-          fi
           ls -la "$KEY_PATH"
           echo "First line: $(head -1 "$KEY_PATH")"
 
