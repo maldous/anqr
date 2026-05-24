@@ -80,7 +80,6 @@ function renderBookmarks() {
   const grid = document.getElementById("bookmarksGrid");
   if (!grid) return;
   const q = (window.searchQ || "").toLowerCase();
-  const esc = window.escForBookmarks || ((s) => s);
 
   // Filter, then build DOM with safe methods (createElement, textContent) — no innerHTML.
   grid.replaceChildren();
