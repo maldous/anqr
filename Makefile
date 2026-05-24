@@ -16,7 +16,7 @@ QUALITY_MOBILE_TARGETS := \
 
 .PHONY: \
   help fix update-metrics reset-metrics reset-health show-metrics \
-  dev build build-web preview \
+  dev build build-web build-android preview \
   typecheck lint lint-fix lint-boundaries format format-check depcruise cspell knip \
   test test-unit test-unit-coverage test-e2e test-basic test-advanced \
   test-appium test-appium-android test-appium-ios \
@@ -46,6 +46,13 @@ build: ## Build the web app
 
 build-web: ## Build the web app using the package script
 	npm run build:web
+
+build-android: build-web ## Sync web bundle into Android and build debug APK
+	npx cap sync android
+	@find android/app/src/main/assets/public -name "*.gz" -delete
+	cd android && ./gradlew assembleDebug
+	@echo ""
+	@echo "APK: android/app/build/outputs/apk/debug/app-debug.apk"
 
 preview: ## Preview the production build locally
 	npm run preview

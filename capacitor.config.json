@@ -1,0 +1,8 @@
+{
+  "appId": "link.anqr.app",
+  "appName": "ANQR",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}
