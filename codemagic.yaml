@@ -86,11 +86,52 @@ workflows:
           # var (APP_STORE_CONNECT_PRIVATE_KEY) but not always as a file.
           # xcodebuild's -authenticationKeyPath requires a real file.
           mkdir -p "$HOME/private_keys"
-          if [ ! -f "$KEY_PATH" ]; then
-            printf '%s' "$APP_STORE_CONNECT_PRIVATE_KEY" > "$KEY_PATH"
-            chmod 600 "$KEY_PATH"
-          fi
+
+          # Diagnostic: show which ASC env vars are populated + sizes
+          # (sizes only — never log the key content).
+          echo "ASC env var diagnostics:"
+          for v in APP_STORE_CONNECT_PRIVATE_KEY APP_STORE_CONNECT_KEY_CONTENT \
+                   APP_STORE_CONNECT_KEY_KEY APP_STORE_CONNECT_API_KEY_CONTENT \
+                   ASC_PRIVATE_KEY; do
+            val="${!v:-}"
+            if [ -n "$val" ]; then
+              echo "  $v: ${#val} chars"
+            fi
+          done
+          # Was the integration's private key written to a known path?
+          find "$HOME/private_keys" "$HOME/Library/MobileDevice" -type f 2>/dev/null | head -20
+
+          # Write the .p8 via python — bypasses bash heredoc indentation
+          # quirks and preserves newlines verbatim from the env var.
+          python3 - "$KEY_PATH" <<'PY'
+          import os, sys
+          path = sys.argv[1]
+          key = (
+              os.environ.get("APP_STORE_CONNECT_PRIVATE_KEY")
+              or os.environ.get("APP_STORE_CONNECT_KEY_CONTENT")
+              or ""
+          )
+          if not key:
+              print("ERROR: no ASC private key in env", file=sys.stderr)
+              sys.exit(1)
+          # Some Codemagic integrations base64-encode the key; detect by
+          # absence of PEM headers and decode if so.
+          if "BEGIN" not in key:
+              import base64
+              try:
+                  key = base64.b64decode(key).decode("ascii")
+              except Exception as e:
+                  print(f"ERROR: env var has no PEM header and is not base64: {e}", file=sys.stderr)
+                  sys.exit(2)
+          with open(path, "w") as f:
+              f.write(key.rstrip() + "\n")
+          os.chmod(path, 0o600)
+          print(f"Wrote {os.path.getsize(path)} bytes to {path}")
+          PY
           ls -la "$KEY_PATH"
+          echo "First line: $(head -1 "$KEY_PATH")"
+          echo "Last line:  $(tail -1 "$KEY_PATH")"
+          echo "Line count: $(wc -l < "$KEY_PATH")"
 
           mkdir -p "$IPA_PATH"
 
