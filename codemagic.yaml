@@ -189,10 +189,42 @@ workflows:
           openssl genrsa -out "$CERT_KEY_PATH" 2048
           chmod 600 "$CERT_KEY_PATH"
 
-          # Dump help once so future failures are easier to diagnose.
-          echo "=== app-store-connect fetch-signing-files --help ==="
-          app-store-connect fetch-signing-files --help 2>&1 | head -60 || true
+          # Apple's policy: ONE active Distribution cert per team. ASC
+          # already has 2 (left over from earlier attempts and/or a previous
+          # setup), and we have no private key for either (we never had a
+          # Mac). --create therefore hits HTTP 409 "You already have a
+          # current Distribution certificate or a pending certificate
+          # request." Revoke them first so --create can succeed.
+          #
+          # Safe here: no TestFlight build has shipped yet, so revoking
+          # doesn't invalidate any user-installed app.
+          echo "=== app-store-connect certificates --help ==="
+          app-store-connect certificates --help 2>&1 | head -40 || true
           echo "==="
+
+          echo "=== Existing IOS_DISTRIBUTION certificates ==="
+          app-store-connect certificates list --type IOS_DISTRIBUTION --json \
+            > /tmp/asc-certs.json 2>&1 || echo "(list failed; continuing)"
+          cat /tmp/asc-certs.json | head -40
+          python3 - <<'PY' > /tmp/cert-ids.txt
+          import json
+          try:
+              data = json.load(open("/tmp/asc-certs.json"))
+              certs = data if isinstance(data, list) else data.get("data", [])
+              for c in certs:
+                  cid = c.get("id") if isinstance(c, dict) else None
+                  if cid:
+                      print(cid)
+          except Exception as e:
+              import sys
+              print(f"(parse error: {e})", file=sys.stderr)
+          PY
+          while read cid; do
+            [ -z "$cid" ] && continue
+            echo "Revoking distribution cert $cid (no local private key)"
+            app-store-connect certificates revoke "$cid" 2>&1 || \
+              echo "  (revoke failed; continuing)"
+          done < /tmp/cert-ids.txt
 
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
