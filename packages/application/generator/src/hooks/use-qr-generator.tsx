@@ -542,6 +542,8 @@ export function useQRGenerator(
       eyeScale: render.eyeScale,
       frameStyle: render.frameStyle,
       frameText: render.frameText,
+      frameColor: render.frameColor || undefined,
+      frameTextColor: render.frameTextColor || undefined,
       crispEdges: render.crispEdges,
       pixelSnap: render.pixelSnap,
 

@@ -45,6 +45,8 @@ export function RenderSection() {
     setRenderCornerRadius,
     setRenderFrameStyle,
     setRenderFrameText,
+    setRenderFrameColor,
+    setRenderFrameTextColor,
     setRenderGradient,
     setRenderAlignmentStyle,
     setRenderTimingStyle,
@@ -317,21 +319,78 @@ export function RenderSection() {
           </LabeledHelpSelectField>
 
           {render.frameStyle !== "none" && (
-            <div className="space-y-2">
-              <Label>
-                <HighlightedLabel>{t("render.frameText")}</HighlightedLabel>
-              </Label>
-              <Input
-                data-testid={DynamicTestId.resolve(
-                  "render-frame-text-input",
-                  "render-frame-text-input",
-                )}
-                value={render.frameText}
-                onChange={(e) => setRenderFrameText(e.target.value)}
-                placeholder={t("accessibility.scanMePlaceholder")}
-                title={t("hints.frameText")}
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label>
+                  <HighlightedLabel>{t("render.frameText")}</HighlightedLabel>
+                </Label>
+                <Input
+                  data-testid={DynamicTestId.resolve(
+                    "render-frame-text-input",
+                    "render-frame-text-input",
+                  )}
+                  value={render.frameText}
+                  onChange={(e) => setRenderFrameText(e.target.value)}
+                  placeholder={t("accessibility.scanMePlaceholder")}
+                  title={t("hints.frameText")}
+                />
+              </div>
+
+              {/*
+                draw-frame-background.ts:16 and draw-frame.ts:51 read
+                frameColor and frameTextColor with fall-back to bgColor
+                and fgColor respectively. Empty string = inherit.
+              */}
+              <div className="space-y-2">
+                <Label>
+                  <HighlightedLabel>{t("render.frameColor")}</HighlightedLabel>
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="color"
+                    value={render.frameColor || render.bgColor}
+                    onChange={(e) => setRenderFrameColor(e.target.value)}
+                    className="w-10 h-8 p-1"
+                  />
+                  <Input
+                    data-testid={DynamicTestId.resolve(
+                      "render-frame-color-input",
+                      "render-frame-color-input",
+                    )}
+                    type="text"
+                    value={render.frameColor}
+                    onChange={(e) => setRenderFrameColor(e.target.value)}
+                    placeholder={t("render.frameColorInherit")}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  <HighlightedLabel>{t("render.frameTextColor")}</HighlightedLabel>
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="color"
+                    value={render.frameTextColor || render.fgColor}
+                    onChange={(e) => setRenderFrameTextColor(e.target.value)}
+                    className="w-10 h-8 p-1"
+                  />
+                  <Input
+                    data-testid={DynamicTestId.resolve(
+                      "render-frame-text-color-input",
+                      "render-frame-text-color-input",
+                    )}
+                    type="text"
+                    value={render.frameTextColor}
+                    onChange={(e) => setRenderFrameTextColor(e.target.value)}
+                    placeholder={t("render.frameTextColorInherit")}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           {/* Dot Rotation */}

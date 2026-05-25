@@ -17,6 +17,8 @@ export const DEFAULT_RENDER: QRState["render"] = {
   eyeScale: 100,
   frameStyle: "none",
   frameText: "",
+  frameColor: "",
+  frameTextColor: "",
   fgColor: "#000000",
   bgColor: "#ffffff",
   bgTransparent: false,

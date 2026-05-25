@@ -58,6 +58,8 @@ export interface QRGeneratorStoreState {
     eyeScale: number;
     frameStyle: "none" | "rounded_frame" | "sticker" | "tag";
     frameText: string;
+    frameColor: string;
+    frameTextColor: string;
     fgColor: string;
     bgColor: string;
     bgTransparent: boolean;

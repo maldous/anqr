@@ -209,6 +209,11 @@ export interface QRState {
     eyeScale: number;
     frameStyle: FrameStyle;
     frameText: string;
+    // Frame colours — empty string means "inherit": frameColor falls
+    // back to bgColor, frameTextColor falls back to fgColor (see
+    // draw-frame-background.ts and draw-frame.ts).
+    frameColor: string;
+    frameTextColor: string;
     // Colors
     fgColor: string;
     bgColor: string;
@@ -234,6 +239,8 @@ export interface QRState {
   setRenderCornerRadius: (radius: number) => void;
   setRenderFrameStyle: (style: FrameStyle) => void;
   setRenderFrameText: (text: string) => void;
+  setRenderFrameColor: (color: string) => void;
+  setRenderFrameTextColor: (color: string) => void;
   setRenderFgColor: (color: string) => void;
   setRenderBgColor: (color: string) => void;
   setRenderBgTransparent: (transparent: boolean) => void;
@@ -691,6 +698,9 @@ export const useQRStore = create<QRState>((set, get) => ({
   setRenderCornerRadius: (cornerRadius) => set((s) => ({ render: { ...s.render, cornerRadius } })),
   setRenderFrameStyle: (frameStyle) => set((s) => ({ render: { ...s.render, frameStyle } })),
   setRenderFrameText: (frameText) => set((s) => ({ render: { ...s.render, frameText } })),
+  setRenderFrameColor: (frameColor) => set((s) => ({ render: { ...s.render, frameColor } })),
+  setRenderFrameTextColor: (frameTextColor) =>
+    set((s) => ({ render: { ...s.render, frameTextColor } })),
   setRenderFgColor: (fgColor) => set((s) => ({ render: { ...s.render, fgColor } })),
   setRenderBgColor: (bgColor) => set((s) => ({ render: { ...s.render, bgColor } })),
   setRenderBgTransparent: (bgTransparent) =>
