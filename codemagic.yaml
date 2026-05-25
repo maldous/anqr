@@ -180,15 +180,20 @@ workflows:
           #
           # @file: prefix is CodeMagic's convention when the env var is
           # registered as a "file" type. Handle both forms.
+          # Cert private key: prefer the persistent CERT_PRIVATE_KEY_PEM env
+          # var (set once in CodeMagic UI) so the same cert is reused build
+          # to build. If that env var is missing we fall back to the
+          # round-10 ephemeral path (generate fresh + delete prior orphan
+          # certs) — that path works but emails the team "your certificate
+          # was revoked" on every run.
           CERT_KEY_PATH="$HOME/build_cert_key.pem"
-          python3 - "$CERT_KEY_PATH" <<'PY'
+          USING_PERSISTENT_KEY=0
+          if [ -n "${CERT_PRIVATE_KEY_PEM:-}" ]; then
+            echo "=== Using persistent CERT_PRIVATE_KEY_PEM from env ==="
+            python3 - "$CERT_KEY_PATH" <<'PY'
           import os, sys, shutil
           path = sys.argv[1]
           raw = (os.environ.get("CERT_PRIVATE_KEY_PEM") or "").strip()
-          if not raw:
-              print("ERROR: CERT_PRIVATE_KEY_PEM not set. Add the PEM to the", file=sys.stderr)
-              print("       CodeMagic env var group used by this workflow.", file=sys.stderr)
-              sys.exit(1)
           if raw.startswith("@file:"):
               shutil.copyfile(raw[len("@file:"):], path)
           else:
@@ -197,19 +202,65 @@ workflows:
           os.chmod(path, 0o600)
           print(f"Wrote {os.path.getsize(path)} bytes to {path}")
           PY
+            USING_PERSISTENT_KEY=1
+          else
+            echo "=== CERT_PRIVATE_KEY_PEM not set → falling back to per-build keypair ==="
+            echo "  (this works but Apple will email 'certificate revoked' each run)"
+            openssl genrsa -out "$CERT_KEY_PATH" 2048
+            chmod 600 "$CERT_KEY_PATH"
+          fi
           ls -la "$CERT_KEY_PATH"
           echo "First line: $(head -1 "$CERT_KEY_PATH")"
 
-          # First-run bootstrap: if the team already has 2 distribution
-          # certs from earlier experiments and neither matches our
-          # CERT_PRIVATE_KEY_PEM, Apple will reject --create with HTTP 409.
-          # The user has to clear those manually in App Store Connect →
-          # Certificates ONCE. After that, builds reuse the cert tied to
-          # our persistent key and no cert state changes per build.
-          #
-          # fetch-signing-files (with --create idempotent) downloads the
-          # existing cert when one matches our key, OR creates one on the
-          # first run. Subsequent builds just fetch.
+          # When using the ephemeral fallback we must delete prior
+          # distribution certs first so --create doesn't hit Apple's
+          # "current Distribution certificate or pending request" 409.
+          # When using the persistent key, the matching cert (created on
+          # first run with this key) is reused and we skip the delete to
+          # avoid the revoke-email churn.
+          if [ "$USING_PERSISTENT_KEY" -eq 0 ]; then
+            : > /tmp/asc-cert-ids.txt
+            for cert_type in DISTRIBUTION IOS_DISTRIBUTION; do
+              app-store-connect --silent --no-color certificates list \
+                --type "$cert_type" --json \
+                > "/tmp/asc-certs-$cert_type.json" 2>&1 || true
+              python3 - "/tmp/asc-certs-$cert_type.json" >> /tmp/asc-cert-ids.txt <<'PY'
+          import json, re, sys
+          path = sys.argv[1]
+          try:
+              raw = open(path).read()
+              raw = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", raw)
+              lines = raw.split("\n")
+              start = next(
+                  (i for i, line in enumerate(lines) if line.lstrip().startswith(("[", "{"))),
+                  -1,
+              )
+              if start < 0:
+                  sys.exit(0)
+              data = json.loads("\n".join(lines[start:]))
+              certs = data if isinstance(data, list) else data.get("data", [])
+              for c in certs:
+                  cid = c.get("id") if isinstance(c, dict) else None
+                  if cid:
+                      print(cid)
+          except Exception as exc:
+              print(f"(parse error: {exc})", file=sys.stderr)
+          PY
+            done
+            sort -u /tmp/asc-cert-ids.txt > /tmp/asc-cert-ids.unique
+            mv /tmp/asc-cert-ids.unique /tmp/asc-cert-ids.txt
+            echo "=== Certs to delete (ephemeral-key path) ==="
+            cat /tmp/asc-cert-ids.txt
+            while read cid; do
+              [ -z "$cid" ] && continue
+              app-store-connect certificates delete "$cid" --ignore-not-found 2>&1 \
+                || echo "  (delete $cid failed; continuing)"
+            done < /tmp/asc-cert-ids.txt
+          fi
+
+          # fetch-signing-files: with the persistent key, this either
+          # downloads the existing matching cert OR creates it once on
+          # the first run. With the ephemeral key, it always creates.
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create \
