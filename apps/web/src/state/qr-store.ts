@@ -667,9 +667,24 @@ export const useQRStore = create<QRState>((set, get) => ({
   setRenderGapMode: (gapMode) => set((s) => ({ render: { ...s.render, gapMode } })),
   setRenderModuleStyle: (moduleStyle) => set((s) => ({ render: { ...s.render, moduleStyle } })),
   setRenderFinderStyle: (finderStyle) =>
-    set((s) => ({
-      render: { ...s.render, finderStyle, eyeOuterStyle: finderStyle, eyeInnerStyle: finderStyle },
-    })),
+    set((s) => {
+      // P1: Only propagate the new finder style into the eye styles
+      // when the user hasn't explicitly overridden them. We treat
+      // "explicit override" as "current eye style differs from the
+      // current finder style" — so flipping the finder still does the
+      // obvious thing on first change, but a later edit to either eye
+      // style is preserved across subsequent finder changes.
+      const eyeOuterFollowsFinder = s.render.eyeOuterStyle === s.render.finderStyle;
+      const eyeInnerFollowsFinder = s.render.eyeInnerStyle === s.render.finderStyle;
+      return {
+        render: {
+          ...s.render,
+          finderStyle,
+          eyeOuterStyle: eyeOuterFollowsFinder ? finderStyle : s.render.eyeOuterStyle,
+          eyeInnerStyle: eyeInnerFollowsFinder ? finderStyle : s.render.eyeInnerStyle,
+        },
+      };
+    }),
   setRenderAlignmentStyle: (alignmentStyle) =>
     set((s) => ({ render: { ...s.render, alignmentStyle } })),
   setRenderTimingStyle: (timingStyle) => set((s) => ({ render: { ...s.render, timingStyle } })),
