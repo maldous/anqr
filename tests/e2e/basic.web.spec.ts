@@ -195,4 +195,76 @@ test.describe("API: /api/mcp", () => {
     // Either SSE-wrapped or direct JSON — must mention at least one of the standard MCP tool keys.
     expect(text).toMatch(/"name"\s*:\s*"[^"]+"/);
   });
+
+  // L2 / E-R8: cover the rest of the MCP surface the server registers
+  // (one tool call, one resource read, one prompt get). These were the
+  // gaps the audit called out — initialize + tools/list alone don't
+  // catch breakage in the actual operations clients invoke.
+
+  test("tools/call generate_qr returns a content block", async ({ request }) => {
+    const res = await request.post("/api/mcp", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      data: {
+        jsonrpc: "2.0",
+        id: 3,
+        method: "tools/call",
+        params: {
+          name: "generate_qr",
+          arguments: { data: "https://anqr.link" },
+        },
+      },
+    });
+    expect([200, 202]).toContain(res.status());
+    const text = await res.text();
+    // Result must include a content array; image responses surface as
+    // either a `data` base64 field or an `image/*` mimeType.
+    expect(text).toMatch(/"content"\s*:\s*\[/);
+    expect(text).toMatch(/"(?:mimeType|data)"\s*:/);
+  });
+
+  test("resources/read returns the qr_capabilities document", async ({ request }) => {
+    const res = await request.post("/api/mcp", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      data: {
+        jsonrpc: "2.0",
+        id: 4,
+        method: "resources/read",
+        params: { uri: "anqr://qr/capabilities" },
+      },
+    });
+    expect([200, 202]).toContain(res.status());
+    const text = await res.text();
+    // The resource body lists supported tools; "generate_qr" must appear.
+    expect(text).toMatch(/anqr:\/\/qr\/capabilities/);
+    expect(text).toMatch(/generate_qr/);
+  });
+
+  test("prompts/get qr_generation_guidance returns a message body", async ({ request }) => {
+    const res = await request.post("/api/mcp", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      data: {
+        jsonrpc: "2.0",
+        id: 5,
+        method: "prompts/get",
+        params: {
+          name: "qr_generation_guidance",
+          arguments: { intent: "share a website URL" },
+        },
+      },
+    });
+    expect([200, 202]).toContain(res.status());
+    const text = await res.text();
+    // Prompts return a messages array with role/content pairs.
+    expect(text).toMatch(/"messages"\s*:\s*\[/);
+    expect(text).toMatch(/"role"\s*:\s*"(user|assistant|system)"/);
+  });
 });
