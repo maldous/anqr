@@ -10,10 +10,20 @@ pre-commit:
         echo "$output"
         if [ $status -ne 0 ]; then exit $status; fi
         if echo "$output" | grep -qE 'Found [1-9][0-9]* warning'; then exit 1; fi
+    # `npm run typecheck` alone runs against the root tsconfig, which
+    # includes only the ~empty src/ tree — toothless. Run the per-project
+    # configurations directly so apps/, packages/, netlify/ and harness/
+    # all get typechecked. typecheck:tests still has 67 known errors
+    # (mostly TS18047 non-null narrowing in unit specs) — kept out of the
+    # gate until those land in a follow-up.
     typecheck:
       run: |
         [ "$ANQR_AUTOMATION_COMMIT" = "1" ] && exit 0
-        npm run typecheck
+        npm run typecheck:src \
+          && npm run typecheck:apps \
+          && npm run typecheck:packages \
+          && npm run typecheck:netlify \
+          && npm run typecheck:harness
     ast-density:
       glob: "*.{ts,tsx}"
       run: |
@@ -36,7 +46,11 @@ pre-push:
     typecheck:
       run: |
         [ "$ANQR_AUTOMATION_PUSH" = "1" ] && exit 0
-        npm run typecheck
+        npm run typecheck:src \
+          && npm run typecheck:apps \
+          && npm run typecheck:packages \
+          && npm run typecheck:netlify \
+          && npm run typecheck:harness
 
 #    unit-tests:
 #      run: npm run test:unit
