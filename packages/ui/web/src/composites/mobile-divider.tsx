@@ -110,7 +110,7 @@ export function MobileDivider({
       )}
       className={`
         md:hidden
-        h-4 py-3 -my-3 w-full
+        h-4 py-3.5 -my-3.5 w-full
         flex items-center justify-center
         bg-muted border-y border-border
         cursor-row-resize

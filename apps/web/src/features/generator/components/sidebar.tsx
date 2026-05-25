@@ -65,6 +65,12 @@ const SECTIONS = [
   { id: "qr", labelKey: "sections.qrEncoding", icon: QrCode, tier: "advanced" as const },
   { id: "render", labelKey: "sections.rendering", icon: Palette, tier: "advanced" as const },
   { id: "animation", labelKey: "sections.animation", icon: Play, tier: "advanced" as const },
+  // Safety promoted from end-of-list to mid-list (D-F9): users should
+  // see contrast / scannability warnings before they pick output format,
+  // not after they've already exported. Pros who care about safety the
+  // most are also the ones using watermark/metadata/share — still tier-
+  // gated, just no longer hidden behind them.
+  { id: "safety", labelKey: "sections.safety", icon: Shield, tier: "professional" as const },
   { id: "output", labelKey: "sections.output", icon: Download, tier: "advanced" as const },
   {
     id: "watermark",
@@ -74,7 +80,6 @@ const SECTIONS = [
   },
   { id: "metadata", labelKey: "sections.metadata", icon: FileText, tier: "professional" as const },
   { id: "share", labelKey: "sections.share", icon: Share2, tier: "professional" as const },
-  { id: "safety", labelKey: "sections.safety", icon: Shield, tier: "professional" as const },
 ];
 
 const VALID_SECTION_IDS = new Set(SECTIONS.map((section) => section.id));
@@ -259,10 +264,15 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
               className="flex-1 bg-transparent border-none outline-none text-sm font-medium placeholder:text-muted-foreground"
               title={t("header.searchSettings")}
             />
+            {/*
+              Touch-target sizing (D-F3): icon stays 16×16 visually but the
+              button itself is 44×44 (WCAG 2.5.5 AAA). Negative margin keeps
+              the row layout identical so this is a hit-area-only change.
+            */}
             {searchQuery && (
               <button
                 type="button"
-                className="h-4 w-4 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                className="h-11 w-11 -my-3 flex-shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
                 onClick={() => setSearchQuery("")}
                 title={t("common.reset")}
               >
@@ -271,7 +281,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
             )}
             <button
               type="button"
-              className="h-4 w-4 flex-shrink-0 text-muted-foreground hover:text-foreground ml-auto"
+              className="h-11 w-11 -my-3 flex-shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground ml-auto"
               onClick={handleReset}
               title={t("common.reset")}
             >
@@ -279,7 +289,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
             </button>
             <button
               type="button"
-              className="h-4 w-4 flex-shrink-0 text-muted-foreground hover:text-foreground"
+              className="h-11 w-11 -my-3 flex-shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
               onClick={onClose}
               title={t("common.close")}
             >
