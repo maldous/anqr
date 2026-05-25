@@ -23,10 +23,8 @@ export function SafetySection() {
     setSafetyMode,
     setSafetyMinModulePx,
     setSafetyLocks,
-    setQaContrastCheck,
     setQaSimulateBlur,
     setQaShowHeatmap,
-    setAutoPickVersion,
     setAutoPickEcc,
   } = useQRStore();
   const { t } = useTranslation();
@@ -196,19 +194,13 @@ export function SafetySection() {
           <HelpLink anchor="section-40" />
         </Label>
 
-        <div className="flex items-center justify-between">
-          <Label className="text-sm">
-            <HighlightedLabel>{t("safety.contrastCheck")}</HighlightedLabel>
-          </Label>
-          <Switch
-            data-testid={DynamicTestId.resolve(
-              "safety-contrast-check-switch",
-              "safety-contrast-check-switch",
-            )}
-            checked={qa.contrastCheck}
-            onCheckedChange={setQaContrastCheck}
-          />
-        </div>
+        {/*
+          B13: previously had a "Contrast Check" switch bound to
+          qa.contrastCheck — that flag had no downstream consumer, and
+          the WCAG contrast panel in analyze renders unconditionally
+          whenever detectedColors is present. Removed to stop the
+          toggle being a visible no-op.
+        */}
 
         <div className="flex items-center justify-between">
           <Label className="text-sm">
@@ -302,19 +294,13 @@ export function SafetySection() {
           <HelpLink anchor="section-40" />
         </Label>
 
-        <div className="flex items-center justify-between">
-          <Label className="text-sm">
-            <HighlightedLabel>{t("safety.autoPickVersion")}</HighlightedLabel>
-          </Label>
-          <Switch
-            data-testid={DynamicTestId.resolve(
-              "safety-auto-pick-version-switch",
-              "safety-auto-pick-version-switch",
-            )}
-            checked={auto.pickVersion}
-            onCheckedChange={setAutoPickVersion}
-          />
-        </div>
+        {/*
+          B12: previously had an "Auto-Pick Version" switch bound to
+          auto.pickVersion — that flag had no consumer in the render
+          pipeline. The QR version slider at value=0 already drives
+          auto-picking (see qr-encoding-section), so the toggle was a
+          visible no-op. Removed.
+        */}
 
         <div className="flex items-center justify-between">
           <Label className="text-sm">
