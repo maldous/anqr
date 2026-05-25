@@ -13,6 +13,7 @@
  * that are not part of the core module types.
  */
 import { create } from "zustand";
+import { DEFAULT_PAYLOAD } from "./qr-store-defaults/default-payload";
 // Import gradient types from contracts (canonical source)
 import type { GradientStop, GradientType } from "@/contracts/generator";
 // Import payload generator types and functions from payload-generators module
@@ -528,64 +529,11 @@ export const useQRStore = create<QRState>((set, get) => ({
     return state.tier;
   },
 
-  // Payload defaults
-  payload: {
-    kind: "url",
-    text: "https://anqr.link",
-    url: { href: "https://anqr.link", forceHttps: false },
-    tel: { number: "" },
-    email: { to: "" },
-    sms: { number: "" },
-    geo: { lat: 0, lon: 0 },
-    wifi: { ssid: "", auth: "WPA2", hidden: false },
-    vcard: { version: "2.1" },
-    mecard: {},
-    event: {},
-    crypto: { type: "bitcoin", address: "" },
-    otpauth: { type: "totp" },
-    // Additional content type defaults
-    bizcard: {},
-    messaging: { platform: "whatsapp", identifier: "" },
-    socialProfile: { platform: "linkedin", username: "" },
-    appLink: { platform: "universal" },
-    gs1: { gtin: "", resolver: "id.gs1.org" },
-    cloudLink: { service: "gdrive", url: "" },
-    calendarSub: { url: "" },
-    eventRsvp: {},
-    // Payment helpers defaults
-    swissQRBill: {
-      creditorIBAN: "",
-      creditorName: "",
-      creditorAddressType: "S",
-      creditorCountry: "CH",
-      currency: "CHF",
-      referenceType: "NON",
-    },
-    lightning: { invoice: "" },
-    ethereum: { targetAddress: "" },
-    qris: { merchantId: "", merchantName: "", merchantCity: "" },
-    duitnow: { proxyType: "MOBILE", proxyValue: "", merchantName: "" },
-    bharatqr: { merchantName: "", merchantCity: "" },
-    vietqr: { bankBin: "", accountNumber: "" },
-    qrph: { accountNumber: "", merchantName: "", merchantCity: "" },
-    twqr: { merchantId: "", merchantName: "", merchantCity: "" },
-    hkqr: { fpsId: "", merchantName: "" },
-    jpqr: { storeId: "", merchantName: "" },
-    auspaynet: { merchantName: "" },
-    paypalMe: { username: "" },
-    cashapp: { cashtag: "" },
-    emvGeneric: {
-      merchantId: "",
-      merchantName: "",
-      merchantCity: "",
-      countryCode: "",
-      currencyCode: "",
-    },
-    validate: false,
-    normalizeNewlines: false,
-    trim: true,
-    maxLenGuard: true,
-  },
+  // Payload defaults — extracted to ./qr-store-defaults/default-payload.ts
+  // (L6 step 1). Other default blocks (qr, render, overlay, animation,
+  // output, watermark, metadata, safety) follow the same pattern in
+  // subsequent batches.
+  payload: DEFAULT_PAYLOAD,
   setPayloadKind: (kind) => set((s) => ({ payload: { ...s.payload, kind } })),
   setPayloadText: (text) => set((s) => ({ payload: { ...s.payload, text } })),
   setPayloadUrl: (url) =>
