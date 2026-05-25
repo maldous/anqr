@@ -1345,7 +1345,15 @@
     "textPlaceholder": "© Company Name",
     "topLeft": "Top Left",
     "topRight": "Top Right",
-    "uploadImage": "Upload Image"
+    "uploadImage": "Upload Image",
+    "posTopLeft": "Top left",
+    "posTopCenter": "Top center",
+    "posTopRight": "Top right",
+    "posCenterLeft": "Center left",
+    "posCenterRight": "Center right",
+    "posBottomLeft": "Bottom left",
+    "posBottomCenter": "Bottom center",
+    "posBottomRight": "Bottom right"
   },
   "accessibility": {
     "toggleSettings": "Toggle settings panel",

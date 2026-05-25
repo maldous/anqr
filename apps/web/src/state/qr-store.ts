@@ -415,7 +415,19 @@ export interface QRState {
     kind: "text" | "image" | "pattern";
     text: string;
     image: File | null;
-    position: "center" | "corners" | "edges" | "behind" | "quiet_zone";
+    // The 9 positions the renderer's calculateWatermarkPositions actually
+    // supports. Old values (corners/edges/behind/quiet_zone) all fell
+    // through the renderer switch to top-left padding — see B1 fix.
+    position:
+      | "top-left"
+      | "top-center"
+      | "top-right"
+      | "center-left"
+      | "center"
+      | "center-right"
+      | "bottom-left"
+      | "bottom-center"
+      | "bottom-right";
     opacity: number;
     blend: "normal" | "multiply" | "screen" | "overlay";
   };
@@ -669,7 +681,21 @@ export const useQRStore = create<QRState>((set, get) => ({
   setRenderBgTransparent: (bgTransparent) =>
     set((s) => ({ render: { ...s.render, bgTransparent } })),
   setRenderGradient: (gradient) =>
-    set((s) => ({ render: { ...s.render, gradient: { ...s.render.gradient, ...gradient } } })),
+    set((s) => {
+      const merged = { ...s.render.gradient, ...gradient };
+      // B2: when the user switches type from "none" to a real gradient,
+      // seed a 2-stop palette so the renderer's `if (type === "none" ||
+      // !stops?.length)` guard doesn't silently skip rendering. Without
+      // this, picking "linear"/"radial"/"conic" looked active in the UI
+      // but produced no visible gradient.
+      if (gradient.type && gradient.type !== "none" && merged.stops.length === 0) {
+        merged.stops = [
+          { pos: 0, color: s.render.fgColor },
+          { pos: 1, color: s.render.bgColor },
+        ];
+      }
+      return { render: { ...s.render, gradient: merged } };
+    }),
 
   _preArtworkQr: null,
 

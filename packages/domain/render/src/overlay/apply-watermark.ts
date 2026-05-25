@@ -35,8 +35,10 @@ export function applyWatermark(
   // Draw source
   ctx.drawImage(sourceCanvas, 0, 0);
 
-  // Set up blending
-  ctx.globalAlpha = opacity;
+  // Set up blending. UI stores opacity 0-100; ctx.globalAlpha is 0-1
+  // and clamps to 1, so the prior code made every nonzero value fully
+  // opaque. The server renderer already normalizes; mirror that here.
+  ctx.globalAlpha = Math.max(0, Math.min(1, opacity / 100));
   applyWatermarkBlendMode(ctx, blend);
 
   let watermark: HTMLCanvasElement | HTMLImageElement | null = null;

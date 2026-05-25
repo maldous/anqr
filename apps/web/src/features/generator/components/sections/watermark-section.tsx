@@ -140,11 +140,21 @@ export function WatermarkSection() {
             triggerTestId="watermark-position-trigger"
             value={watermark.position}
           >
-            <SelectItem value="center">{t("watermark.center")}</SelectItem>
-            <SelectItem value="corners">{t("watermark.corners")}</SelectItem>
-            <SelectItem value="edges">{t("watermark.edges")}</SelectItem>
-            <SelectItem value="behind">{t("watermark.behindQr")}</SelectItem>
-            <SelectItem value="quiet_zone">{t("watermark.quietZone")}</SelectItem>
+            {/*
+              B1: previous options (corners/edges/behind/quiet_zone) all
+              fell through `calculateWatermarkPositions`'s switch and
+              landed on top-left padding. Switched to the 9 positions the
+              renderer actually understands.
+            */}
+            <SelectItem value="top-left">{t("watermark.posTopLeft", "Top left")}</SelectItem>
+            <SelectItem value="top-center">{t("watermark.posTopCenter", "Top center")}</SelectItem>
+            <SelectItem value="top-right">{t("watermark.posTopRight", "Top right")}</SelectItem>
+            <SelectItem value="center-left">{t("watermark.posCenterLeft", "Center left")}</SelectItem>
+            <SelectItem value="center">{t("watermark.center", "Center")}</SelectItem>
+            <SelectItem value="center-right">{t("watermark.posCenterRight", "Center right")}</SelectItem>
+            <SelectItem value="bottom-left">{t("watermark.posBottomLeft", "Bottom left")}</SelectItem>
+            <SelectItem value="bottom-center">{t("watermark.posBottomCenter", "Bottom center")}</SelectItem>
+            <SelectItem value="bottom-right">{t("watermark.posBottomRight", "Bottom right")}</SelectItem>
           </LabeledTestIdSelectField>
 
           {/* Opacity */}
