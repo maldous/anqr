@@ -23,9 +23,14 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
-const SNAPSHOT_DIR = join(__dirname, "__snapshots__", "permutations");
+// ESM equivalent of __dirname — Playwright runs this spec under ESM and
+// the bare __dirname is undefined there. Compute from import.meta.url.
+const __filename_ = fileURLToPath(import.meta.url);
+const __dirname_ = dirname(__filename_);
+const SNAPSHOT_DIR = join(__dirname_, "__snapshots__", "permutations");
 const SNAPSHOT_MODE = process.env.ANQR_SNAPSHOT_PERMUTATIONS ?? "off";
 
 const WELCOME_VERSION = "2026.05.24.2";
@@ -85,11 +90,14 @@ async function applyCombo(
 
 const MODULE_STYLES = ["square", "rounded", "dots", "diamond", "connected"];
 const DITHER_KERNELS = ["floyd_steinberg", "jarvis", "atkinson", "burkes"];
-const ANIMATION_PATTERNS = ["none", "pulse", "wave", "scanline", "shimmer", "drift"];
+// "none" intentionally excluded — already covered by the static grid
+// below. Start from the first real animated pattern.
+const ANIMATION_PATTERNS = ["pulse", "wave", "scanline", "shimmer", "drift"];
 
 // Pick a representative slice: every module style × the 4 dither
-// families paired with a sensible animation. ~30 combos: 5×4 base grid
-// + 10 module/animation pairings without dither variation.
+// families paired with anim=none. Plus one entry per real animation
+// pattern, each on a different (module, dither) so we exercise the
+// animation surface without duplicating any combo.
 const COMBOS: Array<{ moduleStyle: string; ditherKernel: string; animPattern: string }> = [];
 for (const ms of MODULE_STYLES) {
   for (const dk of DITHER_KERNELS) {

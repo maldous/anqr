@@ -165,3 +165,13 @@ if (isCapacitor) {
 
 // Ensure every interactive element has a unique dynamic test id.
 initAutoDynamicTestIds();
+
+// Expose the qr-store on window for e2e tests (the permutations
+// Playwright project mutates state via this global to exercise every
+// module-style × dither × animation combo). The bundle cost is zero —
+// useQRStore is already imported by every store consumer; this just
+// adds a property assignment on the singleton. See
+// tests/e2e/permutations.web.spec.ts and L10 in review-2026-05-24.
+void import("../state/qr-store").then(({ useQRStore }) => {
+  (globalThis as unknown as { useQRStore?: typeof useQRStore }).useQRStore = useQRStore;
+});
