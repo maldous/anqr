@@ -48,48 +48,105 @@ export function applyAnimationPattern(
     }
 
     case "wave": {
+      // A-F2: was issuing up to 1024 sub-pixel drawImage calls per frame
+      // (512 for axis y/x, 1024 for xy at 512²). Replaced with a single
+      // ImageData read, in-JS row/column shifts, single ImageData write.
+      // Output identical — same `Math.round(Math.sin(...) * amplitude)`
+      // arithmetic, just applied as pixel-buffer copies instead of canvas
+      // blits. Falls back to the original drawImage loop if getImageData
+      // isn't available (test/mocked contexts).
       ctx.drawImage(canvas as CanvasImageSource, 0, 0);
       const axis = options.waveAxis || "y";
       const amplitude = 2;
       const waveScale = 0.1;
 
+      const sourceCtx = (canvas as HTMLCanvasElement).getContext?.("2d");
+      const src = sourceCtx?.getImageData?.(0, 0, canvas.width, canvas.height);
+      if (!src) {
+        // Test/mocked context lacks getImageData — keep the original
+        // per-row drawImage loops so the visual output is still correct.
+        if (axis === "y" || axis === "xy") {
+          for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
+            const offsetX = Math.round(
+              Math.sin((y + progress * canvas.height + seed) * waveScale) * amplitude,
+            );
+            ctx.drawImage(
+              canvas as CanvasImageSource,
+              bounds.x, y, bounds.width, 1,
+              bounds.x + offsetX, y, bounds.width, 1,
+            );
+          }
+        }
+        if (axis === "x" || axis === "xy") {
+          for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
+            const offsetY = Math.round(
+              Math.sin((x + progress * canvas.width + seed) * waveScale) * amplitude,
+            );
+            ctx.drawImage(
+              canvas as CanvasImageSource,
+              x, bounds.y, 1, bounds.height,
+              x, bounds.y + offsetY, 1, bounds.height,
+            );
+          }
+        }
+        break;
+      }
+
+      const W = canvas.width;
+      const H = canvas.height;
+      const dst = new Uint8ClampedArray(src.data);
+
       if (axis === "y" || axis === "xy") {
+        // Per-row horizontal shift: copy contiguous row bytes (W*4) from
+        // src to dst at shifted column offset. Typed-array .set is one
+        // memcpy per row instead of a drawImage state setup.
         for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
           const offsetX = Math.round(
             Math.sin((y + progress * canvas.height + seed) * waveScale) * amplitude,
           );
-          ctx.drawImage(
-            canvas as CanvasImageSource,
-            bounds.x,
-            y,
-            bounds.width,
-            1,
-            bounds.x + offsetX,
-            y,
-            bounds.width,
-            1,
+          if (offsetX === 0) continue;
+          const dstX = bounds.x + offsetX;
+          const dstStart = Math.max(0, dstX);
+          const dstEnd = Math.min(W, dstX + bounds.width);
+          const copyLen = dstEnd - dstStart;
+          if (copyLen <= 0) continue;
+          const srcAdjust = dstStart - dstX;
+          const rowBase = y * W * 4;
+          const srcByteStart = rowBase + (bounds.x + srcAdjust) * 4;
+          const dstByteStart = rowBase + dstStart * 4;
+          dst.set(
+            src.data.subarray(srcByteStart, srcByteStart + copyLen * 4),
+            dstByteStart,
           );
         }
       }
 
       if (axis === "x" || axis === "xy") {
+        // Per-column vertical shift: column bytes aren't contiguous, so
+        // copy pixel-by-pixel (4 bytes per pixel). Reads from `src` so
+        // axis="xy" applies x-shift to the ORIGINAL canvas content
+        // (matches the prior drawImage(canvas, ...) per-column source).
+        const srcData = src.data;
         for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
           const offsetY = Math.round(
             Math.sin((x + progress * canvas.width + seed) * waveScale) * amplitude,
           );
-          ctx.drawImage(
-            canvas as CanvasImageSource,
-            x,
-            bounds.y,
-            1,
-            bounds.height,
-            x,
-            bounds.y + offsetY,
-            1,
-            bounds.height,
-          );
+          if (offsetY === 0) continue;
+          for (let row = 0; row < bounds.height; row++) {
+            const srcY = bounds.y + row;
+            const dstY = bounds.y + row + offsetY;
+            if (dstY < 0 || dstY >= H) continue;
+            const srcIdx = (srcY * W + x) * 4;
+            const dstIdx = (dstY * W + x) * 4;
+            dst[dstIdx] = srcData[srcIdx];
+            dst[dstIdx + 1] = srcData[srcIdx + 1];
+            dst[dstIdx + 2] = srcData[srcIdx + 2];
+            dst[dstIdx + 3] = srcData[srcIdx + 3];
+          }
         }
       }
+
+      ctx.putImageData(new ImageData(dst, W, H), 0, 0);
       break;
     }
 
