@@ -13,7 +13,15 @@
  * that are not part of the core module types.
  */
 import { create } from "zustand";
+import { DEFAULT_ANIMATION } from "./qr-store-defaults/default-animation";
+import { DEFAULT_METADATA } from "./qr-store-defaults/default-metadata";
+import { DEFAULT_OUTPUT } from "./qr-store-defaults/default-output";
+import { DEFAULT_OVERLAY } from "./qr-store-defaults/default-overlay";
 import { DEFAULT_PAYLOAD } from "./qr-store-defaults/default-payload";
+import { DEFAULT_QR } from "./qr-store-defaults/default-qr";
+import { DEFAULT_RENDER } from "./qr-store-defaults/default-render";
+import { DEFAULT_SAFETY } from "./qr-store-defaults/default-safety";
+import { DEFAULT_WATERMARK } from "./qr-store-defaults/default-watermark";
 // Import gradient types from contracts (canonical source)
 import type { GradientStop, GradientType } from "@/contracts/generator";
 // Import payload generator types and functions from payload-generators module
@@ -626,17 +634,8 @@ export const useQRStore = create<QRState>((set, get) => ({
     })),
   setPayloadValidation: (opts) => set((s) => ({ payload: { ...s.payload, ...opts } })),
 
-  // QR defaults
-  qr: {
-    version: 0,
-    ecc: "H",
-    encodingMode: "auto",
-    maskPattern: "auto",
-    characterEncoding: "default",
-    quietZoneModules: 4,
-    quietZoneMinEnforce: true,
-    borderModulesExtra: 0,
-  },
+  // QR encoding defaults — see qr-store-defaults/default-qr.ts (L6).
+  qr: DEFAULT_QR,
   setQrVersion: (version) => set((s) => ({ qr: { ...s.qr, version } })),
   setQrEcc: (ecc) => set((s) => ({ qr: { ...s.qr, ecc } })),
   setQrEncodingMode: (encodingMode) => set((s) => ({ qr: { ...s.qr, encodingMode } })),
@@ -647,34 +646,8 @@ export const useQRStore = create<QRState>((set, get) => ({
   setQrQuietZoneMinEnforce: (quietZoneMinEnforce) =>
     set((s) => ({ qr: { ...s.qr, quietZoneMinEnforce } })),
 
-  // Render defaults
-  render: {
-    modulePx: 20,
-    crispEdges: true,
-    pixelSnap: "floor",
-    moduleGapPercent: 0,
-    gapMode: "none",
-    moduleStyle: "square",
-    finderStyle: "square",
-    alignmentStyle: "match_finder",
-    timingStyle: "match_module",
-    cornerRadius: 0,
-    dotRotationDeg: 0,
-    eyeOuterStyle: "square",
-    eyeInnerStyle: "square",
-    eyeScale: 100,
-    frameStyle: "none",
-    frameText: "",
-    fgColor: "#000000",
-    bgColor: "#ffffff",
-    bgTransparent: false,
-    palette: [],
-    paletteMode: "position",
-    gradient: { type: "none", stops: [] },
-    perModuleColorMode: "solid",
-    contrastGuard: false,
-    minContrastRatio: 4.5,
-  },
+  // Render defaults — see qr-store-defaults/default-render.ts.
+  render: DEFAULT_RENDER,
   setRenderModulePx: (modulePx) => set((s) => ({ render: { ...s.render, modulePx } })),
   setRenderCrispEdges: (crispEdges) => set((s) => ({ render: { ...s.render, crispEdges } })),
   setRenderModuleGap: (moduleGapPercent) =>
@@ -701,68 +674,7 @@ export const useQRStore = create<QRState>((set, get) => ({
   _preArtworkQr: null,
 
   // Overlay defaults
-  overlay: {
-    enabled: false,
-    file: null,
-    url: "",
-    type: "static",
-    framePick: "all",
-    cropEnabled: false,
-    cropRegion: { x: 0.5, y: 0.5, size: 1 },
-    fit: "cover",
-    rotateDeg: 0,
-    flipX: false,
-    flipY: false,
-    colorMode: "color",
-    invert: false,
-    brightness: 0,
-    contrast: 0,
-    gamma: 1,
-    saturation: 0,
-    hueRotateDeg: 0,
-    blurPx: 0,
-    sharpen: 0,
-    posterizeLevels: 0,
-    // 0 disables hard thresholding. Any positive value applies a binary threshold.
-    threshold: 0,
-    edgeDetect: "off",
-    mode: "dithered",
-    intensity: 50,
-    preserveFinders: true,
-    preserveTiming: true,
-    preserveAlignment: true,
-    protectFormatInfo: true,
-    protectVersionInfo: true,
-    subpixelGridSize: "3x3",
-    subpixelCenterRule: "strict",
-    subpixelNeutralColor: "#808080",
-    subpixelFinderOverride: "solid",
-    ditherKind: "error_diffusion",
-    ditherStrength: 50,
-    finderDitherStrength: 65,
-    blendPreservations: false,
-    blendPreservationMode: "overlay",
-    ditherSerpentine: false,
-    diffusionKernel: "floyd_steinberg",
-    orderedMatrix: "bayer4",
-    blueNoiseTileSize: 64,
-    blueNoiseSeed: 0,
-    colorDither: "none",
-    halftoneCell: "per_module",
-    halftoneDotShape: "circle",
-    duotoneColors: ["#000000", "#ffffff"],
-    brightnessCurve: "linear",
-    eccAwareEnabled: false,
-    eccAwareRiskBudget: 50,
-    eccAwareWeightMap: "distance_to_finders",
-    gifUseFrameDelays: true,
-    gifMaxFps: 30,
-    gifDisposalHandling: "respect",
-    qrFirstMode: false,
-    qrartIterations: 10000,
-    qrartFragmentLength: 8,
-    qrartSeed: 42,
-  },
+  overlay: DEFAULT_OVERLAY,
   setOverlayEnabled: (enabled) => set((s) => ({ overlay: { ...s.overlay, enabled } })),
   setOverlayFile: (file) =>
     set((s) => ({ overlay: { ...s.overlay, file, enabled: !!file || !!s.overlay.url } })),
@@ -838,28 +750,8 @@ export const useQRStore = create<QRState>((set, get) => ({
   setOverlayThreshold: (threshold) => set((s) => ({ overlay: { ...s.overlay, threshold } })),
   setOverlayEdgeDetect: (edgeDetect) => set((s) => ({ overlay: { ...s.overlay, edgeDetect } })),
 
-  // Animation defaults
-  animation: {
-    speedMs: 100,
-    loop: true,
-    bounce: false,
-    playing: true,
-    startFrame: 0,
-    maxFrames: 0, // 0 = auto (use source frames, capped for performance)
-    frameStep: 1,
-    perFrameDelay: [],
-    interpolate: "none",
-    temporalDither: "off",
-    seed: 0,
-    pattern: "none",
-    target: "result",
-    waveAxis: "y",
-    pattern2: "none",
-    target2: "result",
-    waveAxis2: "x",
-    moduleJitterPx: 0,
-    colorCycle: false,
-  },
+  // Animation defaults — see qr-store-defaults/default-animation.ts.
+  animation: DEFAULT_ANIMATION,
   setAnimationSpeedMs: (speedMs) => set((s) => ({ animation: { ...s.animation, speedMs } })),
   setAnimationLoop: (loop) => set((s) => ({ animation: { ...s.animation, loop } })),
   setAnimationBounce: (bounce) => set((s) => ({ animation: { ...s.animation, bounce } })),
@@ -873,27 +765,8 @@ export const useQRStore = create<QRState>((set, get) => ({
   setAnimationTemporalDither: (temporalDither) =>
     set((s) => ({ animation: { ...s.animation, temporalDither } })),
 
-  // Output defaults
-  output: {
-    format: "gif",
-    widthPx: 400,
-    heightPx: 400,
-    quality: 0.9,
-    filename: "anqr-qrcode",
-    includeQuietZone: true,
-    dpi: 72,
-    bgOverride: "",
-    gifPaletteSize: 256,
-    gifQuantizer: "median_cut",
-    gifDither: "floyd",
-    gifTransparentColor: "",
-    gifDisposal: "keep",
-    svgTrueVector: false,
-    svgShapePrecision: "pixel",
-    svgEmbedRasterOverlay: true,
-    svgMetadata: {},
-    formatExtra: "none",
-  },
+  // Output defaults — see qr-store-defaults/default-output.ts.
+  output: DEFAULT_OUTPUT,
   setOutputFormat: (format) => set((s) => ({ output: { ...s.output, format } })),
   setOutputWidth: (widthPx) =>
     set((s) => ({
@@ -917,46 +790,20 @@ export const useQRStore = create<QRState>((set, get) => ({
   setOutputSvgTrueVector: (svgTrueVector) =>
     set((s) => ({ output: { ...s.output, svgTrueVector } })),
 
-  // Watermark defaults
-  watermark: {
-    enabled: false,
-    kind: "text",
-    text: "",
-    image: null,
-    position: "center",
-    opacity: 50,
-    blend: "normal",
-  },
+  // Watermark defaults — see qr-store-defaults/default-watermark.ts.
+  watermark: DEFAULT_WATERMARK,
   setWatermarkEnabled: (enabled) => set((s) => ({ watermark: { ...s.watermark, enabled } })),
   setWatermarkKind: (kind) => set((s) => ({ watermark: { ...s.watermark, kind } })),
   setWatermarkText: (text) => set((s) => ({ watermark: { ...s.watermark, text } })),
   setWatermarkPosition: (position) => set((s) => ({ watermark: { ...s.watermark, position } })),
   setWatermarkOpacity: (opacity) => set((s) => ({ watermark: { ...s.watermark, opacity } })),
 
-  // Metadata defaults
-  metadata: {
-    title: "",
-    author: "",
-    copyright: "",
-    license: "",
-    description: "",
-    creationTime: false,
-    customKv: [],
-  },
+  // Metadata defaults — see qr-store-defaults/default-metadata.ts.
+  metadata: DEFAULT_METADATA,
   setMetadata: (meta) => set((s) => ({ metadata: { ...s.metadata, ...meta } })),
 
-  // Safety defaults
-  safety: {
-    mode: "off",
-    minModulePx: 2,
-    minQuietZoneModules: 4,
-    lockFinders: true,
-    lockTiming: true,
-    lockAlign: true,
-    lockFormat: true,
-    lockVersion: true,
-    maxOverlayIntensityByEcc: { L: 30, M: 50, Q: 70, H: 85 },
-  },
+  // Safety defaults — see qr-store-defaults/default-safety.ts.
+  safety: DEFAULT_SAFETY,
   setSafetyMode: (mode) => set((s) => ({ safety: { ...s.safety, mode } })),
   setSafetyMinModulePx: (minModulePx) => set((s) => ({ safety: { ...s.safety, minModulePx } })),
   setSafetyLocks: (locks) => set((s) => ({ safety: { ...s.safety, ...locks } })),
