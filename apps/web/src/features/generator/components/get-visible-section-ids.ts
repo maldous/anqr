@@ -16,7 +16,7 @@ export function getVisibleSectionIds(
       const query = searchQuery.toLowerCase();
       const translatedLabel = translate(section.labelKey);
       const labelMatch = translatedLabel.toLowerCase().includes(query);
-      const keywords = getAvailableKeywords(section.id, tier);
+      const keywords = getAvailableKeywords(section.id, tier, translate);
       const keywordMatch = keywords.some((keyword) => keyword.toLowerCase().includes(query));
       return labelMatch || keywordMatch;
     })
