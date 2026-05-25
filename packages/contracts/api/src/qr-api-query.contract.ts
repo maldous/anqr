@@ -23,7 +23,15 @@ export const qrApiQuerySchema = z.object({
     .regex(/^[0-9a-fA-F]{6}$/)
     .optional()
     .describe("Background color as a 6-digit hex value without #"),
-  format: z.enum(["png", "svg"]).optional().describe("Output format"),
+  // L8: was limited to ["png", "svg"] while renderBasicServerQROutput
+  // already supports the full OutputFormat enum (png, webp, gif, svg).
+  // gif here is single-frame; the animated path is /api/qr with
+  // animPattern=... (the contract endpoint is the type-safe, non-
+  // animated surface).
+  format: z
+    .enum(["png", "webp", "gif", "svg"])
+    .optional()
+    .describe("Output format. gif is single-frame; use /api/qr for animation."),
   margin: z.coerce
     .number()
     .int()

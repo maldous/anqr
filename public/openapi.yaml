@@ -371,7 +371,7 @@ components:
       description: Output image format
       schema:
         type: string
-        enum: [png, gif, webp]
+        enum: [png, gif, webp, svg]
         default: gif
     SizeParam:
       name: size
