@@ -28,7 +28,7 @@ export async function handler(request: Request) {
       releaseAnimatedRenderLock = await acquireAnimatedRenderLock();
     }
 
-    return await processQRRequest(p, params, request.url);
+    return await processQRRequest(p, params, request.url, serializeAnimatedRender);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     Sentry.captureException(error);
