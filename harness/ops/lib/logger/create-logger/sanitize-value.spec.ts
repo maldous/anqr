@@ -76,7 +76,6 @@ describe("sanitizeValue", () => {
 
     it("should truncate string Error cause", () => {
       const err = new Error("parent");
-      // @ts-expect-error setting non-standard cause
       err.cause = "a".repeat(500);
       const result = sanitizeValue(err) as Record<string, unknown>;
       expect(result.cause).toMatch(/a+…/);

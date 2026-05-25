@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { describe, it, expect } from "vitest";
 
 const { getResponseBodySummary } = await import("./get-response-body-summary.mjs");
@@ -6,7 +5,7 @@ const { getResponseBodySummary } = await import("./get-response-body-summary.mjs
 describe("getResponseBodySummary", () => {
   it("should trim string response bodies", () => {
     const long = "a".repeat(500);
-    const result = getResponseBodySummary(long);
+    const result = getResponseBodySummary(long) as string;
     expect(result.length).toBeLessThan(310);
   });
 

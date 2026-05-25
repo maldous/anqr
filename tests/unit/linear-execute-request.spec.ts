@@ -122,7 +122,7 @@ describe("executeLinearIssueRequest", () => {
   it.skip("returns 202 on successful execution (requires live runner — covered by integration tests)", async () => {
     process.env.LINEAR_API_KEY = "test-key";
     const res = await driveRequest(executeLinearIssueRequest, { identifier: "ANQ-123" });
-    expect(res.status).toBe(202);
+    expect(res.statusCode).toBe(202);
   });
 
   it("reads identifier from x-linear-identifier header as fallback", async () => {

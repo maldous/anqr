@@ -22,7 +22,7 @@ describe("isStaleQuotaExhausted", () => {
     );
     const results = loadProbeResults();
     // Any provider with a non-quota_exhausted status should not be stale
-    for (const [name, entry] of Object.entries(results)) {
+    for (const [name, entry] of Object.entries(results) as Array<[string, { status: string }]>) {
       if (entry.status !== "quota_exhausted") {
         expect(isStaleQuotaExhausted(name)).toBe(false);
       }

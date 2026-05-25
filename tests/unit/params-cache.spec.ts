@@ -55,7 +55,8 @@ describe("paramsCache live binding", () => {
     paramsMod.setParamsCache(custom);
 
     expect(paramsMod.paramsCache).not.toBeNull();
-    expect(paramsMod.paramsCache.evalCycle.counter).toBe(42);
+    // Non-null asserted via the expect above.
+    expect(paramsMod.paramsCache!.evalCycle.counter).toBe(42);
   });
 
   it("setParamsCache(null) resets cache to null", () => {

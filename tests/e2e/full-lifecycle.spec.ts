@@ -185,7 +185,7 @@ describe("Full lifecycle: Linear → AI → push to main → worktree sync", { t
       "scheduler creates an evidence record (issue claimed)",
       async () => {
         const deadline = Date.now() + 5 * 60_000;
-        let evidence = null;
+        let evidence: ReturnType<typeof findEvidenceByIssue> = null;
         while (!evidence && Date.now() < deadline) {
           evidence = findEvidenceByIssue(issueIdentifier);
           if (!evidence) await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
