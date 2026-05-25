@@ -4,6 +4,12 @@ import { getApiQrRateLimitPerMinute } from "./get-api-qr-rate-limit-per-minute";
 import { API_QR_RATE_LIMIT_WINDOW_MS } from "./api-qr-rate-limit.const";
 import type { RateLimitEntry } from "./rate-limit-entry.types";
 
+// ADR-0016 (rate-limit defense-in-depth): this Map lives per Netlify
+// container. Multiple warm containers means the effective per-client
+// ceiling is `limit × container-count`, not a hard cap. Migrating to
+// Netlify Blobs for a real ceiling adds 10-50ms per request — not
+// worth it for spam protection. The 429 response carries
+// `X-ANQR-RateLimit-Mode: approximate` so consumers can detect this.
 const requestCounts = new Map<string, RateLimitEntry>();
 
 export function enforceApiQrRateLimit(request: Request): Response | null {

@@ -4,6 +4,8 @@ import { getRateLimitPerMinute } from "./get-rate-limit-per-minute";
 import { MCP_RATE_LIMIT_WINDOW_MS } from "./mcp-rate-limit.const";
 import type { RateLimitEntry } from "./rate-limit-entry.types";
 
+// ADR-0016: same per-container approximate-ceiling pattern as
+// enforce-api-qr-rate-limit. See ADR for rationale.
 const requestCounts = new Map<string, RateLimitEntry>();
 
 export function enforceMcpRateLimit(request: Request): Response | null {
