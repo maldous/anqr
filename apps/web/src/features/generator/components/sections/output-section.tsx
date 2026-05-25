@@ -1,10 +1,5 @@
 import { useTranslation } from "react-i18next";
-import {
-  type GifDither,
-  type GifQuantizer,
-  type OutputFormat,
-  useQRStore,
-} from "../../../../state/qr-store";
+import { type OutputFormat, useQRStore } from "../../../../state/qr-store";
 import {
   DynamicTestId,
   HelpLink,
@@ -20,6 +15,15 @@ import {
   Switch,
 } from "./section-ui";
 
+// B4-B11: several output controls used to be exposed here that had
+// no consumer in the export pipeline (formatExtra, gifQuantizer,
+// gifDither, gifTransparentColor, svgShapePrecision,
+// svgEmbedRasterOverlay, includeQuietZone). They roundtripped through
+// share URLs and contracts but the render code never read them, so
+// flipping them changed nothing the user could observe. Removed from
+// the UI. The store fields stay for now (still serialised) and will
+// be cleaned in the orphan-state pass.
+
 export function OutputSection() {
   const {
     tier,
@@ -30,7 +34,6 @@ export function OutputSection() {
     setOutputQuality,
     setOutputFilename,
     setOutputGifPaletteSize,
-    setOutputGifQuantizer,
     setOutputSvgTrueVector,
   } = useQRStore();
   const { t } = useTranslation();
@@ -139,7 +142,7 @@ export function OutputSection() {
             />
           </div>
 
-          {/* GIF Options */}
+          {/* GIF Options — only paletteSize is wired into the encoder */}
           {output.format === "gif" && (
             <div className="space-y-2 pt-2 border-t">
               <Label className="text-muted-foreground flex items-center gap-1.5">
@@ -166,72 +169,10 @@ export function OutputSection() {
                   step={1}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm">
-                  <HighlightedLabel>{t("output.quantizer")}</HighlightedLabel>
-                </Label>
-                <Select
-                  value={output.gifQuantizer}
-                  onValueChange={(v) => setOutputGifQuantizer(v as GifQuantizer)}
-                >
-                  <SelectTrigger
-                    data-testid={DynamicTestId.resolve(
-                      "output-gif-quantizer-trigger",
-                      "output-gif-quantizer-trigger",
-                    )}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent
-                    data-testid={DynamicTestId.resolve(
-                      "output-gif-quantizer-content",
-                      "output-gif-quantizer-content",
-                    )}
-                  >
-                    <SelectItem value="median_cut">{t("output.medianCut")}</SelectItem>
-                    <SelectItem value="neuquant">{t("output.neuquant")}</SelectItem>
-                    <SelectItem value="octree">{t("output.octree")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm">
-                  <HighlightedLabel>{t("output.dithering")}</HighlightedLabel>
-                </Label>
-                <Select
-                  value={output.gifDither}
-                  onValueChange={(v) =>
-                    useQRStore.setState((s) => ({
-                      output: { ...s.output, gifDither: v as GifDither },
-                    }))
-                  }
-                >
-                  <SelectTrigger
-                    data-testid={DynamicTestId.resolve(
-                      "output-gif-dither-trigger",
-                      "output-gif-dither-trigger",
-                    )}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent
-                    data-testid={DynamicTestId.resolve(
-                      "output-gif-dither-content",
-                      "output-gif-dither-content",
-                    )}
-                  >
-                    <SelectItem value="off">{t("output.off")}</SelectItem>
-                    <SelectItem value="floyd">{t("output.floydSteinberg")}</SelectItem>
-                    <SelectItem value="ordered">{t("output.ordered")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           )}
 
-          {/* SVG Options */}
+          {/* SVG Options — only trueVector is wired into the export */}
           {output.format === "svg" && (
             <div className="space-y-2 pt-2 border-t">
               <Label className="text-muted-foreground flex items-center gap-1.5">
@@ -255,97 +196,11 @@ export function OutputSection() {
                   onCheckedChange={setOutputSvgTrueVector}
                 />
               </div>
-
-              {output.svgTrueVector && (
-                <div className="space-y-2">
-                  <Label className="text-sm">
-                    <HighlightedLabel>{t("output.shapePrecision")}</HighlightedLabel>
-                  </Label>
-                  <Select
-                    value={output.svgShapePrecision}
-                    onValueChange={(v) =>
-                      useQRStore.setState((s) => ({
-                        output: {
-                          ...s.output,
-                          svgShapePrecision: v as typeof output.svgShapePrecision,
-                        },
-                      }))
-                    }
-                  >
-                    <SelectTrigger
-                      data-testid={DynamicTestId.resolve(
-                        "output-svg-precision-trigger",
-                        "output-svg-precision-trigger",
-                      )}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent
-                      data-testid={DynamicTestId.resolve(
-                        "output-svg-precision-content",
-                        "output-svg-precision-content",
-                      )}
-                    >
-                      <SelectItem value="pixel">{t("output.pixel")}</SelectItem>
-                      <SelectItem value="precise">{t("output.precise")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">
-                  <HighlightedLabel>{t("output.embedRasterOverlay")}</HighlightedLabel>
-                </Label>
-                <Switch
-                  data-testid={DynamicTestId.resolve(
-                    "output-svg-embed-raster-switch",
-                    "output-svg-embed-raster-switch",
-                  )}
-                  checked={output.svgEmbedRasterOverlay}
-                  onCheckedChange={(checked) =>
-                    useQRStore.setState((s) => ({
-                      output: { ...s.output, svgEmbedRasterOverlay: checked },
-                    }))
-                  }
-                />
-              </div>
             </div>
           )}
 
-          {/* GIF Transparent Color */}
-          {output.format === "gif" && (
-            <div className="space-y-2">
-              <Label className="text-sm">
-                <HighlightedLabel>{t("output.transparentColor")}</HighlightedLabel>
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  type="color"
-                  value={output.gifTransparentColor || "#ffffff"}
-                  onChange={(e) =>
-                    useQRStore.setState((s) => ({
-                      output: { ...s.output, gifTransparentColor: e.target.value },
-                    }))
-                  }
-                  className="w-10 h-8 p-1"
-                />
-                <Input
-                  type="text"
-                  value={output.gifTransparentColor}
-                  onChange={(e) =>
-                    useQRStore.setState((s) => ({
-                      output: { ...s.output, gifTransparentColor: e.target.value },
-                    }))
-                  }
-                  placeholder={t("output.transparentColorPlaceholder")}
-                  className="flex-1"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Background Override */}
+          {/* Background Override — wired into export-gif.tsx and
+              export-image.tsx (drawn behind the QR on raster exports) */}
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t("output.backgroundOverride")}</HighlightedLabel>
@@ -380,7 +235,7 @@ export function OutputSection() {
       {/* Professional Options */}
       {tier === "professional" && (
         <>
-          {/* DPI */}
+          {/* DPI — wired into PNG metadata embedder */}
           <div className="space-y-2 pt-2 border-t">
             <div className="flex items-center justify-between">
               <Label>
@@ -398,57 +253,6 @@ export function OutputSection() {
               max={600}
               step={1}
             />
-          </div>
-
-          {/* Include Quiet Zone */}
-          <div className="flex items-center justify-between">
-            <Label>
-              <HighlightedLabel>{t("output.includeQuietZone")}</HighlightedLabel>
-            </Label>
-            <Switch
-              data-testid={DynamicTestId.resolve(
-                "output-include-quiet-zone-switch",
-                "output-include-quiet-zone-switch",
-              )}
-              checked={output.includeQuietZone}
-              onCheckedChange={(checked) =>
-                useQRStore.setState((s) => ({ output: { ...s.output, includeQuietZone: checked } }))
-              }
-            />
-          </div>
-
-          {/* Extra Formats */}
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t("output.exportAsAdditional")}</HighlightedLabel>
-            </Label>
-            <Select
-              value={output.formatExtra}
-              onValueChange={(v) =>
-                useQRStore.setState((s) => ({
-                  output: { ...s.output, formatExtra: v as typeof output.formatExtra },
-                }))
-              }
-            >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  "output-format-extra-trigger",
-                  "output-format-extra-trigger",
-                )}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent
-                data-testid={DynamicTestId.resolve(
-                  "output-format-extra-content",
-                  "output-format-extra-content",
-                )}
-              >
-                <SelectItem value="none">{t("output.none")}</SelectItem>
-                <SelectItem value="eps">EPS</SelectItem>
-                <SelectItem value="animated_webp">{t("output.animatedWebp")}</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </>
       )}
