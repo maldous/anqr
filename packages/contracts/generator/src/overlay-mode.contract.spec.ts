@@ -27,11 +27,6 @@ describe("contracts/generator/overlay-mode", () => {
       expect(new Set(modes).size).toBe(18);
     });
 
-    it("accepts center mode", () => {
-      const mode: OverlayMode = "center";
-      expect(mode).toBe("center");
-    });
-
     it("accepts halftone variants", () => {
       const modes: OverlayMode[] = ["halftone", "halftone-dithered"];
       expect(modes).toHaveLength(2);
@@ -45,11 +40,6 @@ describe("contracts/generator/overlay-mode", () => {
     it("accepts subpixel variants", () => {
       const modes: OverlayMode[] = ["subpixel", "subpixel-size"];
       expect(modes).toHaveLength(2);
-    });
-
-    it("accepts artwork mode", () => {
-      const mode: OverlayMode = "artwork";
-      expect(mode).toBe("artwork");
     });
   });
 });

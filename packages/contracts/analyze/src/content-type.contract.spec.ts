@@ -28,11 +28,6 @@ describe("contracts/analyze/content-type", () => {
       expect(new Set(types).size).toBe(19);
     });
 
-    it("accepts url content type", () => {
-      const type: ContentType = "url";
-      expect(type).toBe("url");
-    });
-
     it("accepts crypto content types", () => {
       const types: ContentType[] = ["crypto_bitcoin", "crypto_ethereum", "crypto_other"];
       expect(types).toHaveLength(3);
@@ -41,11 +36,6 @@ describe("contracts/analyze/content-type", () => {
     it("accepts payment content types", () => {
       const types: ContentType[] = ["epc_sepa", "upi", "emv_qr", "swiss_qr_bill"];
       expect(types).toHaveLength(4);
-    });
-
-    it("accepts unknown content type as fallback", () => {
-      const type: ContentType = "unknown";
-      expect(type).toBe("unknown");
     });
   });
 });

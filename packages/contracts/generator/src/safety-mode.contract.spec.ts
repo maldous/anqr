@@ -7,20 +7,5 @@ describe("contracts/generator/safety-mode", () => {
       const modes: SafetyMode[] = ["off", "balanced", "strict"];
       expect(new Set(modes).size).toBe(3);
     });
-
-    it("accepts off mode", () => {
-      const mode: SafetyMode = "off";
-      expect(mode).toBe("off");
-    });
-
-    it("accepts balanced mode", () => {
-      const mode: SafetyMode = "balanced";
-      expect(mode).toBe("balanced");
-    });
-
-    it("accepts strict mode", () => {
-      const mode: SafetyMode = "strict";
-      expect(mode).toBe("strict");
-    });
   });
 });
