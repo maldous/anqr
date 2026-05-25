@@ -193,7 +193,8 @@ describe("contracts/api", () => {
       });
 
       it("rejects invalid format", () => {
-        const result = qrApiQuerySchema.safeParse({ data: "test", format: "webp" });
+        // L8: enum widened to png/webp/gif/svg. Use a truly invalid value.
+        const result = qrApiQuerySchema.safeParse({ data: "test", format: "jpg" });
         expect(result.success).toBe(false);
       });
 
