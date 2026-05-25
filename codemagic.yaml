@@ -161,111 +161,55 @@ workflows:
 
           # Use CodeMagic CLI tools to fetch+install signing assets via the
           # ASC API key, then build with Manual signing referencing the
-          # auto-created/fetched provisioning profile. This is the documented
-          # CodeMagic flow for App Store distribution.
+          # fetched provisioning profile. Manual (not Automatic) because:
+          #   * CODE_SIGN_STYLE=Automatic forbids pinning CODE_SIGN_IDENTITY
+          #     ("conflicting provisioning settings" error).
+          #   * Without pinning, Xcode honors the project's baked-in
+          #     "iPhone Developer" Release identity and looks for a dev
+          #     profile — which doesn't exist for App Store distribution.
+          # `xcode-project use-profiles` patches the .xcodeproj to point
+          # at the fetched .mobileprovision so Manual signing works.
           #
-          # Why Manual (not Automatic): with CODE_SIGN_STYLE=Automatic, you
-          # can't pin CODE_SIGN_IDENTITY ("conflicting provisioning settings"
-          # error). And without pinning, Xcode honors the project's baked-in
-          # "iPhone Developer" Release identity and looks for a development
-          # profile — which doesn't exist for App Store distribution.
+          # CERT KEY MUST BE PERSISTENT across builds. Earlier versions
+          # generated a fresh keypair every build, which caused Apple to
+          # email "your certificate was revoked" on every run (the previous
+          # build's cert was unreachable, then we deleted it). The fix:
+          # store the cert PEM in the CodeMagic env var CERT_PRIVATE_KEY_PEM
+          # (group: ios_signing, encrypted). Same key every build → cert
+          # gets created once and reused thereafter. No delete-create churn.
           #
-          # `xcode-project use-profiles` patches the .xcodeproj to point at
-          # the fetched .mobileprovision; from then on Manual signing has
-          # everything it needs and no ASC API hand-off is required during
-          # archive itself.
-          #
-          # CERT_KEY: an iOS Distribution cert exists in ASC but we don't
-          # have its private key locally (we never had a Mac). Without one,
-          # `fetch-signing-files` errors with "Cannot save Signing
-          # Certificates without certificate private key". Generate a fresh
-          # keypair and pass via --certificate-key (the CLI takes the PEM
-          # contents inline; --certificate-key-path doesn't exist in this
-          # CLI version, which is why round 4 failed with "unrecognized
-          # arguments"). With --create the CLI registers a NEW Distribution
-          # cert tied to this key. Apple permits multiple Distribution certs
-          # per team.
+          # @file: prefix is CodeMagic's convention when the env var is
+          # registered as a "file" type. Handle both forms.
           CERT_KEY_PATH="$HOME/build_cert_key.pem"
-          openssl genrsa -out "$CERT_KEY_PATH" 2048
-          chmod 600 "$CERT_KEY_PATH"
-
-          # Apple's policy: ONE active Distribution cert per team. ASC
-          # already has 2 (left over from earlier attempts and/or a previous
-          # setup), and we have no private key for either (we never had a
-          # Mac). --create therefore hits HTTP 409 "You already have a
-          # current Distribution certificate or a pending certificate
-          # request." Revoke them first so --create can succeed.
-          #
-          # Safe here: no TestFlight build has shipped yet, so revoking
-          # doesn't invalidate any user-installed app.
-          # Apple's API exposes BOTH the legacy iOS-specific cert type
-          # (IOS_DISTRIBUTION) AND the modern unified type (DISTRIBUTION).
-          # Round 6 listed only IOS_DISTRIBUTION → found 0, but
-          # fetch-signing-files internally searches both → found 2 and
-          # rejected --create with HTTP 409. List each type explicitly
-          # and revoke whatever turns up.
-          #
-          # Notes on output parsing:
-          #   * `--silent` suppresses the human-readable "Did not find any..."
-          #     preamble that was poisoning the JSON parse in round 6.
-          #   * The CLI prints `[]` for empty, a JSON array otherwise.
-          #     If --silent ever stops suppressing the preamble we still
-          #     locate the JSON by finding the first `[` or `{`.
-          : > /tmp/asc-cert-ids.txt
-          for cert_type in DISTRIBUTION IOS_DISTRIBUTION; do
-            echo "=== Listing certificates of type $cert_type ==="
-            app-store-connect --silent --no-color certificates list \
-              --type "$cert_type" --json \
-              > "/tmp/asc-certs-$cert_type.json" 2>&1 \
-              || echo "  (list failed for $cert_type; continuing)"
-            cat "/tmp/asc-certs-$cert_type.json" | head -10
-            python3 - "/tmp/asc-certs-$cert_type.json" >> /tmp/asc-cert-ids.txt <<'PY'
-          # Round 7 lesson: --silent does NOT suppress the CLI's human-readable
-          # "Found N Signing Certificates matching..." preamble, and the CLI
-          # also embeds ANSI color escapes whose `\x1b[...` byte mid-string
-          # confused a char-by-char "first [ or {" locator. Strip ANSI, then
-          # locate the JSON by finding the first LINE that begins with [ or {
-          # (whitespace-tolerant). That is robust against future preamble
-          # changes.
-          import json, re, sys
+          python3 - "$CERT_KEY_PATH" <<'PY'
+          import os, sys, shutil
           path = sys.argv[1]
-          try:
-              raw = open(path).read()
-              raw = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", raw)
-              lines = raw.split("\n")
-              start = next(
-                  (i for i, line in enumerate(lines) if line.lstrip().startswith(("[", "{"))),
-                  -1,
-              )
-              if start < 0:
-                  sys.exit(0)
-              data = json.loads("\n".join(lines[start:]))
-              certs = data if isinstance(data, list) else data.get("data", [])
-              for c in certs:
-                  cid = c.get("id") if isinstance(c, dict) else None
-                  if cid:
-                      print(cid)
-          except Exception as exc:
-              print(f"(parse error: {exc})", file=sys.stderr)
+          raw = (os.environ.get("CERT_PRIVATE_KEY_PEM") or "").strip()
+          if not raw:
+              print("ERROR: CERT_PRIVATE_KEY_PEM not set. Add the PEM to the", file=sys.stderr)
+              print("       CodeMagic env var group used by this workflow.", file=sys.stderr)
+              sys.exit(1)
+          if raw.startswith("@file:"):
+              shutil.copyfile(raw[len("@file:"):], path)
+          else:
+              with open(path, "w") as f:
+                  f.write(raw.rstrip() + "\n")
+          os.chmod(path, 0o600)
+          print(f"Wrote {os.path.getsize(path)} bytes to {path}")
           PY
-          done
-          sort -u /tmp/asc-cert-ids.txt > /tmp/asc-cert-ids.unique
-          mv /tmp/asc-cert-ids.unique /tmp/asc-cert-ids.txt
-          echo "=== Certs to revoke ==="
-          cat /tmp/asc-cert-ids.txt
-          # The CLI's subcommand is `delete`, NOT `revoke` — Apple's API calls
-          # the action "revoke" but codemagic-cli-tools exposes it as delete.
-          # Subcommand list (from `certificates --help`): {create,delete,get,list}.
-          echo "=== app-store-connect certificates delete --help ==="
-          app-store-connect certificates delete --help 2>&1 | head -25 || true
-          echo "==="
-          while read cid; do
-            [ -z "$cid" ] && continue
-            echo "Deleting (revoking) distribution cert $cid (no local private key)"
-            app-store-connect certificates delete "$cid" --ignore-not-found 2>&1 \
-              || echo "  (delete failed; continuing)"
-          done < /tmp/asc-cert-ids.txt
+          ls -la "$CERT_KEY_PATH"
+          echo "First line: $(head -1 "$CERT_KEY_PATH")"
 
+          # First-run bootstrap: if the team already has 2 distribution
+          # certs from earlier experiments and neither matches our
+          # CERT_PRIVATE_KEY_PEM, Apple will reject --create with HTTP 409.
+          # The user has to clear those manually in App Store Connect →
+          # Certificates ONCE. After that, builds reuse the cert tied to
+          # our persistent key and no cert state changes per build.
+          #
+          # fetch-signing-files (with --create idempotent) downloads the
+          # existing cert when one matches our key, OR creates one on the
+          # first run. Subsequent builds just fetch.
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create \
@@ -315,6 +259,9 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
-        beta_groups:
-          - ANQR
+        # NO beta_groups: the "ANQR" group in App Store Connect is INTERNAL
+        # (App Store Connect Users). Apple's API refuses to add builds to
+        # internal groups ("Builds cannot be assigned to this internal
+        # group"); internal testers auto-receive new builds once processing
+        # completes. Add an external group here only when one exists.
         expire_build_submitted_for_review: true
