@@ -6,13 +6,27 @@
 // scannability for some style combination but doesn't surface on the
 // default settings the basic.web spec covers.
 //
-// We assert canvas existence + non-zero dimensions + absence of
-// "anqr:render-error" custom events. Visual snapshots (canvas.toDataURL
-// hashes) are a separate follow-up (L10) so this spec doesn't block on
-// pixel-stable rendering across CI environments.
+// Asserts: canvas exists with non-zero dimensions, no
+// "anqr:render-error" custom event fires, and the canvas.toDataURL
+// hash matches the committed baseline (when ANQR_SNAPSHOT_PERMUTATIONS=1
+// is set). The hash assertion is opt-in until we've measured pixel
+// stability across the CI matrix — by default the test only asserts
+// "renders SOMETHING non-empty"; with the env var on, drift triggers a
+// failure with both hashes in the message.
+//
+// To bake/refresh baselines on a known-clean run:
+//   ANQR_SNAPSHOT_PERMUTATIONS=record npx playwright test --project permutations
+// On rerun:
+//   ANQR_SNAPSHOT_PERMUTATIONS=1 npx playwright test --project permutations
 //
 // Matches the existing `permutations` Playwright project pattern.
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { expect, test } from "@playwright/test";
+
+const SNAPSHOT_DIR = join(__dirname, "__snapshots__", "permutations");
+const SNAPSHOT_MODE = process.env.ANQR_SNAPSHOT_PERMUTATIONS ?? "off";
 
 const WELCOME_VERSION = "2026.05.24.2";
 
@@ -126,6 +140,38 @@ test.describe("Render permutations", () => {
       expect(dims, `canvas missing for ${label}`).not.toBeNull();
       expect(dims?.w ?? 0).toBeGreaterThan(0);
       expect(dims?.h ?? 0).toBeGreaterThan(0);
+
+      // Snapshot comparison (opt-in via ANQR_SNAPSHOT_PERMUTATIONS).
+      // `off` skips the hash assertion entirely (default — keeps CI
+      //   stable across machines until baselines are agreed).
+      // `record` writes the current hash to the baseline file.
+      // anything else (e.g. `1`) compares against the existing baseline
+      //   and fails on drift.
+      if (SNAPSHOT_MODE === "off") return;
+
+      const dataUrl = await page.evaluate(() => {
+        const c = document.querySelector(
+          '[data-testid="qr-preview"] canvas',
+        ) as HTMLCanvasElement | null;
+        return c ? c.toDataURL("image/png") : null;
+      });
+      expect(dataUrl).not.toBeNull();
+      const hash = createHash("sha256").update(dataUrl ?? "").digest("hex");
+
+      const safeLabel = label.replace(/[^a-zA-Z0-9_+-]/g, "_");
+      const baselinePath = join(SNAPSHOT_DIR, `${safeLabel}.sha256.txt`);
+      if (SNAPSHOT_MODE === "record") {
+        mkdirSync(dirname(baselinePath), { recursive: true });
+        writeFileSync(baselinePath, `${hash}\n`, "utf8");
+        return;
+      }
+      if (!existsSync(baselinePath)) {
+        throw new Error(
+          `Missing baseline for ${label}. Run with ANQR_SNAPSHOT_PERMUTATIONS=record to bake.`,
+        );
+      }
+      const baseline = readFileSync(baselinePath, "utf8").trim();
+      expect(hash, `visual drift detected for ${label}`).toBe(baseline);
     });
   }
 });
