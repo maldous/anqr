@@ -31,14 +31,31 @@ export function embedPngMetadataAndDpi(
       author: "Author",
       description: "Description",
       copyright: "Copyright",
+      license: "License",
       creationTime: "Creation Time",
       software: "Software",
     };
 
     for (const [key, value] of Object.entries(metadata)) {
+      if (key === "custom") continue; // handled separately below
       if (value && typeof value === "string") {
         const keyword = keywordMap[key] || key;
         chunks.push(createPngTextChunk(keyword, value));
+      }
+    }
+    // B14: custom k/v pairs from user metadata. PNG iTXt keywords must
+    // be 1-79 ASCII printable chars and may not start/end with a space.
+    // Sanitise + skip invalid entries; the chunk creator already
+    // UTF-8-encodes the value text.
+    if (Array.isArray(metadata.custom)) {
+      for (const { k, v } of metadata.custom) {
+        const keyword = k
+          .trim()
+          .replace(/[^\x20-\x7e]/g, "")
+          .slice(0, 79);
+        if (keyword && v) {
+          chunks.push(createPngTextChunk(keyword, v));
+        }
       }
     }
   }

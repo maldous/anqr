@@ -21,12 +21,15 @@ export async function embedPngMetadata(pngBlob: Blob, metadata: PngMetadata): Pr
   // Create metadata chunks
   const metadataChunks: Uint8Array[] = [];
 
-  // Standard PNG text keywords
+  // Standard PNG text keywords. Anything not in this map falls through
+  // as a literal keyword (after sanitisation upstream — see
+  // buildPngMetadata) so customKv pairs round-trip as their own chunks.
   const keywordMap: Record<string, string> = {
     title: "Title",
     author: "Author",
     description: "Description",
     copyright: "Copyright",
+    license: "License",
     creationTime: "Creation Time",
     software: "Software",
     comment: "Comment",
