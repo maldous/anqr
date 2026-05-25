@@ -450,6 +450,14 @@ export const viteConfig = defineConfig({
           // QR runtime: generator, analyzer, and media are tightly coupled after the
           // AST split work, so they must stay in one manual chunk to avoid
           // rollup circular manual-chunk warnings.
+          //
+          // B-F11 (review-2026-05-24): audited 2026-05-25. The
+          // `app-qr-runtime` chunk is ~20 KB raw on the initial chain.
+          // Splitting further would create more HTTP requests for
+          // marginal byte savings — the heavy work already lives in
+          // the worker chunk (~788 KB, web-worker only, not on the
+          // initial paint path). Lower priority per the review;
+          // documented here so future maintainers don't re-investigate.
           if (
             id.includes("/modules/overlay") ||
             id.includes("/modules/dither") ||

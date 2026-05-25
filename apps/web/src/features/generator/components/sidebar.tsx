@@ -138,8 +138,11 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
         return;
       }
 
-      // Close on tablet (md-lg) and desktop (lg+) when clicking outside
-      if (globalThis.innerWidth >= 768) {
+      // D-F13: Close on tablet (md, 768-1023) where the sidebar is a
+      // dismissible overlay. On desktop (lg+, 1024+) it's a pinned panel
+      // — clicking the canvas should NOT collapse it, matching the
+      // muscle-memory pattern of every desktop editor with a sidebar.
+      if (globalThis.innerWidth >= 768 && globalThis.innerWidth < 1024) {
         onClose();
       }
     };
