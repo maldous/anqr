@@ -918,7 +918,8 @@
     "export": "Export",
     "lightMode": "Switch to light mode",
     "searchSettings": "Search settings...",
-    "share": "Share"
+    "share": "Share",
+    "help": "Show welcome guide"
   },
   "hints": {
     "moduleJitterWarning": "⚠️ May affect scannability",
@@ -1314,7 +1315,10 @@
     "advanced": "Advanced",
     "basic": "Basic",
     "professional": "Pro",
-    "watchAdForPro": "Watch ad to unlock Professional features for 24 hours"
+    "watchAdForPro": "Watch ad to unlock Professional features for 24 hours",
+    "basicDesc": "Payload, overlay, basic encoding & rendering.",
+    "advancedDesc": "Adds animation, output formats, dithering and advanced encoding.",
+    "professionalDesc": "Adds watermark, metadata, share, safety-aware QA, and adaptive color cycling."
   },
   "watermark": {
     "blendMode": "Blend Mode",

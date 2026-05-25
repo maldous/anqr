@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  HelpCircle,
   Menu,
   Moon,
   PanelLeft,
@@ -301,7 +302,7 @@ export function Header({
                         <TabsTrigger
                           value="basic"
                           className="text-xs px-3"
-                          title={t("tiers.basic")}
+                          title={`${t("tiers.basic")} — ${t("tiers.basicDesc", "Payload, overlay, basic encoding & rendering.")}`}
                           disabled={loadingAd}
                           data-testid={DynamicTestId.resolve("tier-tab-basic", "tier-tab-basic")}
                         >
@@ -310,7 +311,7 @@ export function Header({
                         <TabsTrigger
                           value="advanced"
                           className="text-xs px-3"
-                          title={t("tiers.advanced")}
+                          title={`${t("tiers.advanced")} — ${t("tiers.advancedDesc", "Adds animation, output formats, dithering and advanced encoding.")}`}
                           disabled={loadingAd}
                           data-testid={DynamicTestId.resolve(
                             "tier-tab-advanced",
@@ -325,7 +326,7 @@ export function Header({
                           title={
                             Capacitor.isNativePlatform() && !checkPremiumAccess()
                               ? t("tiers.watchAdForPro")
-                              : t("tiers.professional")
+                              : `${t("tiers.professional")} — ${t("tiers.professionalDesc", "Adds watermark, metadata, share, safety-aware QA, and adaptive color cycling.")}`
                           }
                           disabled={loadingAd}
                           data-testid={DynamicTestId.resolve(
@@ -445,6 +446,26 @@ export function Header({
                 onChangeLanguage={changeLanguage}
                 onCloseAnimationEnd={() => setIsLangMenuClosing(false)}
               />
+
+              {/*
+                Reopen Welcome modal (D-F10). Clearing the storage key
+                triggers the modal's gate on next render. Reload keeps
+                the implementation entirely inside welcome-modal.tsx
+                (off-limits file) — we never need to touch it.
+              */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => {
+                  localStorage.removeItem("anqr-welcome-seen");
+                  globalThis.location.reload();
+                }}
+                title={t("header.help", "Show welcome guide")}
+                aria-label={t("header.help", "Show welcome guide")}
+              >
+                <HelpCircle className="h-4 w-4" aria-hidden="true" />
+              </Button>
 
               {/* Dark Mode Toggle */}
               <Button
