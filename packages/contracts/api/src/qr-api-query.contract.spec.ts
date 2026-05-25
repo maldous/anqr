@@ -120,8 +120,17 @@ describe("contracts/api/qr-api-query", () => {
     });
 
     it("rejects invalid format", () => {
-      const result = qrApiQuerySchema.safeParse({ data: "x", format: "gif" });
+      // L8: format enum expanded to png/webp/gif/svg. Pick a value
+      // that isn't supported — "jpg" is the natural mismatch.
+      const result = qrApiQuerySchema.safeParse({ data: "x", format: "jpg" });
       expect(result.success).toBe(false);
+    });
+
+    it("accepts every supported format", () => {
+      for (const format of ["png", "webp", "gif", "svg"] as const) {
+        const result = qrApiQuerySchema.safeParse({ data: "x", format });
+        expect(result.success, `format=${format} should parse`).toBe(true);
+      }
     });
 
     it("accepts margin range 0-20", () => {
