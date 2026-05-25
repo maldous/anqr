@@ -309,7 +309,6 @@ export function useQRGenerator(
   const watermark = useStore((s) => s.watermark);
   const output = useStore((s) => s.output);
   const animation = useStore((s) => s.animation);
-  const _setAnimationPlaying = useStore((s) => s.setAnimationPlaying);
   const setQrCharacterEncoding = useStore((s) => s.setQrCharacterEncoding);
   const safety = useStore((s) => s.safety);
   const metadata = useStore((s) => s.metadata);
