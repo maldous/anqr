@@ -8,7 +8,7 @@ import { renderSymphony } from "./render-symphony.js";
 
 export function renderAll(data) {
   setAllData(data);
-  globalThis.searchQ = searchQ;
+  window.searchQ = searchQ;
   renderStats(data);
   renderServices(data.health?.services);
   renderCommits(data.commits);
