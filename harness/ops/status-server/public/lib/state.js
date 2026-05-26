@@ -4,8 +4,8 @@
 
 export const API = "";
 
-export let live = true;
-export let searchQ = "";
+export const live = true;
+export const searchQ = "";
 export let activeTab = "services";
 export let commitTypeFilter = "all";
 export let allData = {};
