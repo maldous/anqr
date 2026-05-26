@@ -7,9 +7,21 @@ export function renderServices(services) {
   const q = searchQ.toLowerCase();
   el.innerHTML = services.map(s => {
     const matchesSearch = !q || s.name.toLowerCase().includes(q);
-    const hide = (serviceFilter !== "all" && s.status !== serviceFilter) || !matchesSearch ? " hidden" : "";
+    const shouldHide = (serviceFilter !== "all" && s.status !== serviceFilter) || !matchesSearch;
+    const hide = shouldHide ? " hidden" : "";
     const rt = s.responseTime != null ? `${s.responseTime}ms` : "";
-    const meta = [s.statusCode ? `HTTP ${s.statusCode}` : s.error ? "failed" : "—", rt].filter(Boolean).join(" · ");
+
+    // Replaced nested ternary with if-else statements for clarity
+    let statusInfo;
+    if (s.statusCode) {
+      statusInfo = `HTTP ${s.statusCode}`;
+    } else if (s.error) {
+      statusInfo = "failed";
+    } else {
+      statusInfo = "—";
+    }
+
+    const meta = [statusInfo, rt].filter(Boolean).join(" · ");
     const detail = s.data ? JSON.stringify(s.data, null, 2) : (s.error || "(no data)");
     return `<div class="service-card${hide}" data-status="${s.status}">
       <div class="service-left">
