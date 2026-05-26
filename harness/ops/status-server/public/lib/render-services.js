@@ -3,10 +3,14 @@ import { searchQ } from "./state.js";
 import { esc } from "./format.js";
 
 export function renderServices(services) {
-  const el = $("#servicesList"); if (!services) { el.innerHTML = '<div class="empty-state">No data</div>'; return; }
+  const el = $("#servicesList");
+  if (services == null) {
+    el.innerHTML = '<div class="empty-state">No data</div>';
+    return;
+  }
   const q = searchQ.toLowerCase();
   el.innerHTML = services.map(s => {
-    const matchesSearch = !q || s.name.toLowerCase().includes(q);
+    const matchesSearch = q ? s.name.toLowerCase().includes(q) : true;
     const shouldHide = (serviceFilter !== "all" && s.status !== serviceFilter) || !matchesSearch;
     const hide = shouldHide ? " hidden" : "";
     const rt = s.responseTime != null ? `${s.responseTime}ms` : "";
