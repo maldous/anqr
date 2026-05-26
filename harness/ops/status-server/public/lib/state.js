@@ -4,11 +4,11 @@
 
 export const API = "";
 
-export let live = true;
-export let searchQ = "";
-export let activeTab = "services";
-export let commitTypeFilter = "all";
-export let allData = {};
+export const live = true;
+export const searchQ = "";
+export const activeTab = "services";
+export const commitTypeFilter = "all";
+export const allData = {};
 
 export function setLive(v) {
   live = v;
