@@ -1,7 +1,7 @@
 /* ── ANQR Status Dashboard v4 ── */
 import { $ } from "./lib/dom-query.js";
 import { $$ } from "./lib/dom-query-all.js";
-import { live, setLive, searchQ, setSearchQ, activeTab, setActiveTab, commitTypeFilter, setCommitTypeFilter, allData } from "./lib/state.js";
+import { live, setLive, searchQ, setSearchQ, activeTab, setActiveTab, allData } from "./lib/state.js";
 import { esc } from "./lib/format.js";
 import { fetchAll } from "./lib/fetch-all.js";
 import { renderAll } from "./lib/render-all.js";
