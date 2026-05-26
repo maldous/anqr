@@ -5,7 +5,7 @@
 export const API = "";
 
 export let live = true;
-export const searchQ = "";
+export let searchQ = "";
 export let activeTab = "services";
 export let commitTypeFilter = "all";
 export let allData = {};
