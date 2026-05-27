@@ -245,7 +245,11 @@
 
   "vitest": {
     "config": ["vitest.config.ts", "vitest.integration.config.ts"],
-    "entry": ["tests/unit/**/*.{spec,test}.ts", "tests/integration/**/*.{spec,test}.ts"]
+    "entry": [
+      "tests/unit/**/*.{spec,test}.ts",
+      "tests/integration/**/*.{spec,test}.ts",
+      "packages/**/*.bench.ts"
+    ]
   },
 
   "playwright": {
