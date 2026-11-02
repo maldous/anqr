@@ -1,5 +1,13 @@
 # ANQR
 
+**QR generation, styling and analysis, with web, HTTP API and MCP surfaces.**
+
+This archived repository preserves the ANQR 1.0 monorepo and its engineering history. Its documented product scope is the web application and Netlify delivery surface; the presence of mobile or other application directories does not establish their release readiness.
+
+[ANQR](https://anqr.link/) · [ANQR V3 source](https://github.com/maldous/anqr-v3) · [Translations](https://github.com/maldous/anqr-i18n) · [Matthew Aldous](https://aldous.info/)
+
+## Repository guide
+
 ANQR is a monorepo for the ANQR 1.0 product and its repo-local automation harness.
 
 ## What this repo currently claims
